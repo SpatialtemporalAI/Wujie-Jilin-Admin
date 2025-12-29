@@ -1,0 +1,81 @@
+#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
+
+"""
+项目入口文件
+初始化FastAPI应用并注册各个模块
+"""
+from contextlib import asynccontextmanager
+from typing import Union
+from fastapi.middleware.cors import CORSMiddleware
+import asyncio
+from fastapi import FastAPI
+from core.config import settings  # 导入配置
+from logging import getLogger
+from core.database import init_pool, close_pool
+from core.redis import RedisPool
+# from services.admin.router import router as admin_app_router
+from modules.app.router import router as app_app_router
+from core.registry.setup_registry import setup_app
+from app.asr.asr_manager import asr_manager
+logger = getLogger(__name__)
+from modules.app.mijia.mijia_manager import mijia_manager, MijiaAuthData, MijiaManager
+from modules.app.mijia.monitoring_service import SimpleSensorMonitor, start_monitoring
+from modules.app.mijia.login_utils import login_manager
+from services.kafka.services.custom_kafka_manager import get_custom_kafka_manager
+from services.open.router import router as open_router
+from services.admin.router import router as admin_router
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    loop = asyncio.get_running_loop()
+    # 初始化数据库连接池
+    logger.info("初始化数据库连接池")
+    await init_pool()
+    logger.info("数据库连接池初始化完成")
+    # 初始化 Redis 连接池
+    logger.info("初始化 Redis 连接池")
+    await RedisPool.init_pool()
+    logger.info("Redis 连接池初始化完成")
+    yield
+    # 关闭 Redis 连接池
+    logger.info("关闭 Redis 连接池")
+    await RedisPool.close_pool()
+    logger.info("Redis 连接池已关闭")
+    # 关闭数据库连接池
+    logger.info("关闭数据库连接池")
+    await close_pool()
+    logger.info("数据库连接池已关闭")
+app = FastAPI(
+    title="SmileX_Cloud",
+    description="这是一个使用FastAPI构建的示例API",
+    version="1.0.0",
+    contact={
+        "name": "SpatialtemporalAI",
+        "url": "https://github.com/orgs/SpatialtemporalAI/dashboard",
+    },
+    license_info={
+        "name": "MIT License",
+        "url": "https://opensource.org/licenses/MIT",
+    },
+    lifespan=lifespan,
+    # 禁用默认的docs和redoc，我们将自定义
+)
+logger.info("初始化配置文件")
+# 配置跨域（允许其他服务访问）
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=settings.ALLOWED_ORIGINS,
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+# 配置app
+setup_app(app)
+# 挂载子应用
+# app.mount("/admin", admin_app)
+# app.mount("/app", app_app)
+# 挂载认证路由
+app.include_router(app_app_router)
+app.include_router(admin_router)
+app.include_router(open_router)
+# app.include_router(admin_app_router)

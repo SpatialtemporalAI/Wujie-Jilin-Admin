@@ -1,0 +1,330 @@
+#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
+
+import traceback
+from typing import Any, Callable, Dict, Optional, Type, Union
+from fastapi import FastAPI, HTTPException, Request
+from fastapi.responses import JSONResponse, ORJSONResponse
+from fastapi.exceptions import RequestValidationError, ValidationException
+from pydantic import ValidationError
+from core.exception.errors import (
+    BaseExceptionMixin,
+    CustomError,
+    ForbiddenError,
+    GatewayError,
+    NotFoundError,
+    RequestError,
+    ServerError,
+    TokenError,
+    AuthorizationError,
+    ConflictError,
+    HTTPError,
+)
+from core.response.response_schema import response_base, ResponseModel
+from core.response.response_code import (
+    CustomErrorCode,
+    CustomResponseCode,
+    StandardResponseCode,
+)
+from logging import getLogger
+from core.utils.track_id import get_request_trace_id
+logger = getLogger(__name__)
+def setup_exception_global_handlers(app: FastAPI) -> None:
+    # 注册404路由未找到处理器
+    @app.exception_handler(404)
+    async def not_found_route_handler(
+        request: Request, exc: Exception
+    ) -> ORJSONResponse:
+        """\处理路由未找到的情况"""
+        return await not_found_error_handler(
+            request, NotFoundError(msg="请求的路由不存在")
+        )
+    # 自定义Pydantic验证异常处理器
+    @app.exception_handler(RequestValidationError)
+    async def global_validation_exception_handler(
+        request: Request, exc: RequestValidationError
+    ) -> ORJSONResponse:
+        return await validation_exception_handler(request, exc)
+    @app.exception_handler(ValueError)
+    async def value_error_handler(request: Request, exc: ValueError):
+        """
+        全局捕获ValueError异常，并返回标准化的JSON响应
+        """
+        # 构建响应
+        response = ResponseModel(
+            code=StandardResponseCode.HTTP_400,
+            msg=str(exc),
+            # request_id=request_id
+        )
+        # 记录日志
+        logger.error(
+            f"请求异常: path={request.url.path}, method={request.method}, "
+            f"msg={response.msg}"
+        )
+        return ORJSONResponse(
+            status_code=StandardResponseCode.HTTP_400, content=response.model_dump()
+        )
+def setup_exception_handlers(app: FastAPI) -> None:
+    """
+    设置全局异常处理器
+    Args:
+        app: FastAPI 应用实例
+    """
+    # 注册自定义异常处理器
+    app.exception_handler(BaseExceptionMixin)(base_exception_handler)
+    app.exception_handler(RequestError)(request_error_handler)
+    app.exception_handler(ForbiddenError)(forbidden_error_handler)
+    app.exception_handler(NotFoundError)(not_found_error_handler)
+    app.exception_handler(ServerError)(server_error_handler)
+    app.exception_handler(GatewayError)(gateway_error_handler)
+    app.exception_handler(TokenError)(token_error_handler)
+    app.exception_handler(AuthorizationError)(authorization_error_handler)
+    app.exception_handler(ConflictError)(conflict_error_handler)
+    app.exception_handler(CustomError)(custom_error_handler)
+    # 注册FastAPI内置异常处理器
+    app.exception_handler(HTTPException)(http_exception_handler)
+    app.exception_handler(RequestValidationError)(validation_exception_handler)
+    app.exception_handler(ValidationError)(pydantic_validation_error_handler)
+    # 注册通用异常处理器（捕获所有未处理的异常）
+    app.exception_handler(Exception)(generic_exception_handler)
+async def base_exception_handler(
+    request: Request, exc: BaseExceptionMixin
+) -> ORJSONResponse:
+    """
+    基础异常处理器
+    Args:
+        request: FastAPI 请求对象
+        exc: 基础异常实例
+    Returns:
+        统一格式的JSON响应
+    """
+    request_id = get_request_trace_id(request)
+    # 记录日志
+    logger.error(
+        f"请求异常: path={request.url.path}, method={request.method}, "
+        f"code={exc.code}, msg={exc.msg}, request_id={request_id}"
+    )
+    # 构建响应
+    response = ResponseModel(
+        code=exc.code,
+        err_code=exc.err_code.code if hasattr(exc, "err_code") else None,
+        msg=exc.msg or "请求异常",
+        data=exc.data,
+        # request_id=request_id,
+    )
+    return ORJSONResponse(status_code=exc.code, content=response.model_dump())
+async def request_error_handler(request: Request, exc: RequestError) -> ORJSONResponse:
+    """
+    请求异常处理器
+    """
+    return await base_exception_handler(request, exc)
+async def forbidden_error_handler(
+    request: Request, exc: ForbiddenError
+) -> ORJSONResponse:
+    """
+    禁止访问异常处理器
+    """
+    return await base_exception_handler(request, exc)
+async def not_found_error_handler(
+    request: Request, exc: NotFoundError
+) -> ORJSONResponse:
+    """
+    资源不存在异常处理器
+    """
+    return await base_exception_handler(request, exc)
+async def server_error_handler(request: Request, exc: ServerError) -> ORJSONResponse:
+    """
+    服务器异常处理器
+    """
+    request_id = get_request_trace_id(request)
+    # 记录详细错误日志（包括堆栈信息）
+    logger.error(
+        f"服务器内部错误: path={request.url.path}, method={request.method}, "
+        f"msg={exc.msg}, request_id={request_id}\n{traceback.format_exc()}"
+    )
+    err_code = None
+    msg = exc.msg or "服务器内部错误"
+    if hasattr(exc, "err_code"):
+        err_code = exc.err_code.code
+        msg = exc.err_code.msg or msg
+    # 构建响应
+    response = ResponseModel(
+        code=StandardResponseCode.HTTP_500,
+        err_code=exc.err_code.code if hasattr(exc, "err_code") else None,
+        msg=msg,
+        data=exc.data,
+        # request_id=request_id,
+    )
+    return ORJSONResponse(
+        status_code=StandardResponseCode.HTTP_500, content=response.model_dump()
+    )
+async def gateway_error_handler(request: Request, exc: GatewayError) -> ORJSONResponse:
+    """
+    网关异常处理器
+    """
+    return await base_exception_handler(request, exc)
+async def token_error_handler(request: Request, exc: TokenError) -> ORJSONResponse:
+    """
+    Token异常处理器
+    """
+    request_id = get_request_trace_id(request)
+    # 记录日志
+    logger.warning(
+        f"Token验证失败: path={request.url.path}, method={request.method}, "
+        f"msg={exc.detail}, request_id={request_id}"
+    )
+    # 构建响应
+    response = ResponseModel(
+        code=StandardResponseCode.HTTP_401,
+        msg=exc.detail or "未授权",
+        # request_id=request_id,
+    )
+    return ORJSONResponse(
+        status_code=StandardResponseCode.HTTP_401,
+        content=response.model_dump(),
+        headers=exc.headers,
+    )
+async def authorization_error_handler(
+    request: Request, exc: AuthorizationError
+) -> ORJSONResponse:
+    """
+    授权异常处理器
+    """
+    return await base_exception_handler(request, exc)
+async def conflict_error_handler(
+    request: Request, exc: ConflictError
+) -> ORJSONResponse:
+    """
+    资源冲突异常处理器
+    """
+    return await base_exception_handler(request, exc)
+async def custom_error_handler(request: Request, exc: CustomError) -> ORJSONResponse:
+    """
+    自定义异常处理器
+    """
+    request_id = get_request_trace_id(request)
+    # 记录日志
+    logger.error(
+        f"自定义异常: path={request.url.path}, method={request.method}, "
+        f"code={exc.code}, msg={exc.msg}, request_id={request_id}"
+    )
+    # 确保data不为None，以避免响应验证错误
+    data = exc.data if exc.data is not None else {}
+    # 构建响应
+    response = ResponseModel(
+        code=CustomResponseCode.HTTP_400.code,
+        err_code=exc.code,
+        msg=exc.msg or "服务器发生异常",
+        data=data,
+        # request_id=request_id,
+    )
+    return ORJSONResponse(
+        status_code=CustomResponseCode.HTTP_400.code, content=response.model_dump()
+    )
+async def http_exception_handler(
+    request: Request, exc: HTTPException
+) -> ORJSONResponse:
+    """
+    FastAPI HTTP异常处理器
+    """
+    request_id = get_request_trace_id(request)
+    # 记录日志
+    logger.error(
+        f"HTTP异常: path={request.url.path}, method={request.method}, "
+        f"status_code={exc.status_code}, detail={exc.detail}, request_id={request_id}"
+    )
+    # 构建响应
+    response = ResponseModel(
+        code=exc.status_code,
+        err_code=exc.status_code,
+        msg=str(exc.detail) if exc.detail else "HTTP异常",
+        # request_id=request_id,
+    )
+    return ORJSONResponse(
+        status_code=exc.status_code,
+        content=response.model_dump(),
+        headers=exc.headers if exc.headers else {},
+    )
+async def validation_exception_handler(
+    request: Request, exc: RequestValidationError
+) -> ORJSONResponse:
+    """
+    请求参数验证异常处理器
+    """
+    request_id = get_request_trace_id(request)
+    # 格式化验证错误信息
+    errors = []
+    for error in exc.errors():
+        # field = ".".join(str(loc) for loc in error.get("loc", []))
+        # message = error.get("msg", "验证错误")
+        if "ctx" in error and "error" in error["ctx"]:
+            msg = str(error["ctx"]["error"])
+            errors.append(f"{msg}")
+        elif "msg" in error:
+            errors.append(f"{error['msg']}")
+        else:
+            errors.append(f"验证错误")
+        break
+    # 记录日志
+    logger.warning(
+        f"请求参数验证失败: path={request.url.path}, method={request.method}, "
+        f"errors={errors}, request_id={request_id}"
+    )
+    # 构建响应
+    response = ResponseModel(
+        code=StandardResponseCode.HTTP_422,
+        msg=errors[0] or "请求参数验证失败",
+        # data={"errors": errors},
+        # request_id=request_id,
+    )
+    return ORJSONResponse(
+        status_code=StandardResponseCode.HTTP_422, content=response.model_dump()
+    )
+async def pydantic_validation_error_handler(
+    request: Request, exc: ValidationError
+) -> ORJSONResponse:
+    """
+    Pydantic模型验证异常处理器
+    """
+    request_id = get_request_trace_id(request)
+    # 格式化验证错误信息
+    errors = []
+    for error in exc.errors():
+        field = ".".join(str(loc) for loc in error.get("loc", []))
+        message = error.get("msg", "验证错误")
+        errors.append(f"{field}: {message}")
+    # 记录日志
+    logger.warning(
+        f"模型验证失败: path={request.url.path}, method={request.method}, "
+        f"errors={errors}, request_id={request_id}"
+    )
+    # 构建响应
+    response = ResponseModel(
+        code=StandardResponseCode.HTTP_422,
+        msg="数据验证失败",
+        data={"errors": errors},
+        # request_id=request_id,
+    )
+    return ORJSONResponse(
+        status_code=StandardResponseCode.HTTP_422, content=response.model_dump()
+    )
+async def generic_exception_handler(request: Request, exc: Exception) -> ORJSONResponse:
+    """
+    通用异常处理器（捕获所有未处理的异常）
+    """
+    request_id = get_request_trace_id(request)
+    # 记录详细错误日志（包括堆栈信息）
+    logger.error(
+        f"未捕获的异常: path={request.url.path}, method={request.method}, "
+        f"exception_type={type(exc).__name__}, message={str(exc)}, "
+        f"request_id={request_id}\n{traceback.format_exc()}"
+    )
+    # 构建响应
+    response = ResponseModel(
+        code=StandardResponseCode.HTTP_500,
+        msg="服务器内部错误",
+        # request_id=request_id,
+    )
+    return ORJSONResponse(
+        status_code=StandardResponseCode.HTTP_500, content=response.model_dump()
+    )

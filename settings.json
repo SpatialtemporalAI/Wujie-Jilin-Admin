@@ -1,0 +1,18 @@
+{
+    // 指定 Python 解释器路径（虚拟环境）
+    // "python.defaultInterpreterPath": "${workspaceFolder}/venv/bin/python", // macOS/Linux
+    // "python.defaultInterpreterPath": "${workspaceFolder}/venv/Scripts/python.exe", // Windows
+    // 启用 Pylance 类型检查
+    "python.languageServer": "Pylance",
+    // 自动格式化配置
+    "editor.formatOnSave": true,
+    "python.formatting.provider": "black",
+    //  linting 配置
+    "python.linting.enabled": true,
+    "python.linting.pylintEnabled": false,
+    "python.linting.flake8Enabled": true,
+    // 保存时自动组织导入
+    "editor.codeActionsOnSave": {
+        "source.organizeImports": true
+    }
+}
