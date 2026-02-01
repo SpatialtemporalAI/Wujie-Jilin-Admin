@@ -1,0 +1,26 @@
+{
+  "recommendations": [
+    // Python 相关插件
+    "ms-python.python",
+    "ms-python.vscode-pylance",
+    "ms-python.black-formatter",
+    "ms-python.flake8",
+    
+    // TypeScript/JavaScript 相关插件
+    "ms-vscode.vscode-typescript-next",
+    "dbaeumer.vscode-eslint",
+    "esbenp.prettier-vscode",
+    
+    // Vue 相关插件
+    "Vue.volar",
+    "Vue.vscode-typescript-vue-plugin",
+    
+    // 其他推荐插件
+    "eamodio.gitlens",
+    "ms-vscode-remote.remote-wsl",
+    "redhat.vscode-yaml",
+    "streetsidesoftware.code-spell-checker",
+    "mhutchie.git-graph",
+    "visualstudioexptteam.vscodeintellicode"
+  ]
+}

@@ -4,11 +4,18 @@
 from datetime import datetime
 from datetime import timezone as datetime_timezone
 import zoneinfo
+from zoneinfo._common import ZoneInfoNotFoundError
+import pytz
 from core.config import settings
 class TimeZone:
     def __init__(self) -> None:
         """初始化时区转换器"""
-        self.tz_info = zoneinfo.ZoneInfo(settings.DATETIME.TIMEZONE)
+        try:
+            # 优先使用zoneinfo模块
+            self.tz_info = zoneinfo.ZoneInfo(settings.DATETIME.TIMEZONE)
+        except ZoneInfoNotFoundError:
+            # 当zoneinfo失败时，使用pytz作为备用
+            self.tz_info = pytz.timezone(settings.DATETIME.TIMEZONE)
     def now(self) -> datetime:
         """获取当前时区时间"""
         return datetime.now(self.tz_info)

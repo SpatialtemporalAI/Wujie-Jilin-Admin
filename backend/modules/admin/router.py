@@ -5,9 +5,10 @@
 app路由初始化
 """
 from fastapi import APIRouter
-from .endpoints import (auth_router)
+from .endpoints import (auth_router, sys_router)
 # 创建管理路由器
 router = APIRouter(
     prefix="/admin",
 )
 router.include_router(auth_router)
+router.include_router(sys_router)
