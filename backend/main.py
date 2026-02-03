@@ -12,19 +12,16 @@ import asyncio
 from fastapi import FastAPI
 from core.config import settings  # 导入配置
 from logging import getLogger
-from core.database import init_pool, close_pool
+from database.db_manager import init_pool, close_pool
 from core.redis import RedisPool
-# from services.admin.router import router as admin_app_router
+
 from modules.app.router import router as app_app_router
+from modules.admin.router import router as admin_app_router
 from core.registry.setup_registry import setup_app
-from app.asr.asr_manager import asr_manager
+
 logger = getLogger(__name__)
-from modules.app.mijia.mijia_manager import mijia_manager, MijiaAuthData, MijiaManager
-from modules.app.mijia.monitoring_service import SimpleSensorMonitor, start_monitoring
-from modules.app.mijia.login_utils import login_manager
-from services.kafka.services.custom_kafka_manager import get_custom_kafka_manager
-from services.open.router import router as open_router
-from services.admin.router import router as admin_router
+
+
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     loop = asyncio.get_running_loop()
@@ -45,6 +42,8 @@ async def lifespan(app: FastAPI):
     logger.info("关闭数据库连接池")
     await close_pool()
     logger.info("数据库连接池已关闭")
+
+
 app = FastAPI(
     title="SmileX_Cloud",
     description="这是一个使用FastAPI构建的示例API",
@@ -76,6 +75,4 @@ setup_app(app)
 # app.mount("/app", app_app)
 # 挂载认证路由
 app.include_router(app_app_router)
-app.include_router(admin_router)
-app.include_router(open_router)
-# app.include_router(admin_app_router)
+app.include_router(admin_app_router)

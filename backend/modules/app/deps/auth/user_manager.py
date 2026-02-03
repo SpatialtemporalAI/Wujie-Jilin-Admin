@@ -7,7 +7,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import delete, select, update, func
 from sqlalchemy.sql.functions import cube
 from core.config import settings
-from core.database import get_conn
+from database import get_session
 from core.exception import CustomError, TokenError
 from core.response import CustomErrorCode
 from logging import getLogger
@@ -17,7 +17,7 @@ from fastapi.concurrency import run_in_threadpool
 from core.utils.session_utils import generate_session_id
 from core.security.oauth.user_manager import base_user_manager
 import random
-from app.aliyun import AliyunSMS  # 假设存在该模型用于接收获取验证码的请求
+from app.models.business.user import AppUser  # 导入 AppUser 类
 from modules.app.models.auth import (
     UserInfoModel,
     UserLoginResponseModel,
@@ -29,11 +29,27 @@ from datetime import datetime, timezone
 from core.response import (
     response_base,
 )
-from app.models.business.robot import RobotStatusEnum, NetworkTypeEnum
+
 import aiohttp
 import uuid
 
 logger = getLogger(__name__)
+
+# 定义缺失的变量
+CLOUD_FUNC_URL = "https://example.com/api/push"  # 占位符 URL
+
+
+# 创建占位符 AliyunSMS 类
+class AliyunSMS:
+    """阿里云短信服务占位符类"""
+
+    def send_login_code(self, phone: str, code: str):
+        """发送登录验证码"""
+        logger.info(f"模拟发送登录验证码: {code} 到 {phone}")
+
+    def send_alarm_notification(self, phone: str, name: str, address: str, device: str):
+        """发送报警通知"""
+        logger.info(f"模拟发送报警通知到 {phone}: {name}, {address}, {device}")
 
 
 class UserManager:
@@ -427,7 +443,7 @@ async def update_user_info(
         return None
 
 
-async def get_user_manager(user_db: AsyncSession = Depends(get_conn)):
+async def get_user_manager(user_db: AsyncSession = Depends(get_session)):
     """
     获取用户管理器实例
     Args:

@@ -20,6 +20,7 @@ from core.response import (
     CustomErrorCode,
 )
 from logging import getLogger
+
 logger = getLogger(__name__)
 from modules.app.models.auth import (
     LoginModel,
@@ -29,14 +30,17 @@ from modules.app.models.auth import (
     UserLoginResponseModel,
     UserInfoUpdateModel,
     ClientIDModel,
-    UserPushSettingModel
+    UserPushSettingModel,
 )
-from core.database import (get_conn)
+from database import get_session
+
 # 创建认证路由
 router = APIRouter(
     prefix="/auth",
     tags=["APP接口/认证管理"],
 )
+
+
 # 登录路由
 @router.post(
     "/login",
@@ -71,6 +75,8 @@ async def login(
         data=tokens,
         msg="登录成功",
     )
+
+
 # 绑定客户端ID路由
 @router.post(
     "/push",
@@ -100,10 +106,9 @@ async def push(
     client_id = client_id_model.client_id
     # 绑定客户端ID到用户
     await user_manager.bind_client_id(user.id, client_id)
-    return response_base.success(
-        msg="客户端ID绑定成功",
-        data={"client_id": client_id}
-    )
+    return response_base.success(msg="客户端ID绑定成功", data={"client_id": client_id})
+
+
 # # 注册路由（可选，根据需求决定是否启用）
 # @router.post(
 #     "/register",
@@ -161,12 +166,14 @@ async def get_current_user_info(
     return response_base.success(
         data=user_info,
     )
+
+
 @router.post(
-        "/users/push-setting",
-        response_model=ResponseModel[UserPushSettingModel],
-        summary="更新当前用户推送设置",
-        description="更新当前登录用户的推送设置",
-        )
+    "/users/push-setting",
+    response_model=ResponseModel[UserPushSettingModel],
+    summary="更新当前用户推送设置",
+    description="更新当前登录用户的推送设置",
+)
 async def update_push_setting(
     push_setting: UserPushSettingModel,
     user: AppUser = Depends(current_user),
@@ -182,15 +189,17 @@ async def update_push_setting(
     # 调用 user_manager 更新推送设置
     await user_manager.update_push_setting(user.id, push_setting)
     return response_base.success(msg="推送设置已更新", data=push_setting)
+
+
 @router.put(
-        "/users/me",
-        response_model=ResponseModel[UserInfoUpdateModel],
-        summary="更新当前用户信息",
-        description="更新当前登录用户的信息",
-        )
+    "/users/me",
+    response_model=ResponseModel[UserInfoUpdateModel],
+    summary="更新当前用户信息",
+    description="更新当前登录用户的信息",
+)
 async def update_current_user_info(
     user_update: UserInfoUpdateModel,
-    db: Session = Depends(get_conn),
+    db: Session = Depends(get_session),
 ):
     """更新当前登录用户信息"""
     try:
@@ -199,12 +208,11 @@ async def update_current_user_info(
         update_data = user_update.model_dump(exclude_unset=True)
         # 调用你的 user_manager 更新逻辑
         update_info = await update_user_info(db, user_id, update_data)
-        return response_base.success(
-            msg="用户信息更新成功",
-            data=update_info
-        )
+        return response_base.success(msg="用户信息更新成功", data=update_info)
     except Exception as e:
         return ResponseModel(code=500, msg=f"更新用户信息失败: {str(e)}")
+
+
 # 刷新令牌路由
 @router.post(
     "/refresh",
@@ -232,6 +240,8 @@ async def refresh_token(
         data=tokens,
         msg="令牌刷新成功",
     )
+
+
 # 获取短信验证码路由
 @router.post(
     "/sms-code",

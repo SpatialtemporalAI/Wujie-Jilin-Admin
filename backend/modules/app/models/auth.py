@@ -3,7 +3,6 @@
 
 from typing import Optional
 from pydantic import BaseModel, field_validator, Field
-from app.pydantic.validate import validate_phone
 import re
 from core.security.oauth.jwt import Token
 
@@ -50,7 +49,8 @@ class SmsCodeModel(BaseModel):
     @field_validator("phone")
     def phone_validator(cls, v):
         """验证手机号，示例：验证是否为中国大陆手机号"""
-        v = validate_phone(v)
+        if not re.match(r"^1[3-9]\d{9}$", v):
+            raise ValueError("请输入有效的中国大陆手机号")
         return v
 
 

@@ -8,7 +8,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select
 from core.config import settings
 from app.models.sys.user import SysUser
-from core.database import get_conn
+from database import get_session
 import hashlib
 from core.exception import CustomError, TokenError
 from core.response import CustomErrorCode
@@ -106,7 +106,7 @@ class UserManager:
         if not user_role:
             raise TokenError()
         local_session_id = await get_redis_util().get(
-            settings.JWT.SESSION_PREFIX + str(user_id)
+            settings.JWT.SESSION_PREFIX + user_role + str(user_id)
         )
         if local_session_id != session_id:
             raise TokenError()
@@ -115,6 +115,15 @@ class UserManager:
         return int(user_id), session_id
 
     async def get_user_info(self, user_id: int):
+        """
+        获取用户信息
+        将SysUser模型转换为符合UserInfoResponseData模型的字典，
+        并处理datetime类型到str类型的转换
+        Args:
+            user_id: 用户ID
+        Returns:
+            dict: 符合UserInfoResponseData模型的用户信息字典
+        """
         stmt = select(SysUser).where(SysUser.id == user_id)
         result = await self.session.execute(stmt)
         user = result.scalars().first()
@@ -122,10 +131,29 @@ class UserManager:
             raise CustomError(
                 error=CustomErrorCode.USER_NOT_FOUND,
             )
-        return user
+
+        # 转换为字典并处理datetime类型
+        def format_datetime(dt):
+            if dt:
+                return dt.strftime("%Y-%m-%d %H:%M:%S")
+            return None
+
+        user_info = {
+            "id": user.id,
+            "username": user.username,
+            "nickname": user.nickname,
+            "email": user.email,
+            "phone": user.phone,
+            "avatar": user.avatar,
+            "is_superuser": user.is_superuser,
+            "status": user.status,
+            "last_login_at": format_datetime(user.last_login_at),
+            "last_login_ip": user.last_login_ip,
+        }
+        return user_info
 
 
-async def get_user_manager(user_db: AsyncSession = Depends(get_conn)):
+async def get_user_manager(user_db: AsyncSession = Depends(get_session)):
     """
     获取用户管理器实例
     Args:

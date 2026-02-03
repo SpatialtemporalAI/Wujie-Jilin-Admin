@@ -2,6 +2,7 @@
 # -*- coding: utf-8 -*-
 
 from fastapi import APIRouter, Depends, Request, Response, Body
+
 # from fastapi_users import BaseUserManager, FastAPIUsers
 from pydantic import BaseModel, Field
 from redis import Redis
@@ -11,18 +12,21 @@ from core.response import (
     ResponseModel,
     response_base,
 )
-from services.admin.deps.auth.user_manager import (
+from modules.admin.deps.auth.user_manager import (
     UserManager,
     get_user_manager,
     current_user,
 )
-from services.admin.models.auth import (
+from modules.admin.models.auth import (
     LoginPwdModel,
     LoginResponseData,
     UserInfoResponseData,
 )
+
 # 创建认证路由
 router = APIRouter(prefix="/auth", tags=["admin接口/认证"])
+
+
 # 登录路由
 @router.post(
     "/login",
@@ -59,6 +63,8 @@ async def login(
         data=tokens,
         msg="登录成功",
     )
+
+
 @router.get(
     "/users/me",
     response_model=ResponseModel[UserInfoResponseData],

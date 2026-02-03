@@ -120,7 +120,7 @@ from fastapi import APIRouter, Depends
 from sqlalchemy.ext.asyncio import AsyncSession
 from typing import List
 
-from core.database.asyncio.database_manager import get_async_db
+from database.asyncio.database_manager import get_async_db
 from core.response.response_schema import BaseResponse
 from app.models.user import User
 from modules.admin.services.user_service import UserService

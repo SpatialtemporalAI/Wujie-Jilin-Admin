@@ -1,18 +1,23 @@
 {
   "version": "0.2.0",
   "configurations": [
-    // 后端FastAPI启动配置
+    // 后端FastAPI启动配置 (使用uvicorn)
     {
-      "name": "后端 - FastAPI",
+      "name": "后端 - FastAPI (uvicorn)",
       "type": "debugpy",
       "request": "launch",
-      "program": "${workspaceFolder}/backend/main.py",
+      "module": "uvicorn",
       "console": "integratedTerminal",
       "justMyCode": false,
       "cwd": "${workspaceFolder}/backend",
       "envFile": "${workspaceFolder}/backend/.env.dev",
       "args": [
-        "--reload"
+        "main:app",
+        "--reload",
+        "--host",
+        "0.0.0.0",
+        "--port",
+        "8000"
       ],
       "python": "${workspaceFolder}/backend/.venv/Scripts/python.exe"
     },

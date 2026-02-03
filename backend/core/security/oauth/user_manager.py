@@ -3,10 +3,11 @@
 
 from typing import Optional, Generic, TypeVar, Any
 from sqlalchemy.ext.asyncio import AsyncSession
-from core.database import get_conn
+from database import get_session
 from core.redis import get_redis_util
 from core.config import settings
 from core.security.oauth.jwt import JWTAuthManager, Token, oauth2_scheme
+from app.models.business.user import AppUser
 
 from core.utils.session_utils import generate_session_id
 from fastapi import Request

@@ -21,9 +21,20 @@ if config.config_file_name is not None:
 
 # add your model's MetaData object here
 # for 'autogenerate' support
-# from myapp import mymodel
-# target_metadata = mymodel.Base.metadata
-target_metadata = None
+from core.models.base import Base
+
+# Import all models to ensure they are registered with Base
+from app.models.sys.user import SysUser
+from app.models.sys.role import SysRole
+from app.models.sys.permission import SysPermission
+from app.models.sys.menu import SysMenu
+from app.models.sys.config import SysConfig
+from app.models.sys.dict import SysDict, SysDictItem
+from app.models.sys.association_tables import sys_user_role_association, sys_role_menu_association
+from app.models.business.user import AppUser
+
+# Set target_metadata to Base.metadata
+target_metadata = Base.metadata
 
 # other values from the config, defined by the needs of env.py,
 # can be acquired:

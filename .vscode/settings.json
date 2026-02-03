@@ -28,7 +28,7 @@
     "${workspaceFolder}/frontend"
   ],
   "editor.codeActionsOnSave": {
-    "source.fixAll.eslint": true
+    "source.fixAll.eslint": "explicit"
   },
   
   // 编辑器配置
@@ -57,5 +57,8 @@
   "terminal.integrated.fontSize": 14,
   "terminal.integrated.lineHeight": 1.4,
   "terminal.integrated.shell.windows": "C:\\Windows\\System32\\cmd.exe",
-  "terminal.integrated.defaultProfile.windows": "Command Prompt"
+  "terminal.integrated.defaultProfile.windows": "Command Prompt",
+  "[python]": {
+    "editor.defaultFormatter": "ms-python.black-formatter"
+  }
 }

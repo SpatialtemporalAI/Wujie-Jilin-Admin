@@ -8,7 +8,7 @@ from fastapi import Depends, HTTPException, status
 from jwt.exceptions import InvalidTokenError, ExpiredSignatureError, DecodeError
 from passlib.context import CryptContext
 from pydantic import BaseModel
-from core.database import get_conn
+from database import get_session
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select
 from core.config import settings

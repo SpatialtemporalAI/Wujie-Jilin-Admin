@@ -23,3 +23,17 @@ class UserInfoResponseData(BaseModel):
     status: bool
     last_login_at: str | None
     last_login_ip: str | None
+
+# 系统用户响应数据模型
+class SysUserResponseData(BaseModel):
+    """系统用户接口返回的数据模型"""
+    id: int
+    username: str
+    nickname: str
+    email: str | None
+    phone: str | None
+    avatar: str | None
+    is_superuser: bool
+    status: bool
+    last_login_at: str | None
+    last_login_ip: str | None
