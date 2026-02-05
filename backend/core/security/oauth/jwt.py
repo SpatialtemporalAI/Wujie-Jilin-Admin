@@ -20,6 +20,9 @@ from pydantic import Field
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="token")
 token_type = "Bearer"
 
+# 密码加密上下文
+pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
+
 
 class TokenData(BaseModel):
     """JWT令牌数据模型"""
