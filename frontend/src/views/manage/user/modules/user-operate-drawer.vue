@@ -146,12 +146,8 @@ watch(visible, () => {
           </NRadioGroup>
         </NFormItem>
         <NFormItem :label="$t('page.manage.user.userRole')" path="roles">
-          <NSelect
-            v-model:value="model.userRoles"
-            multiple
-            :options="roleOptions"
-            :placeholder="$t('page.manage.user.form.userRole')"
-          />
+          <NSelect v-model:value="model.userRoles" multiple :options="roleOptions"
+            :placeholder="$t('page.manage.user.form.userRole')" />
         </NFormItem>
       </NForm>
       <template #footer>

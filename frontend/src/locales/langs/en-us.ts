@@ -45,6 +45,7 @@ const local: App.I18n.Schema = {
     update: 'Update',
     updateSuccess: 'Update Success',
     userCenter: 'User Center',
+    changePassword: 'Change Password',
     yesOrNo: {
       yes: 'Yes',
       no: 'No'
@@ -347,6 +348,7 @@ const local: App.I18n.Schema = {
         userStatus: 'User Status',
         userRole: 'User Role',
         isSuperuser: 'Super Admin',
+        changePassword: 'Change Password',
         form: {
           userName: 'Please enter user name',
           userGender: 'Please select gender',
@@ -355,7 +357,11 @@ const local: App.I18n.Schema = {
           userEmail: 'Please enter email',
           userStatus: 'Please select user status',
           userRole: 'Please select user role',
-          isSuperuser: 'Please select whether to be a super admin'
+          isSuperuser: 'Please select whether to be a super admin',
+          newPassword: 'Please enter new password',
+          confirmPassword: 'Please confirm new password',
+          passwordMinLength: 'Password length must be at least 6 characters',
+          passwordNotMatch: 'The two passwords do not match'
         },
         addUser: 'Add User',
         editUser: 'Edit User',

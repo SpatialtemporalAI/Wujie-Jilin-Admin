@@ -12,6 +12,9 @@ from typing import List, Optional, Tuple
 from app.models.sys.user import SysUser
 from app.models.sys.role import SysRole
 from core.exception.errors import NotFoundError
+from core.security.oauth.jwt import JWTAuthManager
+from fastapi import HTTPException
+from sqlalchemy import select
 
 
 class UserService:
@@ -259,4 +262,44 @@ class UserService:
         
         await db.delete(user)
         await db.commit()
+        return True
+    
+    @staticmethod
+    async def change_password(
+        db: AsyncSession,
+        user_id: int,
+        new_password: str
+    ) -> bool:
+        """
+        修改用户密码
+        
+        Args:
+            db: 数据库会话
+            user_id: 用户ID
+            new_password: 新密码
+            
+        Returns:
+            是否修改成功
+            
+        Raises:
+            NotFoundError: 用户不存在
+            HTTPException: 超级管理员密码不能修改
+        """
+        # 获取用户
+        result = await db.execute(select(SysUser).where(SysUser.id == user_id))
+        user = result.scalar_one_or_none()
+        if not user:
+            raise NotFoundError(f"用户 {user_id} 不存在")
+        
+        # 检查是否为超级管理员
+        if user.is_superuser:
+            raise HTTPException(status_code=403, detail="超级管理员密码不能修改")
+        
+        # 加密新密码
+        hashed_password = JWTAuthManager.get_password_hash(new_password)
+        
+        # 更新密码
+        user.password = hashed_password
+        await db.commit()
+        await db.refresh(user)
         return True

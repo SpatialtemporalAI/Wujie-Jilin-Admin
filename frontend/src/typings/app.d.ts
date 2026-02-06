@@ -356,6 +356,7 @@ declare namespace App {
         update: string;
         updateSuccess: string;
         userCenter: string;
+        changePassword: string;
         yesOrNo: {
           yes: string;
           no: string;
@@ -589,6 +590,7 @@ declare namespace App {
             userStatus: string;
             userRole: string;
             isSuperuser: string;
+            changePassword: string;
             form: {
               userName: string;
               userGender: string;
@@ -598,6 +600,10 @@ declare namespace App {
               userStatus: string;
               userRole: string;
               isSuperuser: string;
+              newPassword:string;
+              confirmPassword:string;
+              passwordMinLength:string;
+              passwordNotMatch:string;
             };
             addUser: string;
             editUser: string;

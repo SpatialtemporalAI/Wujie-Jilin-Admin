@@ -1,5 +1,5 @@
 <script setup lang="tsx">
-import { reactive } from 'vue';
+import { reactive, ref } from 'vue';
 import { NButton, NPopconfirm, NTag } from 'naive-ui';
 import { enableStatusRecord, userGenderRecord } from '@/constants/business';
 import { fetchGetUserList } from '@/service/api';
@@ -7,9 +7,14 @@ import { useAppStore } from '@/store/modules/app';
 import { defaultTransform, useNaivePaginatedTable, useTableOperate } from '@/hooks/common/table';
 import { $t } from '@/locales';
 import UserOperateDrawer from './modules/user-operate-drawer.vue';
+import UserPasswordDrawer from './modules/user-password-drawer.vue';
 import UserSearch from './modules/user-search.vue';
 
 const appStore = useAppStore();
+
+// 密码修改相关状态
+const passwordDrawerVisible = ref(false);
+const currentUserId = ref(0);
 
 const searchParams: Api.SystemManage.UserSearchParams = reactive({
   page: 1,
@@ -93,11 +98,16 @@ const { columns, columnChecks, data, getData, getDataByPage, loading, mobilePagi
       title: $t('common.operate'),
       align: 'center',
       width: 130,
-      render: row => (
-        <div class="flex-center gap-8px" v-if={row.is_superuser === false}>
-          {row.is_superuser}
+      render: row => {
+        if (row.is_superuser === true) {
+          return null;
+        }
+        return <div class="flex-center gap-8px">
           <NButton type="primary" ghost size="small" onClick={() => edit(row.id)}>
             {$t('common.edit')}
+          </NButton>
+          <NButton type="info" ghost size="small" onClick={() => openPasswordDrawer(row.id)}>
+            {$t('common.changePassword')}
           </NButton>
           <NPopconfirm onPositiveClick={() => handleDelete(row.id)}>
             {{
@@ -110,7 +120,7 @@ const { columns, columnChecks, data, getData, getDataByPage, loading, mobilePagi
             }}
           </NPopconfirm>
         </div>
-      )
+      }
     }
   ]
 });
@@ -144,6 +154,12 @@ function handleDelete(id: number) {
 function edit(id: number) {
   handleEdit(id);
 }
+
+// 打开修改密码抽屉
+function openPasswordDrawer(id: number) {
+  currentUserId.value = id;
+  passwordDrawerVisible.value = true;
+}
 </script>
 
 <template>
@@ -159,6 +175,7 @@ function edit(id: number) {
         :pagination="mobilePagination" class="sm:h-full" />
       <UserOperateDrawer v-model:visible="drawerVisible" :operate-type="operateType" :row-data="editingData"
         @submitted="getDataByPage" />
+      <UserPasswordDrawer v-model:visible="passwordDrawerVisible" :user-id="currentUserId" @submitted="getDataByPage" />
     </NCard>
   </div>
 </template>

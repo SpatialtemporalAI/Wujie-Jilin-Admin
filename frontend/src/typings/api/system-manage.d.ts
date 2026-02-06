@@ -61,6 +61,12 @@ declare namespace Api {
     /** user list */
     type UserList = Common.PaginatingQueryRecord<User>;
 
+    /** change password request */
+    type ChangePasswordRequest = {
+      /** new password */
+      new_password: string;
+    };
+
     /**
      * menu type
      *

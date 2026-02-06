@@ -53,3 +53,14 @@ export function fetchGetMenuTree() {
     method: 'get'
   });
 }
+
+/** change user password */
+export function fetchChangeUserPassword(userId: number, newPassword: string) {
+  return request<void>({
+    url: `/sys/user/${userId}/password`,
+    method: 'put',
+    data: {
+      new_password: newPassword
+    }
+  });
+}

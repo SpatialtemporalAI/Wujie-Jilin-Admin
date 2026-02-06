@@ -45,6 +45,7 @@ const local: App.I18n.Schema = {
     update: '更新',
     updateSuccess: '更新成功',
     userCenter: '个人中心',
+    changePassword: '修改密码',
     yesOrNo: {
       yes: '是',
       no: '否'
@@ -342,6 +343,7 @@ const local: App.I18n.Schema = {
         userStatus: '用户状态',
         userRole: '用户角色',
         isSuperuser: '超级管理员',
+        changePassword: '修改密码',
         form: {
           userName: '请输入用户名',
           userGender: '请选择性别',
@@ -350,7 +352,11 @@ const local: App.I18n.Schema = {
           userEmail: '请输入邮箱',
           userStatus: '请选择用户状态',
           userRole: '请选择用户角色',
-          isSuperuser: '请选择是否为超级管理员'
+          isSuperuser: '请选择是否为超级管理员',
+          newPassword: '请输入新密码',
+          confirmPassword: '请确认新密码',
+          passwordMinLength: '密码长度至少为6位',
+          passwordNotMatch: '两次输入的密码不一致'
         },
         addUser: '新增用户',
         editUser: '编辑用户',

@@ -7,6 +7,7 @@
 from fastapi import APIRouter, Depends, Query
 from sqlalchemy.ext.asyncio import AsyncSession
 from typing import List, Optional
+from pydantic import BaseModel
 
 from database.db_manager import get_session
 from core.response.response_schema import ResponseModel, ResponsePageModel
@@ -15,6 +16,16 @@ from app.models.common.page import PageRequest, get_page_params, get_paginated_r
 from app.models.sys.user import SysUser
 from modules.admin.services.sys import UserService
 from modules.admin.models.auth import SysUserResponseData
+
+
+# 修改密码请求模型
+class ChangePasswordRequest(BaseModel):
+    """
+    修改密码请求模型
+    """
+
+    new_password: str
+
 
 # 创建用户管理路由
 user_router = APIRouter(prefix="/user", tags=["用户管理"])
@@ -176,3 +187,16 @@ async def delete_user(user_id: int, db: AsyncSession = Depends(get_session)):
     """
     await UserService.delete_user(db, user_id)
     return ResponseModel(msg="删除成功")
+
+
+@user_router.put("/{user_id}/password", response_model=ResponseModel)
+async def change_user_password(
+    user_id: int,
+    request: ChangePasswordRequest,
+    db: AsyncSession = Depends(get_session),
+):
+    """
+    修改用户密码
+    """
+    await UserService.change_password(db, user_id, request.new_password)
+    return ResponseModel(msg="密码修改成功")
