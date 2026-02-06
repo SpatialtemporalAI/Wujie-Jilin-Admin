@@ -234,15 +234,16 @@ export function defaultTransform<ApiData>(
   response: FlatResponseData<any, Api.Common.PaginatingQueryRecord<ApiData>>
 ): PaginationData<ApiData> {
   const { data, error } = response;
-
+  
   if (!error) {
-    const { records, current, size, total } = data;
+    const { records, page, page_size, total,total_pages } = data;
 
     return {
       data: records,
-      pageNum: current,
-      pageSize: size,
-      total
+      pageNum: page,
+      pageSize: page_size,
+      total,
+      totalPages: total_pages
     };
   }
 
@@ -250,7 +251,8 @@ export function defaultTransform<ApiData>(
     data: [],
     pageNum: 1,
     pageSize: 10,
-    total: 0
+    total: 0,
+    totalPages: 1
   };
 }
 

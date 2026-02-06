@@ -8,11 +8,13 @@ declare namespace Api {
     /** common params of paginating */
     interface PaginatingCommonParams {
       /** current page number */
-      current: number;
+      page: number;
       /** page size */
-      size: number;
+      page_size: number;
       /** total count */
       total: number;
+      /** total page count */
+      total_pages: number;
     }
 
     /** common params of paginating query list data */
@@ -21,7 +23,7 @@ declare namespace Api {
     }
 
     /** common search params of table */
-    type CommonSearchParams = Pick<Common.PaginatingCommonParams, 'current' | 'size'>;
+    type CommonSearchParams = Pick<Common.PaginatingCommonParams, 'page' | 'page_size'>;
 
     /**
      * enable status
@@ -30,6 +32,15 @@ declare namespace Api {
      * - "2": disabled
      */
     type EnableStatus = '1' | '2';
+
+    /**
+     * enable boolean status
+     *
+     * - true: enabled
+     * - false: disabled
+     */
+    type EnableBooleanStatus = boolean;
+
 
     /** common record */
     type CommonRecord<T = any> = {

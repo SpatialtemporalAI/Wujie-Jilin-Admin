@@ -18,7 +18,7 @@ from modules.admin.services.sys import MenuService
 menu_router = APIRouter(prefix="/menu", tags=["菜单管理"])
 
 
-@menu_router.get("/list", response_model=ResponseModel[List[SysMenu]])
+@menu_router.get("/list", response_model=ResponseModel[List[dict]])
 async def get_menu_list(
     status: Optional[bool] = Query(None, description="状态"),
     db: AsyncSession = Depends(get_session),
@@ -30,12 +30,21 @@ async def get_menu_list(
     return ResponseModel(data=menus)
 
 
-@menu_router.get("/tree", response_model=ResponseModel[List[SysMenu]])
+@menu_router.get("/tree", response_model=ResponseModel[List[dict]])
 async def get_menu_tree(db: AsyncSession = Depends(get_session)):
     """
     获取菜单树结�?"""
     root_menus = await MenuService.get_menu_tree(db)
     return ResponseModel(data=root_menus)
+
+
+@menu_router.get("/pages", response_model=ResponseModel[List[str]])
+async def get_all_pages(db: AsyncSession = Depends(get_session)):
+    """
+    获取所有页面
+    """
+    pages = await MenuService.get_all_pages(db)
+    return ResponseModel(data=pages)
 
 
 @menu_router.get("/{menu_id}", response_model=ResponseModel[SysMenu])

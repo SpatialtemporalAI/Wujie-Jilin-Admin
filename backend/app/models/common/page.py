@@ -56,7 +56,31 @@ async def get_paginated_results(
     # 查询分页数据
     result = await db.execute(query)
     items = result.scalars().all()
-    records = [schema.model_validate(item) for item in items] if schema else items
+    
+    # 处理数据转换，包括datetime类型转换
+    def format_datetime(dt):
+        if dt:
+            return dt.strftime("%Y-%m-%d %H:%M:%S")
+        return None
+    
+    records = []
+    if schema:
+        for item in items:
+            # 转换为字典并处理datetime类型
+            item_dict = {}
+            for key, value in item.__dict__.items():
+                # 跳过私有属性
+                if not key.startswith('_'):
+                    # 处理datetime类型
+                    if hasattr(value, 'strftime'):
+                        item_dict[key] = format_datetime(value)
+                    else:
+                        item_dict[key] = value
+            # 使用转换后的数据创建响应模型
+            records.append(schema(**item_dict))
+    else:
+        records = items
+    
     # 正确统计总数（不用分页后的 query）
     count_query = base_query.with_only_columns(func.count()).order_by(None)
     result = await db.execute(count_query)

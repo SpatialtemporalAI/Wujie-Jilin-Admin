@@ -8,6 +8,7 @@ export interface PaginationData<T> {
   pageNum: number;
   pageSize: number;
   total: number;
+  totalPages: number;
 }
 
 type GetApiData<ApiData, Pagination extends boolean> = Pagination extends true ? PaginationData<ApiData> : ApiData[];
@@ -99,7 +100,8 @@ export default function useTable<ResponseData, ApiData, Column, Pagination exten
       const transformed = transform(response);
 
       data.value = getTableData(transformed, pagination);
-
+      
+      console.log(data.value)
       setEmpty(data.value.length === 0);
 
       await onFetched?.(transformed);

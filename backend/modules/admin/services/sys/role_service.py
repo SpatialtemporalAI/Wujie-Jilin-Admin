@@ -23,7 +23,7 @@ class RoleService:
     async def get_role_list(
         db: AsyncSession,
         status: Optional[bool] = None
-    ) -> List[SysRole]:
+    ) -> List[dict]:
         """
         获取角色列表
         
@@ -32,13 +32,30 @@ class RoleService:
             status: 状态
             
         Returns:
-            角色列表
+            角色列表（字典列表）
         """
         query = select(SysRole)
         if status is not None:
             query = query.where(SysRole.status == status)
         result = await db.execute(query)
-        return result.scalars().all()
+        roles = result.scalars().all()
+        
+        # 转换为字典列表
+        role_dicts = []
+        for role in roles:
+            role_dict = {
+                "id": role.id,
+                "name": role.name,
+                "code": role.code,
+                "description": role.description,
+                "status": role.status,
+                "is_default": role.is_default,
+                "is_system": role.is_system,
+                "sort": role.sort
+            }
+            role_dicts.append(role_dict)
+        
+        return role_dicts
     
     @staticmethod
     async def get_role(
@@ -185,3 +202,37 @@ class RoleService:
         await db.delete(role)
         await db.commit()
         return True
+    
+    @staticmethod
+    async def get_all_roles(
+        db: AsyncSession
+    ) -> List[dict]:
+        """
+        获取所有启用的角色
+        
+        Args:
+            db: 数据库会话
+            
+        Returns:
+            启用的角色列表（字典列表）
+        """
+        query = select(SysRole).where(SysRole.status == True)
+        result = await db.execute(query)
+        roles = result.scalars().all()
+        
+        # 转换为字典列表
+        role_dicts = []
+        for role in roles:
+            role_dict = {
+                "id": role.id,
+                "name": role.name,
+                "code": role.code,
+                "description": role.description,
+                "status": role.status,
+                "is_default": role.is_default,
+                "is_system": role.is_system,
+                "sort": role.sort
+            }
+            role_dicts.append(role_dict)
+        
+        return role_dicts

@@ -588,6 +588,7 @@ declare namespace App {
             userEmail: string;
             userStatus: string;
             userRole: string;
+            isSuperuser: string;
             form: {
               userName: string;
               userGender: string;
@@ -596,6 +597,7 @@ declare namespace App {
               userEmail: string;
               userStatus: string;
               userRole: string;
+              isSuperuser: string;
             };
             addUser: string;
             editUser: string;

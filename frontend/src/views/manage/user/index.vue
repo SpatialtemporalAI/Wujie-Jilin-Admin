@@ -12,22 +12,22 @@ import UserSearch from './modules/user-search.vue';
 const appStore = useAppStore();
 
 const searchParams: Api.SystemManage.UserSearchParams = reactive({
-  current: 1,
-  size: 10,
+  page: 1,
+  page_size: 10,
   status: null,
-  userName: null,
-  userGender: null,
-  nickName: null,
-  userPhone: null,
-  userEmail: null
+  username: null,
+  nickname: null,
+  phone: null,
+  email: null,
+  isSuperuser: null
 });
 
 const { columns, columnChecks, data, getData, getDataByPage, loading, mobilePagination } = useNaivePaginatedTable({
   api: () => fetchGetUserList(searchParams),
   transform: response => defaultTransform(response),
   onPaginationParamsChange: params => {
-    searchParams.current = params.page;
-    searchParams.size = params.pageSize;
+    searchParams.page = params.page;
+    searchParams.page_size = params.pageSize;
   },
   columns: () => [
     {
@@ -43,45 +43,25 @@ const { columns, columnChecks, data, getData, getDataByPage, loading, mobilePagi
       render: (_, index) => index + 1
     },
     {
-      key: 'userName',
+      key: 'username',
       title: $t('page.manage.user.userName'),
       align: 'center',
       minWidth: 100
     },
     {
-      key: 'userGender',
-      title: $t('page.manage.user.userGender'),
-      align: 'center',
-      width: 100,
-      render: row => {
-        if (row.userGender === null) {
-          return null;
-        }
-
-        const tagMap: Record<Api.SystemManage.UserGender, NaiveUI.ThemeColor> = {
-          1: 'primary',
-          2: 'error'
-        };
-
-        const label = $t(userGenderRecord[row.userGender]);
-
-        return <NTag type={tagMap[row.userGender]}>{label}</NTag>;
-      }
-    },
-    {
-      key: 'nickName',
+      key: 'nickname',
       title: $t('page.manage.user.nickName'),
       align: 'center',
       minWidth: 100
     },
     {
-      key: 'userPhone',
+      key: 'phone',
       title: $t('page.manage.user.userPhone'),
       align: 'center',
       width: 120
     },
     {
-      key: 'userEmail',
+      key: 'email',
       title: $t('page.manage.user.userEmail'),
       align: 'center',
       minWidth: 200
@@ -95,6 +75,8 @@ const { columns, columnChecks, data, getData, getDataByPage, loading, mobilePagi
         if (row.status === null) {
           return null;
         }
+
+        row.status = row.status ? '1' : '2';
 
         const tagMap: Record<Api.Common.EnableStatus, NaiveUI.ThemeColor> = {
           1: 'success',
@@ -112,7 +94,8 @@ const { columns, columnChecks, data, getData, getDataByPage, loading, mobilePagi
       align: 'center',
       width: 130,
       render: row => (
-        <div class="flex-center gap-8px">
+        <div class="flex-center gap-8px" v-if={row.is_superuser === false}>
+          {row.is_superuser}
           <NButton type="primary" ghost size="small" onClick={() => edit(row.id)}>
             {$t('common.edit')}
           </NButton>
@@ -168,34 +151,14 @@ function edit(id: number) {
     <UserSearch v-model:model="searchParams" @search="getDataByPage" />
     <NCard :title="$t('page.manage.user.title')" :bordered="false" size="small" class="card-wrapper sm:flex-1-hidden">
       <template #header-extra>
-        <TableHeaderOperation
-          v-model:columns="columnChecks"
-          :disabled-delete="checkedRowKeys.length === 0"
-          :loading="loading"
-          @add="handleAdd"
-          @delete="handleBatchDelete"
-          @refresh="getData"
-        />
+        <TableHeaderOperation v-model:columns="columnChecks" :disabled-delete="checkedRowKeys.length === 0"
+          :loading="loading" @add="handleAdd" @delete="handleBatchDelete" @refresh="getData" />
       </template>
-      <NDataTable
-        v-model:checked-row-keys="checkedRowKeys"
-        :columns="columns"
-        :data="data"
-        size="small"
-        :flex-height="!appStore.isMobile"
-        :scroll-x="962"
-        :loading="loading"
-        remote
-        :row-key="row => row.id"
-        :pagination="mobilePagination"
-        class="sm:h-full"
-      />
-      <UserOperateDrawer
-        v-model:visible="drawerVisible"
-        :operate-type="operateType"
-        :row-data="editingData"
-        @submitted="getDataByPage"
-      />
+      <NDataTable v-model:checked-row-keys="checkedRowKeys" :columns="columns" :data="data" size="small"
+        :flex-height="!appStore.isMobile" :scroll-x="962" :loading="loading" remote :row-key="row => row.id"
+        :pagination="mobilePagination" class="sm:h-full" />
+      <UserOperateDrawer v-model:visible="drawerVisible" :operate-type="operateType" :row-data="editingData"
+        @submitted="getDataByPage" />
     </NCard>
   </div>
 </template>

@@ -9,7 +9,8 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from typing import List, Optional
 
 from database.db_manager import get_session
-from core.response.response_schema import ResponseModel
+from core.response.response_schema import ResponseModel, ResponsePageModel
+from app.models.common.page import PageRequest, get_page_params, get_paginated_results
 
 from app.models.sys.user import SysUser
 from modules.admin.services.sys import UserService
@@ -19,38 +20,51 @@ from modules.admin.models.auth import SysUserResponseData
 user_router = APIRouter(prefix="/user", tags=["用户管理"])
 
 
-@user_router.get("/list", response_model=ResponseModel[List[SysUserResponseData]])
+@user_router.get("/list", response_model=ResponsePageModel[SysUserResponseData])
 async def get_user_list(
-    status: Optional[bool] = Query(None, description="状态"),
+    page_params: PageRequest = Depends(get_page_params),
+    status: Optional[str] = Query(None, description="状态"),
+    username: Optional[str] = Query(None, description="用户名"),
+    nickname: Optional[str] = Query(None, description="昵称"),
+    phone: Optional[str] = Query(None, description="手机号"),
+    email: Optional[str] = Query(None, description="邮箱"),
+    isSuperuser: Optional[str] = Query(None, description="是否为超级管理员"),
     db: AsyncSession = Depends(get_session),
 ):
     """
     获取用户列表
     """
-    users = await UserService.get_user_list(db, status)
 
-    # 转换为响应模型
-    def format_datetime(dt):
-        if dt:
-            return dt.strftime("%Y-%m-%d %H:%M:%S")
+    # 处理布尔类型参数
+    def parse_bool_param(value: Optional[str]) -> Optional[bool]:
+        if value is None or value == "":
+            return None
+        if value.lower() in ("true", "1", "yes", "y"):
+            return True
+        if value.lower() in ("false", "0", "no", "n"):
+            return False
         return None
 
-    user_responses = []
-    for user in users:
-        user_response = SysUserResponseData(
-            id=user.id,
-            username=user.username,
-            nickname=user.nickname,
-            email=user.email,
-            phone=user.phone,
-            avatar=user.avatar,
-            is_superuser=user.is_superuser,
-            status=user.status,
-            last_login_at=format_datetime(user.last_login_at),
-            last_login_ip=user.last_login_ip,
-        )
-        user_responses.append(user_response)
-    return ResponseModel(data=user_responses)
+    status_bool = parse_bool_param(status)
+    is_superuser_bool = parse_bool_param(isSuperuser)
+
+    # 获取查询语句
+    stmt = await UserService.get_user_list(
+        status=status_bool,
+        username=username,
+        nickname=nickname,
+        phone=phone,
+        email=email,
+        is_superuser=is_superuser_bool,
+    )
+
+    # 获取分页结果
+    result = await get_paginated_results(
+        db=db, page_params=page_params, query=stmt, schema=SysUserResponseData
+    )
+
+    # 返回分页结果
+    return ResponsePageModel(data=result)
 
 
 @user_router.get("/{user_id}", response_model=ResponseModel[SysUserResponseData])

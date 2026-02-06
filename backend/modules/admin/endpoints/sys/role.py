@@ -18,7 +18,7 @@ from modules.admin.services.sys import RoleService
 role_router = APIRouter(prefix="/role", tags=["角色管理"])
 
 
-@role_router.get("/list", response_model=ResponseModel[List[SysRole]])
+@role_router.get("/list", response_model=ResponseModel[List[dict]])
 async def get_role_list(
     status: Optional[bool] = Query(None, description="状态"),
     db: AsyncSession = Depends(get_session),
@@ -27,6 +27,15 @@ async def get_role_list(
     获取角色列表
     """
     roles = await RoleService.get_role_list(db, status)
+    return ResponseModel(data=roles)
+
+
+@role_router.get("/all", response_model=ResponseModel[List[dict]])
+async def get_all_roles(db: AsyncSession = Depends(get_session)):
+    """
+    获取所有启用的角色
+    """
+    roles = await RoleService.get_all_roles(db)
     return ResponseModel(data=roles)
 
 

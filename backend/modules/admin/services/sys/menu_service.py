@@ -22,7 +22,7 @@ class MenuService:
     async def get_menu_list(
         db: AsyncSession,
         status: Optional[bool] = None
-    ) -> List[SysMenu]:
+    ) -> List[dict]:
         """
         获取菜单列表
         
@@ -31,18 +31,43 @@ class MenuService:
             status: 状态
             
         Returns:
-            菜单列表
+            菜单列表（字典列表）
         """
         query = select(SysMenu)
         if status is not None:
             query = query.where(SysMenu.status == status)
         result = await db.execute(query)
-        return result.scalars().all()
+        menus = result.scalars().all()
+        
+        # 转换为字典列表
+        menu_dicts = []
+        for menu in menus:
+            menu_dict = {
+                "id": menu.id,
+                "name": menu.name,
+                "path": menu.path,
+                "component": menu.component,
+                "icon": menu.icon,
+                "parent_id": menu.parent_id,
+                "status": menu.status,
+                "type": menu.type.value,
+                "sort": menu.sort,
+                "permission": menu.permission,
+                "redirect": menu.redirect,
+                "meta_title": menu.meta_title,
+                "meta_icon": menu.meta_icon,
+                "meta_hidden": menu.meta_hidden,
+                "meta_affix": menu.meta_affix,
+                "meta_breadcrumb": menu.meta_breadcrumb
+            }
+            menu_dicts.append(menu_dict)
+        
+        return menu_dicts
     
     @staticmethod
     async def get_menu_tree(
         db: AsyncSession
-    ) -> List[SysMenu]:
+    ) -> List[dict]:
         """
         获取菜单树结构
         
@@ -50,25 +75,47 @@ class MenuService:
             db: 数据库会话
             
         Returns:
-            菜单树结构
+            菜单树结构（字典列表）
         """
         # 先获取所有菜单
         result = await db.execute(select(SysMenu).order_by(SysMenu.sort))
         menus = result.scalars().all()
         
+        # 构建菜单字典列表
+        menu_dicts = []
+        for menu in menus:
+            menu_dict = {
+                "id": menu.id,
+                "name": menu.name,
+                "path": menu.path,
+                "component": menu.component,
+                "icon": menu.icon,
+                "parent_id": menu.parent_id,
+                "status": menu.status,
+                "type": menu.type.value,
+                "sort": menu.sort,
+                "permission": menu.permission,
+                "redirect": menu.redirect,
+                "meta_title": menu.meta_title,
+                "meta_icon": menu.meta_icon,
+                "meta_hidden": menu.meta_hidden,
+                "meta_affix": menu.meta_affix,
+                "meta_breadcrumb": menu.meta_breadcrumb,
+                "children": []
+            }
+            menu_dicts.append(menu_dict)
+        
         # 构建树结构
-        menu_map = {menu.id: menu for menu in menus}
+        menu_map = {menu["id"]: menu for menu in menu_dicts}
         root_menus = []
         
-        for menu in menus:
-            if not menu.parent_id:
+        for menu in menu_dicts:
+            if not menu["parent_id"]:
                 root_menus.append(menu)
             else:
-                parent = menu_map.get(menu.parent_id)
+                parent = menu_map.get(menu["parent_id"])
                 if parent:
-                    if not hasattr(parent, "children"):
-                        parent.children = []
-                    parent.children.append(menu)
+                    parent["children"].append(menu)
         
         return root_menus
     
@@ -191,3 +238,28 @@ class MenuService:
         await db.delete(menu)
         await db.commit()
         return True
+    
+    @staticmethod
+    async def get_all_pages(
+        db: AsyncSession
+    ) -> List[str]:
+        """
+        获取所有页面
+        
+        Args:
+            db: 数据库会话
+            
+        Returns:
+            页面路径列表
+        """
+        # 获取所有菜单
+        result = await db.execute(select(SysMenu))
+        menus = result.scalars().all()
+        
+        # 提取页面路径
+        pages = []
+        for menu in menus:
+            if menu.path and menu.path.strip():
+                pages.append(menu.path.strip())
+        
+        return pages

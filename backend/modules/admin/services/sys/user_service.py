@@ -6,8 +6,8 @@
 处理用户相关的业务逻辑
 """
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy import select
-from typing import List, Optional
+from sqlalchemy import select, func
+from typing import List, Optional, Tuple
 
 from app.models.sys.user import SysUser
 from app.models.sys.role import SysRole
@@ -21,24 +21,62 @@ class UserService:
     
     @staticmethod
     async def get_user_list(
-        db: AsyncSession,
-        status: Optional[bool] = None
-    ) -> List[SysUser]:
+        status: Optional[bool] = None,
+        username: Optional[str] = None,
+        nickname: Optional[str] = None,
+        phone: Optional[str] = None,
+        email: Optional[str] = None,
+        is_superuser: Optional[bool] = None
+    ):
         """
-        获取用户列表
+        获取用户列表查询语句
         
         Args:
-            db: 数据库会话
             status: 状态
+            username: 用户名
+            nickname: 昵称
+            phone: 手机号
+            email: 邮箱
+            is_superuser: 是否为超级管理员
             
         Returns:
-            用户列表
+            查询语句
         """
+        # 处理参数，确保空字符串被视为None
+        if status == "":
+            status = None
+        if username == "":
+            username = None
+        if nickname == "":
+            nickname = None
+        if phone == "":
+            phone = None
+        if email == "":
+            email = None
+        if is_superuser == "":
+            is_superuser = None
+        
+        # 构建查询
         query = select(SysUser)
+        
+        # 添加查询条件
         if status is not None:
             query = query.where(SysUser.status == status)
-        result = await db.execute(query)
-        return result.scalars().all()
+        if username:
+            query = query.where(SysUser.username.like(f"%{username}%"))
+        if nickname:
+            query = query.where(SysUser.nickname.like(f"%{nickname}%"))
+        if phone:
+            query = query.where(SysUser.phone.like(f"%{phone}%"))
+        if email:
+            query = query.where(SysUser.email.like(f"%{email}%"))
+        if is_superuser is not None:
+            query = query.where(SysUser.is_superuser == is_superuser)
+        
+        # 添加排序
+        query = query.order_by(SysUser.created_at.desc())
+        
+        return query
     
     @staticmethod
     async def get_user(

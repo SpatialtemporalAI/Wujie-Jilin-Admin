@@ -5,7 +5,7 @@ declare namespace Api {
    * backend api module: "systemManage"
    */
   namespace SystemManage {
-    type CommonSearchParams = Pick<Common.PaginatingCommonParams, 'current' | 'size'>;
+    type CommonSearchParams = Pick<Common.PaginatingCommonParams, 'page' | 'page_size'>;
 
     /** role */
     type Role = Common.CommonRecord<{
@@ -39,22 +39,22 @@ declare namespace Api {
     /** user */
     type User = Common.CommonRecord<{
       /** user name */
-      userName: string;
-      /** user gender */
-      userGender: UserGender | null;
+      username: string;
       /** user nick name */
-      nickName: string;
+      nickname: string;
       /** user phone */
-      userPhone: string;
+      phone: string;
       /** user email */
-      userEmail: string;
+      email: string;
+      /** is super user */
+      is_superuser: boolean;
       /** user role code collection */
       userRoles: string[];
     }>;
 
     /** user search params */
     type UserSearchParams = CommonType.RecordNullable<
-      Pick<Api.SystemManage.User, 'userName' | 'userGender' | 'nickName' | 'userPhone' | 'userEmail' | 'status'> &
+      Pick<Api.SystemManage.User, 'username' | 'nickname' | 'phone' | 'email' | 'is_superuser' | 'status'> &
         CommonSearchParams
     >;
 
