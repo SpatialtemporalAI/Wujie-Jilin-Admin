@@ -18,6 +18,7 @@ declare namespace Api {
       nickname: string;
       email: string | null;
       phone: string | null;
+      avatar: string | null;
       is_superuser: boolean;
       status: boolean;
       last_login_at: string | null;

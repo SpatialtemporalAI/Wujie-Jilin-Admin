@@ -109,7 +109,7 @@ async def get_user(
     return ResponseModel(data=user_response)
 
 
-@user_router.post("", response_model=ResponseModel[SysUserResponseData])
+@user_router.post("/add", response_model=ResponseModel[SysUserResponseData])
 async def create_user(
     user: SysUser,
     db: AsyncSession = Depends(get_session),

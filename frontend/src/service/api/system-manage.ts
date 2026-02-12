@@ -68,7 +68,7 @@ export function fetchChangeUserPassword(userId: number, newPassword: string) {
 /** create user */
 export function fetchCreateUser(user: Api.SystemManage.UserCreate) {
   return request<Api.SystemManage.User>({
-    url: '/sys/user',
+    url: '/sys/user/add',
     method: 'post',
     data: user
   });
