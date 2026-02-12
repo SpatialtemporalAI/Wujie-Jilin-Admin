@@ -64,3 +64,29 @@ export function fetchChangeUserPassword(userId: number, newPassword: string) {
     }
   });
 }
+
+/** create user */
+export function fetchCreateUser(user: Api.SystemManage.UserCreate) {
+  return request<Api.SystemManage.User>({
+    url: '/sys/user',
+    method: 'post',
+    data: user
+  });
+}
+
+/** update user */
+export function fetchUpdateUser(userId: number, user: Api.SystemManage.UserUpdate) {
+  return request<Api.SystemManage.User>({
+    url: `/sys/user/${userId}`,
+    method: 'put',
+    data: user
+  });
+}
+
+/** delete user */
+export function fetchDeleteUser(userId: number) {
+  return request<void>({
+    url: `/sys/user/${userId}`,
+    method: 'delete'
+  });
+}

@@ -57,7 +57,8 @@ const local: App.I18n.Schema = {
     logoutWithModal: '请求失败后弹出模态框再登出用户',
     logoutWithModalMsg: '用户状态失效，请重新登录',
     refreshToken: '请求的token已过期，刷新token',
-    tokenExpired: 'token已过期'
+    tokenExpired: 'token已过期',
+    error: '请求异常'
   },
   theme: {
     themeDrawerTitle: '主题配置',
@@ -336,6 +337,8 @@ const local: App.I18n.Schema = {
       user: {
         title: '用户列表',
         userName: '用户名',
+        password: '密码',
+        confirmPassword: '确认密码',
         userGender: '性别',
         nickName: '昵称',
         userPhone: '手机号',
@@ -363,7 +366,9 @@ const local: App.I18n.Schema = {
         gender: {
           male: '男',
           female: '女'
-        }
+        },
+        lastLoginTime: "最后登陆时间",
+        lastLoginIp: "最后登录IP"
       },
       menu: {
         home: '首页',

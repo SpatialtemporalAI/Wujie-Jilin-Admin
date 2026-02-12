@@ -369,6 +369,7 @@ declare namespace App {
         logoutWithModalMsg: string;
         refreshToken: string;
         tokenExpired: string;
+        error: string;
       };
       theme: {
         themeDrawerTitle: string;
@@ -584,6 +585,8 @@ declare namespace App {
             title: string;
             userName: string;
             userGender: string;
+            password:string;
+            confirmPassword:string
             nickName: string;
             userPhone: string;
             userEmail: string;
@@ -591,6 +594,8 @@ declare namespace App {
             userRole: string;
             isSuperuser: string;
             changePassword: string;
+            lastLoginTime: string;
+            lastLoginIp: string;
             form: {
               userName: string;
               userGender: string;

@@ -4,7 +4,7 @@
 from core.models.base import Base, DataClassBase, snowflake_id_key
 from sqlalchemy.orm import mapped_column, Mapped, relationship
 from sqlalchemy import String, Boolean, ForeignKey, text
-from typing import TYPE_CHECKING, List
+from typing import TYPE_CHECKING, List, Optional
 from sqlalchemy.dialects.postgresql import ARRAY
 
 
@@ -24,12 +24,12 @@ class AppUser(Base):
     password: Mapped[str] = mapped_column(
         String(255), comment="密码哈希值", nullable=True, default=""
     )
-    email: Mapped[str | None] = mapped_column(
+    email: Mapped[Optional[str]] = mapped_column(
         String(255), nullable=True, comment="邮箱", default=None
     )
-    wx_openid: Mapped[str | None] = mapped_column(
+    wx_openid: Mapped[Optional[str]] = mapped_column(
         String(255), nullable=True, comment="微信 openid", default=None
     )
-    wx_unionid: Mapped[str | None] = mapped_column(
+    wx_unionid: Mapped[Optional[str]] = mapped_column(
         String(255), nullable=True, comment="微信 unionid", default=None
     )

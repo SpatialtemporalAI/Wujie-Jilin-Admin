@@ -76,3 +76,34 @@ setup_app(app)
 # 挂载认证路由
 app.include_router(app_app_router)
 app.include_router(admin_app_router)
+
+
+if __name__ == "__main__":
+    """
+    主函数，用于直接运行应用
+    添加Ctrl+C监听，实现优雅退出
+    """
+    import signal
+    import uvicorn
+    
+    # 定义信号处理函数
+    def signal_handler(signum, frame):
+        """
+        信号处理函数，用于处理Ctrl+C信号
+        """
+        logger.info("收到退出信号，正在优雅关闭应用...")
+        # 这里不需要手动调用关闭函数，因为lifespan会处理
+        # 我们只需要记录日志，让uvicorn正常关闭即可
+    
+    # 注册信号处理函数
+    signal.signal(signal.SIGINT, signal_handler)  # 处理Ctrl+C
+    signal.signal(signal.SIGTERM, signal_handler)  # 处理kill命令
+    
+    # 运行应用
+    logger.info("启动应用...")
+    uvicorn.run(
+        "main:app",
+        host="0.0.0.0",
+        port=8000,
+        reload=True
+    )

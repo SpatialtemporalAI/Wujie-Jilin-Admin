@@ -138,6 +138,9 @@ class UserService:
             if result.scalar_one_or_none():
                 raise HTTPException(status_code=400, detail="手机号已存在")
         
+        # 加密密码
+        user.password = JWTAuthManager.get_password_hash(user.password)
+        
         db.add(user)
         await db.commit()
         await db.refresh(user)

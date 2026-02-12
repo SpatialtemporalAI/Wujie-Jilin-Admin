@@ -57,7 +57,8 @@ const local: App.I18n.Schema = {
     logoutWithModal: 'Pop up modal after request failed and then log out user',
     logoutWithModalMsg: 'User status is invalid, please log in again',
     refreshToken: 'The requested token has expired, refresh the token',
-    tokenExpired: 'The requested token has expired'
+    tokenExpired: 'The requested token has expired',
+    error: 'Request Exception'
   },
   theme: {
     themeDrawerTitle: 'Theme Configuration',
@@ -341,6 +342,8 @@ const local: App.I18n.Schema = {
       user: {
         title: 'User List',
         userName: 'User Name',
+        password: 'Password',
+        confirmPassword: 'Confirm Password',
         userGender: 'Gender',
         nickName: 'Nick Name',
         userPhone: 'Phone Number',
@@ -348,7 +351,9 @@ const local: App.I18n.Schema = {
         userStatus: 'User Status',
         userRole: 'User Role',
         isSuperuser: 'Super Admin',
-        changePassword: 'Change Password',
+        changePassword: 'Change Password', 
+        lastLoginTime: 'Last Login Time',
+        lastLoginIp: 'Last Login IP',
         form: {
           userName: 'Please enter user name',
           userGender: 'Please select gender',

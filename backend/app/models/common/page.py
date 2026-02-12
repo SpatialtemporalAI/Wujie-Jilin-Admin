@@ -15,16 +15,22 @@ from core.response import ResponsePageModel, response_base, ResponsePageDataMode
 from sqlalchemy.sql.elements import BinaryExpression
 from fastapi import Query
 from core.models.base import Base
+
 T = TypeVar("SchemaT")
+
+
 class PageRequest(BaseModel):
     """分页请求的基类模型"""
+
     page: int = Field(1, description="当前页码，默认第 1 页", gt=0)
     page_size: int = Field(100, description="每页条数，默认 100 条", gt=0, le=200)
+
     @field_validator("page")
     def page_must_be_positive(cls, v):
         if v < 1:
             raise ValueError("页码必须为正整数")
         return v
+
     @field_validator("page_size")
     def page_size_must_be_positive(cls, v):
         if v < 1:
@@ -32,6 +38,8 @@ class PageRequest(BaseModel):
         if v > 200:
             raise ValueError("每页条数最多为 200 条")
         return v
+
+
 async def get_paginated_results(
     db: AsyncSession,
     page_params: PageRequest,
@@ -56,31 +64,9 @@ async def get_paginated_results(
     # 查询分页数据
     result = await db.execute(query)
     items = result.scalars().all()
-    
-    # 处理数据转换，包括datetime类型转换
-    def format_datetime(dt):
-        if dt:
-            return dt.strftime("%Y-%m-%d %H:%M:%S")
-        return None
-    
-    records = []
-    if schema:
-        for item in items:
-            # 转换为字典并处理datetime类型
-            item_dict = {}
-            for key, value in item.__dict__.items():
-                # 跳过私有属性
-                if not key.startswith('_'):
-                    # 处理datetime类型
-                    if hasattr(value, 'strftime'):
-                        item_dict[key] = format_datetime(value)
-                    else:
-                        item_dict[key] = value
-            # 使用转换后的数据创建响应模型
-            records.append(schema(**item_dict))
-    else:
-        records = items
-    
+
+    records = [schema.model_validate(item) for item in items] if schema else items
+
     # 正确统计总数（不用分页后的 query）
     count_query = base_query.with_only_columns(func.count()).order_by(None)
     result = await db.execute(count_query)
@@ -94,12 +80,12 @@ async def get_paginated_results(
         total=total,
         total_pages=pages,
     )
+
+
 # FastAPI依赖项：获取分页参数
 def get_page_params(
     page: int = Query(1, ge=1, description="页码，从1开始"),
     page_size: int = Query(10, ge=1, le=200, description="每页条数，最大200"),
 ) -> PageRequest:
     """获取分页查询参数的依赖项"""
-    return PageRequest(
-        page=page, page_size=page_size
-    )
+    return PageRequest(page=page, page_size=page_size)

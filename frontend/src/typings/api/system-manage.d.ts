@@ -67,6 +67,20 @@ declare namespace Api {
       new_password: string;
     };
 
+    /** user create */
+    type UserCreate = Pick<User, 'username' | 'nickname' | 'phone' | 'email' | 'status'> & {
+      /** user password */
+      password: string;
+      /** user role code collection */
+      userRoles: string[];
+    };
+
+    /** user update */
+    type UserUpdate = Pick<User, 'username' | 'nickname' | 'phone' | 'email' | 'status'> & {
+      /** user role code collection */
+      userRoles: string[];
+    };
+
     /**
      * menu type
      *

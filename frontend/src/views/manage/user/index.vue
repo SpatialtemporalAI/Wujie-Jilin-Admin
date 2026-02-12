@@ -72,6 +72,18 @@ const { columns, columnChecks, data, getData, getDataByPage, loading, mobilePagi
       minWidth: 200
     },
     {
+      key: 'last_login_at',
+      title: $t('page.manage.user.lastLoginTime'),
+      align: 'center',
+      minWidth: 100
+    },
+    {
+      key: 'last_login_ip',
+      title: $t('page.manage.user.lastLoginIp'),
+      align: 'center',
+      minWidth: 100
+    },
+    {
       key: 'status',
       title: $t('page.manage.user.userStatus'),
       align: 'center',
