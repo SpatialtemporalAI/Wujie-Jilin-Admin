@@ -93,11 +93,11 @@ const { columns, columnChecks, data, getData, getDataByPage, loading, mobilePagi
           return null;
         }
 
-        row.status = row.status ? '1' : '2';
+        // let status: Api.Common.EnableStatus = row.status ? '1' : '2';
 
         const tagMap: Record<Api.Common.EnableStatus, NaiveUI.ThemeColor> = {
-          1: 'success',
-          2: 'warning'
+          '1': 'success',
+          '2': 'warning'
         };
 
         const label = $t(enableStatusRecord[row.status]);

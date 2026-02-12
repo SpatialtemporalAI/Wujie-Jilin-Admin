@@ -59,7 +59,7 @@ function createDefaultModel(): Model {
     password: '',
     confirmPassword: '',
     userRoles: [],
-    status: null
+    status: '1'
   };
 }
 

@@ -33,14 +33,6 @@ declare namespace Api {
      */
     type EnableStatus = '1' | '2';
 
-    /**
-     * enable boolean status
-     *
-     * - true: enabled
-     * - false: disabled
-     */
-    type EnableBooleanStatus = boolean;
-
 
     /** common record */
     type CommonRecord<T = any> = {

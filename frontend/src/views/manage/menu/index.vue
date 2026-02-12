@@ -101,13 +101,13 @@ const { columns, columnChecks, data, loading, pagination, getData, getDataByPage
         }
 
         const tagMap: Record<Api.Common.EnableStatus, NaiveUI.ThemeColor> = {
-          1: 'success',
-          2: 'warning'
+          '1': 'success',
+          '2': 'warning'
         };
 
-        const label = $t(enableStatusRecord[row.status]);
+        // const label = $t(enableStatusRecord[row.status]);
 
-        return <NTag type={tagMap[row.status]}>{label}</NTag>;
+        return <NTag type={tagMap['1']}>{$t(enableStatusRecord['1'])}</NTag>;
       }
     },
     {
@@ -231,35 +231,14 @@ init();
   <div ref="wrapperRef" class="flex-col-stretch gap-16px overflow-hidden lt-sm:overflow-auto">
     <NCard :title="$t('page.manage.menu.title')" :bordered="false" size="small" class="card-wrapper sm:flex-1-hidden">
       <template #header-extra>
-        <TableHeaderOperation
-          v-model:columns="columnChecks"
-          :disabled-delete="checkedRowKeys.length === 0"
-          :loading="loading"
-          @add="handleAdd"
-          @delete="handleBatchDelete"
-          @refresh="getData"
-        />
+        <TableHeaderOperation v-model:columns="columnChecks" :disabled-delete="checkedRowKeys.length === 0"
+          :loading="loading" @add="handleAdd" @delete="handleBatchDelete" @refresh="getData" />
       </template>
-      <NDataTable
-        v-model:checked-row-keys="checkedRowKeys"
-        :columns="columns"
-        :data="data"
-        size="small"
-        :flex-height="!appStore.isMobile"
-        :scroll-x="1088"
-        :loading="loading"
-        :row-key="row => row.id"
-        remote
-        :pagination="pagination"
-        class="sm:h-full"
-      />
-      <MenuOperateModal
-        v-model:visible="visible"
-        :operate-type="operateType"
-        :row-data="editingData"
-        :all-pages="allPages"
-        @submitted="getDataByPage"
-      />
+      <NDataTable v-model:checked-row-keys="checkedRowKeys" :columns="columns" :data="data" size="small"
+        :flex-height="!appStore.isMobile" :scroll-x="1088" :loading="loading" :row-key="row => row.id" remote
+        :pagination="pagination" class="sm:h-full" />
+      <MenuOperateModal v-model:visible="visible" :operate-type="operateType" :row-data="editingData"
+        :all-pages="allPages" @submitted="getDataByPage" />
     </NCard>
   </div>
 </template>

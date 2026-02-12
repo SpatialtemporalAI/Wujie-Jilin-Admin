@@ -31,15 +31,30 @@ class SysUser(Base):
     phone: Mapped[str] = mapped_column(
         String(20), unique=True, nullable=True, comment="手机号"
     )
-    avatar: Mapped[Optional[str]] = mapped_column(
-        Text, nullable=True, comment="头像URL"
+    # 状态信息
+    status: Mapped[bool] = mapped_column(
+        Boolean, default=True, comment="状态：True-启用，False-禁用"
+    )
+    is_superuser: Mapped[bool] = mapped_column(
+        Boolean, default=False, comment="是否为超级管理员", server_default=None
     )
     # 登录信息
     last_login_at: Mapped[Optional[datetime]] = mapped_column(
-        DateTime(timezone=True), nullable=True, comment="最后登录时间"
+        DateTime(timezone=True),
+        nullable=True,
+        comment="最后登录时间",
+        server_default=None,
+        default=None,
     )
     last_login_ip: Mapped[Optional[str]] = mapped_column(
-        String(50), nullable=True, comment="最后登录IP"
+        String(50),
+        nullable=True,
+        comment="最后登录IP",
+        server_default=None,
+        default=None,
+    )
+    avatar: Mapped[Optional[str]] = mapped_column(
+        Text, nullable=True, comment="头像URL", server_default=None, default=None
     )
     # 关联关系
     # 与角色表的多对多关系
@@ -47,11 +62,5 @@ class SysUser(Base):
         secondary=sys_user_role_association,
         back_populates="users",
         lazy="select",
-    )
-    # 状态信息
-    status: Mapped[bool] = mapped_column(
-        Boolean, default=True, comment="状态：True-启用，False-禁用"
-    )
-    is_superuser: Mapped[bool] = mapped_column(
-        Boolean, default=False, comment="是否为超级管理员"
+        default=list,
     )

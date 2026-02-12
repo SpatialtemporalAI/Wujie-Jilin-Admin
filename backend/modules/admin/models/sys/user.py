@@ -7,6 +7,19 @@ from datetime import datetime
 from app.models.common.base import BaseRespEntity
 
 
+# 系统用户模型
+class SysUserCreate(BaseRespEntity):
+    """系统用户模型"""
+
+    username: str = Field(..., description="用户名")
+    password: str = Field(..., description="密码")
+    nickname: str = Field(..., description="昵称")
+    email: Optional[str] = Field(None, description="邮箱")
+    phone: Optional[str] = Field(None, description="手机号")
+    status: bool = Field(..., description="用户状态")
+    roles: list[str] = Field([], description="用户角色列表")
+
+
 # 系统用户响应数据模型
 class SysUserResponseData(BaseRespEntity):
     """系统用户接口返回的数据模型"""

@@ -15,7 +15,7 @@ from app.models.common.page import PageRequest, get_page_params, get_paginated_r
 
 from app.models.sys.user import SysUser
 from modules.admin.services.sys import UserService
-from modules.admin.models.sys.user import SysUserResponseData
+from modules.admin.models.sys.user import SysUserResponseData, SysUserCreate
 
 
 # 修改密码请求模型
@@ -111,13 +111,24 @@ async def get_user(
 
 @user_router.post("/add", response_model=ResponseModel[SysUserResponseData])
 async def create_user(
-    user: SysUser,
+    user: SysUserCreate,
     db: AsyncSession = Depends(get_session),
 ):
     """
     创建用户
     """
-    user = await UserService.create_user(db, user)
+
+    # 从 SysUserCreate 模型构建 SysUser 对象，添加必需的默认字段
+    user_data = user.model_dump()
+    # 添加默认值
+    user_data["password"] = "123456"  # 默认密码
+    user_data["avatar"] = None
+    user_data["last_login_at"] = None
+    user_data["last_login_ip"] = None
+    user_data["roles"] = []
+    user_data["is_superuser"] = False  # 默认不是超级管理员
+
+    user = await UserService.create_user(db, SysUser(**user_data))
 
     # 转换为响应模型
     def format_datetime(dt):
