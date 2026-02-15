@@ -18,7 +18,7 @@ from core.utils.session_utils import generate_session_id
 from core.security.oauth.user_manager import base_user_manager
 import random
 from app.models.business.user import AppUser  # 导入 AppUser 类
-from modules.app.models.auth import (
+from modules.app.schemas.auth import (
     UserInfoModel,
     UserLoginResponseModel,
     CurrentRobotModel,

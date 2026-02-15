@@ -22,7 +22,7 @@ from core.response import (
 from logging import getLogger
 
 logger = getLogger(__name__)
-from modules.app.models.auth import (
+from modules.app.schemas.auth import (
     LoginModel,
     RefreshTokenModel,
     SmsCodeModel,

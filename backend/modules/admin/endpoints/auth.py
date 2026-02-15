@@ -17,7 +17,7 @@ from modules.admin.deps.auth.user_manager import (
     get_user_manager,
     current_user,
 )
-from modules.admin.models.auth import (
+from modules.admin.schemas.auth import (
     LoginPwdModel,
     LoginResponseData,
     UserInfoResponseData,

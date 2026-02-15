@@ -15,7 +15,7 @@ from app.models.common.page import PageRequest, get_page_params, get_paginated_r
 
 from app.models.sys.user import SysUser
 from modules.admin.services.sys import UserService
-from modules.admin.models.sys.user import SysUserResponseData, SysUserCreate
+from modules.admin.schemas.sys.user import SysUserResponseData, SysUserCreate
 
 
 # 修改密码请求模型
