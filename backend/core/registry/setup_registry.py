@@ -2,18 +2,31 @@ from core.exception import setup_exception_handlers, setup_exception_global_hand
 from database.plugins import setup_soft_delete_plug
 from fastapi import FastAPI
 from core.log import setup_logging
+from core.middleware.share_middleware import RequestContextMiddleware
+from fastapi.middleware.cors import CORSMiddleware
+from core.config import GlobalSetting
 
 
-def setup_app(app: FastAPI):
+def setup_app(app: FastAPI, settings: GlobalSetting):
     """
     注册全局信息
     """
+
+    # 配置跨域（允许其他服务访问）
+    app.add_middleware(
+        CORSMiddleware,
+        allow_origins=settings.ALLOWED_ORIGINS,
+        allow_credentials=True,
+        allow_methods=["*"],
+        allow_headers=["*"],
+    )
+
+    app.add_middleware(RequestContextMiddleware)
 
     # 注册全局异常
     setup_exception_handlers(app)
     setup_exception_global_handlers(app)
     # 注册软删除插件
     setup_soft_delete_plug()
-
     # 注册日志
     setup_logging()

@@ -4,6 +4,7 @@
 from datetime import datetime, timedelta, timezone
 from typing import Union, Optional, Dict, Any
 import jwt
+import hashlib
 from fastapi import Depends, HTTPException, status
 from jwt.exceptions import InvalidTokenError, ExpiredSignatureError, DecodeError
 from passlib.context import CryptContext
@@ -16,6 +17,8 @@ from typing import TypeVar, Generic, Any, Optional, Dict, Union, List, Type
 from app.models.business.user import AppUser
 from fastapi.security import OAuth2PasswordBearer
 from pydantic import Field
+from secrets import token_hex
+
 
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="token")
 token_type = "Bearer"
@@ -70,22 +73,13 @@ class JWTAuthManager:
             return False
 
     @classmethod
-    def get_password_hash(cls, password: str) -> str:
+    def create_salt() -> str:
         """
-        获取密码的哈希值
-        Args:
-            password: 明文密码
+        创建密码盐值
         Returns:
-            str: 密码的哈希值
+            str: 密码盐值
         """
-        try:
-            return pwd_context.hash(password)
-        except Exception as e:
-            # 实际应用中应该替换为日志记录器
-            print(f"密码哈希生成异常: {str(e)}")
-            raise HTTPException(
-                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail="密码处理失败"
-            )
+        return token_hex(16)
 
     @classmethod
     def create_access_token(
@@ -248,3 +242,30 @@ class JWTAuthManager:
             expires_in=settings.JWT.ACCESS_LIFETIME,
             refresh_token=refresh_token,
         )
+
+    def check_password(user_pwd: str, user_salt: str, password: str) -> bool:
+        """
+        检查密码是否正确
+        Args:
+            user_pwd: 数据库存储的密码哈希值
+            user_salt: 数据库存储的密码盐值
+            password: 明文密码
+        Returns:
+            bool: 是否密码正确
+        """
+        password_salt = password + user_salt
+        sha_id = hashlib.sha256((password_salt).encode("utf-8")).hexdigest()
+        return sha_id == user_pwd
+
+    def create_password_hash(self, password: str) -> str:
+        """
+        创建密码哈希值
+        Args:
+            password: 明文密码
+        Returns:
+            str: 密码哈希值
+        """
+        salt = self.create_salt()
+        password_salt = password + salt
+        sha_id = hashlib.sha256((password_salt).encode("utf-8")).hexdigest()
+        return sha_id, salt

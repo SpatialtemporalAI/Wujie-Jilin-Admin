@@ -7,7 +7,6 @@
 """
 from contextlib import asynccontextmanager
 from typing import Union
-from fastapi.middleware.cors import CORSMiddleware
 import asyncio
 from fastapi import FastAPI
 from core.config import settings  # 导入配置
@@ -60,16 +59,9 @@ app = FastAPI(
     # 禁用默认的docs和redoc，我们将自定义
 )
 logger.info("初始化配置文件")
-# 配置跨域（允许其他服务访问）
-app.add_middleware(
-    CORSMiddleware,
-    allow_origins=settings.ALLOWED_ORIGINS,
-    allow_credentials=True,
-    allow_methods=["*"],
-    allow_headers=["*"],
-)
+
 # 配置app
-setup_app(app)
+setup_app(app, settings=settings)
 # 挂载子应用
 # app.mount("/admin", admin_app)
 # app.mount("/app", app_app)
@@ -85,7 +77,7 @@ if __name__ == "__main__":
     """
     import signal
     import uvicorn
-    
+
     # 定义信号处理函数
     def signal_handler(signum, frame):
         """
@@ -94,16 +86,11 @@ if __name__ == "__main__":
         logger.info("收到退出信号，正在优雅关闭应用...")
         # 这里不需要手动调用关闭函数，因为lifespan会处理
         # 我们只需要记录日志，让uvicorn正常关闭即可
-    
+
     # 注册信号处理函数
     signal.signal(signal.SIGINT, signal_handler)  # 处理Ctrl+C
     signal.signal(signal.SIGTERM, signal_handler)  # 处理kill命令
-    
+
     # 运行应用
     logger.info("启动应用...")
-    uvicorn.run(
-        "main:app",
-        host="0.0.0.0",
-        port=8000,
-        reload=True
-    )
+    uvicorn.run("main:app", host="0.0.0.0", port=8000, reload=True)

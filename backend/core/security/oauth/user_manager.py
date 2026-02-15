@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 
+from optparse import Option
 from typing import Optional, Generic, TypeVar, Any
 from sqlalchemy.ext.asyncio import AsyncSession
 from database import get_session
@@ -12,6 +13,7 @@ from app.models.business.user import AppUser
 from core.utils.session_utils import generate_session_id
 from fastapi import Request
 from logging import getLogger
+from datetime import datetime, timedelta, timezone
 
 logger = getLogger(__name__)
 
@@ -48,23 +50,6 @@ class BaseUserManager:
             )
         tokens = JWTAuthManager.create_tokens(token_data)
         return tokens
-
-    async def on_after_login(
-        self,
-        user: AppUser,
-        request: Optional[Request] = None,
-        response: Optional[Any] = None,
-    ):
-        """
-        用户登录后的回调
-        可以在这里实现用户登录后的额外逻辑，如更新最后登录时间、记录登录IP等
-        Args:
-            user: 登录的用户对象
-            request: 请求对象（可选）
-            response: 响应对象（可选）
-        """
-        logger.info(f"用户 {user.id} 登录成功")
-        # 这里可以添加登录成功后的逻辑，如更新登录时间、记录登录IP等
 
 
 base_user_manager = BaseUserManager()

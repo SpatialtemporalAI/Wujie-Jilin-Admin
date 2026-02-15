@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 
-from .config import settings
-__all__ = ["settings"]
+from .config import settings, GlobalSetting
+
+__all__ = ["settings", "GlobalSetting"]

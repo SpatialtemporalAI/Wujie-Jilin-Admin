@@ -9,15 +9,22 @@ from sqlalchemy import select
 from core.config import settings
 from app.models.sys.user import SysUser
 from database import get_session
-import hashlib
 from core.exception import CustomError, TokenError
 from core.response import CustomErrorCode
-from core.security.oauth.user_manager import base_user_manager
+from core.security.oauth.user_manager import base_user_manager, BaseUserManager
 from core.security.oauth.jwt import JWTAuthManager, Token, oauth2_scheme
 from core.redis import get_redis_util
+from core.middleware.share_middleware import request_ctx
+from core.utils.ip_utils import get_real_client_ip
+from datetime import datetime, timedelta, timezone
 
 
-class UserManager:
+import logging
+
+logger = logging.getLogger(__name__)
+
+
+class UserManager(BaseUserManager):
     """
     用户管理器类
     负责用户的创建、认证、密码重置等操作
@@ -48,21 +55,44 @@ class UserManager:
                 msg="用户名不存在",
                 error=CustomErrorCode.USER_LOGIN_FAILED,
             )
-        sha_id = hashlib.sha256(password.encode("utf-8")).hexdigest()
-        if sha_id != user.password:
+
+        pwd_match = JWTAuthManager.check_password(
+            user_pwd=user.password,
+            user_salt=user.salt,
+            password=password,
+        )
+
+        if not pwd_match:
             raise CustomError(
                 msg="密码错误",
                 error=CustomErrorCode.USER_LOGIN_FAILED,
             )
         # 生成JWT令牌
-        tokens = await base_user_manager.create_token(
-            user_id=user.id, user_role="admin"
-        )
-        await base_user_manager.on_after_login(user=user)
+        tokens = await self.create_token(user_id=user.id, user_role="admin")
+        await self.on_after_login(user=user)
         response_model = {
             **tokens.model_dump(),
         }
+        await self.session.commit()
         return response_model
+
+    async def on_after_login(self, user: SysUser):
+        """
+        用户登录后的回调
+        可以在这里实现用户登录后的额外逻辑，如更新最后登录时间、记录登录IP等
+        Args:
+            user: 登录的用户对象
+            request: 请求对象（可选）
+            response: 响应对象（可选）
+        """
+        logger.info(f"用户 {user.id} 登录成功")
+
+        request: Request = request_ctx.get()
+
+        if request is not None:
+            # 这里可以添加登录成功后的逻辑，如更新登录时间、记录登录IP等
+            user.last_login_ip = get_real_client_ip(request)
+            user.last_login_at = datetime.now(timezone.utc)
 
     async def current_user(self, token: str) -> SysUser:
         """
@@ -153,7 +183,9 @@ class UserManager:
         return user_info
 
 
-async def get_user_manager(user_db: AsyncSession = Depends(get_session)):
+async def get_user_manager(
+    user_db: AsyncSession = Depends(get_session),
+):
     """
     获取用户管理器实例
     Args:

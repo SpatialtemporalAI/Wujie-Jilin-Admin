@@ -140,7 +140,9 @@ class UserService:
                 raise HTTPException(status_code=400, detail="手机号已存在")
 
         # 加密密码
-        user.password = JWTAuthManager.get_password_hash(user.password)
+        pwd, salt = JWTAuthManager.create_password_hash(user.password)
+        user.password = pwd
+        user.salt = salt
 
         db.add(user)
         await db.commit()
@@ -298,7 +300,7 @@ class UserService:
             raise HTTPException(status_code=403, detail="超级管理员密码不能修改")
 
         # 加密新密码
-        hashed_password = JWTAuthManager.get_password_hash(new_password)
+        hashed_password = JWTAuthManager.create_password_hash(new_password)
 
         # 更新密码
         user.password = hashed_password
