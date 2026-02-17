@@ -43,7 +43,7 @@ backend/
 
 **后端模块规范**：
 - 每个模块必须包含 `__init__.py` 文件
-- 模块内部按功能划分为：`deps/`（依赖）、`endpoints/`（路由）、`models/`（模型）、`services/`（服务）
+- 模块内部按功能划分为：`deps/`（依赖）、`endpoints/`（路由）、`schemas/`（模型）、`services/`（服务）
 
 ### 1.3 前端目录结构
 ```
