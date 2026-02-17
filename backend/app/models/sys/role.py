@@ -28,13 +28,13 @@ class SysRole(Base):
     users: Mapped[List["SysUser"]] = relationship(
         secondary=sys_user_role_association,
         back_populates="roles",
-        lazy="select",
+        lazy="selectin",
     )
     # 与菜单表的多对多关系
     menus: Mapped[List["SysMenu"]] = relationship(
         secondary=sys_role_menu_association,
         back_populates="roles",
-        lazy="select",
+        lazy="selectin",
     )
     # 状态信息
     status: Mapped[bool] = mapped_column(

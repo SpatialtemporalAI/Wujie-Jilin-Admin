@@ -59,19 +59,19 @@ class SysMenu(Base):
     roles: Mapped[List["SysRole"]] = relationship(
         secondary=sys_role_menu_association,
         back_populates="menus",
-        lazy="select",
+        lazy="selectin",
     )
     # 与自身的一对多关系（子菜单）
     children: Mapped[List["SysMenu"]] = relationship(
         back_populates="parent",
-        lazy="select",
+        lazy="selectin",
         cascade="all, delete-orphan",
     )
     # 与自身的多对一关系（父菜单）
     parent: Mapped["SysMenu"] = relationship(
         back_populates="children",
         remote_side="SysMenu.id",
-        lazy="select",
+        lazy="selectin",
     )
     meta_hidden: Mapped[bool] = mapped_column(
         Boolean, default=False, comment="是否隐藏菜单"
