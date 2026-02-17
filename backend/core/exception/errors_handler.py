@@ -28,7 +28,10 @@ from core.response.response_code import (
 )
 from logging import getLogger
 from core.utils.track_id import get_request_trace_id
+
 logger = getLogger(__name__)
+
+
 def setup_exception_global_handlers(app: FastAPI) -> None:
     # 注册404路由未找到处理器
     @app.exception_handler(404)
@@ -39,12 +42,14 @@ def setup_exception_global_handlers(app: FastAPI) -> None:
         return await not_found_error_handler(
             request, NotFoundError(msg="请求的路由不存在")
         )
+
     # 自定义Pydantic验证异常处理器
     @app.exception_handler(RequestValidationError)
     async def global_validation_exception_handler(
         request: Request, exc: RequestValidationError
     ) -> ORJSONResponse:
         return await validation_exception_handler(request, exc)
+
     @app.exception_handler(ValueError)
     async def value_error_handler(request: Request, exc: ValueError):
         """
@@ -64,6 +69,8 @@ def setup_exception_global_handlers(app: FastAPI) -> None:
         return ORJSONResponse(
             status_code=StandardResponseCode.HTTP_400, content=response.model_dump()
         )
+
+
 def setup_exception_handlers(app: FastAPI) -> None:
     """
     设置全局异常处理器
@@ -87,6 +94,8 @@ def setup_exception_handlers(app: FastAPI) -> None:
     app.exception_handler(ValidationError)(pydantic_validation_error_handler)
     # 注册通用异常处理器（捕获所有未处理的异常）
     app.exception_handler(Exception)(generic_exception_handler)
+
+
 async def base_exception_handler(
     request: Request, exc: BaseExceptionMixin
 ) -> ORJSONResponse:
@@ -113,11 +122,15 @@ async def base_exception_handler(
         # request_id=request_id,
     )
     return ORJSONResponse(status_code=exc.code, content=response.model_dump())
+
+
 async def request_error_handler(request: Request, exc: RequestError) -> ORJSONResponse:
     """
     请求异常处理器
     """
     return await base_exception_handler(request, exc)
+
+
 async def forbidden_error_handler(
     request: Request, exc: ForbiddenError
 ) -> ORJSONResponse:
@@ -125,6 +138,8 @@ async def forbidden_error_handler(
     禁止访问异常处理器
     """
     return await base_exception_handler(request, exc)
+
+
 async def not_found_error_handler(
     request: Request, exc: NotFoundError
 ) -> ORJSONResponse:
@@ -132,6 +147,8 @@ async def not_found_error_handler(
     资源不存在异常处理器
     """
     return await base_exception_handler(request, exc)
+
+
 async def server_error_handler(request: Request, exc: ServerError) -> ORJSONResponse:
     """
     服务器异常处理器
@@ -158,11 +175,15 @@ async def server_error_handler(request: Request, exc: ServerError) -> ORJSONResp
     return ORJSONResponse(
         status_code=StandardResponseCode.HTTP_500, content=response.model_dump()
     )
+
+
 async def gateway_error_handler(request: Request, exc: GatewayError) -> ORJSONResponse:
     """
     网关异常处理器
     """
     return await base_exception_handler(request, exc)
+
+
 async def token_error_handler(request: Request, exc: TokenError) -> ORJSONResponse:
     """
     Token异常处理器
@@ -184,6 +205,8 @@ async def token_error_handler(request: Request, exc: TokenError) -> ORJSONRespon
         content=response.model_dump(),
         headers=exc.headers,
     )
+
+
 async def authorization_error_handler(
     request: Request, exc: AuthorizationError
 ) -> ORJSONResponse:
@@ -191,6 +214,8 @@ async def authorization_error_handler(
     授权异常处理器
     """
     return await base_exception_handler(request, exc)
+
+
 async def conflict_error_handler(
     request: Request, exc: ConflictError
 ) -> ORJSONResponse:
@@ -198,6 +223,8 @@ async def conflict_error_handler(
     资源冲突异常处理器
     """
     return await base_exception_handler(request, exc)
+
+
 async def custom_error_handler(request: Request, exc: CustomError) -> ORJSONResponse:
     """
     自定义异常处理器
@@ -212,15 +239,17 @@ async def custom_error_handler(request: Request, exc: CustomError) -> ORJSONResp
     data = exc.data if exc.data is not None else {}
     # 构建响应
     response = ResponseModel(
-        code=CustomResponseCode.HTTP_400.code,
+        code=CustomResponseCode.HTTP_500.code,
         err_code=exc.code,
         msg=exc.msg or "服务器发生异常",
         data=data,
         # request_id=request_id,
     )
     return ORJSONResponse(
-        status_code=CustomResponseCode.HTTP_400.code, content=response.model_dump()
+        status_code=CustomResponseCode.HTTP_500.code, content=response.model_dump()
     )
+
+
 async def http_exception_handler(
     request: Request, exc: HTTPException
 ) -> ORJSONResponse:
@@ -245,6 +274,8 @@ async def http_exception_handler(
         content=response.model_dump(),
         headers=exc.headers if exc.headers else {},
     )
+
+
 async def validation_exception_handler(
     request: Request, exc: RequestValidationError
 ) -> ORJSONResponse:
@@ -280,6 +311,8 @@ async def validation_exception_handler(
     return ORJSONResponse(
         status_code=StandardResponseCode.HTTP_422, content=response.model_dump()
     )
+
+
 async def pydantic_validation_error_handler(
     request: Request, exc: ValidationError
 ) -> ORJSONResponse:
@@ -308,6 +341,8 @@ async def pydantic_validation_error_handler(
     return ORJSONResponse(
         status_code=StandardResponseCode.HTTP_422, content=response.model_dump()
     )
+
+
 async def generic_exception_handler(request: Request, exc: Exception) -> ORJSONResponse:
     """
     通用异常处理器（捕获所有未处理的异常）
