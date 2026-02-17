@@ -365,7 +365,9 @@ const local: App.I18n.Schema = {
           passwordMinLength: '密码长度至少为6位',
           passwordNotMatch: '两次输入的密码不一致',
           usernameLength: "用户名长度必须在4-20个字符之间",
-          passwordLength: "密码长度必须在6-20个字符之间"
+          passwordLength: "密码长度必须在6-20个字符之间",
+          emailFormat: "邮箱格式不正确",
+          phoneFormat: "手机号格式不正确"
         },
         addUser: '新增用户',
         editUser: '编辑用户',

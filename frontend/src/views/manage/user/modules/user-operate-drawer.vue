@@ -2,6 +2,7 @@
 import { computed, ref, watch } from 'vue';
 import { jsonClone } from '@sa/utils';
 import { enableStatusOptions, userGenderOptions } from '@/constants/business';
+import { REG_EMAIL, REG_PHONE } from '@/constants/reg';
 import { fetchGetAllRoles, fetchCreateUser, fetchUpdateUser } from '@/service/api';
 import { useFormRules, useNaiveForm } from '@/hooks/common/form';
 import { $t } from '@/locales';
@@ -63,7 +64,7 @@ function createDefaultModel(): Model {
   };
 }
 
-type RuleKey = Extract<keyof Model, 'username' | 'status' | 'password' | 'confirmPassword'>;
+type RuleKey = Extract<keyof Model, 'username' | 'status' | 'password' | 'confirmPassword' | 'email' | 'phone'>;
 
 const rules: Record<RuleKey, App.Global.FormRule | App.Global.FormRule[]> = {
   username: [defaultRequiredRule, {
@@ -95,6 +96,28 @@ const rules: Record<RuleKey, App.Global.FormRule | App.Global.FormRule[]> = {
       validator: (rule, value) => {
         if (model.value.password !== value) {
           return new Error($t('page.manage.user.form.passwordNotMatch'));
+        }
+        return true;
+      },
+      trigger: ['input', 'blur']
+    }
+  ],
+  email: [
+    {
+      validator: (rule, value) => {
+        if (value && !REG_EMAIL.test(value)) {
+          return new Error($t('page.manage.user.form.emailFormat'));
+        }
+        return true;
+      },
+      trigger: ['input', 'blur']
+    }
+  ],
+  phone: [
+    {
+      validator: (rule, value) => {
+        if (value && !REG_PHONE.test(value)) {
+          return new Error($t('page.manage.user.form.phoneFormat'));
         }
         return true;
       },
@@ -204,7 +227,7 @@ watch(visible, () => {
           <NInput v-model:value="model.nickname" :placeholder="$t('page.manage.user.form.nickName')" />
         </NFormItem>
         <NFormItem :label="$t('page.manage.user.userPhone')" path="phone">
-          <NInput v-model:value="model.phone" :placeholder="$t('page.manage.user.form.userPhone')" />
+          <NInput v-model:value="model.phone" :placeholder="$t('page.manage.user.form.userPhone')" type="number" maxlength="11" />
         </NFormItem>
         <NFormItem :label="$t('page.manage.user.userEmail')" path="email">
           <NInput v-model:value="model.email" :placeholder="$t('page.manage.user.form.userEmail')" />

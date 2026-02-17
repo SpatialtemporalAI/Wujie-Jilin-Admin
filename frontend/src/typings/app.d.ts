@@ -613,6 +613,8 @@ declare namespace App {
               passwordNotMatch:string;
               usernameLength:string;
               passwordLength:string;
+              emailFormat:string;
+              phoneFormat:string;
             };
             addUser: string;
             editUser: string;

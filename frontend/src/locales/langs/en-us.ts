@@ -372,7 +372,9 @@ const local: App.I18n.Schema = {
           passwordMinLength: 'Password length must be at least 6 characters',
           passwordNotMatch: 'The two passwords do not match',
           usernameLength: "user name length must be between 4 and 20 characters",
-          passwordLength: "password length must be between 6 and 20 characters"
+          passwordLength: "password length must be between 6 and 20 characters",
+          emailFormat: "Email format is incorrect",
+          phoneFormat: "Phone number format is incorrect"
         },
         addUser: 'Add User',
         editUser: 'Edit User',

@@ -227,12 +227,29 @@ class UserService:
 
         Raises:
             NotFoundError: 用户不存在
-            ConflictError: 邮箱/手机号已被其他用户使用
+            ConflictError: 用户名/邮箱/手机号已被其他用户使用
         """
         logger.info(f"更新用户信息，用户ID: {user_id}")
 
         # 获取用户
         user = await UserService.get_user(db, user_id)
+
+        # 检查用户名是否已被其他用户使用
+        if (
+            user_update.username
+            and user_update.username.strip()
+            and user_update.username != user.username
+        ):
+            result = await db.execute(
+                select(SysUser).where(
+                    SysUser.username == user_update.username, SysUser.id != user_id
+                )
+            )
+            if result.scalar_one_or_none():
+                logger.warning(
+                    f"更新用户失败，用户名已被其他用户使用: {user_update.username}"
+                )
+                raise ConflictError(msg="用户名已被其他用户使用")
 
         # 检查邮箱是否已被其他用户使用
         if (
