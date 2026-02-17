@@ -1,16 +1,17 @@
 <script setup lang="tsx">
 import { reactive, ref } from 'vue';
-import { NButton, NPopconfirm, NTag } from 'naive-ui';
+import { NButton, NPopconfirm, NTag, useMessage } from 'naive-ui';
 import { enableStatusRecord, userGenderRecord } from '@/constants/business';
-import { fetchGetUserList } from '@/service/api';
+import { fetchGetUserList, fetchDeleteUser } from '@/service/api';
 import { useAppStore } from '@/store/modules/app';
 import { defaultTransform, useNaivePaginatedTable, useTableOperate } from '@/hooks/common/table';
-import { $t } from '@/locales';
 import UserOperateDrawer from './modules/user-operate-drawer.vue';
 import UserPasswordDrawer from './modules/user-password-drawer.vue';
 import UserSearch from './modules/user-search.vue';
+import { $t } from '@/locales';
 
 const appStore = useAppStore();
+const message = useMessage();
 
 // 密码修改相关状态
 const passwordDrawerVisible = ref(false);
@@ -150,17 +151,30 @@ const {
 } = useTableOperate(data, 'id', getData);
 
 async function handleBatchDelete() {
-  // request
-  console.log(checkedRowKeys.value);
+  if (checkedRowKeys.value.length === 0) {
+    message.warning($t('common.selectAtLeastOne'));
+    return;
+  }
 
-  onBatchDeleted();
+  try {
+    for (const id of checkedRowKeys.value) {
+      await fetchDeleteUser(Number(id));
+    }
+    onBatchDeleted();
+  } catch (error) {
+    message.error($t('common.deleteFailed'));
+    console.error('Batch delete users failed:', error);
+  }
 }
 
-function handleDelete(id: number) {
-  // request
-  console.log(id);
-
-  onDeleted();
+async function handleDelete(id: number) {
+  try {
+    await fetchDeleteUser(id);
+    onDeleted();
+  } catch (error) {
+    message.error($t('common.deleteFailed'));
+    console.error('Delete user failed:', error);
+  }
 }
 
 function edit(id: number) {

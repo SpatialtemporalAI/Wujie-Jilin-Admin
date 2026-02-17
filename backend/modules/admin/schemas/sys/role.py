@@ -1,0 +1,122 @@
+#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
+
+from typing import Optional, List
+from pydantic import Field, ConfigDict
+from datetime import datetime
+from app.models.common.base import BaseRespEntity, BaseEntity
+from app.models.common.page import PageRequest
+
+
+class SysRoleQueryParams(PageRequest):
+    """
+    系统角色查询参数模型
+    用于角色列表分页查询时的筛选条件
+    """
+
+    name: Optional[str] = Field(None, description="角色名称，支持模糊查询")
+    code: Optional[str] = Field(None, description="角色编码，支持模糊查询")
+    status: Optional[bool] = Field(None, description="角色状态：True-启用，False-禁用")
+    is_system: Optional[bool] = Field(None, description="是否为系统内置角色")
+
+
+class SysRoleCreate(BaseEntity):
+    """
+    系统角色创建请求模型
+    用于创建新角色时的请求数据
+    """
+
+    name: str = Field(..., description="角色名称", max_length=100)
+    code: str = Field(..., description="角色编码", max_length=100)
+    description: Optional[str] = Field(None, description="角色描述")
+    status: bool = Field(True, description="角色状态：True-启用，False-禁用")
+    sort: int = Field(0, description="排序号")
+    menu_ids: List[int] = Field([], description="菜单ID列表")
+
+
+class SysRoleUpdate(BaseEntity):
+    """
+    系统角色更新请求模型
+    用于更新角色信息时的请求数据
+    """
+
+    name: Optional[str] = Field(None, description="角色名称", max_length=100)
+    description: Optional[str] = Field(None, description="角色描述")
+    status: Optional[bool] = Field(None, description="角色状态：True-启用，False-禁用")
+    sort: Optional[int] = Field(None, description="排序号")
+    menu_ids: Optional[List[int]] = Field(None, description="菜单ID列表")
+
+
+class SysRoleSimpleResponse(BaseRespEntity):
+    """
+    系统角色简单响应模型
+    用于只需要展示基本角色信息的场景
+    """
+
+    model_config = ConfigDict(from_attributes=True)
+
+    id: int = Field(..., description="角色ID")
+    name: str = Field(..., description="角色名称")
+    code: str = Field(..., description="角色编码")
+    status: bool = Field(..., description="角色状态")
+
+
+class SysRoleResponseData(BaseRespEntity):
+    """
+    系统角色详细响应模型
+    用于展示角色完整信息，包括关联的菜单
+    """
+
+    model_config = ConfigDict(from_attributes=True)
+
+    id: int = Field(..., description="角色ID")
+    name: str = Field(..., description="角色名称")
+    code: str = Field(..., description="角色编码")
+    description: Optional[str] = Field(None, description="角色描述")
+    status: bool = Field(..., description="角色状态")
+    is_default: bool = Field(..., description="是否为默认角色")
+    is_system: bool = Field(..., description="是否为系统内置角色")
+    sort: int = Field(..., description="排序号")
+    created_at: datetime = Field(..., description="创建时间")
+    updated_at: Optional[datetime] = Field(None, description="更新时间")
+    menu_ids: List[int] = Field([], description="菜单ID列表")
+
+    @classmethod
+    def from_orm_with_menus(cls, role) -> "SysRoleResponseData":
+        """
+        从 ORM 对象创建响应模型，包含菜单信息
+
+        Args:
+            role: SysRole ORM 对象
+
+        Returns:
+            SysRoleResponseData 对象
+        """
+        menu_ids = []
+        if hasattr(role, 'menus') and role.menus:
+            for menu in role.menus:
+                menu_ids.append(menu.id)
+
+        return cls(
+            id=role.id,
+            name=role.name,
+            code=role.code,
+            description=role.description,
+            status=role.status,
+            is_default=role.is_default,
+            is_system=role.is_system,
+            sort=role.sort,
+            created_at=role.created_at,
+            updated_at=role.updated_at,
+            menu_ids=menu_ids,
+        )
+
+
+class SysRoleBatchUpdateStatus(BaseEntity):
+    """
+    系统角色批量更新状态请求模型
+    用于批量启用或禁用角色
+    """
+
+    role_ids: List[int] = Field(..., description="角色ID列表")
+    status: bool = Field(..., description="要设置的状态：True-启用，False-禁用")

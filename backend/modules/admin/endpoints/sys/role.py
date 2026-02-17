@@ -4,84 +4,226 @@
 """
 角色管理相关接口
 """
+import logging
 from fastapi import APIRouter, Depends, Query
 from sqlalchemy.ext.asyncio import AsyncSession
 from typing import List, Optional
 
 from database.db_manager import get_session
-from core.response.response_schema import ResponseModel
+from core.response.response_schema import ResponseModel, ResponsePageModel, ResponsePageDataModel
+from app.models.common.page import PageRequest, get_page_params
 
-from app.models.sys.role import SysRole
 from modules.admin.services.sys import RoleService
+from modules.admin.schemas.sys.role import (
+    SysRoleResponseData,
+    SysRoleSimpleResponse,
+    SysRoleCreate,
+    SysRoleUpdate,
+    SysRoleQueryParams,
+    SysRoleBatchUpdateStatus,
+)
+
+logger = logging.getLogger(__name__)
 
 # 创建角色管理路由
 role_router = APIRouter(prefix="/role", tags=["角色管理"])
 
 
-@role_router.get("/list", response_model=ResponseModel[List[dict]])
+def parse_bool_param(value: Optional[str]) -> Optional[bool]:
+    """
+    解析布尔类型参数
+
+    Args:
+        value: 参数字符串
+
+    Returns:
+        布尔值或None
+    """
+    if value is None or value == "":
+        return None
+    if value.lower() in ("true", "1", "yes", "y"):
+        return True
+    if value.lower() in ("false", "0", "no", "n"):
+        return False
+    return None
+
+
+@role_router.get("/list", response_model=ResponsePageModel[SysRoleResponseData])
 async def get_role_list(
-    status: Optional[bool] = Query(None, description="状态"),
+    page_params: PageRequest = Depends(get_page_params),
+    status: Optional[str] = Query(None, description="状态"),
+    name: Optional[str] = Query(None, description="角色名称"),
+    code: Optional[str] = Query(None, description="角色编码"),
+    is_system: Optional[str] = Query(None, description="是否为系统内置角色"),
     db: AsyncSession = Depends(get_session),
 ):
     """
     获取角色列表
     """
-    roles = await RoleService.get_role_list(db, status)
-    return ResponseModel(data=roles)
+    logger.info("获取角色列表请求")
+
+    # 构建查询参数
+    query_params = SysRoleQueryParams(
+        page=page_params.page,
+        page_size=page_params.page_size,
+        status=parse_bool_param(status),
+        name=name,
+        code=code,
+        is_system=parse_bool_param(is_system),
+    )
+
+    # 获取角色列表
+    roles, total = await RoleService.get_role_list(db, query_params)
+
+    # 转换为响应模型
+    records = [SysRoleResponseData.from_orm_with_menus(role) for role in roles]
+
+    # 计算分页信息
+    total_pages = (total + page_params.page_size - 1) // page_params.page_size
+
+    # 构建分页数据模型
+    page_data = ResponsePageDataModel[SysRoleResponseData](
+        records=records,
+        page=page_params.page,
+        page_size=page_params.page_size,
+        total=total,
+        total_pages=total_pages,
+    )
+
+    logger.info(f"获取角色列表成功，共 {total} 条记录")
+    return ResponsePageModel[SysRoleResponseData](data=page_data)
 
 
-@role_router.get("/all", response_model=ResponseModel[List[dict]])
+@role_router.get("/all", response_model=ResponseModel[List[SysRoleSimpleResponse]])
 async def get_all_roles(db: AsyncSession = Depends(get_session)):
     """
     获取所有启用的角色
     """
+    logger.info("获取所有启用的角色请求")
+
     roles = await RoleService.get_all_roles(db)
-    return ResponseModel(data=roles)
+    role_responses = [SysRoleSimpleResponse.model_validate(role) for role in roles]
+
+    logger.info(f"获取所有启用的角色成功，共 {len(role_responses)} 个角色")
+    return ResponseModel(data=role_responses)
 
 
-@role_router.get("/{role_id}", response_model=ResponseModel[SysRole])
-async def get_role(role_id: int, db: AsyncSession = Depends(get_session)):
+@role_router.get("/{role_id}", response_model=ResponseModel[SysRoleResponseData])
+async def get_role(
+    role_id: int,
+    db: AsyncSession = Depends(get_session),
+):
     """
     获取单个角色
     """
+    logger.info(f"获取单个角色请求，角色ID: {role_id}")
+
     role = await RoleService.get_role(db, role_id)
-    return ResponseModel(data=role)
+    role_response = SysRoleResponseData.from_orm_with_menus(role)
+
+    logger.info(f"获取单个角色成功，角色ID: {role_id}")
+    return ResponseModel(data=role_response)
 
 
-@role_router.post("", response_model=ResponseModel[SysRole])
-async def create_role(role: SysRole, db: AsyncSession = Depends(get_session)):
+@role_router.post("/add", response_model=ResponseModel[SysRoleResponseData])
+async def create_role(
+    role_create: SysRoleCreate,
+    db: AsyncSession = Depends(get_session),
+):
     """
     创建角色
     """
-    role = await RoleService.create_role(db, role)
-    return ResponseModel(data=role)
+    logger.info(f"创建角色请求，角色名: {role_create.name}, 编码: {role_create.code}")
+
+    role = await RoleService.create_role(db, role_create)
+    role_response = SysRoleResponseData.from_orm_with_menus(role)
+
+    logger.info(f"创建角色成功，角色ID: {role.id}")
+    return ResponseModel(data=role_response, msg="创建角色成功")
 
 
-@role_router.put("/{role_id}", response_model=ResponseModel[SysRole])
+@role_router.put("/{role_id}", response_model=ResponseModel[SysRoleResponseData])
 async def update_role(
-    role_id: int, role: SysRole, db: AsyncSession = Depends(get_session)
+    role_id: int,
+    role_update: SysRoleUpdate,
+    db: AsyncSession = Depends(get_session),
 ):
     """
     更新角色
     """
-    role = await RoleService.update_role(db, role_id, role)
-    return ResponseModel(data=role)
+    logger.info(f"更新角色请求，角色ID: {role_id}")
+
+    role = await RoleService.update_role(db, role_id, role_update)
+    role_response = SysRoleResponseData.from_orm_with_menus(role)
+
+    logger.info(f"更新角色成功，角色ID: {role_id}")
+    return ResponseModel(data=role_response, msg="更新角色成功")
 
 
-@role_router.post("/{role_id}/menus", response_model=ResponseModel)
+@role_router.post("/{role_id}/menus", response_model=ResponseModel[SysRoleResponseData])
 async def assign_menu_to_role(
-    role_id: int, menu_ids: List[int], db: AsyncSession = Depends(get_session)
+    role_id: int,
+    menu_ids: List[int],
+    db: AsyncSession = Depends(get_session),
 ):
     """
-    为角色分配菜单权�?"""
-    await RoleService.assign_menu_to_role(db, role_id, menu_ids)
-    return ResponseModel(msg="分配成功")
+    为角色分配菜单权限
+    """
+    logger.info(f"为角色分配菜单权限请求，角色ID: {role_id}, 菜单ID: {menu_ids}")
+
+    role = await RoleService.assign_menu_to_role(db, role_id, menu_ids)
+    role_response = SysRoleResponseData.from_orm_with_menus(role)
+
+    logger.info(f"为角色分配菜单权限成功，角色ID: {role_id}")
+    return ResponseModel(data=role_response, msg="分配菜单权限成功")
 
 
 @role_router.delete("/{role_id}", response_model=ResponseModel)
-async def delete_role(role_id: int, db: AsyncSession = Depends(get_session)):
+async def delete_role(
+    role_id: int,
+    db: AsyncSession = Depends(get_session),
+):
     """
     删除角色
     """
+    logger.info(f"删除角色请求，角色ID: {role_id}")
+
     await RoleService.delete_role(db, role_id)
-    return ResponseModel(msg="删除成功")
+
+    logger.info(f"删除角色成功，角色ID: {role_id}")
+    return ResponseModel(msg="删除角色成功")
+
+
+@role_router.delete("/batch", response_model=ResponseModel)
+async def batch_delete_roles(
+    role_ids: List[int],
+    db: AsyncSession = Depends(get_session),
+):
+    """
+    批量删除角色
+    """
+    logger.info(f"批量删除角色请求，角色ID: {role_ids}")
+
+    delete_count = await RoleService.batch_delete_roles(db, role_ids)
+
+    logger.info(f"批量删除角色成功，共删除 {delete_count} 个角色")
+    return ResponseModel(msg=f"批量删除成功，共删除 {delete_count} 个角色", data={"delete_count": delete_count})
+
+
+@role_router.put("/batch/status", response_model=ResponseModel)
+async def batch_update_roles_status(
+    batch_update: SysRoleBatchUpdateStatus,
+    db: AsyncSession = Depends(get_session),
+):
+    """
+    批量更新角色状态
+    """
+    logger.info(f"批量更新角色状态请求，角色ID: {batch_update.role_ids}, 状态: {batch_update.status}")
+
+    update_count = await RoleService.batch_update_roles_status(
+        db, batch_update.role_ids, batch_update.status
+    )
+
+    status_text = "启用" if batch_update.status else "禁用"
+    logger.info(f"批量更新角色状态成功，共 {update_count} 个角色被{status_text}")
+    return ResponseModel(msg=f"批量{status_text}成功，共 {update_count} 个角色", data={"update_count": update_count})

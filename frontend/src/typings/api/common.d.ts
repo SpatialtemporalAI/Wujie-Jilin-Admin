@@ -4,6 +4,9 @@
  * All backend api type
  */
 declare namespace Api {
+  /** operate type */
+  type OperateType = 'add' | 'edit' | 'delete' | 'view';
+
   namespace Common {
     /** common params of paginating */
     interface PaginatingCommonParams {
@@ -48,6 +51,6 @@ declare namespace Api {
       updateTime: string;
       /** record status */
       status: EnableStatus | null;
-    } & T;
-  }
+  } & T;
+}
 }

@@ -7,6 +7,13 @@ export const enableStatusRecord: Record<Api.Common.EnableStatus, App.I18n.I18nKe
 
 export const enableStatusOptions = transformRecordToOption(enableStatusRecord);
 
+export const yesOrNoRecord: Record<string, App.I18n.I18nKey> = {
+  '1': 'common.yesOrNo.yes',
+  '2': 'common.yesOrNo.no'
+};
+
+export const yesOrNoOptions = transformRecordToOption(yesOrNoRecord);
+
 export const userGenderRecord: Record<Api.SystemManage.UserGender, App.I18n.I18nKey> = {
   '1': 'page.manage.user.gender.male',
   '2': 'page.manage.user.gender.female'

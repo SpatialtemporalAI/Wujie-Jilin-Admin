@@ -73,7 +73,7 @@ class JWTAuthManager:
             return False
 
     @classmethod
-    def create_salt() -> str:
+    def create_salt(cls) -> str:
         """
         创建密码盐值
         Returns:
@@ -259,7 +259,7 @@ class JWTAuthManager:
 
     def create_password_hash(self, password: str) -> str:
         """
-        创建密码哈希值
+        创建密码哈希值（实例方法）
         Args:
             password: 明文密码
         Returns:
@@ -269,3 +269,32 @@ class JWTAuthManager:
         password_salt = password + salt
         sha_id = hashlib.sha256((password_salt).encode("utf-8")).hexdigest()
         return sha_id, salt
+
+    @classmethod
+    def create_password_hash(cls, password: str) -> tuple[str, str]:
+        """
+        创建密码哈希值（类方法）
+        Args:
+            password: 明文密码
+        Returns:
+            tuple: (密码哈希值, 盐值)
+        """
+        salt = cls.create_salt()
+        password_salt = password + salt
+        sha_id = hashlib.sha256((password_salt).encode("utf-8")).hexdigest()
+        return sha_id, salt
+
+    @classmethod
+    def verify_password(cls, plain_password: str, hashed_password: str, salt: str) -> bool:
+        """
+        验证密码是否匹配（带盐值）
+        Args:
+            plain_password: 明文密码
+            hashed_password: 哈希密码
+            salt: 盐值
+        Returns:
+            bool: 密码是否匹配
+        """
+        password_salt = plain_password + salt
+        sha_id = hashlib.sha256((password_salt).encode("utf-8")).hexdigest()
+        return sha_id == hashed_password

@@ -65,25 +65,42 @@ function createDefaultModel(): Model {
 
 type RuleKey = Extract<keyof Model, 'username' | 'status' | 'password' | 'confirmPassword'>;
 
-const rules: Record<RuleKey, App.Global.FormRule> = {
-  username: defaultRequiredRule,
+const rules: Record<RuleKey, App.Global.FormRule | App.Global.FormRule[]> = {
+  username: [defaultRequiredRule, {
+    min: 4, max: 20,
+    trigger: ['input', 'blur'], message: $t('page.manage.user.form.usernameLength')
+  }],
   status: defaultRequiredRule,
-  password: {
+  password: [{
     required: props.operateType === 'add',
     message: $t('form.required'),
     trigger: ['input', 'blur']
   },
-  confirmPassword: {
-    required: props.operateType === 'add',
-    message: $t('form.required'),
-    trigger: ['input', 'blur'],
-    validator: (rule, value) => {
-      if (model.value.password !== value) {
-        return new Error($t('page.manage.user.form.passwordNotMatch'));
-      }
-      return true;
-    }
+  {
+    min: 6, max: 20,
+    trigger: ['input', 'blur'], message: $t('page.manage.user.form.passwordLength')
   }
+  ],
+  confirmPassword: [
+    {
+      required: props.operateType === 'add',
+      message: $t('form.required'),
+      trigger: ['input', 'blur']
+    },
+    {
+      min: 6, max: 20,
+      trigger: ['input', 'blur'], message: $t('page.manage.user.form.passwordLength')
+    },
+    {
+      validator: (rule, value) => {
+        if (model.value.password !== value) {
+          return new Error($t('page.manage.user.form.passwordNotMatch'));
+        }
+        return true;
+      },
+      trigger: ['input', 'blur']
+    }
+  ]
 };
 
 /** the enabled role options */

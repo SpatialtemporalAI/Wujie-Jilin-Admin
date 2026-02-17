@@ -318,6 +318,7 @@ declare namespace App {
         updateCancel: string;
       };
       common: {
+        selectAtLeastOne: string;
         action: string;
         add: string;
         addSuccess: string;
@@ -333,6 +334,7 @@ declare namespace App {
         confirm: string;
         delete: string;
         deleteSuccess: string;
+        deleteFailed: string;
         confirmDelete: string;
         edit: string;
         warning: string;
@@ -609,6 +611,8 @@ declare namespace App {
               confirmPassword:string;
               passwordMinLength:string;
               passwordNotMatch:string;
+              usernameLength:string;
+              passwordLength:string;
             };
             addUser: string;
             editUser: string;
@@ -683,6 +687,82 @@ declare namespace App {
             iconType: {
               iconify: string;
               local: string;
+            };
+          };
+          dict: {
+            title: string;
+            dictManage: string;
+            itemManage: string;
+            itemTitle: string;
+            dictName: string;
+            dictCode: string;
+            dictDesc: string;
+            dictStatus: string;
+            isSystem: string;
+            sort: string;
+            itemValue: string;
+            itemLabel: string;
+            itemDesc: string;
+            itemStatus: string;
+            form: {
+              dictName: string;
+              dictCode: string;
+              dictDesc: string;
+              dictStatus: string;
+              isSystem: string;
+              sort: string;
+              itemValue: string;
+              itemLabel: string;
+              itemDesc: string;
+              extInfo: string;
+              itemStatus: string;
+            };
+            addDict: string;
+            editDict: string;
+            addDictItem: string;
+            editDictItem: string;
+          };
+          config: {
+            title: string;
+            configKey: string;
+            configValue: string;
+            defaultValue: string;
+            configDesc: string;
+            configType: string;
+            configGroup: string;
+            editable: string;
+            isSystem: string;
+            required: string;
+            resetConfig: string;
+            validationRule: string;
+            form: {
+              configKey: string;
+              configValue: string;
+              defaultValue: string;
+              validationRule: string;
+              configDesc: string;
+              configType: string;
+              configGroup: string;
+              editable: string;
+              isSystem: string;
+              required: string;
+            };
+            addConfig: string;
+            editConfig: string;
+            type: {
+              string: string;
+              number: string;
+              boolean: string;
+              json: string;
+              array: string;
+            };
+            group: {
+              system: string;
+              security: string;
+              log: string;
+              network: string;
+              storage: string;
+              custom: string;
             };
           };
         };

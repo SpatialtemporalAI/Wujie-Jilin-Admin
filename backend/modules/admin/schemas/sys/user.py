@@ -1,32 +1,108 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 
-from typing import Optional
-from pydantic import ConfigDict, Field
+from typing import Optional, List
+from pydantic import Field, ConfigDict
 from datetime import datetime
-from app.models.common.base import BaseRespEntity
+from app.models.common.base import BaseRespEntity, BaseEntity
+from app.models.common.page import PageRequest
 
 
-# 系统用户模型
-class SysUserCreate(BaseRespEntity):
-    """系统用户模型"""
+class SysUserQueryParams(PageRequest):
+    """
+    系统用户查询参数模型
+    用于用户列表分页查询时的筛选条件
+    """
 
-    username: str = Field(..., description="用户名")
-    password: str = Field(..., description="密码")
-    nickname: str = Field(..., description="昵称")
-    email: Optional[str] = Field(None, description="邮箱")
-    phone: Optional[str] = Field(None, description="手机号")
-    status: bool = Field(..., description="用户状态")
-    roles: list[str] = Field([], description="用户角色列表")
+    username: Optional[str] = Field(None, description="用户名，支持模糊查询")
+    nickname: Optional[str] = Field(None, description="用户昵称，支持模糊查询")
+    email: Optional[str] = Field(None, description="邮箱，支持模糊查询")
+    phone: Optional[str] = Field(None, description="手机号，支持模糊查询")
+    status: Optional[bool] = Field(None, description="用户状态：True-启用，False-禁用")
+    is_superuser: Optional[bool] = Field(None, description="是否为超级管理员")
+    role_ids: Optional[List[int]] = Field(None, description="角色ID列表")
 
 
-# 系统用户响应数据模型
-class SysUserResponseData(BaseRespEntity):
-    """系统用户接口返回的数据模型"""
+class SysUserCreate(BaseEntity):
+    """
+    系统用户创建请求模型
+    用于创建新用户时的请求数据
+    """
+
+    username: str = Field(
+        ..., description="用户名，必须唯一", min_length=4, max_length=20
+    )
+    password: str = Field(..., description="密码", min_length=6, max_length=20)
+    nickname: str = Field(..., description="用户昵称", max_length=100)
+    email: Optional[str] = Field(None, description="邮箱", max_length=100)
+    phone: Optional[str] = Field(None, description="手机号", max_length=20)
+    avatar: Optional[str] = Field(None, description="头像URL")
+    status: bool = Field(True, description="用户状态：True-启用，False-禁用")
+    role_ids: List[int] = Field([], description="角色ID列表")
+
+
+class SysUserUpdate(BaseEntity):
+    """
+    系统用户更新请求模型
+    用于更新用户信息时的请求数据
+    """
+
+    nickname: Optional[str] = Field(None, description="用户昵称", max_length=100)
+    email: Optional[str] = Field(None, description="邮箱", max_length=100)
+    phone: Optional[str] = Field(None, description="手机号", max_length=20)
+    avatar: Optional[str] = Field(None, description="头像URL")
+    status: Optional[bool] = Field(None, description="用户状态：True-启用，False-禁用")
+    role_ids: Optional[List[int]] = Field(None, description="角色ID列表")
+
+
+class SysUserPasswordUpdate(BaseEntity):
+    """
+    系统用户密码更新请求模型
+    用于重置或修改用户密码
+    """
+
+    old_password: Optional[str] = Field(None, description="旧密码")
+    new_password: str = Field(..., description="新密码", min_length=6, max_length=100)
+
+
+class SysUserSimpleResponse(BaseRespEntity):
+    """
+    系统用户简单响应模型
+    用于只需要展示基本用户信息的场景
+    """
+
+    model_config = ConfigDict(from_attributes=True)
 
     id: int = Field(..., description="用户ID")
     username: str = Field(..., description="用户名")
-    nickname: str = Field(..., description="昵称")
+    nickname: str = Field(..., description="用户昵称")
+    avatar: Optional[str] = Field(None, description="头像URL")
+    status: bool = Field(..., description="用户状态")
+
+
+class SysRoleSimpleResponseForUser(BaseRespEntity):
+    """
+    用于用户响应中的角色简单模型
+    """
+
+    model_config = ConfigDict(from_attributes=True)
+    id: int = Field(..., description="角色ID")
+    name: str = Field(..., description="角色名称")
+    code: str = Field(..., description="角色编码")
+    status: bool = Field(..., description="角色状态")
+
+
+class SysUserResponseData(BaseRespEntity):
+    """
+    系统用户详细响应模型
+    用于展示用户完整信息，包括关联的角色
+    """
+
+    model_config = ConfigDict(from_attributes=True)
+
+    id: int = Field(..., description="用户ID")
+    username: str = Field(..., description="用户名")
+    nickname: str = Field(..., description="用户昵称")
     email: Optional[str] = Field(None, description="邮箱")
     phone: Optional[str] = Field(None, description="手机号")
     avatar: Optional[str] = Field(None, description="头像URL")
@@ -34,3 +110,17 @@ class SysUserResponseData(BaseRespEntity):
     status: bool = Field(..., description="用户状态")
     last_login_at: Optional[datetime] = Field(None, description="最后登录时间")
     last_login_ip: Optional[str] = Field(None, description="最后登录IP")
+    created_at: datetime = Field(..., description="创建时间")
+    updated_at: Optional[datetime] = Field(None, description="更新时间")
+    role_ids: List[int] = Field([], description="角色ID列表")
+    roles: List[SysRoleSimpleResponseForUser] = Field([], description="角色列表")
+
+
+class SysUserBatchUpdateStatus(BaseEntity):
+    """
+    系统用户批量更新状态请求模型
+    用于批量启用或禁用用户
+    """
+
+    user_ids: List[int] = Field(..., description="用户ID列表")
+    status: bool = Field(..., description="要设置的状态：True-启用，False-禁用")

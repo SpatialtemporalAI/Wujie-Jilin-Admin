@@ -26,12 +26,8 @@ class SysUser(Base):
     nickname: Mapped[str] = mapped_column(
         String(100), nullable=True, comment="用户昵称"
     )
-    email: Mapped[str] = mapped_column(
-        String(100), unique=True, nullable=True, comment="邮箱"
-    )
-    phone: Mapped[str] = mapped_column(
-        String(20), unique=True, nullable=True, comment="手机号"
-    )
+    email: Mapped[str] = mapped_column(String(100), nullable=True, comment="邮箱")
+    phone: Mapped[str] = mapped_column(String(20), nullable=True, comment="手机号")
     # 状态信息
     status: Mapped[bool] = mapped_column(
         Boolean, default=True, comment="状态：True-启用，False-禁用"
@@ -63,5 +59,5 @@ class SysUser(Base):
         secondary=sys_user_role_association,
         back_populates="users",
         lazy="select",
-        default=list,
+        default_factory=list,
     )

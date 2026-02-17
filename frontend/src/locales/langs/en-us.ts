@@ -7,6 +7,7 @@ const local: App.I18n.Schema = {
     updateCancel: 'Later'
   },
   common: {
+    selectAtLeastOne: 'Please select at least one item',
     action: 'Action',
     add: 'Add',
     addSuccess: 'Add Success',
@@ -22,6 +23,7 @@ const local: App.I18n.Schema = {
     confirm: 'Confirm',
     delete: 'Delete',
     deleteSuccess: 'Delete Success',
+    deleteFailed: 'Delete Failed',
     confirmDelete: 'Are you sure you want to delete?',
     edit: 'Edit',
     warning: 'Warning',
@@ -236,7 +238,9 @@ const local: App.I18n.Schema = {
     manage_menu: "Menu Management",
     manage_role: "Role Management",
     manage_user: "User Management",
-    "manage_user-detail": "User Detail"
+    "manage_user-detail": "User Detail",
+    "manage_dict": "Dict Management",
+    "manage_config": "System Config"
   },
   page: {
     login: {
@@ -366,7 +370,9 @@ const local: App.I18n.Schema = {
           newPassword: 'Please enter new password',
           confirmPassword: 'Please confirm new password',
           passwordMinLength: 'Password length must be at least 6 characters',
-          passwordNotMatch: 'The two passwords do not match'
+          passwordNotMatch: 'The two passwords do not match',
+          usernameLength: "user name length must be between 4 and 20 characters",
+          passwordLength: "password length must be between 6 and 20 characters"
         },
         addUser: 'Add User',
         editUser: 'Edit User',
@@ -441,6 +447,82 @@ const local: App.I18n.Schema = {
         iconType: {
           iconify: 'Iconify Icon',
           local: 'Local Icon'
+        }
+      },
+      dict: {
+        title: 'Dict List',
+        dictName: 'Dict Name',
+        dictCode: 'Dict Code',
+        dictDesc: 'Dict Description',
+        dictStatus: 'Dict Status',
+        isSystem: 'System Built-in',
+        sort: 'Sort',
+        itemTitle: 'Dict Item List',
+        itemValue: 'Item Value',
+        itemLabel: 'Item Label',
+        itemDesc: 'Item Description',
+        itemStatus: 'Item Status',
+        form: {
+          dictName: 'Please enter dict name',
+          dictCode: 'Please enter dict code',
+          dictDesc: 'Please enter dict description',
+          dictStatus: 'Please select dict status',
+          isSystem: 'Please select whether it is a system built-in dict',
+          sort: 'Please enter sort number',
+          itemValue: 'Please enter item value',
+          itemLabel: 'Please enter item label',
+          itemDesc: 'Please enter item description',
+          extInfo: 'Please enter extension info',
+          itemStatus: 'Please select item status'
+        },
+        addDict: 'Add Dict',
+        editDict: 'Edit Dict',
+        addDictItem: 'Add Dict Item',
+        editDictItem: 'Edit Dict Item',
+        dictManage: 'Dict Manage',
+        itemManage: 'Item Manage'
+      },
+      config: {
+        title: 'System Config List',
+        configKey: 'Config Key',
+        configValue: 'Config Value',
+        defaultValue: 'Default Value',
+        configDesc: 'Config Description',
+        configType: 'Config Type',
+        configGroup: 'Config Group',
+        editable: 'Editable',
+        isSystem: 'System Built-in',
+        required: 'Required',
+        validationRule: 'Validation Rule',
+        form: {
+          configKey: 'Please enter config key',
+          configValue: 'Please enter config value',
+          defaultValue: 'Please enter default value',
+          configDesc: 'Please enter config description',
+          configType: 'Please select config type',
+          configGroup: 'Please select config group',
+          editable: 'Please select whether it is editable',
+          isSystem: 'Please select whether it is a system built-in config',
+          required: 'Please select whether it is required',
+          validationRule: 'Please enter validation rule'
+        },
+        addConfig: 'Add Config',
+        editConfig: 'Edit Config',
+        resetConfig: 'Reset Config',
+        type: {
+          string: 'String',
+          number: 'Number',
+          boolean: 'Boolean',
+          json: 'JSON',
+          array: 'Array'
+        },
+        group: {
+          system: 'System',
+          security: 'Security',
+          log: 'Log',
+          network: 'Network',
+          storage: 'Storage',
+          custom: 'Custom'
         }
       }
     }

@@ -7,6 +7,7 @@ const local: App.I18n.Schema = {
     updateCancel: '稍后再说'
   },
   common: {
+    selectAtLeastOne: '请至少选择一条数据',
     action: '操作',
     add: '新增',
     addSuccess: '添加成功',
@@ -22,6 +23,7 @@ const local: App.I18n.Schema = {
     confirm: '确认',
     delete: '删除',
     deleteSuccess: '删除成功',
+    deleteFailed: '删除失败',
     confirmDelete: '确认删除吗？',
     edit: '编辑',
     warning: '警告',
@@ -232,7 +234,9 @@ const local: App.I18n.Schema = {
     manage_menu: "菜单管理",
     manage_role: "角色管理",
     manage_user: "用户管理",
-    "manage_user-detail": "用户详情"
+    "manage_user-detail": "用户详情",
+    "manage_dict": "字典管理",
+    "manage_config": "系统配置"
   },
   page: {
     login: {
@@ -359,7 +363,9 @@ const local: App.I18n.Schema = {
           newPassword: '请输入新密码',
           confirmPassword: '请确认新密码',
           passwordMinLength: '密码长度至少为6位',
-          passwordNotMatch: '两次输入的密码不一致'
+          passwordNotMatch: '两次输入的密码不一致',
+          usernameLength: "用户名长度必须在4-20个字符之间",
+          passwordLength: "密码长度必须在6-20个字符之间"
         },
         addUser: '新增用户',
         editUser: '编辑用户',
@@ -436,6 +442,82 @@ const local: App.I18n.Schema = {
         iconType: {
           iconify: 'iconify图标',
           local: '本地图标'
+        }
+      },
+      dict: {
+        title: '字典列表',
+        dictName: '字典名称',
+        dictCode: '字典编码',
+        dictDesc: '字典描述',
+        dictStatus: '字典状态',
+        isSystem: '系统内置',
+        sort: '排序',
+        itemTitle: '字典项列表',
+        itemValue: '字典项值',
+        itemLabel: '字典项文本',
+        itemDesc: '字典项描述',
+        itemStatus: '字典项状态',
+        form: {
+          dictName: '请输入字典名称',
+          dictCode: '请输入字典编码',
+          dictDesc: '请输入字典描述',
+          dictStatus: '请选择字典状态',
+          isSystem: '请选择是否为系统内置字典',
+          sort: '请输入排序号',
+          itemValue: '请输入字典项值',
+          itemLabel: '请输入字典项文本',
+          itemDesc: '请输入字典项描述',
+          extInfo: '请输入扩展信息',
+          itemStatus: '请选择字典项状态'
+        },
+        addDict: '新增字典',
+        editDict: '编辑字典',
+        addDictItem: '新增字典项',
+        editDictItem: '编辑字典项',
+        dictManage: '字典管理',
+        itemManage: '字典项管理'
+      },
+      config: {
+        title: '系统配置列表',
+        configKey: '配置键名',
+        configValue: '配置值',
+        defaultValue: '默认值',
+        configDesc: '配置描述',
+        configType: '配置类型',
+        configGroup: '配置分组',
+        editable: '可编辑',
+        isSystem: '系统内置',
+        required: '必填',
+        validationRule: '校验规则',
+        form: {
+          configKey: '请输入配置键名',
+          configValue: '请输入配置值',
+          defaultValue: '请输入默认值',
+          configDesc: '请输入配置描述',
+          configType: '请选择配置类型',
+          configGroup: '请选择配置分组',
+          editable: '请选择是否可编辑',
+          isSystem: '请选择是否为系统内置配置',
+          required: '请选择是否必填',
+          validationRule: '请输入校验规则'
+        },
+        addConfig: '新增配置',
+        editConfig: '编辑配置',
+        resetConfig: '重置配置',
+        type: {
+          string: '字符串',
+          number: '数字',
+          boolean: '布尔',
+          json: 'JSON',
+          array: '数组'
+        },
+        group: {
+          system: '系统配置',
+          security: '安全配置',
+          log: '日志配置',
+          network: '网络配置',
+          storage: '存储配置',
+          custom: '自定义配置'
         }
       }
     }
