@@ -110,23 +110,23 @@ const { columns, columnChecks, data, getData, getDataByPage, loading, mobilePagi
       key: 'operate',
       title: $t('common.operate'),
       align: 'center',
-      width: 130,
+      minWidth: 150,
       render: row => {
         if (row.is_superuser === true) {
           return null;
         }
-        return <div class="flex-center gap-8px">
-          <NButton type="primary" ghost size="small" onClick={() => edit(row.id)}>
+        return <div class="flex flex-wrap justify-center gap-8px">
+          <NButton type="primary" text size="small" onClick={() => edit(row.id)}>
             {$t('common.edit')}
           </NButton>
-          <NButton type="info" ghost size="small" onClick={() => openPasswordDrawer(row.id)}>
+          <NButton type="info" text size="small" onClick={() => openPasswordDrawer(row.id)}>
             {$t('common.changePassword')}
           </NButton>
           <NPopconfirm onPositiveClick={() => handleDelete(row.id)}>
             {{
               default: () => $t('common.confirmDelete'),
               trigger: () => (
-                <NButton type="error" ghost size="small">
+                <NButton type="error" text size="small">
                   {$t('common.delete')}
                 </NButton>
               )
