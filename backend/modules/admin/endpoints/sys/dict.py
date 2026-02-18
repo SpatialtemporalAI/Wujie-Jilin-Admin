@@ -221,6 +221,7 @@ async def get_dict_with_items(
 
 
 @dict_router.post("", response_model=ResponseModel[SysDictResponseData])
+@dict_router.post("/add", response_model=ResponseModel[SysDictResponseData])
 async def create_dict(
     dict_in: SysDictCreate,
     db: AsyncSession = Depends(get_session),
@@ -406,6 +407,7 @@ async def get_dict_item(
 
 
 @dict_router.post("/item", response_model=ResponseModel[SysDictItemResponseData])
+@dict_router.post("/item/add", response_model=ResponseModel[SysDictItemResponseData])
 async def create_dict_item(
     item_in: SysDictItemCreate,
     db: AsyncSession = Depends(get_session),

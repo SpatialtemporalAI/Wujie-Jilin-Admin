@@ -29,7 +29,7 @@ class SysRoleCreate(BaseEntity):
     name: str = Field(..., description="角色名称", max_length=100)
     code: str = Field(..., description="角色编码", max_length=100)
     description: Optional[str] = Field(None, description="角色描述")
-    status: bool = Field(True, description="角色状态：True-启用，False-禁用")
+    status: str = Field("1", description="角色状态：1-启用，2-禁用")
     sort: int = Field(0, description="排序号")
     menu_ids: List[int] = Field([], description="菜单ID列表")
 
@@ -56,9 +56,27 @@ class SysRoleSimpleResponse(BaseRespEntity):
     model_config = ConfigDict(from_attributes=True)
 
     id: int = Field(..., description="角色ID")
-    name: str = Field(..., description="角色名称")
-    code: str = Field(..., description="角色编码")
-    status: bool = Field(..., description="角色状态")
+    roleName: str = Field(..., description="角色名称")
+    roleCode: str = Field(..., description="角色编码")
+    status: str = Field(..., description="角色状态")
+
+    @classmethod
+    def from_orm(cls, role) -> "SysRoleSimpleResponse":
+        """
+        从 ORM 对象创建响应模型
+
+        Args:
+            role: SysRole ORM 对象
+
+        Returns:
+            SysRoleSimpleResponse 对象
+        """
+        return cls(
+            id=role.id,
+            roleName=role.name,
+            roleCode=role.code,
+            status="1" if role.status else "2",
+        )
 
 
 class SysRoleResponseData(BaseRespEntity):
@@ -70,46 +88,16 @@ class SysRoleResponseData(BaseRespEntity):
     model_config = ConfigDict(from_attributes=True)
 
     id: int = Field(..., description="角色ID")
-    name: str = Field(..., description="角色名称")
-    code: str = Field(..., description="角色编码")
-    description: Optional[str] = Field(None, description="角色描述")
+    name: str = Field(..., description="角色名称", alias="name")
+    code: str = Field(..., description="角色编码", alias="code")
+    desc: Optional[str] = Field(None, description="角色描述")
     status: bool = Field(..., description="角色状态")
     is_default: bool = Field(..., description="是否为默认角色")
     is_system: bool = Field(..., description="是否为系统内置角色")
     sort: int = Field(..., description="排序号")
-    created_at: datetime = Field(..., description="创建时间")
-    updated_at: Optional[datetime] = Field(None, description="更新时间")
+    create_at: Optional[str] = Field(None, description="创建时间")
+    update_at: Optional[str] = Field(None, description="更新时间")
     menu_ids: List[int] = Field([], description="菜单ID列表")
-
-    @classmethod
-    def from_orm_with_menus(cls, role) -> "SysRoleResponseData":
-        """
-        从 ORM 对象创建响应模型，包含菜单信息
-
-        Args:
-            role: SysRole ORM 对象
-
-        Returns:
-            SysRoleResponseData 对象
-        """
-        menu_ids = []
-        if hasattr(role, 'menus') and role.menus:
-            for menu in role.menus:
-                menu_ids.append(menu.id)
-
-        return cls(
-            id=role.id,
-            name=role.name,
-            code=role.code,
-            description=role.description,
-            status=role.status,
-            is_default=role.is_default,
-            is_system=role.is_system,
-            sort=role.sort,
-            created_at=role.created_at,
-            updated_at=role.updated_at,
-            menu_ids=menu_ids,
-        )
 
 
 class SysRoleBatchUpdateStatus(BaseEntity):
@@ -120,3 +108,12 @@ class SysRoleBatchUpdateStatus(BaseEntity):
 
     role_ids: List[int] = Field(..., description="角色ID列表")
     status: bool = Field(..., description="要设置的状态：True-启用，False-禁用")
+
+
+class SysRoleAssignMenu(BaseEntity):
+    """
+    系统角色分配菜单权限请求模型
+    用于为角色分配菜单权限
+    """
+
+    menu_ids: List[int] = Field(..., description="菜单ID列表")

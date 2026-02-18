@@ -116,22 +116,77 @@ class SysMenuResponseData(BaseRespEntity):
     model_config = ConfigDict(from_attributes=True)
 
     id: int = Field(..., description="菜单ID")
-    parent_id: Optional[int] = Field(None, description="父菜单ID")
-    name: str = Field(..., description="菜单名称")
-    path: Optional[str] = Field(None, description="路由路径")
+    parentId: Optional[int] = Field(None, description="父菜单ID")
+    menuName: str = Field(..., description="菜单名称")
+    routeName: Optional[str] = Field(None, description="路由名称")
+    routePath: Optional[str] = Field(None, description="路由路径")
     component: Optional[str] = Field(None, description="组件路径")
-    redirect: Optional[str] = Field(None, description="重定向路径")
-    permission: Optional[str] = Field(None, description="权限标识")
-    meta_title: Optional[str] = Field(None, description="路由标题")
-    meta_icon: Optional[str] = Field(None, description="路由图标")
-    meta_hidden: bool = Field(..., description="是否隐藏菜单")
-    meta_affix: bool = Field(..., description="是否固定标签")
-    meta_breadcrumb: bool = Field(..., description="是否显示面包屑")
-    status: bool = Field(..., description="菜单状态")
-    type: MenuType = Field(..., description="菜单类型")
-    sort: int = Field(..., description="排序号")
-    created_at: datetime = Field(..., description="创建时间")
-    updated_at: Optional[datetime] = Field(None, description="更新时间")
+    icon: Optional[str] = Field(None, description="图标")
+    iconType: Optional[str] = Field(None, description="图标类型")
+    menuType: str = Field(..., description="菜单类型：1-目录，2-菜单")
+    order: int = Field(..., description="排序号")
+    i18nKey: Optional[str] = Field(None, description="国际化键")
+    keepAlive: bool = Field(False, description="是否缓存")
+    constant: bool = Field(False, description="是否常量路由")
+    href: Optional[str] = Field(None, description="外链地址")
+    hideInMenu: bool = Field(False, description="是否隐藏菜单")
+    activeMenu: Optional[str] = Field(None, description="激活的菜单")
+    multiTab: bool = Field(True, description="是否多标签")
+    fixedIndexInTab: Optional[int] = Field(None, description="固定标签索引")
+    query: Optional[dict] = Field(None, description="路由查询参数")
+    status: str = Field(..., description="菜单状态：1-启用，2-禁用")
+    createTime: str = Field(..., description="创建时间")
+    updateTime: Optional[str] = Field(None, description="更新时间")
+
+    @classmethod
+    def from_orm(cls, menu) -> "SysMenuResponseData":
+        """
+        从 ORM 对象创建响应模型
+
+        Args:
+            menu: SysMenu ORM 对象
+
+        Returns:
+            SysMenuResponseData 对象
+        """
+        return cls(
+            id=menu.id,
+            parentId=menu.parent_id,
+            menuName=menu.name,
+            routeName=menu.path.split('/')[-1] if menu.path else None,
+            routePath=menu.path,
+            component=menu.component,
+            icon=menu.meta_icon,
+            iconType="1",
+            menuType="1" if menu.type == "catalog" else "2",
+            order=menu.sort,
+            i18nKey=menu.meta_title,
+            keepAlive=False,
+            constant=False,
+            href=None,
+            hideInMenu=menu.meta_hidden,
+            activeMenu=None,
+            multiTab=True,
+            fixedIndexInTab=menu.sort if menu.meta_affix else None,
+            query=None,
+            status="1" if menu.status else "2",
+            createTime=menu.created_at.astimezone().strftime("%Y-%m-%d %H:%M:%S") if menu.created_at else "",
+            updateTime=menu.updated_at.astimezone().strftime("%Y-%m-%d %H:%M:%S") if menu.updated_at else None,
+        )
+
+
+class SysMenuTreeResponse(BaseRespEntity):
+    """
+    系统菜单树形响应模型
+    用于展示菜单树形结构
+    """
+
+    model_config = ConfigDict(from_attributes=True)
+
+    id: int = Field(..., description="菜单ID")
+    label: str = Field(..., description="菜单标签")
+    pId: Optional[int] = Field(None, description="父菜单ID")
+    children: List["SysMenuTreeResponse"] = Field([], description="子菜单列表")
 
 
 class SysMenuBatchUpdateStatus(BaseEntity):

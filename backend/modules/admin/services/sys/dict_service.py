@@ -7,7 +7,7 @@
 """
 import logging
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy import select, delete, or_, and_
+from sqlalchemy import select, delete, or_, and_, func
 from typing import List, Optional, Tuple
 
 from app.models.sys.dict import SysDict, SysDictItem
@@ -51,7 +51,7 @@ class DictService:
             logger.info("获取字典列表，查询参数: %s", query_params.model_dump(exclude_none=True))
 
             # 构建基础查询
-            query = select(SysDict)
+            base_query = select(SysDict)
 
             # 构建筛选条件
             conditions = []
@@ -65,15 +65,15 @@ class DictService:
                 conditions.append(SysDict.is_system == query_params.is_system)
 
             if conditions:
-                query = query.where(and_(*conditions))
+                base_query = base_query.where(and_(*conditions))
 
-            # 先查询总数
-            count_query = select(SysDict).select_from(query.subquery())
-            count_result = await db.execute(select(SysDict.id).select_from(query.subquery()))
-            total = len(count_result.scalars().all())
+            # 先查询总数 - 使用正确的方式
+            count_query = select(func.count()).select_from(base_query.subquery())
+            count_result = await db.execute(count_query)
+            total = count_result.scalar() or 0
 
             # 分页查询
-            query = query.order_by(SysDict.sort.asc(), SysDict.id.desc())
+            query = base_query.order_by(SysDict.sort.asc(), SysDict.id.desc())
             if query_params.page and query_params.page_size:
                 offset = (query_params.page - 1) * query_params.page_size
                 query = query.offset(offset).limit(query_params.page_size)
@@ -420,7 +420,7 @@ class DictService:
             logger.info("获取字典项列表，查询参数: %s", query_params.model_dump(exclude_none=True))
 
             # 构建基础查询
-            query = select(SysDictItem)
+            base_query = select(SysDictItem)
 
             # 构建筛选条件
             conditions = []
@@ -434,14 +434,15 @@ class DictService:
                 conditions.append(SysDictItem.status == query_params.status)
 
             if conditions:
-                query = query.where(and_(*conditions))
+                base_query = base_query.where(and_(*conditions))
 
-            # 先查询总数
-            count_result = await db.execute(select(SysDictItem.id).select_from(query.subquery()))
-            total = len(count_result.scalars().all())
+            # 先查询总数 - 使用正确的方式
+            count_query = select(func.count()).select_from(base_query.subquery())
+            count_result = await db.execute(count_query)
+            total = count_result.scalar() or 0
 
             # 分页查询
-            query = query.order_by(SysDictItem.sort.asc(), SysDictItem.id.desc())
+            query = base_query.order_by(SysDictItem.sort.asc(), SysDictItem.id.desc())
             if query_params.page and query_params.page_size:
                 offset = (query_params.page - 1) * query_params.page_size
                 query = query.offset(offset).limit(query_params.page_size)

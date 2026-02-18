@@ -223,6 +223,7 @@ async def get_config_value(
 
 
 @config_router.post("", response_model=ResponseModel[SysConfigResponseData])
+@config_router.post("/add", response_model=ResponseModel[SysConfigResponseData])
 async def create_config(
     config_in: SysConfigCreate,
     db: AsyncSession = Depends(get_session),

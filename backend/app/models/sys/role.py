@@ -26,15 +26,19 @@ class SysRole(Base):
     # 关联关系
     # 与用户表的多对多关系
     users: Mapped[List["SysUser"]] = relationship(
+        "SysUser",
         secondary=sys_user_role_association,
         back_populates="roles",
-        lazy="selectin",
+        lazy="select",
+        default_factory=list,
     )
     # 与菜单表的多对多关系
     menus: Mapped[List["SysMenu"]] = relationship(
+        "SysMenu",
         secondary=sys_role_menu_association,
         back_populates="roles",
-        lazy="selectin",
+        lazy="select",
+        default_factory=list,
     )
     # 状态信息
     status: Mapped[bool] = mapped_column(

@@ -90,7 +90,7 @@ async def get_menu_list(
     menus = await MenuService.get_menu_list(db, query_params)
 
     # 转换为响应模型
-    records = [SysMenuResponseData.model_validate(menu) for menu in menus]
+    records = [SysMenuResponseData.from_orm(menu) for menu in menus]
 
     logger.info(f"获取菜单列表成功，共 {len(records)} 条记录")
     return ResponseModel(data=records)
@@ -123,7 +123,7 @@ async def get_menu(
     logger.info(f"获取单个菜单请求，菜单ID: {menu_id}")
 
     menu = await MenuService.get_menu(db, menu_id)
-    menu_response = SysMenuResponseData.model_validate(menu)
+    menu_response = SysMenuResponseData.from_orm(menu)
 
     logger.info(f"获取单个菜单成功，菜单ID: {menu_id}")
     return ResponseModel(data=menu_response)
@@ -140,7 +140,7 @@ async def create_menu(
     logger.info(f"创建菜单请求，菜单名称: {menu_create.name}")
 
     menu = await MenuService.create_menu(db, menu_create)
-    menu_response = SysMenuResponseData.model_validate(menu)
+    menu_response = SysMenuResponseData.from_orm(menu)
 
     logger.info(f"创建菜单成功，菜单ID: {menu.id}")
     return ResponseModel(data=menu_response, msg="创建菜单成功")
@@ -158,7 +158,7 @@ async def update_menu(
     logger.info(f"更新菜单请求，菜单ID: {menu_id}")
 
     menu = await MenuService.update_menu(db, menu_id, menu_update)
-    menu_response = SysMenuResponseData.model_validate(menu)
+    menu_response = SysMenuResponseData.from_orm(menu)
 
     logger.info(f"更新菜单成功，菜单ID: {menu_id}")
     return ResponseModel(data=menu_response, msg="更新菜单成功")
@@ -201,4 +201,23 @@ async def batch_update_menus_status(
     return ResponseModel(
         msg=f"批量{status_text}成功，共 {update_count} 个菜单",
         data={"update_count": update_count},
+    )
+
+
+@menu_router.delete("/batch/delete", response_model=ResponseModel)
+async def batch_delete_menus(
+    menu_ids: List[int],
+    db: AsyncSession = Depends(get_session),
+):
+    """
+    批量删除菜单
+    """
+    logger.info(f"批量删除菜单请求，菜单ID: {menu_ids}")
+
+    delete_count = await MenuService.batch_delete_menus(db, menu_ids)
+
+    logger.info(f"批量删除菜单成功，共删除 {delete_count} 个菜单")
+    return ResponseModel(
+        msg=f"批量删除成功，共删除 {delete_count} 个菜单",
+        data={"delete_count": delete_count},
     )

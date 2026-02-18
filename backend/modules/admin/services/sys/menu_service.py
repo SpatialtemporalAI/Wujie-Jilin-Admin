@@ -102,20 +102,8 @@ class MenuService:
         for menu in menus:
             menu_response = SysMenuTreeResponse(
                 id=menu.id,
-                parent_id=menu.parent_id,
-                name=menu.name,
-                path=menu.path,
-                component=menu.component,
-                redirect=menu.redirect,
-                permission=menu.permission,
-                meta_title=menu.meta_title,
-                meta_icon=menu.meta_icon,
-                meta_hidden=menu.meta_hidden,
-                meta_affix=menu.meta_affix,
-                meta_breadcrumb=menu.meta_breadcrumb,
-                status=menu.status,
-                type=menu.type,
-                sort=menu.sort,
+                label=menu.name,
+                pId=menu.parent_id,
                 children=[],
             )
             menu_map[menu.id] = menu_response
@@ -323,3 +311,31 @@ class MenuService:
 
         logger.info(f"批量更新菜单状态成功，共更新 {update_count} 个菜单")
         return update_count
+
+    @staticmethod
+    async def batch_delete_menus(
+        db: AsyncSession, menu_ids: List[int]
+    ) -> int:
+        """
+        批量删除菜单
+
+        Args:
+            db: 数据库会话
+            menu_ids: 菜单ID列表
+
+        Returns:
+            删除的菜单数量
+        """
+        logger.info(f"批量删除菜单，菜单ID列表: {menu_ids}")
+
+        from sqlalchemy import delete
+
+        # 执行删除
+        stmt = delete(SysMenu).where(SysMenu.id.in_(menu_ids))
+        result = await db.execute(stmt)
+        delete_count = result.rowcount
+
+        await db.commit()
+
+        logger.info(f"批量删除菜单成功，共删除 {delete_count} 个菜单")
+        return delete_count

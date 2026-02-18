@@ -58,6 +58,6 @@ class SysUser(Base):
     roles: Mapped[List["SysRole"]] = relationship(
         secondary=sys_user_role_association,
         back_populates="users",
-        lazy="selectin",
-        default_factory=list,
+        lazy="select",
+        init=False,
     )

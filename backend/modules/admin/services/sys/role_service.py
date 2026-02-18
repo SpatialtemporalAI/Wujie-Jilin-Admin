@@ -46,9 +46,7 @@ class RoleService:
         logger.info(f"获取角色列表，查询参数: {query_params}")
 
         # 构建基础查询
-        base_query = select(SysRole).options(
-            joinedload(SysRole.menus)
-        )
+        base_query = select(SysRole).options(joinedload(SysRole.menus))
 
         # 添加查询条件
         conditions = []
@@ -174,8 +172,16 @@ class RoleService:
         await db.commit()
         await db.refresh(role)
 
+        # 重新查询角色，预加载菜单关系，避免异步加载问题
+        result = await db.execute(
+            select(SysRole)
+            .options(joinedload(SysRole.menus))
+            .where(SysRole.id == role.id)
+        )
+        role_with_menus = result.unique().scalar_one()
+
         logger.info(f"创建角色成功，角色ID: {role.id}")
-        return role
+        return role_with_menus
 
     @staticmethod
     async def update_role(
@@ -224,7 +230,11 @@ class RoleService:
         # 更新其他字段
         for key, value in update_data.items():
             if hasattr(role, key) and value is not None:
-                setattr(role, key, value)
+                # 处理状态字段，将字符串转换为布尔值
+                if key == "status":
+                    setattr(role, key, value == "1")
+                else:
+                    setattr(role, key, value)
 
         await db.commit()
         await db.refresh(role)
@@ -339,7 +349,7 @@ class RoleService:
 
     @staticmethod
     async def batch_update_roles_status(
-        db: AsyncSession, role_ids: List[int], status: bool
+        db: AsyncSession, role_ids: List[int], status: str
     ) -> int:
         """
         批量更新角色状态
@@ -347,7 +357,7 @@ class RoleService:
         Args:
             db: 数据库会话
             role_ids: 角色ID列表
-            status: 要设置的状态
+            status: 要设置的状态（1-启用，2-禁用）
 
         Returns:
             更新的角色数量
@@ -366,7 +376,7 @@ class RoleService:
         update_count = 0
         for role in roles:
             if not role.is_system:
-                role.status = status
+                role.status = status == "1"
                 update_count += 1
             else:
                 logger.warning(f"不能修改系统内置角色状态，角色ID: {role.id}")
@@ -377,9 +387,7 @@ class RoleService:
         return update_count
 
     @staticmethod
-    async def get_all_roles(
-        db: AsyncSession
-    ) -> List[SysRole]:
+    async def get_all_roles(db: AsyncSession) -> List[SysRole]:
         """
         获取所有启用的角色
 
@@ -391,9 +399,11 @@ class RoleService:
         """
         logger.info("获取所有启用的角色")
 
-        query = select(SysRole).options(
-            joinedload(SysRole.menus)
-        ).where(SysRole.status == True)
+        query = (
+            select(SysRole)
+            .options(joinedload(SysRole.menus))
+            .where(SysRole.status == True)
+        )
         result = await db.execute(query)
         roles = result.unique().scalars().all()
 
