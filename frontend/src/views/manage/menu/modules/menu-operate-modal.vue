@@ -2,7 +2,7 @@
 import { computed, ref, watch } from 'vue';
 import type { SelectOption } from 'naive-ui';
 import { enableStatusOptions, menuIconTypeOptions, menuTypeOptions } from '@/constants/business';
-import { fetchGetAllRoles } from '@/service/api';
+import { fetchGetAllRoles, fetchCreateMenu, fetchUpdateMenu } from '@/service/api';
 import { useFormRules, useNaiveForm } from '@/hooks/common/form';
 import { getLocalIcons } from '@/utils/icon';
 import { $t } from '@/locales';
@@ -253,13 +253,22 @@ async function handleSubmit() {
   await validate();
 
   const params = getSubmitParams();
+  
+  let error: any = null;
+  
+  if (props.operateType === 'edit') {
+    const result = await fetchUpdateMenu(props.rowData!.id, params);
+    error = result.error;
+  } else {
+    const result = await fetchCreateMenu(params);
+    error = result.error;
+  }
 
-  console.log('params: ', params);
-
-  // request
-  window.$message?.success($t('common.updateSuccess'));
-  closeDrawer();
-  emit('submitted');
+  if (!error) {
+    window.$message?.success(props.operateType === 'edit' ? $t('common.updateSuccess') : $t('common.addSuccess'));
+    closeDrawer();
+    emit('submitted');
+  }
 }
 
 watch(visible, () => {

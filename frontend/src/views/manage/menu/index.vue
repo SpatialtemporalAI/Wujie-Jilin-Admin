@@ -5,7 +5,7 @@ import { NButton, NPopconfirm, NTag } from 'naive-ui';
 import { useBoolean } from '@sa/hooks';
 import { yesOrNoRecord } from '@/constants/common';
 import { enableStatusRecord, menuTypeRecord } from '@/constants/business';
-import { fetchGetAllPages, fetchGetMenuList } from '@/service/api';
+import { fetchGetAllPages, fetchGetMenuList, fetchDeleteMenu, fetchBatchDeleteMenu } from '@/service/api';
 import { useAppStore } from '@/store/modules/app';
 import { defaultTransform, useNaivePaginatedTable, useTableOperate } from '@/hooks/common/table';
 import { $t } from '@/locales';
@@ -39,8 +39,8 @@ const { columns, columnChecks, data, loading, pagination, getData, getDataByPage
       width: 80,
       render: row => {
         const tagMap: Record<Api.SystemManage.MenuType, NaiveUI.ThemeColor> = {
-          1: 'default',
-          2: 'primary'
+          '1': 'default',
+          '2': 'primary'
         };
 
         const label = $t(menuTypeRecord[row.menuType]);
@@ -105,9 +105,7 @@ const { columns, columnChecks, data, loading, pagination, getData, getDataByPage
           '2': 'warning'
         };
 
-        // const label = $t(enableStatusRecord[row.status]);
-
-        return <NTag type={tagMap['1']}>{$t(enableStatusRecord['1'])}</NTag>;
+        return <NTag type={tagMap[row.status]}>{$t(enableStatusRecord[row.status])}</NTag>;
       }
     },
     {
@@ -181,17 +179,24 @@ function handleAdd() {
 }
 
 async function handleBatchDelete() {
-  // request
-  console.log(checkedRowKeys.value);
+  if (checkedRowKeys.value.length === 0) {
+    window.$message?.warning($t('common.pleaseSelect'));
+    return;
+  }
 
-  onBatchDeleted();
+  const { error } = await fetchBatchDeleteMenu(checkedRowKeys.value as number[]);
+  if (!error) {
+    window.$message?.success($t('common.deleteSuccess'));
+    onBatchDeleted();
+  }
 }
 
-function handleDelete(id: number) {
-  // request
-  console.log(id);
-
-  onDeleted();
+async function handleDelete(id: number) {
+  const { error } = await fetchDeleteMenu(id);
+  if (!error) {
+    window.$message?.success($t('common.deleteSuccess'));
+    onDeleted();
+  }
 }
 
 /** the edit menu data or the parent menu data when adding a child menu */

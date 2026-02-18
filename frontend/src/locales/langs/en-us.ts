@@ -8,6 +8,7 @@ const local: App.I18n.Schema = {
   },
   common: {
     selectAtLeastOne: 'Please select at least one item',
+    pleaseSelect: 'Please select data to operate first',
     action: 'Action',
     add: 'Add',
     addSuccess: 'Add Success',

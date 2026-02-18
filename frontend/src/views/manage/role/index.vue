@@ -2,7 +2,7 @@
 import { reactive } from 'vue';
 import { NButton, NPopconfirm, NTag } from 'naive-ui';
 import { enableStatusRecord } from '@/constants/business';
-import { fetchGetRoleList } from '@/service/api';
+import { fetchGetRoleList, fetchDeleteRole, fetchBatchDeleteRole } from '@/service/api';
 import { useAppStore } from '@/store/modules/app';
 import { defaultTransform, useNaivePaginatedTable, useTableOperate } from '@/hooks/common/table';
 import { $t } from '@/locales';
@@ -40,19 +40,19 @@ const { columns, columnChecks, data, loading, getData, getDataByPage, mobilePagi
       render: (_, index) => index + 1
     },
     {
-      key: 'roleName',
+      key: 'name',
       title: $t('page.manage.role.roleName'),
       align: 'center',
       minWidth: 120
     },
     {
-      key: 'roleCode',
+      key: 'code',
       title: $t('page.manage.role.roleCode'),
       align: 'center',
       minWidth: 120
     },
     {
-      key: 'roleDesc',
+      key: 'desc',
       title: $t('page.manage.role.roleDesc'),
       minWidth: 120
     },
@@ -61,7 +61,7 @@ const { columns, columnChecks, data, loading, getData, getDataByPage, mobilePagi
       title: $t('page.manage.role.roleStatus'),
       align: 'center',
       width: 100,
-      render: row => {
+      render: (row: Api.SystemManage.Role) => {
         if (row.status === null) {
           return null;
         }
@@ -83,7 +83,7 @@ const { columns, columnChecks, data, loading, getData, getDataByPage, mobilePagi
       title: $t('common.operate'),
       align: 'center',
       minWidth: 150,
-      render: row => (
+      render: (row: Api.SystemManage.Role) => (
         <div class="flex flex-wrap justify-center gap-8px">
           <NButton type="primary" text size="small" onClick={() => edit(row.id)}>
             {$t('common.edit')}
@@ -117,17 +117,24 @@ const {
 } = useTableOperate(data, 'id', getData);
 
 async function handleBatchDelete() {
-  // request
-  console.log(checkedRowKeys.value);
+  if (checkedRowKeys.value.length === 0) {
+    window.$message?.warning($t('common.pleaseSelect'));
+    return;
+  }
 
-  onBatchDeleted();
+  const { error } = await fetchBatchDeleteRole(checkedRowKeys.value);
+  if (!error) {
+    window.$message?.success($t('common.deleteSuccess'));
+    onBatchDeleted();
+  }
 }
 
-function handleDelete(id: number) {
-  // request
-  console.log(id);
-
-  onDeleted();
+async function handleDelete(id: number) {
+  const { error } = await fetchDeleteRole(id);
+  if (!error) {
+    window.$message?.success($t('common.deleteSuccess'));
+    onDeleted();
+  }
 }
 
 function edit(id: number) {

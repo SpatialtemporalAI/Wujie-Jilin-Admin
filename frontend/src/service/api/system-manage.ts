@@ -3,28 +3,92 @@ import { request } from '../request';
 /** get role list */
 export function fetchGetRoleList(params?: Api.SystemManage.RoleSearchParams) {
   return request<Api.SystemManage.RoleList>({
-    url: '/sys/role/list',
+    url: '/admin/sys/role/list',
     method: 'get',
     params
   });
 }
 
-/**
- * get all roles
+/** get all roles
  *
  * these roles are all enabled
  */
 export function fetchGetAllRoles() {
   return request<Api.SystemManage.AllRole[]>({
-    url: '/sys/role/all',
+    url: '/admin/sys/role/all',
     method: 'get'
+  });
+}
+
+/** get role by id */
+export function fetchGetRole(roleId: number) {
+  return request<Api.SystemManage.Role>({
+    url: `/admin/sys/role/${roleId}`,
+    method: 'get'
+  });
+}
+
+/** create role */
+export function fetchCreateRole(role: Partial<Api.SystemManage.Role>) {
+  return request<Api.SystemManage.Role>({
+    url: '/admin/sys/role/add',
+    method: 'post',
+    data: {
+      name: role.roleName,
+      code: role.roleCode,
+      description: role.roleDesc,
+      status: role.status,
+      sort: 0,
+      menu_ids: []
+    }
+  });
+}
+
+/** update role */
+export function fetchUpdateRole(roleId: number, role: Partial<Api.SystemManage.Role>) {
+  return request<Api.SystemManage.Role>({
+    url: `/admin/sys/role/${roleId}`,
+    method: 'put',
+    data: {
+      name: role.roleName,
+      description: role.roleDesc,
+      status: role.status === '1'
+    }
+  });
+}
+
+/** delete role */
+export function fetchDeleteRole(roleId: number) {
+  return request<void>({
+    url: `/admin/sys/role/${roleId}`,
+    method: 'delete'
+  });
+}
+
+/** batch delete roles */
+export function fetchBatchDeleteRole(roleIds: string[]) {
+  return request<void>({
+    url: '/admin/sys/role/batch',
+    method: 'delete',
+    data: roleIds
+  });
+}
+
+/** assign menu to role */
+export function fetchAssignMenuToRole(roleId: number, menuIds: number[]) {
+  return request<Api.SystemManage.Role>({
+    url: `/admin/sys/role/${roleId}/menus`,
+    method: 'post',
+    data: {
+      menu_ids: menuIds
+    }
   });
 }
 
 /** get user list */
 export function fetchGetUserList(params?: Api.SystemManage.UserSearchParams) {
   return request<Api.SystemManage.UserList>({
-    url: '/sys/user/list',
+    url: '/admin/sys/user/list',
     method: 'get',
     params
   });
@@ -33,7 +97,7 @@ export function fetchGetUserList(params?: Api.SystemManage.UserSearchParams) {
 /** get menu list */
 export function fetchGetMenuList() {
   return request<Api.SystemManage.MenuList>({
-    url: '/sys/menu/list',
+    url: '/admin/sys/menu/list',
     method: 'get'
   });
 }
@@ -41,7 +105,7 @@ export function fetchGetMenuList() {
 /** get all pages */
 export function fetchGetAllPages() {
   return request<string[]>({
-    url: '/sys/menu/pages',
+    url: '/admin/sys/menu/pages',
     method: 'get'
   });
 }
@@ -49,8 +113,67 @@ export function fetchGetAllPages() {
 /** get menu tree */
 export function fetchGetMenuTree() {
   return request<Api.SystemManage.MenuTree[]>({
-    url: '/sys/menu/tree',
+    url: '/admin/sys/menu/tree',
     method: 'get'
+  });
+}
+
+/** create menu */
+export function fetchCreateMenu(menu: Partial<Api.SystemManage.Menu>) {
+  return request<Api.SystemManage.Menu>({
+    url: '/admin/sys/menu/add',
+    method: 'post',
+    data: {
+      parent_id: menu.parentId || null,
+      name: menu.menuName,
+      path: menu.routePath,
+      component: menu.component,
+      redirect: null,
+      permission: null,
+      meta_title: menu.i18nKey || menu.menuName,
+      meta_icon: menu.icon,
+      meta_hidden: menu.hideInMenu || false,
+      meta_affix: menu.fixedIndexInTab !== null,
+      meta_breadcrumb: true,
+      status: true,
+      type: menu.menuType === '1' ? 'catalog' : 'menu',
+      sort: menu.order || 0
+    }
+  });
+}
+
+/** update menu */
+export function fetchUpdateMenu(menuId: number, menu: Partial<Api.SystemManage.Menu>) {
+  return request<Api.SystemManage.Menu>({
+    url: `/admin/sys/menu/${menuId}`,
+    method: 'put',
+    data: {
+      parent_id: menu.parentId,
+      name: menu.menuName,
+      path: menu.routePath,
+      component: menu.component,
+      meta_title: menu.i18nKey,
+      meta_icon: menu.icon,
+      meta_hidden: menu.hideInMenu,
+      sort: menu.order
+    }
+  });
+}
+
+/** delete menu */
+export function fetchDeleteMenu(menuId: number) {
+  return request<void>({
+    url: `/admin/sys/menu/${menuId}`,
+    method: 'delete'
+  });
+}
+
+/** batch delete menus */
+export function fetchBatchDeleteMenu(menuIds: number[]) {
+  return request<void>({
+    url: '/admin/sys/menu/batch/delete',
+    method: 'delete',
+    data: menuIds
   });
 }
 
@@ -96,7 +219,7 @@ export function fetchDeleteUser(userId: number) {
 /** get dict list */
 export function fetchGetDictList(params?: Api.SystemManage.DictSearchParams) {
   return request<Api.SystemManage.DictList>({
-    url: '/sys/dict/list',
+    url: '/admin/sys/dict/list',
     method: 'get',
     params
   });
@@ -105,7 +228,7 @@ export function fetchGetDictList(params?: Api.SystemManage.DictSearchParams) {
 /** get all dicts */
 export function fetchGetAllDicts(status?: boolean) {
   return request<Api.SystemManage.Dict[]>({
-    url: '/sys/dict/all',
+    url: '/admin/sys/dict/all',
     method: 'get',
     params: { status }
   });
@@ -114,7 +237,7 @@ export function fetchGetAllDicts(status?: boolean) {
 /** get dict by code */
 export function fetchGetDictByCode(code: string) {
   return request<Api.SystemManage.DictWithItems>({
-    url: `/sys/dict/code/${code}`,
+    url: `/admin/sys/dict/code/${code}`,
     method: 'get'
   });
 }
@@ -122,7 +245,7 @@ export function fetchGetDictByCode(code: string) {
 /** get dict by id */
 export function fetchGetDict(dictId: number) {
   return request<Api.SystemManage.Dict>({
-    url: `/sys/dict/${dictId}`,
+    url: `/admin/sys/dict/${dictId}`,
     method: 'get'
   });
 }
@@ -130,7 +253,7 @@ export function fetchGetDict(dictId: number) {
 /** get dict with items */
 export function fetchGetDictWithItems(dictId: number) {
   return request<Api.SystemManage.DictWithItems>({
-    url: `/sys/dict/${dictId}/with-items`,
+    url: `/admin/sys/dict/${dictId}/with-items`,
     method: 'get'
   });
 }
@@ -138,7 +261,7 @@ export function fetchGetDictWithItems(dictId: number) {
 /** create dict */
 export function fetchCreateDict(dict: Api.SystemManage.DictCreate) {
   return request<Api.SystemManage.Dict>({
-    url: '/sys/dict',
+    url: '/admin/sys/dict/add',
     method: 'post',
     data: dict
   });
@@ -147,7 +270,7 @@ export function fetchCreateDict(dict: Api.SystemManage.DictCreate) {
 /** update dict */
 export function fetchUpdateDict(dictId: number, dict: Api.SystemManage.DictUpdate) {
   return request<Api.SystemManage.Dict>({
-    url: `/sys/dict/${dictId}`,
+    url: `/admin/sys/dict/${dictId}`,
     method: 'put',
     data: dict
   });
@@ -156,7 +279,7 @@ export function fetchUpdateDict(dictId: number, dict: Api.SystemManage.DictUpdat
 /** batch update dict status */
 export function fetchBatchUpdateDictStatus(data: Api.SystemManage.DictBatchUpdateStatus) {
   return request<void>({
-    url: '/sys/dict/batch/status',
+    url: '/admin/sys/dict/batch/status',
     method: 'put',
     data
   });
@@ -165,7 +288,7 @@ export function fetchBatchUpdateDictStatus(data: Api.SystemManage.DictBatchUpdat
 /** delete dict */
 export function fetchDeleteDict(dictId: number) {
   return request<void>({
-    url: `/sys/dict/${dictId}`,
+    url: `/admin/sys/dict/${dictId}`,
     method: 'delete'
   });
 }
@@ -175,7 +298,7 @@ export function fetchDeleteDict(dictId: number) {
 /** get dict item list */
 export function fetchGetDictItemList(params?: Api.SystemManage.DictItemSearchParams) {
   return request<Api.SystemManage.DictItemList>({
-    url: '/sys/dict/item/list',
+    url: '/admin/sys/dict/item/list',
     method: 'get',
     params
   });
@@ -184,7 +307,7 @@ export function fetchGetDictItemList(params?: Api.SystemManage.DictItemSearchPar
 /** get dict items by dict code */
 export function fetchGetDictItemsByDictCode(dictCode: string) {
   return request<Api.SystemManage.DictItem[]>({
-    url: `/sys/dict/item/all/${dictCode}`,
+    url: `/admin/sys/dict/item/all/${dictCode}`,
     method: 'get'
   });
 }
@@ -192,7 +315,7 @@ export function fetchGetDictItemsByDictCode(dictCode: string) {
 /** get dict item by id */
 export function fetchGetDictItem(itemId: number) {
   return request<Api.SystemManage.DictItem>({
-    url: `/sys/dict/item/${itemId}`,
+    url: `/admin/sys/dict/item/${itemId}`,
     method: 'get'
   });
 }
@@ -200,7 +323,7 @@ export function fetchGetDictItem(itemId: number) {
 /** create dict item */
 export function fetchCreateDictItem(item: Api.SystemManage.DictItemCreate) {
   return request<Api.SystemManage.DictItem>({
-    url: '/sys/dict/item',
+    url: '/admin/sys/dict/item/add',
     method: 'post',
     data: item
   });
@@ -209,7 +332,7 @@ export function fetchCreateDictItem(item: Api.SystemManage.DictItemCreate) {
 /** update dict item */
 export function fetchUpdateDictItem(itemId: number, item: Api.SystemManage.DictItemUpdate) {
   return request<Api.SystemManage.DictItem>({
-    url: `/sys/dict/item/${itemId}`,
+    url: `/admin/sys/dict/item/${itemId}`,
     method: 'put',
     data: item
   });
@@ -218,7 +341,7 @@ export function fetchUpdateDictItem(itemId: number, item: Api.SystemManage.DictI
 /** batch update dict item status */
 export function fetchBatchUpdateDictItemStatus(data: Api.SystemManage.DictItemBatchUpdateStatus) {
   return request<void>({
-    url: '/sys/dict/item/batch/status',
+    url: '/admin/sys/dict/item/batch/status',
     method: 'put',
     data
   });
@@ -227,7 +350,7 @@ export function fetchBatchUpdateDictItemStatus(data: Api.SystemManage.DictItemBa
 /** delete dict item */
 export function fetchDeleteDictItem(itemId: number) {
   return request<void>({
-    url: `/sys/dict/item/${itemId}`,
+    url: `/admin/sys/dict/item/${itemId}`,
     method: 'delete'
   });
 }
@@ -237,7 +360,7 @@ export function fetchDeleteDictItem(itemId: number) {
 /** get config list */
 export function fetchGetConfigList(params?: Api.SystemManage.ConfigSearchParams) {
   return request<Api.SystemManage.ConfigList>({
-    url: '/sys/config/list',
+    url: '/admin/sys/config/list',
     method: 'get',
     params
   });
@@ -246,7 +369,7 @@ export function fetchGetConfigList(params?: Api.SystemManage.ConfigSearchParams)
 /** get all configs */
 export function fetchGetAllConfigs(group?: Api.SystemManage.ConfigGroup, editableOnly?: boolean) {
   return request<Api.SystemManage.Config[]>({
-    url: '/sys/config/all',
+    url: '/admin/sys/config/all',
     method: 'get',
     params: { group, editable_only: editableOnly }
   });
@@ -255,7 +378,7 @@ export function fetchGetAllConfigs(group?: Api.SystemManage.ConfigGroup, editabl
 /** get configs by group */
 export function fetchGetConfigsByGroup(group: Api.SystemManage.ConfigGroup, editableOnly?: boolean) {
   return request<Api.SystemManage.Config[]>({
-    url: `/sys/config/group/${group}`,
+    url: `/admin/sys/config/group/${group}`,
     method: 'get',
     params: { editable_only: editableOnly }
   });
@@ -264,7 +387,7 @@ export function fetchGetConfigsByGroup(group: Api.SystemManage.ConfigGroup, edit
 /** get config by id */
 export function fetchGetConfigById(configId: number) {
   return request<Api.SystemManage.Config>({
-    url: `/sys/config/id/${configId}`,
+    url: `/admin/sys/config/id/${configId}`,
     method: 'get'
   });
 }
@@ -272,7 +395,7 @@ export function fetchGetConfigById(configId: number) {
 /** get config by key */
 export function fetchGetConfigByKey(configKey: string) {
   return request<Api.SystemManage.Config>({
-    url: `/sys/config/key/${configKey}`,
+    url: `/admin/sys/config/key/${configKey}`,
     method: 'get'
   });
 }
@@ -280,7 +403,7 @@ export function fetchGetConfigByKey(configKey: string) {
 /** get config value */
 export function fetchGetConfigValue(configKey: string, defaultValue?: string) {
   return request({
-    url: `/sys/config/value/${configKey}`,
+    url: `/admin/sys/config/value/${configKey}`,
     method: 'get',
     params: { default: defaultValue }
   });
@@ -289,7 +412,7 @@ export function fetchGetConfigValue(configKey: string, defaultValue?: string) {
 /** create config */
 export function fetchCreateConfig(config: Api.SystemManage.ConfigCreate) {
   return request<Api.SystemManage.Config>({
-    url: '/sys/config',
+    url: '/admin/sys/config/add',
     method: 'post',
     data: config
   });
@@ -298,7 +421,7 @@ export function fetchCreateConfig(config: Api.SystemManage.ConfigCreate) {
 /** update config */
 export function fetchUpdateConfig(configId: number, config: Api.SystemManage.ConfigUpdate) {
   return request<Api.SystemManage.Config>({
-    url: `/sys/config/${configId}`,
+    url: `/admin/sys/config/${configId}`,
     method: 'put',
     data: config
   });
@@ -307,7 +430,7 @@ export function fetchUpdateConfig(configId: number, config: Api.SystemManage.Con
 /** batch update configs */
 export function fetchBatchUpdateConfigs(data: Api.SystemManage.ConfigBatchUpdate) {
   return request<void>({
-    url: '/sys/config/batch/update',
+    url: '/admin/sys/config/batch/update',
     method: 'put',
     data
   });
@@ -316,7 +439,7 @@ export function fetchBatchUpdateConfigs(data: Api.SystemManage.ConfigBatchUpdate
 /** reset configs */
 export function fetchResetConfigs(data: Api.SystemManage.ConfigReset) {
   return request<void>({
-    url: '/sys/config/batch/reset',
+    url: '/admin/sys/config/batch/reset',
     method: 'put',
     data
   });
@@ -325,7 +448,7 @@ export function fetchResetConfigs(data: Api.SystemManage.ConfigReset) {
 /** delete config */
 export function fetchDeleteConfig(configId: number) {
   return request<void>({
-    url: `/sys/config/${configId}`,
+    url: `/admin/sys/config/${configId}`,
     method: 'delete'
   });
 }

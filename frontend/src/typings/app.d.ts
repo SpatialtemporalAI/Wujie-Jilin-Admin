@@ -319,6 +319,7 @@ declare namespace App {
       };
       common: {
         selectAtLeastOne: string;
+        pleaseSelect: string;
         action: string;
         add: string;
         addSuccess: string;

@@ -8,6 +8,7 @@ const local: App.I18n.Schema = {
   },
   common: {
     selectAtLeastOne: '请至少选择一条数据',
+    pleaseSelect: '请先选择要操作的数据',
     action: '操作',
     add: '新增',
     addSuccess: '添加成功',
