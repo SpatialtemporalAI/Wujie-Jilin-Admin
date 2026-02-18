@@ -143,7 +143,7 @@ frontend/
 2. **配置国际化**：
    - 修改 `src/locales/langs/zh-cn.ts` 添加中文翻译
    - 修改 `src/locales/langs/en-us.ts` 添加英文翻译
-   - 修改 `src/typings/app.d.ts` 添加国际化类型
+   - 修改 `src/typings/app.d.ts` 添加国际化类型，修改App.I18n.Schema的类型配置
 3. **配置类型声明**：修改 `src/typings/app.d.ts` 添加页面路由类型
 4. **生成路由**：执行 `pnpm gen-route` 自动生成路由
 
