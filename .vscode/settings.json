@@ -1,6 +1,5 @@
 {
   "workspaceFolder": "${workspaceFolder}",
-  
   // Python 配置
   "python.defaultInterpreterPath": "${workspaceFolder}/backend/.venv/Scripts/python.exe",
   "python.analysis.extraPaths": [
@@ -16,12 +15,10 @@
   "python.formatting.blackArgs": [
     "--line-length=120"
   ],
-  
   // TypeScript 配置
   "typescript.tsdk": "${workspaceFolder}/frontend/node_modules/typescript/lib",
   "javascript.validate.enable": false,
   "typescript.validate.enable": true,
-  
   // ESLint 配置
   "eslint.enable": true,
   "eslint.workingDirectories": [
@@ -30,14 +27,12 @@
   "editor.codeActionsOnSave": {
     "source.fixAll.eslint": "explicit"
   },
-  
   // 编辑器配置
   "editor.tabSize": 2,
   "editor.insertSpaces": true,
   "editor.detectIndentation": false,
   "editor.formatOnSave": true,
   "editor.defaultFormatter": "esbenp.prettier-vscode",
-  
   // 搜索配置
   "search.exclude": {
     "**/node_modules": true,
@@ -48,11 +43,9 @@
     "**/__pycache__": true,
     "**/.git": true
   },
-  
   // 调试配置
   "debug.console.fontSize": 14,
   "debug.console.lineHeight": 1.4,
-  
   // 终端配置
   "terminal.integrated.fontSize": 14,
   "terminal.integrated.lineHeight": 1.4,
@@ -62,6 +55,9 @@
     "editor.defaultFormatter": "ms-python.black-formatter"
   },
   "[jsonc]": {
+    "editor.defaultFormatter": "vscode.json-language-features"
+  },
+  "[json]": {
     "editor.defaultFormatter": "vscode.json-language-features"
   }
 }
