@@ -144,22 +144,22 @@ const { columns, columnChecks, data, loading, pagination, getData, getDataByPage
       key: 'operate',
       title: $t('common.operate'),
       align: 'center',
-      width: 230,
+      minWidth: 150,
       render: row => (
-        <div class="flex-center justify-end gap-8px">
+        <div class="flex flex-wrap justify-center gap-8px">
           {row.menuType === '1' && (
-            <NButton type="primary" ghost size="small" onClick={() => handleAddChildMenu(row)}>
+            <NButton type="primary" text size="small" onClick={() => handleAddChildMenu(row)}>
               {$t('page.manage.menu.addChildMenu')}
             </NButton>
           )}
-          <NButton type="primary" ghost size="small" onClick={() => handleEdit(row)}>
+          <NButton type="primary" text size="small" onClick={() => handleEdit(row)}>
             {$t('common.edit')}
           </NButton>
           <NPopconfirm onPositiveClick={() => handleDelete(row.id)}>
             {{
               default: () => $t('common.confirmDelete'),
               trigger: () => (
-                <NButton type="error" ghost size="small">
+                <NButton type="error" text size="small">
                   {$t('common.delete')}
                 </NButton>
               )
