@@ -54,7 +54,7 @@ function createDefaultModel(): Model {
     roleName: '',
     roleCode: '',
     roleDesc: '',
-    status: null
+    status: '1'
   };
 }
 
@@ -84,9 +84,9 @@ function closeDrawer() {
 
 async function handleSubmit() {
   await validate();
-  
+
   let error: any = null;
-  
+
   if (isEdit.value) {
     const result = await fetchUpdateRole(roleId.value, model.value);
     error = result.error;
@@ -94,7 +94,7 @@ async function handleSubmit() {
     const result = await fetchCreateRole(model.value);
     error = result.error;
   }
-  
+
   if (!error) {
     window.$message?.success(isEdit.value ? $t('common.updateSuccess') : $t('common.addSuccess'));
     closeDrawer();
