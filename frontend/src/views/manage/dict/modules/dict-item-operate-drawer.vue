@@ -11,6 +11,8 @@ import {
   NGrid,
   NInput,
   NInputNumber,
+  NRadio,
+  NRadioGroup,
   NSelect,
   useMessage
 } from 'naive-ui';
@@ -48,7 +50,7 @@ const defaultFormValue: Api.SystemManage.DictItemCreate = {
   label: '',
   description: '',
   ext_info: '',
-  status: true,
+  status: '1',
   sort: 0
 };
 

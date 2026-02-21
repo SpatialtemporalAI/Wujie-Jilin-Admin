@@ -74,7 +74,18 @@ function handleInitModel() {
   model.value = createDefaultModel();
 
   if (props.operateType === 'edit' && props.rowData) {
-    Object.assign(model.value, jsonClone(props.rowData));
+    const clonedData = jsonClone(props.rowData);
+    // 确保 status 字段格式正确
+    if (clonedData.status === true || clonedData.status === '1') {
+      clonedData.status = '1';
+    } else if (clonedData.status === false || clonedData.status === '2') {
+      clonedData.status = '2';
+    }
+    // 将 rowData 的字段映射到 model 的字段
+    model.value.roleName = clonedData.roleName || clonedData.name || '';
+    model.value.roleCode = clonedData.roleCode || clonedData.code || '';
+    model.value.roleDesc = clonedData.roleDesc || clonedData.desc || '';
+    model.value.status = clonedData.status;
   }
 }
 

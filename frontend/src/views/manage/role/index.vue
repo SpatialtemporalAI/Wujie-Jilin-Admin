@@ -66,16 +66,14 @@ const { columns, columnChecks, data, loading, getData, getDataByPage, mobilePagi
           return null;
         }
 
-        let status: Api.Common.EnableStatus = row.status ? '1' : '2';
-
         const tagMap: Record<Api.Common.EnableStatus, NaiveUI.ThemeColor> = {
           '1': 'success',
           '2': 'warning'
         };
 
-        const label = $t(enableStatusRecord[status]);
+        const label = $t(enableStatusRecord[row.status]);
 
-        return <NTag type={tagMap[status]}>{label}</NTag>;
+        return <NTag type={tagMap[row.status]}>{label}</NTag>;
       }
     },
     {
@@ -83,8 +81,8 @@ const { columns, columnChecks, data, loading, getData, getDataByPage, mobilePagi
       title: $t('common.operate'),
       align: 'center',
       minWidth: 150,
-      render: (row: Api.SystemManage.Role) => (
-        <div class="flex flex-wrap justify-center gap-8px">
+      render: (row: Api.SystemManage.Role) => {
+        return <div class="flex flex-wrap justify-center gap-8px">
           <NButton type="primary" text size="small" onClick={() => edit(row.id)}>
             {$t('common.edit')}
           </NButton>
@@ -99,7 +97,7 @@ const { columns, columnChecks, data, loading, getData, getDataByPage, mobilePagi
             }}
           </NPopconfirm>
         </div>
-      )
+      }
     }
   ]
 });
@@ -113,7 +111,6 @@ const {
   checkedRowKeys,
   onBatchDeleted,
   onDeleted
-  // closeDrawer
 } = useTableOperate(data, 'id', getData);
 
 async function handleBatchDelete() {
@@ -158,5 +155,6 @@ function edit(id: number) {
     </NCard>
   </div>
 </template>
+
 
 <style scoped></style>

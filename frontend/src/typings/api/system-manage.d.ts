@@ -10,23 +10,23 @@ declare namespace Api {
     /** role */
     type Role = Common.CommonRecord<{
       /** role name */
-      roleName: string;
+      name: string;
       /** role code */
-      roleCode: string;
+      code: string;
       /** role description */
-      roleDesc: string;
+      desc: string;
     }>;
 
     /** role search params */
     type RoleSearchParams = CommonType.RecordNullable<
-      Pick<Api.SystemManage.Role, 'roleName' | 'roleCode' | 'status'> & CommonSearchParams
+      Pick<Api.SystemManage.Role, 'name' | 'code' | 'status'> & CommonSearchParams
     >;
 
     /** role list */
     type RoleList = Common.PaginatingQueryRecord<Role>;
 
     /** all role */
-    type AllRole = Pick<Role, 'id' | 'roleName' | 'roleCode'>;
+    type AllRole = Pick<Role, 'id' | 'name' | 'code'>;
 
     /**
      * user gender
@@ -194,7 +194,7 @@ declare namespace Api {
 
     /** 字典搜索参数 */
     type DictSearchParams = CommonType.RecordNullable<
-      Pick<Dict, 'name' | 'code' | 'is_system'> & { status?: boolean } & CommonSearchParams
+      Pick<Dict, 'name' | 'code' | 'is_system' | 'status'> & CommonSearchParams
     >;
 
     /** 字典列表 */
@@ -202,7 +202,7 @@ declare namespace Api {
 
     /** 字典项搜索参数 */
     type DictItemSearchParams = CommonType.RecordNullable<
-      Pick<DictItem, 'dict_id' | 'label' | 'value'> & { status?: boolean } & CommonSearchParams
+      Pick<DictItem, 'dict_id' | 'label' | 'value' | 'status'> & CommonSearchParams
     >;
 
     /** 字典项列表 */
@@ -245,7 +245,7 @@ declare namespace Api {
       /** 扩展信息(JSON格式) */
       ext_info?: string;
       /** 是否启用 */
-      status: boolean;
+      status: Common.EnableStatus;
       /** 排序号 */
       sort: number;
     };

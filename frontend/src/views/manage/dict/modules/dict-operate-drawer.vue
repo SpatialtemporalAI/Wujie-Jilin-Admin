@@ -107,7 +107,7 @@ async function handleSubmit() {
           </NFormItemGi>
           <NFormItemGi :span="12" :label="$t('page.manage.dict.isSystem')">
             <NSelect v-model:value="form.is_system" :options="yesOrNoOptions"
-              :placeholder="$t('page.manage.dict.form.isSystem')" clearable />/>
+              :placeholder="$t('page.manage.dict.form.isSystem')" clearable />
           </NFormItemGi>
           <NFormItemGi :span="12" :label="$t('page.manage.dict.sort')">
             <NInputNumber v-model:value="form.sort" :placeholder="$t('page.manage.dict.form.sort')"

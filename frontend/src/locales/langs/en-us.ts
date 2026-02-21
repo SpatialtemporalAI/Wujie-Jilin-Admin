@@ -13,6 +13,7 @@ const local: App.I18n.Schema = {
     add: 'Add',
     addSuccess: 'Add Success',
     backToHome: 'Back to home',
+    back: 'Back',
     batchDelete: 'Batch Delete',
     cancel: 'Cancel',
     close: 'Close',
@@ -47,6 +48,7 @@ const local: App.I18n.Schema = {
     trigger: 'Trigger',
     update: 'Update',
     updateSuccess: 'Update Success',
+    updateFailed: 'Update Failed',
     userCenter: 'User Center',
     changePassword: 'Change Password',
     yesOrNo: {

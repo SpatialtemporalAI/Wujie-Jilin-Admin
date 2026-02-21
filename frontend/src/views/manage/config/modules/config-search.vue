@@ -1,20 +1,23 @@
-<script setup lang="tsx">
-import { useVModel } from '@vueuse/core';
-import { NButton, NForm, NFormItem, NGrid, NGridItem, NInput, NSelect } from 'naive-ui';
+<script setup lang="ts">
+import { toRaw } from 'vue';
+import { jsonClone } from '@sa/utils';
 import { yesOrNoOptions } from '@/constants/business';
 import { $t } from '@/locales';
 
-interface Props {
-  model: Api.SystemManage.ConfigSearchParams;
+defineOptions({
+  name: 'ConfigSearch'
+});
+
+interface Emits {
+  (e: 'search'): void;
+  (e: 'reset'): void;
 }
 
-const props = defineProps<Props>();
-const emit = defineEmits<{
-  search: [];
-  reset: [];
-}>();
+const emit = defineEmits<Emits>();
 
-const model = useVModel(props, 'model');
+const model = defineModel<Api.SystemManage.ConfigSearchParams>('model', { required: true });
+
+const defaultModel = jsonClone(toRaw(model.value));
 
 /** 配置类型选项 */
 const configTypeOptions = [
@@ -35,73 +38,60 @@ const configGroupOptions = [
   { label: $t('page.manage.config.group.custom'), value: 'custom' }
 ];
 
-function handleSearch() {
-  emit('search');
+function resetModel() {
+  Object.assign(model.value, defaultModel);
+  emit('reset');
 }
 
-function handleReset() {
-  model.value = {
-    page: 1,
-    page_size: 10,
-    key: null,
-    description: null,
-    type: null,
-    group: null,
-    editable: null,
-    is_system: null
-  };
-  emit('reset');
+function search() {
+  emit('search');
 }
 </script>
 
 <template>
   <NCard :bordered="false" size="small" class="card-wrapper">
-    <NForm :model="model" label-placement="left" label-width="auto" size="small">
-      <NGrid :x-gap="16" :cols="24">
-        <NGridItem :xs="24" :sm="12" :md="8" :lg="6" :xl="4">
-          <NFormItem :label="$t('page.manage.config.configKey')">
-            <NInput v-model:value="model.key" :placeholder="$t('common.keywordSearch')" clearable />
-          </NFormItem>
-        </NGridItem>
-        <NGridItem :xs="24" :sm="12" :md="8" :lg="6" :xl="4">
-          <NFormItem :label="$t('page.manage.config.configDesc')">
-            <NInput v-model:value="model.description" :placeholder="$t('common.keywordSearch')" clearable />
-          </NFormItem>
-        </NGridItem>
-        <NGridItem :xs="24" :sm="12" :md="8" :lg="6" :xl="4">
-          <NFormItem :label="$t('page.manage.config.configType')">
-            <NSelect v-model:value="model.type" :options="configTypeOptions" :placeholder="$t('common.keywordSearch')" clearable />
-          </NFormItem>
-        </NGridItem>
-        <NGridItem :xs="24" :sm="12" :md="8" :lg="6" :xl="4">
-          <NFormItem :label="$t('page.manage.config.configGroup')">
-            <NSelect v-model:value="model.group" :options="configGroupOptions" :placeholder="$t('common.keywordSearch')" clearable />
-          </NFormItem>
-        </NGridItem>
-        <NGridItem :xs="24" :sm="12" :md="8" :lg="6" :xl="4">
-          <NFormItem :label="$t('page.manage.config.editable')">
-            <NSelect v-model:value="model.editable" :options="yesOrNoOptions" :placeholder="$t('common.keywordSearch')" clearable />
-          </NFormItem>
-        </NGridItem>
-        <NGridItem :xs="24" :sm="12" :md="8" :lg="6" :xl="4">
-          <NFormItem :label="$t('page.manage.config.isSystem')">
-            <NSelect v-model:value="model.is_system" :options="yesOrNoOptions" :placeholder="$t('common.keywordSearch')" clearable />
-          </NFormItem>
-        </NGridItem>
-        <NGridItem :xs="24" :sm="12" :md="8" :lg="6" :xl="4">
-          <NFormItem>
-            <div class="flex-center gap-8px">
-              <NButton type="primary" size="small" @click="handleSearch">
-                {{ $t('common.search') }}
-              </NButton>
-              <NButton size="small" @click="handleReset">
-                {{ $t('common.reset') }}
-              </NButton>
-            </div>
-          </NFormItem>
-        </NGridItem>
-      </NGrid>
-    </NForm>
+    <NCollapse :default-expanded-names="['config-search']">
+      <NCollapseItem :title="$t('common.search')" name="config-search">
+        <NForm :model="model" label-placement="left" :label-width="80">
+          <NGrid responsive="screen" item-responsive>
+            <NFormItemGi span="24 s:12 m:6" :label="$t('page.manage.config.configKey')" path="key" class="pr-24px">
+              <NInput v-model:value="model.key" :placeholder="$t('common.keywordSearch')" clearable />
+            </NFormItemGi>
+            <NFormItemGi span="24 s:12 m:6" :label="$t('page.manage.config.configDesc')" path="description" class="pr-24px">
+              <NInput v-model:value="model.description" :placeholder="$t('common.keywordSearch')" clearable />
+            </NFormItemGi>
+            <NFormItemGi span="24 s:12 m:6" :label="$t('page.manage.config.configType')" path="type" class="pr-24px">
+              <NSelect v-model:value="model.type" :options="configTypeOptions" :placeholder="$t('common.keywordSearch')" clearable />
+            </NFormItemGi>
+            <NFormItemGi span="24 s:12 m:6" :label="$t('page.manage.config.configGroup')" path="group" class="pr-24px">
+              <NSelect v-model:value="model.group" :options="configGroupOptions" :placeholder="$t('common.keywordSearch')" clearable />
+            </NFormItemGi>
+            <NFormItemGi span="24 s:12 m:6" :label="$t('page.manage.config.editable')" path="editable" class="pr-24px">
+              <NSelect v-model:value="model.editable" :options="yesOrNoOptions" :placeholder="$t('common.keywordSearch')" clearable />
+            </NFormItemGi>
+            <NFormItemGi span="24 s:12 m:6" :label="$t('page.manage.config.isSystem')" path="is_system" class="pr-24px">
+              <NSelect v-model:value="model.is_system" :options="yesOrNoOptions" :placeholder="$t('common.keywordSearch')" clearable />
+            </NFormItemGi>
+            <NFormItemGi span="24 m:12" class="pr-24px">
+              <NSpace class="w-full" justify="end">
+                <NButton @click="resetModel">
+                  <template #icon>
+                    <icon-ic-round-refresh class="text-icon" />
+                  </template>
+                  {{ $t('common.reset') }}
+                </NButton>
+                <NButton type="primary" ghost @click="search">
+                  <template #icon>
+                    <icon-ic-round-search class="text-icon" />
+                  </template>
+                  {{ $t('common.search') }}
+                </NButton>
+              </NSpace>
+            </NFormItemGi>
+          </NGrid>
+        </NForm>
+      </NCollapseItem>
+    </NCollapse>
   </NCard>
 </template>
 

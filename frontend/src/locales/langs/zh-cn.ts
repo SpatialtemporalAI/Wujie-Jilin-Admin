@@ -13,6 +13,7 @@ const local: App.I18n.Schema = {
     add: '新增',
     addSuccess: '添加成功',
     backToHome: '返回首页',
+    back: '返回',
     batchDelete: '批量删除',
     cancel: '取消',
     close: '关闭',
@@ -47,6 +48,7 @@ const local: App.I18n.Schema = {
     trigger: '触发',
     update: '更新',
     updateSuccess: '更新成功',
+    updateFailed: '更新失败',
     userCenter: '个人中心',
     changePassword: '修改密码',
     yesOrNo: {

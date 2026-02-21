@@ -324,6 +324,7 @@ declare namespace App {
         add: string;
         addSuccess: string;
         backToHome: string;
+        back: string;
         batchDelete: string;
         cancel: string;
         close: string;
@@ -358,6 +359,7 @@ declare namespace App {
         trigger: string;
         update: string;
         updateSuccess: string;
+        updateFailed: string;
         userCenter: string;
         changePassword: string;
         yesOrNo: {

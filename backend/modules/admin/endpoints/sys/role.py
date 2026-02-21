@@ -100,7 +100,7 @@ async def get_all_roles(db: AsyncSession = Depends(get_session)):
     logger.info("获取所有启用的角色请求")
 
     roles = await RoleService.get_all_roles(db)
-    role_responses = [SysRoleSimpleResponse.from_orm(role) for role in roles]
+    role_responses = [SysRoleSimpleResponse.model_validate(role) for role in roles]
 
     logger.info(f"获取所有启用的角色成功，共 {len(role_responses)} 个角色")
     return ResponseModel(data=role_responses)
@@ -117,7 +117,7 @@ async def get_role(
     logger.info(f"获取单个角色请求，角色ID: {role_id}")
 
     role = await RoleService.get_role(db, role_id)
-    role_response = SysRoleResponseData.from_orm(role)
+    role_response = SysRoleResponseData.model_validate(role)
 
     logger.info(f"获取单个角色成功，角色ID: {role_id}")
     return ResponseModel(data=role_response)
@@ -134,7 +134,7 @@ async def create_role(
     logger.info(f"创建角色请求，角色名: {role_create.name}, 编码: {role_create.code}")
 
     role = await RoleService.create_role(db, role_create)
-    role_response = SysRoleResponseData.from_orm(role)
+    role_response = SysRoleResponseData.model_validate(role)
 
     logger.info(f"创建角色成功，角色ID: {role.id}")
     return ResponseModel(data=role_response, msg="创建角色成功")
@@ -152,7 +152,7 @@ async def update_role(
     logger.info(f"更新角色请求，角色ID: {role_id}")
 
     role = await RoleService.update_role(db, role_id, role_update)
-    role_response = SysRoleResponseData.from_orm(role)
+    role_response = SysRoleResponseData.model_validate(role)
 
     logger.info(f"更新角色成功，角色ID: {role_id}")
     return ResponseModel(data=role_response, msg="更新角色成功")
@@ -172,7 +172,7 @@ async def assign_menu_to_role(
     )
 
     role = await RoleService.assign_menu_to_role(db, role_id, assign_in.menu_ids)
-    role_response = SysRoleResponseData.from_orm(role)
+    role_response = SysRoleResponseData.model_validate(role)
 
     logger.info(f"为角色分配菜单权限成功，角色ID: {role_id}")
     return ResponseModel(data=role_response, msg="分配菜单权限成功")

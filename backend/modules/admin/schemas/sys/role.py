@@ -29,7 +29,7 @@ class SysRoleCreate(BaseEntity):
     name: str = Field(..., description="角色名称", max_length=100)
     code: str = Field(..., description="角色编码", max_length=100)
     description: Optional[str] = Field(None, description="角色描述")
-    status: str = Field("1", description="角色状态：1-启用，2-禁用")
+    status: bool = Field(True, description="角色状态：1-启用，2-禁用")
     sort: int = Field(0, description="排序号")
     menu_ids: List[int] = Field([], description="菜单ID列表")
 
@@ -59,25 +59,7 @@ class SysRoleSimpleResponse(BaseRespEntity):
     id: int = Field(..., description="角色ID")
     roleName: str = Field(..., description="角色名称")
     roleCode: str = Field(..., description="角色编码")
-    status: str = Field(..., description="角色状态")
-
-    @classmethod
-    def from_orm(cls, role) -> "SysRoleSimpleResponse":
-        """
-        从 ORM 对象创建响应模型
-
-        Args:
-            role: SysRole ORM 对象
-
-        Returns:
-            SysRoleSimpleResponse 对象
-        """
-        return cls(
-            id=role.id,
-            roleName=role.name,
-            roleCode=role.code,
-            status="1" if role.status else "2",
-        )
+    status: bool = Field(Trueescription="角色状态")
 
 
 class SysRoleResponseData(BaseRespEntity):
@@ -92,46 +74,13 @@ class SysRoleResponseData(BaseRespEntity):
     roleName: str = Field(..., description="角色名称", alias="name")
     roleCode: str = Field(..., description="角色编码", alias="code")
     roleDesc: Optional[str] = Field(None, description="角色描述", alias="description")
-    status: str = Field(..., description="角色状态：1-启用，2-禁用")
+    status: bool = Field(True, description="角色状态：1-启用，2-禁用")
     is_default: bool = Field(..., description="是否为默认角色")
     is_system: bool = Field(..., description="是否为系统内置角色")
     sort: int = Field(..., description="排序号")
     createTime: Optional[str] = Field(None, description="创建时间")
     updateTime: Optional[str] = Field(None, description="更新时间")
     menu_ids: List[int] = Field([], description="菜单ID列表")
-
-    @classmethod
-    def from_orm(cls, role) -> "SysRoleResponseData":
-        """
-        从 ORM 对象创建响应模型
-
-        Args:
-            role: SysRole ORM 对象
-
-        Returns:
-            SysRoleResponseData 对象
-        """
-        return cls(
-            id=role.id,
-            roleName=role.name,
-            roleCode=role.code,
-            roleDesc=role.description,
-            status="1" if role.status else "2",
-            is_default=role.is_default,
-            is_system=role.is_system,
-            sort=role.sort,
-            createTime=(
-                role.created_at.astimezone().strftime("%Y-%m-%d %H:%M:%S")
-                if role.created_at
-                else None
-            ),
-            updateTime=(
-                role.updated_at.astimezone().strftime("%Y-%m-%d %H:%M:%S")
-                if role.updated_at
-                else None
-            ),
-            menu_ids=[menu.id for menu in role.menus] if role.menus else [],
-        )
 
 
 class SysRoleBatchUpdateStatus(BaseEntity):
