@@ -171,7 +171,7 @@ class RoleService:
         role = SysRole(
             name=role_create.name,
             code=role_create.code,
-            description=role_create.description,
+            desc=role_create.desc,
             status=role_create.status,
             sort=role_create.sort,
             is_system=False,
@@ -257,7 +257,9 @@ class RoleService:
             if hasattr(role, key) and value is not None:
                 # 处理状态字段，将字符串转换为布尔值
                 if key == "status":
-                    setattr(role, key, value == "1" if isinstance(value, str) else value)
+                    setattr(
+                        role, key, value == "1" if isinstance(value, str) else value
+                    )
                 else:
                     setattr(role, key, value)
 

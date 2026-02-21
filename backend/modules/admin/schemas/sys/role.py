@@ -28,7 +28,7 @@ class SysRoleCreate(BaseEntity):
 
     name: str = Field(..., description="角色名称", max_length=100)
     code: str = Field(..., description="角色编码", max_length=100)
-    description: Optional[str] = Field(None, description="角色描述")
+    desc: Optional[str] = Field(None, description="角色描述")
     status: bool = Field(True, description="角色状态：1-启用，2-禁用")
     sort: int = Field(0, description="排序号")
     menu_ids: List[int] = Field([], description="菜单ID列表")
@@ -42,7 +42,7 @@ class SysRoleUpdate(BaseEntity):
 
     name: Optional[str] = Field(None, description="角色名称", max_length=100)
     code: Optional[str] = Field(None, description="角色编码", max_length=100)
-    description: Optional[str] = Field(None, description="角色描述")
+    desc: Optional[str] = Field(None, description="角色描述")
     status: Optional[bool] = Field(None, description="角色状态：True-启用，False-禁用")
     sort: Optional[int] = Field(None, description="排序号")
     menu_ids: Optional[List[int]] = Field(None, description="菜单ID列表")
@@ -57,8 +57,8 @@ class SysRoleSimpleResponse(BaseRespEntity):
     model_config = ConfigDict(from_attributes=True)
 
     id: int = Field(..., description="角色ID")
-    roleName: str = Field(..., description="角色名称")
-    roleCode: str = Field(..., description="角色编码")
+    name: str = Field(..., description="角色名称")
+    code: str = Field(..., description="角色编码")
     status: bool = Field(Trueescription="角色状态")
 
 
@@ -71,9 +71,9 @@ class SysRoleResponseData(BaseRespEntity):
     model_config = ConfigDict(from_attributes=True, populate_by_name=True)
 
     id: int = Field(..., description="角色ID")
-    roleName: str = Field(..., description="角色名称", alias="name")
-    roleCode: str = Field(..., description="角色编码", alias="code")
-    roleDesc: Optional[str] = Field(None, description="角色描述", alias="description")
+    name: str = Field(..., description="角色名称")
+    code: str = Field(..., description="角色编码")
+    desc: Optional[str] = Field(None, description="角色描述")
     status: bool = Field(True, description="角色状态：1-启用，2-禁用")
     is_default: bool = Field(..., description="是否为默认角色")
     is_system: bool = Field(..., description="是否为系统内置角色")

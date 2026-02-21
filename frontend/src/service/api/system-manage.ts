@@ -34,9 +34,9 @@ export function fetchCreateRole(role: Partial<Api.SystemManage.Role>) {
     url: '/admin/sys/role/add',
     method: 'post',
     data: {
-      name: role.roleName || role.name,
-      code: role.roleCode || role.code,
-      description: role.roleDesc || role.desc,
+      name: role.name,
+      code: role.code,
+      desc: role.desc,
       status: role.status,
       sort: 0,
       menu_ids: []
@@ -50,10 +50,10 @@ export function fetchUpdateRole(roleId: number, role: Partial<Api.SystemManage.R
     url: `/admin/sys/role/${roleId}`,
     method: 'put',
     data: {
-      name: role.roleName || role.name,
-      code: role.roleCode || role.code,
-      description: role.roleDesc || role.desc,
-      status: role.status === '1' || role.status === true
+      name: role.name,
+      code: role.code,
+      desc: role.desc,
+      status: role.status === '1'
     }
   });
 }

@@ -45,24 +45,24 @@ const title = computed(() => {
   return titles[props.operateType];
 });
 
-type Model = Pick<Api.SystemManage.Role, 'roleName' | 'roleCode' | 'roleDesc' | 'status'>;
+type Model = Pick<Api.SystemManage.Role, 'name' | 'code' | 'desc' | 'status'>;
 
 const model = ref(createDefaultModel());
 
 function createDefaultModel(): Model {
   return {
-    roleName: '',
-    roleCode: '',
-    roleDesc: '',
+    name: '',
+    code: '',
+    desc: '',
     status: '1'
   };
 }
 
-type RuleKey = Exclude<keyof Model, 'roleDesc'>;
+type RuleKey = Exclude<keyof Model, 'desc'>;
 
 const rules: Record<RuleKey, App.Global.FormRule> = {
-  roleName: defaultRequiredRule,
-  roleCode: defaultRequiredRule,
+  name: defaultRequiredRule,
+  code: defaultRequiredRule,
   status: defaultRequiredRule
 };
 
@@ -76,15 +76,11 @@ function handleInitModel() {
   if (props.operateType === 'edit' && props.rowData) {
     const clonedData = jsonClone(props.rowData);
     // 确保 status 字段格式正确
-    if (clonedData.status === true || clonedData.status === '1') {
-      clonedData.status = '1';
-    } else if (clonedData.status === false || clonedData.status === '2') {
-      clonedData.status = '2';
-    }
+
     // 将 rowData 的字段映射到 model 的字段
-    model.value.roleName = clonedData.roleName || clonedData.name || '';
-    model.value.roleCode = clonedData.roleCode || clonedData.code || '';
-    model.value.roleDesc = clonedData.roleDesc || clonedData.desc || '';
+    model.value.name = clonedData.name || '';
+    model.value.code = clonedData.code || '';
+    model.value.desc = clonedData.desc || '';
     model.value.status = clonedData.status;
   }
 }
@@ -126,18 +122,18 @@ watch(visible, () => {
     <NDrawerContent :title="title" :native-scrollbar="false" closable>
       <NForm ref="formRef" :model="model" :rules="rules">
         <NFormItem :label="$t('page.manage.role.roleName')" path="roleName">
-          <NInput v-model:value="model.roleName" :placeholder="$t('page.manage.role.form.roleName')" />
+          <NInput v-model:value="model.name" :placeholder="$t('page.manage.role.form.roleName')" />
         </NFormItem>
         <NFormItem :label="$t('page.manage.role.roleCode')" path="roleCode">
-          <NInput v-model:value="model.roleCode" :placeholder="$t('page.manage.role.form.roleCode')" />
+          <NInput v-model:value="model.code" :placeholder="$t('page.manage.role.form.roleCode')" />
         </NFormItem>
         <NFormItem :label="$t('page.manage.role.roleStatus')" path="status">
           <NRadioGroup v-model:value="model.status">
             <NRadio v-for="item in enableStatusOptions" :key="item.value" :value="item.value" :label="$t(item.label)" />
           </NRadioGroup>
         </NFormItem>
-        <NFormItem :label="$t('page.manage.role.roleDesc')" path="roleDesc">
-          <NInput v-model:value="model.roleDesc" :placeholder="$t('page.manage.role.form.roleDesc')" />
+        <NFormItem :label="$t('page.manage.role.roleDesc')" path="desc">
+          <NInput v-model:value="model.desc" :placeholder="$t('page.manage.role.form.roleDesc')" />
         </NFormItem>
       </NForm>
       <NSpace v-if="isEdit">

@@ -14,8 +14,8 @@ const appStore = useAppStore();
 const searchParams: Api.SystemManage.RoleSearchParams = reactive({
   page: 1,
   page_size: 10,
-  roleName: null,
-  roleCode: null,
+  name: null,
+  code: null,
   status: null
 });
 
