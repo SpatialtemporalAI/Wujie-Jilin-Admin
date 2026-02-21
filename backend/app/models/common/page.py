@@ -63,7 +63,8 @@ async def get_paginated_results(
     query = query.offset(offset).limit(page_params.page_size)
     # 查询分页数据
     result = await db.execute(query)
-    items = result.scalars().all()
+    # 使用 unique() 处理 joined eager loads 的情况
+    items = result.unique().scalars().all()
 
     records = [schema.model_validate(item) for item in items] if schema else items
 

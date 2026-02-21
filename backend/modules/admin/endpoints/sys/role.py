@@ -15,7 +15,7 @@ from core.response.response_schema import (
     ResponsePageModel,
     ResponsePageDataModel,
 )
-from app.models.common.page import PageRequest, get_page_params
+from app.models.common.page import PageRequest, get_page_params, get_paginated_results
 
 from modules.admin.services.sys import RoleService
 from modules.admin.schemas.sys.role import (
@@ -77,25 +77,18 @@ async def get_role_list(
         is_system=parse_bool_param(is_system),
     )
 
-    # 获取角色列表
-    roles, total = await RoleService.get_role_list(db, query_params)
+    # 构建查询对象
+    query = RoleService.build_role_query(query_params)
 
-    # 转换为响应模型
-    records = [SysRoleResponseData.model_validate(role) for role in roles]
-
-    # 计算分页信息
-    total_pages = (total + page_params.page_size - 1) // page_params.page_size
-
-    # 构建分页数据模型
-    page_data = ResponsePageDataModel[SysRoleResponseData](
-        records=records,
-        page=page_params.page,
-        page_size=page_params.page_size,
-        total=total,
-        total_pages=total_pages,
+    # 使用通用分页方法
+    page_data = await get_paginated_results(
+        db=db,
+        page_params=page_params,
+        query=query,
+        schema=SysRoleResponseData,
     )
 
-    logger.info(f"获取角色列表成功，共 {total} 条记录")
+    logger.info(f"获取角色列表成功，共 {page_data.total} 条记录")
     return ResponsePageModel[SysRoleResponseData](data=page_data)
 
 
@@ -124,7 +117,7 @@ async def get_role(
     logger.info(f"获取单个角色请求，角色ID: {role_id}")
 
     role = await RoleService.get_role(db, role_id)
-    role_response = SysRoleResponseData.model_validate(role)
+    role_response = SysRoleResponseData.from_orm(role)
 
     logger.info(f"获取单个角色成功，角色ID: {role_id}")
     return ResponseModel(data=role_response)
@@ -141,7 +134,7 @@ async def create_role(
     logger.info(f"创建角色请求，角色名: {role_create.name}, 编码: {role_create.code}")
 
     role = await RoleService.create_role(db, role_create)
-    role_response = SysRoleResponseData.model_validate(role)
+    role_response = SysRoleResponseData.from_orm(role)
 
     logger.info(f"创建角色成功，角色ID: {role.id}")
     return ResponseModel(data=role_response, msg="创建角色成功")
@@ -159,7 +152,7 @@ async def update_role(
     logger.info(f"更新角色请求，角色ID: {role_id}")
 
     role = await RoleService.update_role(db, role_id, role_update)
-    role_response = SysRoleResponseData.model_validate(role)
+    role_response = SysRoleResponseData.from_orm(role)
 
     logger.info(f"更新角色成功，角色ID: {role_id}")
     return ResponseModel(data=role_response, msg="更新角色成功")
@@ -179,7 +172,7 @@ async def assign_menu_to_role(
     )
 
     role = await RoleService.assign_menu_to_role(db, role_id, assign_in.menu_ids)
-    role_response = SysRoleResponseData.model_validate(role)
+    role_response = SysRoleResponseData.from_orm(role)
 
     logger.info(f"为角色分配菜单权限成功，角色ID: {role_id}")
     return ResponseModel(data=role_response, msg="分配菜单权限成功")

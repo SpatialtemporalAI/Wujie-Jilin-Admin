@@ -7,7 +7,7 @@
 """
 import logging
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy import select, func, and_
+from sqlalchemy import select, func, and_, Select
 from sqlalchemy.orm import joinedload
 from typing import List, Optional, Tuple
 
@@ -31,22 +31,18 @@ class UserService:
     """
 
     @staticmethod
-    async def get_user_list(
-        db: AsyncSession,
+    def build_user_query(
         query_params: SysUserQueryParams,
-    ) -> Tuple[List[SysUser], int]:
+    ) -> Select:
         """
-        获取用户列表（带分页和查询条件）
+        构建用户查询对象
 
         Args:
-            db: 数据库会话
             query_params: 查询参数
 
         Returns:
-            Tuple[用户列表, 总记录数]
+            SQLAlchemy查询对象
         """
-        logger.info(f"获取用户列表，查询参数: {query_params}")
-
         # 构建基础查询
         base_query = select(SysUser).options(joinedload(SysUser.roles))
 
@@ -72,13 +68,35 @@ class UserService:
         if conditions:
             base_query = base_query.where(and_(*conditions))
 
+        # 添加排序
+        base_query = base_query.order_by(SysUser.created_at.desc())
+
+        return base_query
+
+    @staticmethod
+    async def get_user_list(
+        db: AsyncSession,
+        query_params: SysUserQueryParams,
+    ) -> Tuple[List[SysUser], int]:
+        """
+        获取用户列表（带分页和查询条件）
+
+        Args:
+            db: 数据库会话
+            query_params: 查询参数
+
+        Returns:
+            Tuple[用户列表, 总记录数]
+        """
+        logger.info(f"获取用户列表，查询参数: {query_params}")
+
+        # 构建查询
+        base_query = UserService.build_user_query(query_params)
+
         # 统计总数
         count_query = select(func.count()).select_from(base_query.subquery())
         count_result = await db.execute(count_query)
         total = count_result.scalar() or 0
-
-        # 添加排序
-        base_query = base_query.order_by(SysUser.created_at.desc())
 
         # 分页
         offset = (query_params.page - 1) * query_params.page_size

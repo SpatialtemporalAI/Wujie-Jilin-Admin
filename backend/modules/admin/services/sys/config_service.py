@@ -8,11 +8,16 @@
 import logging
 import json
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy import select, delete, or_, and_, update
+from sqlalchemy import select, delete, or_, and_, update, Select
 from typing import List, Optional, Tuple, Any
 
 from app.models.sys.config import SysConfig, ConfigType, ConfigGroup
-from core.exception.errors import NotFoundError, ConflictError, ForbiddenError, ValidationError
+from core.exception.errors import (
+    NotFoundError,
+    ConflictError,
+    ForbiddenError,
+    ValidationError,
+)
 from modules.admin.schemas.sys.config import (
     SysConfigCreate,
     SysConfigUpdate,
@@ -32,9 +37,47 @@ class ConfigService:
     """
 
     @staticmethod
+    def build_config_query(
+        query_params: SysConfigQueryParams,
+    ) -> Select:
+        """
+        构建配置查询对象
+
+        Args:
+            query_params: 查询参数
+
+        Returns:
+            SQLAlchemy查询对象
+        """
+        # 构建基础查询
+        query = select(SysConfig)
+
+        # 构建筛选条件
+        conditions = []
+        if query_params.key:
+            conditions.append(SysConfig.key.contains(query_params.key))
+        if query_params.description:
+            conditions.append(SysConfig.description.contains(query_params.description))
+        if query_params.type:
+            conditions.append(SysConfig.type == query_params.type)
+        if query_params.group:
+            conditions.append(SysConfig.group == query_params.group)
+        if query_params.editable is not None:
+            conditions.append(SysConfig.editable == query_params.editable)
+        if query_params.is_system is not None:
+            conditions.append(SysConfig.is_system == query_params.is_system)
+
+        if conditions:
+            query = query.where(and_(*conditions))
+
+        # 排序
+        query = query.order_by(SysConfig.id.desc())
+
+        return query
+
+    @staticmethod
     async def get_config_list(
-        db: AsyncSession,
-        query_params: SysConfigQueryParams
+        db: AsyncSession, query_params: SysConfigQueryParams
     ) -> Tuple[List[SysConfig], int]:
         """
         获取配置列表（分页）
@@ -47,35 +90,21 @@ class ConfigService:
             (配置列表, 总数)
         """
         try:
-            logger.info("获取配置列表，查询参数: %s", query_params.model_dump(exclude_none=True))
+            logger.info(
+                "获取配置列表，查询参数: %s", query_params.model_dump(exclude_none=True)
+            )
 
-            # 构建基础查询
-            query = select(SysConfig)
-
-            # 构建筛选条件
-            conditions = []
-            if query_params.key:
-                conditions.append(SysConfig.key.contains(query_params.key))
-            if query_params.description:
-                conditions.append(SysConfig.description.contains(query_params.description))
-            if query_params.type:
-                conditions.append(SysConfig.type == query_params.type)
-            if query_params.group:
-                conditions.append(SysConfig.group == query_params.group)
-            if query_params.editable is not None:
-                conditions.append(SysConfig.editable == query_params.editable)
-            if query_params.is_system is not None:
-                conditions.append(SysConfig.is_system == query_params.is_system)
-
-            if conditions:
-                query = query.where(and_(*conditions))
+            # 构建查询
+            base_query = ConfigService.build_config_query(query_params)
 
             # 先查询总数
-            count_result = await db.execute(select(SysConfig.id).select_from(query.subquery()))
+            count_result = await db.execute(
+                select(SysConfig.id).select_from(base_query.subquery())
+            )
             total = len(count_result.scalars().all())
 
             # 分页查询
-            query = query.order_by(SysConfig.id.desc())
+            query = base_query
             if query_params.page and query_params.page_size:
                 offset = (query_params.page - 1) * query_params.page_size
                 query = query.offset(offset).limit(query_params.page_size)
@@ -91,10 +120,7 @@ class ConfigService:
             raise
 
     @staticmethod
-    async def get_config_by_id(
-        db: AsyncSession,
-        config_id: int
-    ) -> SysConfig:
+    async def get_config_by_id(db: AsyncSession, config_id: int) -> SysConfig:
         """
         通过ID获取单个配置
 
@@ -111,7 +137,9 @@ class ConfigService:
         try:
             logger.info("获取配置详情，配置ID: %d", config_id)
 
-            result = await db.execute(select(SysConfig).where(SysConfig.id == config_id))
+            result = await db.execute(
+                select(SysConfig).where(SysConfig.id == config_id)
+            )
             config = result.scalar_one_or_none()
 
             if not config:
@@ -128,10 +156,7 @@ class ConfigService:
             raise
 
     @staticmethod
-    async def get_config_by_key(
-        db: AsyncSession,
-        config_key: str
-    ) -> SysConfig:
+    async def get_config_by_key(db: AsyncSession, config_key: str) -> SysConfig:
         """
         通过键名获取单个配置
 
@@ -148,7 +173,9 @@ class ConfigService:
         try:
             logger.info("获取配置详情，配置键名: %s", config_key)
 
-            result = await db.execute(select(SysConfig).where(SysConfig.key == config_key))
+            result = await db.execute(
+                select(SysConfig).where(SysConfig.key == config_key)
+            )
             config = result.scalar_one_or_none()
 
             if not config:
@@ -166,8 +193,7 @@ class ConfigService:
 
     @staticmethod
     async def get_configs_by_group(
-        db: AsyncSession,
-        query: SysConfigByGroupQuery
+        db: AsyncSession, query: SysConfigByGroupQuery
     ) -> List[SysConfig]:
         """
         按分组获取配置列表
@@ -180,11 +206,15 @@ class ConfigService:
             配置列表
         """
         try:
-            logger.info("按分组获取配置，分组: %s, 仅可编辑: %s", query.group, query.editable_only)
+            logger.info(
+                "按分组获取配置，分组: %s, 仅可编辑: %s",
+                query.group,
+                query.editable_only,
+            )
 
             stmt = select(SysConfig).where(SysConfig.group == query.group)
-            if query.editable_only:
-                stmt = stmt.where(SysConfig.editable == True)
+            if query.editable_only is not None:
+                stmt = stmt.where(SysConfig.editable == query.editable_only)
 
             stmt = stmt.order_by(SysConfig.id.desc())
             result = await db.execute(stmt)
@@ -199,9 +229,7 @@ class ConfigService:
 
     @staticmethod
     async def get_config_value(
-        db: AsyncSession,
-        config_key: str,
-        default: Any = None
+        db: AsyncSession, config_key: str, default: Any = None
     ) -> Any:
         """
         获取配置值，并根据配置类型进行转换
@@ -220,7 +248,9 @@ class ConfigService:
         except NotFoundError:
             return default
         except Exception as e:
-            logger.error("获取配置值失败，配置键名: %s: %s", config_key, str(e), exc_info=True)
+            logger.error(
+                "获取配置值失败，配置键名: %s: %s", config_key, str(e), exc_info=True
+            )
             return default
 
     @staticmethod
@@ -293,7 +323,16 @@ class ConfigService:
                 except (ValueError, TypeError):
                     return False
             elif config_type == ConfigType.BOOLEAN:
-                return value.lower() in ("true", "false", "1", "0", "yes", "no", "on", "off")
+                return value.lower() in (
+                    "true",
+                    "false",
+                    "1",
+                    "0",
+                    "yes",
+                    "no",
+                    "on",
+                    "off",
+                )
             elif config_type == ConfigType.JSON:
                 try:
                     json.loads(value)
@@ -311,10 +350,7 @@ class ConfigService:
             return False
 
     @staticmethod
-    async def create_config(
-        db: AsyncSession,
-        config_in: SysConfigCreate
-    ) -> SysConfig:
+    async def create_config(db: AsyncSession, config_in: SysConfigCreate) -> SysConfig:
         """
         创建配置
 
@@ -330,15 +366,23 @@ class ConfigService:
             ValidationError: 配置值无效
         """
         try:
-            logger.info("创建配置，请求数据: %s", config_in.model_dump(exclude_none=True))
+            logger.info(
+                "创建配置，请求数据: %s", config_in.model_dump(exclude_none=True)
+            )
 
             # 验证配置值
             if not ConfigService._validate_value(config_in.value, config_in.type):
-                logger.warning("配置值无效，类型: %s, 值: %s", config_in.type, config_in.value)
-                raise ValidationError(msg=f"配置值不符合 {config_in.type.value} 类型要求")
+                logger.warning(
+                    "配置值无效，类型: %s, 值: %s", config_in.type, config_in.value
+                )
+                raise ValidationError(
+                    msg=f"配置值不符合 {config_in.type.value} 类型要求"
+                )
 
             # 检查配置键是否已存在
-            result = await db.execute(select(SysConfig).where(SysConfig.key == config_in.key))
+            result = await db.execute(
+                select(SysConfig).where(SysConfig.key == config_in.key)
+            )
             if result.scalar_one_or_none():
                 logger.warning("配置键已存在，键名: %s", config_in.key)
                 raise ConflictError(msg="配置键已存在")
@@ -374,9 +418,7 @@ class ConfigService:
 
     @staticmethod
     async def update_config(
-        db: AsyncSession,
-        config_id: int,
-        config_in: SysConfigUpdate
+        db: AsyncSession, config_id: int, config_in: SysConfigUpdate
     ) -> SysConfig:
         """
         更新配置
@@ -395,10 +437,16 @@ class ConfigService:
             ValidationError: 配置值无效
         """
         try:
-            logger.info("更新配置，配置ID: %d，请求数据: %s", config_id, config_in.model_dump(exclude_none=True))
+            logger.info(
+                "更新配置，配置ID: %d，请求数据: %s",
+                config_id,
+                config_in.model_dump(exclude_none=True),
+            )
 
             # 查询配置
-            result = await db.execute(select(SysConfig).where(SysConfig.id == config_id))
+            result = await db.execute(
+                select(SysConfig).where(SysConfig.id == config_id)
+            )
             existing_config = result.scalar_one_or_none()
 
             if not existing_config:
@@ -415,8 +463,14 @@ class ConfigService:
             if "value" in update_data:
                 config_type = update_data.get("type", existing_config.type)
                 if not ConfigService._validate_value(update_data["value"], config_type):
-                    logger.warning("配置值无效，类型: %s, 值: %s", config_type, update_data["value"])
-                    raise ValidationError(msg=f"配置值不符合 {config_type.value} 类型要求")
+                    logger.warning(
+                        "配置值无效，类型: %s, 值: %s",
+                        config_type,
+                        update_data["value"],
+                    )
+                    raise ValidationError(
+                        msg=f"配置值不符合 {config_type.value} 类型要求"
+                    )
 
             # 更新字段
             for field, value in update_data.items():
@@ -438,8 +492,7 @@ class ConfigService:
 
     @staticmethod
     async def batch_update_configs(
-        db: AsyncSession,
-        batch_in: SysConfigBatchUpdate
+        db: AsyncSession, batch_in: SysConfigBatchUpdate
     ) -> int:
         """
         批量更新配置
@@ -462,7 +515,9 @@ class ConfigService:
                 if not config_id or value is None:
                     continue
 
-                result = await db.execute(select(SysConfig).where(SysConfig.id == config_id))
+                result = await db.execute(
+                    select(SysConfig).where(SysConfig.id == config_id)
+                )
                 config = result.scalar_one_or_none()
 
                 if config and config.editable:
@@ -481,10 +536,7 @@ class ConfigService:
             raise
 
     @staticmethod
-    async def reset_configs(
-        db: AsyncSession,
-        reset_in: SysConfigReset
-    ) -> int:
+    async def reset_configs(db: AsyncSession, reset_in: SysConfigReset) -> int:
         """
         重置配置为默认值
 
@@ -500,7 +552,9 @@ class ConfigService:
 
             reset_count = 0
             for config_id in reset_in.config_ids:
-                result = await db.execute(select(SysConfig).where(SysConfig.id == config_id))
+                result = await db.execute(
+                    select(SysConfig).where(SysConfig.id == config_id)
+                )
                 config = result.scalar_one_or_none()
 
                 if config and config.editable and config.default_value is not None:
@@ -518,10 +572,7 @@ class ConfigService:
             raise
 
     @staticmethod
-    async def delete_config(
-        db: AsyncSession,
-        config_id: int
-    ) -> bool:
+    async def delete_config(db: AsyncSession, config_id: int) -> bool:
         """
         删除配置
 
@@ -540,7 +591,9 @@ class ConfigService:
             logger.info("删除配置，配置ID: %d", config_id)
 
             # 查询配置
-            result = await db.execute(select(SysConfig).where(SysConfig.id == config_id))
+            result = await db.execute(
+                select(SysConfig).where(SysConfig.id == config_id)
+            )
             config = result.scalar_one_or_none()
 
             if not config:

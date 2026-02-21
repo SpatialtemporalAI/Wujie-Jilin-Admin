@@ -7,7 +7,7 @@
 """
 import logging
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy import select, delete, or_, and_, func
+from sqlalchemy import select, delete, or_, and_, func, Select
 from typing import List, Optional, Tuple
 
 from app.models.sys.dict import SysDict, SysDictItem
@@ -33,9 +33,43 @@ class DictService:
     """
 
     @staticmethod
+    def build_dict_query(
+        query_params: SysDictQueryParams,
+    ) -> Select:
+        """
+        构建字典查询对象
+
+        Args:
+            query_params: 查询参数
+
+        Returns:
+            SQLAlchemy查询对象
+        """
+        # 构建基础查询
+        base_query = select(SysDict)
+
+        # 构建筛选条件
+        conditions = []
+        if query_params.name:
+            conditions.append(SysDict.name.contains(query_params.name))
+        if query_params.code:
+            conditions.append(SysDict.code.contains(query_params.code))
+        if query_params.status is not None:
+            conditions.append(SysDict.status == query_params.status)
+        if query_params.is_system is not None:
+            conditions.append(SysDict.is_system == query_params.is_system)
+
+        if conditions:
+            base_query = base_query.where(and_(*conditions))
+
+        # 排序
+        base_query = base_query.order_by(SysDict.sort.asc(), SysDict.id.desc())
+
+        return base_query
+
+    @staticmethod
     async def get_dict_list(
-        db: AsyncSession,
-        query_params: SysDictQueryParams
+        db: AsyncSession, query_params: SysDictQueryParams
     ) -> Tuple[List[SysDict], int]:
         """
         获取字典列表（分页）
@@ -48,24 +82,12 @@ class DictService:
             (字典列表, 总数)
         """
         try:
-            logger.info("获取字典列表，查询参数: %s", query_params.model_dump(exclude_none=True))
+            logger.info(
+                "获取字典列表，查询参数: %s", query_params.model_dump(exclude_none=True)
+            )
 
-            # 构建基础查询
-            base_query = select(SysDict)
-
-            # 构建筛选条件
-            conditions = []
-            if query_params.name:
-                conditions.append(SysDict.name.contains(query_params.name))
-            if query_params.code:
-                conditions.append(SysDict.code.contains(query_params.code))
-            if query_params.status is not None:
-                conditions.append(SysDict.status == query_params.status)
-            if query_params.is_system is not None:
-                conditions.append(SysDict.is_system == query_params.is_system)
-
-            if conditions:
-                base_query = base_query.where(and_(*conditions))
+            # 构建查询
+            base_query = DictService.build_dict_query(query_params)
 
             # 先查询总数 - 使用正确的方式
             count_query = select(func.count()).select_from(base_query.subquery())
@@ -73,7 +95,7 @@ class DictService:
             total = count_result.scalar() or 0
 
             # 分页查询
-            query = base_query.order_by(SysDict.sort.asc(), SysDict.id.desc())
+            query = base_query
             if query_params.page and query_params.page_size:
                 offset = (query_params.page - 1) * query_params.page_size
                 query = query.offset(offset).limit(query_params.page_size)
@@ -89,10 +111,7 @@ class DictService:
             raise
 
     @staticmethod
-    async def get_dict(
-        db: AsyncSession,
-        dict_id: int
-    ) -> SysDict:
+    async def get_dict(db: AsyncSession, dict_id: int) -> SysDict:
         """
         获取单个字典
 
@@ -126,10 +145,7 @@ class DictService:
             raise
 
     @staticmethod
-    async def get_dict_by_code(
-        db: AsyncSession,
-        code: str
-    ) -> SysDict:
+    async def get_dict_by_code(db: AsyncSession, code: str) -> SysDict:
         """
         通过编码获取字典
 
@@ -163,10 +179,7 @@ class DictService:
             raise
 
     @staticmethod
-    async def get_dict_with_items(
-        db: AsyncSession,
-        dict_id: int
-    ) -> SysDict:
+    async def get_dict_with_items(db: AsyncSession, dict_id: int) -> SysDict:
         """
         获取字典及其所有字典项
 
@@ -206,10 +219,7 @@ class DictService:
             raise
 
     @staticmethod
-    async def create_dict(
-        db: AsyncSession,
-        dict_in: SysDictCreate
-    ) -> SysDict:
+    async def create_dict(db: AsyncSession, dict_in: SysDictCreate) -> SysDict:
         """
         创建字典
 
@@ -227,7 +237,9 @@ class DictService:
             logger.info("创建字典，请求数据: %s", dict_in.model_dump(exclude_none=True))
 
             # 检查字典编码是否已存在
-            result = await db.execute(select(SysDict).where(SysDict.code == dict_in.code))
+            result = await db.execute(
+                select(SysDict).where(SysDict.code == dict_in.code)
+            )
             if result.scalar_one_or_none():
                 logger.warning("字典编码已存在，编码: %s", dict_in.code)
                 raise ConflictError(msg="字典编码已存在")
@@ -239,7 +251,7 @@ class DictService:
                 description=dict_in.description,
                 status=dict_in.status,
                 sort=dict_in.sort,
-                is_system=False
+                is_system=False,
             )
 
             db.add(dict_obj)
@@ -259,9 +271,7 @@ class DictService:
 
     @staticmethod
     async def update_dict(
-        db: AsyncSession,
-        dict_id: int,
-        dict_in: SysDictUpdate
+        db: AsyncSession, dict_id: int, dict_in: SysDictUpdate
     ) -> SysDict:
         """
         更新字典
@@ -279,7 +289,11 @@ class DictService:
             ForbiddenError: 系统内置字典禁止修改
         """
         try:
-            logger.info("更新字典，字典ID: %d，请求数据: %s", dict_id, dict_in.model_dump(exclude_none=True))
+            logger.info(
+                "更新字典，字典ID: %d，请求数据: %s",
+                dict_id,
+                dict_in.model_dump(exclude_none=True),
+            )
 
             # 查询字典
             result = await db.execute(select(SysDict).where(SysDict.id == dict_id))
@@ -315,8 +329,7 @@ class DictService:
 
     @staticmethod
     async def batch_update_dict_status(
-        db: AsyncSession,
-        batch_in: SysDictBatchUpdateStatus
+        db: AsyncSession, batch_in: SysDictBatchUpdateStatus
     ) -> int:
         """
         批量更新字典状态
@@ -329,7 +342,11 @@ class DictService:
             更新的数量
         """
         try:
-            logger.info("批量更新字典状态，字典ID列表: %s，状态: %s", batch_in.dict_ids, batch_in.status)
+            logger.info(
+                "批量更新字典状态，字典ID列表: %s，状态: %s",
+                batch_in.dict_ids,
+                batch_in.status,
+            )
 
             from sqlalchemy import update
 
@@ -353,10 +370,7 @@ class DictService:
             raise
 
     @staticmethod
-    async def delete_dict(
-        db: AsyncSession,
-        dict_id: int
-    ) -> bool:
+    async def delete_dict(db: AsyncSession, dict_id: int) -> bool:
         """
         删除字典
 
@@ -402,9 +416,43 @@ class DictService:
             raise
 
     @staticmethod
+    def build_dict_item_query(
+        query_params: SysDictItemQueryParams,
+    ) -> Select:
+        """
+        构建字典项查询对象
+
+        Args:
+            query_params: 查询参数
+
+        Returns:
+            SQLAlchemy查询对象
+        """
+        # 构建基础查询
+        base_query = select(SysDictItem)
+
+        # 构建筛选条件
+        conditions = []
+        if query_params.dict_id:
+            conditions.append(SysDictItem.dict_id == query_params.dict_id)
+        if query_params.label:
+            conditions.append(SysDictItem.label.contains(query_params.label))
+        if query_params.value:
+            conditions.append(SysDictItem.value.contains(query_params.value))
+        if query_params.status is not None:
+            conditions.append(SysDictItem.status == query_params.status)
+
+        if conditions:
+            base_query = base_query.where(and_(*conditions))
+
+        # 排序
+        base_query = base_query.order_by(SysDictItem.sort.asc(), SysDictItem.id.desc())
+
+        return base_query
+
+    @staticmethod
     async def get_dict_item_list(
-        db: AsyncSession,
-        query_params: SysDictItemQueryParams
+        db: AsyncSession, query_params: SysDictItemQueryParams
     ) -> Tuple[List[SysDictItem], int]:
         """
         获取字典项列表（分页）
@@ -417,24 +465,13 @@ class DictService:
             (字典项列表, 总数)
         """
         try:
-            logger.info("获取字典项列表，查询参数: %s", query_params.model_dump(exclude_none=True))
+            logger.info(
+                "获取字典项列表，查询参数: %s",
+                query_params.model_dump(exclude_none=True),
+            )
 
-            # 构建基础查询
-            base_query = select(SysDictItem)
-
-            # 构建筛选条件
-            conditions = []
-            if query_params.dict_id:
-                conditions.append(SysDictItem.dict_id == query_params.dict_id)
-            if query_params.label:
-                conditions.append(SysDictItem.label.contains(query_params.label))
-            if query_params.value:
-                conditions.append(SysDictItem.value.contains(query_params.value))
-            if query_params.status is not None:
-                conditions.append(SysDictItem.status == query_params.status)
-
-            if conditions:
-                base_query = base_query.where(and_(*conditions))
+            # 构建查询
+            base_query = DictService.build_dict_item_query(query_params)
 
             # 先查询总数 - 使用正确的方式
             count_query = select(func.count()).select_from(base_query.subquery())
@@ -442,7 +479,7 @@ class DictService:
             total = count_result.scalar() or 0
 
             # 分页查询
-            query = base_query.order_by(SysDictItem.sort.asc(), SysDictItem.id.desc())
+            query = base_query
             if query_params.page and query_params.page_size:
                 offset = (query_params.page - 1) * query_params.page_size
                 query = query.offset(offset).limit(query_params.page_size)
@@ -459,8 +496,7 @@ class DictService:
 
     @staticmethod
     async def get_dict_items_by_dict_code(
-        db: AsyncSession,
-        dict_code: str
+        db: AsyncSession, dict_code: str
     ) -> List[SysDictItem]:
         """
         通过字典编码获取字典项列表（只返回启用的）
@@ -487,7 +523,11 @@ class DictService:
             result = await db.execute(query)
             dict_items = result.scalars().all()
 
-            logger.info("通过字典编码获取字典项成功，字典编码: %s，数量: %d", dict_code, len(dict_items))
+            logger.info(
+                "通过字典编码获取字典项成功，字典编码: %s，数量: %d",
+                dict_code,
+                len(dict_items),
+            )
             return dict_items
 
         except Exception as e:
@@ -495,10 +535,7 @@ class DictService:
             raise
 
     @staticmethod
-    async def get_dict_item(
-        db: AsyncSession,
-        item_id: int
-    ) -> SysDictItem:
+    async def get_dict_item(db: AsyncSession, item_id: int) -> SysDictItem:
         """
         获取单个字典项
 
@@ -515,7 +552,9 @@ class DictService:
         try:
             logger.info("获取字典项详情，字典项ID: %d", item_id)
 
-            result = await db.execute(select(SysDictItem).where(SysDictItem.id == item_id))
+            result = await db.execute(
+                select(SysDictItem).where(SysDictItem.id == item_id)
+            )
             dict_item = result.scalar_one_or_none()
 
             if not dict_item:
@@ -533,8 +572,7 @@ class DictService:
 
     @staticmethod
     async def create_dict_item(
-        db: AsyncSession,
-        item_in: SysDictItemCreate
+        db: AsyncSession, item_in: SysDictItemCreate
     ) -> SysDictItem:
         """
         创建字典项
@@ -550,10 +588,14 @@ class DictService:
             NotFoundError: 字典不存在
         """
         try:
-            logger.info("创建字典项，请求数据: %s", item_in.model_dump(exclude_none=True))
+            logger.info(
+                "创建字典项，请求数据: %s", item_in.model_dump(exclude_none=True)
+            )
 
             # 检查字典是否存在
-            result = await db.execute(select(SysDict).where(SysDict.id == item_in.dict_id))
+            result = await db.execute(
+                select(SysDict).where(SysDict.id == item_in.dict_id)
+            )
             if not result.scalar_one_or_none():
                 logger.warning("字典不存在，字典ID: %d", item_in.dict_id)
                 raise NotFoundError(msg=f"字典 {item_in.dict_id} 不存在")
@@ -566,7 +608,7 @@ class DictService:
                 description=item_in.description,
                 ext_info=item_in.ext_info,
                 status=item_in.status,
-                sort=item_in.sort
+                sort=item_in.sort,
             )
 
             db.add(dict_item)
@@ -586,9 +628,7 @@ class DictService:
 
     @staticmethod
     async def update_dict_item(
-        db: AsyncSession,
-        item_id: int,
-        item_in: SysDictItemUpdate
+        db: AsyncSession, item_id: int, item_in: SysDictItemUpdate
     ) -> SysDictItem:
         """
         更新字典项
@@ -605,10 +645,16 @@ class DictService:
             NotFoundError: 字典项不存在
         """
         try:
-            logger.info("更新字典项，字典项ID: %d，请求数据: %s", item_id, item_in.model_dump(exclude_none=True))
+            logger.info(
+                "更新字典项，字典项ID: %d，请求数据: %s",
+                item_id,
+                item_in.model_dump(exclude_none=True),
+            )
 
             # 查询字典项
-            result = await db.execute(select(SysDictItem).where(SysDictItem.id == item_id))
+            result = await db.execute(
+                select(SysDictItem).where(SysDictItem.id == item_id)
+            )
             existing_item = result.scalar_one_or_none()
 
             if not existing_item:
@@ -636,8 +682,7 @@ class DictService:
 
     @staticmethod
     async def batch_update_dict_item_status(
-        db: AsyncSession,
-        batch_in: SysDictItemBatchUpdateStatus
+        db: AsyncSession, batch_in: SysDictItemBatchUpdateStatus
     ) -> int:
         """
         批量更新字典项状态
@@ -650,7 +695,11 @@ class DictService:
             更新的数量
         """
         try:
-            logger.info("批量更新字典项状态，字典项ID列表: %s，状态: %s", batch_in.item_ids, batch_in.status)
+            logger.info(
+                "批量更新字典项状态，字典项ID列表: %s，状态: %s",
+                batch_in.item_ids,
+                batch_in.status,
+            )
 
             from sqlalchemy import update
 
@@ -673,10 +722,7 @@ class DictService:
             raise
 
     @staticmethod
-    async def delete_dict_item(
-        db: AsyncSession,
-        item_id: int
-    ) -> bool:
+    async def delete_dict_item(db: AsyncSession, item_id: int) -> bool:
         """
         删除字典项
 
@@ -694,7 +740,9 @@ class DictService:
             logger.info("删除字典项，字典项ID: %d", item_id)
 
             # 查询字典项
-            result = await db.execute(select(SysDictItem).where(SysDictItem.id == item_id))
+            result = await db.execute(
+                select(SysDictItem).where(SysDictItem.id == item_id)
+            )
             dict_item = result.scalar_one_or_none()
 
             if not dict_item:
@@ -714,4 +762,3 @@ class DictService:
             await db.rollback()
             logger.error("删除字典项失败: %s", str(e), exc_info=True)
             raise
-

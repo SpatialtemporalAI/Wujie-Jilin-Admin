@@ -41,6 +41,7 @@ class SysRoleUpdate(BaseEntity):
     """
 
     name: Optional[str] = Field(None, description="角色名称", max_length=100)
+    code: Optional[str] = Field(None, description="角色编码", max_length=100)
     description: Optional[str] = Field(None, description="角色描述")
     status: Optional[bool] = Field(None, description="角色状态：True-启用，False-禁用")
     sort: Optional[int] = Field(None, description="排序号")
@@ -85,19 +86,52 @@ class SysRoleResponseData(BaseRespEntity):
     用于展示角色完整信息，包括关联的菜单
     """
 
-    model_config = ConfigDict(from_attributes=True)
+    model_config = ConfigDict(from_attributes=True, populate_by_name=True)
 
     id: int = Field(..., description="角色ID")
-    name: str = Field(..., description="角色名称", alias="name")
-    code: str = Field(..., description="角色编码", alias="code")
-    desc: Optional[str] = Field(None, description="角色描述")
-    status: bool = Field(..., description="角色状态")
+    roleName: str = Field(..., description="角色名称", alias="name")
+    roleCode: str = Field(..., description="角色编码", alias="code")
+    roleDesc: Optional[str] = Field(None, description="角色描述", alias="description")
+    status: str = Field(..., description="角色状态：1-启用，2-禁用")
     is_default: bool = Field(..., description="是否为默认角色")
     is_system: bool = Field(..., description="是否为系统内置角色")
     sort: int = Field(..., description="排序号")
-    create_at: Optional[str] = Field(None, description="创建时间")
-    update_at: Optional[str] = Field(None, description="更新时间")
+    createTime: Optional[str] = Field(None, description="创建时间")
+    updateTime: Optional[str] = Field(None, description="更新时间")
     menu_ids: List[int] = Field([], description="菜单ID列表")
+
+    @classmethod
+    def from_orm(cls, role) -> "SysRoleResponseData":
+        """
+        从 ORM 对象创建响应模型
+
+        Args:
+            role: SysRole ORM 对象
+
+        Returns:
+            SysRoleResponseData 对象
+        """
+        return cls(
+            id=role.id,
+            roleName=role.name,
+            roleCode=role.code,
+            roleDesc=role.description,
+            status="1" if role.status else "2",
+            is_default=role.is_default,
+            is_system=role.is_system,
+            sort=role.sort,
+            createTime=(
+                role.created_at.astimezone().strftime("%Y-%m-%d %H:%M:%S")
+                if role.created_at
+                else None
+            ),
+            updateTime=(
+                role.updated_at.astimezone().strftime("%Y-%m-%d %H:%M:%S")
+                if role.updated_at
+                else None
+            ),
+            menu_ids=[menu.id for menu in role.menus] if role.menus else [],
+        )
 
 
 class SysRoleBatchUpdateStatus(BaseEntity):

@@ -7,7 +7,7 @@
 """
 import logging
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy import select, func, and_
+from sqlalchemy import select, func, and_, Select
 from sqlalchemy.orm import joinedload
 from typing import List, Optional, Tuple
 
@@ -29,22 +29,18 @@ class RoleService:
     """
 
     @staticmethod
-    async def get_role_list(
-        db: AsyncSession,
+    def build_role_query(
         query_params: SysRoleQueryParams,
-    ) -> Tuple[List[SysRole], int]:
+    ) -> Select:
         """
-        获取角色列表（带分页和查询条件）
+        构建角色查询对象
 
         Args:
-            db: 数据库会话
             query_params: 查询参数
 
         Returns:
-            Tuple[角色列表, 总记录数]
+            SQLAlchemy查询对象
         """
-        logger.info(f"获取角色列表，查询参数: {query_params}")
-
         # 构建基础查询
         base_query = select(SysRole).options(joinedload(SysRole.menus))
 
@@ -62,13 +58,35 @@ class RoleService:
         if conditions:
             base_query = base_query.where(and_(*conditions))
 
+        # 添加排序
+        base_query = base_query.order_by(SysRole.sort.asc(), SysRole.created_at.desc())
+
+        return base_query
+
+    @staticmethod
+    async def get_role_list(
+        db: AsyncSession,
+        query_params: SysRoleQueryParams,
+    ) -> Tuple[List[SysRole], int]:
+        """
+        获取角色列表（带分页和查询条件）
+
+        Args:
+            db: 数据库会话
+            query_params: 查询参数
+
+        Returns:
+            Tuple[角色列表, 总记录数]
+        """
+        logger.info(f"获取角色列表，查询参数: {query_params}")
+
+        # 构建查询
+        base_query = RoleService.build_role_query(query_params)
+
         # 统计总数
         count_query = select(func.count()).select_from(base_query.subquery())
         count_result = await db.execute(count_query)
         total = count_result.scalar() or 0
-
-        # 添加排序
-        base_query = base_query.order_by(SysRole.sort.asc(), SysRole.created_at.desc())
 
         # 分页
         offset = (query_params.page - 1) * query_params.page_size
@@ -212,6 +230,13 @@ class RoleService:
             logger.warning(f"更新角色失败，不能修改系统内置角色，角色ID: {role_id}")
             raise ForbiddenError(msg="不能修改系统内置角色")
 
+        # 检查角色编码是否已存在（如果要更新编码的话）
+        if role_update.code and role_update.code != role.code:
+            existing_role = await RoleService.get_role_by_code(db, role_update.code)
+            if existing_role:
+                logger.warning(f"更新角色失败，角色编码已存在: {role_update.code}")
+                raise ConflictError(msg="角色编码已存在")
+
         # 更新角色信息
         update_data = role_update.model_dump(exclude_unset=True)
 
@@ -232,7 +257,7 @@ class RoleService:
             if hasattr(role, key) and value is not None:
                 # 处理状态字段，将字符串转换为布尔值
                 if key == "status":
-                    setattr(role, key, value == "1")
+                    setattr(role, key, value == "1" if isinstance(value, str) else value)
                 else:
                     setattr(role, key, value)
 

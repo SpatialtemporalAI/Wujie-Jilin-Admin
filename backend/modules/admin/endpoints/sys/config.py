@@ -16,6 +16,7 @@ from core.response.response_schema import (
     ResponsePageDataModel,
     response_base,
 )
+from app.models.common.page import PageRequest, get_page_params, get_paginated_results
 
 from modules.admin.services.sys import ConfigService
 from modules.admin.schemas.sys.config import (
@@ -37,16 +38,34 @@ logger = logging.getLogger(__name__)
 config_router = APIRouter(prefix="/config", tags=["系统配置"])
 
 
+def parse_bool_param(value: Optional[str]) -> Optional[bool]:
+    """
+    解析布尔类型参数
+
+    Args:
+        value: 参数字符串
+
+    Returns:
+        布尔值或None
+    """
+    if value is None or value == "":
+        return None
+    if value.lower() in ("true", "1", "yes", "y"):
+        return True
+    if value.lower() in ("false", "0", "no", "n"):
+        return False
+    return None
+
+
 @config_router.get("/list", response_model=ResponsePageModel[SysConfigResponseData])
 async def get_config_list(
     key: Optional[str] = Query(None, description="配置键名，支持模糊查询"),
     description: Optional[str] = Query(None, description="配置描述，支持模糊查询"),
     type: Optional[ConfigType] = Query(None, description="配置类型"),
     group: Optional[ConfigGroup] = Query(None, description="配置分组"),
-    editable: Optional[bool] = Query(None, description="是否可编辑"),
-    is_system: Optional[bool] = Query(None, description="是否为系统内置配置"),
-    page: int = Query(1, ge=1, description="页码，从1开始"),
-    page_size: int = Query(10, ge=1, le=200, description="每页条数，最大200"),
+    editable: Optional[str] = Query(None, description="是否可编辑"),
+    is_system: Optional[str] = Query(None, description="是否为系统内置配置"),
+    page_params: PageRequest = Depends(get_page_params),
     db: AsyncSession = Depends(get_session),
 ):
     """
@@ -61,28 +80,24 @@ async def get_config_list(
             description=description,
             type=type,
             group=group,
-            editable=editable,
-            is_system=is_system,
-            page=page,
-            page_size=page_size,
+            editable=parse_bool_param(editable),
+            is_system=parse_bool_param(is_system),
+            page=page_params.page,
+            page_size=page_params.page_size,
         )
 
-        # 调用服务层
-        configs, total = await ConfigService.get_config_list(db, query_params)
+        # 构建查询对象
+        query = ConfigService.build_config_query(query_params)
 
-        # 转换为响应模型
-        records = [SysConfigResponseData.model_validate(c) for c in configs]
-        total_pages = (total + page_size - 1) // page_size if total > 0 else 0
-
-        page_data = ResponsePageDataModel(
-            records=records,
-            page=page,
-            page_size=page_size,
-            total=total,
-            total_pages=total_pages,
+        # 使用通用分页方法
+        page_data = await get_paginated_results(
+            db=db,
+            page_params=page_params,
+            query=query,
+            schema=SysConfigResponseData,
         )
 
-        logger.info("获取配置列表接口成功，共 %d 条记录", total)
+        logger.info("获取配置列表接口成功，共 %d 条记录", page_data.total)
         return response_base.page(data=page_data)
 
     except Exception as e:
@@ -93,7 +108,7 @@ async def get_config_list(
 @config_router.get("/all", response_model=ResponseModel[List[SysConfigSimpleResponse]])
 async def get_all_configs(
     group: Optional[ConfigGroup] = Query(None, description="配置分组"),
-    editable_only: bool = Query(False, description="是否只查询可编辑的配置"),
+    editable_only: Optional[str] = Query(None, description="是否只查询可编辑的配置"),
     db: AsyncSession = Depends(get_session),
 ):
     """
@@ -105,7 +120,7 @@ async def get_all_configs(
         # 构建查询参数
         query_params = SysConfigQueryParams(
             group=group,
-            editable=editable_only if editable_only else None,
+            editable=parse_bool_param(editable_only),
             page=1,
             page_size=1000,
         )
@@ -127,7 +142,7 @@ async def get_all_configs(
 @config_router.get("/group/{group}", response_model=ResponseModel[List[SysConfigSimpleResponse]])
 async def get_configs_by_group(
     group: ConfigGroup,
-    editable_only: bool = Query(False, description="是否只查询可编辑的配置"),
+    editable_only: Optional[str] = Query(None, description="是否只查询可编辑的配置"),
     db: AsyncSession = Depends(get_session),
 ):
     """
@@ -139,7 +154,7 @@ async def get_configs_by_group(
         # 构建查询参数
         query = SysConfigByGroupQuery(
             group=group,
-            editable_only=editable_only,
+            editable_only=parse_bool_param(editable_only),
         )
 
         # 调用服务层

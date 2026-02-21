@@ -15,7 +15,7 @@ from core.response.response_schema import (
     ResponsePageModel,
     ResponsePageDataModel,
 )
-from app.models.common.page import PageRequest, get_page_params
+from app.models.common.page import PageRequest, get_page_params, get_paginated_results
 
 from modules.admin.services.sys import UserService
 from modules.admin.schemas.sys.user import (
@@ -82,25 +82,18 @@ async def get_user_list(
         role_ids=[int(r) for r in role_ids.split(",")] if role_ids else None,
     )
 
-    # 获取用户列表
-    users, total = await UserService.get_user_list(db, query_params)
+    # 构建查询对象
+    query = UserService.build_user_query(query_params)
 
-    # 转换为响应模型
-    records = [SysUserResponseData.model_validate(user) for user in users]
-
-    # 计算分页信息
-    total_pages = (total + page_params.page_size - 1) // page_params.page_size
-
-    # 构建分页数据模型
-    page_data = ResponsePageDataModel[SysUserResponseData](
-        records=records,
-        page=page_params.page,
-        page_size=page_params.page_size,
-        total=total,
-        total_pages=total_pages,
+    # 使用通用分页方法
+    page_data = await get_paginated_results(
+        db=db,
+        page_params=page_params,
+        query=query,
+        schema=SysUserResponseData,
     )
 
-    logger.info(f"获取用户列表成功，共 {total} 条记录")
+    logger.info(f"获取用户列表成功，共 {page_data.total} 条记录")
     return ResponsePageModel[SysUserResponseData](data=page_data)
 
 

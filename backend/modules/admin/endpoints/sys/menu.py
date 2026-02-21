@@ -10,7 +10,13 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from typing import List, Optional
 
 from database.db_manager import get_session
-from core.response.response_schema import ResponseModel
+from core.response.response_schema import (
+    ResponseModel,
+    ResponsePageModel,
+    ResponsePageDataModel,
+    response_base,
+)
+from app.models.common.page import PageRequest, get_page_params, get_paginated_results
 
 from modules.admin.services.sys import MenuService
 from modules.admin.schemas.sys.menu import (
@@ -24,6 +30,22 @@ from modules.admin.schemas.sys.menu import (
 from app.models.sys.menu import MenuType
 
 logger = logging.getLogger(__name__)
+
+# 页面组件列表（模拟前端的视图组件）
+PAGE_COMPONENTS = [
+    "403",
+    "404",
+    "500",
+    "iframe-page",
+    "login",
+    "home",
+    "manage_config",
+    "manage_dict",
+    "manage_menu",
+    "manage_role",
+    "manage_user-detail",
+    "manage_user",
+]
 
 
 def parse_bool_param(value: Optional[str]) -> Optional[bool]:
@@ -67,15 +89,25 @@ def parse_menu_type_param(value: Optional[str]) -> Optional[MenuType]:
 menu_router = APIRouter(prefix="/menu", tags=["菜单管理"])
 
 
-@menu_router.get("/list", response_model=ResponseModel[List[SysMenuResponseData]])
+@menu_router.get("/pages", response_model=ResponseModel[List[str]])
+async def get_all_pages():
+    """
+    获取所有页面组件列表
+    """
+    logger.info("获取所有页面组件列表")
+    return ResponseModel(data=PAGE_COMPONENTS)
+
+
+@menu_router.get("/list", response_model=ResponsePageModel[SysMenuResponseData])
 async def get_menu_list(
     name: Optional[str] = Query(None, description="菜单名称，支持模糊查询"),
     status: Optional[str] = Query(None, description="菜单状态"),
     type: Optional[str] = Query(None, description="菜单类型"),
+    page_params: PageRequest = Depends(get_page_params),
     db: AsyncSession = Depends(get_session),
 ):
     """
-    获取菜单列表
+    获取菜单列表（分页）
     """
     logger.info("获取菜单列表请求")
 
@@ -86,14 +118,19 @@ async def get_menu_list(
         type=parse_menu_type_param(type),
     )
 
-    # 获取菜单列表
-    menus = await MenuService.get_menu_list(db, query_params)
+    # 构建查询对象
+    query = MenuService.build_menu_query(query_params)
 
-    # 转换为响应模型
-    records = [SysMenuResponseData.from_orm(menu) for menu in menus]
+    # 使用通用分页方法
+    page_data = await get_paginated_results(
+        db=db,
+        page_params=page_params,
+        query=query,
+        schema=SysMenuResponseData,
+    )
 
-    logger.info(f"获取菜单列表成功，共 {len(records)} 条记录")
-    return ResponseModel(data=records)
+    logger.info(f"获取菜单列表成功，共 {page_data.total} 条记录")
+    return response_base.page(data=page_data)
 
 
 @menu_router.get("/tree", response_model=ResponseModel[List[SysMenuTreeResponse]])

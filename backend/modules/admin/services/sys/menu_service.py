@@ -7,9 +7,10 @@
 """
 import logging
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy import select, and_
-from typing import List, Optional
+from sqlalchemy import select, and_,Select
+from typing import List, Optional, Tuple
 
+from sqlalchemy import func
 from app.models.sys.menu import SysMenu, MenuType
 from core.exception.errors import NotFoundError, ConflictError
 from modules.admin.schemas.sys.menu import (
@@ -68,6 +69,83 @@ class MenuService:
 
         logger.info(f"获取菜单列表成功，共 {len(menus)} 条记录")
         return menus
+
+    @staticmethod
+    def build_menu_query(
+        query_params: SysMenuQueryParams,
+    ) -> Select:
+        """
+        构建菜单查询对象
+
+        Args:
+            query_params: 查询参数
+
+        Returns:
+            SQLAlchemy查询对象
+        """
+        # 构建基础查询
+        base_query = select(SysMenu)
+
+        # 添加查询条件
+        conditions = []
+        if query_params.status is not None:
+            conditions.append(SysMenu.status == query_params.status)
+        if query_params.name:
+            conditions.append(SysMenu.name.like(f"%{query_params.name}%"))
+        if query_params.type:
+            conditions.append(SysMenu.type == query_params.type)
+
+        if conditions:
+            base_query = base_query.where(and_(*conditions))
+
+        # 添加排序
+        base_query = base_query.order_by(SysMenu.sort, SysMenu.id)
+
+        return base_query
+
+    @staticmethod
+    async def get_menu_list_paginated(
+        db: AsyncSession,
+        query_params: SysMenuQueryParams,
+        page: int = 1,
+        page_size: int = 100,
+    ) -> Tuple[List[SysMenu], int]:
+        """
+        获取菜单列表（带分页和查询条件）
+
+        Args:
+            db: 数据库会话
+            query_params: 查询参数
+            page: 页码
+            page_size: 每页条数
+
+        Returns:
+            Tuple[菜单列表, 总记录数]
+        """
+        logger.info(
+            f"获取菜单列表（分页），查询参数: {query_params}, 页码: {page}, 每页条数: {page_size}"
+        )
+
+        # 构建查询
+        base_query = MenuService.build_menu_query(query_params)
+
+        # 统计总数
+        count_query = select(func.count()).select_from(base_query.subquery())
+        count_result = await db.execute(count_query)
+        total = count_result.scalar() or 0
+
+        # 分页
+        offset = (page - 1) * page_size
+        paginated_query = base_query.offset(offset).limit(page_size)
+
+        # 执行查询
+        result = await db.execute(paginated_query)
+        menus = result.scalars().all()
+
+        logger.info(
+            f"获取菜单列表（分页）成功，共 {total} 条记录，当前页 {len(menus)} 条"
+        )
+        return menus, total
 
     @staticmethod
     async def get_menu_tree(
@@ -313,9 +391,7 @@ class MenuService:
         return update_count
 
     @staticmethod
-    async def batch_delete_menus(
-        db: AsyncSession, menu_ids: List[int]
-    ) -> int:
+    async def batch_delete_menus(db: AsyncSession, menu_ids: List[int]) -> int:
         """
         批量删除菜单
 

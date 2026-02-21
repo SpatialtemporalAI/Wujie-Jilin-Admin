@@ -121,4 +121,4 @@ class SysConfigByGroupQuery(BaseEntity):
     """
 
     group: ConfigGroup = Field(..., description="配置分组")
-    editable_only: bool = Field(False, description="是否只查询可编辑的配置")
+    editable_only: Optional[bool] = Field(None, description="是否只查询可编辑的配置")
