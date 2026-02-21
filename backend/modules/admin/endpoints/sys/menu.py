@@ -160,7 +160,7 @@ async def get_menu(
     logger.info(f"获取单个菜单请求，菜单ID: {menu_id}")
 
     menu = await MenuService.get_menu(db, menu_id)
-    menu_response = SysMenuResponseData.from_orm(menu)
+    menu_response = SysMenuResponseData.model_validate(menu)
 
     logger.info(f"获取单个菜单成功，菜单ID: {menu_id}")
     return ResponseModel(data=menu_response)
@@ -177,7 +177,7 @@ async def create_menu(
     logger.info(f"创建菜单请求，菜单名称: {menu_create.name}")
 
     menu = await MenuService.create_menu(db, menu_create)
-    menu_response = SysMenuResponseData.from_orm(menu)
+    menu_response = SysMenuResponseData.model_validate(menu)
 
     logger.info(f"创建菜单成功，菜单ID: {menu.id}")
     return ResponseModel(data=menu_response, msg="创建菜单成功")
@@ -195,7 +195,7 @@ async def update_menu(
     logger.info(f"更新菜单请求，菜单ID: {menu_id}")
 
     menu = await MenuService.update_menu(db, menu_id, menu_update)
-    menu_response = SysMenuResponseData.from_orm(menu)
+    menu_response = SysMenuResponseData.model_validate(menu)
 
     logger.info(f"更新菜单成功，菜单ID: {menu_id}")
     return ResponseModel(data=menu_response, msg="更新菜单成功")

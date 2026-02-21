@@ -138,42 +138,6 @@ class SysMenuResponseData(BaseRespEntity):
     createTime: str = Field(..., description="创建时间")
     updateTime: Optional[str] = Field(None, description="更新时间")
 
-    @classmethod
-    def from_orm(cls, menu) -> "SysMenuResponseData":
-        """
-        从 ORM 对象创建响应模型
-
-        Args:
-            menu: SysMenu ORM 对象
-
-        Returns:
-            SysMenuResponseData 对象
-        """
-        return cls(
-            id=menu.id,
-            parentId=menu.parent_id,
-            menuName=menu.name,
-            routeName=menu.path.split('/')[-1] if menu.path else None,
-            routePath=menu.path,
-            component=menu.component,
-            icon=menu.meta_icon,
-            iconType="1",
-            menuType="1" if menu.type == "catalog" else "2",
-            order=menu.sort,
-            i18nKey=menu.meta_title,
-            keepAlive=False,
-            constant=False,
-            href=None,
-            hideInMenu=menu.meta_hidden,
-            activeMenu=None,
-            multiTab=True,
-            fixedIndexInTab=menu.sort if menu.meta_affix else None,
-            query=None,
-            status="1" if menu.status else "2",
-            createTime=menu.created_at.astimezone().strftime("%Y-%m-%d %H:%M:%S") if menu.created_at else "",
-            updateTime=menu.updated_at.astimezone().strftime("%Y-%m-%d %H:%M:%S") if menu.updated_at else None,
-        )
-
 
 class SysMenuTreeResponse(BaseRespEntity):
     """
