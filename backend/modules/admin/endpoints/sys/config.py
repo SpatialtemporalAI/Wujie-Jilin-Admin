@@ -61,8 +61,8 @@ def parse_bool_param(value: Optional[str]) -> Optional[bool]:
 async def get_config_list(
     key: Optional[str] = Query(None, description="配置键名，支持模糊查询"),
     description: Optional[str] = Query(None, description="配置描述，支持模糊查询"),
-    type: Optional[ConfigType] = Query(None, description="配置类型"),
-    group: Optional[ConfigGroup] = Query(None, description="配置分组"),
+    type: Optional[str] = Query(None, description="配置类型"),
+    group: Optional[str] = Query(None, description="配置分组"),
     editable: Optional[str] = Query(None, description="是否可编辑"),
     is_system: Optional[str] = Query(None, description="是否为系统内置配置"),
     page_params: PageRequest = Depends(get_page_params),
@@ -74,12 +74,27 @@ async def get_config_list(
     try:
         logger.info("获取配置列表接口被调用")
 
+        # 转换枚举类型参数
+        config_type = None
+        if type and type.strip():
+            try:
+                config_type = ConfigType(type)
+            except ValueError:
+                pass
+        
+        config_group = None
+        if group and group.strip():
+            try:
+                config_group = ConfigGroup(group)
+            except ValueError:
+                pass
+
         # 构建查询参数
         query_params = SysConfigQueryParams(
             key=key,
             description=description,
-            type=type,
-            group=group,
+            type=config_type,
+            group=config_group,
             editable=parse_bool_param(editable),
             is_system=parse_bool_param(is_system),
             page=page_params.page,
