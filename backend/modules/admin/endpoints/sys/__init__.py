@@ -18,7 +18,8 @@ sys_router = APIRouter(
     tags=["系统管理"]
 )
 
-# 包含各个子模块路�?sys_router.include_router(config_router)
+# 包含各个子模块路由
+sys_router.include_router(config_router)
 sys_router.include_router(dict_router)
 sys_router.include_router(menu_router)
 sys_router.include_router(permission_router)
