@@ -126,6 +126,22 @@ frontend/
 - 大文件上传下载采用流式处理
 - 异步接口优先使用 async/await
 
+### 2.7 ORM模型返回数据规范
+- 所有ORM模型返回的数据必须是`BaseRespEntity`的子类
+- 确保时间字段的正确格式化
+- 统一响应格式在 `core/response/` 中定义
+- sqlAlchemy 对象转化为 `BaseRespEntity` 子类时，必须调用 `BaseRespEntity.model_validate()` 方法
+
+### 2.8 后台分页查询规范
+- 所有分页查询接口必须包含 `page_params: PageRequest = Depends(get_page_params)` 参数，并引入对应依赖
+- `page` 从 1 开始，`page_size` 最大 200
+- 分页查询接口必须返回 `ResponsePageModel` 格式
+- 分页查询方法需要使用 `get_paginated_results` 方法，该方法已在 `backend\app\models\common\page.py` 中定义
+
+### 2.9 前后端数据类型说明
+1。 后端中的 `status` 字段类型为 `bool`，前端中对应 `number` 类型
+2。 后端中的 `created_at` 和 `updated_at` 字段类型为 `datetime`，前端中对应 `string` 类型，格式为 `YYYY-MM-DD HH:mm:ss`
+
 ---
 
 ## 三、前端开发规范
