@@ -412,19 +412,35 @@ export function fetchGetConfigValue(configKey: string, defaultValue?: string) {
 
 /** create config */
 export function fetchCreateConfig(config: Api.SystemManage.ConfigCreate) {
+  // 转换布尔字段：将字符串转换为布尔值
+  const transformedConfig = {
+    ...config,
+    editable: config.editable === '1',
+    is_system: config.is_system === '1',
+    required: config.required === '1'
+  };
+  
   return request<Api.SystemManage.Config>({
     url: '/admin/sys/config/add',
     method: 'post',
-    data: config
+    data: transformedConfig
   });
 }
 
 /** update config */
 export function fetchUpdateConfig(configId: number, config: Api.SystemManage.ConfigUpdate) {
+  // 转换布尔字段：将字符串转换为布尔值
+  const transformedConfig = {
+    ...config,
+    editable: config.editable === '1',
+    is_system: config.is_system === '1',
+    required: config.required === '1'
+  };
+  
   return request<Api.SystemManage.Config>({
     url: `/admin/sys/config/${configId}`,
     method: 'put',
-    data: config
+    data: transformedConfig
   });
 }
 

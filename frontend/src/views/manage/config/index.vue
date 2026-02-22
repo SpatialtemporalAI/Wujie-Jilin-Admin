@@ -259,9 +259,11 @@ async function handleBatchResetConfig() {
           @delete="handleBatchDeleteConfig"
           @refresh="getConfigData"
         >
-          <NButton type="info" ghost size="small" :disabled="checkedConfigRowKeys.length === 0" @click="handleBatchResetConfig">
-            {{ $t('page.manage.config.resetConfig') }}
-          </NButton>
+          <template #suffix>
+            <NButton type="info" ghost size="small" :disabled="checkedConfigRowKeys.length === 0" @click="handleBatchResetConfig">
+              {{ $t('page.manage.config.resetConfig') }}
+            </NButton>
+          </template>
         </TableHeaderOperation>
       </template>
       <NDataTable

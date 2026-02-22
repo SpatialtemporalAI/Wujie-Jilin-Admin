@@ -348,6 +348,7 @@ declare namespace App {
         lookForward: string;
         modify: string;
         modifySuccess: string;
+        saveSuccess: string;
         noData: string;
         operate: string;
         pleaseCheckValue: string;
@@ -740,6 +741,9 @@ declare namespace App {
             required: string;
             resetConfig: string;
             validationRule: string;
+            beautifyJson: string;
+            editInModal: string;
+            editJson: string;
             form: {
               configKey: string;
               configValue: string;
@@ -751,6 +755,13 @@ declare namespace App {
               editable: string;
               isSystem: string;
               required: string;
+              invalidNumber: string;
+              invalidBoolean: string;
+              invalidJson: string;
+              invalidArray: string;
+              jsonEmpty: string;
+              jsonBeautifySuccess: string;
+              jsonFormatError: string;
             };
             addConfig: string;
             editConfig: string;

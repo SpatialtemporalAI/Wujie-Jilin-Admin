@@ -134,8 +134,8 @@ async function getRoleOptions() {
 
   if (!error) {
     const options = data.map(item => ({
-      label: item.roleName,
-      value: item.roleCode
+      label: item.name,
+      value: item.code
     }));
 
     // the mock data does not have the roleCode, so fill it
@@ -227,8 +227,7 @@ watch(visible, () => {
           <NInput v-model:value="model.nickname" :placeholder="$t('page.manage.user.form.nickName')" />
         </NFormItem>
         <NFormItem :label="$t('page.manage.user.userPhone')" path="phone">
-          <NInput v-model:value="model.phone" :placeholder="$t('page.manage.user.form.userPhone')" type="number"
-            maxlength="11" />
+          <NInput v-model:value="model.phone" :placeholder="$t('page.manage.user.form.userPhone')" maxlength="11" />
         </NFormItem>
         <NFormItem :label="$t('page.manage.user.userEmail')" path="email">
           <NInput v-model:value="model.email" :placeholder="$t('page.manage.user.form.userEmail')" />
