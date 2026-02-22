@@ -197,7 +197,6 @@ const defaultFormValue: Api.SystemManage.ConfigCreate = {
   type: 'string',
   group: 'system',
   is_system: '2',
-  required: '2'
 };
 
 const form = reactive<Api.SystemManage.ConfigCreate>({ ...defaultFormValue });
@@ -301,10 +300,6 @@ async function handleSubmit() {
           <NFormItemGi :span="12" :label="$t('page.manage.config.isSystem')">
             <NSelect v-model:value="form.is_system" :options="translatedYesOrNoOptions"
               :placeholder="$t('page.manage.config.form.isSystem')" />
-          </NFormItemGi>
-          <NFormItemGi :span="12" :label="$t('page.manage.config.required')">
-            <NSelect v-model:value="form.required" :options="translatedYesOrNoOptions"
-              :placeholder="$t('page.manage.config.form.required')" />
           </NFormItemGi>
         </NGrid>
       </NForm>

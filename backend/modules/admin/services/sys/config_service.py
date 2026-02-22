@@ -393,9 +393,7 @@ class ConfigService:
                 description=config_in.description,
                 type=config_in.type,
                 group=config_in.group,
-                editable=config_in.editable,
                 is_system=config_in.is_system,
-                required=config_in.required,
             )
 
             db.add(config)

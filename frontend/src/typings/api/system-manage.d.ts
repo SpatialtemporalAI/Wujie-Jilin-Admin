@@ -290,8 +290,7 @@ declare namespace Api {
 
       /** 是否为系统内置配置 */
       is_system: Common.EnableStatus;
-      /** 是否必填 */
-      required: Common.EnableStatus;
+
     }>;
 
     /** 配置搜索参数 */
@@ -305,7 +304,7 @@ declare namespace Api {
     /** 配置创建 */
     type ConfigCreate = Pick<
       Config,
-      'key' | 'value' | 'default_value' | 'validation_rule' | 'description' | 'type' | 'group' | 'is_system' | 'required'
+      'key' | 'value' | 'default_value' | 'validation_rule' | 'description' | 'type' | 'group' | 'is_system'
     >;
 
     /** 配置更新 */

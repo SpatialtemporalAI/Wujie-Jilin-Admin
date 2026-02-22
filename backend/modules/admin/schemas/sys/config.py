@@ -38,7 +38,7 @@ class SysConfigCreate(BaseEntity):
     group: ConfigGroup = Field(ConfigGroup.SYSTEM, description="配置分组")
 
     is_system: bool = Field(False, description="是否为系统内置配置")
-    required: bool = Field(False, description="是否必填")
+
 
 
 class SysConfigUpdate(BaseEntity):
@@ -55,7 +55,7 @@ class SysConfigUpdate(BaseEntity):
     group: Optional[ConfigGroup] = Field(None, description="配置分组")
 
     is_system: Optional[bool] = Field(None, description="是否为系统内置配置")
-    required: Optional[bool] = Field(None, description="是否必填")
+
 
 
 class SysConfigBatchUpdate(BaseEntity):
@@ -101,7 +101,7 @@ class SysConfigResponseData(BaseRespEntity):
     group: ConfigGroup = Field(..., description="配置分组")
 
     is_system: bool = Field(..., description="是否为系统内置配置")
-    required: bool = Field(..., description="是否必填")
+
     created_at: datetime = Field(..., description="创建时间")
     updated_at: Optional[datetime] = Field(None, description="更新时间")
 

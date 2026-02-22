@@ -69,5 +69,3 @@ class SysConfig(Base):
     is_system: Mapped[bool] = mapped_column(
         Boolean, default=False, comment="是否为系统内置配置"
     )
-    # 是否必填
-    required: Mapped[bool] = mapped_column(Boolean, default=False, comment="是否必填")
