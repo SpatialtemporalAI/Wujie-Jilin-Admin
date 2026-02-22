@@ -613,3 +613,41 @@ class ConfigService:
             await db.rollback()
             logger.error("删除配置失败: %s", str(e), exc_info=True)
             raise
+
+    @staticmethod
+    async def batch_delete_configs(db: AsyncSession, config_ids: List[int]) -> int:
+        """
+        批量删除配置
+
+        Args:
+            db: 数据库会话
+            config_ids: 配置ID列表
+
+        Returns:
+            删除的配置数量
+
+        Raises:
+            NotFoundError: 配置不存在
+            ForbiddenError: 系统内置配置禁止删除
+        """
+        try:
+            logger.info("批量删除配置，配置ID列表: %s", config_ids)
+
+            delete_count = 0
+            for config_id in config_ids:
+                try:
+                    await ConfigService.delete_config(db, config_id)
+                    delete_count += 1
+                except Exception as e:
+                    logger.error(
+                        "删除配置失败，配置ID: %d, 错误: %s", config_id, str(e)
+                    )
+                    raise e
+
+            logger.info("批量删除配置成功，共删除 %d 个配置", delete_count)
+            return delete_count
+
+        except Exception as e:
+            await db.rollback()
+            logger.error("批量删除配置失败: %s", str(e), exc_info=True)
+            raise

@@ -4,6 +4,7 @@ import { NButton, NCard, NDataTable, NPopconfirm, NTag, useMessage } from 'naive
 import {
   fetchCreateConfig,
   fetchDeleteConfig,
+  fetchBatchDeleteConfig,
   fetchGetConfigList,
   fetchResetConfigs,
   fetchUpdateConfig
@@ -131,15 +132,6 @@ const {
       }
     },
     {
-      key: 'required',
-      title: $t('page.manage.config.required'),
-      align: 'center',
-      width: 100,
-      render: row => {
-        return <NTag type={row.required ? 'error' : 'default'}>{row.required ? $t('common.yesOrNo.yes') : $t('common.yesOrNo.no')}</NTag>;
-      }
-    },
-    {
       key: 'operate',
       title: $t('common.operate'),
       align: 'center',
@@ -216,8 +208,16 @@ async function handleResetConfig(id: number) {
 
 /** 批量删除配置 */
 async function handleBatchDeleteConfig() {
-  console.log('批量删除配置:', checkedConfigRowKeys.value);
-  onConfigBatchDeleted();
+  if (checkedConfigRowKeys.value.length === 0) {
+    return;
+  }
+  try {
+    await fetchBatchDeleteConfig(checkedConfigRowKeys.value.map(Number));
+    message.success($t('common.deleteSuccess'));
+    onConfigBatchDeleted();
+  } catch (error) {
+    console.error('批量删除配置失败:', error);
+  }
 }
 
 /** 批量重置配置 */

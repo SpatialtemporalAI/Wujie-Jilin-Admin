@@ -465,3 +465,12 @@ export function fetchDeleteConfig(configId: number) {
     method: 'delete'
   });
 }
+
+/** batch delete configs */
+export function fetchBatchDeleteConfig(configIds: number[]) {
+  return request<void>({
+    url: '/admin/sys/config/batch',
+    method: 'delete',
+    data: configIds
+  });
+}

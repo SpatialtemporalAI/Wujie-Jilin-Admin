@@ -328,7 +328,7 @@ async def delete_dict(
 
 @dict_router.get("/item/list", response_model=ResponsePageModel[SysDictItemResponseData])
 async def get_dict_item_list(
-    dict_id: Optional[int] = Query(None, description="字典ID"),
+    dict_id: Optional[str] = Query(None, description="字典ID"),
     label: Optional[str] = Query(None, description="字典项文本，支持模糊查询"),
     value: Optional[str] = Query(None, description="字典项值，支持模糊查询"),
     status: Optional[str] = Query(None, description="字典项状态：True-启用，False-禁用"),
@@ -341,9 +341,17 @@ async def get_dict_item_list(
     try:
         logger.info("获取字典项列表接口被调用")
 
+        # 解析 dict_id 参数
+        parsed_dict_id = None
+        if dict_id and dict_id.strip():
+            try:
+                parsed_dict_id = int(dict_id)
+            except ValueError:
+                parsed_dict_id = None
+
         # 构建查询参数
         query_params = SysDictItemQueryParams(
-            dict_id=dict_id,
+            dict_id=parsed_dict_id,
             label=label,
             value=value,
             status=parse_bool_param(status),

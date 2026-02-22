@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 
 from typing import Optional, List, Any
-from pydantic import Field, ConfigDict
+from pydantic import Field, ConfigDict, field_validator, field_serializer
 from datetime import datetime
 from app.models.common.base import BaseRespEntity, BaseEntity
 from app.models.common.page import PageRequest
@@ -40,7 +40,6 @@ class SysConfigCreate(BaseEntity):
     is_system: bool = Field(False, description="是否为系统内置配置")
 
 
-
 class SysConfigUpdate(BaseEntity):
     """
     系统配置更新请求模型
@@ -57,6 +56,33 @@ class SysConfigUpdate(BaseEntity):
     is_system: Optional[bool] = Field(None, description="是否为系统内置配置")
 
 
+class SysConfigBaseResp(BaseRespEntity):
+    """
+    系统配置基础响应模型
+    用于定义系统配置的基础响应字段
+    """
+
+    # 处理输入转换：接收1→True，接收2→False（也可添加非法值校验）
+    @field_validator(
+        "is_system", mode="before", check_fields=False
+    )  # mode="before" 表示先处理原始输入再验证类型
+    def validate_is_system_input(cls, value):
+        # 如果输入是1，转为True；输入是2，转为False
+        if value == "1":
+            return True
+        elif value == "2":
+            return False
+        # 可选：校验非法输入（比如传3/字符串等），抛出明确异常
+        elif value not in (True, False):
+            raise ValueError("status参数只能是1（代表true）或2（代表false）")
+        # 如果输入本身是bool（比如直接传true/false），直接返回
+        return value
+
+    # 处理输出转换：True→1，False→2
+    @field_serializer("is_system", check_fields=False)
+    def serialize_is_system_output(self, value: bool):
+        return "1" if value else "2"
+
 
 class SysConfigBatchUpdate(BaseEntity):
     """
@@ -67,7 +93,7 @@ class SysConfigBatchUpdate(BaseEntity):
     configs: List[dict] = Field(..., description="配置项列表，每项包含id和value")
 
 
-class SysConfigSimpleResponse(BaseRespEntity):
+class SysConfigSimpleResponse(SysConfigBaseResp):
     """
     系统配置简单响应模型
     用于只需要展示基本配置信息的场景
@@ -83,7 +109,7 @@ class SysConfigSimpleResponse(BaseRespEntity):
     group: ConfigGroup = Field(..., description="配置分组")
 
 
-class SysConfigResponseData(BaseRespEntity):
+class SysConfigResponseData(SysConfigBaseResp):
     """
     系统配置详细响应模型
     用于展示配置完整信息

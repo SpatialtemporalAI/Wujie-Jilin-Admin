@@ -116,7 +116,7 @@ async function handleSubmit() {
           <NFormItemGi :span="12" :label="$t('page.manage.dict.itemStatus')">
             <NRadioGroup v-model:value="form.status">
               <NRadio v-for="item in enableStatusOptions" :key="item.value" :value="item.value"
-                :label="$t(item.label)" />
+                :label="item.label" />
             </NRadioGroup>
           </NFormItemGi>
           <NFormItemGi :span="12" :label="$t('page.manage.dict.sort')">
