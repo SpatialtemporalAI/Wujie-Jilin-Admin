@@ -196,7 +196,6 @@ const defaultFormValue: Api.SystemManage.ConfigCreate = {
   description: '',
   type: 'string',
   group: 'system',
-  editable: '1',
   is_system: '2',
   required: '2'
 };
@@ -298,10 +297,6 @@ async function handleSubmit() {
           </NFormItemGi>
           <NFormItemGi :span="12" :label="$t('page.manage.config.validationRule')">
             <NInput v-model:value="form.validation_rule" :placeholder="$t('page.manage.config.form.validationRule')" />
-          </NFormItemGi>
-          <NFormItemGi :span="12" :label="$t('page.manage.config.editable')">
-            <NSelect v-model:value="form.editable" :options="translatedYesOrNoOptions"
-              :placeholder="$t('page.manage.config.form.editable')" />
           </NFormItemGi>
           <NFormItemGi :span="12" :label="$t('page.manage.config.isSystem')">
             <NSelect v-model:value="form.is_system" :options="translatedYesOrNoOptions"

@@ -64,8 +64,7 @@ class SysConfig(Base):
     group: Mapped[ConfigGroup] = mapped_column(
         Enum(ConfigGroup), default=ConfigGroup.SYSTEM, comment="配置分组"
     )
-    # 是否可编辑
-    editable: Mapped[bool] = mapped_column(Boolean, default=True, comment="是否可编辑")
+
     # 是否为系统内置配置
     is_system: Mapped[bool] = mapped_column(
         Boolean, default=False, comment="是否为系统内置配置"

@@ -62,8 +62,7 @@ class ConfigService:
             conditions.append(SysConfig.type == query_params.type)
         if query_params.group:
             conditions.append(SysConfig.group == query_params.group)
-        if query_params.editable is not None:
-            conditions.append(SysConfig.editable == query_params.editable)
+
         if query_params.is_system is not None:
             conditions.append(SysConfig.is_system == query_params.is_system)
 
@@ -213,8 +212,6 @@ class ConfigService:
             )
 
             stmt = select(SysConfig).where(SysConfig.group == query.group)
-            if query.editable_only is not None:
-                stmt = stmt.where(SysConfig.editable == query.editable_only)
 
             stmt = stmt.order_by(SysConfig.id.desc())
             result = await db.execute(stmt)
@@ -453,8 +450,8 @@ class ConfigService:
                 logger.warning("配置不存在，配置ID: %d", config_id)
                 raise NotFoundError(msg=f"配置 {config_id} 不存在")
 
-            # 检查是否为系统内置且不可编辑
-            if existing_config.is_system and not existing_config.editable:
+            # 检查是否为系统内置配置
+            if existing_config.is_system:
                 logger.warning("系统内置配置禁止修改，配置ID: %d", config_id)
                 raise ForbiddenError(msg="系统内置配置禁止修改")
 
@@ -520,7 +517,7 @@ class ConfigService:
                 )
                 config = result.scalar_one_or_none()
 
-                if config and config.editable:
+                if config:
                     if ConfigService._validate_value(value, config.type):
                         config.value = value
                         updated_count += 1
@@ -548,16 +545,16 @@ class ConfigService:
             重置的数量
         """
         try:
-            logger.info("重置配置，配置ID列表: %s", reset_in.config_ids)
+            logger.info("重置配置，配置ID列表: %s", reset_in.ids)
 
             reset_count = 0
-            for config_id in reset_in.config_ids:
+            for config_id in reset_in.ids:
                 result = await db.execute(
                     select(SysConfig).where(SysConfig.id == config_id)
                 )
                 config = result.scalar_one_or_none()
 
-                if config and config.editable and config.default_value is not None:
+                if config and config.default_value is not None:
                     config.value = config.default_value
                     reset_count += 1
 

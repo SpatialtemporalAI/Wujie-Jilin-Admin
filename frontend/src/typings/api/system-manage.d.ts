@@ -287,8 +287,7 @@ declare namespace Api {
       type: ConfigType;
       /** 配置分组 */
       group: ConfigGroup;
-      /** 是否可编辑 */
-      editable: Common.EnableStatus;
+
       /** 是否为系统内置配置 */
       is_system: Common.EnableStatus;
       /** 是否必填 */
@@ -297,7 +296,7 @@ declare namespace Api {
 
     /** 配置搜索参数 */
     type ConfigSearchParams = CommonType.RecordNullable<
-      Pick<Config, 'key' | 'description' | 'type' | 'group' | 'editable' | 'is_system'> & CommonSearchParams
+      Pick<Config, 'key' | 'description' | 'type' | 'group' | 'is_system'> & CommonSearchParams
     >;
 
     /** 配置列表 */
@@ -306,7 +305,7 @@ declare namespace Api {
     /** 配置创建 */
     type ConfigCreate = Pick<
       Config,
-      'key' | 'value' | 'default_value' | 'validation_rule' | 'description' | 'type' | 'group' | 'editable' | 'is_system' | 'required'
+      'key' | 'value' | 'default_value' | 'validation_rule' | 'description' | 'type' | 'group' | 'is_system' | 'required'
     >;
 
     /** 配置更新 */
@@ -319,7 +318,7 @@ declare namespace Api {
 
     /** 重置配置 */
     type ConfigReset = {
-      ids: number[];
+      ids: string[];
     };
   }
 }

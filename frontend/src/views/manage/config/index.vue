@@ -25,7 +25,6 @@ const configSearchParams: Api.SystemManage.ConfigSearchParams = reactive({
   description: null,
   type: null,
   group: null,
-  editable: null,
   is_system: null
 });
 
@@ -121,15 +120,7 @@ const {
         return <NTag type="default">{groupLabel}</NTag>;
       }
     },
-    {
-      key: 'editable',
-      title: $t('page.manage.config.editable'),
-      align: 'center',
-      width: 100,
-      render: row => {
-        return <NTag type={row.editable ? 'success' : 'warning'}>{row.editable ? $t('common.yesOrNo.yes') : $t('common.yesOrNo.no')}</NTag>;
-      }
-    },
+
     {
       key: 'is_system',
       title: $t('page.manage.config.isSystem'),
@@ -153,14 +144,13 @@ const {
       title: $t('common.operate'),
       align: 'center',
       width: 200,
+      fixed: 'right',
       render: row => {
         return (
           <div class="flex-center gap-8px">
-            {row.editable && (
-              <NButton type="primary" ghost size="small" onClick={() => editConfig(row.id)}>
-                {$t('common.edit')}
-              </NButton>
-            )}
+            <NButton type="primary" ghost size="small" onClick={() => editConfig(row.id)}>
+              {$t('common.edit')}
+            </NButton>
             {row.default_value && (
               <NButton type="info" ghost size="small" onClick={() => handleResetConfig(row.id)}>
                 {$t('page.manage.config.resetConfig')}
@@ -216,7 +206,7 @@ async function handleDeleteConfig(id: number) {
 /** 重置配置 */
 async function handleResetConfig(id: number) {
   try {
-    await fetchResetConfigs({ ids: [id] });
+    await fetchResetConfigs({ ids: [id.toString()] });
     message.success($t('common.updateSuccess'));
     getConfigDataByPage();
   } catch (error) {
@@ -237,7 +227,7 @@ async function handleBatchResetConfig() {
     return;
   }
   try {
-    await fetchResetConfigs({ ids: checkedConfigRowKeys.value as number[] });
+    await fetchResetConfigs({ ids: checkedConfigRowKeys.value as string[] });
     message.success($t('common.updateSuccess'));
     getConfigDataByPage();
   } catch (error) {
@@ -251,40 +241,38 @@ async function handleBatchResetConfig() {
     <ConfigSearch v-model:model="configSearchParams" @search="getConfigDataByPage" />
     <NCard :title="$t('page.manage.config.title')" :bordered="false" size="small" class="card-wrapper sm:flex-1-hidden">
       <template #header-extra>
-        <TableHeaderOperation
-          v-model:columns="configColumnChecks"
-          :disabled-delete="checkedConfigRowKeys.length === 0"
-          :loading="configLoading"
-          @add="handleAddConfig"
-          @delete="handleBatchDeleteConfig"
-          @refresh="getConfigData"
-        >
-          <template #suffix>
-            <NButton type="info" ghost size="small" :disabled="checkedConfigRowKeys.length === 0" @click="handleBatchResetConfig">
+        <TableHeaderOperation v-model:columns="configColumnChecks" :disabled-delete="checkedConfigRowKeys.length === 0"
+          :loading="configLoading" @add="handleAddConfig" @delete="handleBatchDeleteConfig" @refresh="getConfigData">
+          <template #default>
+            <NButton size="small" ghost type="primary" @click="handleAddConfig">
+              <template #icon>
+                <icon-ic-round-plus class="text-icon" />
+              </template>
+              {{ $t('common.add') }}
+            </NButton>
+            <NPopconfirm @positive-click="handleBatchDeleteConfig">
+              <template #trigger>
+                <NButton size="small" ghost type="error" :disabled="checkedConfigRowKeys.length === 0">
+                  <template #icon>
+                    <icon-ic-round-delete class="text-icon" />
+                  </template>
+                  {{ $t('common.batchDelete') }}
+                </NButton>
+              </template>
+              {{ $t('common.confirmDelete') }}
+            </NPopconfirm>
+            <NButton type="info" ghost size="small" :disabled="checkedConfigRowKeys.length === 0"
+              @click="handleBatchResetConfig">
               {{ $t('page.manage.config.resetConfig') }}
             </NButton>
           </template>
         </TableHeaderOperation>
       </template>
-      <NDataTable
-        v-model:checked-row-keys="checkedConfigRowKeys"
-        :columns="configColumns"
-        :data="configData"
-        size="small"
-        :flex-height="!appStore.isMobile"
-        :scroll-x="1600"
-        :loading="configLoading"
-        remote
-        :row-key="row => row.id"
-        :pagination="configMobilePagination"
-        class="sm:h-full"
-      />
-      <ConfigOperateDrawer
-        v-model:visible="configDrawerVisible"
-        :operate-type="configOperateType"
-        :row-data="editingConfigData"
-        @submitted="getConfigDataByPage"
-      />
+      <NDataTable v-model:checked-row-keys="checkedConfigRowKeys" :columns="configColumns" :data="configData"
+        size="small" :flex-height="!appStore.isMobile" :scroll-x="1600" :loading="configLoading" remote
+        :row-key="row => row.id" :pagination="configMobilePagination" class="sm:h-full" />
+      <ConfigOperateDrawer v-model:visible="configDrawerVisible" :operate-type="configOperateType"
+        :row-data="editingConfigData" @submitted="getConfigDataByPage" />
     </NCard>
   </div>
 </template>

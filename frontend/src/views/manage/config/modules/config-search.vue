@@ -66,9 +66,6 @@ function search() {
             <NFormItemGi span="24 s:12 m:6" :label="$t('page.manage.config.configGroup')" path="group" class="pr-24px">
               <NSelect v-model:value="model.group" :options="configGroupOptions" :placeholder="$t('common.keywordSearch')" clearable />
             </NFormItemGi>
-            <NFormItemGi span="24 s:12 m:6" :label="$t('page.manage.config.editable')" path="editable" class="pr-24px">
-              <NSelect v-model:value="model.editable" :options="yesOrNoOptions" :placeholder="$t('common.keywordSearch')" clearable />
-            </NFormItemGi>
             <NFormItemGi span="24 s:12 m:6" :label="$t('page.manage.config.isSystem')" path="is_system" class="pr-24px">
               <NSelect v-model:value="model.is_system" :options="yesOrNoOptions" :placeholder="$t('common.keywordSearch')" clearable />
             </NFormItemGi>

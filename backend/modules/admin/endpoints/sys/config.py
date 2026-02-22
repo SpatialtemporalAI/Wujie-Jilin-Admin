@@ -63,7 +63,6 @@ async def get_config_list(
     description: Optional[str] = Query(None, description="配置描述，支持模糊查询"),
     type: Optional[str] = Query(None, description="配置类型"),
     group: Optional[str] = Query(None, description="配置分组"),
-    editable: Optional[str] = Query(None, description="是否可编辑"),
     is_system: Optional[str] = Query(None, description="是否为系统内置配置"),
     page_params: PageRequest = Depends(get_page_params),
     db: AsyncSession = Depends(get_session),
@@ -81,7 +80,7 @@ async def get_config_list(
                 config_type = ConfigType(type)
             except ValueError:
                 pass
-        
+
         config_group = None
         if group and group.strip():
             try:
@@ -95,7 +94,6 @@ async def get_config_list(
             description=description,
             type=config_type,
             group=config_group,
-            editable=parse_bool_param(editable),
             is_system=parse_bool_param(is_system),
             page=page_params.page,
             page_size=page_params.page_size,
@@ -123,7 +121,6 @@ async def get_config_list(
 @config_router.get("/all", response_model=ResponseModel[List[SysConfigSimpleResponse]])
 async def get_all_configs(
     group: Optional[ConfigGroup] = Query(None, description="配置分组"),
-    editable_only: Optional[str] = Query(None, description="是否只查询可编辑的配置"),
     db: AsyncSession = Depends(get_session),
 ):
     """
@@ -135,7 +132,6 @@ async def get_all_configs(
         # 构建查询参数
         query_params = SysConfigQueryParams(
             group=group,
-            editable=parse_bool_param(editable_only),
             page=1,
             page_size=1000,
         )
@@ -154,10 +150,11 @@ async def get_all_configs(
         raise
 
 
-@config_router.get("/group/{group}", response_model=ResponseModel[List[SysConfigSimpleResponse]])
+@config_router.get(
+    "/group/{group}", response_model=ResponseModel[List[SysConfigSimpleResponse]]
+)
 async def get_configs_by_group(
     group: ConfigGroup,
-    editable_only: Optional[str] = Query(None, description="是否只查询可编辑的配置"),
     db: AsyncSession = Depends(get_session),
 ):
     """
@@ -169,7 +166,6 @@ async def get_configs_by_group(
         # 构建查询参数
         query = SysConfigByGroupQuery(
             group=group,
-            editable_only=parse_bool_param(editable_only),
         )
 
         # 调用服务层
@@ -186,7 +182,9 @@ async def get_configs_by_group(
         raise
 
 
-@config_router.get("/id/{config_id}", response_model=ResponseModel[SysConfigResponseData])
+@config_router.get(
+    "/id/{config_id}", response_model=ResponseModel[SysConfigResponseData]
+)
 async def get_config_by_id(
     config_id: int,
     db: AsyncSession = Depends(get_session),
@@ -208,7 +206,9 @@ async def get_config_by_id(
         raise
 
 
-@config_router.get("/key/{config_key}", response_model=ResponseModel[SysConfigResponseData])
+@config_router.get(
+    "/key/{config_key}", response_model=ResponseModel[SysConfigResponseData]
+)
 async def get_config_by_key(
     config_key: str,
     db: AsyncSession = Depends(get_session),
@@ -359,4 +359,3 @@ async def delete_config(
     except Exception as e:
         logger.error("删除配置接口失败: %s", str(e), exc_info=True)
         raise
-

@@ -19,7 +19,7 @@ class SysConfigQueryParams(PageRequest):
     description: Optional[str] = Field(None, description="配置描述，支持模糊查询")
     type: Optional[ConfigType] = Field(None, description="配置类型")
     group: Optional[ConfigGroup] = Field(None, description="配置分组")
-    editable: Optional[bool] = Field(None, description="是否可编辑")
+
     is_system: Optional[bool] = Field(None, description="是否为系统内置配置")
 
 
@@ -36,7 +36,7 @@ class SysConfigCreate(BaseEntity):
     description: Optional[str] = Field(None, description="配置描述", max_length=255)
     type: ConfigType = Field(ConfigType.STRING, description="配置类型")
     group: ConfigGroup = Field(ConfigGroup.SYSTEM, description="配置分组")
-    editable: bool = Field(True, description="是否可编辑")
+
     is_system: bool = Field(False, description="是否为系统内置配置")
     required: bool = Field(False, description="是否必填")
 
@@ -53,7 +53,7 @@ class SysConfigUpdate(BaseEntity):
     description: Optional[str] = Field(None, description="配置描述", max_length=255)
     type: Optional[ConfigType] = Field(None, description="配置类型")
     group: Optional[ConfigGroup] = Field(None, description="配置分组")
-    editable: Optional[bool] = Field(None, description="是否可编辑")
+
     is_system: Optional[bool] = Field(None, description="是否为系统内置配置")
     required: Optional[bool] = Field(None, description="是否必填")
 
@@ -99,7 +99,7 @@ class SysConfigResponseData(BaseRespEntity):
     description: Optional[str] = Field(None, description="配置描述")
     type: ConfigType = Field(..., description="配置类型")
     group: ConfigGroup = Field(..., description="配置分组")
-    editable: bool = Field(..., description="是否可编辑")
+
     is_system: bool = Field(..., description="是否为系统内置配置")
     required: bool = Field(..., description="是否必填")
     created_at: datetime = Field(..., description="创建时间")
@@ -112,7 +112,7 @@ class SysConfigReset(BaseEntity):
     用于重置配置为默认值
     """
 
-    config_ids: List[int] = Field(..., description="要重置的配置ID列表")
+    ids: List[int] = Field(..., description="要重置的配置ID列表")
 
 
 class SysConfigByGroupQuery(BaseEntity):
@@ -121,4 +121,3 @@ class SysConfigByGroupQuery(BaseEntity):
     """
 
     group: ConfigGroup = Field(..., description="配置分组")
-    editable_only: Optional[bool] = Field(None, description="是否只查询可编辑的配置")

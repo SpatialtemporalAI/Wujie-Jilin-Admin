@@ -415,7 +415,6 @@ export function fetchCreateConfig(config: Api.SystemManage.ConfigCreate) {
   // 转换布尔字段：将字符串转换为布尔值
   const transformedConfig = {
     ...config,
-    editable: config.editable === '1',
     is_system: config.is_system === '1',
     required: config.required === '1'
   };
@@ -432,7 +431,6 @@ export function fetchUpdateConfig(configId: number, config: Api.SystemManage.Con
   // 转换布尔字段：将字符串转换为布尔值
   const transformedConfig = {
     ...config,
-    editable: config.editable === '1',
     is_system: config.is_system === '1',
     required: config.required === '1'
   };
