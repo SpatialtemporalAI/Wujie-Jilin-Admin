@@ -16,6 +16,7 @@ from core.response.response_schema import (
     ResponsePageDataModel,
 )
 from app.models.common.page import PageRequest, get_page_params, get_paginated_results
+from app.models.common.base import BoolField
 
 from modules.admin.services.sys import UserService
 from modules.admin.schemas.sys.user import (
@@ -33,34 +34,15 @@ logger = logging.getLogger(__name__)
 user_router = APIRouter(prefix="/user", tags=["用户管理"])
 
 
-def parse_bool_param(value: Optional[str]) -> Optional[bool]:
-    """
-    解析布尔类型参数
-
-    Args:
-        value: 参数字符串
-
-    Returns:
-        布尔值或None
-    """
-    if value is None or value == "":
-        return None
-    if value.lower() in ("true", "1", "yes", "y"):
-        return True
-    if value.lower() in ("false", "0", "no", "n"):
-        return False
-    return None
-
-
 @user_router.get("/list", response_model=ResponsePageModel[SysUserResponseData])
 async def get_user_list(
     page_params: PageRequest = Depends(get_page_params),
-    status: Optional[str] = Query(None, description="状态"),
+    status: BoolField = Query(None, description="用户状态：True-启用，False-禁用"),
     username: Optional[str] = Query(None, description="用户名"),
     nickname: Optional[str] = Query(None, description="昵称"),
     phone: Optional[str] = Query(None, description="手机号"),
     email: Optional[str] = Query(None, description="邮箱"),
-    is_superuser: Optional[str] = Query(None, description="是否为超级管理员"),
+    is_superuser: BoolField = Query(None, description="是否为超级管理员"),
     role_ids: Optional[str] = Query(None, description="角色ID列表，逗号分隔"),
     db: AsyncSession = Depends(get_session),
 ):
@@ -73,12 +55,12 @@ async def get_user_list(
     query_params = SysUserQueryParams(
         page=page_params.page,
         page_size=page_params.page_size,
-        status=parse_bool_param(status),
+        status=status,
         username=username,
         nickname=nickname,
         phone=phone,
         email=email,
-        is_superuser=parse_bool_param(is_superuser),
+        is_superuser=is_superuser,
         role_ids=[int(r) for r in role_ids.split(",")] if role_ids else None,
     )
 

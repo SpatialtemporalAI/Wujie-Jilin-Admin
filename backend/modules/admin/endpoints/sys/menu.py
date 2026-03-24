@@ -28,6 +28,7 @@ from modules.admin.schemas.sys.menu import (
     SysMenuBatchUpdateStatus,
 )
 from app.models.sys.menu import MenuType
+from app.models.common.base import BoolField
 
 logger = logging.getLogger(__name__)
 
@@ -46,25 +47,6 @@ PAGE_COMPONENTS = [
     "manage_user-detail",
     "manage_user",
 ]
-
-
-def parse_bool_param(value: Optional[str]) -> Optional[bool]:
-    """
-    解析布尔类型参数
-
-    Args:
-        value: 参数字符串
-
-    Returns:
-        布尔值或None
-    """
-    if value is None or value == "":
-        return None
-    if value.lower() in ("true", "1", "yes", "y"):
-        return True
-    if value.lower() in ("false", "0", "no", "n"):
-        return False
-    return None
 
 
 def parse_menu_type_param(value: Optional[str]) -> Optional[MenuType]:
@@ -101,7 +83,7 @@ async def get_all_pages():
 @menu_router.get("/list", response_model=ResponsePageModel[SysMenuResponseData])
 async def get_menu_list(
     name: Optional[str] = Query(None, description="菜单名称，支持模糊查询"),
-    status: Optional[str] = Query(None, description="菜单状态"),
+    status: BoolField = Query(None, description="菜单状态：True-启用，False-禁用"),
     type: Optional[str] = Query(None, description="菜单类型"),
     page_params: PageRequest = Depends(get_page_params),
     db: AsyncSession = Depends(get_session),
@@ -114,7 +96,7 @@ async def get_menu_list(
     # 构建查询参数
     query_params = SysMenuQueryParams(
         name=name,
-        status=parse_bool_param(status),
+        status=status,
         type=parse_menu_type_param(type),
     )
 
@@ -135,7 +117,7 @@ async def get_menu_list(
 
 @menu_router.get("/tree", response_model=ResponseModel[List[SysMenuTreeResponse]])
 async def get_menu_tree(
-    status: Optional[str] = Query(None, description="状态筛选"),
+    status: BoolField = Query(None, description="菜单状态：True-启用，False-禁用"),
     db: AsyncSession = Depends(get_session),
 ):
     """
@@ -143,7 +125,7 @@ async def get_menu_tree(
     """
     logger.info("获取菜单树结构请求")
 
-    menu_tree = await MenuService.get_menu_tree(db, status=parse_bool_param(status))
+    menu_tree = await MenuService.get_menu_tree(db, status=status)
 
     logger.info(f"获取菜单树结构成功，共 {len(menu_tree)} 个根菜单")
     return ResponseModel(data=menu_tree)

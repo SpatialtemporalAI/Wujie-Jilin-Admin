@@ -2,9 +2,10 @@
 # -*- coding: utf-8 -*-
 
 from typing import Optional, List
+from fastapi import Query
 from pydantic import Field, ConfigDict
 from datetime import datetime
-from app.models.common.base import BaseRespEntity, BaseEntity
+from app.models.common.base import BaseRespEntity, BaseEntity, BoolField
 from app.models.common.page import PageRequest
 from app.models.sys.menu import MenuType
 
@@ -16,7 +17,7 @@ class SysMenuQueryParams(BaseEntity):
     """
 
     name: Optional[str] = Field(None, description="菜单名称，支持模糊查询")
-    status: Optional[bool] = Field(None, description="菜单状态：True-启用，False-禁用")
+    status: BoolField = Query(None, description="菜单状态：True-启用，False-禁用")
     type: Optional[MenuType] = Field(None, description="菜单类型")
 
 
@@ -59,7 +60,7 @@ class SysMenuUpdate(BaseEntity):
     meta_hidden: Optional[bool] = Field(None, description="是否隐藏菜单")
     meta_affix: Optional[bool] = Field(None, description="是否固定标签")
     meta_breadcrumb: Optional[bool] = Field(None, description="是否显示面包屑")
-    status: Optional[bool] = Field(None, description="菜单状态：True-启用，False-禁用")
+    status: BoolField = Field(None, description="菜单状态：True-启用，False-禁用")
     type: Optional[MenuType] = Field(None, description="菜单类型")
     sort: Optional[int] = Field(None, description="排序号")
 

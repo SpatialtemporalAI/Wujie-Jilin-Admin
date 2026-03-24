@@ -7,7 +7,7 @@
 import logging
 from fastapi import APIRouter, Depends, Query
 from sqlalchemy.ext.asyncio import AsyncSession
-from typing import List, Optional
+from typing import List
 
 from database.db_manager import get_session
 from core.response.response_schema import (
@@ -16,6 +16,7 @@ from core.response.response_schema import (
     ResponsePageDataModel,
 )
 from app.models.common.page import PageRequest, get_page_params, get_paginated_results
+from app.models.common.base import BoolField
 
 from modules.admin.services.sys import RoleService
 from modules.admin.schemas.sys.role import (
@@ -34,32 +35,13 @@ logger = logging.getLogger(__name__)
 role_router = APIRouter(prefix="/role", tags=["角色管理"])
 
 
-def parse_bool_param(value: Optional[str]) -> Optional[bool]:
-    """
-    解析布尔类型参数
-
-    Args:
-        value: 参数字符串
-
-    Returns:
-        布尔值或None
-    """
-    if value is None or value == "":
-        return None
-    if value.lower() in ("true", "1", "yes", "y"):
-        return True
-    if value.lower() in ("false", "0", "no", "n"):
-        return False
-    return None
-
-
 @role_router.get("/list", response_model=ResponsePageModel[SysRoleResponseData])
 async def get_role_list(
     page_params: PageRequest = Depends(get_page_params),
-    status: Optional[str] = Query(None, description="状态"),
-    name: Optional[str] = Query(None, description="角色名称"),
-    code: Optional[str] = Query(None, description="角色编码"),
-    is_system: Optional[str] = Query(None, description="是否为系统内置角色"),
+    status: BoolField = Query(None, description="角色状态：True-启用，False-禁用"),
+    name: str | None = Query(None, description="角色名称"),
+    code: str | None = Query(None, description="角色编码"),
+    is_system: BoolField = Query(None, description="是否为系统内置角色"),
     db: AsyncSession = Depends(get_session),
 ):
     """
@@ -71,10 +53,10 @@ async def get_role_list(
     query_params = SysRoleQueryParams(
         page=page_params.page,
         page_size=page_params.page_size,
-        status=parse_bool_param(status),
+        status=status,
         name=name,
         code=code,
-        is_system=parse_bool_param(is_system),
+        is_system=is_system,
     )
 
     # 构建查询对象

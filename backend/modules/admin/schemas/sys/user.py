@@ -2,10 +2,11 @@
 # -*- coding: utf-8 -*-
 
 from typing import Optional, List
+from fastapi import Query
 from pydantic import Field, ConfigDict, field_validator
 from datetime import datetime
 import re
-from app.models.common.base import BaseRespEntity, BaseEntity
+from app.models.common.base import BaseRespEntity, BaseEntity, BoolField
 from app.models.common.page import PageRequest
 
 
@@ -19,8 +20,8 @@ class SysUserQueryParams(PageRequest):
     nickname: Optional[str] = Field(None, description="用户昵称，支持模糊查询")
     email: Optional[str] = Field(None, description="邮箱，支持模糊查询")
     phone: Optional[str] = Field(None, description="手机号，支持模糊查询")
-    status: Optional[bool] = Field(None, description="用户状态：True-启用，False-禁用")
-    is_superuser: Optional[bool] = Field(None, description="是否为超级管理员")
+    status: BoolField = Query(None, description="用户状态：True-启用，False-禁用")
+    is_superuser: BoolField = Query(None, description="是否为超级管理员")
     role_ids: Optional[List[int]] = Field(None, description="角色ID列表")
 
 
@@ -77,7 +78,7 @@ class SysUserUpdate(BaseEntity):
     email: Optional[str] = Field(None, description="邮箱", max_length=100)
     phone: Optional[str] = Field(None, description="手机号", max_length=20)
     avatar: Optional[str] = Field(None, description="头像URL")
-    status: Optional[bool] = Field(None, description="用户状态：True-启用，False-禁用")
+    status: BoolField = Field(None, description="用户状态：True-启用，False-禁用")
     role_ids: Optional[List[int]] = Field(None, description="角色ID列表")
 
     @field_validator('email')

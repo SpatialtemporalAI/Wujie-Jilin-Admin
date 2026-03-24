@@ -12,6 +12,7 @@ from database.db_manager import get_session
 from core.response.response_schema import ResponseModel
 
 from app.models.sys.permission import SysPermission
+from app.models.common.base import BoolField
 from modules.admin.services.sys import PermissionService
 
 # 创建权限管理路由
@@ -21,7 +22,7 @@ permission_router = APIRouter(prefix="/permission", tags=["权限管理"])
 @permission_router.get("/list", response_model=ResponseModel[List[SysPermission]])
 async def get_permission_list(
     category: Optional[str] = Query(None, description="权限分类"),
-    status: Optional[bool] = Query(None, description="状态"),
+    status: BoolField = Query(None, description="状态：True-启用，False-禁用"),
     db: AsyncSession = Depends(get_session),
 ):
     """

@@ -17,6 +17,7 @@ from core.response.response_schema import (
     response_base,
 )
 from app.models.common.page import PageRequest, get_page_params, get_paginated_results
+from app.models.common.base import BoolField
 
 from modules.admin.services.sys import DictService
 from modules.admin.schemas.sys.dict import (
@@ -40,25 +41,6 @@ logger = logging.getLogger(__name__)
 
 # 创建字典管理路由
 dict_router = APIRouter(prefix="/dict", tags=["字典管理"])
-
-
-def parse_bool_param(value: Optional[str]) -> Optional[bool]:
-    """
-    解析布尔类型参数
-
-    Args:
-        value: 参数字符串
-
-    Returns:
-        布尔值或None
-    """
-    if value is None or value == "":
-        return None
-    if value.lower() in ("true", "1", "yes", "y"):
-        return True
-    if value.lower() in ("false", "2", "no", "n", "0"):
-        return False
-    return None
 
 
 # ==================== 字典分类管理 ====================
@@ -97,7 +79,7 @@ async def get_dict_list(
 
 @dict_router.get("/all", response_model=ResponseModel[List[SysDictSimpleResponse]])
 async def get_all_dicts(
-    status: Optional[bool] = Query(None, description="字典状态：True-启用，False-禁用"),
+    status: BoolField = Query(None, description="字典状态：True-启用，False-禁用"),
     db: AsyncSession = Depends(get_session),
 ):
     """
@@ -329,9 +311,7 @@ async def get_dict_item_list(
     dict_id: Optional[str] = Query(None, description="字典ID"),
     label: Optional[str] = Query(None, description="字典项文本，支持模糊查询"),
     value: Optional[str] = Query(None, description="字典项值，支持模糊查询"),
-    status: Optional[str] = Query(
-        None, description="字典项状态：True-启用，False-禁用"
-    ),
+    status: BoolField = Query(None, description="字典项状态：True-启用，False-禁用"),
     page_params: PageRequest = Depends(get_page_params),
     db: AsyncSession = Depends(get_session),
 ):
@@ -354,7 +334,7 @@ async def get_dict_item_list(
             dict_id=parsed_dict_id,
             label=label,
             value=value,
-            status=parse_bool_param(status),
+            status=status,
             page=page_params.page,
             page_size=page_params.page_size,
         )
