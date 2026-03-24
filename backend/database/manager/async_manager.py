@@ -44,19 +44,17 @@ async def check_db_connection(engine: AsyncEngine) -> bool:
             # 获取查询结果，验证执行成功
             row = result.scalar()
             if row == 1:
-                print("✅ 数据库连接成功！")
+                logger.info("数据库连接验证成功")
                 return True
     except SQLAlchemyError as e:
         # 捕获所有 SQLAlchemy 相关异常（认证失败、连接超时、数据库不存在等）
-        print(f"❌ 数据库连接失败：{str(e)}")
+        logger.error("数据库连接验证失败: %s", str(e))
         return False
     except Exception as e:
         # 捕获其他未知异常
-        print(f"❌ 连接过程中发生未知错误：{str(e)}")
+        logger.error("数据库连接验证出现未知错误: %s", str(e))
         return False
-    finally:
-        # 关闭引擎（可选，根据实际场景决定是否关闭）
-        await engine.dispose()
+    # 注意：这里不要 dispose 引擎；调用方会复用该 engine 作为连接池
 
 
 class AsyncDatabaseManager:
