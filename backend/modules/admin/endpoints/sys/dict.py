@@ -56,19 +56,17 @@ def parse_bool_param(value: Optional[str]) -> Optional[bool]:
         return None
     if value.lower() in ("true", "1", "yes", "y"):
         return True
-    if value.lower() in ("false", "0", "no", "n"):
+    if value.lower() in ("false", "2", "no", "n", "0"):
         return False
     return None
 
 
 # ==================== 字典分类管理 ====================
 
+
 @dict_router.get("/list", response_model=ResponsePageModel[SysDictResponseData])
 async def get_dict_list(
-    name: Optional[str] = Query(None, description="字典名称，支持模糊查询"),
-    code: Optional[str] = Query(None, description="字典编码，支持模糊查询"),
-    status: Optional[str] = Query(None, description="字典状态：True-启用，False-禁用"),
-    is_system: Optional[str] = Query(None, description="是否为系统内置字典"),
+    query_params: SysDictQueryParams = Depends(),
     page_params: PageRequest = Depends(get_page_params),
     db: AsyncSession = Depends(get_session),
 ):
@@ -77,16 +75,6 @@ async def get_dict_list(
     """
     try:
         logger.info("获取字典列表接口被调用")
-
-        # 构建查询参数
-        query_params = SysDictQueryParams(
-            name=name,
-            code=code,
-            status=parse_bool_param(status),
-            is_system=parse_bool_param(is_system),
-            page=page_params.page,
-            page_size=page_params.page_size,
-        )
 
         # 构建查询对象
         query = DictService.build_dict_query(query_params)
@@ -167,7 +155,10 @@ async def get_dict_by_code(
             sort=dict_with_items.sort,
             created_at=dict_with_items.created_at,
             updated_at=dict_with_items.updated_at,
-            items=[SysDictItemSimpleResponse.model_validate(item) for item in dict_with_items.dict_items],
+            items=[
+                SysDictItemSimpleResponse.model_validate(item)
+                for item in dict_with_items.dict_items
+            ],
         )
 
         logger.info("通过编码获取字典接口成功，编码: %s", code)
@@ -200,7 +191,9 @@ async def get_dict(
         raise
 
 
-@dict_router.get("/{dict_id}/with-items", response_model=ResponseModel[SysDictWithItemsResponse])
+@dict_router.get(
+    "/{dict_id}/with-items", response_model=ResponseModel[SysDictWithItemsResponse]
+)
 async def get_dict_with_items(
     dict_id: int,
     db: AsyncSession = Depends(get_session),
@@ -224,7 +217,10 @@ async def get_dict_with_items(
             sort=dict_with_items.sort,
             created_at=dict_with_items.created_at,
             updated_at=dict_with_items.updated_at,
-            items=[SysDictItemSimpleResponse.model_validate(item) for item in dict_with_items.dict_items],
+            items=[
+                SysDictItemSimpleResponse.model_validate(item)
+                for item in dict_with_items.dict_items
+            ],
         )
 
         logger.info("获取字典及其字典项接口成功，字典ID: %d", dict_id)
@@ -326,12 +322,16 @@ async def delete_dict(
 # ==================== 字典项管理 ====================
 
 
-@dict_router.get("/item/list", response_model=ResponsePageModel[SysDictItemResponseData])
+@dict_router.get(
+    "/item/list", response_model=ResponsePageModel[SysDictItemResponseData]
+)
 async def get_dict_item_list(
     dict_id: Optional[str] = Query(None, description="字典ID"),
     label: Optional[str] = Query(None, description="字典项文本，支持模糊查询"),
     value: Optional[str] = Query(None, description="字典项值，支持模糊查询"),
-    status: Optional[str] = Query(None, description="字典项状态：True-启用，False-禁用"),
+    status: Optional[str] = Query(
+        None, description="字典项状态：True-启用，False-禁用"
+    ),
     page_params: PageRequest = Depends(get_page_params),
     db: AsyncSession = Depends(get_session),
 ):
@@ -378,7 +378,10 @@ async def get_dict_item_list(
         raise
 
 
-@dict_router.get("/item/all/{dict_code}", response_model=ResponseModel[List[SysDictItemSimpleResponse]])
+@dict_router.get(
+    "/item/all/{dict_code}",
+    response_model=ResponseModel[List[SysDictItemSimpleResponse]],
+)
 async def get_dict_items_by_dict_code(
     dict_code: str,
     db: AsyncSession = Depends(get_session),
@@ -392,9 +395,15 @@ async def get_dict_items_by_dict_code(
         dict_items = await DictService.get_dict_items_by_dict_code(db, dict_code)
 
         # 转换为响应模型
-        records = [SysDictItemSimpleResponse.model_validate(item) for item in dict_items]
+        records = [
+            SysDictItemSimpleResponse.model_validate(item) for item in dict_items
+        ]
 
-        logger.info("通过字典编码获取字典项接口成功，编码: %s，数量: %d", dict_code, len(records))
+        logger.info(
+            "通过字典编码获取字典项接口成功，编码: %s，数量: %d",
+            dict_code,
+            len(records),
+        )
         return response_base.success(data=records)
 
     except Exception as e:
@@ -402,7 +411,9 @@ async def get_dict_items_by_dict_code(
         raise
 
 
-@dict_router.get("/item/{item_id}", response_model=ResponseModel[SysDictItemResponseData])
+@dict_router.get(
+    "/item/{item_id}", response_model=ResponseModel[SysDictItemResponseData]
+)
 async def get_dict_item(
     item_id: int,
     db: AsyncSession = Depends(get_session),
@@ -447,7 +458,9 @@ async def create_dict_item(
         raise
 
 
-@dict_router.put("/item/{item_id}", response_model=ResponseModel[SysDictItemResponseData])
+@dict_router.put(
+    "/item/{item_id}", response_model=ResponseModel[SysDictItemResponseData]
+)
 async def update_dict_item(
     item_id: int,
     item_in: SysDictItemUpdate,
@@ -510,4 +523,3 @@ async def delete_dict_item(
     except Exception as e:
         logger.error("删除字典项接口失败: %s", str(e), exc_info=True)
         raise
-

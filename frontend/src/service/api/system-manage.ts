@@ -261,19 +261,35 @@ export function fetchGetDictWithItems(dictId: number) {
 
 /** create dict */
 export function fetchCreateDict(dict: Api.SystemManage.DictCreate) {
+  // Backend expects boolean for `status` / `is_system`.
+  const toEnableBoolean = (value: unknown) => (typeof value === 'boolean' ? value : value === '1');
+  const transformedDict = {
+    ...dict,
+    status: toEnableBoolean(dict.status),
+    is_system: toEnableBoolean(dict.is_system)
+  };
+
   return request<Api.SystemManage.Dict>({
     url: '/admin/sys/dict/add',
     method: 'post',
-    data: dict
+    data: transformedDict
   });
 }
 
 /** update dict */
 export function fetchUpdateDict(dictId: number, dict: Api.SystemManage.DictUpdate) {
+  // Backend expects boolean for `status` / `is_system`.
+  const toEnableBoolean = (value: unknown) => (typeof value === 'boolean' ? value : value === '1');
+  const transformedDict = {
+    ...dict,
+    ...(dict.status !== undefined ? { status: toEnableBoolean(dict.status) } : {}),
+    ...(dict.is_system !== undefined ? { is_system: toEnableBoolean(dict.is_system) } : {})
+  };
+
   return request<Api.SystemManage.Dict>({
     url: `/admin/sys/dict/${dictId}`,
     method: 'put',
-    data: dict
+    data: transformedDict
   });
 }
 
@@ -323,19 +339,31 @@ export function fetchGetDictItem(itemId: number) {
 
 /** create dict item */
 export function fetchCreateDictItem(item: Api.SystemManage.DictItemCreate) {
+  // Backend expects boolean for `status`.
+  const toEnableBoolean = (value: unknown) => (typeof value === 'boolean' ? value : value === '1');
   return request<Api.SystemManage.DictItem>({
     url: '/admin/sys/dict/item/add',
     method: 'post',
-    data: item
+    data: {
+      ...item,
+      status: toEnableBoolean(item.status)
+    }
   });
 }
 
 /** update dict item */
 export function fetchUpdateDictItem(itemId: number, item: Api.SystemManage.DictItemUpdate) {
+  // Backend expects boolean for `status`.
+  const toEnableBoolean = (value: unknown) => (typeof value === 'boolean' ? value : value === '1');
+  const transformedItem = {
+    ...item,
+    ...(item.status !== undefined ? { status: toEnableBoolean(item.status) } : {})
+  };
+
   return request<Api.SystemManage.DictItem>({
     url: `/admin/sys/dict/item/${itemId}`,
     method: 'put',
-    data: item
+    data: transformedItem
   });
 }
 

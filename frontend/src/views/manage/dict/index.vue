@@ -3,14 +3,10 @@ import { reactive, ref, watch } from 'vue';
 import { NButton, NCard, NDataTable, NPopconfirm, NTabPane, NTabs, NTag, useMessage } from 'naive-ui';
 import { enableStatusRecord } from '@/constants/business';
 import {
-  fetchCreateDict,
-  fetchCreateDictItem,
   fetchDeleteDict,
   fetchDeleteDictItem,
   fetchGetDictItemList,
   fetchGetDictList,
-  fetchUpdateDict,
-  fetchUpdateDictItem
 } from '@/service/api';
 import { useAppStore } from '@/store/modules/app';
 import { defaultTransform, useNaivePaginatedTable, useTableOperate } from '@/hooks/common/table';
@@ -21,6 +17,13 @@ import DictSearch from './modules/dict-search.vue';
 
 const appStore = useAppStore();
 const message = useMessage();
+
+function normalizeEnableStatus(status: unknown): Api.Common.EnableStatus {
+  if (typeof status === 'boolean') {
+    return status ? '1' : '2';
+  }
+  return status === '1' ? '1' : '2';
+}
 
 /** 字典搜索参数 */
 const dictSearchParams: Api.SystemManage.DictSearchParams = reactive({
@@ -34,6 +37,7 @@ const dictSearchParams: Api.SystemManage.DictSearchParams = reactive({
 
 /** 当前选中的字典 */
 const selectedDict = ref<Api.SystemManage.Dict | null>(null);
+const activeTab = ref<'dict' | 'dictItem'>('dict');
 
 /** 字典项搜索参数 */
 const dictItemSearchParams: Api.SystemManage.DictItemSearchParams = reactive({
@@ -98,7 +102,7 @@ const {
       align: 'center',
       width: 100,
       render: row => {
-        const status: Api.Common.EnableStatus = row.status ? '1' : '2';
+        const status = normalizeEnableStatus(row.status);
         const tagMap: Record<Api.Common.EnableStatus, NaiveUI.ThemeColor> = {
           '1': 'success',
           '2': 'warning'
@@ -126,10 +130,10 @@ const {
       key: 'operate',
       title: $t('common.operate'),
       align: 'center',
-      width: 180,
+      minWidth: 240,
       render: row => {
         return (
-          <div class="flex-center gap-8px">
+          <div class="flex flex-wrap justify-center gap-8px">
             <NButton type="primary" ghost size="small" onClick={() => handleSelectDict(row)}>
               {$t('page.manage.dict.itemManage')}
             </NButton>
@@ -220,7 +224,7 @@ const {
       align: 'center',
       width: 100,
       render: row => {
-        const status: Api.Common.EnableStatus = row.status ? '1' : '2';
+        const status = normalizeEnableStatus(row.status);
         const tagMap: Record<Api.Common.EnableStatus, NaiveUI.ThemeColor> = {
           '1': 'success',
           '2': 'warning'
@@ -239,10 +243,10 @@ const {
       key: 'operate',
       title: $t('common.operate'),
       align: 'center',
-      width: 150,
+      minWidth: 180,
       render: row => {
         return (
-          <div class="flex-center gap-8px">
+          <div class="flex flex-wrap justify-center gap-8px">
             <NButton type="info" ghost size="small" onClick={() => editDictItem(row.id)}>
               {$t('common.edit')}
             </NButton>
@@ -278,6 +282,7 @@ const {
 /** 选中字典 */
 function handleSelectDict(row: Api.SystemManage.Dict) {
   selectedDict.value = row;
+  activeTab.value = 'dictItem';
   dictItemSearchParams.dict_id = row.id;
   dictItemSearchParams.page = 1;
   getDictItemDataByPage();
@@ -326,88 +331,82 @@ async function handleBatchDeleteDictItem() {
   console.log('批量删除字典项:', checkedDictItemRowKeys.value);
   onDictItemBatchDeleted();
 }
+
+watch(selectedDict, value => {
+  if (!value && activeTab.value === 'dictItem') {
+    activeTab.value = 'dict';
+  }
+});
+
+watch(activeTab, tab => {
+  if (tab === 'dictItem') {
+    checkedDictItemRowKeys.value = [];
+  }
+});
 </script>
 
 <template>
   <div class="min-h-500px flex-col-stretch gap-16px overflow-hidden lt-sm:overflow-auto">
-    <NTabs type="line">
-      <NTabPane name="dict" :tab="$t('page.manage.dict.dictManage')">
+    <NTabs v-model:value="activeTab" type="line" class="flex-1-hidden">
+      <NTabPane name="dict" :tab="$t('page.manage.dict.dictManage')" class="flex-1-hidden">
         <DictSearch v-model:model="dictSearchParams" @search="getDictDataByPage" />
-        <NCard :title="$t('page.manage.dict.title')" :bordered="false" size="small" class="card-wrapper sm:flex-1-hidden">
+        <NCard :title="$t('page.manage.dict.title')" :bordered="false" size="small" class="card-wrapper flex-1-hidden">
           <template #header-extra>
-            <TableHeaderOperation
-              v-model:columns="dictColumnChecks"
-              :disabled-delete="checkedDictRowKeys.length === 0"
-              :loading="dictLoading"
-              @add="handleAddDict"
-              @delete="handleBatchDeleteDict"
-              @refresh="getDictData"
-            />
+            <TableHeaderOperation v-model:columns="dictColumnChecks" :disabled-delete="checkedDictRowKeys.length === 0"
+              :loading="dictLoading" @add="handleAddDict" @delete="handleBatchDeleteDict" @refresh="getDictData" />
           </template>
-          <NDataTable
-            v-model:checked-row-keys="checkedDictRowKeys"
-            :columns="dictColumns"
-            :data="dictData"
-            size="small"
-            :flex-height="!appStore.isMobile"
-            :scroll-x="962"
-            :loading="dictLoading"
-            remote
-            :row-key="row => row.id"
-            :pagination="dictMobilePagination"
-            class="sm:h-full"
-          />
-          <DictOperateDrawer
-            v-model:visible="dictDrawerVisible"
-            :operate-type="dictOperateType"
-            :row-data="editingDictData"
-            @submitted="getDictDataByPage"
-          />
+          <NDataTable v-model:checked-row-keys="checkedDictRowKeys" :columns="dictColumns" :data="dictData" size="small"
+            :flex-height="!appStore.isMobile" :scroll-x="962" :loading="dictLoading" remote :row-key="row => row.id"
+            :pagination="dictMobilePagination" class="sm:h-full" />
+          <DictOperateDrawer v-model:visible="dictDrawerVisible" :operate-type="dictOperateType"
+            :row-data="editingDictData" @submitted="getDictDataByPage" />
         </NCard>
       </NTabPane>
-      <NTabPane name="dictItem" :tab="$t('page.manage.dict.itemManage')" :disabled="!selectedDict">
+      <NTabPane name="dictItem" :tab="$t('page.manage.dict.itemManage')" :disabled="!selectedDict"
+        class="flex-1-hidden">
         <div class="mb-16px">
-          <NButton type="info" ghost size="small" @click="selectedDict = null; dictItemSearchParams.dict_id = null">
+          <NButton type="info" ghost size="small"
+            @click="activeTab = 'dict'; selectedDict = null; dictItemSearchParams.dict_id = null">
             {{ $t('common.back') }}
           </NButton>
-          <span class="ml-8px">{{ selectedDict ? `${$t('page.manage.dict.dictName')}: ${selectedDict.name}` : '' }}</span>
+          <span class="ml-8px">{{ selectedDict ? `${$t('page.manage.dict.dictName')}: ${selectedDict.name}` : ''
+          }}</span>
         </div>
-        <NCard :title="$t('page.manage.dict.itemTitle')" :bordered="false" size="small" class="card-wrapper sm:flex-1-hidden">
+        <NCard :title="$t('page.manage.dict.itemTitle')" :bordered="false" size="small"
+          class="card-wrapper flex-1-hidden">
           <template #header-extra>
-            <TableHeaderOperation
-              v-model:columns="dictItemColumnChecks"
-              :disabled-delete="checkedDictItemRowKeys.length === 0"
-              :loading="dictItemLoading"
-              :disabled-add="!selectedDict"
-              @add="handleAddDictItem"
-              @delete="handleBatchDeleteDictItem"
-              @refresh="getDictItemData"
-            />
+            <TableHeaderOperation v-model:columns="dictItemColumnChecks"
+              :disabled-delete="checkedDictItemRowKeys.length === 0" :loading="dictItemLoading"
+              :disabled-add="!selectedDict" @add="handleAddDictItem" @delete="handleBatchDeleteDictItem"
+              @refresh="getDictItemData" />
           </template>
-          <NDataTable
-            v-model:checked-row-keys="checkedDictItemRowKeys"
-            :columns="dictItemColumns"
-            :data="dictItemData"
-            size="small"
-            :flex-height="!appStore.isMobile"
-            :scroll-x="962"
-            :loading="dictItemLoading"
-            remote
-            :row-key="row => row.id"
-            :pagination="dictItemMobilePagination"
-            class="sm:h-full"
-          />
-          <DictItemOperateDrawer
-            v-model:visible="dictItemDrawerVisible"
-            :operate-type="dictItemOperateType"
-            :row-data="editingDictItemData"
-            :dict-id="selectedDict?.id"
-            @submitted="getDictItemDataByPage"
-          />
+          <NDataTable v-model:checked-row-keys="checkedDictItemRowKeys" :columns="dictItemColumns" :data="dictItemData"
+            size="small" :flex-height="!appStore.isMobile" :scroll-x="962" :loading="dictItemLoading" remote
+            :row-key="row => row.id" :pagination="dictItemMobilePagination" class="sm:h-full" />
+          <DictItemOperateDrawer v-model:visible="dictItemDrawerVisible" :operate-type="dictItemOperateType"
+            :row-data="editingDictItemData" :dict-id="selectedDict?.id" @submitted="getDictItemDataByPage" />
         </NCard>
       </NTabPane>
     </NTabs>
   </div>
 </template>
 
-<style scoped></style>
+<style scoped>
+:deep(.n-tabs) {
+  display: flex;
+  min-height: 0;
+  flex-direction: column;
+}
+
+:deep(.n-tabs-pane-wrapper) {
+  min-height: 0;
+  flex: 1;
+}
+
+:deep(.n-tab-pane) {
+  display: flex;
+  min-height: 0;
+  flex-direction: column;
+  gap: 16px;
+}
+</style>

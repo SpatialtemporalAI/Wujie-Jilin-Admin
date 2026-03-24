@@ -66,6 +66,10 @@ watch(
     if (val) {
       if (props.operateType === 'edit' && props.rowData) {
         Object.assign(form, props.rowData);
+        // Normalize backend boolean fields to frontend enum string fields.
+        if (typeof props.rowData.status === 'boolean') {
+          form.status = props.rowData.status ? '1' : '2';
+        }
       } else {
         Object.assign(form, {
           ...defaultFormValue,

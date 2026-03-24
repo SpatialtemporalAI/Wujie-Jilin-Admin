@@ -1,14 +1,15 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 
+from fastapi import Query
 from typing import Optional, List
-from pydantic import Field, ConfigDict
+from pydantic import Field, ConfigDict, field_validator
 from datetime import datetime
-from app.models.common.base import BaseRespEntity, BaseEntity
+from app.models.common.base import BaseRespEntity, BaseReqEntity, BaseEntity, BoolField
 from app.models.common.page import PageRequest
 
 
-class SysDictQueryParams(PageRequest):
+class SysDictQueryParams(BaseReqEntity):
     """
     系统字典查询参数模型
     用于字典列表分页查询时的筛选条件
@@ -16,11 +17,13 @@ class SysDictQueryParams(PageRequest):
 
     name: Optional[str] = Field(None, description="字典名称，支持模糊查询")
     code: Optional[str] = Field(None, description="字典编码，支持模糊查询")
-    status: Optional[bool] = Field(None, description="字典状态：True-启用，False-禁用")
-    is_system: Optional[bool] = Field(None, description="是否为系统内置字典")
+    status: BoolField = Query(None, description="字典状态：True-启用，False-禁用")
+    is_system: BoolField = Query(
+        None, description="是否为系统内置字典：True-是，False-否"
+    )
 
 
-class SysDictCreate(BaseEntity):
+class SysDictCreate(BaseReqEntity):
     """
     系统字典创建请求模型
     用于创建新字典时的请求数据
@@ -33,7 +36,7 @@ class SysDictCreate(BaseEntity):
     sort: int = Field(0, description="排序号")
 
 
-class SysDictUpdate(BaseEntity):
+class SysDictUpdate(BaseReqEntity):
     """
     系统字典更新请求模型
     用于更新字典信息时的请求数据
@@ -41,7 +44,7 @@ class SysDictUpdate(BaseEntity):
 
     name: Optional[str] = Field(None, description="字典名称", max_length=100)
     description: Optional[str] = Field(None, description="字典描述")
-    status: Optional[bool] = Field(None, description="字典状态：True-启用，False-禁用")
+    status: BoolField = Field(None, description="字典状态：True-启用，False-禁用")
     sort: Optional[int] = Field(None, description="排序号")
 
 
@@ -87,10 +90,10 @@ class SysDictItemQueryParams(PageRequest):
     dict_id: Optional[int] = Field(None, description="字典ID")
     label: Optional[str] = Field(None, description="字典项文本，支持模糊查询")
     value: Optional[str] = Field(None, description="字典项值，支持模糊查询")
-    status: Optional[bool] = Field(None, description="字典项状态：True-启用，False-禁用")
+    status: BoolField = Field(None, description="字典项状态：True-启用，False-禁用")
 
 
-class SysDictItemCreate(BaseEntity):
+class SysDictItemCreate(BaseReqEntity):
     """
     系统字典项创建请求模型
     用于创建新字典项时的请求数据
@@ -105,7 +108,7 @@ class SysDictItemCreate(BaseEntity):
     sort: int = Field(0, description="排序号")
 
 
-class SysDictItemUpdate(BaseEntity):
+class SysDictItemUpdate(BaseReqEntity):
     """
     系统字典项更新请求模型
     用于更新字典项信息时的请求数据
@@ -115,7 +118,7 @@ class SysDictItemUpdate(BaseEntity):
     label: Optional[str] = Field(None, description="字典项文本", max_length=100)
     description: Optional[str] = Field(None, description="字典项描述")
     ext_info: Optional[str] = Field(None, description="扩展信息(JSON格式)")
-    status: Optional[bool] = Field(None, description="字典项状态：True-启用，False-禁用")
+    status: BoolField = Field(None, description="字典项状态：True-启用，False-禁用")
     sort: Optional[int] = Field(None, description="排序号")
 
 
@@ -174,7 +177,7 @@ class SysDictWithItemsResponse(BaseRespEntity):
     items: List[SysDictItemSimpleResponse] = Field([], description="字典项列表")
 
 
-class SysDictBatchUpdateStatus(BaseEntity):
+class SysDictBatchUpdateStatus(BaseReqEntity):
     """
     系统字典批量更新状态请求模型
     用于批量启用或禁用字典
@@ -184,7 +187,7 @@ class SysDictBatchUpdateStatus(BaseEntity):
     status: bool = Field(..., description="要设置的状态：True-启用，False-禁用")
 
 
-class SysDictItemBatchUpdateStatus(BaseEntity):
+class SysDictItemBatchUpdateStatus(BaseReqEntity):
     """
     系统字典项批量更新状态请求模型
     用于批量启用或禁用字典项
