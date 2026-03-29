@@ -18,6 +18,7 @@ from .settings_model import (
     JWTModel,
     RedisPoolModel,
     LocalUploadModel,
+    SecurityModel,
 )
 
 
@@ -35,8 +36,8 @@ class GlobalSetting(BaseSettings):
     ENVIR: Literal["dev", "test", "prod"] = Field(..., description="当前环境标识")
     # 日志配置
     LOG: LogModel = LogModel()
-    # cors配置
-    ALLOWED_ORIGINS: List[str] = ["*"]
+    # 安全配置
+    SECURITY: SecurityModel = SecurityModel()
     # 项目基本配置
     SERVICE: ServiceModel = ServiceModel()
     # 日期配置

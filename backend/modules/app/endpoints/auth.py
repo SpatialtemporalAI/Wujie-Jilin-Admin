@@ -33,6 +33,7 @@ from modules.app.schemas.auth import (
     UserPushSettingModel,
 )
 from database import get_session
+from core.security.rate_limit import limit_by_ip
 
 # 创建认证路由
 router = APIRouter(
@@ -49,6 +50,7 @@ router = APIRouter(
     description="通过手机号和验证码登录系统，获取访问令牌和刷新令牌",
 )
 async def login(
+    request: Request,
     login_model: LoginModel = Body(..., description="登录请求参数"),
     user_manager: UserManager = Depends(get_user_manager),
 ):
@@ -69,6 +71,14 @@ async def login(
         }
     """
     phone = login_model.phone
+    await limit_by_ip(
+        request=request,
+        action="app_login",
+        limit=12,
+        window_seconds=60,
+        scope="app",
+        extra_suffix=phone,
+    )
     code = login_model.code
     tokens = await user_manager.login_by_phone(phone=phone, code=code)
     return response_base.success(
@@ -250,6 +260,7 @@ async def refresh_token(
     description="向指定手机号发送短信验证码，用于登录或注册验证",
 )
 async def get_sms_code(
+    request: Request,
     sms_code_model: SmsCodeModel = Body(..., description="获取短信验证码请求参数"),
     user_manager: UserManager = Depends(get_user_manager),
 ):
@@ -266,5 +277,13 @@ async def get_sms_code(
             "phone": "13800000000"
         }
     """
+    await limit_by_ip(
+        request=request,
+        action="sms_code",
+        limit=6,
+        window_seconds=60,
+        scope="app",
+        extra_suffix=sms_code_model.phone,
+    )
     await user_manager.get_verification_code(phone=sms_code_model.phone)
     return response_base.success(msg="短信验证码发送成功")

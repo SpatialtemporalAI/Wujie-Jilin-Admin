@@ -3,7 +3,13 @@ from database.plugins import setup_soft_delete_plug
 from fastapi import FastAPI
 from core.log import setup_logging
 from core.middleware.share_middleware import RequestContextMiddleware
+from core.middleware.security_middleware import (
+    RequestAuditMiddleware,
+    RequestSizeLimitMiddleware,
+    SecurityHeadersMiddleware,
+)
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.middleware.trustedhost import TrustedHostMiddleware
 from core.config import GlobalSetting
 
 
@@ -12,15 +18,21 @@ def setup_app(app: FastAPI, settings: GlobalSetting):
     注册全局信息
     """
 
+    app.add_middleware(
+        TrustedHostMiddleware, allowed_hosts=settings.SECURITY.ALLOWED_HOSTS
+    )
+
     # 配置跨域（允许其他服务访问）
     app.add_middleware(
         CORSMiddleware,
-        allow_origins=settings.ALLOWED_ORIGINS,
+        allow_origins=settings.SECURITY.ALLOWED_ORIGINS,
         allow_credentials=True,
         allow_methods=["*"],
         allow_headers=["*"],
     )
-
+    app.add_middleware(RequestAuditMiddleware)
+    app.add_middleware(RequestSizeLimitMiddleware)
+    app.add_middleware(SecurityHeadersMiddleware)
     app.add_middleware(RequestContextMiddleware)
 
     # 注册全局异常

@@ -19,10 +19,27 @@ from sqlalchemy import create_engine, text
 from sqlalchemy.exc import SQLAlchemyError
 import asyncio
 import logging
+import re
 
 from ..config import DatabaseModel
 
 logger = logging.getLogger(__name__)
+
+_RAW_SQL_BLOCKLIST_PATTERNS = [
+    r";\s*\S+",
+    r"--",
+    r"/\*",
+    r"\b(drop|truncate|alter|grant|revoke|create)\b",
+]
+
+
+def _validate_raw_sql(sql: str) -> None:
+    normalized_sql = " ".join(sql.strip().split()).lower()
+    if not normalized_sql:
+        raise ValueError("SQL 语句不能为空")
+    for pattern in _RAW_SQL_BLOCKLIST_PATTERNS:
+        if re.search(pattern, normalized_sql):
+            raise ValueError("检测到高风险 SQL 语句，请使用 ORM 或白名单模板")
 
 
 async def check_db_connection(engine: AsyncEngine) -> bool:
@@ -310,6 +327,7 @@ class AsyncDatabaseManager:
         """
         from sqlalchemy import text
 
+        _validate_raw_sql(sql)
         async with self.get_session() as session:
             result = await session.execute(text(sql), params or {})
             await session.commit()

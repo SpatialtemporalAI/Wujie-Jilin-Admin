@@ -4,6 +4,7 @@
 from fastapi import Query
 from typing import Optional, List
 from pydantic import Field, ConfigDict, field_validator
+import json
 from datetime import datetime
 from app.models.common.base import BaseRespEntity, BaseReqEntity, BaseEntity, BoolField
 from app.models.common.page import PageRequest
@@ -107,6 +108,17 @@ class SysDictItemCreate(BaseReqEntity):
     status: bool = Field(True, description="字典项状态：True-启用，False-禁用")
     sort: int = Field(0, description="排序号")
 
+    @field_validator("ext_info")
+    @classmethod
+    def validate_ext_info_json(cls, value: Optional[str]) -> Optional[str]:
+        if value in (None, ""):
+            return value
+        try:
+            json.loads(value)
+        except json.JSONDecodeError as exc:
+            raise ValueError("ext_info 必须为合法 JSON 字符串") from exc
+        return value
+
 
 class SysDictItemUpdate(BaseReqEntity):
     """
@@ -120,6 +132,17 @@ class SysDictItemUpdate(BaseReqEntity):
     ext_info: Optional[str] = Field(None, description="扩展信息(JSON格式)")
     status: BoolField = Field(None, description="字典项状态：True-启用，False-禁用")
     sort: Optional[int] = Field(None, description="排序号")
+
+    @field_validator("ext_info")
+    @classmethod
+    def validate_ext_info_json(cls, value: Optional[str]) -> Optional[str]:
+        if value in (None, ""):
+            return value
+        try:
+            json.loads(value)
+        except json.JSONDecodeError as exc:
+            raise ValueError("ext_info 必须为合法 JSON 字符串") from exc
+        return value
 
 
 class SysDictItemSimpleResponse(BaseRespEntity):

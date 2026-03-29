@@ -9,10 +9,27 @@ from sqlalchemy import create_engine, event, Result
 from sqlalchemy.orm import Session, sessionmaker, scoped_session
 from sqlalchemy.pool import QueuePool, NullPool
 import logging
+import re
 
 from ..config import DatabaseModel
 
 logger = logging.getLogger(__name__)
+
+_RAW_SQL_BLOCKLIST_PATTERNS = [
+    r";\s*\S+",
+    r"--",
+    r"/\*",
+    r"\b(drop|truncate|alter|grant|revoke|create)\b",
+]
+
+
+def _validate_raw_sql(sql: str) -> None:
+    normalized_sql = " ".join(sql.strip().split()).lower()
+    if not normalized_sql:
+        raise ValueError("SQL 语句不能为空")
+    for pattern in _RAW_SQL_BLOCKLIST_PATTERNS:
+        if re.search(pattern, normalized_sql):
+            raise ValueError("检测到高风险 SQL 语句，请使用 ORM 或白名单模板")
 
 
 class SyncDatabaseManager:
@@ -293,6 +310,7 @@ class SyncDatabaseManager:
         with self.get_session() as session:
             from sqlalchemy import text
 
+            _validate_raw_sql(sql)
             result = session.execute(text(sql), params or {})
             session.commit()
             return result

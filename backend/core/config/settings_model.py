@@ -8,6 +8,7 @@ from pydantic_settings import BaseSettings, SettingsConfigDict
 from pydantic import Field, BaseModel
 from typing import Optional, Tuple
 from database import DatabaseModel
+from typing import List
 
 
 class ServiceModel(BaseModel):
@@ -53,6 +54,42 @@ class TraceIdModel(BaseModel):
     REQUEST_HEADER_KEY: str = "X-Request-ID"
     LOG_LENGTH: int = 32  # UUID 长度，必须小于等于 32
     LOG_DEFAULT_VALUE: str = "-"
+
+
+class SecurityModel(BaseModel):
+    """安全配置模型"""
+
+    # cors配置
+    ALLOWED_ORIGINS: List[str] = Field(
+        ["http://localhost:3000", "http://127.0.0.1:3000"],
+        description="允许的Origin白名单",
+    )
+    ALLOWED_HOSTS: Tuple[str, ...] = Field(
+        ("localhost", "127.0.0.1"),
+        description="允许的Host白名单",
+    )
+    TRUSTED_PROXIES: Tuple[str, ...] = Field(
+        ("127.0.0.1", "::1"),
+        description="可信反向代理IP列表",
+    )
+    MAX_REQUEST_SIZE: int = Field(2 * 1024 * 1024, description="最大请求体大小(字节)")
+    HSTS_ENABLED: bool = Field(False, description="是否启用 HSTS")
+    HSTS_VALUE: str = Field(
+        "max-age=31536000; includeSubDomains",
+        description="HSTS 响应头内容",
+    )
+    CSP_POLICY: str = Field(
+        "default-src 'none'; frame-ancestors 'none'; base-uri 'none'",
+        description="Content-Security-Policy 策略",
+    )
+    REFERRER_POLICY: str = Field(
+        "strict-origin-when-cross-origin",
+        description="Referrer-Policy",
+    )
+    PERMISSIONS_POLICY: str = Field(
+        "camera=(), microphone=(), geolocation=()",
+        description="Permissions-Policy",
+    )
 
 
 class DatatimeModel(BaseModel):

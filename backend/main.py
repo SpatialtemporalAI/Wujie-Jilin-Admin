@@ -56,7 +56,9 @@ app = FastAPI(
         "url": "https://opensource.org/licenses/MIT",
     },
     lifespan=lifespan,
-    # 禁用默认的docs和redoc，我们将自定义
+    docs_url=None if settings.ENVIR == "prod" and not settings.OPENAPI_ENABLE_IN_PROD else "/docs",
+    redoc_url=None if settings.ENVIR == "prod" and not settings.OPENAPI_ENABLE_IN_PROD else "/redoc",
+    openapi_url=None if settings.ENVIR == "prod" and not settings.OPENAPI_ENABLE_IN_PROD else "/openapi.json",
 )
 logger.info("初始化配置文件")
 

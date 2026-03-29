@@ -1,0 +1,78 @@
+#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
+
+from logging import getLogger
+from typing import Callable
+from uuid import uuid4
+
+from fastapi import Request
+from fastapi.responses import ORJSONResponse
+from starlette.middleware.base import BaseHTTPMiddleware
+
+from core.config import settings
+from core.utils.ip_utils import get_real_client_ip
+
+logger = getLogger(__name__)
+
+
+class RequestAuditMiddleware(BaseHTTPMiddleware):
+    """写入审计上下文字段，供日志和业务复用。"""
+
+    async def dispatch(self, request: Request, call_next: Callable):
+        request_id = (
+            request.headers.get(settings.TRACE_ID.REQUEST_HEADER_KEY) or uuid4().hex
+        )
+        client_ip = get_real_client_ip(request)
+        request.state.request_id = request_id
+        request.state.client_ip = client_ip
+        response = await call_next(request)
+        response.headers[settings.TRACE_ID.REQUEST_HEADER_KEY] = request_id
+        return response
+
+
+class RequestSizeLimitMiddleware(BaseHTTPMiddleware):
+    """基于 Content-Length 的请求体大小限制。"""
+
+    async def dispatch(self, request: Request, call_next: Callable):
+        content_length = request.headers.get("content-length")
+        if content_length:
+            try:
+                if int(content_length) > settings.SECURITY.MAX_REQUEST_SIZE:
+                    return ORJSONResponse(
+                        status_code=413,
+                        content={
+                            "code": 413,
+                            "msg": "请求体过大",
+                        },
+                    )
+            except ValueError:
+                return ORJSONResponse(
+                    status_code=400,
+                    content={
+                        "code": 400,
+                        "msg": "非法 Content-Length",
+                    },
+                )
+        return await call_next(request)
+
+
+class SecurityHeadersMiddleware(BaseHTTPMiddleware):
+    """统一追加安全响应头。"""
+
+    async def dispatch(self, request: Request, call_next: Callable):
+        response = await call_next(request)
+        response.headers.setdefault("X-Content-Type-Options", "nosniff")
+        response.headers.setdefault(
+            "Referrer-Policy", settings.SECURITY.REFERRER_POLICY
+        )
+        response.headers.setdefault(
+            "Permissions-Policy", settings.SECURITY.PERMISSIONS_POLICY
+        )
+        response.headers.setdefault(
+            "Content-Security-Policy", settings.SECURITY.CSP_POLICY
+        )
+        if settings.SECURITY.HSTS_ENABLED:
+            response.headers.setdefault(
+                "Strict-Transport-Security", settings.SECURITY.HSTS_VALUE
+            )
+        return response

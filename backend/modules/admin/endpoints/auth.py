@@ -22,6 +22,7 @@ from modules.admin.schemas.auth import (
     LoginResponseData,
     UserInfoResponseData,
 )
+from core.security.rate_limit import limit_by_ip
 
 # 创建认证路由
 router = APIRouter(prefix="/auth", tags=["admin接口/认证"])
@@ -35,6 +36,7 @@ router = APIRouter(prefix="/auth", tags=["admin接口/认证"])
     description="通过用户名和密码登录系统，获取访问令牌和刷新令牌",
 )
 async def login(
+    request: Request,
     login_pwd: LoginPwdModel = Body(..., description="登录请求参数"),
     user_manager: UserManager = Depends(get_user_manager),
 ):
@@ -54,6 +56,14 @@ async def login(
         }
     """
     username = login_pwd.username
+    await limit_by_ip(
+        request=request,
+        action="admin_login",
+        limit=10,
+        window_seconds=60,
+        scope="admin",
+        extra_suffix=username.lower(),
+    )
     password = login_pwd.password
     tokens = await user_manager.login_by_password(
         username=username,
