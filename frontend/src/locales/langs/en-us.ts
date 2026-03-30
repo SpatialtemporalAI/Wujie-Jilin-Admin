@@ -243,7 +243,6 @@ const local: App.I18n.Schema = {
     manage_menu: "Menu Management",
     manage_role: "Role Management",
     manage_user: "User Management",
-    "manage_user-detail": "User Detail",
     "manage_dict": "Dict Management",
     "manage_config": "System Config"
   },

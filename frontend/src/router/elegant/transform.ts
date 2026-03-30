@@ -174,8 +174,7 @@ const routeMap: RouteMap = {
   "manage_dict": "/manage/dict",
   "manage_menu": "/manage/menu",
   "manage_role": "/manage/role",
-  "manage_user": "/manage/user",
-  "manage_user-detail": "/manage/user-detail/:id"
+  "manage_user": "/manage/user"
 };
 
 /**

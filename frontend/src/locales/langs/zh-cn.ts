@@ -239,7 +239,6 @@ const local: App.I18n.Schema = {
     manage_menu: "菜单管理",
     manage_role: "角色管理",
     manage_user: "用户管理",
-    "manage_user-detail": "用户详情",
     "manage_dict": "字典管理",
     "manage_config": "系统配置"
   },
