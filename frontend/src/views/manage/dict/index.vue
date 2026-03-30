@@ -214,7 +214,13 @@ const {
   loading: dictItemLoading,
   mobilePagination: dictItemMobilePagination
 } = useNaivePaginatedTable({
-  api: () => fetchGetDictItemList(dictItemSearchParams),
+  api: () => {
+    // 只有在选中字典后才调用 API，避免初始化时请求空数据
+    if (!dictItemSearchParams.dict_id) {
+      return Promise.resolve({ data: [], total: 0 });
+    }
+    return fetchGetDictItemList(dictItemSearchParams);
+  },
   transform: response => defaultTransform(response),
   onPaginationParamsChange: params => {
     dictItemSearchParams.page = params.page;

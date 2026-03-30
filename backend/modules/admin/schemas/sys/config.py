@@ -1,12 +1,75 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 
-from typing import Optional, List, Any, Union
-from pydantic import Field, ConfigDict, field_validator, field_serializer
+from typing import Optional, List, Any, Union, Annotated
+from pydantic import (
+    Field,
+    ConfigDict,
+    field_validator,
+    field_serializer,
+    BeforeValidator,
+)
 from datetime import datetime
-from app.models.common.base import BaseRespEntity, BaseEntity
+from app.models.common.base import BaseRespEntity, BaseEntity, BoolField
 from app.models.common.page import PageRequest
 from app.models.sys.config import ConfigType, ConfigGroup
+
+
+def parse_config_type(v):
+    """
+    解析配置类型参数，支持字符串格式转换为 ConfigType 枚举
+
+    Args:
+        v: 输入值，可以是 None、空字符串、ConfigType 枚举或字符串
+
+    Returns:
+        ConfigType 枚举值或 None
+    """
+    # 处理 None 和空值
+    if v is None or v == "":
+        return None
+    if isinstance(v, ConfigType):
+        return v
+    if isinstance(v, str):
+        stripped = v.strip()
+        if not stripped:
+            return None
+        try:
+            return ConfigType(stripped)
+        except ValueError:
+            return None
+    return None
+
+
+def parse_config_group(v):
+    """
+    解析配置分组参数，支持字符串格式转换为 ConfigGroup 枚举
+
+    Args:
+        v: 输入值，可以是 None、空字符串、ConfigGroup 枚举或字符串
+
+    Returns:
+        ConfigGroup 枚举值或 None
+    """
+    # 处理 None 和空值
+    if v is None or v == "":
+        return None
+    if isinstance(v, ConfigGroup):
+        return v
+    if isinstance(v, str):
+        stripped = v.strip()
+        if not stripped:
+            return None
+        try:
+            return ConfigGroup(stripped)
+        except ValueError:
+            return None
+    return None
+
+
+# 使用 Annotated 类型定义带验证器的字段
+ConfigTypeField = Annotated[Optional[ConfigType], BeforeValidator(parse_config_type)]
+ConfigGroupField = Annotated[Optional[ConfigGroup], BeforeValidator(parse_config_group)]
 
 
 class SysConfigQueryParams(PageRequest):
@@ -17,61 +80,9 @@ class SysConfigQueryParams(PageRequest):
 
     key: Optional[str] = Field(None, description="配置键名，支持模糊查询")
     description: Optional[str] = Field(None, description="配置描述，支持模糊查询")
-    type: Optional[ConfigType] = Field(None, description="配置类型")
-    group: Optional[ConfigGroup] = Field(None, description="配置分组")
-    is_system: Optional[bool] = Field(None, description="是否为系统内置配置")
-
-    @field_validator("type", mode="before")
-    @classmethod
-    def parse_config_type(cls, v):
-        """
-        解析配置类型参数，支持字符串格式转换为 ConfigType 枚举
-        """
-        if v is None:
-            return None
-        if isinstance(v, ConfigType):
-            return v
-        if isinstance(v, str) and v.strip():
-            try:
-                return ConfigType(v.strip())
-            except ValueError:
-                return None
-        return None
-
-    @field_validator("group", mode="before")
-    @classmethod
-    def parse_config_group(cls, v):
-        """
-        解析配置分组参数，支持字符串格式转换为 ConfigGroup 枚举
-        """
-        if v is None:
-            return None
-        if isinstance(v, ConfigGroup):
-            return v
-        if isinstance(v, str) and v.strip():
-            try:
-                return ConfigGroup(v.strip())
-            except ValueError:
-                return None
-        return None
-
-    @field_validator("is_system", mode="before")
-    @classmethod
-    def parse_bool_param(cls, v):
-        """
-        解析布尔类型参数
-        """
-        if v is None:
-            return None
-        if isinstance(v, bool):
-            return v
-        if isinstance(v, str):
-            v = v.strip().lower()
-            if v in ("true", "1", "yes", "y"):
-                return True
-            if v in ("false", "0", "no", "n"):
-                return False
-        return None
+    type: ConfigTypeField = Field(None, description="配置类型")
+    group: ConfigGroupField = Field(None, description="配置分组")
+    is_system: BoolField = Field(None, description="是否为系统内置配置")
 
 
 class SysConfigCreate(BaseEntity):
