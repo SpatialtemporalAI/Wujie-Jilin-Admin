@@ -5,7 +5,7 @@
 角色管理相关接口
 """
 import logging
-from fastapi import APIRouter, Depends, Query
+from fastapi import APIRouter, Depends
 from sqlalchemy.ext.asyncio import AsyncSession
 from typing import List
 
@@ -16,7 +16,6 @@ from core.response.response_schema import (
     ResponsePageDataModel,
 )
 from app.models.common.page import PageRequest, get_page_params, get_paginated_results
-from app.models.common.base import BoolField
 
 from modules.admin.services.sys import RoleService
 from modules.admin.schemas.sys.role import (
@@ -38,10 +37,7 @@ role_router = APIRouter(prefix="/role", tags=["角色管理"])
 @role_router.get("/list", response_model=ResponsePageModel[SysRoleResponseData])
 async def get_role_list(
     page_params: PageRequest = Depends(get_page_params),
-    status: BoolField = Query(None, description="角色状态：True-启用，False-禁用"),
-    name: str | None = Query(None, description="角色名称"),
-    code: str | None = Query(None, description="角色编码"),
-    is_system: BoolField = Query(None, description="是否为系统内置角色"),
+    query_params: SysRoleQueryParams = Depends(),
     db: AsyncSession = Depends(get_session),
 ):
     """
@@ -49,15 +45,9 @@ async def get_role_list(
     """
     logger.info("获取角色列表请求")
 
-    # 构建查询参数
-    query_params = SysRoleQueryParams(
-        page=page_params.page,
-        page_size=page_params.page_size,
-        status=status,
-        name=name,
-        code=code,
-        is_system=is_system,
-    )
+    # 合并分页参数
+    query_params.page = page_params.page
+    query_params.page_size = page_params.page_size
 
     # 构建查询对象
     query = RoleService.build_role_query(query_params)

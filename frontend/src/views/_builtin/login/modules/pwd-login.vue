@@ -80,8 +80,12 @@ async function handleAccountLogin(account: Account) {
       <NInput v-model:value="model.userName" :placeholder="$t('page.login.common.userNamePlaceholder')" />
     </NFormItem>
     <NFormItem path="password">
-      <NInput v-model:value="model.password" type="password" show-password-on="click"
-        :placeholder="$t('page.login.common.passwordPlaceholder')" />
+      <NInput
+        v-model:value="model.password"
+        type="password"
+        show-password-on="click"
+        :placeholder="$t('page.login.common.passwordPlaceholder')"
+      />
     </NFormItem>
     <NSpace vertical :size="24">
       <div class="flex-y-center justify-between">

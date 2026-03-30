@@ -5,9 +5,9 @@
 菜单管理相关接口
 """
 import logging
-from fastapi import APIRouter, Depends, Query
+from fastapi import APIRouter, Depends
 from sqlalchemy.ext.asyncio import AsyncSession
-from typing import List, Optional
+from typing import List
 
 from database.db_manager import get_session
 from core.response.response_schema import (
@@ -25,10 +25,10 @@ from modules.admin.schemas.sys.menu import (
     SysMenuCreate,
     SysMenuUpdate,
     SysMenuQueryParams,
+    SysMenuTreeQuery,
     SysMenuBatchUpdateStatus,
 )
 from app.models.sys.menu import MenuType
-from app.models.common.base import BoolField
 
 logger = logging.getLogger(__name__)
 
@@ -49,24 +49,6 @@ PAGE_COMPONENTS = [
 ]
 
 
-def parse_menu_type_param(value: Optional[str]) -> Optional[MenuType]:
-    """
-    解析菜单类型参数
-
-    Args:
-        value: 参数字符串
-
-    Returns:
-        MenuType枚举或None
-    """
-    if value is None or value == "":
-        return None
-    try:
-        return MenuType(value)
-    except ValueError:
-        return None
-
-
 # 创建菜单管理路由
 menu_router = APIRouter(prefix="/menu", tags=["菜单管理"])
 
@@ -82,9 +64,7 @@ async def get_all_pages():
 
 @menu_router.get("/list", response_model=ResponsePageModel[SysMenuResponseData])
 async def get_menu_list(
-    name: Optional[str] = Query(None, description="菜单名称，支持模糊查询"),
-    status: BoolField = Query(None, description="菜单状态：True-启用，False-禁用"),
-    type: Optional[str] = Query(None, description="菜单类型"),
+    query_params: SysMenuQueryParams = Depends(),
     page_params: PageRequest = Depends(get_page_params),
     db: AsyncSession = Depends(get_session),
 ):
@@ -93,12 +73,9 @@ async def get_menu_list(
     """
     logger.info("获取菜单列表请求")
 
-    # 构建查询参数
-    query_params = SysMenuQueryParams(
-        name=name,
-        status=status,
-        type=parse_menu_type_param(type),
-    )
+    # 合并分页参数
+    query_params.page = page_params.page
+    query_params.page_size = page_params.page_size
 
     # 构建查询对象
     query = MenuService.build_menu_query(query_params)
@@ -117,7 +94,7 @@ async def get_menu_list(
 
 @menu_router.get("/tree", response_model=ResponseModel[List[SysMenuTreeResponse]])
 async def get_menu_tree(
-    status: BoolField = Query(None, description="菜单状态：True-启用，False-禁用"),
+    query_params: SysMenuTreeQuery = Depends(),
     db: AsyncSession = Depends(get_session),
 ):
     """
@@ -125,7 +102,7 @@ async def get_menu_tree(
     """
     logger.info("获取菜单树结构请求")
 
-    menu_tree = await MenuService.get_menu_tree(db, status=status)
+    menu_tree = await MenuService.get_menu_tree(db, status=query_params.status)
 
     logger.info(f"获取菜单树结构成功，共 {len(menu_tree)} 个根菜单")
     return ResponseModel(data=menu_tree)

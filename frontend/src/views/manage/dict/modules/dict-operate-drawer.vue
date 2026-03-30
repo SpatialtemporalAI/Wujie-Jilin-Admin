@@ -1,5 +1,5 @@
 <script setup lang="tsx">
-import { computed, reactive, watch, ref } from 'vue';
+import { computed, reactive, ref, watch } from 'vue';
 import { useVModel } from '@vueuse/core';
 import {
   NButton,
@@ -105,25 +105,39 @@ async function handleSubmit() {
             <NInput v-model:value="form.code" :placeholder="$t('page.manage.dict.form.dictCode')" />
           </NFormItemGi>
           <NFormItemGi :span="24" :label="$t('page.manage.dict.dictDesc')">
-            <NInput v-model:value="form.description" :placeholder="$t('page.manage.dict.form.dictDesc')" type="textarea"
-              :autosize="{ minRows: 3, maxRows: 5 }" />
+            <NInput
+              v-model:value="form.description"
+              :placeholder="$t('page.manage.dict.form.dictDesc')"
+              type="textarea"
+              :autosize="{ minRows: 3, maxRows: 5 }"
+            />
           </NFormItemGi>
           <NFormItemGi :span="12" :label="$t('page.manage.dict.dictStatus')">
-            <NSelect v-model:value="form.status" :options="enableStatusOptions"
-              :placeholder="$t('page.manage.dict.form.dictStatus')" />
+            <NSelect
+              v-model:value="form.status"
+              :options="enableStatusOptions"
+              :placeholder="$t('page.manage.dict.form.dictStatus')"
+            />
           </NFormItemGi>
           <NFormItemGi :span="12" :label="$t('page.manage.dict.isSystem')">
-            <NSelect v-model:value="form.is_system" :options="yesOrNoOptions"
-              :placeholder="$t('page.manage.dict.form.isSystem')" clearable />
+            <NSelect
+              v-model:value="form.is_system"
+              :options="yesOrNoOptions"
+              :placeholder="$t('page.manage.dict.form.isSystem')"
+              clearable
+            />
           </NFormItemGi>
           <NFormItemGi :span="12" :label="$t('page.manage.dict.sort')">
-            <NInputNumber v-model:value="form.sort" :placeholder="$t('page.manage.dict.form.sort')"
-              style="width: 100%" />
+            <NInputNumber
+              v-model:value="form.sort"
+              :placeholder="$t('page.manage.dict.form.sort')"
+              style="width: 100%"
+            />
           </NFormItemGi>
         </NGrid>
       </NForm>
       <template #footer>
-        <div class="flex-justify-end gap-12px">
+        <div class="gap-12px flex-justify-end">
           <NButton size="small" @click="visible = false">
             {{ $t('common.cancel') }}
           </NButton>

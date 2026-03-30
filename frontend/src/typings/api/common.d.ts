@@ -36,7 +36,6 @@ declare namespace Api {
      */
     type EnableStatus = '1' | '2';
 
-
     /** common record */
     type CommonRecord<T = any> = {
       /** record id */
@@ -51,6 +50,6 @@ declare namespace Api {
       updateTime: string;
       /** record status */
       status: EnableStatus | null;
-  } & T;
-}
+    } & T;
+  }
 }

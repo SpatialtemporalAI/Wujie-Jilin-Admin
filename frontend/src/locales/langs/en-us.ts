@@ -27,6 +27,7 @@ const local: App.I18n.Schema = {
     deleteSuccess: 'Delete Success',
     deleteFailed: 'Delete Failed',
     confirmDelete: 'Are you sure you want to delete?',
+    loadDataFailed: 'Failed to load data',
     edit: 'Edit',
     warning: 'Warning',
     error: 'Error',
@@ -486,7 +487,8 @@ const local: App.I18n.Schema = {
         addDictItem: 'Add Dict Item',
         editDictItem: 'Edit Dict Item',
         dictManage: 'Dict Manage',
-        itemManage: 'Item Manage'
+        itemManage: 'Item Manage',
+        pleaseSelectDict: 'Please select a dict first'
       },
       config: {
         title: 'System Config List',

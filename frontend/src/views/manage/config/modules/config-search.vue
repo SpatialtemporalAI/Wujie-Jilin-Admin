@@ -57,17 +57,37 @@ function search() {
             <NFormItemGi span="24 s:12 m:6" :label="$t('page.manage.config.configKey')" path="key" class="pr-24px">
               <NInput v-model:value="model.key" :placeholder="$t('common.keywordSearch')" clearable />
             </NFormItemGi>
-            <NFormItemGi span="24 s:12 m:6" :label="$t('page.manage.config.configDesc')" path="description" class="pr-24px">
+            <NFormItemGi
+              span="24 s:12 m:6"
+              :label="$t('page.manage.config.configDesc')"
+              path="description"
+              class="pr-24px"
+            >
               <NInput v-model:value="model.description" :placeholder="$t('common.keywordSearch')" clearable />
             </NFormItemGi>
             <NFormItemGi span="24 s:12 m:6" :label="$t('page.manage.config.configType')" path="type" class="pr-24px">
-              <NSelect v-model:value="model.type" :options="configTypeOptions" :placeholder="$t('common.keywordSearch')" clearable />
+              <NSelect
+                v-model:value="model.type"
+                :options="configTypeOptions"
+                :placeholder="$t('common.keywordSearch')"
+                clearable
+              />
             </NFormItemGi>
             <NFormItemGi span="24 s:12 m:6" :label="$t('page.manage.config.configGroup')" path="group" class="pr-24px">
-              <NSelect v-model:value="model.group" :options="configGroupOptions" :placeholder="$t('common.keywordSearch')" clearable />
+              <NSelect
+                v-model:value="model.group"
+                :options="configGroupOptions"
+                :placeholder="$t('common.keywordSearch')"
+                clearable
+              />
             </NFormItemGi>
             <NFormItemGi span="24 s:12 m:6" :label="$t('page.manage.config.isSystem')" path="is_system" class="pr-24px">
-              <NSelect v-model:value="model.is_system" :options="yesOrNoOptions" :placeholder="$t('common.keywordSearch')" clearable />
+              <NSelect
+                v-model:value="model.is_system"
+                :options="yesOrNoOptions"
+                :placeholder="$t('common.keywordSearch')"
+                clearable
+              />
             </NFormItemGi>
             <NFormItemGi span="24 m:12" class="pr-24px">
               <NSpace class="w-full" justify="end">

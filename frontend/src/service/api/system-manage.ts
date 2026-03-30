@@ -445,7 +445,7 @@ export function fetchCreateConfig(config: Api.SystemManage.ConfigCreate) {
     ...config,
     is_system: config.is_system === '1'
   };
-  
+
   return request<Api.SystemManage.Config>({
     url: '/admin/sys/config/add',
     method: 'post',
@@ -460,7 +460,7 @@ export function fetchUpdateConfig(configId: number, config: Api.SystemManage.Con
     ...config,
     is_system: config.is_system === '1'
   };
-  
+
   return request<Api.SystemManage.Config>({
     url: `/admin/sys/config/${configId}`,
     method: 'put',

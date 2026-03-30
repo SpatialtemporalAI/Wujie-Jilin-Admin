@@ -2,9 +2,9 @@
 import { reactive, ref } from 'vue';
 import { NButton, NCard, NDataTable, NPopconfirm, NTag, useMessage } from 'naive-ui';
 import {
+  fetchBatchDeleteConfig,
   fetchCreateConfig,
   fetchDeleteConfig,
-  fetchBatchDeleteConfig,
   fetchGetConfigList,
   fetchResetConfigs,
   fetchUpdateConfig
@@ -128,7 +128,11 @@ const {
       align: 'center',
       width: 100,
       render: row => {
-        return <NTag type={row.is_system ? 'info' : 'default'}>{row.is_system ? $t('common.yesOrNo.yes') : $t('common.yesOrNo.no')}</NTag>;
+        return (
+          <NTag type={row.is_system ? 'info' : 'default'}>
+            {row.is_system ? $t('common.yesOrNo.yes') : $t('common.yesOrNo.no')}
+          </NTag>
+        );
       }
     },
     {
@@ -241,8 +245,14 @@ async function handleBatchResetConfig() {
     <ConfigSearch v-model:model="configSearchParams" @search="getConfigDataByPage" />
     <NCard :title="$t('page.manage.config.title')" :bordered="false" size="small" class="card-wrapper sm:flex-1-hidden">
       <template #header-extra>
-        <TableHeaderOperation v-model:columns="configColumnChecks" :disabled-delete="checkedConfigRowKeys.length === 0"
-          :loading="configLoading" @add="handleAddConfig" @delete="handleBatchDeleteConfig" @refresh="getConfigData">
+        <TableHeaderOperation
+          v-model:columns="configColumnChecks"
+          :disabled-delete="checkedConfigRowKeys.length === 0"
+          :loading="configLoading"
+          @add="handleAddConfig"
+          @delete="handleBatchDeleteConfig"
+          @refresh="getConfigData"
+        >
           <template #default>
             <NButton size="small" ghost type="primary" @click="handleAddConfig">
               <template #icon>
@@ -261,18 +271,37 @@ async function handleBatchResetConfig() {
               </template>
               {{ $t('common.confirmDelete') }}
             </NPopconfirm>
-            <NButton type="info" ghost size="small" :disabled="checkedConfigRowKeys.length === 0"
-              @click="handleBatchResetConfig">
+            <NButton
+              type="info"
+              ghost
+              size="small"
+              :disabled="checkedConfigRowKeys.length === 0"
+              @click="handleBatchResetConfig"
+            >
               {{ $t('page.manage.config.resetConfig') }}
             </NButton>
           </template>
         </TableHeaderOperation>
       </template>
-      <NDataTable v-model:checked-row-keys="checkedConfigRowKeys" :columns="configColumns" :data="configData"
-        size="small" :flex-height="!appStore.isMobile" :scroll-x="1600" :loading="configLoading" remote
-        :row-key="row => row.id" :pagination="configMobilePagination" class="sm:h-full" />
-      <ConfigOperateDrawer v-model:visible="configDrawerVisible" :operate-type="configOperateType"
-        :row-data="editingConfigData" @submitted="getConfigDataByPage" />
+      <NDataTable
+        v-model:checked-row-keys="checkedConfigRowKeys"
+        :columns="configColumns"
+        :data="configData"
+        size="small"
+        :flex-height="!appStore.isMobile"
+        :scroll-x="1600"
+        :loading="configLoading"
+        remote
+        :row-key="row => row.id"
+        :pagination="configMobilePagination"
+        class="sm:h-full"
+      />
+      <ConfigOperateDrawer
+        v-model:visible="configDrawerVisible"
+        :operate-type="configOperateType"
+        :row-data="editingConfigData"
+        @submitted="getConfigDataByPage"
+      />
     </NCard>
   </div>
 </template>

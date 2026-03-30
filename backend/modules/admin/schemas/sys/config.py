@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 
-from typing import Optional, List, Any
+from typing import Optional, List, Any, Union
 from pydantic import Field, ConfigDict, field_validator, field_serializer
 from datetime import datetime
 from app.models.common.base import BaseRespEntity, BaseEntity
@@ -19,8 +19,59 @@ class SysConfigQueryParams(PageRequest):
     description: Optional[str] = Field(None, description="配置描述，支持模糊查询")
     type: Optional[ConfigType] = Field(None, description="配置类型")
     group: Optional[ConfigGroup] = Field(None, description="配置分组")
-
     is_system: Optional[bool] = Field(None, description="是否为系统内置配置")
+
+    @field_validator("type", mode="before")
+    @classmethod
+    def parse_config_type(cls, v):
+        """
+        解析配置类型参数，支持字符串格式转换为 ConfigType 枚举
+        """
+        if v is None:
+            return None
+        if isinstance(v, ConfigType):
+            return v
+        if isinstance(v, str) and v.strip():
+            try:
+                return ConfigType(v.strip())
+            except ValueError:
+                return None
+        return None
+
+    @field_validator("group", mode="before")
+    @classmethod
+    def parse_config_group(cls, v):
+        """
+        解析配置分组参数，支持字符串格式转换为 ConfigGroup 枚举
+        """
+        if v is None:
+            return None
+        if isinstance(v, ConfigGroup):
+            return v
+        if isinstance(v, str) and v.strip():
+            try:
+                return ConfigGroup(v.strip())
+            except ValueError:
+                return None
+        return None
+
+    @field_validator("is_system", mode="before")
+    @classmethod
+    def parse_bool_param(cls, v):
+        """
+        解析布尔类型参数
+        """
+        if v is None:
+            return None
+        if isinstance(v, bool):
+            return v
+        if isinstance(v, str):
+            v = v.strip().lower()
+            if v in ("true", "1", "yes", "y"):
+                return True
+            if v in ("false", "0", "no", "n"):
+                return False
+        return None
 
 
 class SysConfigCreate(BaseEntity):

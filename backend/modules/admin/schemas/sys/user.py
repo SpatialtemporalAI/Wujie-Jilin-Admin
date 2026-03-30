@@ -1,9 +1,8 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 
-from typing import Optional, List
-from fastapi import Query
-from pydantic import Field, ConfigDict, field_validator
+from typing import Optional, List, Union
+from pydantic import Field, ConfigDict, field_validator, model_validator
 from datetime import datetime
 import re
 from app.models.common.base import BaseRespEntity, BaseEntity, BoolField
@@ -20,9 +19,23 @@ class SysUserQueryParams(PageRequest):
     nickname: Optional[str] = Field(None, description="用户昵称，支持模糊查询")
     email: Optional[str] = Field(None, description="邮箱，支持模糊查询")
     phone: Optional[str] = Field(None, description="手机号，支持模糊查询")
-    status: BoolField = Query(None, description="用户状态：True-启用，False-禁用")
-    is_superuser: BoolField = Query(None, description="是否为超级管理员")
+    status: BoolField = Field(None, description="用户状态：True-启用，False-禁用")
+    is_superuser: BoolField = Field(None, description="是否为超级管理员")
     role_ids: Optional[List[int]] = Field(None, description="角色ID列表")
+
+    @field_validator("role_ids", mode="before")
+    @classmethod
+    def parse_role_ids(cls, v):
+        """
+        解析 role_ids 参数，支持逗号分隔的字符串格式
+        """
+        if v is None:
+            return None
+        if isinstance(v, list):
+            return v
+        if isinstance(v, str) and v.strip():
+            return [int(r.strip()) for r in v.split(",") if r.strip()]
+        return None
 
 
 class SysUserCreate(BaseEntity):
@@ -42,28 +55,28 @@ class SysUserCreate(BaseEntity):
     status: bool = Field(True, description="用户状态：True-启用，False-禁用")
     role_ids: List[int] = Field([], description="角色ID列表")
 
-    @field_validator('email')
+    @field_validator("email")
     @classmethod
     def validate_email(cls, v):
         """
         验证邮箱格式
         """
         if v:
-            email_pattern = r'^[a-zA-Z0-9_.+-]+@[a-zA-Z0-9-]+\.[a-zA-Z0-9-.]+$'
+            email_pattern = r"^[a-zA-Z0-9_.+-]+@[a-zA-Z0-9-]+\.[a-zA-Z0-9-.]+$"
             if not re.match(email_pattern, v):
-                raise ValueError('邮箱格式不正确')
+                raise ValueError("邮箱格式不正确")
         return v
 
-    @field_validator('phone')
+    @field_validator("phone")
     @classmethod
     def validate_phone(cls, v):
         """
         验证手机号格式
         """
         if v:
-            phone_pattern = r'^1[3-9]\d{9}$'
+            phone_pattern = r"^1[3-9]\d{9}$"
             if not re.match(phone_pattern, v):
-                raise ValueError('手机号格式不正确')
+                raise ValueError("手机号格式不正确")
         return v
 
 
@@ -73,7 +86,9 @@ class SysUserUpdate(BaseEntity):
     用于更新用户信息时的请求数据
     """
 
-    username: Optional[str] = Field(None, description="用户名", min_length=4, max_length=20)
+    username: Optional[str] = Field(
+        None, description="用户名", min_length=4, max_length=20
+    )
     nickname: Optional[str] = Field(None, description="用户昵称", max_length=100)
     email: Optional[str] = Field(None, description="邮箱", max_length=100)
     phone: Optional[str] = Field(None, description="手机号", max_length=20)
@@ -81,28 +96,28 @@ class SysUserUpdate(BaseEntity):
     status: BoolField = Field(None, description="用户状态：True-启用，False-禁用")
     role_ids: Optional[List[int]] = Field(None, description="角色ID列表")
 
-    @field_validator('email')
+    @field_validator("email")
     @classmethod
     def validate_email(cls, v):
         """
         验证邮箱格式
         """
         if v:
-            email_pattern = r'^[a-zA-Z0-9_.+-]+@[a-zA-Z0-9-]+\.[a-zA-Z0-9-.]+$'
+            email_pattern = r"^[a-zA-Z0-9_.+-]+@[a-zA-Z0-9-]+\.[a-zA-Z0-9-.]+$"
             if not re.match(email_pattern, v):
-                raise ValueError('邮箱格式不正确')
+                raise ValueError("邮箱格式不正确")
         return v
 
-    @field_validator('phone')
+    @field_validator("phone")
     @classmethod
     def validate_phone(cls, v):
         """
         验证手机号格式
         """
         if v:
-            phone_pattern = r'^1[3-9]\d{9}$'
+            phone_pattern = r"^1[3-9]\d{9}$"
             if not re.match(phone_pattern, v):
-                raise ValueError('手机号格式不正确')
+                raise ValueError("手机号格式不正确")
         return v
 
 

@@ -5,9 +5,9 @@
 用户管理相关接口
 """
 import logging
-from fastapi import APIRouter, Depends, Query
+from fastapi import APIRouter, Depends
 from sqlalchemy.ext.asyncio import AsyncSession
-from typing import List, Optional
+from typing import List
 
 from database.db_manager import get_session
 from core.response.response_schema import (
@@ -37,13 +37,7 @@ user_router = APIRouter(prefix="/user", tags=["用户管理"])
 @user_router.get("/list", response_model=ResponsePageModel[SysUserResponseData])
 async def get_user_list(
     page_params: PageRequest = Depends(get_page_params),
-    status: BoolField = Query(None, description="用户状态：True-启用，False-禁用"),
-    username: Optional[str] = Query(None, description="用户名"),
-    nickname: Optional[str] = Query(None, description="昵称"),
-    phone: Optional[str] = Query(None, description="手机号"),
-    email: Optional[str] = Query(None, description="邮箱"),
-    is_superuser: BoolField = Query(None, description="是否为超级管理员"),
-    role_ids: Optional[str] = Query(None, description="角色ID列表，逗号分隔"),
+    query_params: SysUserQueryParams = Depends(),
     db: AsyncSession = Depends(get_session),
 ):
     """
@@ -51,18 +45,9 @@ async def get_user_list(
     """
     logger.info("获取用户列表请求")
 
-    # 构建查询参数
-    query_params = SysUserQueryParams(
-        page=page_params.page,
-        page_size=page_params.page_size,
-        status=status,
-        username=username,
-        nickname=nickname,
-        phone=phone,
-        email=email,
-        is_superuser=is_superuser,
-        role_ids=[int(r) for r in role_ids.split(",")] if role_ids else None,
-    )
+    # 合并分页参数和查询参数
+    query_params.page = page_params.page
+    query_params.page_size = page_params.page_size
 
     # 构建查询对象
     query = UserService.build_user_query(query_params)

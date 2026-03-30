@@ -234,9 +234,9 @@ export function defaultTransform<ApiData>(
   response: FlatResponseData<any, Api.Common.PaginatingQueryRecord<ApiData>>
 ): PaginationData<ApiData> {
   const { data, error } = response;
-  
+
   if (!error) {
-    const { records, page, page_size, total,total_pages } = data;
+    const { records, page, page_size, total, total_pages } = data;
 
     return {
       data: records,

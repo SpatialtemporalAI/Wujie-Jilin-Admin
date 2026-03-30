@@ -5,7 +5,7 @@ import { NButton, NPopconfirm, NTag } from 'naive-ui';
 import { useBoolean } from '@sa/hooks';
 import { yesOrNoRecord } from '@/constants/common';
 import { enableStatusRecord, menuTypeRecord } from '@/constants/business';
-import { fetchGetAllPages, fetchGetMenuList, fetchDeleteMenu, fetchBatchDeleteMenu } from '@/service/api';
+import { fetchBatchDeleteMenu, fetchDeleteMenu, fetchGetAllPages, fetchGetMenuList } from '@/service/api';
 import { useAppStore } from '@/store/modules/app';
 import { defaultTransform, useNaivePaginatedTable, useTableOperate } from '@/hooks/common/table';
 import { $t } from '@/locales';
@@ -236,14 +236,35 @@ init();
   <div ref="wrapperRef" class="flex-col-stretch gap-16px overflow-hidden lt-sm:overflow-auto">
     <NCard :title="$t('page.manage.menu.title')" :bordered="false" size="small" class="card-wrapper sm:flex-1-hidden">
       <template #header-extra>
-        <TableHeaderOperation v-model:columns="columnChecks" :disabled-delete="checkedRowKeys.length === 0"
-          :loading="loading" @add="handleAdd" @delete="handleBatchDelete" @refresh="getData" />
+        <TableHeaderOperation
+          v-model:columns="columnChecks"
+          :disabled-delete="checkedRowKeys.length === 0"
+          :loading="loading"
+          @add="handleAdd"
+          @delete="handleBatchDelete"
+          @refresh="getData"
+        />
       </template>
-      <NDataTable v-model:checked-row-keys="checkedRowKeys" :columns="columns" :data="data" size="small"
-        :flex-height="!appStore.isMobile" :scroll-x="1088" :loading="loading" :row-key="row => row.id" remote
-        :pagination="pagination" class="sm:h-full" />
-      <MenuOperateModal v-model:visible="visible" :operate-type="operateType" :row-data="editingData"
-        :all-pages="allPages" @submitted="getDataByPage" />
+      <NDataTable
+        v-model:checked-row-keys="checkedRowKeys"
+        :columns="columns"
+        :data="data"
+        size="small"
+        :flex-height="!appStore.isMobile"
+        :scroll-x="1088"
+        :loading="loading"
+        :row-key="row => row.id"
+        remote
+        :pagination="pagination"
+        class="sm:h-full"
+      />
+      <MenuOperateModal
+        v-model:visible="visible"
+        :operate-type="operateType"
+        :row-data="editingData"
+        :all-pages="allPages"
+        @submitted="getDataByPage"
+      />
     </NCard>
   </div>
 </template>

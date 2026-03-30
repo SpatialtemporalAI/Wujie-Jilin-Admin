@@ -290,7 +290,6 @@ declare namespace Api {
 
       /** 是否为系统内置配置 */
       is_system: Common.EnableStatus;
-
     }>;
 
     /** 配置搜索参数 */

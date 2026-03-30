@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { computed, shallowRef, watch } from 'vue';
-import { fetchGetAllPages, fetchGetMenuTree, fetchGetRole, fetchAssignMenuToRole } from '@/service/api';
+import { fetchAssignMenuToRole, fetchGetAllPages, fetchGetMenuTree, fetchGetRole } from '@/service/api';
 import { $t } from '@/locales';
 
 defineOptions({

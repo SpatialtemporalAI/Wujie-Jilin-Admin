@@ -1,5 +1,5 @@
 <script setup lang="tsx">
-import { computed, reactive, watch, ref } from 'vue';
+import { computed, reactive, ref, watch } from 'vue';
 import { useVModel } from '@vueuse/core';
 import {
   NButton,
@@ -10,15 +10,15 @@ import {
   NFormItemGi,
   NGrid,
   NInput,
+  NModal,
   NSelect,
   NSwitch,
-  NModal,
   useMessage
 } from 'naive-ui';
 import { yesOrNoOptions } from '@/constants/business';
-import { translateOptions } from '@/utils/common';
 import { fetchCreateConfig, fetchUpdateConfig } from '@/service/api';
 import { useFormRules, useNaiveForm } from '@/hooks/common/form';
+import { translateOptions } from '@/utils/common';
 import { $t } from '@/locales';
 
 export type OperateType = NaiveUI.TableOperateType | 'addChild';
@@ -196,7 +196,7 @@ const defaultFormValue: Api.SystemManage.ConfigCreate = {
   description: '',
   type: 'string',
   group: 'system',
-  is_system: '2',
+  is_system: '2'
 };
 
 const form = reactive<Api.SystemManage.ConfigCreate>({ ...defaultFormValue });
@@ -251,11 +251,15 @@ async function handleSubmit() {
             <NInput v-model:value="form.key" :placeholder="$t('page.manage.config.form.configKey')" />
           </NFormItemGi>
           <NFormItemGi :span="24" :label="$t('page.manage.config.configValue')" path="value">
-            <div class="flex gap-8px w-full">
-              <NInput v-model:value="form.value" :placeholder="$t('page.manage.config.form.configValue')"
+            <div class="w-full flex gap-8px">
+              <NInput
+                v-model:value="form.value"
+                :placeholder="$t('page.manage.config.form.configValue')"
                 :type="form.type === 'json' ? 'textarea' : 'text'"
-                :autosize="form.type === 'json' ? { minRows: 3, maxRows: 6 } : undefined" class="flex-1 w-full"
-                style="width: 100%;" />
+                :autosize="form.type === 'json' ? { minRows: 3, maxRows: 6 } : undefined"
+                class="w-full flex-1"
+                style="width: 100%"
+              />
               <div v-if="form.type === 'json'" class="flex gap-8px">
                 <NButton size="small" type="info" ghost @click="beautifyJson('value')">
                   {{ $t('page.manage.config.beautifyJson') }}
@@ -267,11 +271,15 @@ async function handleSubmit() {
             </div>
           </NFormItemGi>
           <NFormItemGi :span="24" :label="$t('page.manage.config.defaultValue')" path="default_value">
-            <div class="flex gap-8px w-full">
-              <NInput v-model:value="form.default_value" :placeholder="$t('page.manage.config.form.defaultValue')"
+            <div class="w-full flex gap-8px">
+              <NInput
+                v-model:value="form.default_value"
+                :placeholder="$t('page.manage.config.form.defaultValue')"
                 :type="form.type === 'json' ? 'textarea' : 'text'"
-                :autosize="form.type === 'json' ? { minRows: 2, maxRows: 4 } : undefined" class="flex-1 w-full"
-                style="width: 100%;" />
+                :autosize="form.type === 'json' ? { minRows: 2, maxRows: 4 } : undefined"
+                class="w-full flex-1"
+                style="width: 100%"
+              />
               <div v-if="form.type === 'json'" class="flex gap-8px">
                 <NButton size="small" type="info" ghost @click="beautifyJson('default_value')">
                   {{ $t('page.manage.config.beautifyJson') }}
@@ -283,28 +291,43 @@ async function handleSubmit() {
             </div>
           </NFormItemGi>
           <NFormItemGi :span="24" :label="$t('page.manage.config.configDesc')">
-            <NInput v-model:value="form.description" :placeholder="$t('page.manage.config.form.configDesc')"
-              type="textarea" :autosize="{ minRows: 2, maxRows: 3 }" class="w-full" style="width: 100%;" />
+            <NInput
+              v-model:value="form.description"
+              :placeholder="$t('page.manage.config.form.configDesc')"
+              type="textarea"
+              :autosize="{ minRows: 2, maxRows: 3 }"
+              class="w-full"
+              style="width: 100%"
+            />
           </NFormItemGi>
           <NFormItemGi :span="12" :label="$t('page.manage.config.configType')">
-            <NSelect v-model:value="form.type" :options="configTypeOptions"
-              :placeholder="$t('page.manage.config.form.configType')" />
+            <NSelect
+              v-model:value="form.type"
+              :options="configTypeOptions"
+              :placeholder="$t('page.manage.config.form.configType')"
+            />
           </NFormItemGi>
           <NFormItemGi :span="12" :label="$t('page.manage.config.configGroup')">
-            <NSelect v-model:value="form.group" :options="configGroupOptions"
-              :placeholder="$t('page.manage.config.form.configGroup')" />
+            <NSelect
+              v-model:value="form.group"
+              :options="configGroupOptions"
+              :placeholder="$t('page.manage.config.form.configGroup')"
+            />
           </NFormItemGi>
           <NFormItemGi :span="12" :label="$t('page.manage.config.validationRule')">
             <NInput v-model:value="form.validation_rule" :placeholder="$t('page.manage.config.form.validationRule')" />
           </NFormItemGi>
           <NFormItemGi :span="12" :label="$t('page.manage.config.isSystem')">
-            <NSelect v-model:value="form.is_system" :options="translatedYesOrNoOptions"
-              :placeholder="$t('page.manage.config.form.isSystem')" />
+            <NSelect
+              v-model:value="form.is_system"
+              :options="translatedYesOrNoOptions"
+              :placeholder="$t('page.manage.config.form.isSystem')"
+            />
           </NFormItemGi>
         </NGrid>
       </NForm>
       <template #footer>
-        <div class="flex-justify-end gap-12px">
+        <div class="gap-12px flex-justify-end">
           <NButton size="small" @click="visible = false">
             {{ $t('common.cancel') }}
           </NButton>
@@ -319,10 +342,15 @@ async function handleSubmit() {
   <!-- JSON 编辑弹窗 -->
   <NModal v-model:show="jsonModalVisible" :width="800" preset="card" title="编辑JSON">
     <div class="mb-12px">
-      <NInput v-model:value="jsonModalContent" type="textarea" :autosize="{ minRows: 12, maxRows: 20 }" class="w-full"
-        style="width: 100%;" />
+      <NInput
+        v-model:value="jsonModalContent"
+        type="textarea"
+        :autosize="{ minRows: 12, maxRows: 20 }"
+        class="w-full"
+        style="width: 100%"
+      />
     </div>
-    <div class="flex justify-end gap-8px mb-12px">
+    <div class="mb-12px flex justify-end gap-8px">
       <NButton size="small" type="info" ghost @click="beautifyJsonInModal">
         {{ $t('page.manage.config.beautifyJson') }}
       </NButton>

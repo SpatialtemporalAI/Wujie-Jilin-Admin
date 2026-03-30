@@ -1,8 +1,8 @@
 <script setup lang="ts">
 import { ref } from 'vue';
+import { fetchChangeUserPassword } from '@/service/api/system-manage';
 import { useFormRules, useNaiveForm } from '@/hooks/common/form';
 import { $t } from '@/locales';
-import { fetchChangeUserPassword } from '@/service/api/system-manage';
 
 interface Props {
   /** 用户ID */
@@ -92,12 +92,18 @@ async function handleSubmit() {
     <NDrawerContent :title="title" :native-scrollbar="false" closable>
       <NForm ref="formRef" :model="model" :rules="rules">
         <NFormItem :label="$t('page.manage.user.form.newPassword')" path="newPassword">
-          <NInput v-model:value="model.newPassword" type="password"
-            :placeholder="$t('page.manage.user.form.newPassword')" />
+          <NInput
+            v-model:value="model.newPassword"
+            type="password"
+            :placeholder="$t('page.manage.user.form.newPassword')"
+          />
         </NFormItem>
         <NFormItem :label="$t('page.manage.user.form.confirmPassword')" path="confirmPassword">
-          <NInput v-model:value="model.confirmPassword" type="password"
-            :placeholder="$t('page.manage.user.form.confirmPassword')" />
+          <NInput
+            v-model:value="model.confirmPassword"
+            type="password"
+            :placeholder="$t('page.manage.user.form.confirmPassword')"
+          />
         </NFormItem>
       </NForm>
       <template #footer>

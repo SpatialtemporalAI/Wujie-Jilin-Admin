@@ -2,7 +2,7 @@
 import { computed, ref, watch } from 'vue';
 import type { SelectOption } from 'naive-ui';
 import { enableStatusOptions, menuIconTypeOptions, menuTypeOptions } from '@/constants/business';
-import { fetchGetAllRoles, fetchCreateMenu, fetchUpdateMenu } from '@/service/api';
+import { fetchCreateMenu, fetchGetAllRoles, fetchUpdateMenu } from '@/service/api';
 import { useFormRules, useNaiveForm } from '@/hooks/common/form';
 import { getLocalIcons } from '@/utils/icon';
 import { $t } from '@/locales';
@@ -253,9 +253,9 @@ async function handleSubmit() {
   await validate();
 
   const params = getSubmitParams();
-  
+
   let error: any = null;
-  
+
   if (props.operateType === 'edit') {
     const result = await fetchUpdateMenu(props.rowData!.id, params);
     error = result.error;

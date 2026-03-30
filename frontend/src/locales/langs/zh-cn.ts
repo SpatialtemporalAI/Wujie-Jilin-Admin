@@ -27,6 +27,7 @@ const local: App.I18n.Schema = {
     deleteSuccess: '删除成功',
     deleteFailed: '删除失败',
     confirmDelete: '确认删除吗？',
+    loadDataFailed: '加载数据失败',
     edit: '编辑',
     warning: '警告',
     error: '错误',
@@ -481,7 +482,8 @@ const local: App.I18n.Schema = {
         addDictItem: '新增字典项',
         editDictItem: '编辑字典项',
         dictManage: '字典管理',
-        itemManage: '字典项管理'
+        itemManage: '字典项管理',
+        pleaseSelectDict: '请先选择一个字典'
       },
       config: {
         title: '系统配置列表',

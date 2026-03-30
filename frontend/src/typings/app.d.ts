@@ -363,6 +363,7 @@ declare namespace App {
         updateFailed: string;
         userCenter: string;
         changePassword: string;
+        loadDataFailed:string;
         yesOrNo: {
           yes: string;
           no: string;
@@ -562,7 +563,7 @@ declare namespace App {
           };
           creativity: string;
         };
-        
+
         manage: {
           common: {
             status: {
@@ -591,8 +592,8 @@ declare namespace App {
             title: string;
             userName: string;
             userGender: string;
-            password:string;
-            confirmPassword:string
+            password: string;
+            confirmPassword: string;
             nickName: string;
             userPhone: string;
             userEmail: string;
@@ -611,14 +612,14 @@ declare namespace App {
               userStatus: string;
               userRole: string;
               isSuperuser: string;
-              newPassword:string;
-              confirmPassword:string;
-              passwordMinLength:string;
-              passwordNotMatch:string;
-              usernameLength:string;
-              passwordLength:string;
-              emailFormat:string;
-              phoneFormat:string;
+              newPassword: string;
+              confirmPassword: string;
+              passwordMinLength: string;
+              passwordNotMatch: string;
+              usernameLength: string;
+              passwordLength: string;
+              emailFormat: string;
+              phoneFormat: string;
             };
             addUser: string;
             editUser: string;
@@ -727,6 +728,7 @@ declare namespace App {
             editDict: string;
             addDictItem: string;
             editDictItem: string;
+            pleaseSelectDict:string;
           };
           config: {
             title: string;
@@ -876,7 +878,6 @@ declare namespace App {
       requestId?: string;
       /** The backend service error code */
       error_code?: string;
-
     };
 
     /** The demo backend service response data */

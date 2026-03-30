@@ -3,7 +3,7 @@ import { computed, ref, watch } from 'vue';
 import { jsonClone } from '@sa/utils';
 import { enableStatusOptions, userGenderOptions } from '@/constants/business';
 import { REG_EMAIL, REG_PHONE } from '@/constants/reg';
-import { fetchGetAllRoles, fetchCreateUser, fetchUpdateUser } from '@/service/api';
+import { fetchCreateUser, fetchGetAllRoles, fetchUpdateUser } from '@/service/api';
 import { useFormRules, useNaiveForm } from '@/hooks/common/form';
 import { $t } from '@/locales';
 
@@ -41,10 +41,7 @@ const title = computed(() => {
   return titles[props.operateType];
 });
 
-type Model = Pick<
-  Api.SystemManage.User,
-  'username' | 'nickname' | 'phone' | 'email' | 'userRoles' | 'status'
-> & {
+type Model = Pick<Api.SystemManage.User, 'username' | 'nickname' | 'phone' | 'email' | 'userRoles' | 'status'> & {
   password: string;
   confirmPassword: string;
 };
@@ -67,20 +64,28 @@ function createDefaultModel(): Model {
 type RuleKey = Extract<keyof Model, 'username' | 'status' | 'password' | 'confirmPassword' | 'email' | 'phone'>;
 
 const rules: Record<RuleKey, App.Global.FormRule | App.Global.FormRule[]> = {
-  username: [defaultRequiredRule, {
-    min: 4, max: 20,
-    trigger: ['input', 'blur'], message: $t('page.manage.user.form.usernameLength')
-  }],
+  username: [
+    defaultRequiredRule,
+    {
+      min: 4,
+      max: 20,
+      trigger: ['input', 'blur'],
+      message: $t('page.manage.user.form.usernameLength')
+    }
+  ],
   status: defaultRequiredRule,
-  password: [{
-    required: props.operateType === 'add',
-    message: $t('form.required'),
-    trigger: ['input', 'blur']
-  },
-  {
-    min: 6, max: 20,
-    trigger: ['input', 'blur'], message: $t('page.manage.user.form.passwordLength')
-  }
+  password: [
+    {
+      required: props.operateType === 'add',
+      message: $t('form.required'),
+      trigger: ['input', 'blur']
+    },
+    {
+      min: 6,
+      max: 20,
+      trigger: ['input', 'blur'],
+      message: $t('page.manage.user.form.passwordLength')
+    }
   ],
   confirmPassword: [
     {
@@ -89,8 +94,10 @@ const rules: Record<RuleKey, App.Global.FormRule | App.Global.FormRule[]> = {
       trigger: ['input', 'blur']
     },
     {
-      min: 6, max: 20,
-      trigger: ['input', 'blur'], message: $t('page.manage.user.form.passwordLength')
+      min: 6,
+      max: 20,
+      trigger: ['input', 'blur'],
+      message: $t('page.manage.user.form.passwordLength')
     },
     {
       validator: (rule, value) => {
@@ -215,13 +222,22 @@ watch(visible, () => {
           <NInput v-model:value="model.username" :placeholder="$t('page.manage.user.form.userName')" />
         </NFormItem>
         <NFormItem v-if="props.operateType === 'add'" :label="$t('page.manage.user.password')" path="password">
-          <NInput v-model:value="model.password" type="password"
-            :placeholder="$t('page.manage.user.form.newPassword')" />
+          <NInput
+            v-model:value="model.password"
+            type="password"
+            :placeholder="$t('page.manage.user.form.newPassword')"
+          />
         </NFormItem>
-        <NFormItem v-if="props.operateType === 'add'" :label="$t('page.manage.user.confirmPassword')"
-          path="confirmPassword">
-          <NInput v-model:value="model.confirmPassword" type="password"
-            :placeholder="$t('page.manage.user.form.confirmPassword')" />
+        <NFormItem
+          v-if="props.operateType === 'add'"
+          :label="$t('page.manage.user.confirmPassword')"
+          path="confirmPassword"
+        >
+          <NInput
+            v-model:value="model.confirmPassword"
+            type="password"
+            :placeholder="$t('page.manage.user.form.confirmPassword')"
+          />
         </NFormItem>
         <NFormItem :label="$t('page.manage.user.nickName')" path="nickname">
           <NInput v-model:value="model.nickname" :placeholder="$t('page.manage.user.form.nickName')" />
@@ -238,8 +254,12 @@ watch(visible, () => {
           </NRadioGroup>
         </NFormItem>
         <NFormItem :label="$t('page.manage.user.userRole')" path="userRoles">
-          <NSelect v-model:value="model.userRoles" multiple :options="roleOptions"
-            :placeholder="$t('page.manage.user.form.userRole')" />
+          <NSelect
+            v-model:value="model.userRoles"
+            multiple
+            :options="roleOptions"
+            :placeholder="$t('page.manage.user.form.userRole')"
+          />
         </NFormItem>
       </NForm>
       <template #footer>

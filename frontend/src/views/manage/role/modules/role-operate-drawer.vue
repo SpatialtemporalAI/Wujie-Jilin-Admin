@@ -3,9 +3,9 @@ import { computed, ref, watch } from 'vue';
 import { jsonClone } from '@sa/utils';
 import { useBoolean } from '@sa/hooks';
 import { enableStatusOptions } from '@/constants/business';
+import { fetchCreateRole, fetchUpdateRole } from '@/service/api';
 import { useFormRules, useNaiveForm } from '@/hooks/common/form';
 import { $t } from '@/locales';
-import { fetchCreateRole, fetchUpdateRole } from '@/service/api';
 import MenuAuthModal from './menu-auth-modal.vue';
 import ButtonAuthModal from './button-auth-modal.vue';
 

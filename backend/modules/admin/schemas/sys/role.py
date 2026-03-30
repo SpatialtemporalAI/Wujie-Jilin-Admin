@@ -2,7 +2,6 @@
 # -*- coding: utf-8 -*-
 
 from typing import Optional, List
-from fastapi import Query
 from pydantic import Field, ConfigDict
 from datetime import datetime
 from app.models.common.base import BaseRespEntity, BaseEntity, BoolField
@@ -17,8 +16,8 @@ class SysRoleQueryParams(PageRequest):
 
     name: Optional[str] = Field(None, description="角色名称，支持模糊查询")
     code: Optional[str] = Field(None, description="角色编码，支持模糊查询")
-    status: BoolField = Query(None, description="角色状态：True-启用，False-禁用")
-    is_system: BoolField = Query(None, description="是否为系统内置角色")
+    status: BoolField = Field(None, description="角色状态：True-启用，False-禁用")
+    is_system: BoolField = Field(None, description="是否为系统内置角色")
 
 
 class SysRoleCreate(BaseEntity):

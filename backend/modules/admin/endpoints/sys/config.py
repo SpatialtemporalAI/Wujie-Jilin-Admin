@@ -7,7 +7,7 @@
 import logging
 from fastapi import APIRouter, Depends, Query
 from sqlalchemy.ext.asyncio import AsyncSession
-from typing import Optional, List
+from typing import List, Optional
 
 from database.db_manager import get_session
 from core.response.response_schema import (
@@ -38,32 +38,9 @@ logger = logging.getLogger(__name__)
 config_router = APIRouter(prefix="/config", tags=["系统配置"])
 
 
-def parse_bool_param(value: Optional[str]) -> Optional[bool]:
-    """
-    解析布尔类型参数
-
-    Args:
-        value: 参数字符串
-
-    Returns:
-        布尔值或None
-    """
-    if value is None or value == "":
-        return None
-    if value.lower() in ("true", "1", "yes", "y"):
-        return True
-    if value.lower() in ("false", "0", "no", "n"):
-        return False
-    return None
-
-
 @config_router.get("/list", response_model=ResponsePageModel[SysConfigResponseData])
 async def get_config_list(
-    key: Optional[str] = Query(None, description="配置键名，支持模糊查询"),
-    description: Optional[str] = Query(None, description="配置描述，支持模糊查询"),
-    type: Optional[str] = Query(None, description="配置类型"),
-    group: Optional[str] = Query(None, description="配置分组"),
-    is_system: Optional[str] = Query(None, description="是否为系统内置配置"),
+    query_params: SysConfigQueryParams = Depends(),
     page_params: PageRequest = Depends(get_page_params),
     db: AsyncSession = Depends(get_session),
 ):
@@ -73,31 +50,9 @@ async def get_config_list(
     try:
         logger.info("获取配置列表接口被调用")
 
-        # 转换枚举类型参数
-        config_type = None
-        if type and type.strip():
-            try:
-                config_type = ConfigType(type)
-            except ValueError:
-                pass
-
-        config_group = None
-        if group and group.strip():
-            try:
-                config_group = ConfigGroup(group)
-            except ValueError:
-                pass
-
-        # 构建查询参数
-        query_params = SysConfigQueryParams(
-            key=key,
-            description=description,
-            type=config_type,
-            group=config_group,
-            is_system=parse_bool_param(is_system),
-            page=page_params.page,
-            page_size=page_params.page_size,
-        )
+        # 合并分页参数
+        query_params.page = page_params.page
+        query_params.page_size = page_params.page_size
 
         # 构建查询对象
         query = ConfigService.build_config_query(query_params)
@@ -120,7 +75,7 @@ async def get_config_list(
 
 @config_router.get("/all", response_model=ResponseModel[List[SysConfigSimpleResponse]])
 async def get_all_configs(
-    group: Optional[ConfigGroup] = Query(None, description="配置分组"),
+    group: ConfigGroup = Depends(),
     db: AsyncSession = Depends(get_session),
 ):
     """

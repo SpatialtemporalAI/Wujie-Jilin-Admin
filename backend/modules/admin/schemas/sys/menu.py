@@ -2,23 +2,48 @@
 # -*- coding: utf-8 -*-
 
 from typing import Optional, List
-from fastapi import Query
-from pydantic import Field, ConfigDict
+from pydantic import Field, ConfigDict, field_validator
 from datetime import datetime
 from app.models.common.base import BaseRespEntity, BaseEntity, BoolField
 from app.models.common.page import PageRequest
 from app.models.sys.menu import MenuType
 
 
-class SysMenuQueryParams(BaseEntity):
+class SysMenuQueryParams(PageRequest):
     """
     系统菜单查询参数模型
     用于菜单列表查询时的筛选条件
     """
 
     name: Optional[str] = Field(None, description="菜单名称，支持模糊查询")
-    status: BoolField = Query(None, description="菜单状态：True-启用，False-禁用")
+    status: BoolField = Field(None, description="菜单状态：True-启用，False-禁用")
     type: Optional[MenuType] = Field(None, description="菜单类型")
+
+    @field_validator("type", mode="before")
+    @classmethod
+    def parse_menu_type(cls, v):
+        """
+        解析菜单类型参数，支持字符串格式转换为 MenuType 枚举
+        """
+        if v is None:
+            return None
+        if isinstance(v, MenuType):
+            return v
+        if isinstance(v, str) and v.strip():
+            try:
+                return MenuType(v.strip())
+            except ValueError:
+                return None
+        return None
+
+
+class SysMenuTreeQuery(BaseEntity):
+    """
+    系统菜单树形查询参数模型
+    用于获取菜单树形结构时的筛选条件
+    """
+
+    status: BoolField = Field(None, description="菜单状态：True-启用，False-禁用")
 
 
 class SysMenuCreate(BaseEntity):

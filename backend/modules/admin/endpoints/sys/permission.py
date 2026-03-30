@@ -4,7 +4,7 @@
 """
 权限管理相关接口
 """
-from fastapi import APIRouter, Depends, Query
+from fastapi import APIRouter, Depends
 from sqlalchemy.ext.asyncio import AsyncSession
 from typing import List, Optional
 
@@ -13,7 +13,19 @@ from core.response.response_schema import ResponseModel
 
 from app.models.sys.permission import SysPermission
 from app.models.common.base import BoolField
+from pydantic import BaseModel, Field
 from modules.admin.services.sys import PermissionService
+
+
+class SysPermissionQueryParams(BaseModel):
+    """
+    系统权限查询参数模型
+    用于权限列表查询时的筛选条件
+    """
+
+    category: Optional[str] = Field(None, description="权限分类")
+    status: BoolField = Field(None, description="状态：True-启用，False-禁用")
+
 
 # 创建权限管理路由
 permission_router = APIRouter(prefix="/permission", tags=["权限管理"])
@@ -21,14 +33,15 @@ permission_router = APIRouter(prefix="/permission", tags=["权限管理"])
 
 @permission_router.get("/list", response_model=ResponseModel[List[SysPermission]])
 async def get_permission_list(
-    category: Optional[str] = Query(None, description="权限分类"),
-    status: BoolField = Query(None, description="状态：True-启用，False-禁用"),
+    query_params: SysPermissionQueryParams = Depends(),
     db: AsyncSession = Depends(get_session),
 ):
     """
     获取权限列表
     """
-    permissions = await PermissionService.get_permission_list(db, category, status)
+    permissions = await PermissionService.get_permission_list(
+        db, query_params.category, query_params.status
+    )
     return ResponseModel(data=permissions)
 
 

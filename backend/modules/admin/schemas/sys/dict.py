@@ -1,7 +1,6 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 
-from fastapi import Query
 from typing import Optional, List
 from pydantic import Field, ConfigDict, field_validator
 import json
@@ -18,10 +17,19 @@ class SysDictQueryParams(BaseReqEntity):
 
     name: Optional[str] = Field(None, description="字典名称，支持模糊查询")
     code: Optional[str] = Field(None, description="字典编码，支持模糊查询")
-    status: BoolField = Query(None, description="字典状态：True-启用，False-禁用")
-    is_system: BoolField = Query(
+    status: BoolField = Field(None, description="字典状态：True-启用，False-禁用")
+    is_system: BoolField = Field(
         None, description="是否为系统内置字典：True-是，False-否"
     )
+
+
+class SysDictAllQuery(BaseReqEntity):
+    """
+    系统字典查询参数模型（不分页）
+    用于获取所有字典时的筛选条件
+    """
+
+    status: BoolField = Field(None, description="字典状态：True-启用，False-禁用")
 
 
 class SysDictCreate(BaseReqEntity):
@@ -92,6 +100,23 @@ class SysDictItemQueryParams(PageRequest):
     label: Optional[str] = Field(None, description="字典项文本，支持模糊查询")
     value: Optional[str] = Field(None, description="字典项值，支持模糊查询")
     status: BoolField = Field(None, description="字典项状态：True-启用，False-禁用")
+
+    @field_validator("dict_id", mode="before")
+    @classmethod
+    def parse_dict_id(cls, v):
+        """
+        解析 dict_id 参数，支持字符串格式转换为 int
+        """
+        if v is None:
+            return None
+        if isinstance(v, int):
+            return v
+        if isinstance(v, str) and v.strip():
+            try:
+                return int(v)
+            except ValueError:
+                return None
+        return None
 
 
 class SysDictItemCreate(BaseReqEntity):

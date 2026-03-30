@@ -2,13 +2,13 @@
 import { reactive, ref } from 'vue';
 import { NButton, NPopconfirm, NTag, useMessage } from 'naive-ui';
 import { enableStatusRecord, userGenderRecord } from '@/constants/business';
-import { fetchGetUserList, fetchDeleteUser } from '@/service/api';
+import { fetchDeleteUser, fetchGetUserList } from '@/service/api';
 import { useAppStore } from '@/store/modules/app';
 import { defaultTransform, useNaivePaginatedTable, useTableOperate } from '@/hooks/common/table';
+import { $t } from '@/locales';
 import UserOperateDrawer from './modules/user-operate-drawer.vue';
 import UserPasswordDrawer from './modules/user-password-drawer.vue';
 import UserSearch from './modules/user-search.vue';
-import { $t } from '@/locales';
 
 const appStore = useAppStore();
 const message = useMessage();
@@ -115,24 +115,26 @@ const { columns, columnChecks, data, getData, getDataByPage, loading, mobilePagi
         if (row.is_superuser === true) {
           return null;
         }
-        return <div class="flex flex-wrap justify-center gap-8px">
-          <NButton type="primary" text size="small" onClick={() => edit(row.id)}>
-            {$t('common.edit')}
-          </NButton>
-          <NButton type="info" text size="small" onClick={() => openPasswordDrawer(row.id)}>
-            {$t('common.changePassword')}
-          </NButton>
-          <NPopconfirm onPositiveClick={() => handleDelete(row.id)}>
-            {{
-              default: () => $t('common.confirmDelete'),
-              trigger: () => (
-                <NButton type="error" text size="small">
-                  {$t('common.delete')}
-                </NButton>
-              )
-            }}
-          </NPopconfirm>
-        </div>
+        return (
+          <div class="flex flex-wrap justify-center gap-8px">
+            <NButton type="primary" text size="small" onClick={() => edit(row.id)}>
+              {$t('common.edit')}
+            </NButton>
+            <NButton type="info" text size="small" onClick={() => openPasswordDrawer(row.id)}>
+              {$t('common.changePassword')}
+            </NButton>
+            <NPopconfirm onPositiveClick={() => handleDelete(row.id)}>
+              {{
+                default: () => $t('common.confirmDelete'),
+                trigger: () => (
+                  <NButton type="error" text size="small">
+                    {$t('common.delete')}
+                  </NButton>
+                )
+              }}
+            </NPopconfirm>
+          </div>
+        );
       }
     }
   ]
@@ -193,14 +195,34 @@ function openPasswordDrawer(id: number) {
     <UserSearch v-model:model="searchParams" @search="getDataByPage" />
     <NCard :title="$t('page.manage.user.title')" :bordered="false" size="small" class="card-wrapper sm:flex-1-hidden">
       <template #header-extra>
-        <TableHeaderOperation v-model:columns="columnChecks" :disabled-delete="checkedRowKeys.length === 0"
-          :loading="loading" @add="handleAdd" @delete="handleBatchDelete" @refresh="getData" />
+        <TableHeaderOperation
+          v-model:columns="columnChecks"
+          :disabled-delete="checkedRowKeys.length === 0"
+          :loading="loading"
+          @add="handleAdd"
+          @delete="handleBatchDelete"
+          @refresh="getData"
+        />
       </template>
-      <NDataTable v-model:checked-row-keys="checkedRowKeys" :columns="columns" :data="data" size="small"
-        :flex-height="!appStore.isMobile" :scroll-x="962" :loading="loading" remote :row-key="row => row.id"
-        :pagination="mobilePagination" class="sm:h-full" />
-      <UserOperateDrawer v-model:visible="drawerVisible" :operate-type="operateType" :row-data="editingData"
-        @submitted="getDataByPage" />
+      <NDataTable
+        v-model:checked-row-keys="checkedRowKeys"
+        :columns="columns"
+        :data="data"
+        size="small"
+        :flex-height="!appStore.isMobile"
+        :scroll-x="962"
+        :loading="loading"
+        remote
+        :row-key="row => row.id"
+        :pagination="mobilePagination"
+        class="sm:h-full"
+      />
+      <UserOperateDrawer
+        v-model:visible="drawerVisible"
+        :operate-type="operateType"
+        :row-data="editingData"
+        @submitted="getDataByPage"
+      />
       <UserPasswordDrawer v-model:visible="passwordDrawerVisible" :user-id="currentUserId" @submitted="getDataByPage" />
     </NCard>
   </div>

@@ -5,9 +5,9 @@
 字典管理相关接口
 """
 import logging
-from fastapi import APIRouter, Depends, Query
+from fastapi import APIRouter, Depends
 from sqlalchemy.ext.asyncio import AsyncSession
-from typing import Optional, List
+from typing import List
 
 from database.db_manager import get_session
 from core.response.response_schema import (
@@ -17,13 +17,13 @@ from core.response.response_schema import (
     response_base,
 )
 from app.models.common.page import PageRequest, get_page_params, get_paginated_results
-from app.models.common.base import BoolField
 
 from modules.admin.services.sys import DictService
 from modules.admin.schemas.sys.dict import (
     SysDictCreate,
     SysDictUpdate,
     SysDictQueryParams,
+    SysDictAllQuery,
     SysDictResponseData,
     SysDictSimpleResponse,
     SysDictWithItemsResponse,
@@ -79,7 +79,7 @@ async def get_dict_list(
 
 @dict_router.get("/all", response_model=ResponseModel[List[SysDictSimpleResponse]])
 async def get_all_dicts(
-    status: BoolField = Query(None, description="字典状态：True-启用，False-禁用"),
+    query_params: SysDictAllQuery = Depends(),
     db: AsyncSession = Depends(get_session),
 ):
     """
@@ -89,14 +89,14 @@ async def get_all_dicts(
         logger.info("获取所有字典接口被调用")
 
         # 构建查询参数
-        query_params = SysDictQueryParams(
-            status=status,
+        query_params_full = SysDictQueryParams(
+            status=query_params.status,
             page=1,
             page_size=1000,
         )
 
         # 调用服务层
-        dicts, _ = await DictService.get_dict_list(db, query_params)
+        dicts, _ = await DictService.get_dict_list(db, query_params_full)
 
         # 转换为响应模型
         records = [SysDictSimpleResponse.model_validate(d) for d in dicts]
@@ -308,10 +308,7 @@ async def delete_dict(
     "/item/list", response_model=ResponsePageModel[SysDictItemResponseData]
 )
 async def get_dict_item_list(
-    dict_id: Optional[str] = Query(None, description="字典ID"),
-    label: Optional[str] = Query(None, description="字典项文本，支持模糊查询"),
-    value: Optional[str] = Query(None, description="字典项值，支持模糊查询"),
-    status: BoolField = Query(None, description="字典项状态：True-启用，False-禁用"),
+    query_params: SysDictItemQueryParams = Depends(),
     page_params: PageRequest = Depends(get_page_params),
     db: AsyncSession = Depends(get_session),
 ):
@@ -321,23 +318,9 @@ async def get_dict_item_list(
     try:
         logger.info("获取字典项列表接口被调用")
 
-        # 解析 dict_id 参数
-        parsed_dict_id = None
-        if dict_id and dict_id.strip():
-            try:
-                parsed_dict_id = int(dict_id)
-            except ValueError:
-                parsed_dict_id = None
-
-        # 构建查询参数
-        query_params = SysDictItemQueryParams(
-            dict_id=parsed_dict_id,
-            label=label,
-            value=value,
-            status=status,
-            page=page_params.page,
-            page_size=page_params.page_size,
-        )
+        # 合并分页参数
+        query_params.page = page_params.page
+        query_params.page_size = page_params.page_size
 
         # 构建查询对象
         query = DictService.build_dict_item_query(query_params)

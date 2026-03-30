@@ -100,8 +100,8 @@ export default function useTable<ResponseData, ApiData, Column, Pagination exten
       const transformed = transform(response);
 
       data.value = getTableData(transformed, pagination);
-      
-      console.log(data.value)
+
+      console.log(data.value);
       setEmpty(data.value.length === 0);
 
       await onFetched?.(transformed);

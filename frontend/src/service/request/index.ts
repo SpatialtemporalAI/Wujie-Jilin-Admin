@@ -1,5 +1,5 @@
 import type { AxiosResponse } from 'axios';
-import { BACKEND_ERROR_CODE,BACKEND_REQUEST_ERROR_CODE, createFlatRequest, createRequest } from '@sa/axios';
+import { BACKEND_ERROR_CODE, BACKEND_REQUEST_ERROR_CODE, createFlatRequest, createRequest } from '@sa/axios';
 import { useAuthStore } from '@/store/modules/auth';
 import { localStg } from '@/utils/storage';
 import { getServiceBaseURL } from '@/utils/service';
@@ -103,7 +103,7 @@ export const request = createFlatRequest(
 
       let message = error.message;
       let backendErrorCode = '';
-      
+
       // get backend error message and code
       if (error.code === BACKEND_ERROR_CODE || error.code === BACKEND_REQUEST_ERROR_CODE) {
         message = error.response?.data?.msg || message;

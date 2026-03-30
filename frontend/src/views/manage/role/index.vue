@@ -2,7 +2,7 @@
 import { reactive } from 'vue';
 import { NButton, NPopconfirm, NTag } from 'naive-ui';
 import { enableStatusRecord } from '@/constants/business';
-import { fetchGetRoleList, fetchDeleteRole, fetchBatchDeleteRole } from '@/service/api';
+import { fetchBatchDeleteRole, fetchDeleteRole, fetchGetRoleList } from '@/service/api';
 import { useAppStore } from '@/store/modules/app';
 import { defaultTransform, useNaivePaginatedTable, useTableOperate } from '@/hooks/common/table';
 import { $t } from '@/locales';
@@ -82,36 +82,30 @@ const { columns, columnChecks, data, loading, getData, getDataByPage, mobilePagi
       align: 'center',
       minWidth: 150,
       render: (row: Api.SystemManage.Role) => {
-        return <div class="flex flex-wrap justify-center gap-8px">
-          <NButton type="primary" text size="small" onClick={() => edit(row.id)}>
-            {$t('common.edit')}
-          </NButton>
-          <NPopconfirm onPositiveClick={() => handleDelete(row.id)}>
-            {{
-              default: () => $t('common.confirmDelete'),
-              trigger: () => (
-                <NButton type="error" text size="small">
-                  {$t('common.delete')}
-                </NButton>
-              )
-            }}
-          </NPopconfirm>
-        </div>
+        return (
+          <div class="flex flex-wrap justify-center gap-8px">
+            <NButton type="primary" text size="small" onClick={() => edit(row.id)}>
+              {$t('common.edit')}
+            </NButton>
+            <NPopconfirm onPositiveClick={() => handleDelete(row.id)}>
+              {{
+                default: () => $t('common.confirmDelete'),
+                trigger: () => (
+                  <NButton type="error" text size="small">
+                    {$t('common.delete')}
+                  </NButton>
+                )
+              }}
+            </NPopconfirm>
+          </div>
+        );
       }
     }
   ]
 });
 
-const {
-  drawerVisible,
-  operateType,
-  editingData,
-  handleAdd,
-  handleEdit,
-  checkedRowKeys,
-  onBatchDeleted,
-  onDeleted
-} = useTableOperate(data, 'id', getData);
+const { drawerVisible, operateType, editingData, handleAdd, handleEdit, checkedRowKeys, onBatchDeleted, onDeleted } =
+  useTableOperate(data, 'id', getData);
 
 async function handleBatchDelete() {
   if (checkedRowKeys.value.length === 0) {
@@ -144,17 +138,36 @@ function edit(id: number) {
     <RoleSearch v-model:model="searchParams" @search="getDataByPage" />
     <NCard :title="$t('page.manage.role.title')" :bordered="false" size="small" class="card-wrapper sm:flex-1-hidden">
       <template #header-extra>
-        <TableHeaderOperation v-model:columns="columnChecks" :disabled-delete="checkedRowKeys.length === 0"
-          :loading="loading" @add="handleAdd" @delete="handleBatchDelete" @refresh="getData" />
+        <TableHeaderOperation
+          v-model:columns="columnChecks"
+          :disabled-delete="checkedRowKeys.length === 0"
+          :loading="loading"
+          @add="handleAdd"
+          @delete="handleBatchDelete"
+          @refresh="getData"
+        />
       </template>
-      <NDataTable v-model:checked-row-keys="checkedRowKeys" :columns="columns" :data="data" size="small"
-        :flex-height="!appStore.isMobile" :scroll-x="702" :loading="loading" remote :row-key="row => row.id"
-        :pagination="mobilePagination" class="sm:h-full" />
-      <RoleOperateDrawer v-model:visible="drawerVisible" :operate-type="operateType" :row-data="editingData"
-        @submitted="getDataByPage" />
+      <NDataTable
+        v-model:checked-row-keys="checkedRowKeys"
+        :columns="columns"
+        :data="data"
+        size="small"
+        :flex-height="!appStore.isMobile"
+        :scroll-x="702"
+        :loading="loading"
+        remote
+        :row-key="row => row.id"
+        :pagination="mobilePagination"
+        class="sm:h-full"
+      />
+      <RoleOperateDrawer
+        v-model:visible="drawerVisible"
+        :operate-type="operateType"
+        :row-data="editingData"
+        @submitted="getDataByPage"
+      />
     </NCard>
   </div>
 </template>
-
 
 <style scoped></style>

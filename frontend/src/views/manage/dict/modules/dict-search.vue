@@ -1,6 +1,5 @@
 <script setup lang="ts">
 import { toRaw } from 'vue';
-import { jsonClone } from '@sa/utils';
 import {
   NButton,
   NCollapse,
@@ -13,6 +12,7 @@ import {
   NSelect,
   NSpace
 } from 'naive-ui';
+import { jsonClone } from '@sa/utils';
 import { enableStatusOptions, yesOrNoOptions } from '@/constants/business';
 import { translateOptions } from '@/utils/common';
 import { $t } from '@/locales';
@@ -55,10 +55,20 @@ function search() {
               <NInput v-model:value="model.code" :placeholder="$t('common.keywordSearch')" clearable />
             </NFormItemGi>
             <NFormItemGi span="24 s:12 m:6" :label="$t('page.manage.dict.dictStatus')" path="status" class="pr-24px">
-              <NSelect v-model:value="model.status" :options="translateOptions(enableStatusOptions)" :placeholder="$t('common.keywordSearch')" clearable />
+              <NSelect
+                v-model:value="model.status"
+                :options="translateOptions(enableStatusOptions)"
+                :placeholder="$t('common.keywordSearch')"
+                clearable
+              />
             </NFormItemGi>
             <NFormItemGi span="24 s:12 m:6" :label="$t('page.manage.dict.isSystem')" path="is_system" class="pr-24px">
-              <NSelect v-model:value="model.is_system" :options="yesOrNoOptions" :placeholder="$t('common.keywordSearch')" clearable />
+              <NSelect
+                v-model:value="model.is_system"
+                :options="yesOrNoOptions"
+                :placeholder="$t('common.keywordSearch')"
+                clearable
+              />
             </NFormItemGi>
             <NFormItemGi span="24 m:12" class="pr-24px">
               <NSpace class="w-full" justify="end">
