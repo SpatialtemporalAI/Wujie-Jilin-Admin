@@ -33,6 +33,14 @@ const visible = defineModel<boolean>('visible', {
 const { formRef, validate, restoreValidation } = useNaiveForm();
 const { defaultRequiredRule } = useFormRules();
 
+// 保存所有角色信息，用于编码和ID的映射
+interface RoleInfo {
+  id: number;
+  name: string;
+  code: string;
+}
+const allRoles = ref<RoleInfo[]>([]);
+
 const title = computed(() => {
   const titles: Record<NaiveUI.TableOperateType, string> = {
     add: $t('page.manage.user.addUser'),
@@ -136,24 +144,26 @@ const rules: Record<RuleKey, App.Global.FormRule | App.Global.FormRule[]> = {
 /** the enabled role options */
 const roleOptions = ref<CommonType.Option<string>[]>([]);
 
+/** 将角色编码数组转换为角色ID数组 */
+function roleCodesToIds(codes: string[]): number[] {
+  return codes
+    .map(code => allRoles.value.find(r => r.code === code)?.id)
+    .filter((id): id is number => id !== undefined);
+}
+
 async function getRoleOptions() {
   const { error, data } = await fetchGetAllRoles();
 
   if (!error) {
+    // 保存完整的角色信息
+    allRoles.value = data as RoleInfo[];
+
     const options = data.map(item => ({
       label: item.name,
       value: item.code
     }));
 
-    // the mock data does not have the roleCode, so fill it
-    // if the real request, remove the following code
-    const userRoleOptions = model.value.userRoles.map(item => ({
-      label: item,
-      value: item
-    }));
-    // end
-
-    roleOptions.value = [...userRoleOptions, ...options];
+    roleOptions.value = options;
   }
 }
 
@@ -173,6 +183,9 @@ async function handleSubmit() {
   await validate();
 
   try {
+    // 将角色编码转换为角色ID
+    const roleIds = roleCodesToIds(model.value.userRoles);
+
     if (props.operateType === 'add') {
       // 创建用户
       await fetchCreateUser({
@@ -182,8 +195,10 @@ async function handleSubmit() {
         email: model.value.email,
         password: model.value.password,
         status: model.value.status,
-        userRoles: model.value.userRoles
-      });
+        userRoles: model.value.userRoles,
+        // 额外传递 role_ids 给后端
+        role_ids: roleIds
+      } as any);
       window.$message?.success($t('common.addSuccess'));
     } else if (props.operateType === 'edit' && props.rowData) {
       // 更新用户
@@ -193,8 +208,10 @@ async function handleSubmit() {
         phone: model.value.phone,
         email: model.value.email,
         status: model.value.status,
-        userRoles: model.value.userRoles
-      });
+        userRoles: model.value.userRoles,
+        // 额外传递 role_ids 给后端
+        role_ids: roleIds
+      } as any);
       window.$message?.success($t('common.updateSuccess'));
     }
     closeDrawer();
@@ -250,7 +267,7 @@ watch(visible, () => {
         </NFormItem>
         <NFormItem :label="$t('page.manage.user.userStatus')" path="status">
           <NRadioGroup v-model:value="model.status">
-            <NRadio v-for="item in enableStatusOptions" :key="item.value" :value="item.value" :label="$t(item.label)" />
+            <NRadio v-for="item in enableStatusOptions" :key="item.value" :value="item.value" :label="item.label" />
           </NRadioGroup>
         </NFormItem>
         <NFormItem :label="$t('page.manage.user.userRole')" path="userRoles">

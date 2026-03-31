@@ -1,5 +1,17 @@
 import { request } from '../request';
 
+/** 状态转换辅助函数：将后端boolean转换为前端'1'/'2' */
+function toEnableStatus(value: boolean | null | undefined): Api.Common.EnableStatus {
+  if (value === null || value === undefined) return '1';
+  return value ? '1' : '2';
+}
+
+/** 状态转换辅助函数：将前端'1'/'2'转换为后端boolean */
+function toBooleanStatus(value: string | boolean | null | undefined): boolean {
+  if (value === null || value === undefined) return true;
+  return typeof value === 'boolean' ? value : value === '1';
+}
+
 /** get role list */
 export function fetchGetRoleList(params?: Api.SystemManage.RoleSearchParams) {
   return request<Api.SystemManage.RoleList>({
@@ -37,7 +49,7 @@ export function fetchCreateRole(role: Partial<Api.SystemManage.Role>) {
       name: role.name,
       code: role.code,
       desc: role.desc,
-      status: role.status,
+      status: toBooleanStatus(role.status),
       sort: 0,
       menu_ids: []
     }
@@ -53,7 +65,7 @@ export function fetchUpdateRole(roleId: number, role: Partial<Api.SystemManage.R
       name: role.name,
       code: role.code,
       desc: role.desc,
-      status: role.status === '1'
+      status: toBooleanStatus(role.status)
     }
   });
 }
@@ -83,15 +95,6 @@ export function fetchAssignMenuToRole(roleId: number, menuIds: number[]) {
     data: {
       menu_ids: menuIds
     }
-  });
-}
-
-/** get user list */
-export function fetchGetUserList(params?: Api.SystemManage.UserSearchParams) {
-  return request<Api.SystemManage.UserList>({
-    url: '/admin/sys/user/list',
-    method: 'get',
-    params
   });
 }
 
@@ -181,7 +184,7 @@ export function fetchBatchDeleteMenu(menuIds: number[]) {
 /** change user password */
 export function fetchChangeUserPassword(userId: number, newPassword: string) {
   return request<void>({
-    url: `/sys/user/${userId}/password`,
+    url: `/admin/sys/user/${userId}/password`,
     method: 'put',
     data: {
       new_password: newPassword
@@ -190,28 +193,54 @@ export function fetchChangeUserPassword(userId: number, newPassword: string) {
 }
 
 /** create user */
-export function fetchCreateUser(user: Api.SystemManage.UserCreate) {
+export function fetchCreateUser(user: Api.SystemManage.UserCreate & { role_ids?: number[] }) {
   return request<Api.SystemManage.User>({
-    url: '/sys/user/add',
+    url: '/admin/sys/user/add',
     method: 'post',
-    data: user
+    data: {
+      username: user.username,
+      nickname: user.nickname,
+      phone: user.phone,
+      email: user.email,
+      password: user.password,
+      status: toBooleanStatus(user.status),
+      // 优先使用 role_ids，如果没有则保持原样
+      role_ids: user.role_ids || []
+    }
   });
 }
 
 /** update user */
-export function fetchUpdateUser(userId: number, user: Api.SystemManage.UserUpdate) {
+export function fetchUpdateUser(userId: number, user: Api.SystemManage.UserUpdate & { role_ids?: number[] }) {
   return request<Api.SystemManage.User>({
-    url: `/sys/user/${userId}`,
+    url: `/admin/sys/user/${userId}`,
     method: 'put',
-    data: user
+    data: {
+      username: user.username,
+      nickname: user.nickname,
+      phone: user.phone,
+      email: user.email,
+      status: toBooleanStatus(user.status),
+      // 优先使用 role_ids
+      ...(user.role_ids !== undefined ? { role_ids: user.role_ids } : {})
+    }
   });
 }
 
 /** delete user */
 export function fetchDeleteUser(userId: number) {
   return request<void>({
-    url: `/sys/user/${userId}`,
+    url: `/admin/sys/user/${userId}`,
     method: 'delete'
+  });
+}
+
+/** get user list with transform */
+export function fetchGetUserList(params?: Api.SystemManage.UserSearchParams) {
+  return request<Api.SystemManage.UserList>({
+    url: '/admin/sys/user/list',
+    method: 'get',
+    params
   });
 }
 

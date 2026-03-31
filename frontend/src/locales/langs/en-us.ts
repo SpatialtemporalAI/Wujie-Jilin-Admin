@@ -239,12 +239,12 @@ const local: App.I18n.Schema = {
     500: 'Server Error',
     'iframe-page': 'Iframe',
     home: 'Home',
-    manage: "Manage",
-    manage_menu: "Menu Management",
-    manage_role: "Role Management",
-    manage_user: "User Management",
-    "manage_dict": "Dict Management",
-    "manage_config": "System Config"
+    manage: 'Manage',
+    manage_menu: 'Menu Management',
+    manage_role: 'Role Management',
+    manage_user: 'User Management',
+    manage_dict: 'Dict Management',
+    manage_config: 'System Config'
   },
   page: {
     login: {
@@ -322,7 +322,7 @@ const local: App.I18n.Schema = {
       },
       creativity: 'Creativity'
     },
-    
+
     manage: {
       common: {
         status: {
@@ -359,7 +359,7 @@ const local: App.I18n.Schema = {
         userStatus: 'User Status',
         userRole: 'User Role',
         isSuperuser: 'Super Admin',
-        changePassword: 'Change Password', 
+        changePassword: 'Change Password',
         lastLoginTime: 'Last Login Time',
         lastLoginIp: 'Last Login IP',
         form: {
@@ -375,10 +375,10 @@ const local: App.I18n.Schema = {
           confirmPassword: 'Please confirm new password',
           passwordMinLength: 'Password length must be at least 6 characters',
           passwordNotMatch: 'The two passwords do not match',
-          usernameLength: "user name length must be between 4 and 20 characters",
-          passwordLength: "password length must be between 6 and 20 characters",
-          emailFormat: "Email format is incorrect",
-          phoneFormat: "Phone number format is incorrect"
+          usernameLength: 'user name length must be between 4 and 20 characters',
+          passwordLength: 'password length must be between 6 and 20 characters',
+          emailFormat: 'Email format is incorrect',
+          phoneFormat: 'Phone number format is incorrect'
         },
         addUser: 'Add User',
         editUser: 'Edit User',

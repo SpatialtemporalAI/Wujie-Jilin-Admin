@@ -3,7 +3,6 @@ import { computed, toRaw } from 'vue';
 import { jsonClone } from '@sa/utils';
 import { enableStatusOptions, userGenderOptions } from '@/constants/business';
 import { useFormRules, useNaiveForm } from '@/hooks/common/form';
-import { translateOptions } from '@/utils/common';
 import { $t } from '@/locales';
 
 defineOptions({
@@ -70,7 +69,7 @@ async function search() {
               <NSelect
                 v-model:value="model.status"
                 :placeholder="$t('page.manage.user.form.userStatus')"
-                :options="translateOptions(enableStatusOptions)"
+                :options="enableStatusOptions"
                 clearable
               />
             </NFormItemGi>

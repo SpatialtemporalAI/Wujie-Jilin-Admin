@@ -235,12 +235,12 @@ const local: App.I18n.Schema = {
     500: '服务器错误',
     'iframe-page': '外链页面',
     home: '首页',
-    manage: "管理",
-    manage_menu: "菜单管理",
-    manage_role: "角色管理",
-    manage_user: "用户管理",
-    "manage_dict": "字典管理",
-    "manage_config": "系统配置"
+    manage: '管理',
+    manage_menu: '菜单管理',
+    manage_role: '角色管理',
+    manage_user: '用户管理',
+    manage_dict: '字典管理',
+    manage_config: '系统配置'
   },
   page: {
     login: {
@@ -368,10 +368,10 @@ const local: App.I18n.Schema = {
           confirmPassword: '请确认新密码',
           passwordMinLength: '密码长度至少为6位',
           passwordNotMatch: '两次输入的密码不一致',
-          usernameLength: "用户名长度必须在4-20个字符之间",
-          passwordLength: "密码长度必须在6-20个字符之间",
-          emailFormat: "邮箱格式不正确",
-          phoneFormat: "手机号格式不正确"
+          usernameLength: '用户名长度必须在4-20个字符之间',
+          passwordLength: '密码长度必须在6-20个字符之间',
+          emailFormat: '邮箱格式不正确',
+          phoneFormat: '手机号格式不正确'
         },
         addUser: '新增用户',
         editUser: '编辑用户',
@@ -379,8 +379,8 @@ const local: App.I18n.Schema = {
           male: '男',
           female: '女'
         },
-        lastLoginTime: "最后登陆时间",
-        lastLoginIp: "最后登录IP"
+        lastLoginTime: '最后登陆时间',
+        lastLoginIp: '最后登录IP'
       },
       menu: {
         home: '首页',

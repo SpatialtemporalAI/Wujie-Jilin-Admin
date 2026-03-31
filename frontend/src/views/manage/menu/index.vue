@@ -184,7 +184,8 @@ async function handleBatchDelete() {
     return;
   }
 
-  const { error } = await fetchBatchDeleteMenu(checkedRowKeys.value as number[]);
+  const ids = checkedRowKeys.value.map(key => Number(key));
+  const { error } = await fetchBatchDeleteMenu(ids);
   if (!error) {
     window.$message?.success($t('common.deleteSuccess'));
     onBatchDeleted();

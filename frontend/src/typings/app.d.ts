@@ -363,7 +363,7 @@ declare namespace App {
         updateFailed: string;
         userCenter: string;
         changePassword: string;
-        loadDataFailed:string;
+        loadDataFailed: string;
         yesOrNo: {
           yes: string;
           no: string;
@@ -728,7 +728,7 @@ declare namespace App {
             editDict: string;
             addDictItem: string;
             editDictItem: string;
-            pleaseSelectDict:string;
+            pleaseSelectDict: string;
           };
           config: {
             title: string;

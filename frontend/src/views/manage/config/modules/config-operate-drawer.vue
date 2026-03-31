@@ -18,7 +18,6 @@ import {
 import { yesOrNoOptions } from '@/constants/business';
 import { fetchCreateConfig, fetchUpdateConfig } from '@/service/api';
 import { useFormRules, useNaiveForm } from '@/hooks/common/form';
-import { translateOptions } from '@/utils/common';
 import { $t } from '@/locales';
 
 export type OperateType = NaiveUI.TableOperateType | 'addChild';
@@ -201,11 +200,6 @@ const defaultFormValue: Api.SystemManage.ConfigCreate = {
 
 const form = reactive<Api.SystemManage.ConfigCreate>({ ...defaultFormValue });
 
-// 翻译后的是/否选项
-const translatedYesOrNoOptions = computed(() => {
-  return translateOptions(yesOrNoOptions);
-});
-
 const drawerTitle = computed(() => {
   return props.operateType === 'add' ? $t('page.manage.config.addConfig') : $t('page.manage.config.editConfig');
 });
@@ -320,7 +314,7 @@ async function handleSubmit() {
           <NFormItemGi :span="12" :label="$t('page.manage.config.isSystem')">
             <NSelect
               v-model:value="form.is_system"
-              :options="translatedYesOrNoOptions"
+              :options="yesOrNoOptions"
               :placeholder="$t('page.manage.config.form.isSystem')"
             />
           </NFormItemGi>

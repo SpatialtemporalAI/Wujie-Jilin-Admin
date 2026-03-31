@@ -15,6 +15,8 @@ declare namespace Api {
       code: string;
       /** role description */
       desc: string;
+      /** menu ids */
+      menu_ids?: number[];
     }>;
 
     /** role search params */

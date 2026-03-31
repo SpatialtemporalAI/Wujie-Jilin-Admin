@@ -19,9 +19,22 @@ const searchParams: Api.SystemManage.RoleSearchParams = reactive({
   status: null
 });
 
+/** 状态转换辅助函数：将后端boolean转换为前端'1'/'2' */
+function toEnableStatus(value: boolean | null | undefined): Api.Common.EnableStatus {
+  if (value === null || value === undefined) return '1';
+  return value ? '1' : '2';
+}
+
 const { columns, columnChecks, data, loading, getData, getDataByPage, mobilePagination } = useNaivePaginatedTable({
   api: () => fetchGetRoleList(searchParams),
-  transform: response => defaultTransform(response),
+  transform: response => {
+    const result = defaultTransform(response);
+    result.data = result.data.map((role: any) => ({
+      ...role,
+      status: toEnableStatus(role.status)
+    }));
+    return result;
+  },
   onPaginationParamsChange: params => {
     searchParams.page = params.page;
     searchParams.page_size = params.pageSize;

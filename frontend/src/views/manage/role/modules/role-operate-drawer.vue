@@ -37,6 +37,13 @@ const { defaultRequiredRule } = useFormRules();
 const { bool: menuAuthVisible, setTrue: openMenuAuthModal } = useBoolean();
 const { bool: buttonAuthVisible, setTrue: openButtonAuthModal } = useBoolean();
 
+/** 状态转换辅助函数：将后端boolean转换为前端'1'/'2' */
+function toEnableStatus(value: boolean | string | null | undefined): Api.Common.EnableStatus {
+  if (value === null || value === undefined) return '1';
+  if (typeof value === 'string') return value as Api.Common.EnableStatus;
+  return value ? '1' : '2';
+}
+
 const title = computed(() => {
   const titles: Record<NaiveUI.TableOperateType, string> = {
     add: $t('page.manage.role.addRole'),
@@ -75,13 +82,11 @@ function handleInitModel() {
 
   if (props.operateType === 'edit' && props.rowData) {
     const clonedData = jsonClone(props.rowData);
-    // 确保 status 字段格式正确
-
     // 将 rowData 的字段映射到 model 的字段
     model.value.name = clonedData.name || '';
     model.value.code = clonedData.code || '';
     model.value.desc = clonedData.desc || '';
-    model.value.status = clonedData.status;
+    model.value.status = toEnableStatus(clonedData.status);
   }
 }
 
@@ -129,7 +134,7 @@ watch(visible, () => {
         </NFormItem>
         <NFormItem :label="$t('page.manage.role.roleStatus')" path="status">
           <NRadioGroup v-model:value="model.status">
-            <NRadio v-for="item in enableStatusOptions" :key="item.value" :value="item.value" :label="$t(item.label)" />
+            <NRadio v-for="item in enableStatusOptions" :key="item.value" :value="item.value" :label="item.label" />
           </NRadioGroup>
         </NFormItem>
         <NFormItem :label="$t('page.manage.role.roleDesc')" path="desc">

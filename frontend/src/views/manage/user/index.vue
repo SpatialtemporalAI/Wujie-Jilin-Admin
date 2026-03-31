@@ -25,12 +25,27 @@ const searchParams: Api.SystemManage.UserSearchParams = reactive({
   nickname: null,
   phone: null,
   email: null,
-  isSuperuser: null
+  is_superuser: null
 });
 
-const { columns, columnChecks, data, getData, getDataByPage, loading, mobilePagination } = useNaivePaginatedTable({
+/** 状态转换辅助函数：将后端boolean转换为前端'1'/'2' */
+function toEnableStatus(value: boolean | null | undefined): Api.Common.EnableStatus {
+  if (value === null || value === undefined) return '1';
+  return value ? '1' : '2';
+}
+
+const { columns, columnChecks, data, loading, getData, getDataByPage, mobilePagination } = useNaivePaginatedTable({
   api: () => fetchGetUserList(searchParams),
-  transform: response => defaultTransform(response),
+  transform: response => {
+    const result = defaultTransform(response);
+    result.data = result.data.map((user: any) => ({
+      ...user,
+      status: toEnableStatus(user.status),
+      // 从roles中提取code作为userRoles
+      userRoles: user.roles ? user.roles.map((r: any) => r.code) : []
+    }));
+    return result;
+  },
   onPaginationParamsChange: params => {
     searchParams.page = params.page;
     searchParams.page_size = params.pageSize;

@@ -14,7 +14,6 @@ import {
 } from 'naive-ui';
 import { jsonClone } from '@sa/utils';
 import { enableStatusOptions, yesOrNoOptions } from '@/constants/business';
-import { translateOptions } from '@/utils/common';
 import { $t } from '@/locales';
 
 defineOptions({
@@ -57,7 +56,7 @@ function search() {
             <NFormItemGi span="24 s:12 m:6" :label="$t('page.manage.dict.dictStatus')" path="status" class="pr-24px">
               <NSelect
                 v-model:value="model.status"
-                :options="translateOptions(enableStatusOptions)"
+                :options="enableStatusOptions"
                 :placeholder="$t('common.keywordSearch')"
                 clearable
               />

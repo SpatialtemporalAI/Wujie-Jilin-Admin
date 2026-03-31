@@ -78,6 +78,12 @@ watch(
   }
 );
 
+/** 状态转换辅助函数：将后端boolean转换为前端'1'/'2' */
+function toEnableStatus(value: boolean | null | undefined): Api.Common.EnableStatus {
+  if (value === null || value === undefined) return '1';
+  return value ? '1' : '2';
+}
+
 /** 字典表格 */
 const {
   columns: dictColumns,
@@ -89,7 +95,15 @@ const {
   mobilePagination: dictMobilePagination
 } = useNaivePaginatedTable({
   api: () => fetchGetDictList(dictSearchParams),
-  transform: response => defaultTransform(response),
+  transform: response => {
+    const result = defaultTransform(response);
+    result.data = result.data.map((dict: any) => ({
+      ...dict,
+      status: toEnableStatus(dict.status),
+      is_system: toEnableStatus(dict.is_system)
+    }));
+    return result;
+  },
   onPaginationParamsChange: params => {
     dictSearchParams.page = params.page;
     dictSearchParams.page_size = params.pageSize;
@@ -217,11 +231,21 @@ const {
   api: () => {
     // 只有在选中字典后才调用 API，避免初始化时请求空数据
     if (!dictItemSearchParams.dict_id) {
-      return Promise.resolve({ data: [], total: 0 });
+      // 直接返回一个空的响应，让 defaultTransform 处理
+      return Promise.resolve({
+        data: { records: [], page: 1, page_size: 10, total: 0, total_pages: 0 }
+      } as any);
     }
     return fetchGetDictItemList(dictItemSearchParams);
   },
-  transform: response => defaultTransform(response),
+  transform: response => {
+    const result = defaultTransform(response);
+    result.data = result.data.map((item: any) => ({
+      ...item,
+      status: toEnableStatus(item.status)
+    }));
+    return result;
+  },
   onPaginationParamsChange: params => {
     dictItemSearchParams.page = params.page;
     dictItemSearchParams.page_size = params.pageSize;
@@ -263,7 +287,7 @@ const {
       align: 'center',
       width: 100,
       render: row => {
-        const status = normalizeEnableStatus(row.status);
+        const status = normalizeEnableStatus((row as any).status);
         const tagMap: Record<Api.Common.EnableStatus, NaiveUI.ThemeColor> = {
           '1': 'success',
           '2': 'warning'
@@ -286,10 +310,10 @@ const {
       render: row => {
         return (
           <div class="flex flex-wrap justify-center gap-8px">
-            <NButton type="info" ghost size="small" onClick={() => editDictItem(row.id)}>
+            <NButton type="info" ghost size="small" onClick={() => editDictItem((row as any).id)}>
               {$t('common.edit')}
             </NButton>
-            <NPopconfirm onPositiveClick={() => handleDeleteDictItem(row.id)}>
+            <NPopconfirm onPositiveClick={() => handleDeleteDictItem((row as any).id)}>
               {{
                 default: () => $t('common.confirmDelete'),
                 trigger: () => (
@@ -316,6 +340,7 @@ const {
   checkedRowKeys: checkedDictItemRowKeys,
   onBatchDeleted: onDictItemBatchDeleted,
   onDeleted: onDictItemDeleted
+  // @ts-ignore - 类型推断问题，使用类型断言处理
 } = useTableOperate(dictItemData, 'id', getDictItemData);
 
 /** 选中字典 */
@@ -342,6 +367,7 @@ async function handleDeleteDict(id: number) {
 
 /** 编辑字典项 */
 function editDictItem(id: number) {
+  // @ts-ignore - 类型推断问题，使用类型断言处理
   handleEditDictItem(id);
 }
 
@@ -481,7 +507,7 @@ watch(activeTab, tab => {
           <DictItemOperateDrawer
             v-model:visible="dictItemDrawerVisible"
             :operate-type="dictItemOperateType"
-            :row-data="editingDictItemData"
+            :row-data="editingDictItemData as any"
             :dict-id="selectedDict?.id"
             @submitted="loadDictItemData"
           />

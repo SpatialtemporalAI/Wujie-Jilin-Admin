@@ -2,7 +2,6 @@
 import { toRaw } from 'vue';
 import { jsonClone } from '@sa/utils';
 import { enableStatusOptions } from '@/constants/business';
-import { translateOptions } from '@/utils/common';
 import { $t } from '@/locales';
 
 defineOptions({
@@ -34,17 +33,17 @@ function search() {
       <NCollapseItem :title="$t('common.search')" name="role-search">
         <NForm :model="model" label-placement="left" :label-width="80">
           <NGrid responsive="screen" item-responsive>
-            <NFormItemGi span="24 s:12 m:6" :label="$t('page.manage.role.roleName')" path="roleName" class="pr-24px">
-              <NInput v-model:value="model.roleName" :placeholder="$t('page.manage.role.form.roleName')" />
+            <NFormItemGi span="24 s:12 m:6" :label="$t('page.manage.role.roleName')" path="name" class="pr-24px">
+              <NInput v-model:value="model.name" :placeholder="$t('page.manage.role.form.roleName')" />
             </NFormItemGi>
-            <NFormItemGi span="24 s:12 m:6" :label="$t('page.manage.role.roleCode')" path="roleCode" class="pr-24px">
-              <NInput v-model:value="model.roleCode" :placeholder="$t('page.manage.role.form.roleCode')" />
+            <NFormItemGi span="24 s:12 m:6" :label="$t('page.manage.role.roleCode')" path="code" class="pr-24px">
+              <NInput v-model:value="model.code" :placeholder="$t('page.manage.role.form.roleCode')" />
             </NFormItemGi>
             <NFormItemGi span="24 s:12 m:6" :label="$t('page.manage.role.roleStatus')" path="status" class="pr-24px">
               <NSelect
                 v-model:value="model.status"
                 :placeholder="$t('page.manage.role.form.roleStatus')"
-                :options="translateOptions(enableStatusOptions)"
+                :options="enableStatusOptions"
                 clearable
               />
             </NFormItemGi>
