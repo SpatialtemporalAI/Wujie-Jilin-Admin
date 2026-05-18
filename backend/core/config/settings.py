@@ -19,6 +19,7 @@ from .settings_model import (
     RedisPoolModel,
     LocalUploadModel,
     SecurityModel,
+    MCPModel,
 )
 
 
@@ -52,3 +53,5 @@ class GlobalSetting(BaseSettings):
     REDIS: RedisPoolModel = RedisPoolModel()
     # 本地上传配置
     UPLOAD_LOCAL: LocalUploadModel = LocalUploadModel()
+    # MCP 配置
+    MCP: MCPModel = MCPModel()

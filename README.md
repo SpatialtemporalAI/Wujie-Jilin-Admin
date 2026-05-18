@@ -13,6 +13,12 @@ SmileX-Fastapi-Cloud/
 │   ├── config/         # 配置文件
 │   ├── core/           # 核心功能模块
 │   ├── database/       # 数据库相关
+│   ├── mcp/            # MCP 工具模块
+│   │   ├── registry.py # 工具注册表与自动发现
+│   │   ├── server.py   # FastMCP 服务器
+│   │   ├── template.py # 工具代码生成器
+│   │   ├── standalone.py # 独立进程管理
+│   │   └── tools/      # 自动发现的工具目录
 │   ├── modules/        # 业务模块
 │   ├── scripts/        # 脚本工具
 │   ├── main.py         # 后端入口文件
@@ -83,8 +89,43 @@ SmileX-Fastapi-Cloud/
 
 7. **启动后端服务**
    ```bash
+   # 开发模式（自动重载）
    python main.py
+
+   # 或使用 uvicorn 直接启动
+   uvicorn main:app --reload --host 0.0.0.0 --port 8000
    ```
+
+8. **启动 MCP 服务（可选）**
+
+   项目内置了 MCP (Model Context Protocol) 模块，支持工具注册与独立进程部署。
+
+   - **内嵌模式**（默认）：MCP 服务随主应用一起启动，挂载在 `/mcp` 路径下，无需额外操作。
+   - **独立模式**：通过管理 API 启动独立的 MCP 服务器进程。
+
+   ```bash
+   # MCP 服务随主应用自动启动，无需手动操作
+   # 默认配置如下（可在 .env 中覆盖）：
+   # MCP__ENABLED=true
+   # MCP__NAME=SmileX MCP Server
+   # MCP__HOST=127.0.0.1
+   # MCP__PORT=9000
+
+   # 通过管理 API 启动独立 MCP 进程：
+   # POST http://localhost:8000/admin/sys/mcp/start
+   ```
+
+   MCP 管理 API 列表：
+
+   | 接口 | 路径 | 说明 |
+   |------|------|------|
+   | POST | `/admin/sys/mcp/add` | 创建 MCP 工具 |
+   | POST | `/admin/sys/mcp/list` | 获取已注册工具列表 |
+   | POST | `/admin/sys/mcp/test` | 测试工具调用 |
+   | POST | `/admin/sys/mcp/routes` | 获取 MCP 路由信息 |
+   | POST | `/admin/sys/mcp/status` | 获取 MCP 服务器状态 |
+   | POST | `/admin/sys/mcp/start` | 启动独立 MCP 服务 |
+   | POST | `/admin/sys/mcp/stop` | 停止独立 MCP 服务 |
 
 ### 前端环境搭建
 
@@ -115,6 +156,7 @@ SmileX-Fastapi-Cloud/
 - **菜单管理**: 动态生成系统菜单，支持权限控制
 - **角色管理**: 基于角色的权限控制系统
 - **用户管理**: 完整的用户CRUD操作，支持用户状态管理
+- **MCP 工具平台**: 内置 MCP 服务器，支持工具注册、自动发现、在线创建与测试
 - **日志系统**: 完整的日志记录与管理
 - **缓存系统**: 基于Redis的缓存实现
 

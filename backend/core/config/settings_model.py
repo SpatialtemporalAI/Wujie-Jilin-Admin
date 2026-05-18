@@ -99,6 +99,21 @@ class DatatimeModel(BaseModel):
     FORMAT: str = Field("%Y-%m-%d %H:%M:%S", description="时间格式")
 
 
+class MCPModel(BaseModel):
+    """MCP 配置模型"""
+
+    ENABLED: bool = Field(True, description="是否启用 MCP 模块")
+    NAME: str = Field("SmileX MCP Server", description="MCP 服务器名称")
+    VERSION: str = Field("1.0.0", description="MCP 版本")
+    HOST: str = Field("127.0.0.1", description="独立服务地址")
+    PORT: int = Field(9000, description="独立服务端口")
+    BASE_URL: str = Field("", description="MCP 服务基础 URL")
+    UPSTREAM_BASE_URL: str = Field("http://127.0.0.1:8000", description="上游应用 URL")
+    AUTH_HEADER: str = Field("Authorization", description="鉴权 Header 名称")
+    REQUEST_TIMEOUT: int = Field(30, description="请求超时时间(秒)")
+    PROCESS_META_FILE: str = Field("mcp_process.json", description="进程元数据文件")
+
+
 class RedisPoolModel(BaseModel):
     """Redis连接池模型"""
 

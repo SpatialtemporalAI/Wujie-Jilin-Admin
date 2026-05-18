@@ -34,6 +34,8 @@
 | Pydantic | 2.x | 数据验证 |
 | Uvicorn | 0.40.0+ | ASGI 服务器 |
 | Gunicorn | 23.0.0+ | 生产环境服务器 |
+| mcp | 1.0+ | MCP SDK（FastMCP） |
+| httpx | 0.27+ | 异步 HTTP 客户端 |
 
 ## 🚀 快速开始
 
@@ -76,7 +78,12 @@ alembic revision --autogenerate -m "Initial migration"
 alembic upgrade head
 ```
 
-5. **启动开发服务器**
+5. **创建超级管理员**
+```bash
+python scripts/create_superuser.py
+```
+
+6. **启动开发服务器**
 ```bash
 # 使用 uvicorn 直接运行
 uvicorn main:app --reload
@@ -85,7 +92,7 @@ uvicorn main:app --reload
 python main.py
 ```
 
-6. **访问 API 文档**
+7. **访问 API 文档**
    - Swagger UI: http://localhost:8000/docs
    - ReDoc: http://localhost:8000/redoc
 
@@ -105,6 +112,15 @@ python main.py
 │   ├── response/         # 统一响应格式
 │   ├── security/         # 安全相关功能
 │   └── utils/            # 工具函数
+├── mcp/                  # MCP 工具模块
+│   ├── registry.py       # 工具注册表与 @register_tool 装饰器
+│   ├── server.py         # FastMCP 服务器创建与 ASGI 挂载
+│   ├── template.py       # 工具代码模板生成器
+│   ├── standalone.py     # 独立进程管理（启动/停止/状态）
+│   ├── context.py        # MCP 鉴权上下文
+│   ├── http_client.py    # 上游 HTTP 客户端
+│   ├── result.py         # 结果辅助函数
+│   └── tools/            # 自动发现的工具目录
 ├── modules/              # 业务模块
 │   ├── admin/            # 后台管理模块
 │   │   ├── deps/         # 依赖注入
@@ -155,6 +171,35 @@ python main.py
 - 结构化日志格式
 - 日志级别控制
 - 日志文件轮转
+
+### 6. MCP 工具平台
+- 基于 Python `mcp` SDK (FastMCP) 的 MCP 服务器
+- Streamable HTTP 传输，挂载在 `/mcp` 路径下
+- `@register_tool` 装饰器 + `pkgutil` 自动发现工具
+- 管理后台支持在线创建工具（自动生成代码）、测试调用
+- 支持独立进程部署（通过管理 API 启动/停止）
+
+MCP 环境变量配置（在 `.env` 中设置，使用 `MCP__` 前缀）：
+
+```bash
+MCP__ENABLED=true                # 是否启用 MCP
+MCP__NAME=SmileX MCP Server      # 服务器名称
+MCP__HOST=127.0.0.1              # 独立服务地址
+MCP__PORT=9000                   # 独立服务端口
+MCP__UPSTREAM_BASE_URL=http://127.0.0.1:8000  # 上游应用 URL
+```
+
+管理 API 端点：
+
+| 方法 | 路径 | 说明 |
+|------|------|------|
+| POST | `/admin/sys/mcp/add` | 创建 MCP 工具 |
+| POST | `/admin/sys/mcp/list` | 获取已注册工具列表 |
+| POST | `/admin/sys/mcp/test` | 测试工具调用 |
+| POST | `/admin/sys/mcp/routes` | 获取 MCP 路由信息 |
+| POST | `/admin/sys/mcp/status` | 获取 MCP 服务器状态 |
+| POST | `/admin/sys/mcp/start` | 启动独立 MCP 服务 |
+| POST | `/admin/sys/mcp/stop` | 停止独立 MCP 服务 |
 
 ## 📚 API 文档
 

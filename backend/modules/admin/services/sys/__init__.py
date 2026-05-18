@@ -10,6 +10,7 @@ from .menu_service import MenuService
 from .permission_service import PermissionService
 from .role_service import RoleService
 from .user_service import UserService
+from .mcp_service import MCPService
 
 __all__ = [
     "ConfigService",
@@ -17,5 +18,6 @@ __all__ = [
     "MenuService",
     "PermissionService",
     "RoleService",
-    "UserService"
+    "UserService",
+    "MCPService",
 ]
