@@ -6,6 +6,7 @@ import { fetchBatchDeleteRole, fetchDeleteRole, fetchGetRoleList } from '@/servi
 import { useAppStore } from '@/store/modules/app';
 import { defaultTransform, useNaivePaginatedTable, useTableOperate } from '@/hooks/common/table';
 import { $t } from '@/locales';
+import { booleanToEnableStatus } from '@/utils/status';
 import RoleOperateDrawer from './modules/role-operate-drawer.vue';
 import RoleSearch from './modules/role-search.vue';
 
@@ -19,19 +20,13 @@ const searchParams: Api.SystemManage.RoleSearchParams = reactive({
   status: null
 });
 
-/** 状态转换辅助函数：将后端boolean转换为前端'1'/'2' */
-function toEnableStatus(value: boolean | null | undefined): Api.Common.EnableStatus {
-  if (value === null || value === undefined) return '1';
-  return value ? '1' : '2';
-}
-
 const { columns, columnChecks, data, loading, getData, getDataByPage, mobilePagination } = useNaivePaginatedTable({
   api: () => fetchGetRoleList(searchParams),
   transform: response => {
     const result = defaultTransform(response);
     result.data = result.data.map((role: any) => ({
       ...role,
-      status: toEnableStatus(role.status)
+      status: booleanToEnableStatus(role.status)
     }));
     return result;
   },

@@ -6,6 +6,7 @@ import { fetchDeleteUser, fetchGetUserList } from '@/service/api';
 import { useAppStore } from '@/store/modules/app';
 import { defaultTransform, useNaivePaginatedTable, useTableOperate } from '@/hooks/common/table';
 import { $t } from '@/locales';
+import { booleanToEnableStatus } from '@/utils/status';
 import UserOperateDrawer from './modules/user-operate-drawer.vue';
 import UserPasswordDrawer from './modules/user-password-drawer.vue';
 import UserSearch from './modules/user-search.vue';
@@ -28,19 +29,13 @@ const searchParams: Api.SystemManage.UserSearchParams = reactive({
   is_superuser: null
 });
 
-/** 状态转换辅助函数：将后端boolean转换为前端'1'/'2' */
-function toEnableStatus(value: boolean | null | undefined): Api.Common.EnableStatus {
-  if (value === null || value === undefined) return '1';
-  return value ? '1' : '2';
-}
-
 const { columns, columnChecks, data, loading, getData, getDataByPage, mobilePagination } = useNaivePaginatedTable({
   api: () => fetchGetUserList(searchParams),
   transform: response => {
     const result = defaultTransform(response);
     result.data = result.data.map((user: any) => ({
       ...user,
-      status: toEnableStatus(user.status),
+      status: booleanToEnableStatus(user.status),
       // 从roles中提取code作为userRoles
       userRoles: user.roles ? user.roles.map((r: any) => r.code) : []
     }));
@@ -108,8 +103,6 @@ const { columns, columnChecks, data, loading, getData, getDataByPage, mobilePagi
         if (row.status === null) {
           return null;
         }
-
-        // let status: Api.Common.EnableStatus = row.status ? '1' : '2';
 
         const tagMap: Record<Api.Common.EnableStatus, NaiveUI.ThemeColor> = {
           '1': 'success',

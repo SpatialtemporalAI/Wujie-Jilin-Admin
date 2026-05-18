@@ -1,16 +1,5 @@
 import { request } from '../request';
-
-/** 状态转换辅助函数：将后端boolean转换为前端'1'/'2' */
-function toEnableStatus(value: boolean | null | undefined): Api.Common.EnableStatus {
-  if (value === null || value === undefined) return '1';
-  return value ? '1' : '2';
-}
-
-/** 状态转换辅助函数：将前端'1'/'2'转换为后端boolean */
-function toBooleanStatus(value: string | boolean | null | undefined): boolean {
-  if (value === null || value === undefined) return true;
-  return typeof value === 'boolean' ? value : value === '1';
-}
+import { enableStatusToBoolean } from '@/utils/status';
 
 /** get role list */
 export function fetchGetRoleList(params?: Api.SystemManage.RoleSearchParams) {
@@ -49,7 +38,7 @@ export function fetchCreateRole(role: Partial<Api.SystemManage.Role>) {
       name: role.name,
       code: role.code,
       desc: role.desc,
-      status: toBooleanStatus(role.status),
+      status: enableStatusToBoolean(role.status),
       sort: 0,
       menu_ids: []
     }
@@ -65,7 +54,7 @@ export function fetchUpdateRole(roleId: number, role: Partial<Api.SystemManage.R
       name: role.name,
       code: role.code,
       desc: role.desc,
-      status: toBooleanStatus(role.status)
+      status: enableStatusToBoolean(role.status)
     }
   });
 }
@@ -203,8 +192,7 @@ export function fetchCreateUser(user: Api.SystemManage.UserCreate & { role_ids?:
       phone: user.phone,
       email: user.email,
       password: user.password,
-      status: toBooleanStatus(user.status),
-      // 优先使用 role_ids，如果没有则保持原样
+      status: enableStatusToBoolean(user.status),
       role_ids: user.role_ids || []
     }
   });
@@ -220,8 +208,7 @@ export function fetchUpdateUser(userId: number, user: Api.SystemManage.UserUpdat
       nickname: user.nickname,
       phone: user.phone,
       email: user.email,
-      status: toBooleanStatus(user.status),
-      // 优先使用 role_ids
+      status: enableStatusToBoolean(user.status),
       ...(user.role_ids !== undefined ? { role_ids: user.role_ids } : {})
     }
   });
@@ -290,12 +277,10 @@ export function fetchGetDictWithItems(dictId: number) {
 
 /** create dict */
 export function fetchCreateDict(dict: Api.SystemManage.DictCreate) {
-  // Backend expects boolean for `status` / `is_system`.
-  const toEnableBoolean = (value: unknown) => (typeof value === 'boolean' ? value : value === '1');
   const transformedDict = {
     ...dict,
-    status: toEnableBoolean(dict.status),
-    is_system: toEnableBoolean(dict.is_system)
+    status: enableStatusToBoolean(dict.status),
+    is_system: enableStatusToBoolean(dict.is_system)
   };
 
   return request<Api.SystemManage.Dict>({
@@ -307,12 +292,10 @@ export function fetchCreateDict(dict: Api.SystemManage.DictCreate) {
 
 /** update dict */
 export function fetchUpdateDict(dictId: number, dict: Api.SystemManage.DictUpdate) {
-  // Backend expects boolean for `status` / `is_system`.
-  const toEnableBoolean = (value: unknown) => (typeof value === 'boolean' ? value : value === '1');
   const transformedDict = {
     ...dict,
-    ...(dict.status !== undefined ? { status: toEnableBoolean(dict.status) } : {}),
-    ...(dict.is_system !== undefined ? { is_system: toEnableBoolean(dict.is_system) } : {})
+    ...(dict.status !== undefined ? { status: enableStatusToBoolean(dict.status) } : {}),
+    ...(dict.is_system !== undefined ? { is_system: enableStatusToBoolean(dict.is_system) } : {})
   };
 
   return request<Api.SystemManage.Dict>({
@@ -368,25 +351,21 @@ export function fetchGetDictItem(itemId: number) {
 
 /** create dict item */
 export function fetchCreateDictItem(item: Api.SystemManage.DictItemCreate) {
-  // Backend expects boolean for `status`.
-  const toEnableBoolean = (value: unknown) => (typeof value === 'boolean' ? value : value === '1');
   return request<Api.SystemManage.DictItem>({
     url: '/admin/sys/dict/item/add',
     method: 'post',
     data: {
       ...item,
-      status: toEnableBoolean(item.status)
+      status: enableStatusToBoolean(item.status)
     }
   });
 }
 
 /** update dict item */
 export function fetchUpdateDictItem(itemId: number, item: Api.SystemManage.DictItemUpdate) {
-  // Backend expects boolean for `status`.
-  const toEnableBoolean = (value: unknown) => (typeof value === 'boolean' ? value : value === '1');
   const transformedItem = {
     ...item,
-    ...(item.status !== undefined ? { status: toEnableBoolean(item.status) } : {})
+    ...(item.status !== undefined ? { status: enableStatusToBoolean(item.status) } : {})
   };
 
   return request<Api.SystemManage.DictItem>({
@@ -469,7 +448,6 @@ export function fetchGetConfigValue(configKey: string, defaultValue?: string) {
 
 /** create config */
 export function fetchCreateConfig(config: Api.SystemManage.ConfigCreate) {
-  // 转换布尔字段：将字符串转换为布尔值
   const transformedConfig = {
     ...config,
     is_system: config.is_system === '1'
@@ -484,7 +462,6 @@ export function fetchCreateConfig(config: Api.SystemManage.ConfigCreate) {
 
 /** update config */
 export function fetchUpdateConfig(configId: number, config: Api.SystemManage.ConfigUpdate) {
-  // 转换布尔字段：将字符串转换为布尔值
   const transformedConfig = {
     ...config,
     is_system: config.is_system === '1'

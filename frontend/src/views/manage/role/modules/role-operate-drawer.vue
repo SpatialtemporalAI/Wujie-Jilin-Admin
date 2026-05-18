@@ -6,6 +6,7 @@ import { enableStatusOptions } from '@/constants/business';
 import { fetchCreateRole, fetchUpdateRole } from '@/service/api';
 import { useFormRules, useNaiveForm } from '@/hooks/common/form';
 import { $t } from '@/locales';
+import { booleanToEnableStatus } from '@/utils/status';
 import MenuAuthModal from './menu-auth-modal.vue';
 import ButtonAuthModal from './button-auth-modal.vue';
 
@@ -36,13 +37,6 @@ const { formRef, validate, restoreValidation } = useNaiveForm();
 const { defaultRequiredRule } = useFormRules();
 const { bool: menuAuthVisible, setTrue: openMenuAuthModal } = useBoolean();
 const { bool: buttonAuthVisible, setTrue: openButtonAuthModal } = useBoolean();
-
-/** 状态转换辅助函数：将后端boolean转换为前端'1'/'2' */
-function toEnableStatus(value: boolean | string | null | undefined): Api.Common.EnableStatus {
-  if (value === null || value === undefined) return '1';
-  if (typeof value === 'string') return value as Api.Common.EnableStatus;
-  return value ? '1' : '2';
-}
 
 const title = computed(() => {
   const titles: Record<NaiveUI.TableOperateType, string> = {
@@ -86,7 +80,7 @@ function handleInitModel() {
     model.value.name = clonedData.name || '';
     model.value.code = clonedData.code || '';
     model.value.desc = clonedData.desc || '';
-    model.value.status = toEnableStatus(clonedData.status);
+    model.value.status = booleanToEnableStatus(clonedData.status);
   }
 }
 

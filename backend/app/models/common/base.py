@@ -42,9 +42,13 @@ class BaseReqEntity(BaseEntity):
 class BaseRespEntity(BaseEntity):
     """基础响应实体模型"""
 
-    # 处理输出转换：True→1，False→2
+    # 处理输出转换：True→"1"，False→"2"
     @field_serializer("status", check_fields=False)
     def serialize_status_output(self, value: bool):
+        return "1" if value else "2"
+
+    @field_serializer("is_system", check_fields=False)
+    def serialize_is_system_output(self, value: bool):
         return "1" if value else "2"
 
 

@@ -6,19 +6,13 @@ import { fetchDeleteDict, fetchDeleteDictItem, fetchGetDictItemList, fetchGetDic
 import { useAppStore } from '@/store/modules/app';
 import { defaultTransform, useNaivePaginatedTable, useTableOperate } from '@/hooks/common/table';
 import { $t } from '@/locales';
+import { booleanToEnableStatus } from '@/utils/status';
 import DictOperateDrawer from './modules/dict-operate-drawer.vue';
 import DictItemOperateDrawer from './modules/dict-item-operate-drawer.vue';
 import DictSearch from './modules/dict-search.vue';
 
 const appStore = useAppStore();
 const message = useMessage();
-
-function normalizeEnableStatus(status: unknown): Api.Common.EnableStatus {
-  if (typeof status === 'boolean') {
-    return status ? '1' : '2';
-  }
-  return status === '1' ? '1' : '2';
-}
 
 /** 字典搜索参数 */
 const dictSearchParams: Api.SystemManage.DictSearchParams = reactive({
@@ -78,12 +72,6 @@ watch(
   }
 );
 
-/** 状态转换辅助函数：将后端boolean转换为前端'1'/'2' */
-function toEnableStatus(value: boolean | null | undefined): Api.Common.EnableStatus {
-  if (value === null || value === undefined) return '1';
-  return value ? '1' : '2';
-}
-
 /** 字典表格 */
 const {
   columns: dictColumns,
@@ -99,8 +87,7 @@ const {
     const result = defaultTransform(response);
     result.data = result.data.map((dict: any) => ({
       ...dict,
-      status: toEnableStatus(dict.status),
-      is_system: toEnableStatus(dict.is_system)
+      status: booleanToEnableStatus(dict.status)
     }));
     return result;
   },
@@ -145,13 +132,12 @@ const {
       align: 'center',
       width: 100,
       render: row => {
-        const status = normalizeEnableStatus(row.status);
         const tagMap: Record<Api.Common.EnableStatus, NaiveUI.ThemeColor> = {
           '1': 'success',
           '2': 'warning'
         };
-        const label = $t(enableStatusRecord[status]);
-        return <NTag type={tagMap[status]}>{label}</NTag>;
+        const label = $t(enableStatusRecord[row.status]);
+        return <NTag type={tagMap[row.status]}>{label}</NTag>;
       }
     },
     {
@@ -160,9 +146,10 @@ const {
       align: 'center',
       width: 100,
       render: row => {
+        const isSystem = row.is_system === '1';
         return (
-          <NTag type={row.is_system ? 'info' : 'default'}>
-            {row.is_system ? $t('common.yesOrNo.yes') : $t('common.yesOrNo.no')}
+          <NTag type={isSystem ? 'info' : 'default'}>
+            {isSystem ? $t('common.yesOrNo.yes') : $t('common.yesOrNo.no')}
           </NTag>
         );
       }
@@ -187,7 +174,7 @@ const {
             <NButton type="info" ghost size="small" onClick={() => editDict(row.id)}>
               {$t('common.edit')}
             </NButton>
-            {!row.is_system && (
+            {row.is_system !== '1' && (
               <NPopconfirm onPositiveClick={() => handleDeleteDict(row.id)}>
                 {{
                   default: () => $t('common.confirmDelete'),
@@ -242,7 +229,7 @@ const {
     const result = defaultTransform(response);
     result.data = result.data.map((item: any) => ({
       ...item,
-      status: toEnableStatus(item.status)
+      status: booleanToEnableStatus(item.status)
     }));
     return result;
   },
@@ -287,13 +274,12 @@ const {
       align: 'center',
       width: 100,
       render: row => {
-        const status = normalizeEnableStatus((row as any).status);
         const tagMap: Record<Api.Common.EnableStatus, NaiveUI.ThemeColor> = {
           '1': 'success',
           '2': 'warning'
         };
-        const label = $t(enableStatusRecord[status]);
-        return <NTag type={tagMap[status]}>{label}</NTag>;
+        const label = $t(enableStatusRecord[row.status]);
+        return <NTag type={tagMap[row.status]}>{label}</NTag>;
       }
     },
     {
@@ -310,10 +296,10 @@ const {
       render: row => {
         return (
           <div class="flex flex-wrap justify-center gap-8px">
-            <NButton type="info" ghost size="small" onClick={() => editDictItem((row as any).id)}>
+            <NButton type="info" ghost size="small" onClick={() => editDictItem(row.id)}>
               {$t('common.edit')}
             </NButton>
-            <NPopconfirm onPositiveClick={() => handleDeleteDictItem((row as any).id)}>
+            <NPopconfirm onPositiveClick={() => handleDeleteDictItem(row.id)}>
               {{
                 default: () => $t('common.confirmDelete'),
                 trigger: () => (
@@ -340,8 +326,7 @@ const {
   checkedRowKeys: checkedDictItemRowKeys,
   onBatchDeleted: onDictItemBatchDeleted,
   onDeleted: onDictItemDeleted
-  // @ts-ignore - 类型推断问题，使用类型断言处理
-} = useTableOperate(dictItemData, 'id', getDictItemData);
+} = useTableOperate(dictItemData as any, 'id', getDictItemData);
 
 /** 选中字典 */
 function handleSelectDict(row: Api.SystemManage.Dict) {
@@ -367,8 +352,7 @@ async function handleDeleteDict(id: number) {
 
 /** 编辑字典项 */
 function editDictItem(id: number) {
-  // @ts-ignore - 类型推断问题，使用类型断言处理
-  handleEditDictItem(id);
+  (handleEditDictItem as any)(id);
 }
 
 /** 删除字典项 */
@@ -384,14 +368,36 @@ async function handleDeleteDictItem(id: number) {
 
 /** 批量删除字典 */
 async function handleBatchDeleteDict() {
-  console.log('批量删除字典:', checkedDictRowKeys.value);
-  onDictBatchDeleted();
+  if (checkedDictRowKeys.value.length === 0) {
+    message.warning($t('common.selectAtLeastOne'));
+    return;
+  }
+  try {
+    for (const id of checkedDictRowKeys.value) {
+      await fetchDeleteDict(Number(id));
+    }
+    onDictBatchDeleted();
+  } catch (error) {
+    message.error($t('common.deleteFailed'));
+    console.error('Batch delete dicts failed:', error);
+  }
 }
 
 /** 批量删除字典项 */
 async function handleBatchDeleteDictItem() {
-  console.log('批量删除字典项:', checkedDictItemRowKeys.value);
-  onDictItemBatchDeleted();
+  if (checkedDictItemRowKeys.value.length === 0) {
+    message.warning($t('common.selectAtLeastOne'));
+    return;
+  }
+  try {
+    for (const id of checkedDictItemRowKeys.value) {
+      await fetchDeleteDictItem(Number(id));
+    }
+    onDictItemBatchDeleted();
+  } catch (error) {
+    message.error($t('common.deleteFailed'));
+    console.error('Batch delete dict items failed:', error);
+  }
 }
 
 watch(selectedDict, value => {
