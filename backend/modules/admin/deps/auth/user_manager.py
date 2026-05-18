@@ -13,6 +13,7 @@ from core.exception import CustomError, TokenError
 from core.response import CustomErrorCode
 from core.security.oauth.user_manager import base_user_manager, BaseUserManager
 from core.security.oauth.jwt import JWTAuthManager, Token, oauth2_scheme
+from core.security.password import PasswordHasher
 from core.redis import get_redis_util
 from core.middleware.share_middleware import request_ctx
 from core.utils.ip_utils import get_real_client_ip
@@ -56,10 +57,9 @@ class UserManager(BaseUserManager):
                 error=CustomErrorCode.USER_LOGIN_FAILED,
             )
 
-        pwd_match = JWTAuthManager.check_password(
-            user_pwd=user.password,
-            user_salt=user.salt,
+        pwd_match = PasswordHasher.verify(
             password=password,
+            hashed_password=user.password,
         )
 
         if not pwd_match:

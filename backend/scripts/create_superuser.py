@@ -5,7 +5,6 @@
 创建默认超级管理用户脚本
 用于在数据库初始化后创建默认的超级管理员账号
 """
-import hashlib
 from datetime import datetime
 from sqlalchemy import create_engine, select
 from sqlalchemy.orm import sessionmaker
@@ -18,6 +17,7 @@ sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 from core.models.base import Base
 from app.models.sys.user import SysUser
 from core.config import settings
+from core.security.password import PasswordHasher
 
 
 def create_superuser():
@@ -46,9 +46,9 @@ def create_superuser():
                 print("超级管理员已存在，跳过创建")
                 return
 
-            # 生成密码哈希
+            # 生成密码哈希（bcrypt）
             password = "admin123"  # 默认密码
-            password_hash = hashlib.sha256(password.encode("utf-8")).hexdigest()
+            password_hash = PasswordHasher.hash(password)
 
             # 创建超级管理员用户
             superuser = SysUser(

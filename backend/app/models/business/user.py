@@ -18,9 +18,6 @@ class AppUser(Base):
         String(10), comment="手机号区号，如：+86、+1 等", nullable=False
     )
     phone: Mapped[str] = mapped_column(String(13), comment="手机号")
-    salt: Mapped[str] = mapped_column(
-        String(255), comment="密码盐值", nullable=True, default=""
-    )
     password: Mapped[str] = mapped_column(
         String(255), comment="密码哈希值", nullable=True, default=""
     )

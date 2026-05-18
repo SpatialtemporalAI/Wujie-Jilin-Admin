@@ -55,11 +55,12 @@ def setup_exception_global_handlers(app: FastAPI) -> None:
         """
         全局捕获ValueError异常，并返回标准化的JSON响应
         """
+        request_id = get_request_trace_id(request)
         # 构建响应
         response = ResponseModel(
             code=StandardResponseCode.HTTP_400,
             msg=str(exc),
-            # request_id=request_id
+            request_id=request_id,
         )
         # 记录日志
         logger.error(
@@ -119,7 +120,7 @@ async def base_exception_handler(
         err_code=exc.err_code.code if hasattr(exc, "err_code") else None,
         msg=exc.msg or "请求异常",
         data=exc.data,
-        # request_id=request_id,
+        request_id=request_id,
     )
     return ORJSONResponse(status_code=exc.code, content=response.model_dump())
 
@@ -170,7 +171,7 @@ async def server_error_handler(request: Request, exc: ServerError) -> ORJSONResp
         err_code=exc.err_code.code if hasattr(exc, "err_code") else None,
         msg=msg,
         data=exc.data,
-        # request_id=request_id,
+        request_id=request_id,
     )
     return ORJSONResponse(
         status_code=StandardResponseCode.HTTP_500, content=response.model_dump()
@@ -198,7 +199,7 @@ async def token_error_handler(request: Request, exc: TokenError) -> ORJSONRespon
     response = ResponseModel(
         code=StandardResponseCode.HTTP_401,
         msg=exc.detail or "未授权",
-        # request_id=request_id,
+        request_id=request_id,
     )
     return ORJSONResponse(
         status_code=StandardResponseCode.HTTP_401,
@@ -243,7 +244,7 @@ async def custom_error_handler(request: Request, exc: CustomError) -> ORJSONResp
         err_code=exc.code,
         msg=exc.msg or "服务器发生异常",
         data=data,
-        # request_id=request_id,
+        request_id=request_id,
     )
     return ORJSONResponse(
         status_code=CustomResponseCode.HTTP_500.code, content=response.model_dump()
@@ -267,7 +268,7 @@ async def http_exception_handler(
         code=exc.status_code,
         err_code=exc.status_code,
         msg=str(exc.detail) if exc.detail else "HTTP异常",
-        # request_id=request_id,
+        request_id=request_id,
     )
     return ORJSONResponse(
         status_code=exc.status_code,
@@ -306,7 +307,7 @@ async def validation_exception_handler(
         code=StandardResponseCode.HTTP_422,
         msg=errors[0] or "请求参数验证失败",
         # data={"errors": errors},
-        # request_id=request_id,
+        request_id=request_id,
     )
     return ORJSONResponse(
         status_code=StandardResponseCode.HTTP_422, content=response.model_dump()
@@ -336,7 +337,7 @@ async def pydantic_validation_error_handler(
         code=StandardResponseCode.HTTP_422,
         msg="数据验证失败",
         data={"errors": errors},
-        # request_id=request_id,
+        request_id=request_id,
     )
     return ORJSONResponse(
         status_code=StandardResponseCode.HTTP_422, content=response.model_dump()
@@ -358,7 +359,7 @@ async def generic_exception_handler(request: Request, exc: Exception) -> ORJSONR
     response = ResponseModel(
         code=StandardResponseCode.HTTP_500,
         msg="服务器内部错误",
-        # request_id=request_id,
+        request_id=request_id,
     )
     return ORJSONResponse(
         status_code=StandardResponseCode.HTTP_500, content=response.model_dump()

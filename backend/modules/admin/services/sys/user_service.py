@@ -15,6 +15,7 @@ from app.models.sys.user import SysUser
 from app.models.sys.role import SysRole
 from core.exception.errors import NotFoundError, ConflictError, ForbiddenError
 from core.security.oauth.jwt import JWTAuthManager
+from core.security.password import PasswordHasher
 from modules.admin.schemas.sys.user import (
     SysUserCreate,
     SysUserUpdate,
@@ -198,15 +199,11 @@ class UserService:
                 raise ConflictError(msg="手机号已存在")
 
         # 加密密码
-        pwd, salt = JWTAuthManager.create_password_hash(user_create.password)
-
-        # 创建用户对象
         user = SysUser(
             username=user_create.username,
             nickname=user_create.nickname,
             email=user_create.email,
-            password=pwd,
-            salt=salt,
+            password=PasswordHasher.hash(user_create.password),
             phone=user_create.phone,
             avatar=user_create.avatar,
             status=user_create.status,
@@ -462,16 +459,14 @@ class UserService:
 
         # 如果提供了旧密码，需要验证
         if password_update.old_password:
-            if not JWTAuthManager.verify_password(
-                password_update.old_password, user.password, user.salt
+            if not PasswordHasher.verify(
+                password_update.old_password, user.password
             ):
                 logger.warning(f"修改密码失败，旧密码错误，用户ID: {user_id}")
                 raise ForbiddenError(msg="旧密码错误")
 
         # 加密新密码
-        pwd, salt = JWTAuthManager.create_password_hash(password_update.new_password)
-        user.password = pwd
-        user.salt = salt
+        user.password = PasswordHasher.hash(password_update.new_password)
 
         await db.commit()
 

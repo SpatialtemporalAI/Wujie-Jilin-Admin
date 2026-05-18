@@ -4,6 +4,7 @@
 from logging import getLogger
 from typing import Callable
 from uuid import uuid4
+import time
 
 from fastapi import Request
 from fastapi.responses import ORJSONResponse
@@ -11,6 +12,7 @@ from starlette.middleware.base import BaseHTTPMiddleware
 
 from core.config import settings
 from core.utils.ip_utils import get_real_client_ip
+from core.log.request_id_filter import set_request_id
 
 logger = getLogger(__name__)
 
@@ -19,14 +21,26 @@ class RequestAuditMiddleware(BaseHTTPMiddleware):
     """写入审计上下文字段，供日志和业务复用。"""
 
     async def dispatch(self, request: Request, call_next: Callable):
+        start = time.monotonic()
         request_id = (
             request.headers.get(settings.TRACE_ID.REQUEST_HEADER_KEY) or uuid4().hex
         )
         client_ip = get_real_client_ip(request)
         request.state.request_id = request_id
         request.state.client_ip = client_ip
+        set_request_id(request_id)
         response = await call_next(request)
+        elapsed_ms = (time.monotonic() - start) * 1000
         response.headers[settings.TRACE_ID.REQUEST_HEADER_KEY] = request_id
+        logger.info(
+            "request completed: method=%s path=%s status=%s elapsed=%.1fms client_ip=%s request_id=%s",
+            request.method,
+            request.url.path,
+            response.status_code,
+            elapsed_ms,
+            client_ip,
+            request_id,
+        )
         return response
 
 

@@ -2,29 +2,21 @@
 # -*- coding: utf-8 -*-
 
 from datetime import datetime, timedelta, timezone
-from typing import Union, Optional, Dict, Any
+from typing import Optional, Dict, Any
 import jwt
-import hashlib
-from fastapi import Depends, HTTPException, status
+import logging
+from fastapi import HTTPException, status
 from jwt.exceptions import InvalidTokenError, ExpiredSignatureError, DecodeError
-from passlib.context import CryptContext
 from pydantic import BaseModel
-from database import get_session
-from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy import select
 from core.config import settings
-from typing import TypeVar, Generic, Any, Optional, Dict, Union, List, Type
-from app.models.business.user import AppUser
 from fastapi.security import OAuth2PasswordBearer
 from pydantic import Field
-from secrets import token_hex
 
 
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="token")
 token_type = "Bearer"
 
-# 密码加密上下文
-pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
+logger = logging.getLogger(__name__)
 
 
 class TokenData(BaseModel):
@@ -50,36 +42,6 @@ t = TypeVar("T")
 
 class JWTAuthManager:
     """JWT认证管理器"""
-
-    # user_model: Type[t]
-    # def __init__(self, user_model: Type[t] = AppUser):
-    #     # 调用父类构造函数，传入AppUser作为用户模型
-    #     self.user_model = user_model
-    @classmethod
-    def verify_password(cls, plain_password: str, hashed_password: str) -> bool:
-        """
-        验证密码是否匹配
-        Args:
-            plain_password: 明文密码
-            hashed_password: 哈希密码
-        Returns:
-            bool: 密码是否匹配
-        """
-        try:
-            return pwd_context.verify(plain_password, hashed_password)
-        except Exception as e:
-            # 实际应用中应该替换为日志记录器
-            print(f"密码验证异常: {str(e)}")
-            return False
-
-    @classmethod
-    def create_salt(cls) -> str:
-        """
-        创建密码盐值
-        Returns:
-            str: 密码盐值
-        """
-        return token_hex(16)
 
     @classmethod
     def create_access_token(
@@ -115,8 +77,7 @@ class JWTAuthManager:
             )
             return encoded_jwt
         except Exception as e:
-            # 实际应用中应该替换为日志记录器
-            print(f"创建访问令牌异常: {str(e)}")
+            logger.exception("创建访问令牌异常: %s", str(e))
             raise HTTPException(
                 status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail="令牌创建失败"
             )
@@ -156,8 +117,7 @@ class JWTAuthManager:
             )
             return encoded_jwt
         except Exception as e:
-            # 实际应用中应该替换为日志记录器
-            print(f"创建刷新令牌异常: {str(e)}")
+            logger.exception("创建刷新令牌异常: %s", str(e))
             raise HTTPException(
                 status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
                 detail="刷新令牌创建失败",
@@ -202,8 +162,7 @@ class JWTAuthManager:
                 headers={"WWW-Authenticate": token_type},
             )
         except Exception as e:
-            # 实际应用中应该替换为日志记录器
-            print(f"令牌解码异常: {str(e)}")
+            logger.exception("令牌解码异常: %s", str(e))
             raise HTTPException(
                 status_code=status.HTTP_401_UNAUTHORIZED,
                 detail="令牌验证失败",
@@ -242,59 +201,3 @@ class JWTAuthManager:
             expires_in=settings.JWT.ACCESS_LIFETIME,
             refresh_token=refresh_token,
         )
-
-    def check_password(user_pwd: str, user_salt: str, password: str) -> bool:
-        """
-        检查密码是否正确
-        Args:
-            user_pwd: 数据库存储的密码哈希值
-            user_salt: 数据库存储的密码盐值
-            password: 明文密码
-        Returns:
-            bool: 是否密码正确
-        """
-        password_salt = password + user_salt
-        sha_id = hashlib.sha256((password_salt).encode("utf-8")).hexdigest()
-        return sha_id == user_pwd
-
-    def create_password_hash(self, password: str) -> str:
-        """
-        创建密码哈希值（实例方法）
-        Args:
-            password: 明文密码
-        Returns:
-            str: 密码哈希值
-        """
-        salt = self.create_salt()
-        password_salt = password + salt
-        sha_id = hashlib.sha256((password_salt).encode("utf-8")).hexdigest()
-        return sha_id, salt
-
-    @classmethod
-    def create_password_hash(cls, password: str) -> tuple[str, str]:
-        """
-        创建密码哈希值（类方法）
-        Args:
-            password: 明文密码
-        Returns:
-            tuple: (密码哈希值, 盐值)
-        """
-        salt = cls.create_salt()
-        password_salt = password + salt
-        sha_id = hashlib.sha256((password_salt).encode("utf-8")).hexdigest()
-        return sha_id, salt
-
-    @classmethod
-    def verify_password(cls, plain_password: str, hashed_password: str, salt: str) -> bool:
-        """
-        验证密码是否匹配（带盐值）
-        Args:
-            plain_password: 明文密码
-            hashed_password: 哈希密码
-            salt: 盐值
-        Returns:
-            bool: 密码是否匹配
-        """
-        password_salt = plain_password + salt
-        sha_id = hashlib.sha256((password_salt).encode("utf-8")).hexdigest()
-        return sha_id == hashed_password

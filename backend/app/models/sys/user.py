@@ -20,9 +20,8 @@ class SysUser(Base):
         String(50), unique=True, index=True, nullable=False, comment="用户名"
     )
     password: Mapped[str] = mapped_column(
-        String(255), nullable=False, comment="密码（加密存储）"
+        String(255), nullable=False, comment="密码（bcrypt加密存储）"
     )
-    salt: Mapped[str] = mapped_column(String(255), nullable=False, comment="密码盐值")
     nickname: Mapped[str] = mapped_column(
         String(100), nullable=True, comment="用户昵称"
     )

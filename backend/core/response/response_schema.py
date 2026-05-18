@@ -155,61 +155,23 @@ class ResponseBase:
         self,
         *,
         res: CustomResponseCode | CustomResponse = CustomResponseCode.HTTP_200,
-        data: Any = None,
-        page: int,
-        page_size: int,
-        total: int,
-        total_pages: int,
-        request_id: str | None = None,
-    ) -> ResponsePageModel[PageDataT]:
-        """
-        分页相应
-        :param res: 响应信息
-        :param data: 响应数据
-        :param page: 当前页码
-        :param page_size: 每页条数
-        :param total: 总条数
-        :param total_pages: 总页数
-        :return:
-        """
-        data_model = ResponsePageDataModel[PageDataT](
-            records=data,
-            page=page,
-            page_size=page_size,
-            total=total,
-            total_pages=total_pages,
-        )
-
-        return self.page(
-            res=res,
-            data_model=data_model,
-            # request_id=request_id,
-        )
-    
-    def page(
-        self,
-        *,
-        res: CustomResponseCode | CustomResponse = CustomResponseCode.HTTP_200,
         data: ResponsePageDataModel[PageDataT],
         request_id: str | None = None,
     ) -> ResponsePageModel[PageDataT]:
         """
-        分页相应
+        分页响应
         :param res: 响应信息
-        :param data: 响应数据
-        :param page: 当前页码
-        :param page_size: 每页条数
-        :param total: 总条数
-        :param total_pages: 总页数
+        :param data: 分页数据模型
+        :param request_id: 请求追踪ID
         :return:
         """
         return ResponsePageModel[PageDataT](
             code=res.code,
             msg=res.msg,
             data=data,
-            # request_id=request_id,
+            request_id=request_id,
         )
-    
+
 
 
 response_base: ResponseBase = ResponseBase()
