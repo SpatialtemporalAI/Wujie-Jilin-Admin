@@ -10,7 +10,7 @@ import logging
 import httpx
 
 from core.config import settings
-from mcp.context import mcp_request_ctx
+from mcp_platform.context import mcp_request_ctx
 
 logger = logging.getLogger(__name__)
 

@@ -67,7 +67,7 @@ setup_app(app, settings=settings)
 
 # 挂载 MCP ASGI 子应用
 if settings.MCP.ENABLED:
-    from mcp.server import create_mcp_server
+    from mcp_platform.server import create_mcp_server
     mcp_server = create_mcp_server()
     app.mount("/mcp", mcp_server.streamable_http_app())
     logger.info("MCP 服务已挂载到 /mcp")

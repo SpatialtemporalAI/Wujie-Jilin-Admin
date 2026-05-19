@@ -5,7 +5,7 @@
 MCP 工具结果辅助函数
 """
 import json
-from mcp.types import TextContent
+from mcp_platform.types import TextContent
 
 
 def text_result(content: str) -> list[TextContent]:

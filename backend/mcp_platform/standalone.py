@@ -60,7 +60,7 @@ class StandaloneMCPManager:
         # 使用 uvicorn 启动独立 MCP 服务器入口
         cmd = [
             sys.executable, "-m", "uvicorn",
-            "mcp.server_entry:app",
+            "mcp_platform.server_entry:app",
             "--host", host,
             "--port", str(port),
         ]

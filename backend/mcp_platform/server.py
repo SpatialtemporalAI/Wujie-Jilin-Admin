@@ -11,8 +11,8 @@ import logging
 from mcp.server.fastmcp import FastMCP
 
 from core.config import settings
-from mcp.context import McpContext, mcp_request_ctx
-from mcp.registry import discover_tools, get_all_tools
+from mcp_platform.context import McpContext, mcp_request_ctx
+from mcp_platform.registry import discover_tools, get_all_tools
 
 logger = logging.getLogger(__name__)
 

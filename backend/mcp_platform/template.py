@@ -18,10 +18,10 @@ MCP 工具: {tool_name}
 {tool_description}
 自动生成 - 请根据业务需要修改 handle 方法
 """
-from mcp.registry import register_tool, ToolParam
-from mcp.context import McpContext
-from mcp.result import text_result, text_result_with_json, text_result_error
-from mcp.types import TextContent
+from mcp_platform.registry import register_tool, ToolParam
+from mcp_platform.context import McpContext
+from mcp_platform.result import text_result, text_result_with_json, text_result_error
+from mcp_platform.types import TextContent
 
 
 @register_tool

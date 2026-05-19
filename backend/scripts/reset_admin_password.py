@@ -2,6 +2,7 @@
 重置 admin 用户密码为 bcrypt 哈希（"123456"）。
 一次性脚本，运行后可删除。
 """
+
 from sqlalchemy import create_engine, select, update
 from sqlalchemy.orm import sessionmaker
 import sys
@@ -28,12 +29,13 @@ def reset_admin_password():
                 print("未找到 admin 用户，跳过")
                 return
 
-            new_password = "123456"
-            admin.password = PasswordHasher.hash(new_password)
+            new_password = "admin123"
+            hashed = PasswordHasher.hash(new_password)
+            admin.password = hashed
             session.commit()
 
             print(f"admin 密码已重置为: {new_password}")
-            print(f"密码哈希: {password_hash}")
+            print(f"密码哈希: {hashed}")
         except Exception as e:
             print(f"重置密码失败: {str(e)}")
             session.rollback()

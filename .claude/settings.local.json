@@ -1,0 +1,10 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(cd /d/project/SmileX/SmileX-Fastapi-Cloud/backend && mv mcp mcp_platform)"
+    ],
+    "additionalDirectories": [
+      "d:\\d\\project\\SmileX\\SmileX-Fastapi-Cloud\\backend"
+    ]
+  }
+}

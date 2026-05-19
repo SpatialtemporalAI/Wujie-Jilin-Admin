@@ -7,10 +7,10 @@ MCP 管理服务层
 import logging
 from typing import List
 
-from mcp.registry import get_all_tools, get_tool, discover_tools, ToolParam
-from mcp.standalone import StandaloneMCPManager
-from mcp.template import generate_tool_code, write_tool_file
-from mcp.context import McpContext
+from mcp_platform.registry import get_all_tools, get_tool, discover_tools, ToolParam
+from mcp_platform.standalone import StandaloneMCPManager
+from mcp_platform.template import generate_tool_code, write_tool_file
+from mcp_platform.context import McpContext
 from modules.admin.schemas.sys.mcp import (
     AutoMcpToolCreate,
     McpToolInfo,
@@ -81,7 +81,7 @@ class MCPService:
 
     @staticmethod
     async def list_routes() -> list:
-        from mcp.server import get_mcp_server
+        from mcp_platform.server import get_mcp_server
         mcp = get_mcp_server()
         if not mcp:
             return []
