@@ -17,6 +17,7 @@ class ServiceModel(BaseModel):
     NAME: str = Field("SmileX Cloud", description="服务名称")
     VERSION: str = Field("1.0.0", description="服务版本")
     PREFIX: str = Field("/st", description="服务前缀")
+    OPENAPI_ENABLE_IN_PROD: bool = Field(False, description="生产环境是否启用OpenAPI文档")
 
 
 class JWTModel(BaseModel):

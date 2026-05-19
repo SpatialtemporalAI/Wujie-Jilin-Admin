@@ -56,14 +56,13 @@ app = FastAPI(
         "url": "https://opensource.org/licenses/MIT",
     },
     lifespan=lifespan,
-    docs_url=None if settings.ENVIR == "prod" and not settings.OPENAPI_ENABLE_IN_PROD else "/docs",
-    redoc_url=None if settings.ENVIR == "prod" and not settings.OPENAPI_ENABLE_IN_PROD else "/redoc",
-    openapi_url=None if settings.ENVIR == "prod" and not settings.OPENAPI_ENABLE_IN_PROD else "/openapi.json",
+    docs_url=None if settings.ENVIR == "prod" and not settings.SERVICE.OPENAPI_ENABLE_IN_PROD else "/docs",
+    redoc_url=None if settings.ENVIR == "prod" and not settings.SERVICE.OPENAPI_ENABLE_IN_PROD else "/redoc",
+    openapi_url=None if settings.ENVIR == "prod" and not settings.SERVICE.OPENAPI_ENABLE_IN_PROD else "/openapi.json",
 )
-logger.info("初始化配置文件")
-
 # 配置app
 setup_app(app, settings=settings)
+logger.info("配置文件初始化完成")
 
 # 挂载 MCP ASGI 子应用
 if settings.MCP.ENABLED:
