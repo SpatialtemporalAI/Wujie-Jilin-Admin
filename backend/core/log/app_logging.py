@@ -1,6 +1,8 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 
+import sys
+import io
 import logging
 import logging.config
 from pathlib import Path
@@ -16,6 +18,11 @@ _ENV_INI_MAP = {
 
 
 def setup_logging():
+    # Windows 控制台默认编码非 UTF-8，重新配置以支持中文输出
+    if sys.platform == "win32" and hasattr(sys.stdout, "reconfigure"):
+        sys.stdout.reconfigure(encoding="utf-8")
+        sys.stderr.reconfigure(encoding="utf-8")
+
     env = settings.ENVIR.lower()
     ini_name = _ENV_INI_MAP.get(env, "logging_dev.ini")
     config_path = _PROJECT_ROOT / "config" / ini_name
