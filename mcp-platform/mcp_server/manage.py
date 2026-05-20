@@ -3,10 +3,13 @@
 
 """
 MCP 管理接口
-提供工具管理、健康检查等 REST API
+提供工具管理、健康检查、优雅关闭等 REST API
 """
+import asyncio
 import json
 import logging
+import os
+import signal
 
 from starlette.applications import Starlette
 from starlette.requests import Request
@@ -80,8 +83,17 @@ async def test_tool(request: Request) -> JSONResponse:
         return JSONResponse({"error": str(e)}, status_code=500)
 
 
+async def shutdown(request: Request) -> JSONResponse:
+    """触发优雅关闭，向当前进程发送 SIGTERM"""
+    logger.info("收到远程关闭请求，开始优雅关闭...")
+    loop = asyncio.get_running_loop()
+    loop.call_later(0.1, os.kill, os.getpid(), signal.SIGTERM)
+    return JSONResponse({"status": "shutting_down"})
+
+
 routes = [
     Route("/health", health),
+    Route("/manage/shutdown", shutdown, methods=["POST"]),
     Route("/manage/tools/list", list_tools),
     Route("/manage/tools/create", create_tool, methods=["POST"]),
     Route("/manage/tools/test", test_tool, methods=["POST"]),

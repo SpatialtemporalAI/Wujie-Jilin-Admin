@@ -5,10 +5,13 @@
 MCP 服务器创建与 ASGI 挂载
 使用 FastMCP + Streamable HTTP 传输
 """
+import asyncio
 import inspect
 import logging
+from contextlib import asynccontextmanager
 
 from mcp.server.fastmcp import FastMCP
+from starlette.applications import Starlette
 
 from mcp_server.config import settings
 from mcp_server.context import McpContext, mcp_request_ctx
@@ -17,6 +20,10 @@ from mcp_server.registry import discover_tools, get_all_tools
 logger = logging.getLogger(__name__)
 
 _mcp_server: FastMCP | None = None
+
+# 跟踪正在处理的请求数量，用于优雅关闭时等待完成
+_active_requests: int = 0
+_shutdown_event: asyncio.Event | None = None
 
 
 def _type_annotation(type_name: str):
@@ -53,9 +60,16 @@ def _make_tool_handler(tool_cls):
         sig_params.append(param)
 
     async def _handler(**kwargs):
-        ctx = mcp_request_ctx.get() or McpContext()
-        result = await tool_cls().handle(kwargs, ctx)
-        return "\n".join(r.text for r in result)
+        global _active_requests
+        _active_requests += 1
+        try:
+            ctx = mcp_request_ctx.get() or McpContext()
+            result = await tool_cls().handle(kwargs, ctx)
+            return "\n".join(r.text for r in result)
+        finally:
+            _active_requests -= 1
+            if _shutdown_event is not None and _shutdown_event.is_set() and _active_requests == 0:
+                _shutdown_event.set()
 
     _handler.__name__ = tool_cls.tool_name()
     _handler.__doc__ = tool_cls.tool_description()
@@ -83,6 +97,29 @@ def create_mcp_server() -> FastMCP:
     return mcp
 
 
+@asynccontextmanager
+async def _app_lifespan(app):
+    """Starlette 应用生命周期：启动与优雅关闭"""
+    global _shutdown_event
+    _shutdown_event = asyncio.Event()
+
+    logger.info("MCP 服务已就绪，开始接受请求")
+    yield
+
+    # 关闭阶段：等待正在处理的请求完成（最多 10 秒）
+    logger.info("MCP 服务正在关闭，等待 %d 个进行中的请求完成...", _active_requests)
+    if _active_requests > 0:
+        try:
+            await asyncio.wait_for(_shutdown_event.wait(), timeout=10)
+            logger.info("所有请求已处理完毕")
+        except asyncio.TimeoutError:
+            logger.warning("关闭超时，仍有 %d 个请求未完成，强制关闭", _active_requests)
+    else:
+        logger.info("无进行中的请求，直接关闭")
+
+    logger.info("MCP 服务已关闭")
+
+
 def create_app():
     """创建 ASGI 应用，供 uvicorn factory 模式使用
 
@@ -91,7 +128,6 @@ def create_app():
     - /health    → 健康检查
     - /manage/*  → 工具管理 REST API
     """
-    from starlette.applications import Starlette
     from starlette.routing import Mount
 
     mcp = create_mcp_server()
@@ -105,6 +141,7 @@ def create_app():
             Mount("/mcp", app=mcp_app),
             Mount("/", app=manage_app),
         ],
+        lifespan=_app_lifespan,
     )
     return app
 

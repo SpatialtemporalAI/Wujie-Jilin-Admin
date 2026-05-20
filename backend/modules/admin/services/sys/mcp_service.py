@@ -83,9 +83,21 @@ class MCPService:
 
     @staticmethod
     async def stop_server() -> dict:
+        try:
+            async with httpx.AsyncClient(timeout=5) as client:
+                resp = await client.post(f"{_mcp_base_url()}/manage/shutdown")
+                if resp.status_code == 200:
+                    return {
+                        "status": "shutting_down",
+                        "message": "MCP 服务正在优雅关闭",
+                    }
+        except Exception:
+            pass
         return {
             "status": "independent",
             "message": "MCP 服务已独立部署，请直接停止 mcp-server",
+            "host": settings.MCP.HOST,
+            "port": settings.MCP.PORT,
         }
 
     @staticmethod
