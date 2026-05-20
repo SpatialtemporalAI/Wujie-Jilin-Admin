@@ -5,7 +5,7 @@
 角色管理相关接口
 """
 import logging
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, Request
 from sqlalchemy.ext.asyncio import AsyncSession
 from typing import List
 
@@ -16,6 +16,9 @@ from core.response.response_schema import (
     ResponsePageDataModel,
 )
 from app.models.common.page import PageRequest, get_page_params, get_paginated_results
+from core.decorators.operation_log import log_operation
+from modules.admin.deps.auth.user_manager import current_user
+from app.models.sys.user import SysUser
 
 from modules.admin.services.sys import RoleService
 from modules.admin.schemas.sys.role import (
@@ -96,9 +99,12 @@ async def get_role(
 
 
 @role_router.post("/add", response_model=ResponseModel[SysRoleResponseData])
+@log_operation(module="role", action="create", description="创建角色")
 async def create_role(
+    request: Request,
     role_create: SysRoleCreate,
     db: AsyncSession = Depends(get_session),
+    user: SysUser = Depends(current_user),
 ):
     """
     创建角色
@@ -113,10 +119,13 @@ async def create_role(
 
 
 @role_router.put("/{role_id}", response_model=ResponseModel[SysRoleResponseData])
+@log_operation(module="role", action="update", description="更新角色")
 async def update_role(
     role_id: int,
+    request: Request,
     role_update: SysRoleUpdate,
     db: AsyncSession = Depends(get_session),
+    user: SysUser = Depends(current_user),
 ):
     """
     更新角色
@@ -131,10 +140,13 @@ async def update_role(
 
 
 @role_router.post("/{role_id}/menus", response_model=ResponseModel[SysRoleResponseData])
+@log_operation(module="role", action="assign_menu", description="分配菜单权限")
 async def assign_menu_to_role(
     role_id: int,
+    request: Request,
     assign_in: SysRoleAssignMenu,
     db: AsyncSession = Depends(get_session),
+    user: SysUser = Depends(current_user),
 ):
     """
     为角色分配菜单权限
@@ -151,9 +163,12 @@ async def assign_menu_to_role(
 
 
 @role_router.delete("/{role_id}", response_model=ResponseModel)
+@log_operation(module="role", action="delete", description="删除角色")
 async def delete_role(
     role_id: int,
+    request: Request,
     db: AsyncSession = Depends(get_session),
+    user: SysUser = Depends(current_user),
 ):
     """
     删除角色

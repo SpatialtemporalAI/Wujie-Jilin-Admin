@@ -1,13 +1,15 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 
-from typing import Optional, Union, Dict, Any, Tuple
+from typing import Optional, Union, Dict, Any, Tuple, List
 from fastapi import Depends, Request
 
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select
+from sqlalchemy.orm import joinedload
 from core.config import settings
 from app.models.sys.user import SysUser
+from app.models.sys.menu import SysMenu, MenuType
 from database import get_session
 from core.exception import CustomError, TokenError
 from core.response import CustomErrorCode
@@ -146,27 +148,59 @@ class UserManager(BaseUserManager):
 
     async def get_user_info(self, user_id: int):
         """
-        获取用户信息
-        将SysUser模型转换为符合UserInfoResponseData模型的字典，
-        并处理datetime类型到str类型的转换
+        获取用户信息，包含角色列表和按钮权限列表
         Args:
             user_id: 用户ID
         Returns:
-            dict: 符合UserInfoResponseData模型的用户信息字典
+            dict: 用户信息字典，含 roles 和 buttons
         """
-        stmt = select(SysUser).where(SysUser.id == user_id)
+        stmt = (
+            select(SysUser)
+            .options(joinedload(SysUser.roles))
+            .where(SysUser.id == user_id)
+        )
         result = await self.session.execute(stmt)
-        user = result.scalars().first()
+        user = result.unique().scalars().first()
         if not user:
             raise CustomError(
                 error=CustomErrorCode.USER_NOT_FOUND,
             )
 
-        # 转换为字典并处理datetime类型
         def format_datetime(dt):
             if dt:
                 return dt.strftime("%Y-%m-%d %H:%M:%S")
             return None
+
+        # 收集角色 code 列表
+        roles: List[str] = [role.code for role in user.roles if role.status]
+
+        # 收集按钮权限：通过角色 → 关联菜单 → 筛选 type=BUTTON → 提取 permission 字段
+        buttons: List[str] = []
+        if user.is_superuser:
+            # 超级用户获取所有按钮权限
+            btn_stmt = select(SysMenu).where(
+                SysMenu.type == MenuType.BUTTON,
+                SysMenu.status == True,
+            )
+            btn_result = await self.session.execute(btn_stmt)
+            buttons = [
+                m.permission for m in btn_result.scalars().all() if m.permission
+            ]
+        else:
+            seen = set()
+            for role in user.roles:
+                if not role.status:
+                    continue
+                await self.session.refresh(role, attribute_names=["menus"])
+                for menu in role.menus:
+                    if (
+                        menu.type == MenuType.BUTTON
+                        and menu.status
+                        and menu.permission
+                        and menu.permission not in seen
+                    ):
+                        seen.add(menu.permission)
+                        buttons.append(menu.permission)
 
         user_info = {
             "id": user.id,
@@ -179,6 +213,8 @@ class UserManager(BaseUserManager):
             "status": user.status,
             "last_login_at": format_datetime(user.last_login_at),
             "last_login_ip": user.last_login_ip,
+            "roles": roles,
+            "buttons": buttons,
         }
         return user_info
 

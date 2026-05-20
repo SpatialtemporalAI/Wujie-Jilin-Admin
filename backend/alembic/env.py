@@ -31,6 +31,7 @@ from app.models.sys.menu import SysMenu
 from app.models.sys.config import SysConfig
 from app.models.sys.dict import SysDict, SysDictItem
 from app.models.sys.association_tables import sys_user_role_association, sys_role_menu_association
+from app.models.sys.operation_log import SysOperationLog
 from app.models.business.user import AppUser
 
 # Set target_metadata to Base.metadata

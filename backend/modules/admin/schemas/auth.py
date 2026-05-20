@@ -34,3 +34,5 @@ class UserInfoResponseData(BaseModel):
     status: bool
     last_login_at: str | None
     last_login_ip: str | None
+    roles: list[str] = []
+    buttons: list[str] = []

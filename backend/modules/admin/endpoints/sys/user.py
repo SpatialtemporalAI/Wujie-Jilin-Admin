@@ -5,7 +5,7 @@
 用户管理相关接口
 """
 import logging
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, Request
 from sqlalchemy.ext.asyncio import AsyncSession
 from typing import List
 
@@ -17,6 +17,9 @@ from core.response.response_schema import (
 )
 from app.models.common.page import PageRequest, get_page_params, get_paginated_results
 from app.models.common.base import BoolField
+from core.decorators.operation_log import log_operation
+from modules.admin.deps.auth.user_manager import current_user
+from app.models.sys.user import SysUser
 
 from modules.admin.services.sys import UserService
 from modules.admin.schemas.sys.user import (
@@ -82,9 +85,12 @@ async def get_user(
 
 
 @user_router.post("/add", response_model=ResponseModel[SysUserResponseData])
+@log_operation(module="user", action="create", description="创建用户")
 async def create_user(
+    request: Request,
     user_create: SysUserCreate,
     db: AsyncSession = Depends(get_session),
+    user: SysUser = Depends(current_user),
 ):
     """
     创建用户
@@ -99,10 +105,13 @@ async def create_user(
 
 
 @user_router.put("/{user_id}", response_model=ResponseModel[SysUserResponseData])
+@log_operation(module="user", action="update", description="更新用户")
 async def update_user(
     user_id: int,
+    request: Request,
     user_update: SysUserUpdate,
     db: AsyncSession = Depends(get_session),
+    user: SysUser = Depends(current_user),
 ):
     """
     更新用户
@@ -135,9 +144,12 @@ async def assign_roles_to_user(
 
 
 @user_router.delete("/{user_id}", response_model=ResponseModel)
+@log_operation(module="user", action="delete", description="删除用户")
 async def delete_user(
     user_id: int,
+    request: Request,
     db: AsyncSession = Depends(get_session),
+    user: SysUser = Depends(current_user),
 ):
     """
     删除用户

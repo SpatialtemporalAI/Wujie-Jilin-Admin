@@ -5,7 +5,7 @@
 菜单管理相关接口
 """
 import logging
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, Request
 from sqlalchemy.ext.asyncio import AsyncSession
 from typing import List
 
@@ -17,6 +17,9 @@ from core.response.response_schema import (
     response_base,
 )
 from app.models.common.page import PageRequest, get_page_params, get_paginated_results
+from core.decorators.operation_log import log_operation
+from modules.admin.deps.auth.user_manager import current_user
+from app.models.sys.user import SysUser
 
 from modules.admin.services.sys import MenuService
 from modules.admin.schemas.sys.menu import (
@@ -126,9 +129,12 @@ async def get_menu(
 
 
 @menu_router.post("/add", response_model=ResponseModel[SysMenuResponseData])
+@log_operation(module="menu", action="create", description="创建菜单")
 async def create_menu(
+    request: Request,
     menu_create: SysMenuCreate,
     db: AsyncSession = Depends(get_session),
+    user: SysUser = Depends(current_user),
 ):
     """
     创建菜单
@@ -143,10 +149,13 @@ async def create_menu(
 
 
 @menu_router.put("/{menu_id}", response_model=ResponseModel[SysMenuResponseData])
+@log_operation(module="menu", action="update", description="更新菜单")
 async def update_menu(
     menu_id: int,
+    request: Request,
     menu_update: SysMenuUpdate,
     db: AsyncSession = Depends(get_session),
+    user: SysUser = Depends(current_user),
 ):
     """
     更新菜单
@@ -161,9 +170,12 @@ async def update_menu(
 
 
 @menu_router.delete("/{menu_id}", response_model=ResponseModel)
+@log_operation(module="menu", action="delete", description="删除菜单")
 async def delete_menu(
     menu_id: int,
+    request: Request,
     db: AsyncSession = Depends(get_session),
+    user: SysUser = Depends(current_user),
 ):
     """
     删除菜单

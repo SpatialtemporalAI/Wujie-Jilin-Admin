@@ -11,6 +11,8 @@ from .permission_service import PermissionService
 from .role_service import RoleService
 from .user_service import UserService
 from .mcp_service import MCPService
+from .route_service import RouteService
+from .operation_log_service import OperationLogService
 
 __all__ = [
     "ConfigService",
@@ -20,4 +22,6 @@ __all__ = [
     "RoleService",
     "UserService",
     "MCPService",
+    "RouteService",
+    "OperationLogService",
 ]

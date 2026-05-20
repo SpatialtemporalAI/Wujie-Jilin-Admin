@@ -12,6 +12,8 @@ from .permission import permission_router
 from .role import role_router
 from .user import user_router
 from .mcp import mcp_router
+from .route import route_router
+from .operation_log import operation_log_router
 
 # 创建系统管理主路由器
 sys_router = APIRouter(
@@ -27,6 +29,8 @@ sys_router.include_router(permission_router)
 sys_router.include_router(role_router)
 sys_router.include_router(user_router)
 sys_router.include_router(mcp_router)
+sys_router.include_router(route_router)
+sys_router.include_router(operation_log_router)
 
 __all__ = ["sys_router"]
 

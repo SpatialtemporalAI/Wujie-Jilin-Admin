@@ -5,7 +5,7 @@
 系统配置相关接口
 """
 import logging
-from fastapi import APIRouter, Depends, Query
+from fastapi import APIRouter, Depends, Query, Request
 from sqlalchemy.ext.asyncio import AsyncSession
 from typing import List, Optional
 
@@ -17,6 +17,9 @@ from core.response.response_schema import (
     response_base,
 )
 from app.models.common.page import PageRequest, get_page_params, get_paginated_results
+from core.decorators.operation_log import log_operation
+from modules.admin.deps.auth.user_manager import current_user
+from app.models.sys.user import SysUser
 
 from modules.admin.services.sys import ConfigService
 from modules.admin.schemas.sys.config import (
@@ -209,9 +212,12 @@ async def get_config_value(
 
 @config_router.post("", response_model=ResponseModel[SysConfigResponseData])
 @config_router.post("/add", response_model=ResponseModel[SysConfigResponseData])
+@log_operation(module="config", action="create", description="创建配置")
 async def create_config(
+    request: Request,
     config_in: SysConfigCreate,
     db: AsyncSession = Depends(get_session),
+    user: SysUser = Depends(current_user),
 ):
     """
     创建配置
@@ -231,10 +237,13 @@ async def create_config(
 
 
 @config_router.put("/{config_id}", response_model=ResponseModel[SysConfigResponseData])
+@log_operation(module="config", action="update", description="更新配置")
 async def update_config(
     config_id: int,
+    request: Request,
     config_in: SysConfigUpdate,
     db: AsyncSession = Depends(get_session),
+    user: SysUser = Depends(current_user),
 ):
     """
     更新配置
@@ -296,9 +305,12 @@ async def reset_configs(
 
 
 @config_router.delete("/{config_id}", response_model=ResponseModel)
+@log_operation(module="config", action="delete", description="删除配置")
 async def delete_config(
     config_id: int,
+    request: Request,
     db: AsyncSession = Depends(get_session),
+    user: SysUser = Depends(current_user),
 ):
     """
     删除配置

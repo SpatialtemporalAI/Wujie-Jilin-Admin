@@ -23,6 +23,7 @@ from modules.admin.schemas.auth import (
     UserInfoResponseData,
 )
 from core.security.rate_limit import limit_by_ip
+from core.decorators.operation_log import log_operation
 
 # 创建认证路由
 router = APIRouter(prefix="/auth", tags=["admin接口/认证"])
@@ -35,6 +36,7 @@ router = APIRouter(prefix="/auth", tags=["admin接口/认证"])
     summary="后台用户登录接口",
     description="通过用户名和密码登录系统，获取访问令牌和刷新令牌",
 )
+@log_operation(module="auth", action="login", description="用户登录")
 async def login(
     request: Request,
     login_pwd: LoginPwdModel = Body(..., description="登录请求参数"),

@@ -1,0 +1,187 @@
+#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
+
+"""
+路由管理服务
+根据用户角色构建动态路由
+"""
+import logging
+from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy import select
+from sqlalchemy.orm import joinedload, selectinload
+from typing import List
+
+from app.models.sys.user import SysUser
+from app.models.sys.menu import SysMenu, MenuType
+from app.models.sys.role import SysRole
+from modules.admin.schemas.sys.route import (
+    MenuRouteResponse,
+    RouteMetaResponse,
+    UserRouteResponse,
+)
+
+logger = logging.getLogger(__name__)
+
+
+class RouteService:
+    """路由管理服务类"""
+
+    @staticmethod
+    def _menu_to_route(menu: SysMenu) -> MenuRouteResponse:
+        """将 SysMenu 模型转换为 MenuRouteResponse"""
+        meta = RouteMetaResponse(
+            title=menu.meta_title or menu.name,
+            icon=menu.meta_icon,
+            order=menu.sort if menu.sort else None,
+            hideInMenu=menu.meta_hidden if menu.meta_hidden else None,
+            href=menu.component if menu.type == MenuType.EXTERNAL else None,
+        )
+
+        children = None
+        if menu.children:
+            child_routes = [
+                RouteService._menu_to_route(child)
+                for child in menu.children
+                if child.type != MenuType.BUTTON
+                and child.status
+                and child.deleted_at is None
+            ]
+            if child_routes:
+                children = child_routes
+
+        return MenuRouteResponse(
+            id=str(menu.id),
+            name=menu.name,
+            path=menu.path or "",
+            component=menu.component,
+            redirect=menu.redirect,
+            meta=meta,
+            children=children,
+        )
+
+    @staticmethod
+    async def get_user_routes(
+        db: AsyncSession, user: SysUser
+    ) -> UserRouteResponse:
+        """
+        获取当前用户可用的路由树
+        - 超级用户返回所有非 BUTTON 类型的启用菜单
+        - 普通用户通过 user.roles → role.menus 获取
+        """
+        if user.is_superuser:
+            stmt = (
+                select(SysMenu)
+                .where(
+                    SysMenu.type != MenuType.BUTTON,
+                    SysMenu.status == True,
+                    SysMenu.parent_id.is_(None),
+                )
+                .options(selectinload(SysMenu.children))
+                .order_by(SysMenu.sort, SysMenu.id)
+            )
+            result = await db.execute(stmt)
+            menus = result.unique().scalars().all()
+        else:
+            # 预加载 user.roles.menus
+            stmt = (
+                select(SysUser)
+                .options(
+                    joinedload(SysUser.roles).options(
+                        joinedload(SysRole.menus)
+                    )
+                )
+                .where(SysUser.id == user.id)
+            )
+            result = await db.execute(stmt)
+            user_with_relations = result.unique().scalar_one()
+
+            # 收集所有启用的非 BUTTON 菜单 ID
+            menu_ids: set[int] = set()
+            for role in user_with_relations.roles:
+                if not role.status:
+                    continue
+                for menu in role.menus:
+                    if menu.status and menu.type != MenuType.BUTTON:
+                        menu_ids.add(menu.id)
+                        # 同时收集其所有祖先菜单 ID
+                        parent_id = menu.parent_id
+                        while parent_id:
+                            menu_ids.add(parent_id)
+                            parent_stmt = select(SysMenu.parent_id).where(
+                                SysMenu.id == parent_id
+                            )
+                            parent_result = await db.execute(parent_stmt)
+                            parent_id = parent_result.scalar_one_or_none()
+
+            if not menu_ids:
+                return UserRouteResponse(routes=[], home="home")
+
+            # 查询所有相关菜单并构建树
+            stmt = (
+                select(SysMenu)
+                .where(
+                    SysMenu.id.in_(menu_ids),
+                    SysMenu.parent_id.is_(None),
+                )
+                .options(selectinload(SysMenu.children))
+                .order_by(SysMenu.sort, SysMenu.id)
+            )
+            result = await db.execute(stmt)
+            menus = result.unique().scalars().all()
+
+            # 过滤子菜单中不属于用户权限的项
+            def filter_menu(menus_list):
+                filtered = []
+                for m in menus_list:
+                    if m.id not in menu_ids:
+                        continue
+                    filtered.append(m)
+                return filtered
+
+            # 对顶层菜单过滤
+            menus = [m for m in menus if m.id in menu_ids]
+
+        routes = [RouteService._menu_to_route(menu) for menu in menus]
+        return UserRouteResponse(routes=routes, home="home")
+
+    @staticmethod
+    async def get_constant_routes() -> list[MenuRouteResponse]:
+        """返回常量路由（登录页、错误页等），这些路由不需要权限控制"""
+        routes = [
+            MenuRouteResponse(
+                id="login",
+                name="login",
+                path="/login/:module(pwd-login|code-login|register|reset-pwd|bind-wechat)?",
+                component="layout.blank$view.login",
+                meta=RouteMetaResponse(title="login", order=1),
+            ),
+            MenuRouteResponse(
+                id="403",
+                name="403",
+                path="/403",
+                component="layout.blank$view.403",
+                meta=RouteMetaResponse(title="403"),
+            ),
+            MenuRouteResponse(
+                id="404",
+                name="404",
+                path="/404",
+                component="layout.blank$view.404",
+                meta=RouteMetaResponse(title="404"),
+            ),
+            MenuRouteResponse(
+                id="500",
+                name="500",
+                path="/500",
+                component="layout.blank$view.500",
+                meta=RouteMetaResponse(title="500"),
+            ),
+        ]
+        return routes
+
+    @staticmethod
+    async def is_route_exist(db: AsyncSession, route_name: str) -> bool:
+        """检查路由名称是否存在于菜单表中"""
+        stmt = select(SysMenu).where(SysMenu.name == route_name)
+        result = await db.execute(stmt)
+        return result.scalar_one_or_none() is not None
