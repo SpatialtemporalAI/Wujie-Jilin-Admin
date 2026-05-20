@@ -83,6 +83,36 @@ async def get_log_list(
     )
 
 
+@operation_log_router.delete(
+    "/batch/delete",
+    response_model=ResponseModel,
+    summary="批量删除操作日志",
+)
+async def batch_delete_logs(
+    log_ids: List[int] = Body(..., description="日志ID列表"),
+    user: SysUser = Depends(current_user),
+    db: AsyncSession = Depends(get_session),
+):
+    count = await OperationLogService.batch_delete_logs(db, log_ids)
+    return response_base.success(data={"deleted": count}, msg="批量删除成功")
+
+
+@operation_log_router.delete(
+    "/clear",
+    response_model=ResponseModel,
+    summary="清理过期操作日志",
+)
+async def clear_logs(
+    days: int = Query(30, description="清理多少天前的日志"),
+    user: SysUser = Depends(current_user),
+    db: AsyncSession = Depends(get_session),
+):
+    count = await OperationLogService.clear_logs(db, days)
+    return response_base.success(
+        data={"deleted": count}, msg=f"已清理 {days} 天前的日志"
+    )
+
+
 @operation_log_router.get(
     "/{log_id}",
     response_model=ResponseModel[OperationLogDetailResponse],
@@ -112,33 +142,3 @@ async def delete_log(
     ids = [log_id]
     count = await OperationLogService.batch_delete_logs(db, ids)
     return response_base.success(data={"deleted": count}, msg="删除成功")
-
-
-@operation_log_router.delete(
-    "/batch/delete",
-    response_model=ResponseModel,
-    summary="批量删除操作日志",
-)
-async def batch_delete_logs(
-    log_ids: List[int] = Body(..., description="日志ID列表"),
-    user: SysUser = Depends(current_user),
-    db: AsyncSession = Depends(get_session),
-):
-    count = await OperationLogService.batch_delete_logs(db, log_ids)
-    return response_base.success(data={"deleted": count}, msg="批量删除成功")
-
-
-@operation_log_router.delete(
-    "/clear",
-    response_model=ResponseModel,
-    summary="清理过期操作日志",
-)
-async def clear_logs(
-    days: int = Query(30, description="清理多少天前的日志"),
-    user: SysUser = Depends(current_user),
-    db: AsyncSession = Depends(get_session),
-):
-    count = await OperationLogService.clear_logs(db, days)
-    return response_base.success(
-        data={"deleted": count}, msg=f"已清理 {days} 天前的日志"
-    )

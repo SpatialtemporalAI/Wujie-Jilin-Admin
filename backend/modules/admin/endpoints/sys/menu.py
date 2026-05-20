@@ -169,29 +169,35 @@ async def update_menu(
     return ResponseModel(data=menu_response, msg="更新菜单成功")
 
 
-@menu_router.delete("/{menu_id}", response_model=ResponseModel)
-@log_operation(module="menu", action="delete", description="删除菜单")
-async def delete_menu(
-    menu_id: int,
+@menu_router.delete("/batch/delete", response_model=ResponseModel)
+@log_operation(module="menu", action="batch_delete", description="批量删除菜单")
+async def batch_delete_menus(
     request: Request,
+    menu_ids: List[int],
     db: AsyncSession = Depends(get_session),
     user: SysUser = Depends(current_user),
 ):
     """
-    删除菜单
+    批量删除菜单
     """
-    logger.info(f"删除菜单请求，菜单ID: {menu_id}")
+    logger.info(f"批量删除菜单请求，菜单ID: {menu_ids}")
 
-    await MenuService.delete_menu(db, menu_id)
+    delete_count = await MenuService.batch_delete_menus(db, menu_ids)
 
-    logger.info(f"删除菜单成功，菜单ID: {menu_id}")
-    return ResponseModel(msg="删除菜单成功")
+    logger.info(f"批量删除菜单成功，共删除 {delete_count} 个菜单")
+    return ResponseModel(
+        msg=f"批量删除成功，共删除 {delete_count} 个菜单",
+        data={"delete_count": delete_count},
+    )
 
 
 @menu_router.put("/batch/status", response_model=ResponseModel)
+@log_operation(module="menu", action="batch_update_status", description="批量更新菜单状态")
 async def batch_update_menus_status(
+    request: Request,
     batch_update: SysMenuBatchUpdateStatus,
     db: AsyncSession = Depends(get_session),
+    user: SysUser = Depends(current_user),
 ):
     """
     批量更新菜单状态
@@ -212,20 +218,20 @@ async def batch_update_menus_status(
     )
 
 
-@menu_router.delete("/batch/delete", response_model=ResponseModel)
-async def batch_delete_menus(
-    menu_ids: List[int],
+@menu_router.delete("/{menu_id}", response_model=ResponseModel)
+@log_operation(module="menu", action="delete", description="删除菜单")
+async def delete_menu(
+    menu_id: int,
+    request: Request,
     db: AsyncSession = Depends(get_session),
+    user: SysUser = Depends(current_user),
 ):
     """
-    批量删除菜单
+    删除菜单
     """
-    logger.info(f"批量删除菜单请求，菜单ID: {menu_ids}")
+    logger.info(f"删除菜单请求，菜单ID: {menu_id}")
 
-    delete_count = await MenuService.batch_delete_menus(db, menu_ids)
+    await MenuService.delete_menu(db, menu_id)
 
-    logger.info(f"批量删除菜单成功，共删除 {delete_count} 个菜单")
-    return ResponseModel(
-        msg=f"批量删除成功，共删除 {delete_count} 个菜单",
-        data={"delete_count": delete_count},
-    )
+    logger.info(f"删除菜单成功，菜单ID: {menu_id}")
+    return ResponseModel(msg="删除菜单成功")

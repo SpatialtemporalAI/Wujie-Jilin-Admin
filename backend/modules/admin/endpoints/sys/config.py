@@ -210,7 +210,6 @@ async def get_config_value(
         raise
 
 
-@config_router.post("", response_model=ResponseModel[SysConfigResponseData])
 @config_router.post("/add", response_model=ResponseModel[SysConfigResponseData])
 @log_operation(module="config", action="create", description="创建配置")
 async def create_config(
@@ -263,9 +262,12 @@ async def update_config(
 
 
 @config_router.put("/batch/update", response_model=ResponseModel)
+@log_operation(module="config", action="batch_update", description="批量更新配置")
 async def batch_update_configs(
+    request: Request,
     batch_in: SysConfigBatchUpdate,
     db: AsyncSession = Depends(get_session),
+    user: SysUser = Depends(current_user),
 ):
     """
     批量更新配置
@@ -284,9 +286,12 @@ async def batch_update_configs(
 
 
 @config_router.put("/batch/reset", response_model=ResponseModel)
+@log_operation(module="config", action="batch_reset", description="批量重置配置")
 async def reset_configs(
+    request: Request,
     reset_in: SysConfigReset,
     db: AsyncSession = Depends(get_session),
+    user: SysUser = Depends(current_user),
 ):
     """
     批量重置配置为默认值
@@ -301,6 +306,30 @@ async def reset_configs(
 
     except Exception as e:
         logger.error("重置配置接口失败: %s", str(e), exc_info=True)
+        raise
+
+
+@config_router.delete("/batch", response_model=ResponseModel)
+@log_operation(module="config", action="batch_delete", description="批量删除配置")
+async def batch_delete_configs(
+    request: Request,
+    config_ids: List[int],
+    db: AsyncSession = Depends(get_session),
+    user: SysUser = Depends(current_user),
+):
+    """
+    批量删除配置
+    """
+    try:
+        logger.info("批量删除配置接口被调用，配置ID列表: %s", config_ids)
+
+        delete_count = await ConfigService.batch_delete_configs(db, config_ids)
+
+        logger.info("批量删除配置接口成功，共删除 %d 个配置", delete_count)
+        return response_base.success(msg=f"批量删除成功，共删除 {delete_count} 个配置")
+
+    except Exception as e:
+        logger.error("批量删除配置接口失败: %s", str(e), exc_info=True)
         raise
 
 
@@ -325,25 +354,4 @@ async def delete_config(
 
     except Exception as e:
         logger.error("删除配置接口失败: %s", str(e), exc_info=True)
-        raise
-
-
-@config_router.delete("/batch", response_model=ResponseModel)
-async def batch_delete_configs(
-    config_ids: List[int],
-    db: AsyncSession = Depends(get_session),
-):
-    """
-    批量删除配置
-    """
-    try:
-        logger.info("批量删除配置接口被调用，配置ID列表: %s", config_ids)
-
-        delete_count = await ConfigService.batch_delete_configs(db, config_ids)
-
-        logger.info("批量删除配置接口成功，共删除 %d 个配置", delete_count)
-        return response_base.success(msg=f"批量删除成功，共删除 {delete_count} 个配置")
-
-    except Exception as e:
-        logger.error("批量删除配置接口失败: %s", str(e), exc_info=True)
         raise

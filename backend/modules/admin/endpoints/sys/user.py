@@ -130,6 +130,7 @@ async def assign_roles_to_user(
     user_id: int,
     role_ids: List[int],
     db: AsyncSession = Depends(get_session),
+    user: SysUser = Depends(current_user),
 ):
     """
     为用户分配角色
@@ -141,6 +142,55 @@ async def assign_roles_to_user(
 
     logger.info(f"为用户分配角色成功，用户ID: {user_id}")
     return ResponseModel(data=user_response, msg="分配角色成功")
+
+
+@user_router.delete("/batch", response_model=ResponseModel)
+@log_operation(module="user", action="batch_delete", description="批量删除用户")
+async def batch_delete_users(
+    request: Request,
+    user_ids: List[int],
+    db: AsyncSession = Depends(get_session),
+    user: SysUser = Depends(current_user),
+):
+    """
+    批量删除用户
+    """
+    logger.info(f"批量删除用户请求，用户ID: {user_ids}")
+
+    delete_count = await UserService.batch_delete_users(db, user_ids)
+
+    logger.info(f"批量删除用户成功，共删除 {delete_count} 个用户")
+    return ResponseModel(
+        msg=f"批量删除成功，共删除 {delete_count} 个用户",
+        data={"delete_count": delete_count},
+    )
+
+
+@user_router.put("/batch/status", response_model=ResponseModel)
+@log_operation(module="user", action="batch_update_status", description="批量更新用户状态")
+async def batch_update_users_status(
+    request: Request,
+    batch_update: SysUserBatchUpdateStatus,
+    db: AsyncSession = Depends(get_session),
+    user: SysUser = Depends(current_user),
+):
+    """
+    批量更新用户状态
+    """
+    logger.info(
+        f"批量更新用户状态请求，用户ID: {batch_update.user_ids}, 状态: {batch_update.status}"
+    )
+
+    update_count = await UserService.batch_update_users_status(
+        db, batch_update.user_ids, batch_update.status
+    )
+
+    status_text = "启用" if batch_update.status else "禁用"
+    logger.info(f"批量更新用户状态成功，共 {update_count} 个用户被{status_text}")
+    return ResponseModel(
+        msg=f"批量{status_text}成功，共 {update_count} 个用户",
+        data={"update_count": update_count},
+    )
 
 
 @user_router.delete("/{user_id}", response_model=ResponseModel)
@@ -162,30 +212,14 @@ async def delete_user(
     return ResponseModel(msg="删除用户成功")
 
 
-@user_router.delete("/batch", response_model=ResponseModel)
-async def batch_delete_users(
-    user_ids: List[int],
-    db: AsyncSession = Depends(get_session),
-):
-    """
-    批量删除用户
-    """
-    logger.info(f"批量删除用户请求，用户ID: {user_ids}")
-
-    delete_count = await UserService.batch_delete_users(db, user_ids)
-
-    logger.info(f"批量删除用户成功，共删除 {delete_count} 个用户")
-    return ResponseModel(
-        msg=f"批量删除成功，共删除 {delete_count} 个用户",
-        data={"delete_count": delete_count},
-    )
-
-
 @user_router.put("/{user_id}/password", response_model=ResponseModel)
+@log_operation(module="user", action="change_password", description="修改用户密码")
 async def change_user_password(
     user_id: int,
+    request: Request,
     password_update: SysUserPasswordUpdate,
     db: AsyncSession = Depends(get_session),
+    user: SysUser = Depends(current_user),
 ):
     """
     修改用户密码
@@ -196,27 +230,3 @@ async def change_user_password(
 
     logger.info(f"修改用户密码成功，用户ID: {user_id}")
     return ResponseModel(msg="密码修改成功")
-
-
-@user_router.put("/batch/status", response_model=ResponseModel)
-async def batch_update_users_status(
-    batch_update: SysUserBatchUpdateStatus,
-    db: AsyncSession = Depends(get_session),
-):
-    """
-    批量更新用户状态
-    """
-    logger.info(
-        f"批量更新用户状态请求，用户ID: {batch_update.user_ids}, 状态: {batch_update.status}"
-    )
-
-    update_count = await UserService.batch_update_users_status(
-        db, batch_update.user_ids, batch_update.status
-    )
-
-    status_text = "启用" if batch_update.status else "禁用"
-    logger.info(f"批量更新用户状态成功，共 {update_count} 个用户被{status_text}")
-    return ResponseModel(
-        msg=f"批量{status_text}成功，共 {update_count} 个用户",
-        data={"update_count": update_count},
-    )

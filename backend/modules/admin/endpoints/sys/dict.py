@@ -5,7 +5,7 @@
 字典管理相关接口
 """
 import logging
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, Request
 from sqlalchemy.ext.asyncio import AsyncSession
 from typing import List
 
@@ -17,6 +17,9 @@ from core.response.response_schema import (
     response_base,
 )
 from app.models.common.page import PageRequest, get_page_params, get_paginated_results
+from core.decorators.operation_log import log_operation
+from modules.admin.deps.auth.user_manager import current_user
+from app.models.sys.user import SysUser
 
 from modules.admin.services.sys import DictService
 from modules.admin.schemas.sys.dict import (
@@ -213,11 +216,13 @@ async def get_dict_with_items(
         raise
 
 
-@dict_router.post("", response_model=ResponseModel[SysDictResponseData])
 @dict_router.post("/add", response_model=ResponseModel[SysDictResponseData])
+@log_operation(module="dict", action="create", description="创建字典")
 async def create_dict(
+    request: Request,
     dict_in: SysDictCreate,
     db: AsyncSession = Depends(get_session),
+    user: SysUser = Depends(current_user),
 ):
     """
     创建字典
@@ -237,10 +242,13 @@ async def create_dict(
 
 
 @dict_router.put("/{dict_id}", response_model=ResponseModel[SysDictResponseData])
+@log_operation(module="dict", action="update", description="更新字典")
 async def update_dict(
     dict_id: int,
+    request: Request,
     dict_in: SysDictUpdate,
     db: AsyncSession = Depends(get_session),
+    user: SysUser = Depends(current_user),
 ):
     """
     更新字典
@@ -260,9 +268,12 @@ async def update_dict(
 
 
 @dict_router.put("/batch/status", response_model=ResponseModel)
+@log_operation(module="dict", action="batch_update_status", description="批量更新字典状态")
 async def batch_update_dict_status(
+    request: Request,
     batch_in: SysDictBatchUpdateStatus,
     db: AsyncSession = Depends(get_session),
+    user: SysUser = Depends(current_user),
 ):
     """
     批量更新字典状态
@@ -280,10 +291,37 @@ async def batch_update_dict_status(
         raise
 
 
+@dict_router.delete("/batch/delete", response_model=ResponseModel)
+@log_operation(module="dict", action="batch_delete", description="批量删除字典")
+async def batch_delete_dicts(
+    request: Request,
+    dict_ids: List[int],
+    db: AsyncSession = Depends(get_session),
+    user: SysUser = Depends(current_user),
+):
+    """
+    批量删除字典
+    """
+    try:
+        logger.info("批量删除字典接口被调用，字典ID列表: %s", dict_ids)
+
+        delete_count = await DictService.batch_delete_dicts(db, dict_ids)
+
+        logger.info("批量删除字典接口成功，共删除 %d 个字典", delete_count)
+        return response_base.success(msg=f"批量删除成功，共删除 {delete_count} 个字典")
+
+    except Exception as e:
+        logger.error("批量删除字典接口失败: %s", str(e), exc_info=True)
+        raise
+
+
 @dict_router.delete("/{dict_id}", response_model=ResponseModel)
+@log_operation(module="dict", action="delete", description="删除字典")
 async def delete_dict(
     dict_id: int,
+    request: Request,
     db: AsyncSession = Depends(get_session),
+    user: SysUser = Depends(current_user),
 ):
     """
     删除字典
@@ -398,11 +436,13 @@ async def get_dict_item(
         raise
 
 
-@dict_router.post("/item", response_model=ResponseModel[SysDictItemResponseData])
 @dict_router.post("/item/add", response_model=ResponseModel[SysDictItemResponseData])
+@log_operation(module="dict_item", action="create", description="创建字典项")
 async def create_dict_item(
+    request: Request,
     item_in: SysDictItemCreate,
     db: AsyncSession = Depends(get_session),
+    user: SysUser = Depends(current_user),
 ):
     """
     创建字典项
@@ -424,10 +464,13 @@ async def create_dict_item(
 @dict_router.put(
     "/item/{item_id}", response_model=ResponseModel[SysDictItemResponseData]
 )
+@log_operation(module="dict_item", action="update", description="更新字典项")
 async def update_dict_item(
     item_id: int,
+    request: Request,
     item_in: SysDictItemUpdate,
     db: AsyncSession = Depends(get_session),
+    user: SysUser = Depends(current_user),
 ):
     """
     更新字典项
@@ -447,9 +490,12 @@ async def update_dict_item(
 
 
 @dict_router.put("/item/batch/status", response_model=ResponseModel)
+@log_operation(module="dict_item", action="batch_update_status", description="批量更新字典项状态")
 async def batch_update_dict_item_status(
+    request: Request,
     batch_in: SysDictItemBatchUpdateStatus,
     db: AsyncSession = Depends(get_session),
+    user: SysUser = Depends(current_user),
 ):
     """
     批量更新字典项状态
@@ -467,10 +513,37 @@ async def batch_update_dict_item_status(
         raise
 
 
+@dict_router.delete("/item/batch/delete", response_model=ResponseModel)
+@log_operation(module="dict_item", action="batch_delete", description="批量删除字典项")
+async def batch_delete_dict_items(
+    request: Request,
+    item_ids: List[int],
+    db: AsyncSession = Depends(get_session),
+    user: SysUser = Depends(current_user),
+):
+    """
+    批量删除字典项
+    """
+    try:
+        logger.info("批量删除字典项接口被调用，字典项ID列表: %s", item_ids)
+
+        delete_count = await DictService.batch_delete_dict_items(db, item_ids)
+
+        logger.info("批量删除字典项接口成功，共删除 %d 个字典项", delete_count)
+        return response_base.success(msg=f"批量删除成功，共删除 {delete_count} 个字典项")
+
+    except Exception as e:
+        logger.error("批量删除字典项接口失败: %s", str(e), exc_info=True)
+        raise
+
+
 @dict_router.delete("/item/{item_id}", response_model=ResponseModel)
+@log_operation(module="dict_item", action="delete", description="删除字典项")
 async def delete_dict_item(
     item_id: int,
+    request: Request,
     db: AsyncSession = Depends(get_session),
+    user: SysUser = Depends(current_user),
 ):
     """
     删除字典项

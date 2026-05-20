@@ -162,29 +162,13 @@ async def assign_menu_to_role(
     return ResponseModel(data=role_response, msg="分配菜单权限成功")
 
 
-@role_router.delete("/{role_id}", response_model=ResponseModel)
-@log_operation(module="role", action="delete", description="删除角色")
-async def delete_role(
-    role_id: int,
-    request: Request,
-    db: AsyncSession = Depends(get_session),
-    user: SysUser = Depends(current_user),
-):
-    """
-    删除角色
-    """
-    logger.info(f"删除角色请求，角色ID: {role_id}")
-
-    await RoleService.delete_role(db, role_id)
-
-    logger.info(f"删除角色成功，角色ID: {role_id}")
-    return ResponseModel(msg="删除角色成功")
-
-
 @role_router.delete("/batch", response_model=ResponseModel)
+@log_operation(module="role", action="batch_delete", description="批量删除角色")
 async def batch_delete_roles(
+    request: Request,
     role_ids: List[int],
     db: AsyncSession = Depends(get_session),
+    user: SysUser = Depends(current_user),
 ):
     """
     批量删除角色
@@ -201,9 +185,12 @@ async def batch_delete_roles(
 
 
 @role_router.put("/batch/status", response_model=ResponseModel)
+@log_operation(module="role", action="batch_update_status", description="批量更新角色状态")
 async def batch_update_roles_status(
+    request: Request,
     batch_update: SysRoleBatchUpdateStatus,
     db: AsyncSession = Depends(get_session),
+    user: SysUser = Depends(current_user),
 ):
     """
     批量更新角色状态
@@ -222,3 +209,22 @@ async def batch_update_roles_status(
         msg=f"批量{status_text}成功，共 {update_count} 个角色",
         data={"update_count": update_count},
     )
+
+
+@role_router.delete("/{role_id}", response_model=ResponseModel)
+@log_operation(module="role", action="delete", description="删除角色")
+async def delete_role(
+    role_id: int,
+    request: Request,
+    db: AsyncSession = Depends(get_session),
+    user: SysUser = Depends(current_user),
+):
+    """
+    删除角色
+    """
+    logger.info(f"删除角色请求，角色ID: {role_id}")
+
+    await RoleService.delete_role(db, role_id)
+
+    logger.info(f"删除角色成功，角色ID: {role_id}")
+    return ResponseModel(msg="删除角色成功")
