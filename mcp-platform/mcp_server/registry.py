@@ -8,12 +8,11 @@ MCP 工具注册表
 import importlib
 import logging
 import pkgutil
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 from typing import Any, Protocol, runtime_checkable
 
-from mcp_platform.types import TextContent
-
-from mcp_platform.context import McpContext
+from mcp_server.types import TextContent
+from mcp_server.context import McpContext
 
 logger = logging.getLogger(__name__)
 
@@ -50,11 +49,11 @@ def register_tool(cls) -> type:
 
 
 def discover_tools() -> None:
-    import mcp_platform.tools as tools_pkg
+    import mcp_server.tools as tools_pkg
 
     package_path = tools_pkg.__path__
     for _importer, module_name, _ispkg in pkgutil.iter_modules(package_path):
-        full_name = f"mcp_platform.tools.{module_name}"
+        full_name = f"mcp_server.tools.{module_name}"
         try:
             importlib.import_module(full_name)
             logger.info(f"已发现 MCP 工具模块: {full_name}")

@@ -3,14 +3,14 @@
 
 """
 MCP 管理服务层
+通过 HTTP 调用独立 MCP 服务器
 """
 import logging
 from typing import List
 
-from mcp_platform.registry import get_all_tools, get_tool, discover_tools, ToolParam
-from mcp_platform.standalone import StandaloneMCPManager
-from mcp_platform.template import generate_tool_code, write_tool_file
-from mcp_platform.context import McpContext
+import httpx
+
+from core.config import settings
 from modules.admin.schemas.sys.mcp import (
     AutoMcpToolCreate,
     McpToolInfo,
@@ -20,6 +20,10 @@ from modules.admin.schemas.sys.mcp import (
 )
 
 logger = logging.getLogger(__name__)
+
+
+def _mcp_base_url() -> str:
+    return f"http://{settings.MCP.HOST}:{settings.MCP.PORT}"
 
 
 class MCPService:
@@ -35,79 +39,106 @@ class MCPService:
             }
             for p in tool_create.params
         ]
-        code = generate_tool_code(
-            name=tool_create.name,
-            description=tool_create.description,
-            params=params,
-        )
-        file_path = write_tool_file(tool_create.name, code)
-        return {"name": tool_create.name, "file_path": file_path}
+        async with httpx.AsyncClient(timeout=30) as client:
+            resp = await client.post(
+                f"{_mcp_base_url()}/manage/tools/create",
+                json={
+                    "name": tool_create.name,
+                    "description": tool_create.description,
+                    "params": params,
+                },
+            )
+            resp.raise_for_status()
+            return resp.json()
 
     @staticmethod
     async def get_server_status() -> McpServerStatusResponse:
-        status = StandaloneMCPManager.status()
-        return McpServerStatusResponse(**status)
+        try:
+            async with httpx.AsyncClient(timeout=5) as client:
+                resp = await client.get(f"{_mcp_base_url()}/health")
+                if resp.status_code == 200:
+                    return McpServerStatusResponse(
+                        running=True,
+                        status="running",
+                        host=settings.MCP.HOST,
+                        port=settings.MCP.PORT,
+                    )
+        except Exception:
+            pass
+        return McpServerStatusResponse(
+            running=False,
+            status="stopped",
+            host=settings.MCP.HOST,
+            port=settings.MCP.PORT,
+        )
 
     @staticmethod
     async def start_server() -> dict:
-        return StandaloneMCPManager.start()
+        return {
+            "status": "independent",
+            "message": "MCP 服务已独立部署，请直接启动 mcp-server",
+            "host": settings.MCP.HOST,
+            "port": settings.MCP.PORT,
+        }
 
     @staticmethod
     async def stop_server() -> dict:
-        return StandaloneMCPManager.stop()
+        return {
+            "status": "independent",
+            "message": "MCP 服务已独立部署，请直接停止 mcp-server",
+        }
 
     @staticmethod
     async def list_tools() -> List[McpToolInfo]:
-        discover_tools()
-        tools = get_all_tools()
-        result = []
-        for name, cls in tools.items():
-            params = cls.tool_params()
-            result.append(McpToolInfo(
-                name=name,
-                description=cls.tool_description(),
-                params=[
-                    McpToolParamSchema(
-                        name=p.name,
-                        description=p.description,
-                        type=p.type,
-                        required=p.required,
-                        default=str(p.default) if p.default is not None else None,
+        try:
+            async with httpx.AsyncClient(timeout=10) as client:
+                resp = await client.get(f"{_mcp_base_url()}/manage/tools/list")
+                resp.raise_for_status()
+                data = resp.json()
+                return [
+                    McpToolInfo(
+                        name=t["name"],
+                        description=t.get("description", ""),
+                        params=[
+                            McpToolParamSchema(
+                                name=p["name"],
+                                description=p.get("description", ""),
+                                type=p.get("type", "string"),
+                                required=p.get("required", True),
+                                default=p.get("default"),
+                            )
+                            for p in t.get("params", [])
+                        ],
                     )
-                    for p in params
-                ],
-            ))
-        return result
+                    for t in data
+                ]
+        except Exception as e:
+            logger.error(f"获取 MCP 工具列表失败: {e}")
+            return []
 
     @staticmethod
     async def list_routes() -> list:
-        from mcp_platform.server import get_mcp_server
-        mcp = get_mcp_server()
-        if not mcp:
-            return []
-        tools = mcp._tool_manager.list_tools()
+        tools = await MCPService.list_tools()
         return [
-            {
-                "name": t.name,
-                "description": t.description,
-            }
+            {"name": t.name, "description": t.description}
             for t in tools
         ]
 
     @staticmethod
     async def test_tool(test_request: McpToolTestRequest) -> dict:
-        discover_tools()
-        tool_cls = get_tool(test_request.tool_name)
-        if not tool_cls:
-            return {"error": f"工具 '{test_request.tool_name}' 不存在"}
-
         try:
-            tool_instance = tool_cls()
-            result = await tool_instance.handle(test_request.arguments, McpContext())
-            return {
-                "tool_name": test_request.tool_name,
-                "result": [r.text for r in result],
-            }
+            async with httpx.AsyncClient(timeout=30) as client:
+                resp = await client.post(
+                    f"{_mcp_base_url()}/manage/tools/test",
+                    json={
+                        "tool_name": test_request.tool_name,
+                        "arguments": test_request.arguments,
+                    },
+                )
+                resp.raise_for_status()
+                return resp.json()
+        except httpx.HTTPStatusError as e:
+            return e.response.json()
         except Exception as e:
             logger.error(f"测试工具失败: {e}")
             return {"error": str(e)}

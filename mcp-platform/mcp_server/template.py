@@ -6,7 +6,6 @@ MCP 工具代码模板生成器
 根据用户输入（名称、描述、参数、响应类型）生成 Python 工具代码
 """
 import logging
-import os
 from pathlib import Path
 
 logger = logging.getLogger(__name__)
@@ -18,10 +17,10 @@ MCP 工具: {tool_name}
 {tool_description}
 自动生成 - 请根据业务需要修改 handle 方法
 """
-from mcp_platform.registry import register_tool, ToolParam
-from mcp_platform.context import McpContext
-from mcp_platform.result import text_result, text_result_with_json, text_result_error
-from mcp_platform.types import TextContent
+from mcp_server.registry import register_tool, ToolParam
+from mcp_server.context import McpContext
+from mcp_server.result import text_result, text_result_with_json, text_result_error
+from mcp_server.types import TextContent
 
 
 @register_tool
@@ -65,7 +64,6 @@ def generate_tool_code(
     """生成工具 Python 代码"""
     class_name = _to_class_name(name)
 
-    # 生成 ToolParam 列表
     param_lines = []
     param_extracts = []
     for p in params:
@@ -95,7 +93,7 @@ def generate_tool_code(
 
 
 def write_tool_file(name: str, code: str) -> str:
-    """将工具代码写入 mcp/tools/ 目录，返回文件路径"""
+    """将工具代码写入 tools/ 目录，返回文件路径"""
     tools_dir = Path(__file__).resolve().parent / "tools"
     tools_dir.mkdir(parents=True, exist_ok=True)
 
