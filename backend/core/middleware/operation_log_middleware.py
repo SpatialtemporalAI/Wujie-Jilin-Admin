@@ -105,6 +105,11 @@ async def _capture_response_body(response: Response) -> str | None:
                 if len(text) > MAX_RESPONSE_RESULT_LENGTH:
                     text = text[:MAX_RESPONSE_RESULT_LENGTH] + "...(truncated)"
                 return text
+        elif hasattr(response, "body") and response.body:
+            text = response.body.decode("utf-8", errors="replace") if isinstance(response.body, bytes) else str(response.body)
+            if len(text) > MAX_RESPONSE_RESULT_LENGTH:
+                text = text[:MAX_RESPONSE_RESULT_LENGTH] + "...(truncated)"
+            return text
         return None
     except Exception:
         return None
