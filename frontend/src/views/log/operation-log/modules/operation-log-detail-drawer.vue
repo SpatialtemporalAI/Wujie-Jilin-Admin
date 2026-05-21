@@ -40,7 +40,10 @@ watch(visible, async val => {
 async function loadDetail(id: number) {
   loading.value = true;
   try {
-    detail.value = await fetchGetOperationLogDetail(id);
+    const { data, error } = await fetchGetOperationLogDetail(id);
+    if (!error) {
+      detail.value = data;
+    }
   } catch (error) {
     console.error('获取操作日志详情失败:', error);
   } finally {
