@@ -21,11 +21,11 @@ export const views: Record<LastLevelRouteKey, RouteComponent | (() => Promise<Ro
   "iframe-page": () => import("@/views/_builtin/iframe-page/[url].vue"),
   login: () => import("@/views/_builtin/login/index.vue"),
   home: () => import("@/views/home/index.vue"),
+  "log_login-log": () => import("@/views/log/login-log/index.vue"),
+  "log_operation-log": () => import("@/views/log/operation-log/index.vue"),
   manage_config: () => import("@/views/manage/config/index.vue"),
   manage_dict: () => import("@/views/manage/dict/index.vue"),
   manage_menu: () => import("@/views/manage/menu/index.vue"),
   manage_role: () => import("@/views/manage/role/index.vue"),
   manage_user: () => import("@/views/manage/user/index.vue"),
-  "log_login-log": () => import("@/views/log/login-log/index.vue"),
-  "log_operation-log": () => import("@/views/log/operation-log/index.vue"),
 };

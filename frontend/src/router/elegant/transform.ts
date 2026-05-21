@@ -168,16 +168,16 @@ const routeMap: RouteMap = {
   "500": "/500",
   "home": "/home",
   "iframe-page": "/iframe-page/:url",
+  "log": "/log",
+  "log_login-log": "/log/login-log",
+  "log_operation-log": "/log/operation-log",
   "login": "/login/:module(pwd-login|code-login|register|reset-pwd|bind-wechat)?",
   "manage": "/manage",
   "manage_config": "/manage/config",
   "manage_dict": "/manage/dict",
   "manage_menu": "/manage/menu",
   "manage_role": "/manage/role",
-  "manage_user": "/manage/user",
-  "log": "/log",
-  "log_login-log": "/log/login-log",
-  "log_operation-log": "/log/operation-log"
+  "manage_user": "/manage/user"
 };
 
 /**

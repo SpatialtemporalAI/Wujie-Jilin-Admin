@@ -64,6 +64,37 @@ export const generatedRoutes: GeneratedRoute[] = [
     }
   },
   {
+    name: 'log',
+    path: '/log',
+    component: 'layout.base',
+    meta: {
+      title: 'log',
+      i18nKey: 'route.log',
+      icon: 'mdi:file-document-outline',
+      order: 3
+    },
+    children: [
+      {
+        name: 'log_login-log',
+        path: '/log/login-log',
+        component: 'view.log_login-log',
+        meta: {
+          title: 'log_login-log',
+          i18nKey: 'route.log_login-log'
+        }
+      },
+      {
+        name: 'log_operation-log',
+        path: '/log/operation-log',
+        component: 'view.log_operation-log',
+        meta: {
+          title: 'log_operation-log',
+          i18nKey: 'route.log_operation-log'
+        }
+      }
+    ]
+  },
+  {
     name: 'login',
     path: '/login/:module(pwd-login|code-login|register|reset-pwd|bind-wechat)?',
     component: 'layout.blank$view.login',
@@ -127,37 +158,6 @@ export const generatedRoutes: GeneratedRoute[] = [
         meta: {
           title: 'manage_user',
           i18nKey: 'route.manage_user'
-        }
-      }
-    ]
-  },
-  {
-    name: 'log',
-    path: '/log',
-    component: 'layout.base',
-    meta: {
-      title: 'log',
-      i18nKey: 'route.log',
-      icon: 'mdi:file-document-outline',
-      order: 3
-    },
-    children: [
-      {
-        name: 'log_login-log',
-        path: '/log/login-log',
-        component: 'view.log_login-log',
-        meta: {
-          title: 'log_login-log',
-          i18nKey: 'route.log_login-log'
-        }
-      },
-      {
-        name: 'log_operation-log',
-        path: '/log/operation-log',
-        component: 'view.log_operation-log',
-        meta: {
-          title: 'log_operation-log',
-          i18nKey: 'route.log_operation-log'
         }
       }
     ]

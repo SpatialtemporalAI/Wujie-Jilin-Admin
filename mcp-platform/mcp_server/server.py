@@ -99,12 +99,15 @@ def create_mcp_server() -> FastMCP:
 
 @asynccontextmanager
 async def _app_lifespan(app):
-    """Starlette 应用生命周期：启动与优雅关闭"""
+    """Starlette 应用生命周期：启动 session manager 与优雅关闭"""
     global _shutdown_event
     _shutdown_event = asyncio.Event()
 
-    logger.info("MCP 服务已就绪，开始接受请求")
-    yield
+    # 启动 MCP session manager 的任务组
+    mcp = get_mcp_server()
+    async with mcp.session_manager.run():
+        logger.info("MCP 服务已就绪，开始接受请求")
+        yield
 
     # 关闭阶段：等待正在处理的请求完成（最多 10 秒）
     logger.info("MCP 服务正在关闭，等待 %d 个进行中的请求完成...", _active_requests)
@@ -132,14 +135,15 @@ def create_app():
 
     mcp = create_mcp_server()
     mcp_app = mcp.streamable_http_app()
+    # 提取 mcp_app 的路由，去掉其自带 lifespan（由外层 _app_lifespan 统一管理）
+    mcp_routes = list(mcp_app.routes)
 
-    from mcp_server.manage import create_manage_app
-    manage_app = create_manage_app()
+    from mcp_server.manage import routes as manage_routes
 
     app = Starlette(
         routes=[
-            Mount("/mcp", app=mcp_app),
-            Mount("/", app=manage_app),
+            *manage_routes,
+            *mcp_routes,
         ],
         lifespan=_app_lifespan,
     )
