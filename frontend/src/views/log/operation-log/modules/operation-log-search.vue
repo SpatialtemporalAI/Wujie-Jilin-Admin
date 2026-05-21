@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { toRaw } from 'vue';
 import { jsonClone } from '@sa/utils';
+import { $t } from '@/locales';
 import { NButton, NCard, NCollapse, NCollapseItem, NDatePicker, NForm, NFormItemGi, NGrid, NInput, NSpace } from 'naive-ui';
 
 defineOptions({
