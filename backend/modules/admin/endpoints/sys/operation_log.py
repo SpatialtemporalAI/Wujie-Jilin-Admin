@@ -13,8 +13,8 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from typing import List
 
 from database.db_manager import get_session
-from core.response import ResponseModel, response_base
-from app.models.common.page import get_page_params
+from core.response import ResponseModel, ResponsePageModel, response_base
+from app.models.common.page import PageRequest, get_page_params, get_paginated_results
 from core.utils.excel_export import build_excel_bytes, SYNC_EXPORT_MAX_ROWS
 from modules.admin.deps.auth.user_manager import current_user
 from modules.admin.exports import get_export_config
@@ -31,62 +31,26 @@ logger = logging.getLogger(__name__)
 operation_log_router = APIRouter(prefix="/operation-log", tags=["系统管理/操作日志"])
 
 
-def _to_response(log) -> dict:
-    def format_datetime(dt):
-        if dt:
-            return dt.strftime("%Y-%m-%d %H:%M:%S")
-        return None
-
-    return {
-        "id": log.id,
-        "user_id": log.user_id,
-        "username": log.username,
-        "module": log.module,
-        "action": log.action,
-        "description": log.description,
-        "method": log.method,
-        "path": log.path,
-        "ip": log.ip,
-        "response_code": log.response_code,
-        "response_result": log.response_result,
-        "elapsed_ms": log.elapsed_ms,
-        "created_at": format_datetime(log.created_at),
-    }
-
-
 @operation_log_router.get(
     "/list",
-    response_model=ResponseModel,
+    response_model=ResponsePageModel[OperationLogResponse],
     summary="获取操作日志列表",
 )
 async def get_log_list(
-    module: str | None = Query(None, description="操作模块"),
-    action: str | None = Query(None, description="操作类型"),
-    user_id: int | None = Query(None, description="操作人ID"),
-    username: str | None = Query(None, description="操作人用户名"),
-    start_time: str | None = Query(None, description="开始时间"),
-    end_time: str | None = Query(None, description="结束时间"),
-    page: int = Query(1, ge=1),
-    page_size: int = Query(10, ge=1, le=100),
+    query_params: OperationLogQueryParams = Depends(),
+    page_params: PageRequest = Depends(get_page_params),
     user: SysUser = Depends(current_user),
     db: AsyncSession = Depends(get_session),
 ):
-    query_params = OperationLogQueryParams(
-        module=module,
-        action=action,
-        user_id=user_id,
-        username=username,
-        start_time=start_time,
-        end_time=end_time,
-        page=page,
-        page_size=page_size,
+    """分页查询操作日志列表"""
+    query = OperationLogService.build_operation_log_query(query_params)
+    page_data = await get_paginated_results(
+        db=db,
+        page_params=page_params,
+        query=query,
+        schema=OperationLogResponse,
     )
-    logs, total = await OperationLogService.get_log_list(db, query_params)
-    items = [_to_response(log) for log in logs]
-    return response_base.success(
-        data={"items": items, "total": total, "page": page, "page_size": page_size},
-        msg="获取操作日志列表成功",
-    )
+    return response_base.page(data=page_data)
 
 
 @operation_log_router.get("/export", summary="导出操作日志 Excel")
@@ -100,6 +64,7 @@ async def export_operation_logs(
     user: SysUser = Depends(current_user),
     db: AsyncSession = Depends(get_session),
 ):
+    """导出操作日志为 Excel 文件"""
     query_params = OperationLogQueryParams(
         module=module,
         action=action,
@@ -133,6 +98,7 @@ async def batch_delete_logs(
     user: SysUser = Depends(current_user),
     db: AsyncSession = Depends(get_session),
 ):
+    """批量删除操作日志"""
     count = await OperationLogService.batch_delete_logs(db, log_ids)
     return response_base.success(data={"deleted": count}, msg="批量删除成功")
 
@@ -147,6 +113,7 @@ async def clear_logs(
     user: SysUser = Depends(current_user),
     db: AsyncSession = Depends(get_session),
 ):
+    """清理指定天数前的操作日志"""
     count = await OperationLogService.clear_logs(db, days)
     return response_base.success(
         data={"deleted": count}, msg=f"已清理 {days} 天前的日志"
@@ -163,11 +130,12 @@ async def get_log_detail(
     user: SysUser = Depends(current_user),
     db: AsyncSession = Depends(get_session),
 ):
+    """获取单条操作日志详情"""
     log = await OperationLogService.get_log(db, log_id)
-    data = _to_response(log)
-    data["request_params"] = log.request_params
-    data["response_result"] = log.response_result
-    return response_base.success(data=data, msg="获取操作日志详情成功")
+    return response_base.success(
+        data=OperationLogDetailResponse.model_validate(log),
+        msg="获取操作日志详情成功",
+    )
 
 
 @operation_log_router.delete(
@@ -180,6 +148,7 @@ async def delete_log(
     user: SysUser = Depends(current_user),
     db: AsyncSession = Depends(get_session),
 ):
+    """删除单条操作日志"""
     ids = [log_id]
     count = await OperationLogService.batch_delete_logs(db, ids)
     return response_base.success(data={"deleted": count}, msg="删除成功")

@@ -6,9 +6,8 @@
 """
 import logging
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy import select, func, and_, delete
-from sqlalchemy.orm import selectinload
-from typing import List, Tuple
+from sqlalchemy import select, and_, delete
+from typing import List
 from datetime import datetime, timezone
 
 from app.models.sys.operation_log import SysOperationLog
@@ -59,28 +58,6 @@ class OperationLogService:
 
         base_query = base_query.order_by(SysOperationLog.created_at.desc())
         return base_query
-
-    @staticmethod
-    async def get_log_list(
-        db: AsyncSession,
-        query_params: OperationLogQueryParams,
-    ) -> Tuple[List[SysOperationLog], int]:
-        """获取操作日志列表（分页）"""
-        base_query = OperationLogService.build_operation_log_query(query_params)
-
-        # 统计总数
-        count_query = select(func.count()).select_from(base_query.subquery())
-        count_result = await db.execute(count_query)
-        total = count_result.scalar() or 0
-
-        # 分页
-        offset = (query_params.page - 1) * query_params.page_size
-        paginated_query = base_query.offset(offset).limit(query_params.page_size)
-
-        result = await db.execute(paginated_query)
-        logs = result.scalars().all()
-
-        return logs, total
 
     @staticmethod
     async def get_log(db: AsyncSession, log_id: int) -> SysOperationLog:

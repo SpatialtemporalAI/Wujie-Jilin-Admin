@@ -52,12 +52,12 @@ Base = DataClassBase + LogicMixin + DateTimeMixin
 
 ### 响应 Schema 规则
 
-- 必须继承 `BaseRespEntity`
-- 必须配置 `model_config = ConfigDict(from_attributes=True)`（从 SQLAlchemy 对象转换）
+- 有启用/禁用语义的 `status` 字段时，继承 `BaseRespEntity`（自动序列化 `True → "1"`，`False → "2"`）
+- 无此类字段时（如日志的 success/failure 状态），继承 `BaseEntity`（保持 bool 原样输出）
+- `BaseRespEntity` 同时处理 `is_system` 字段序列化：`True → "1"`，`False → "2"`
+- `BaseEntity` 已内含 `from_attributes=True` 和 `datetime → "YYYY-MM-DD HH:mm:ss"` 序列化，无需重复配置
 - ORM 对象转换为 Schema 时，必须调用 `SchemaClass.model_validate(orm_instance)`
-- `BaseRespEntity` 自动处理 `status` 字段序列化：`True → "1"`，`False → "2"`
-- `BaseRespEntity` 自动处理 `is_system` 字段序列化：`True → "1"`，`False → "2"`
-- 时间字段自动格式化为 `Asia/Shanghai` 时区的 `YYYY-MM-DD HH:mm:ss` 字符串
+- **禁止**手写 `_to_response()` / `_to_dict()` 等辅助函数手动转换 ORM 字段
 
 ### 布尔字段
 
@@ -127,7 +127,8 @@ Base = DataClassBase + LogicMixin + DateTimeMixin
 - 负责参数提取（`Depends`）、校验、调用 Service、格式化响应
 - 必须声明 `response_model=ResponseModel[SchemaT]` 或 `ResponsePageModel[SchemaT]`
 - 列表接口必须包含 `page_params: PageRequest = Depends(get_page_params)` 参数
-- 分页查询使用 `get_paginated_results()`（`app/models/common/page.py`）
+- 分页查询使用 `get_paginated_results()`（`app/models/common/page.py`），返回 `response_base.page(data=page_data)`
+- **禁止**在 Endpoint 或 Service 层手动构造分页响应字典（如 `{"items": ..., "total": ...}`）
 - ORM 结果转换为 Schema 使用 `SchemaClass.model_validate(instance)`
 - 所有端点必须有 docstring 说明用途
 

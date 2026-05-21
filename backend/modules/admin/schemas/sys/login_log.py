@@ -1,10 +1,14 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 
-from pydantic import BaseModel, Field
+from datetime import datetime
+
+from pydantic import Field
+
+from app.models.common.base import BaseEntity
 
 
-class LoginLogQueryParams(BaseModel):
+class LoginLogQueryParams(BaseEntity):
     """登录日志查询参数"""
 
     username: str | None = Field(None, description="登录用户名")
@@ -12,11 +16,9 @@ class LoginLogQueryParams(BaseModel):
     status: bool | None = Field(None, description="登录状态")
     start_time: str | None = Field(None, description="开始时间")
     end_time: str | None = Field(None, description="结束时间")
-    page: int = Field(1, ge=1, description="页码")
-    page_size: int = Field(10, ge=1, le=100, description="每页条数")
 
 
-class LoginLogResponse(BaseModel):
+class LoginLogResponse(BaseEntity):
     """登录日志列表响应"""
 
     id: int
@@ -25,8 +27,8 @@ class LoginLogResponse(BaseModel):
     status: bool
     detail: str | None
     user_agent: str | None
-    login_time: str | None
-    created_at: str | None
+    login_time: datetime | None
+    created_at: datetime | None
 
 
 class LoginLogDetailResponse(LoginLogResponse):

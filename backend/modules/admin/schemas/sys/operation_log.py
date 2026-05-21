@@ -1,10 +1,14 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 
-from pydantic import BaseModel, Field
+from datetime import datetime
+
+from pydantic import Field
+
+from app.models.common.base import BaseEntity
 
 
-class OperationLogQueryParams(BaseModel):
+class OperationLogQueryParams(BaseEntity):
     """操作日志查询参数"""
 
     module: str | None = Field(None, description="操作模块")
@@ -13,11 +17,9 @@ class OperationLogQueryParams(BaseModel):
     username: str | None = Field(None, description="操作人用户名")
     start_time: str | None = Field(None, description="开始时间")
     end_time: str | None = Field(None, description="结束时间")
-    page: int = Field(1, ge=1, description="页码")
-    page_size: int = Field(10, ge=1, le=100, description="每页条数")
 
 
-class OperationLogResponse(BaseModel):
+class OperationLogResponse(BaseEntity):
     """操作日志列表响应"""
 
     id: int
@@ -31,11 +33,23 @@ class OperationLogResponse(BaseModel):
     ip: str | None
     response_code: int | None
     elapsed_ms: float | None
-    created_at: str | None
+    created_at: datetime | None
 
 
-class OperationLogDetailResponse(OperationLogResponse):
+class OperationLogDetailResponse(BaseEntity):
     """操作日志详情响应（含请求参数和响应结果）"""
 
+    id: int
+    user_id: int
+    username: str
+    module: str
+    action: str
+    description: str | None
+    method: str | None
+    path: str | None
+    ip: str | None
+    response_code: int | None
+    elapsed_ms: float | None
     request_params: str | None
     response_result: str | None
+    created_at: datetime | None

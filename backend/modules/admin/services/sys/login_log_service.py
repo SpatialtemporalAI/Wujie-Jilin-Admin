@@ -6,8 +6,8 @@
 """
 import logging
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy import select, func, and_
-from typing import List, Tuple
+from sqlalchemy import select, and_
+from typing import List
 from datetime import datetime, timezone, timedelta
 
 from app.models.sys.login_log import SysLoginLog
@@ -69,32 +69,14 @@ class LoginLogService:
             except ValueError:
                 pass
 
+        conditions.append(SysLoginLog.deleted_at.is_(None))
+
         base_query = select(SysLoginLog)
         if conditions:
             base_query = base_query.where(and_(*conditions))
 
         base_query = base_query.order_by(SysLoginLog.login_time.desc())
         return base_query
-
-    @staticmethod
-    async def get_log_list(
-        db: AsyncSession,
-        query_params: LoginLogQueryParams,
-    ) -> Tuple[List[SysLoginLog], int]:
-        """获取登录日志列表（分页）"""
-        base_query = LoginLogService.build_login_log_query(query_params)
-
-        count_query = select(func.count()).select_from(base_query.subquery())
-        count_result = await db.execute(count_query)
-        total = count_result.scalar() or 0
-
-        offset = (query_params.page - 1) * query_params.page_size
-        paginated_query = base_query.offset(offset).limit(query_params.page_size)
-
-        result = await db.execute(paginated_query)
-        logs = result.scalars().all()
-
-        return logs, total
 
     @staticmethod
     async def get_log(db: AsyncSession, log_id: int) -> SysLoginLog:

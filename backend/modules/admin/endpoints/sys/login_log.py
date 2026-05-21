@@ -10,7 +10,8 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from typing import List
 
 from database.db_manager import get_session
-from core.response import ResponseModel, response_base
+from core.response import ResponseModel, ResponsePageModel, response_base
+from app.models.common.page import PageRequest, get_page_params, get_paginated_results
 from modules.admin.deps.auth.user_manager import current_user
 from app.models.sys.user import SysUser
 from modules.admin.services.sys.login_log_service import LoginLogService
@@ -25,84 +26,26 @@ logger = logging.getLogger(__name__)
 login_log_router = APIRouter(prefix="/login-log", tags=["系统管理/登录日志"])
 
 
-def _to_response(log) -> dict:
-    def format_datetime(dt):
-        if dt:
-            return dt.strftime("%Y-%m-%d %H:%M:%S")
-        return None
-
-    return {
-        "id": log.id,
-        "username": log.username,
-        "ip": log.ip,
-        "status": log.status,
-        "detail": log.detail,
-        "user_agent": log.user_agent,
-        "login_time": format_datetime(log.login_time),
-        "created_at": format_datetime(log.created_at),
-    }
-
-
 @login_log_router.get(
     "/list",
-    response_model=ResponseModel,
+    response_model=ResponsePageModel[LoginLogResponse],
     summary="获取登录日志列表",
 )
 async def get_log_list(
-    username: str | None = Query(None, description="登录用户名"),
-    ip: str | None = Query(None, description="客户端IP"),
-    status: bool | None = Query(None, description="登录状态"),
-    start_time: str | None = Query(None, description="开始时间"),
-    end_time: str | None = Query(None, description="结束时间"),
-    page: int = Query(1, ge=1),
-    page_size: int = Query(10, ge=1, le=100),
+    query_params: LoginLogQueryParams = Depends(),
+    page_params: PageRequest = Depends(get_page_params),
     user: SysUser = Depends(current_user),
     db: AsyncSession = Depends(get_session),
 ):
-    query_params = LoginLogQueryParams(
-        username=username,
-        ip=ip,
-        status=status,
-        start_time=start_time,
-        end_time=end_time,
-        page=page,
-        page_size=page_size,
+    """分页查询登录日志列表"""
+    query = LoginLogService.build_login_log_query(query_params)
+    page_data = await get_paginated_results(
+        db=db,
+        page_params=page_params,
+        query=query,
+        schema=LoginLogResponse,
     )
-    logs, total = await LoginLogService.get_log_list(db, query_params)
-    items = [_to_response(log) for log in logs]
-    return response_base.success(
-        data={"items": items, "total": total, "page": page, "page_size": page_size},
-        msg="获取登录日志列表成功",
-    )
-
-
-@login_log_router.get(
-    "/{log_id}",
-    response_model=ResponseModel[LoginLogDetailResponse],
-    summary="获取登录日志详情",
-)
-async def get_log_detail(
-    log_id: int,
-    user: SysUser = Depends(current_user),
-    db: AsyncSession = Depends(get_session),
-):
-    log = await LoginLogService.get_log(db, log_id)
-    data = _to_response(log)
-    return response_base.success(data=data, msg="获取登录日志详情成功")
-
-
-@login_log_router.delete(
-    "/{log_id}",
-    response_model=ResponseModel,
-    summary="删除单条登录日志",
-)
-async def delete_log(
-    log_id: int,
-    user: SysUser = Depends(current_user),
-    db: AsyncSession = Depends(get_session),
-):
-    count = await LoginLogService.batch_delete_logs(db, [log_id])
-    return response_base.success(data={"deleted": count}, msg="删除成功")
+    return response_base.page(data=page_data)
 
 
 @login_log_router.delete(
@@ -115,6 +58,7 @@ async def batch_delete_logs(
     user: SysUser = Depends(current_user),
     db: AsyncSession = Depends(get_session),
 ):
+    """批量软删除登录日志"""
     count = await LoginLogService.batch_delete_logs(db, log_ids)
     return response_base.success(data={"deleted": count}, msg="批量删除成功")
 
@@ -129,7 +73,41 @@ async def clear_logs(
     user: SysUser = Depends(current_user),
     db: AsyncSession = Depends(get_session),
 ):
+    """清理指定天数前的登录日志"""
     count = await LoginLogService.clear_logs(db, days)
     return response_base.success(
         data={"deleted": count}, msg=f"已清理 {days} 天前的日志"
     )
+
+
+@login_log_router.get(
+    "/{log_id}",
+    response_model=ResponseModel[LoginLogDetailResponse],
+    summary="获取登录日志详情",
+)
+async def get_log_detail(
+    log_id: int,
+    user: SysUser = Depends(current_user),
+    db: AsyncSession = Depends(get_session),
+):
+    """获取单条登录日志详情"""
+    log = await LoginLogService.get_log(db, log_id)
+    return response_base.success(
+        data=LoginLogDetailResponse.model_validate(log),
+        msg="获取登录日志详情成功",
+    )
+
+
+@login_log_router.delete(
+    "/{log_id}",
+    response_model=ResponseModel,
+    summary="删除单条登录日志",
+)
+async def delete_log(
+    log_id: int,
+    user: SysUser = Depends(current_user),
+    db: AsyncSession = Depends(get_session),
+):
+    """软删除单条登录日志"""
+    count = await LoginLogService.batch_delete_logs(db, [log_id])
+    return response_base.success(data={"deleted": count}, msg="删除成功")
