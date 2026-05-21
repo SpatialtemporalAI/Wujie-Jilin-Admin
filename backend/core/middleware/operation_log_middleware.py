@@ -24,7 +24,7 @@ logger = logging.getLogger(__name__)
 MAX_RESPONSE_RESULT_LENGTH = 2000
 
 WHITELIST_PREFIXES = (
-    "/admin/auth/login",
+    "/admin/auth",
     "/admin/sys/operation-log",
     "/admin/sys/login-log",
     "/docs",
