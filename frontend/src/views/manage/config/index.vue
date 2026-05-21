@@ -129,8 +129,8 @@ const {
       width: 100,
       render: row => {
         return (
-          <NTag type={row.is_system ? 'info' : 'default'}>
-            {row.is_system ? $t('common.yesOrNo.yes') : $t('common.yesOrNo.no')}
+          <NTag type={row.is_system === '1' ? 'info' : 'default'}>
+            {row.is_system === '1' ? $t('common.yesOrNo.yes') : $t('common.yesOrNo.no')}
           </NTag>
         );
       }
@@ -152,7 +152,7 @@ const {
                 {$t('page.manage.config.resetConfig')}
               </NButton>
             )}
-            {!row.is_system && (
+            {row.is_system !== '1' && (
               <NPopconfirm onPositiveClick={() => handleDeleteConfig(row.id)}>
                 {{
                   default: () => $t('common.confirmDelete'),
