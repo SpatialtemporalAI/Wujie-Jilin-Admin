@@ -101,7 +101,7 @@ SmileX-Fastapi-Cloud/
    项目内置了 MCP (Model Context Protocol) 模块，支持工具注册与独立进程部署。
 
    - **内嵌模式**（默认）：MCP 服务随主应用一起启动，挂载在 `/mcp` 路径下，无需额外操作。
-   - **独立模式**：通过管理 API 启动独立的 MCP 服务器进程。
+   - **独立模式**：独立的 MCP 服务进程，通过 `mcp-platform/` 目录启动，默认端口 `9001`。
 
    ```bash
    # MCP 服务随主应用自动启动，无需手动操作
@@ -111,7 +111,12 @@ SmileX-Fastapi-Cloud/
    # MCP__HOST=127.0.0.1
    # MCP__PORT=9000
 
-   # 通过管理 API 启动独立 MCP 进程：
+   # 独立模式启动：
+   cd mcp-platform
+   python run.py
+   # 默认监听 http://127.0.0.1:9001
+
+   # 也可通过管理 API 启动独立 MCP 进程：
    # POST http://localhost:8000/admin/sys/mcp/start
    ```
 
@@ -126,6 +131,72 @@ SmileX-Fastapi-Cloud/
    | POST | `/admin/sys/mcp/status` | 获取 MCP 服务器状态 |
    | POST | `/admin/sys/mcp/start` | 启动独立 MCP 服务 |
    | POST | `/admin/sys/mcp/stop` | 停止独立 MCP 服务 |
+
+### Claude Code 接入 MCP
+
+本项目支持通过 Claude Code 等 MCP 客户端直接调用后端能力（菜单管理、权限管理、代码审查等）。
+
+1. **启动 MCP 服务**
+
+   确保独立 MCP 服务已启动：
+
+   ```bash
+   cd mcp-platform
+   python run.py
+   ```
+
+   服务启动后默认监听 `http://127.0.0.1:9001`，MCP 协议端点为 `/mcp`。
+
+2. **配置 Claude Code**
+
+   在 Claude Code 中输入 `/mcp` 命令添加 HTTP 类型的 MCP 服务器：
+
+   - **Type**: HTTP
+   - **URL**: `http://127.0.0.1:9001/mcp`
+
+   或直接编辑配置文件 `~/.claude.json`（项目级别）：
+
+   ```json
+   {
+     "projects": {
+       "你的项目路径": {
+         "mcpServers": {
+           "fastapi": {
+             "type": "http",
+             "url": "http://127.0.0.1:9001/mcp"
+           }
+         }
+       }
+     }
+   }
+   ```
+
+3. **连接验证**
+
+   配置完成后，在 Claude Code 中输入 `/mcp` 查看连接状态，确认状态为已连接。也可通过健康检查接口验证：
+
+   ```bash
+   curl http://127.0.0.1:9001/health
+   # 返回 {"status": "ok"} 表示服务正常
+   ```
+
+4. **可用工具**
+
+   连接成功后，Claude Code 可直接调用以下工具：
+
+   | 工具名称 | 说明 |
+   |---------|------|
+   | `system_analyze` | 分析系统 |
+   | `requirement_analyzer` | 需求分析 |
+   | `code_review` | 代码审查 |
+   | `code_execute` | 代码执行 |
+   | `create_menu` | 创建菜单 |
+   | `list_all_menus` | 查询菜单列表 |
+   | `assign_menus_to_role` | 为角色分配菜单 |
+   | `create_permission` | 创建权限 |
+   | `list_all_permissions` | 查询权限列表 |
+   | `generate_dictionary` | 生成字典 |
+   | `query_dictionaries` | 查询字典 |
 
 ### 前端环境搭建
 
