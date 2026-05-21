@@ -24,28 +24,28 @@ class SysExportTask(Base):
     query_params_json: Mapped[str] = mapped_column(
         Text, nullable=False, comment="查询参数JSON"
     )
+    created_by: Mapped[int] = mapped_column(
+        BigInteger, nullable=False, comment="创建者ID"
+    )
     status: Mapped[str] = mapped_column(
         String(20), nullable=False, default="pending",
         comment="状态: pending/processing/completed/failed",
     )
     total_rows: Mapped[int | None] = mapped_column(
-        Integer, nullable=True, comment="导出总行数"
+        Integer, nullable=True, default=None, comment="导出总行数"
     )
     file_path: Mapped[str | None] = mapped_column(
-        String(500), nullable=True, comment="文件存储路径"
+        String(500), nullable=True, default=None, comment="文件存储路径"
     )
     file_size: Mapped[int | None] = mapped_column(
-        Integer, nullable=True, comment="文件大小(字节)"
+        Integer, nullable=True, default=None, comment="文件大小(字节)"
     )
     error_message: Mapped[str | None] = mapped_column(
-        Text, nullable=True, comment="错误信息"
-    )
-    created_by: Mapped[int] = mapped_column(
-        BigInteger, nullable=False, comment="创建者ID"
+        Text, nullable=True, default=None, comment="错误信息"
     )
     started_at: Mapped[datetime | None] = mapped_column(
-        DateTime(timezone=True), nullable=True, comment="开始执行时间"
+        DateTime(timezone=True), nullable=True, default=None, comment="开始执行时间"
     )
     finished_at: Mapped[datetime | None] = mapped_column(
-        DateTime(timezone=True), nullable=True, comment="执行完成时间"
+        DateTime(timezone=True), nullable=True, default=None, comment="执行完成时间"
     )

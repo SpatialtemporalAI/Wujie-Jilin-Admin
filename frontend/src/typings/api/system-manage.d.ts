@@ -320,5 +320,63 @@ declare namespace Api {
     type ConfigReset = {
       ids: string[];
     };
+
+    /** 登录日志搜索参数 */
+    type LoginLogSearchParams = CommonType.RecordNullable<{
+      username?: string;
+      ip?: string;
+      status?: boolean | null;
+      start_time?: string;
+      end_time?: string;
+    } & CommonSearchParams>;
+
+    /** 登录日志 */
+    type LoginLog = {
+      id: number;
+      username: string;
+      ip: string | null;
+      status: boolean;
+      detail: string | null;
+      user_agent: string | null;
+      login_time: string | null;
+      created_at: string | null;
+    };
+
+    /** 登录日志列表 */
+    type LoginLogList = Common.PaginatingQueryRecord<LoginLog>;
+
+    /** 操作日志搜索参数 */
+    type OperationLogSearchParams = CommonType.RecordNullable<{
+      username?: string;
+      module?: string;
+      action?: string;
+      start_time?: string;
+      end_time?: string;
+    } & CommonSearchParams>;
+
+    /** 操作日志 */
+    type OperationLog = {
+      id: number;
+      user_id: number;
+      username: string;
+      module: string;
+      action: string;
+      description: string | null;
+      method: string | null;
+      path: string | null;
+      ip: string | null;
+      response_code: number | null;
+      response_result: string | null;
+      elapsed_ms: number | null;
+      created_at: string | null;
+    };
+
+    /** 操作日志详情 */
+    type OperationLogDetail = OperationLog & {
+      request_params: string | null;
+    };
+
+    /** 操作日志列表 */
+    type OperationLogList = Common.PaginatingQueryRecord<OperationLog>;
   }
 }

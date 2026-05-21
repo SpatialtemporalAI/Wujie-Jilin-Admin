@@ -240,7 +240,10 @@ const local: App.I18n.Schema = {
     manage_role: '角色管理',
     manage_user: '用户管理',
     manage_dict: '字典管理',
-    manage_config: '系统配置'
+    manage_config: '系统配置',
+    log: '日志管理',
+    'log_login-log': '登录日志',
+    'log_operation-log': '操作日志'
   },
   page: {
     login: {
@@ -535,6 +538,54 @@ const local: App.I18n.Schema = {
           network: '网络配置',
           storage: '存储配置',
           custom: '自定义配置'
+        }
+      }
+    },
+    log: {
+      loginLog: {
+        title: '登录日志列表',
+        username: '用户名',
+        ip: '登录IP',
+        status: '登录状态',
+        detail: '详细信息',
+        userAgent: '登录设备',
+        loginTime: '登录时间',
+        success: '成功',
+        failed: '失败',
+        clear: '清理日志',
+        clearConfirm: '确认清理30天前的登录日志？',
+        form: {
+          username: '请输入用户名',
+          ip: '请输入IP地址',
+          status: '请选择登录状态',
+          startTime: '开始时间',
+          endTime: '结束时间'
+        }
+      },
+      operationLog: {
+        title: '操作日志列表',
+        username: '操作人',
+        module: '操作模块',
+        action: '操作类型',
+        description: '操作描述',
+        method: '请求方法',
+        path: '请求路径',
+        ip: '操作IP',
+        responseCode: '状态码',
+        responseResult: '响应结果',
+        elapsedMs: '耗时(ms)',
+        requestParams: '请求参数',
+        operateTime: '操作时间',
+        viewDetail: '查看详情',
+        detailTitle: '操作日志详情',
+        clear: '清理日志',
+        clearConfirm: '确认清理30天前的操作日志？',
+        form: {
+          username: '请输入操作人',
+          module: '请输入操作模块',
+          action: '请输入操作类型',
+          startTime: '开始时间',
+          endTime: '结束时间'
         }
       }
     }

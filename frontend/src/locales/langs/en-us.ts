@@ -244,7 +244,10 @@ const local: App.I18n.Schema = {
     manage_role: 'Role Management',
     manage_user: 'User Management',
     manage_dict: 'Dict Management',
-    manage_config: 'System Config'
+    manage_config: 'System Config',
+    log: 'Log Management',
+    'log_login-log': 'Login Log',
+    'log_operation-log': 'Operation Log'
   },
   page: {
     login: {
@@ -540,6 +543,54 @@ const local: App.I18n.Schema = {
           network: 'Network',
           storage: 'Storage',
           custom: 'Custom'
+        }
+      }
+    },
+    log: {
+      loginLog: {
+        title: 'Login Log List',
+        username: 'Username',
+        ip: 'Login IP',
+        status: 'Status',
+        detail: 'Detail',
+        userAgent: 'Device',
+        loginTime: 'Login Time',
+        success: 'Success',
+        failed: 'Failed',
+        clear: 'Clear Logs',
+        clearConfirm: 'Confirm to clear login logs older than 30 days?',
+        form: {
+          username: 'Enter username',
+          ip: 'Enter IP address',
+          status: 'Select status',
+          startTime: 'Start time',
+          endTime: 'End time'
+        }
+      },
+      operationLog: {
+        title: 'Operation Log List',
+        username: 'Operator',
+        module: 'Module',
+        action: 'Action',
+        description: 'Description',
+        method: 'Method',
+        path: 'Path',
+        ip: 'IP',
+        responseCode: 'Status Code',
+        responseResult: 'Response Result',
+        elapsedMs: 'Elapsed(ms)',
+        requestParams: 'Request Params',
+        operateTime: 'Operate Time',
+        viewDetail: 'Detail',
+        detailTitle: 'Operation Log Detail',
+        clear: 'Clear Logs',
+        clearConfirm: 'Confirm to clear operation logs older than 30 days?',
+        form: {
+          username: 'Enter operator',
+          module: 'Enter module',
+          action: 'Enter action',
+          startTime: 'Start time',
+          endTime: 'End time'
         }
       }
     }

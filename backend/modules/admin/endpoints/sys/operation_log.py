@@ -48,6 +48,7 @@ def _to_response(log) -> dict:
         "path": log.path,
         "ip": log.ip,
         "response_code": log.response_code,
+        "response_result": log.response_result,
         "elapsed_ms": log.elapsed_ms,
         "created_at": format_datetime(log.created_at),
     }
@@ -165,6 +166,7 @@ async def get_log_detail(
     log = await OperationLogService.get_log(db, log_id)
     data = _to_response(log)
     data["request_params"] = log.request_params
+    data["response_result"] = log.response_result
     return response_base.success(data=data, msg="获取操作日志详情成功")
 
 

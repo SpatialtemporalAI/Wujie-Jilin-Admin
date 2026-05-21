@@ -26,4 +26,6 @@ export const views: Record<LastLevelRouteKey, RouteComponent | (() => Promise<Ro
   manage_menu: () => import("@/views/manage/menu/index.vue"),
   manage_role: () => import("@/views/manage/role/index.vue"),
   manage_user: () => import("@/views/manage/user/index.vue"),
+  "log_login-log": () => import("@/views/log/login-log/index.vue"),
+  "log_operation-log": () => import("@/views/log/operation-log/index.vue"),
 };

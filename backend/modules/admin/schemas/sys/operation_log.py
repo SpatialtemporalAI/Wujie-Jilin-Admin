@@ -35,6 +35,7 @@ class OperationLogResponse(BaseModel):
 
 
 class OperationLogDetailResponse(OperationLogResponse):
-    """操作日志详情响应（含请求参数）"""
+    """操作日志详情响应（含请求参数和响应结果）"""
 
     request_params: str | None
+    response_result: str | None

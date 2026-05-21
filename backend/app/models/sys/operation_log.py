@@ -42,6 +42,9 @@ class SysOperationLog(Base):
     response_code: Mapped[int | None] = mapped_column(
         Integer, nullable=True, comment="响应状态码"
     )
+    response_result: Mapped[str | None] = mapped_column(
+        Text, nullable=True, comment="响应结果"
+    )
     elapsed_ms: Mapped[float | None] = mapped_column(
         Float, nullable=True, comment="耗时(毫秒)"
     )

@@ -1,9 +1,10 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 
-from fastapi import APIRouter, Depends, Request, Response, Body
+import asyncio
+import logging
 
-# from fastapi_users import BaseUserManager, FastAPIUsers
+from fastapi import APIRouter, Depends, Request, Body
 from pydantic import BaseModel, Field
 from redis import Redis
 from app.models.sys.user import SysUser
@@ -12,6 +13,8 @@ from core.response import (
     ResponseModel,
     response_base,
 )
+from core.exception.errors import CustomError
+from core.utils.ip_utils import get_real_client_ip
 from modules.admin.deps.auth.user_manager import (
     UserManager,
     get_user_manager,
@@ -23,10 +26,30 @@ from modules.admin.schemas.auth import (
     UserInfoResponseData,
 )
 from core.security.rate_limit import limit_by_ip
-from core.decorators.operation_log import log_operation
+
+logger = logging.getLogger(__name__)
 
 # 创建认证路由
 router = APIRouter(prefix="/auth", tags=["admin接口/认证"])
+
+
+async def _write_login_log(username: str, ip: str | None, status: bool, detail: str, user_agent: str | None):
+    """异步写入登录日志"""
+    try:
+        from database import get_session
+        from modules.admin.services.sys.login_log_service import LoginLogService
+
+        async for db in get_session():
+            await LoginLogService.create_log(
+                db=db,
+                username=username,
+                ip=ip,
+                status=status,
+                detail=detail,
+                user_agent=user_agent,
+            )
+    except Exception as e:
+        logger.error(f"写入登录日志失败: {e}")
 
 
 # 登录路由
@@ -36,7 +59,6 @@ router = APIRouter(prefix="/auth", tags=["admin接口/认证"])
     summary="后台用户登录接口",
     description="通过用户名和密码登录系统，获取访问令牌和刷新令牌",
 )
-@log_operation(module="auth", action="login", description="用户登录")
 async def login(
     request: Request,
     login_pwd: LoginPwdModel = Body(..., description="登录请求参数"),
@@ -45,19 +67,11 @@ async def login(
     """
     用户登录接口
     接收用户名和密码，返回JWT令牌
-    Args:
-        request: 请求对象
-        response: 响应对象
-        user_manager: 用户管理器
-    Returns:
-        ResponseModel: 包含访问令牌和刷新令牌的响应
-    Examples:
-        {
-            "username": "testuser",
-            "password": "BlockChain"
-        }
     """
     username = login_pwd.username
+    ip = get_real_client_ip(request)
+    user_agent = request.headers.get("user-agent", "")
+
     await limit_by_ip(
         request=request,
         action="admin_login",
@@ -66,15 +80,25 @@ async def login(
         scope="admin",
         extra_suffix=username.lower(),
     )
-    password = login_pwd.password
-    tokens = await user_manager.login_by_password(
-        username=username,
-        password=password,
-    )
-    return response_base.success(
-        data=tokens,
-        msg="登录成功",
-    )
+
+    try:
+        password = login_pwd.password
+        tokens = await user_manager.login_by_password(
+            username=username,
+            password=password,
+        )
+        asyncio.create_task(
+            _write_login_log(username, ip, True, "登录成功", user_agent)
+        )
+        return response_base.success(
+            data=tokens,
+            msg="登录成功",
+        )
+    except CustomError as e:
+        asyncio.create_task(
+            _write_login_log(username, ip, False, e.msg, user_agent)
+        )
+        raise
 
 
 @router.get(

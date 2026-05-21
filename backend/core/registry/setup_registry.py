@@ -8,6 +8,7 @@ from core.middleware.security_middleware import (
     RequestSizeLimitMiddleware,
     SecurityHeadersMiddleware,
 )
+from core.middleware.operation_log_middleware import OperationLogMiddleware
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.middleware.trustedhost import TrustedHostMiddleware
 from core.config import GlobalSetting
@@ -33,6 +34,7 @@ def setup_app(app: FastAPI, settings: GlobalSetting):
     app.add_middleware(RequestAuditMiddleware)
     app.add_middleware(RequestSizeLimitMiddleware)
     app.add_middleware(SecurityHeadersMiddleware)
+    app.add_middleware(OperationLogMiddleware)
     app.add_middleware(RequestContextMiddleware)
 
     # 注册全局异常
