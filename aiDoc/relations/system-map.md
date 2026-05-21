@@ -73,6 +73,7 @@ src/store/                # Pinia 全局状态管理
 src/router/               # 路由配置与守卫
 src/views/                # 页面组件
   ├─ manage/              # 系统管理页面（对应后端 admin 模块）
+  ├─ log/                 # 日志管理页面（登录日志、操作日志）
   └─ <feature>/           # 业务页面
 src/typings/api/          # TypeScript 类型声明（与后端 Schema 对应）
 src/locales/langs/        # 国际化（zh-cn.ts、en-us.ts）
@@ -96,6 +97,8 @@ src/locales/langs/        # 国际化（zh-cn.ts、en-us.ts）
 | 后端模块 | 前端页面 |
 |----------|----------|
 | `backend/modules/admin/` | `frontend/src/views/manage/` |
+| `backend/modules/admin/endpoints/sys/login_log.py` | `frontend/src/views/log/login-log/` |
+| `backend/modules/admin/endpoints/sys/operation_log.py` | `frontend/src/views/log/operation-log/` |
 | `backend/modules/app/` | `frontend/src/views/`（应用页面） |
 
 ## 配置文件

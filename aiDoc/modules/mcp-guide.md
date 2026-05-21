@@ -251,3 +251,31 @@ POST /admin/mcp/test
 | `backend/modules/admin/services/sys/mcp_service.py` | 管理服务层 |
 | `backend/modules/admin/schemas/sys/mcp.py` | 管理 Schema |
 | `backend/core/config/settings_model.py` | MCP 配置模型 |
+
+## 日志模块
+
+系统提供登录日志和操作日志两个模块，前端搜索表单已统一为标准折叠网格布局（`NCollapse` + `NGrid` + `NFormItemGi`）。
+
+### 后端 API 端点
+
+| 端点 | 方法 | 说明 |
+|------|------|------|
+| `/admin/login-log/list` | GET | 分页查询登录日志 |
+| `/admin/login-log/batch/delete` | DELETE | 批量删除登录日志 |
+| `/admin/login-log/clear` | DELETE | 清理过期登录日志（默认 30 天） |
+| `/admin/login-log/{log_id}` | GET/DELETE | 查看/删除单条登录日志 |
+| `/admin/operation-log/list` | GET | 分页查询操作日志 |
+| `/admin/operation-log/export` | GET | 导出操作日志 |
+| `/admin/operation-log/batch/delete` | DELETE | 批量删除操作日志 |
+| `/admin/operation-log/clear` | DELETE | 清理过期操作日志（默认 30 天） |
+| `/admin/operation-log/{log_id}` | GET/DELETE | 查看/删除单条操作日志 |
+
+### 前端组件
+
+| 组件 | 路径 |
+|------|------|
+| 登录日志列表 | `frontend/src/views/log/login-log/index.vue` |
+| 登录日志搜索 | `frontend/src/views/log/login-log/modules/login-log-search.vue` |
+| 操作日志列表 | `frontend/src/views/log/operation-log/index.vue` |
+| 操作日志搜索 | `frontend/src/views/log/operation-log/modules/operation-log-search.vue` |
+| 操作日志详情 | `frontend/src/views/log/operation-log/modules/operation-log-detail-drawer.vue` |

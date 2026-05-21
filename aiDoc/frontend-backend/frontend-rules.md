@@ -34,6 +34,22 @@
 - 每个页面必须有独立文件夹，包含主 `.vue` 文件
 - 相关子组件放在 `modules/` 子目录
 
+### 搜索表单标准模式
+
+列表页的搜索表单统一使用以下 NaiveUI 组件组合：
+
+- `NCard` 包裹，`size="small"` `class="card-wrapper"`
+- `NCollapse` + `NCollapseItem` 折叠容器，标题使用 `$t('common.search')`
+- `NForm label-placement="left" :label-width="80"` 左对齐标签
+- `NGrid responsive="screen" item-responsive` 响应式网格
+- `NFormItemGi span="24 s:12 m:6" class="pr-24px"` 表单项，小屏 2 列、中屏 4 列
+- 按钮行 `NFormItemGi span="24 m:12"`，`NSpace justify="end"` 右对齐
+- 重置按钮：`icon-ic-round-refresh` 图标
+- 搜索按钮：`icon-ic-round-search` 图标，`type="primary" ghost`
+- 重置逻辑使用 `jsonClone(toRaw(model.value))` + `Object.assign`
+
+参考实现：`src/views/manage/config/modules/config-search.vue`
+
 ## 页面规范
 
 新增页面时必须完成：

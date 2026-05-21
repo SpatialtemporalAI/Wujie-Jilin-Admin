@@ -5,7 +5,7 @@ from datetime import datetime
 
 from pydantic import Field
 
-from app.models.common.base import BaseEntity
+from app.models.common.base import BaseEntity, BoolField
 
 
 class LoginLogQueryParams(BaseEntity):
@@ -13,7 +13,7 @@ class LoginLogQueryParams(BaseEntity):
 
     username: str | None = Field(None, description="登录用户名")
     ip: str | None = Field(None, description="客户端IP")
-    status: bool | None = Field(None, description="登录状态")
+    status: BoolField = Field(None, description="登录状态")
     start_time: str | None = Field(None, description="开始时间")
     end_time: str | None = Field(None, description="结束时间")
 

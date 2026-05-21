@@ -3,7 +3,7 @@
 
 from core.models.base import Base
 from sqlalchemy.orm import mapped_column, Mapped
-from sqlalchemy import String, Text, Integer, Float
+from sqlalchemy import String, Text, Integer, BigInteger, Float
 
 
 class SysOperationLog(Base):
@@ -13,7 +13,7 @@ class SysOperationLog(Base):
     """
 
     user_id: Mapped[int] = mapped_column(
-        Integer, nullable=False, index=True, comment="操作人ID"
+        BigInteger, nullable=False, index=True, comment="操作人ID"
     )
     username: Mapped[str] = mapped_column(
         String(50), nullable=False, comment="操作人用户名"
