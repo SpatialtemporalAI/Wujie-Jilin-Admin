@@ -235,6 +235,18 @@ POST /admin/mcp/test
 6. 调用 `POST /admin/mcp/test` 测试工具执行
 7. 在 AI 客户端中配置 MCP 服务地址
 
+## 时间参数规范
+
+MCP 工具如需接收时间参数，遵循项目统一的时间格式约定（详见 `aiDoc/frontend-backend/boundary.md`）：
+
+- **入参格式**：ISO 8601 带时区偏移，如 `2026-05-21T16:39:23+08:00`
+- **解析方式**：
+  ```python
+  dt = datetime.fromisoformat(time_str)
+  result = dt.astimezone(timezone.utc) if dt.tzinfo else dt.replace(tzinfo=timezone.utc)
+  ```
+- **禁止**：直接对带时区偏移的字符串使用 `.replace(tzinfo=timezone.utc)`
+
 ## 相关文件
 
 | 文件 | 职责 |

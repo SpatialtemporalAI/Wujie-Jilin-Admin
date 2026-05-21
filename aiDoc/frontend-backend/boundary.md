@@ -119,6 +119,8 @@
 
 ## 时间字段桥接
 
+### 后端 → 前端（响应序列化）
+
 | 层面 | 类型 | 格式 |
 |------|------|------|
 | 后端数据库 | `datetime`（带时区） | UTC 存储 |
@@ -126,6 +128,26 @@
 | 前端接收 | `string` | `YYYY-MM-DD HH:mm:ss` |
 
 序列化由 `BaseEntity` 的 `json_encoders` 自动处理（`app/models/common/base.py`）。
+
+### 前端 → 后端（请求参数）
+
+| 层面 | 类型 | 格式示例 |
+|------|------|----------|
+| 前端选择 | `number`（时间戳） | NDatePicker 返回毫秒时间戳 |
+| 前端发送 | `string` | `2026-05-21T16:39:23+08:00`（本地时间 + 时区偏移） |
+| 后端解析 | `datetime` | `fromisoformat()` → `astimezone(UTC)` → UTC datetime |
+
+**强制规则**：
+
+1. **前端发送时间参数时，必须携带时区偏移**：使用 `dayjs(val).format()` 生成 `YYYY-MM-DDTHH:mm:ssZ` 格式（如 `+08:00`），禁止使用 `new Date(val).toISOString()` —— 后者会转为 UTC 导致与用户选择不一致
+2. **后端解析时间参数时，必须区分有无时区**：
+   ```python
+   dt = datetime.fromisoformat(time_str)
+   result = dt.astimezone(timezone.utc) if dt.tzinfo else dt.replace(tzinfo=timezone.utc)
+   ```
+   禁止直接使用 `.replace(tzinfo=timezone.utc)` —— 对带时区偏移的字符串会丢失转换
+
+**原因**：用户在前端选择 `2026-05-21 16:39:23`，API 传参也应体现为 `16:39:23+08:00`，而非 UTC 时间 `08:39:23Z`。
 
 ---
 
