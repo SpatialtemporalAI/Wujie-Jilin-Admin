@@ -221,7 +221,7 @@ class UserManager:
         is_first_login = user is None
         if is_first_login:
             user = await self.register_by_phone(phone=phone, code=code)
-        tokens = await base_user_manager.create_token(user_id=user.id, user_role="app")
+        tokens = await base_user_manager.create_token(user_id=user.id, user_role="app", username=user.username)
         await base_user_manager.on_after_login(user=user)
         # 如果不是首次登录，则获取机器人id
 
@@ -243,9 +243,11 @@ class UserManager:
             user_id, session_id = await self.verify_token_session(
                 refresh_token, _type="refresh"
             )
+            payload = self.jwt_manager.decode_token(refresh_token)
+            username = payload.get("username")
             # 创建新的token
             return await base_user_manager.create_token(
-                user_id=user_id, user_role="app"
+                user_id=user_id, user_role="app", session_id=session_id, username=username
             )
         except Exception as e:
             logger.error(f"刷新token失败: {str(e)}")

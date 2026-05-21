@@ -70,7 +70,7 @@ class UserManager(BaseUserManager):
                 error=CustomErrorCode.USER_LOGIN_FAILED,
             )
         # 生成JWT令牌
-        tokens = await self.create_token(user_id=user.id, user_role="admin")
+        tokens = await self.create_token(user_id=user.id, user_role="admin", username=user.username)
         await self.on_after_login(user=user)
         response_model = {
             **tokens.model_dump(),

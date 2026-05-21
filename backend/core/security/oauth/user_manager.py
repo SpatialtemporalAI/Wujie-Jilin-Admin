@@ -30,7 +30,7 @@ class BaseUserManager:
         self.jwt_manager = JWTAuthManager()
 
     async def create_token(
-        self, user_id: int, user_role: str = "app", session_id: str = None
+        self, user_id: int, user_role: str = "app", session_id: str = None, username: str = None
     ):
         """
         创建token
@@ -40,7 +40,7 @@ class BaseUserManager:
             session_id = generate_session_id(user_id)
             new_session = True
         # 使用JWTAuthManager创建令牌
-        token_data = {"id": user_id, "session_id": session_id, "role": user_role}
+        token_data = {"id": user_id, "session_id": session_id, "role": user_role, "username": username}
         if new_session:
             # 保存session_id到redis - 添加用户角色区分
             await get_redis_util().set(

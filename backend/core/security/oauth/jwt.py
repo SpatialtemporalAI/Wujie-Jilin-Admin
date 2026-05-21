@@ -181,6 +181,7 @@ class JWTAuthManager:
         # 创建访问令牌的数据
         access_token_data = {
             "user_id": str(user_data.get("id", "")),
+            "username": user_data.get("username", ""),
             "session_id": user_data.get("session_id", ""),
             "scope": "access",
             "role": user_data.get("role", ""),
@@ -188,6 +189,7 @@ class JWTAuthManager:
         # 创建刷新令牌的数据
         refresh_token_data = {
             "user_id": str(user_data.get("id", "")),
+            "username": user_data.get("username", ""),
             "session_id": user_data.get("session_id", ""),
             "scope": "refresh",
             "role": user_data.get("role", ""),
