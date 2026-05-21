@@ -4,15 +4,20 @@
 """
 操作日志管理接口
 """
+import io
 import logging
+from datetime import datetime
 from fastapi import APIRouter, Depends, Query, Body
+from fastapi.responses import StreamingResponse
 from sqlalchemy.ext.asyncio import AsyncSession
 from typing import List
 
 from database.db_manager import get_session
 from core.response import ResponseModel, response_base
 from app.models.common.page import get_page_params
+from core.utils.excel_export import build_excel_bytes, SYNC_EXPORT_MAX_ROWS
 from modules.admin.deps.auth.user_manager import current_user
+from modules.admin.exports import get_export_config
 from app.models.sys.user import SysUser
 from modules.admin.services.sys.operation_log_service import OperationLogService
 from modules.admin.schemas.sys.operation_log import (
@@ -80,6 +85,40 @@ async def get_log_list(
     return response_base.success(
         data={"items": items, "total": total, "page": page, "page_size": page_size},
         msg="获取操作日志列表成功",
+    )
+
+
+@operation_log_router.get("/export", summary="导出操作日志 Excel")
+async def export_operation_logs(
+    module: str | None = Query(None, description="操作模块"),
+    action: str | None = Query(None, description="操作类型"),
+    user_id: int | None = Query(None, description="操作人ID"),
+    username: str | None = Query(None, description="操作人用户名"),
+    start_time: str | None = Query(None, description="开始时间"),
+    end_time: str | None = Query(None, description="结束时间"),
+    user: SysUser = Depends(current_user),
+    db: AsyncSession = Depends(get_session),
+):
+    query_params = OperationLogQueryParams(
+        module=module,
+        action=action,
+        user_id=user_id,
+        username=username,
+        start_time=start_time,
+        end_time=end_time,
+    )
+    config = get_export_config("operation_log")
+    query = config.build_query_fn(query_params).limit(SYNC_EXPORT_MAX_ROWS)
+    result = await db.execute(query)
+    rows = result.scalars().all()
+
+    excel_bytes = build_excel_bytes(config.columns, rows, sheet_name=config.name)
+    filename = f"operation_logs_{datetime.now().strftime('%Y%m%d_%H%M%S')}.xlsx"
+
+    return StreamingResponse(
+        io.BytesIO(excel_bytes),
+        media_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+        headers={"Content-Disposition": f'attachment; filename="{filename}"'},
     )
 
 

@@ -4,8 +4,11 @@
 """
 角色管理相关接口
 """
+import io
 import logging
+from datetime import datetime
 from fastapi import APIRouter, Depends, Request
+from fastapi.responses import StreamingResponse
 from sqlalchemy.ext.asyncio import AsyncSession
 from typing import List
 
@@ -17,7 +20,9 @@ from core.response.response_schema import (
 )
 from app.models.common.page import PageRequest, get_page_params, get_paginated_results
 from core.decorators.operation_log import log_operation
+from core.utils.excel_export import build_excel_bytes, SYNC_EXPORT_MAX_ROWS
 from modules.admin.deps.auth.user_manager import current_user
+from modules.admin.exports import get_export_config
 from app.models.sys.user import SysUser
 
 from modules.admin.services.sys import RoleService
@@ -65,6 +70,27 @@ async def get_role_list(
 
     logger.info(f"获取角色列表成功，共 {page_data.total} 条记录")
     return ResponsePageModel[SysRoleResponseData](data=page_data)
+
+
+@role_router.get("/export", summary="导出角色列表 Excel")
+async def export_roles(
+    query_params: SysRoleQueryParams = Depends(),
+    db: AsyncSession = Depends(get_session),
+    user: SysUser = Depends(current_user),
+):
+    config = get_export_config("role")
+    query = config.build_query_fn(query_params).limit(SYNC_EXPORT_MAX_ROWS)
+    result = await db.execute(query)
+    rows = result.unique().scalars().all()
+
+    excel_bytes = build_excel_bytes(config.columns, rows, sheet_name=config.name)
+    filename = f"roles_{datetime.now().strftime('%Y%m%d_%H%M%S')}.xlsx"
+
+    return StreamingResponse(
+        io.BytesIO(excel_bytes),
+        media_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+        headers={"Content-Disposition": f'attachment; filename="{filename}"'},
+    )
 
 
 @role_router.get("/all", response_model=ResponseModel[List[SysRoleSimpleResponse]])

@@ -22,11 +22,8 @@ class OperationLogService:
     """操作日志管理服务类"""
 
     @staticmethod
-    async def get_log_list(
-        db: AsyncSession,
-        query_params: OperationLogQueryParams,
-    ) -> Tuple[List[SysOperationLog], int]:
-        """获取操作日志列表（分页）"""
+    def build_operation_log_query(query_params: OperationLogQueryParams):
+        """构建操作日志查询（供导出和列表共用）"""
         conditions = []
 
         if query_params.module:
@@ -61,6 +58,15 @@ class OperationLogService:
             base_query = base_query.where(and_(*conditions))
 
         base_query = base_query.order_by(SysOperationLog.created_at.desc())
+        return base_query
+
+    @staticmethod
+    async def get_log_list(
+        db: AsyncSession,
+        query_params: OperationLogQueryParams,
+    ) -> Tuple[List[SysOperationLog], int]:
+        """获取操作日志列表（分页）"""
+        base_query = OperationLogService.build_operation_log_query(query_params)
 
         # 统计总数
         count_query = select(func.count()).select_from(base_query.subquery())
