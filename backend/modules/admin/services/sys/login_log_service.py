@@ -54,17 +54,15 @@ class LoginLogService:
             conditions.append(SysLoginLog.status == query_params.status)
         if query_params.start_time:
             try:
-                start = datetime.fromisoformat(query_params.start_time).replace(
-                    tzinfo=timezone.utc
-                )
+                dt = datetime.fromisoformat(query_params.start_time)
+                start = dt.astimezone(timezone.utc) if dt.tzinfo else dt.replace(tzinfo=timezone.utc)
                 conditions.append(SysLoginLog.login_time >= start)
             except ValueError:
                 pass
         if query_params.end_time:
             try:
-                end = datetime.fromisoformat(query_params.end_time).replace(
-                    tzinfo=timezone.utc
-                )
+                dt = datetime.fromisoformat(query_params.end_time)
+                end = dt.astimezone(timezone.utc) if dt.tzinfo else dt.replace(tzinfo=timezone.utc)
                 conditions.append(SysLoginLog.login_time <= end)
             except ValueError:
                 pass

@@ -558,6 +558,7 @@ const local: App.I18n.Schema = {
           username: '请输入用户名',
           ip: '请输入IP地址',
           status: '请选择登录状态',
+          timeRange: '时间范围',
           startTime: '开始时间',
           endTime: '结束时间'
         }
@@ -584,6 +585,7 @@ const local: App.I18n.Schema = {
           username: '请输入操作人',
           module: '请输入操作模块',
           action: '请输入操作类型',
+          timeRange: '时间范围',
           startTime: '开始时间',
           endTime: '结束时间'
         }

@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { toRaw } from 'vue';
+import dayjs from 'dayjs';
 import { jsonClone } from '@sa/utils';
 import { $t } from '@/locales';
 import { NButton, NCard, NCollapse, NCollapseItem, NDatePicker, NForm, NFormItemGi, NGrid, NInput, NSpace } from 'naive-ui';
@@ -55,23 +56,26 @@ function search() {
                 clearable
               />
             </NFormItemGi>
-            <NFormItemGi span="24 s:12 m:6" :label="$t('page.log.operationLog.form.startTime')" path="start_time" class="pr-24px">
-              <NDatePicker
-                v-model:value="model.start_time"
-                type="datetime"
-                :placeholder="$t('page.log.operationLog.form.startTime')"
-                clearable
-                @update:value="(val: number | null) => { model.start_time = val ? new Date(val).toISOString() : null }"
-              />
-            </NFormItemGi>
-            <NFormItemGi span="24 s:12 m:6" :label="$t('page.log.operationLog.form.endTime')" path="end_time" class="pr-24px">
-              <NDatePicker
-                v-model:value="model.end_time"
-                type="datetime"
-                :placeholder="$t('page.log.operationLog.form.endTime')"
-                clearable
-                @update:value="(val: number | null) => { model.end_time = val ? new Date(val).toISOString() : null }"
-              />
+            <NFormItemGi span="24 s:24 m:12" :label="$t('page.log.operationLog.form.timeRange')" class="pr-24px">
+              <NSpace align="center" :size="8" :wrap="false" class="w-full">
+                <NDatePicker
+                  v-model:value="model.start_time"
+                  type="datetime"
+                  :placeholder="$t('page.log.operationLog.form.startTime')"
+                  clearable
+                  class="flex-1"
+                  @update:value="(val: number | null) => { model.start_time = val ? dayjs(val).format() : null }"
+                />
+                <span>~</span>
+                <NDatePicker
+                  v-model:value="model.end_time"
+                  type="datetime"
+                  :placeholder="$t('page.log.operationLog.form.endTime')"
+                  clearable
+                  class="flex-1"
+                  @update:value="(val: number | null) => { model.end_time = val ? dayjs(val).format() : null }"
+                />
+              </NSpace>
             </NFormItemGi>
             <NFormItemGi span="24 m:12" class="pr-24px">
               <NSpace class="w-full" justify="end">

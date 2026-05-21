@@ -563,6 +563,7 @@ const local: App.I18n.Schema = {
           username: 'Enter username',
           ip: 'Enter IP address',
           status: 'Select status',
+          timeRange: 'Time Range',
           startTime: 'Start time',
           endTime: 'End time'
         }
@@ -589,6 +590,7 @@ const local: App.I18n.Schema = {
           username: 'Enter operator',
           module: 'Enter module',
           action: 'Enter action',
+          timeRange: 'Time Range',
           startTime: 'Start time',
           endTime: 'End time'
         }
