@@ -14,7 +14,7 @@ from typing import Callable
 import jwt
 from starlette.middleware.base import BaseHTTPMiddleware
 from starlette.requests import Request
-from starlette.responses import Response, StreamingResponse
+from starlette.responses import Response
 
 from core.config import settings
 from core.utils.ip_utils import get_real_client_ip
@@ -82,37 +82,18 @@ async def _capture_request_body(request: Request) -> str | None:
         return None
 
 
-async def _capture_response_body(response: Response) -> str | None:
-    """捕获响应体内容"""
+def _read_response_body_fast(response: Response) -> str | None:
+    """从已缓冲的响应中快速读取 body（BaseHTTPMiddleware 已缓冲，无需遍历 body_iterator）"""
     try:
-        if hasattr(response, "body_iterator"):
-            body_parts = []
-            async for chunk in response.body_iterator:
-                if isinstance(chunk, bytes):
-                    body_parts.append(chunk)
-                elif isinstance(chunk, str):
-                    body_parts.append(chunk.encode("utf-8"))
-
-            async def replay():
-                for part in body_parts:
-                    yield part
-
-            response.body_iterator = replay()
-
-            if body_parts:
-                full_body = b"".join(body_parts)
-                text = full_body.decode("utf-8", errors="replace")
-                if len(text) > MAX_RESPONSE_RESULT_LENGTH:
-                    text = text[:MAX_RESPONSE_RESULT_LENGTH] + "...(truncated)"
-                return text
-        elif hasattr(response, "body") and response.body:
-            text = response.body.decode("utf-8", errors="replace") if isinstance(response.body, bytes) else str(response.body)
+        body = getattr(response, "body", None)
+        if body:
+            text = body.decode("utf-8", errors="replace") if isinstance(body, bytes) else str(body)
             if len(text) > MAX_RESPONSE_RESULT_LENGTH:
                 text = text[:MAX_RESPONSE_RESULT_LENGTH] + "...(truncated)"
             return text
-        return None
     except Exception:
-        return None
+        pass
+    return None
 
 
 async def _write_operation_log(
@@ -171,7 +152,7 @@ class OperationLogMiddleware(BaseHTTPMiddleware):
 
         elapsed_ms = (time.monotonic() - start) * 1000
 
-        response_result = await _capture_response_body(response)
+        response_result = _read_response_body_fast(response)
 
         asyncio.create_task(
             _write_operation_log(

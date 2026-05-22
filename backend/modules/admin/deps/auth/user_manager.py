@@ -156,7 +156,7 @@ class UserManager(BaseUserManager):
         """
         stmt = (
             select(SysUser)
-            .options(joinedload(SysUser.roles))
+            .options(joinedload(SysUser.roles).joinedload("menus"))
             .where(SysUser.id == user_id)
         )
         result = await self.session.execute(stmt)
@@ -191,7 +191,6 @@ class UserManager(BaseUserManager):
             for role in user.roles:
                 if not role.status:
                     continue
-                await self.session.refresh(role, attribute_names=["menus"])
                 for menu in role.menus:
                     if (
                         menu.type == MenuType.BUTTON
