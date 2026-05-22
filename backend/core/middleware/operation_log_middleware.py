@@ -41,7 +41,7 @@ def _is_whitelisted(path: str) -> bool:
 
 
 def _extract_user_from_token(request: Request) -> tuple[int | None, str | None]:
-    """从 Authorization 头解析 JWT 获取 user_id 和 username"""
+    """从 Authorization 头解析 JWT 获取 user_id 和 username，同时将 payload 存入 request.state 供下游复用"""
     auth_header = request.headers.get("authorization", "")
     if not auth_header.startswith("Bearer "):
         return None, None
@@ -54,6 +54,8 @@ def _extract_user_from_token(request: Request) -> tuple[int | None, str | None]:
             audience=settings.JWT.AUDIENCE,
             options={"verify_exp": True},
         )
+        request.state._jwt_payload = payload
+        request.state._jwt_raw_token = token
         user_id = payload.get("user_id")
         username = payload.get("username")
         if user_id:

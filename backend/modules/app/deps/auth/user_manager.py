@@ -13,6 +13,7 @@ from core.response import CustomErrorCode
 from logging import getLogger
 from core.security.oauth.jwt import JWTAuthManager, Token, oauth2_scheme
 from core.redis import get_redis_util
+from core.utils.session_cache import get_session_cache
 from fastapi.concurrency import run_in_threadpool
 from core.utils.session_utils import generate_session_id
 from core.security.oauth.user_manager import base_user_manager
@@ -276,11 +277,17 @@ class UserManager:
             raise TokenError()
         if not user_role:
             raise TokenError()
-        local_session_id = await get_redis_util().get(
-            settings.JWT.SESSION_PREFIX + user_role + str(user_id)
-        )
-        if local_session_id != session_id:
-            raise TokenError()
+        cache_key = settings.JWT.SESSION_PREFIX + user_role + str(user_id)
+        cached_session_id = get_session_cache().get(cache_key)
+        if cached_session_id is not None:
+            if cached_session_id != session_id:
+                raise TokenError()
+        else:
+            local_session_id = await get_redis_util().get(cache_key)
+            if local_session_id != session_id:
+                raise TokenError()
+            if local_session_id is not None:
+                get_session_cache().set(cache_key, local_session_id)
         if user_id is None:
             raise TokenError()
         return int(user_id), session_id
@@ -300,7 +307,9 @@ class UserManager:
         """
         退出登录
         """
-        await get_redis_util().delete(settings.JWT.SESSION_PREFIX + str(user_id))
+        cache_key = settings.JWT.SESSION_PREFIX + str(user_id)
+        get_session_cache().invalidate(cache_key)
+        await get_redis_util().delete(cache_key)
 
     async def current_user(self, token: str) -> AppUser:
         """

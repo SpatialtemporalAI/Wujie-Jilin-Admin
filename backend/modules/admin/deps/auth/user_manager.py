@@ -19,6 +19,7 @@ from core.security.password import PasswordHasher
 from core.redis import get_redis_util
 from core.middleware.share_middleware import request_ctx
 from core.utils.ip_utils import get_real_client_ip
+from core.utils.session_cache import get_session_cache
 from datetime import datetime, timedelta, timezone
 
 
@@ -125,7 +126,16 @@ class UserManager(BaseUserManager):
             user_id: 用户id
             session_id: 会话id
         """
-        payload = self.jwt_manager.decode_token(token)
+        # 优先复用中间件已解码的 JWT payload，避免重复解码
+        request: Request = request_ctx.get()
+        cached_payload = None
+        if request is not None:
+            cached_payload = getattr(request.state, "_jwt_payload", None)
+            cached_token = getattr(request.state, "_jwt_raw_token", None)
+            if cached_token != token:
+                cached_payload = None
+
+        payload = cached_payload if cached_payload is not None else self.jwt_manager.decode_token(token)
         session_id = payload.get("session_id")
         user_id = payload.get("user_id")
         user_role = payload.get("role")
@@ -137,11 +147,17 @@ class UserManager(BaseUserManager):
             raise TokenError()
         if not user_role:
             raise TokenError()
-        local_session_id = await get_redis_util().get(
-            settings.JWT.SESSION_PREFIX + user_role + str(user_id)
-        )
-        if local_session_id != session_id:
-            raise TokenError()
+        cache_key = settings.JWT.SESSION_PREFIX + user_role + str(user_id)
+        cached_session_id = get_session_cache().get(cache_key)
+        if cached_session_id is not None:
+            if cached_session_id != session_id:
+                raise TokenError()
+        else:
+            local_session_id = await get_redis_util().get(cache_key)
+            if local_session_id != session_id:
+                raise TokenError()
+            if local_session_id is not None:
+                get_session_cache().set(cache_key, local_session_id)
         if user_id is None:
             raise TokenError()
         return int(user_id), session_id
