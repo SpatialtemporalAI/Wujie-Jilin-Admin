@@ -261,13 +261,7 @@ class RoleService:
         # 更新其他字段
         for key, value in update_data.items():
             if hasattr(role, key) and value is not None:
-                # 处理状态字段，将字符串转换为布尔值
-                if key == "status":
-                    setattr(
-                        role, key, value == "1" if isinstance(value, str) else value
-                    )
-                else:
-                    setattr(role, key, value)
+                setattr(role, key, value)
 
         await db.commit()
         await db.refresh(role)

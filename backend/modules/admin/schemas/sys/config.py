@@ -113,7 +113,7 @@ class SysConfigUpdate(BaseEntity):
     type: Optional[ConfigType] = Field(None, description="配置类型")
     group: Optional[ConfigGroup] = Field(None, description="配置分组")
 
-    is_system: Optional[bool] = Field(None, description="是否为系统内置配置")
+    is_system: BoolField = Field(None, description="是否为系统内置配置")
 
 
 class SysConfigBaseResp(BaseRespEntity):

@@ -4,9 +4,9 @@
 from typing import Optional
 from datetime import datetime
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, ConfigDict, Field
 
-from app.models.common.base import BoolField
+from app.models.common.base import BaseRespEntity, BoolField
 
 
 class SysPermissionQueryParams(BaseModel):
@@ -40,12 +40,14 @@ class SysPermissionUpdate(BaseModel):
     method: Optional[str] = Field(None, description="请求方法")
     category: Optional[str] = Field(None, description="权限分类")
     type: Optional[str] = Field(None, description="权限类型")
-    status: Optional[bool] = Field(None, description="状态")
+    status: BoolField = Field(None, description="状态")
     sort: Optional[int] = Field(None, description="排序号")
 
 
-class SysPermissionResponse(BaseModel):
+class SysPermissionResponse(BaseRespEntity):
     """权限响应模型"""
+
+    model_config = ConfigDict(from_attributes=True)
 
     id: int
     name: str
@@ -59,5 +61,3 @@ class SysPermissionResponse(BaseModel):
     sort: int = 0
     created_at: Optional[datetime] = None
     updated_at: Optional[datetime] = None
-
-    model_config = {"from_attributes": True}
