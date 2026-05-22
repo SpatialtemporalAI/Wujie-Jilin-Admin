@@ -376,7 +376,7 @@ class RoleService:
 
     @staticmethod
     async def batch_update_roles_status(
-        db: AsyncSession, role_ids: List[int], status: str
+        db: AsyncSession, role_ids: List[int], status: bool
     ) -> int:
         """
         批量更新角色状态
@@ -384,7 +384,7 @@ class RoleService:
         Args:
             db: 数据库会话
             role_ids: 角色ID列表
-            status: 要设置的状态（1-启用，2-禁用）
+            status: 要设置的状态（True-启用，False-禁用）
 
         Returns:
             更新的角色数量
@@ -393,17 +393,15 @@ class RoleService:
 
         # 获取角色
         result = await db.execute(
-            select(SysRole)
-            .options(joinedload(SysRole.menus))
-            .where(SysRole.id.in_(role_ids))
+            select(SysRole).where(SysRole.id.in_(role_ids))
         )
-        roles = result.unique().scalars().all()
+        roles = result.scalars().all()
 
         # 更新状态
         update_count = 0
         for role in roles:
             if not role.is_system:
-                role.status = status == "1"
+                role.status = status
                 update_count += 1
             else:
                 logger.warning(f"不能修改系统内置角色状态，角色ID: {role.id}")

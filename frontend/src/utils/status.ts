@@ -5,9 +5,10 @@
  * Backend uses boolean true (enabled) / false (disabled).
  */
 
-/** Convert backend boolean to frontend EnableStatus string */
-export function booleanToEnableStatus(value: boolean | null | undefined): Api.Common.EnableStatus {
+/** Convert backend boolean/string to frontend EnableStatus string */
+export function booleanToEnableStatus(value: boolean | string | null | undefined): Api.Common.EnableStatus {
   if (value === null || value === undefined) return '1';
+  if (typeof value === 'string') return value === '1' ? '1' : '2';
   return value ? '1' : '2';
 }
 
