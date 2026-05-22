@@ -8,7 +8,7 @@
 import logging
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select, func, and_, Select
-from sqlalchemy.orm import joinedload
+from sqlalchemy.orm import joinedload, selectinload
 from typing import List, Optional, Tuple
 
 from app.models.sys.role import SysRole
@@ -42,7 +42,7 @@ class RoleService:
             SQLAlchemy查询对象
         """
         # 构建基础查询
-        base_query = select(SysRole).options(joinedload(SysRole.menus))
+        base_query = select(SysRole).options(selectinload(SysRole.menus))
 
         # 添加查询条件
         conditions = []

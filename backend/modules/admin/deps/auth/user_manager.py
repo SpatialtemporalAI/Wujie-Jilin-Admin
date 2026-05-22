@@ -9,6 +9,7 @@ from sqlalchemy import select
 from sqlalchemy.orm import joinedload
 from core.config import settings
 from app.models.sys.user import SysUser
+from app.models.sys.role import SysRole
 from app.models.sys.menu import SysMenu, MenuType
 from database import get_session
 from core.exception import CustomError, TokenError
@@ -172,7 +173,7 @@ class UserManager(BaseUserManager):
         """
         stmt = (
             select(SysUser)
-            .options(joinedload(SysUser.roles).joinedload("menus"))
+            .options(joinedload(SysUser.roles).joinedload(SysRole.menus))
             .where(SysUser.id == user_id)
         )
         result = await self.session.execute(stmt)
