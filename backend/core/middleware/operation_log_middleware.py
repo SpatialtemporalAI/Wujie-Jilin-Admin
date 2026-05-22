@@ -85,7 +85,7 @@ async def _capture_request_body(request: Request) -> str | None:
 async def _capture_response_body(response: Response) -> str | None:
     """捕获响应体内容"""
     try:
-        if isinstance(response, StreamingResponse):
+        if hasattr(response, "body_iterator"):
             body_parts = []
             async for chunk in response.body_iterator:
                 if isinstance(chunk, bytes):
