@@ -28,6 +28,7 @@ from app.models.sys.user import SysUser
 from modules.admin.services.sys import RoleService
 from modules.admin.schemas.sys.role import (
     SysRoleResponseData,
+    SysRoleListResponse,
     SysRoleSimpleResponse,
     SysRoleCreate,
     SysRoleUpdate,
@@ -42,7 +43,7 @@ logger = logging.getLogger(__name__)
 role_router = APIRouter(prefix="/role", tags=["角色管理"])
 
 
-@role_router.get("/list", response_model=ResponsePageModel[SysRoleResponseData])
+@role_router.get("/list", response_model=ResponsePageModel[SysRoleListResponse])
 async def get_role_list(
     page_params: PageRequest = Depends(get_page_params),
     query_params: SysRoleQueryParams = Depends(),
@@ -65,11 +66,11 @@ async def get_role_list(
         db=db,
         page_params=page_params,
         query=query,
-        schema=SysRoleResponseData,
+        schema=SysRoleListResponse,
     )
 
     logger.info(f"获取角色列表成功，共 {page_data.total} 条记录")
-    return ResponsePageModel[SysRoleResponseData](data=page_data)
+    return ResponsePageModel[SysRoleListResponse](data=page_data)
 
 
 @role_router.get("/export", summary="导出角色列表 Excel")

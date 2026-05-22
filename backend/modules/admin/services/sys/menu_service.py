@@ -8,6 +8,7 @@
 import logging
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select, and_,Select
+from sqlalchemy.orm import noload
 from typing import List, Optional, Tuple
 
 from sqlalchemy import func
@@ -83,8 +84,12 @@ class MenuService:
         Returns:
             SQLAlchemy查询对象
         """
-        # 构建基础查询
-        base_query = select(SysMenu)
+        # 构建基础查询（抑制模型级 selectin 自动联查）
+        base_query = select(SysMenu).options(
+            noload(SysMenu.children),
+            noload(SysMenu.parent),
+            noload(SysMenu.roles),
+        )
 
         # 添加查询条件
         conditions = []

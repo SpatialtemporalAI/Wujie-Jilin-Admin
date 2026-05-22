@@ -32,22 +32,9 @@ class UserService:
     """
 
     @staticmethod
-    def build_user_query(
-        query_params: SysUserQueryParams,
+    def _apply_user_filters(
+        base_query: Select, query_params: SysUserQueryParams
     ) -> Select:
-        """
-        构建用户查询对象
-
-        Args:
-            query_params: 查询参数
-
-        Returns:
-            SQLAlchemy查询对象
-        """
-        # 构建基础查询
-        base_query = select(SysUser).options(selectinload(SysUser.roles))
-
-        # 添加查询条件
         conditions = []
         if query_params.status is not None:
             conditions.append(SysUser.status == query_params.status)
@@ -69,10 +56,39 @@ class UserService:
         if conditions:
             base_query = base_query.where(and_(*conditions))
 
-        # 添加排序
-        base_query = base_query.order_by(SysUser.created_at.desc())
+        return base_query.order_by(SysUser.created_at.desc())
 
-        return base_query
+    @staticmethod
+    def build_user_list_query(
+        query_params: SysUserQueryParams,
+    ) -> Select:
+        """
+        构建用户列表查询对象（不加载关联角色）
+
+        Args:
+            query_params: 查询参数
+
+        Returns:
+            SQLAlchemy查询对象
+        """
+        base_query = select(SysUser)
+        return UserService._apply_user_filters(base_query, query_params)
+
+    @staticmethod
+    def build_user_query(
+        query_params: SysUserQueryParams,
+    ) -> Select:
+        """
+        构建用户查询对象（加载关联角色，用于导出等需要角色信息的场景）
+
+        Args:
+            query_params: 查询参数
+
+        Returns:
+            SQLAlchemy查询对象
+        """
+        base_query = select(SysUser).options(selectinload(SysUser.roles))
+        return UserService._apply_user_filters(base_query, query_params)
 
     @staticmethod
     async def get_user_list(

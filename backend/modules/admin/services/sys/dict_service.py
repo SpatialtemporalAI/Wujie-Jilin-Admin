@@ -8,6 +8,7 @@
 import logging
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select, delete, or_, and_, func, Select
+from sqlalchemy.orm import noload
 from typing import List, Optional, Tuple
 
 from app.models.sys.dict import SysDict, SysDictItem
@@ -45,8 +46,8 @@ class DictService:
         Returns:
             SQLAlchemy查询对象
         """
-        # 构建基础查询
-        base_query = select(SysDict)
+        # 构建基础查询（抑制模型级 selectin 自动联查 dict_items）
+        base_query = select(SysDict).options(noload(SysDict.dict_items))
 
         # 构建筛选条件
         conditions = []
@@ -428,8 +429,8 @@ class DictService:
         Returns:
             SQLAlchemy查询对象
         """
-        # 构建基础查询
-        base_query = select(SysDictItem)
+        # 构建基础查询（抑制模型级 selectin 自动联查 dict）
+        base_query = select(SysDictItem).options(noload(SysDictItem.dict))
 
         # 构建筛选条件
         conditions = []

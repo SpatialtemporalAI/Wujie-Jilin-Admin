@@ -29,6 +29,7 @@ from app.models.sys.user import SysUser
 from modules.admin.services.sys import UserService
 from modules.admin.schemas.sys.user import (
     SysUserResponseData,
+    SysUserListResponse,
     SysUserCreate,
     SysUserUpdate,
     SysUserPasswordUpdate,
@@ -42,7 +43,7 @@ logger = logging.getLogger(__name__)
 user_router = APIRouter(prefix="/user", tags=["用户管理"])
 
 
-@user_router.get("/list", response_model=ResponsePageModel[SysUserResponseData])
+@user_router.get("/list", response_model=ResponsePageModel[SysUserListResponse])
 async def get_user_list(
     page_params: PageRequest = Depends(get_page_params),
     query_params: SysUserQueryParams = Depends(),
@@ -57,19 +58,19 @@ async def get_user_list(
     query_params.page = page_params.page
     query_params.page_size = page_params.page_size
 
-    # 构建查询对象
-    query = UserService.build_user_query(query_params)
+    # 构建查询对象（不加载关联角色）
+    query = UserService.build_user_list_query(query_params)
 
     # 使用通用分页方法
     page_data = await get_paginated_results(
         db=db,
         page_params=page_params,
         query=query,
-        schema=SysUserResponseData,
+        schema=SysUserListResponse,
     )
 
     logger.info(f"获取用户列表成功，共 {page_data.total} 条记录")
-    return ResponsePageModel[SysUserResponseData](data=page_data)
+    return ResponsePageModel[SysUserListResponse](data=page_data)
 
 
 @user_router.get("/export", summary="导出用户列表 Excel")

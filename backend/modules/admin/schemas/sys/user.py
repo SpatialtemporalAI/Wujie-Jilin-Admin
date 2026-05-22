@@ -158,6 +158,28 @@ class SysRoleSimpleResponseForUser(BaseRespEntity):
     status: bool = Field(..., description="角色状态")
 
 
+class SysUserListResponse(BaseRespEntity):
+    """
+    系统用户列表响应模型
+    用于用户列表展示，不包含关联角色数据
+    """
+
+    model_config = ConfigDict(from_attributes=True)
+
+    id: int = Field(..., description="用户ID")
+    username: str = Field(..., description="用户名")
+    nickname: str = Field(..., description="用户昵称")
+    email: Optional[str] = Field(None, description="邮箱")
+    phone: Optional[str] = Field(None, description="手机号")
+    avatar: Optional[str] = Field(None, description="头像URL")
+    is_superuser: bool = Field(..., description="是否为超级管理员")
+    status: bool = Field(..., description="用户状态")
+    last_login_at: Optional[datetime] = Field(None, description="最后登录时间")
+    last_login_ip: Optional[str] = Field(None, description="最后登录IP")
+    created_at: datetime = Field(..., description="创建时间")
+    updated_at: Optional[datetime] = Field(None, description="更新时间")
+
+
 class SysUserResponseData(BaseRespEntity):
     """
     系统用户详细响应模型

@@ -62,6 +62,26 @@ class SysRoleSimpleResponse(BaseRespEntity):
     status: bool = Field(..., description="角色状态")
 
 
+class SysRoleListResponse(BaseRespEntity):
+    """
+    系统角色列表响应模型
+    用于角色列表展示，不包含关联菜单数据
+    """
+
+    model_config = ConfigDict(from_attributes=True, populate_by_name=True)
+
+    id: int = Field(..., description="角色ID")
+    name: str = Field(..., description="角色名称")
+    code: str = Field(..., description="角色编码")
+    desc: Optional[str] = Field(None, description="角色描述")
+    status: bool = Field(True, description="角色状态：1-启用，2-禁用")
+    is_default: bool = Field(..., description="是否为默认角色")
+    is_system: bool = Field(..., description="是否为系统内置角色")
+    sort: int = Field(..., description="排序号")
+    createTime: Optional[str] = Field(None, description="创建时间")
+    updateTime: Optional[str] = Field(None, description="更新时间")
+
+
 class SysRoleResponseData(BaseRespEntity):
     """
     系统角色详细响应模型
