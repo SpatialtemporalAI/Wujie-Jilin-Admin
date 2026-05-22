@@ -230,7 +230,9 @@ async def create_dict(
     try:
         logger.info("创建字典接口被调用")
 
-        dict_obj = await DictService.create_dict(db, dict_in)
+        dict_obj = await DictService.create_dict(
+            db, dict_in, is_superuser=user.is_superuser
+        )
         response_data = SysDictResponseData.model_validate(dict_obj)
 
         logger.info("创建字典接口成功，字典ID: %d", dict_obj.id)
@@ -256,7 +258,9 @@ async def update_dict(
     try:
         logger.info("更新字典接口被调用，字典ID: %d", dict_id)
 
-        dict_obj = await DictService.update_dict(db, dict_id, dict_in)
+        dict_obj = await DictService.update_dict(
+            db, dict_id, dict_in, is_superuser=user.is_superuser
+        )
         response_data = SysDictResponseData.model_validate(dict_obj)
 
         logger.info("更新字典接口成功，字典ID: %d", dict_id)
@@ -281,7 +285,9 @@ async def batch_update_dict_status(
     try:
         logger.info("批量更新字典状态接口被调用")
 
-        updated_count = await DictService.batch_update_dict_status(db, batch_in)
+        updated_count = await DictService.batch_update_dict_status(
+            db, batch_in, is_superuser=user.is_superuser
+        )
 
         logger.info("批量更新字典状态接口成功，更新数量: %d", updated_count)
         return response_base.success(msg=f"成功更新 {updated_count} 条记录")
@@ -329,7 +335,7 @@ async def delete_dict(
     try:
         logger.info("删除字典接口被调用，字典ID: %d", dict_id)
 
-        await DictService.delete_dict(db, dict_id)
+        await DictService.delete_dict(db, dict_id, is_superuser=user.is_superuser)
 
         logger.info("删除字典接口成功，字典ID: %d", dict_id)
         return response_base.success(msg="删除成功")

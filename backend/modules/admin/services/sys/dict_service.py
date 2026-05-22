@@ -220,7 +220,9 @@ class DictService:
             raise
 
     @staticmethod
-    async def create_dict(db: AsyncSession, dict_in: SysDictCreate) -> SysDict:
+    async def create_dict(
+        db: AsyncSession, dict_in: SysDictCreate, *, is_superuser: bool = False
+    ) -> SysDict:
         """
         创建字典
 
@@ -252,7 +254,7 @@ class DictService:
                 description=dict_in.description,
                 status=dict_in.status,
                 sort=dict_in.sort,
-                is_system=False,
+                is_system=False if not is_superuser else getattr(dict_in, 'is_system', False),
             )
 
             db.add(dict_obj)
@@ -272,7 +274,11 @@ class DictService:
 
     @staticmethod
     async def update_dict(
-        db: AsyncSession, dict_id: int, dict_in: SysDictUpdate
+        db: AsyncSession,
+        dict_id: int,
+        dict_in: SysDictUpdate,
+        *,
+        is_superuser: bool = False,
     ) -> SysDict:
         """
         更新字典
@@ -304,8 +310,8 @@ class DictService:
                 logger.warning("字典不存在，字典ID: %d", dict_id)
                 raise NotFoundError(msg=f"字典 {dict_id} 不存在")
 
-            # 检查是否为系统内置字典
-            if existing_dict.is_system:
+            # 非超级管理员不能修改系统内置字典
+            if existing_dict.is_system and not is_superuser:
                 logger.warning("系统内置字典禁止修改，字典ID: %d", dict_id)
                 raise ForbiddenError(msg="系统内置字典禁止修改")
 
@@ -330,7 +336,10 @@ class DictService:
 
     @staticmethod
     async def batch_update_dict_status(
-        db: AsyncSession, batch_in: SysDictBatchUpdateStatus
+        db: AsyncSession,
+        batch_in: SysDictBatchUpdateStatus,
+        *,
+        is_superuser: bool = False,
     ) -> int:
         """
         批量更新字典状态
@@ -354,9 +363,13 @@ class DictService:
             stmt = (
                 update(SysDict)
                 .where(SysDict.id.in_(batch_in.dict_ids))
-                .where(SysDict.is_system == False)
-                .values(status=batch_in.status)
             )
+
+            # 非超级管理员跳过系统内置字典
+            if not is_superuser:
+                stmt = stmt.where(SysDict.is_system == False)
+
+            stmt = stmt.values(status=batch_in.status)
             result = await db.execute(stmt)
             updated_count = result.rowcount
 
@@ -371,7 +384,9 @@ class DictService:
             raise
 
     @staticmethod
-    async def delete_dict(db: AsyncSession, dict_id: int) -> bool:
+    async def delete_dict(
+        db: AsyncSession, dict_id: int, *, is_superuser: bool = False
+    ) -> bool:
         """
         删除字典
 
@@ -397,8 +412,8 @@ class DictService:
                 logger.warning("字典不存在，字典ID: %d", dict_id)
                 raise NotFoundError(msg=f"字典 {dict_id} 不存在")
 
-            # 检查是否为系统内置字典
-            if dict_obj.is_system:
+            # 非超级管理员不能删除系统内置字典
+            if dict_obj.is_system and not is_superuser:
                 logger.warning("系统内置字典禁止删除，字典ID: %d", dict_id)
                 raise ForbiddenError(msg="系统内置字典禁止删除")
 

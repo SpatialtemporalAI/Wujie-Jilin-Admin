@@ -146,7 +146,9 @@ class RoleService:
         return result.scalar_one_or_none()
 
     @staticmethod
-    async def create_role(db: AsyncSession, role_create: SysRoleCreate) -> SysRole:
+    async def create_role(
+        db: AsyncSession, role_create: SysRoleCreate, *, is_superuser: bool = False
+    ) -> SysRole:
         """
         创建角色
 
@@ -174,7 +176,7 @@ class RoleService:
             desc=role_create.desc,
             status=role_create.status,
             sort=role_create.sort,
-            is_system=False,
+            is_system=False if not is_superuser else getattr(role_create, 'is_system', False),
             is_default=False,
         )
 
@@ -203,7 +205,11 @@ class RoleService:
 
     @staticmethod
     async def update_role(
-        db: AsyncSession, role_id: int, role_update: SysRoleUpdate
+        db: AsyncSession,
+        role_id: int,
+        role_update: SysRoleUpdate,
+        *,
+        is_superuser: bool = False,
     ) -> SysRole:
         """
         更新角色
@@ -226,7 +232,7 @@ class RoleService:
         role = await RoleService.get_role(db, role_id)
 
         # 检查是否为系统内置角色
-        if role.is_system:
+        if role.is_system and not is_superuser:
             logger.warning(f"更新角色失败，不能修改系统内置角色，角色ID: {role_id}")
             raise ForbiddenError(msg="不能修改系统内置角色")
 
@@ -271,7 +277,11 @@ class RoleService:
 
     @staticmethod
     async def assign_menu_to_role(
-        db: AsyncSession, role_id: int, menu_ids: List[int]
+        db: AsyncSession,
+        role_id: int,
+        menu_ids: List[int],
+        *,
+        is_superuser: bool = False,
     ) -> SysRole:
         """
         为角色分配菜单权限
@@ -294,7 +304,7 @@ class RoleService:
         role = await RoleService.get_role(db, role_id)
 
         # 检查是否为系统内置角色
-        if role.is_system:
+        if role.is_system and not is_superuser:
             logger.warning(f"分配菜单失败，不能修改系统内置角色，角色ID: {role_id}")
             raise ForbiddenError(msg="不能修改系统内置角色")
 
@@ -313,7 +323,9 @@ class RoleService:
         return role
 
     @staticmethod
-    async def delete_role(db: AsyncSession, role_id: int) -> bool:
+    async def delete_role(
+        db: AsyncSession, role_id: int, *, is_superuser: bool = False
+    ) -> bool:
         """
         删除角色
 
@@ -334,7 +346,7 @@ class RoleService:
         role = await RoleService.get_role(db, role_id)
 
         # 检查是否为系统内置角色或默认角色
-        if role.is_system:
+        if role.is_system and not is_superuser:
             logger.warning(f"删除角色失败，不能删除系统内置角色，角色ID: {role_id}")
             raise ForbiddenError(msg="不能删除系统内置角色")
 
@@ -349,7 +361,9 @@ class RoleService:
         return True
 
     @staticmethod
-    async def batch_delete_roles(db: AsyncSession, role_ids: List[int]) -> int:
+    async def batch_delete_roles(
+        db: AsyncSession, role_ids: List[int], *, is_superuser: bool = False
+    ) -> int:
         """
         批量删除角色
 
@@ -365,7 +379,7 @@ class RoleService:
         delete_count = 0
         for role_id in role_ids:
             try:
-                await RoleService.delete_role(db, role_id)
+                await RoleService.delete_role(db, role_id, is_superuser=is_superuser)
                 delete_count += 1
             except Exception as e:
                 logger.error(f"删除角色失败，角色ID: {role_id}, 错误: {str(e)}")
@@ -376,7 +390,11 @@ class RoleService:
 
     @staticmethod
     async def batch_update_roles_status(
-        db: AsyncSession, role_ids: List[int], status: bool
+        db: AsyncSession,
+        role_ids: List[int],
+        status: bool,
+        *,
+        is_superuser: bool = False,
     ) -> int:
         """
         批量更新角色状态
@@ -400,7 +418,7 @@ class RoleService:
         # 更新状态
         update_count = 0
         for role in roles:
-            if not role.is_system:
+            if not role.is_system or is_superuser:
                 role.status = status
                 update_count += 1
             else:

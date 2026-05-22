@@ -138,7 +138,9 @@ async def create_role(
     """
     logger.info(f"创建角色请求，角色名: {role_create.name}, 编码: {role_create.code}")
 
-    role = await RoleService.create_role(db, role_create)
+    role = await RoleService.create_role(
+        db, role_create, is_superuser=user.is_superuser
+    )
     role_response = SysRoleResponseData.model_validate(role)
 
     logger.info(f"创建角色成功，角色ID: {role.id}")
@@ -159,7 +161,9 @@ async def update_role(
     """
     logger.info(f"更新角色请求，角色ID: {role_id}")
 
-    role = await RoleService.update_role(db, role_id, role_update)
+    role = await RoleService.update_role(
+        db, role_id, role_update, is_superuser=user.is_superuser
+    )
     role_response = SysRoleResponseData.model_validate(role)
 
     logger.info(f"更新角色成功，角色ID: {role_id}")
@@ -182,7 +186,9 @@ async def assign_menu_to_role(
         f"为角色分配菜单权限请求，角色ID: {role_id}, 菜单ID: {assign_in.menu_ids}"
     )
 
-    role = await RoleService.assign_menu_to_role(db, role_id, assign_in.menu_ids)
+    role = await RoleService.assign_menu_to_role(
+        db, role_id, assign_in.menu_ids, is_superuser=user.is_superuser
+    )
     role_response = SysRoleResponseData.model_validate(role)
 
     logger.info(f"为角色分配菜单权限成功，角色ID: {role_id}")
@@ -202,7 +208,9 @@ async def batch_delete_roles(
     """
     logger.info(f"批量删除角色请求，角色ID: {role_ids}")
 
-    delete_count = await RoleService.batch_delete_roles(db, role_ids)
+    delete_count = await RoleService.batch_delete_roles(
+        db, role_ids, is_superuser=user.is_superuser
+    )
 
     logger.info(f"批量删除角色成功，共删除 {delete_count} 个角色")
     return ResponseModel(
@@ -227,7 +235,7 @@ async def batch_update_roles_status(
     )
 
     update_count = await RoleService.batch_update_roles_status(
-        db, batch_update.role_ids, batch_update.status
+        db, batch_update.role_ids, batch_update.status, is_superuser=user.is_superuser
     )
 
     status_text = "启用" if batch_update.status else "禁用"
@@ -251,7 +259,7 @@ async def delete_role(
     """
     logger.info(f"删除角色请求，角色ID: {role_id}")
 
-    await RoleService.delete_role(db, role_id)
+    await RoleService.delete_role(db, role_id, is_superuser=user.is_superuser)
 
     logger.info(f"删除角色成功，角色ID: {role_id}")
     return ResponseModel(msg="删除角色成功")

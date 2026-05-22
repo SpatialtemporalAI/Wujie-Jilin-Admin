@@ -347,7 +347,9 @@ class ConfigService:
             return False
 
     @staticmethod
-    async def create_config(db: AsyncSession, config_in: SysConfigCreate) -> SysConfig:
+    async def create_config(
+        db: AsyncSession, config_in: SysConfigCreate, *, is_superuser: bool = False
+    ) -> SysConfig:
         """
         创建配置
 
@@ -375,6 +377,11 @@ class ConfigService:
                 raise ValidationError(
                     msg=f"配置值不符合 {config_in.type.value} 类型要求"
                 )
+
+            # 非超级管理员不能创建系统内置配置
+            if config_in.is_system and not is_superuser:
+                logger.warning("非超级管理员不能创建系统内置配置")
+                raise ForbiddenError(msg="非超级管理员不能创建系统内置配置")
 
             # 检查配置键是否已存在
             result = await db.execute(
@@ -413,7 +420,11 @@ class ConfigService:
 
     @staticmethod
     async def update_config(
-        db: AsyncSession, config_id: int, config_in: SysConfigUpdate
+        db: AsyncSession,
+        config_id: int,
+        config_in: SysConfigUpdate,
+        *,
+        is_superuser: bool = False,
     ) -> SysConfig:
         """
         更新配置
@@ -448,8 +459,8 @@ class ConfigService:
                 logger.warning("配置不存在，配置ID: %d", config_id)
                 raise NotFoundError(msg=f"配置 {config_id} 不存在")
 
-            # 检查是否为系统内置配置
-            if existing_config.is_system:
+            # 非超级管理员不能修改系统内置配置
+            if existing_config.is_system and not is_superuser:
                 logger.warning("系统内置配置禁止修改，配置ID: %d", config_id)
                 raise ForbiddenError(msg="系统内置配置禁止修改")
 
@@ -487,7 +498,7 @@ class ConfigService:
 
     @staticmethod
     async def batch_update_configs(
-        db: AsyncSession, batch_in: SysConfigBatchUpdate
+        db: AsyncSession, batch_in: SysConfigBatchUpdate, *, is_superuser: bool = False
     ) -> int:
         """
         批量更新配置
@@ -516,6 +527,9 @@ class ConfigService:
                 config = result.scalar_one_or_none()
 
                 if config:
+                    # 非超级管理员跳过系统内置配置
+                    if config.is_system and not is_superuser:
+                        continue
                     if ConfigService._validate_value(value, config.type):
                         config.value = value
                         updated_count += 1
@@ -531,7 +545,9 @@ class ConfigService:
             raise
 
     @staticmethod
-    async def reset_configs(db: AsyncSession, reset_in: SysConfigReset) -> int:
+    async def reset_configs(
+        db: AsyncSession, reset_in: SysConfigReset, *, is_superuser: bool = False
+    ) -> int:
         """
         重置配置为默认值
 
@@ -553,6 +569,9 @@ class ConfigService:
                 config = result.scalar_one_or_none()
 
                 if config and config.default_value is not None:
+                    # 非超级管理员跳过系统内置配置
+                    if config.is_system and not is_superuser:
+                        continue
                     config.value = config.default_value
                     reset_count += 1
 
@@ -567,7 +586,9 @@ class ConfigService:
             raise
 
     @staticmethod
-    async def delete_config(db: AsyncSession, config_id: int) -> bool:
+    async def delete_config(
+        db: AsyncSession, config_id: int, *, is_superuser: bool = False
+    ) -> bool:
         """
         删除配置
 
@@ -595,8 +616,8 @@ class ConfigService:
                 logger.warning("配置不存在，配置ID: %d", config_id)
                 raise NotFoundError(msg=f"配置 {config_id} 不存在")
 
-            # 检查是否为系统内置配置
-            if config.is_system:
+            # 非超级管理员不能删除系统内置配置
+            if config.is_system and not is_superuser:
                 logger.warning("系统内置配置禁止删除，配置ID: %d", config_id)
                 raise ForbiddenError(msg="系统内置配置禁止删除")
 
@@ -615,7 +636,9 @@ class ConfigService:
             raise
 
     @staticmethod
-    async def batch_delete_configs(db: AsyncSession, config_ids: List[int]) -> int:
+    async def batch_delete_configs(
+        db: AsyncSession, config_ids: List[int], *, is_superuser: bool = False
+    ) -> int:
         """
         批量删除配置
 
@@ -636,7 +659,9 @@ class ConfigService:
             delete_count = 0
             for config_id in config_ids:
                 try:
-                    await ConfigService.delete_config(db, config_id)
+                    await ConfigService.delete_config(
+                        db, config_id, is_superuser=is_superuser
+                    )
                     delete_count += 1
                 except Exception as e:
                     logger.error(

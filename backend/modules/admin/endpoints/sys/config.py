@@ -224,7 +224,9 @@ async def create_config(
     try:
         logger.info("创建配置接口被调用")
 
-        config = await ConfigService.create_config(db, config_in)
+        config = await ConfigService.create_config(
+            db, config_in, is_superuser=user.is_superuser
+        )
         response_data = SysConfigResponseData.model_validate(config)
 
         logger.info("创建配置接口成功，配置ID: %d", config.id)
@@ -250,7 +252,9 @@ async def update_config(
     try:
         logger.info("更新配置接口被调用，配置ID: %d", config_id)
 
-        config = await ConfigService.update_config(db, config_id, config_in)
+        config = await ConfigService.update_config(
+            db, config_id, config_in, is_superuser=user.is_superuser
+        )
         response_data = SysConfigResponseData.model_validate(config)
 
         logger.info("更新配置接口成功，配置ID: %d", config_id)
@@ -275,7 +279,9 @@ async def batch_update_configs(
     try:
         logger.info("批量更新配置接口被调用")
 
-        updated_count = await ConfigService.batch_update_configs(db, batch_in)
+        updated_count = await ConfigService.batch_update_configs(
+            db, batch_in, is_superuser=user.is_superuser
+        )
 
         logger.info("批量更新配置接口成功，更新数量: %d", updated_count)
         return response_base.success(msg=f"成功更新 {updated_count} 条记录")
@@ -299,7 +305,9 @@ async def reset_configs(
     try:
         logger.info("重置配置接口被调用")
 
-        reset_count = await ConfigService.reset_configs(db, reset_in)
+        reset_count = await ConfigService.reset_configs(
+            db, reset_in, is_superuser=user.is_superuser
+        )
 
         logger.info("重置配置接口成功，重置数量: %d", reset_count)
         return response_base.success(msg=f"成功重置 {reset_count} 条记录")
@@ -323,7 +331,9 @@ async def batch_delete_configs(
     try:
         logger.info("批量删除配置接口被调用，配置ID列表: %s", config_ids)
 
-        delete_count = await ConfigService.batch_delete_configs(db, config_ids)
+        delete_count = await ConfigService.batch_delete_configs(
+            db, config_ids, is_superuser=user.is_superuser
+        )
 
         logger.info("批量删除配置接口成功，共删除 %d 个配置", delete_count)
         return response_base.success(msg=f"批量删除成功，共删除 {delete_count} 个配置")
@@ -347,7 +357,9 @@ async def delete_config(
     try:
         logger.info("删除配置接口被调用，配置ID: %d", config_id)
 
-        await ConfigService.delete_config(db, config_id)
+        await ConfigService.delete_config(
+            db, config_id, is_superuser=user.is_superuser
+        )
 
         logger.info("删除配置接口成功，配置ID: %d", config_id)
         return response_base.success(msg="删除成功")
