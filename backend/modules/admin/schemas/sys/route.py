@@ -8,6 +8,7 @@ class RouteMetaResponse(BaseModel):
     """路由元信息响应模型"""
 
     title: str = Field(..., description="路由标题")
+    i18nKey: str | None = Field(None, description="国际化键")
     icon: str | None = Field(None, description="路由图标")
     order: int | None = Field(None, description="排序号")
     hideInMenu: bool | None = Field(None, description="是否隐藏菜单")

@@ -49,6 +49,8 @@ PAGE_COMPONENTS = [
     "manage_role",
     "manage_user-detail",
     "manage_user",
+    "log_login-log",
+    "log_operation-log",
 ]
 
 
@@ -110,6 +112,25 @@ async def get_menu_tree(
     menu_tree = await MenuService.get_menu_tree(db, status=query_params.status)
 
     logger.info(f"获取菜单树结构成功，共 {len(menu_tree)} 个根菜单")
+    return ResponseModel(data=menu_tree)
+
+
+@menu_router.get(
+    "/user-menus", response_model=ResponseModel[List[SysMenuTreeResponse]]
+)
+async def get_user_menus(
+    user: SysUser = Depends(current_user),
+    db: AsyncSession = Depends(get_session),
+):
+    """
+    获取当前用户的菜单权限树
+    根据当前用户角色返回可访问的菜单树结构
+    """
+    logger.info(f"获取用户菜单权限树请求，用户ID: {user.id}")
+
+    menu_tree = await MenuService.get_user_menu_tree(db, user)
+
+    logger.info(f"获取用户菜单权限树成功，共 {len(menu_tree)} 个根菜单")
     return ResponseModel(data=menu_tree)
 
 

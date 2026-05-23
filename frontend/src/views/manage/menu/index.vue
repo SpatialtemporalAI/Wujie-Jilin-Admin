@@ -67,6 +67,8 @@ const { columns, columnChecks, data, loading, pagination, getData, getDataByPage
       align: 'center',
       width: 60,
       render: row => {
+        if (!row.icon) return <div class="flex-center">-</div>;
+
         const icon = row.iconType === '1' ? row.icon : undefined;
 
         const localIcon = row.iconType === '2' ? row.icon : undefined;

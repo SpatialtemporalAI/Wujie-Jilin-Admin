@@ -8,11 +8,13 @@
 import logging
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select, and_,Select
-from sqlalchemy.orm import noload
+from sqlalchemy.orm import noload, joinedload
 from typing import List, Optional, Tuple
 
 from sqlalchemy import func
 from app.models.sys.menu import SysMenu, MenuType
+from app.models.sys.user import SysUser
+from app.models.sys.role import SysRole
 from core.exception.errors import NotFoundError, ConflictError
 from modules.admin.schemas.sys.menu import (
     SysMenuCreate,
@@ -420,3 +422,101 @@ class MenuService:
 
         logger.info(f"批量删除菜单成功，共删除 {delete_count} 个菜单")
         return delete_count
+
+    @staticmethod
+    async def get_user_menu_tree(
+        db: AsyncSession, user: SysUser
+    ) -> List[SysMenuTreeResponse]:
+        """
+        获取当前用户的菜单权限树
+
+        Args:
+            db: 数据库会话
+            user: 当前用户
+
+        Returns:
+            菜单权限树
+        """
+        logger.info(f"获取用户菜单权限树，用户ID: {user.id}")
+
+        if user.is_superuser:
+            stmt = (
+                select(SysMenu)
+                .where(
+                    SysMenu.type != MenuType.BUTTON,
+                    SysMenu.status == True,
+                )
+                .order_by(SysMenu.sort, SysMenu.id)
+            )
+            result = await db.execute(stmt)
+            menus = result.scalars().all()
+        else:
+            # 预加载 user.roles.menus
+            stmt = (
+                select(SysUser)
+                .options(
+                    joinedload(SysUser.roles).options(
+                        joinedload(SysRole.menus)
+                    )
+                )
+                .where(SysUser.id == user.id)
+            )
+            result = await db.execute(stmt)
+            user_with_relations = result.unique().scalar_one()
+
+            # 收集所有启用的非 BUTTON 菜单 ID
+            menu_ids: set[int] = set()
+            for role in user_with_relations.roles:
+                if not role.status:
+                    continue
+                for menu in role.menus:
+                    if menu.status and menu.type != MenuType.BUTTON:
+                        menu_ids.add(menu.id)
+                        # 同时收集其所有祖先菜单 ID
+                        parent_id = menu.parent_id
+                        while parent_id:
+                            menu_ids.add(parent_id)
+                            parent_stmt = select(SysMenu.parent_id).where(
+                                SysMenu.id == parent_id
+                            )
+                            parent_result = await db.execute(parent_stmt)
+                            parent_id = parent_result.scalar_one_or_none()
+
+            if not menu_ids:
+                return []
+
+            stmt = (
+                select(SysMenu)
+                .where(
+                    SysMenu.id.in_(menu_ids),
+                    SysMenu.status == True,
+                )
+                .order_by(SysMenu.sort, SysMenu.id)
+            )
+            result = await db.execute(stmt)
+            menus = result.scalars().all()
+
+        # 构建菜单树
+        menu_map = {}
+        root_menus = []
+
+        for menu in menus:
+            menu_response = SysMenuTreeResponse(
+                id=menu.id,
+                label=menu.name,
+                pId=menu.parent_id,
+                children=[],
+            )
+            menu_map[menu.id] = menu_response
+
+        for menu in menus:
+            menu_response = menu_map[menu.id]
+            if not menu.parent_id:
+                root_menus.append(menu_response)
+            else:
+                parent = menu_map.get(menu.parent_id)
+                if parent:
+                    parent.children.append(menu_response)
+
+        logger.info(f"获取用户菜单权限树成功，共 {len(root_menus)} 个根菜单")
+        return root_menus

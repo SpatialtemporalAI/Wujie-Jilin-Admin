@@ -1,12 +1,26 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 
-from typing import Optional, List
-from pydantic import Field, ConfigDict, field_validator
+from typing import Optional, List, Annotated
+from pydantic import Field, ConfigDict, field_validator, BeforeValidator
 from datetime import datetime
+from zoneinfo import ZoneInfo
 from app.models.common.base import BaseRespEntity, BaseEntity, BoolField
 from app.models.common.page import PageRequest
 from app.models.sys.menu import MenuType
+
+
+def _format_datetime(v):
+    if isinstance(v, datetime):
+        return v.astimezone(ZoneInfo("Asia/Shanghai")).strftime("%Y-%m-%d %H:%M:%S")
+    return v
+
+
+def _menu_type_to_str(v):
+    if isinstance(v, MenuType):
+        mapping = {MenuType.CATALOG: "1", MenuType.MENU: "2", MenuType.EXTERNAL: "2", MenuType.BUTTON: "1"}
+        return mapping.get(v, v.value)
+    return v
 
 
 class SysMenuQueryParams(PageRequest):
@@ -116,27 +130,27 @@ class SysMenuResponseData(BaseRespEntity):
     model_config = ConfigDict(from_attributes=True)
 
     id: int = Field(..., description="菜单ID")
-    parentId: Optional[int] = Field(None, description="父菜单ID")
-    menuName: str = Field(..., description="菜单名称")
-    routeName: Optional[str] = Field(None, description="路由名称")
-    routePath: Optional[str] = Field(None, description="路由路径")
+    parentId: Optional[int] = Field(None, validation_alias="parent_id", description="父菜单ID")
+    menuName: str = Field(..., validation_alias="name", description="菜单名称")
+    routeName: Optional[str] = Field(None, validation_alias="meta_title", description="路由名称")
+    routePath: Optional[str] = Field(None, validation_alias="path", description="路由路径")
     component: Optional[str] = Field(None, description="组件路径")
-    icon: Optional[str] = Field(None, description="图标")
-    iconType: Optional[str] = Field(None, description="图标类型")
-    menuType: str = Field(..., description="菜单类型：1-目录，2-菜单")
-    order: int = Field(..., description="排序号")
+    icon: Optional[str] = Field(None, validation_alias="meta_icon", description="图标")
+    iconType: str = Field("1", description="图标类型：1-iconify，2-本地")
+    menuType: Annotated[str, BeforeValidator(_menu_type_to_str)] = Field(..., validation_alias="type", description="菜单类型：1-目录，2-菜单")
+    order: int = Field(..., validation_alias="sort", description="排序号")
     i18nKey: Optional[str] = Field(None, description="国际化键")
     keepAlive: bool = Field(False, description="是否缓存")
     constant: bool = Field(False, description="是否常量路由")
     href: Optional[str] = Field(None, description="外链地址")
-    hideInMenu: bool = Field(False, description="是否隐藏菜单")
+    hideInMenu: bool = Field(False, validation_alias="meta_hidden", description="是否隐藏菜单")
     activeMenu: Optional[str] = Field(None, description="激活的菜单")
     multiTab: bool = Field(True, description="是否多标签")
     fixedIndexInTab: Optional[int] = Field(None, description="固定标签索引")
     query: Optional[dict] = Field(None, description="路由查询参数")
     status: bool = Field(..., description="菜单状态")
-    createTime: str = Field(..., description="创建时间")
-    updateTime: Optional[str] = Field(None, description="更新时间")
+    createTime: Annotated[str, BeforeValidator(_format_datetime)] = Field(..., validation_alias="created_at", description="创建时间")
+    updateTime: Annotated[Optional[str], BeforeValidator(_format_datetime)] = Field(None, validation_alias="updated_at", description="更新时间")
 
 
 class SysMenuTreeResponse(BaseRespEntity):
