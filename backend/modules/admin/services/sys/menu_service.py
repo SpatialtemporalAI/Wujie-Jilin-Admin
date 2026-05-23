@@ -15,7 +15,7 @@ from sqlalchemy import func
 from app.models.sys.menu import SysMenu, MenuType
 from app.models.sys.user import SysUser
 from app.models.sys.role import SysRole
-from core.exception.errors import NotFoundError, ConflictError
+from core.exception.errors import NotFoundError, ConflictError, ForbiddenError
 from modules.admin.schemas.sys.menu import (
     SysMenuCreate,
     SysMenuUpdate,
@@ -102,6 +102,8 @@ class MenuService:
             conditions.append(SysMenu.name.like(f"%{query_params.name}%"))
         if query_params.type:
             conditions.append(SysMenu.type == query_params.type)
+        if query_params.is_system is not None:
+            conditions.append(SysMenu.is_system == query_params.is_system)
 
         if conditions:
             base_query = base_query.where(and_(*conditions))
@@ -235,7 +237,7 @@ class MenuService:
         return menu
 
     @staticmethod
-    async def create_menu(db: AsyncSession, menu_create: SysMenuCreate) -> SysMenu:
+    async def create_menu(db: AsyncSession, menu_create: SysMenuCreate, *, is_superuser: bool = False) -> SysMenu:
         """
         创建菜单
 
@@ -277,6 +279,7 @@ class MenuService:
             status=menu_create.status,
             type=menu_create.type,
             sort=menu_create.sort,
+            is_system=False if not is_superuser else getattr(menu_create, 'is_system', False),
         )
 
         db.add(menu)
@@ -288,7 +291,7 @@ class MenuService:
 
     @staticmethod
     async def update_menu(
-        db: AsyncSession, menu_id: int, menu_update: SysMenuUpdate
+        db: AsyncSession, menu_id: int, menu_update: SysMenuUpdate, *, is_superuser: bool = False
     ) -> SysMenu:
         """
         更新菜单
@@ -309,6 +312,11 @@ class MenuService:
 
         # 获取菜单
         menu = await MenuService.get_menu(db, menu_id)
+
+        # 检查是否为系统内置菜单
+        if menu.is_system and not is_superuser:
+            logger.warning(f"更新菜单失败，不能修改系统内置菜单，菜单ID: {menu_id}")
+            raise ForbiddenError(msg="不能修改系统内置菜单")
 
         # 检查父菜单
         if menu_update.parent_id is not None:
@@ -341,7 +349,7 @@ class MenuService:
         return menu
 
     @staticmethod
-    async def delete_menu(db: AsyncSession, menu_id: int) -> bool:
+    async def delete_menu(db: AsyncSession, menu_id: int, *, is_superuser: bool = False) -> bool:
         """
         删除菜单
 
@@ -360,6 +368,11 @@ class MenuService:
         # 获取菜单
         menu = await MenuService.get_menu(db, menu_id)
 
+        # 检查是否为系统内置菜单
+        if menu.is_system and not is_superuser:
+            logger.warning(f"删除菜单失败，不能删除系统内置菜单，菜单ID: {menu_id}")
+            raise ForbiddenError(msg="不能删除系统内置菜单")
+
         await db.delete(menu)
         await db.commit()
 
@@ -368,7 +381,7 @@ class MenuService:
 
     @staticmethod
     async def batch_update_menus_status(
-        db: AsyncSession, menu_ids: List[int], status: bool
+        db: AsyncSession, menu_ids: List[int], status: bool, *, is_superuser: bool = False
     ) -> int:
         """
         批量更新菜单状态
@@ -390,8 +403,11 @@ class MenuService:
         # 更新状态
         update_count = 0
         for menu in menus:
-            menu.status = status
-            update_count += 1
+            if not menu.is_system or is_superuser:
+                menu.status = status
+                update_count += 1
+            else:
+                logger.warning(f"不能修改系统内置菜单状态，菜单ID: {menu.id}")
 
         await db.commit()
 
@@ -399,7 +415,7 @@ class MenuService:
         return update_count
 
     @staticmethod
-    async def batch_delete_menus(db: AsyncSession, menu_ids: List[int]) -> int:
+    async def batch_delete_menus(db: AsyncSession, menu_ids: List[int], *, is_superuser: bool = False) -> int:
         """
         批量删除菜单
 
@@ -412,14 +428,16 @@ class MenuService:
         """
         logger.info(f"批量删除菜单，菜单ID列表: {menu_ids}")
 
-        from sqlalchemy import delete
-
-        # 执行删除
-        stmt = delete(SysMenu).where(SysMenu.id.in_(menu_ids))
-        result = await db.execute(stmt)
-        delete_count = result.rowcount
-
-        await db.commit()
+        delete_count = 0
+        for menu_id in menu_ids:
+            try:
+                await MenuService.delete_menu(db, menu_id, is_superuser=is_superuser)
+                delete_count += 1
+            except NotFoundError:
+                logger.warning(f"菜单不存在，跳过: {menu_id}")
+            except ForbiddenError as e:
+                logger.warning(f"跳过系统内置菜单: {menu_id}")
+                raise e
 
         logger.info(f"批量删除菜单成功，共删除 {delete_count} 个菜单")
         return delete_count

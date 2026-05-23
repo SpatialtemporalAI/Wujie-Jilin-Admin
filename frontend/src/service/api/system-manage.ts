@@ -138,7 +138,8 @@ export function fetchCreateMenu(menu: Partial<Api.SystemManage.Menu>) {
       meta_breadcrumb: true,
       status: true,
       type: menu.menuType === '1' ? 'catalog' : 'menu',
-      sort: menu.order || 0
+      sort: menu.order || 0,
+      is_system: enableStatusToBoolean(menu.is_system)
     }
   });
 }
@@ -157,7 +158,8 @@ export function fetchUpdateMenu(menuId: number, menu: Partial<Api.SystemManage.M
       meta_icon: menu.icon,
       meta_hidden: menu.hideInMenu || false,
       status: enableStatusToBoolean(menu.status),
-      sort: menu.order
+      sort: menu.order,
+      is_system: enableStatusToBoolean(menu.is_system)
     }
   });
 }

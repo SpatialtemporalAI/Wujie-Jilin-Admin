@@ -419,6 +419,7 @@ const local: App.I18n.Schema = {
         buttonCode: 'Button Code',
         buttonDesc: 'Button Desc',
         menuStatus: 'Menu Status',
+        isSystem: 'System Built-in',
         form: {
           home: 'Please select home',
           menuType: 'Please select menu type',
@@ -444,7 +445,8 @@ const local: App.I18n.Schema = {
           button: 'Please select whether it is a button',
           buttonCode: 'Please enter button code',
           buttonDesc: 'Please enter button description',
-          menuStatus: 'Please select menu status'
+          menuStatus: 'Please select menu status',
+          isSystem: 'Please select whether it is a system built-in menu'
         },
         addMenu: 'Add Menu',
         editMenu: 'Edit Menu',

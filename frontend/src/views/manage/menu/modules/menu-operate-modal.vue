@@ -74,6 +74,7 @@ type Model = Pick<
   | 'activeMenu'
   | 'multiTab'
   | 'fixedIndexInTab'
+  | 'is_system'
 > & {
   query: NonNullable<Api.SystemManage.Menu['query']>;
   buttons: NonNullable<Api.SystemManage.Menu['buttons']>;
@@ -108,7 +109,8 @@ function createDefaultModel(): Model {
     multiTab: false,
     fixedIndexInTab: null,
     query: [],
-    buttons: []
+    buttons: [],
+    is_system: '2'
   };
 }
 
@@ -353,6 +355,11 @@ watch(
           </NFormItemGi>
           <NFormItemGi span="24 m:12" :label="$t('page.manage.menu.menuStatus')" path="status">
             <NRadioGroup v-model:value="model.status">
+              <NRadio v-for="item in enableStatusOptions" :key="item.value" :value="item.value" :label="item.label" />
+            </NRadioGroup>
+          </NFormItemGi>
+          <NFormItemGi span="24 m:12" :label="$t('page.manage.menu.isSystem')" path="is_system">
+            <NRadioGroup v-model:value="model.is_system">
               <NRadio v-for="item in enableStatusOptions" :key="item.value" :value="item.value" :label="item.label" />
             </NRadioGroup>
           </NFormItemGi>

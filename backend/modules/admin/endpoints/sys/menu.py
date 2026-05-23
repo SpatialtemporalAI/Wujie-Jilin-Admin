@@ -179,7 +179,7 @@ async def create_menu(
     """
     logger.info(f"创建菜单请求，菜单名称: {menu_create.name}")
 
-    menu = await MenuService.create_menu(db, menu_create)
+    menu = await MenuService.create_menu(db, menu_create, is_superuser=user.is_superuser)
     menu_response = SysMenuResponseData.model_validate(menu)
 
     logger.info(f"创建菜单成功，菜单ID: {menu.id}")
@@ -200,7 +200,7 @@ async def update_menu(
     """
     logger.info(f"更新菜单请求，菜单ID: {menu_id}")
 
-    menu = await MenuService.update_menu(db, menu_id, menu_update)
+    menu = await MenuService.update_menu(db, menu_id, menu_update, is_superuser=user.is_superuser)
     menu_response = SysMenuResponseData.model_validate(menu)
 
     logger.info(f"更新菜单成功，菜单ID: {menu_id}")
@@ -220,7 +220,7 @@ async def batch_delete_menus(
     """
     logger.info(f"批量删除菜单请求，菜单ID: {menu_ids}")
 
-    delete_count = await MenuService.batch_delete_menus(db, menu_ids)
+    delete_count = await MenuService.batch_delete_menus(db, menu_ids, is_superuser=user.is_superuser)
 
     logger.info(f"批量删除菜单成功，共删除 {delete_count} 个菜单")
     return ResponseModel(
@@ -245,7 +245,7 @@ async def batch_update_menus_status(
     )
 
     update_count = await MenuService.batch_update_menus_status(
-        db, batch_update.menu_ids, batch_update.status
+        db, batch_update.menu_ids, batch_update.status, is_superuser=user.is_superuser
     )
 
     status_text = "启用" if batch_update.status else "禁用"
@@ -269,7 +269,7 @@ async def delete_menu(
     """
     logger.info(f"删除菜单请求，菜单ID: {menu_id}")
 
-    await MenuService.delete_menu(db, menu_id)
+    await MenuService.delete_menu(db, menu_id, is_superuser=user.is_superuser)
 
     logger.info(f"删除菜单成功，菜单ID: {menu_id}")
     return ResponseModel(msg="删除菜单成功")

@@ -110,6 +110,21 @@ const columns = [
     }
   },
   {
+    key: 'is_system',
+    title: $t('page.manage.menu.isSystem'),
+    align: 'center',
+    width: 80,
+    render: (row: Api.SystemManage.Menu) => {
+      const isSystem = row.is_system === '1';
+
+      return (
+        <NTag type={isSystem ? 'info' : 'default'}>
+          {isSystem ? $t('common.yesOrNo.yes') : $t('common.yesOrNo.no')}
+        </NTag>
+      );
+    }
+  },
+  {
     key: 'hideInMenu',
     title: $t('page.manage.menu.hideInMenu'),
     align: 'center',

@@ -414,6 +414,7 @@ const local: App.I18n.Schema = {
         buttonCode: '按钮编码',
         buttonDesc: '按钮描述',
         menuStatus: '菜单状态',
+        isSystem: '系统内置',
         form: {
           home: '请选择首页',
           menuType: '请选择菜单类型',
@@ -439,7 +440,8 @@ const local: App.I18n.Schema = {
           button: '请选择是否按钮',
           buttonCode: '请输入按钮编码',
           buttonDesc: '请输入按钮描述',
-          menuStatus: '请选择菜单状态'
+          menuStatus: '请选择菜单状态',
+          isSystem: '请选择是否为系统内置菜单'
         },
         addMenu: '新增菜单',
         editMenu: '编辑菜单',

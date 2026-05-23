@@ -25,6 +25,9 @@ from modules.admin.schemas.sys.user import (
 
 logger = logging.getLogger(__name__)
 
+# Super admin username that cannot be modified/deleted
+SUPER_ADMIN_USERNAME = "admin"
+
 
 class UserService:
     """
@@ -265,6 +268,11 @@ class UserService:
         # 获取用户
         user = await UserService.get_user(db, user_id)
 
+        # 保护超级管理员账号不被禁用
+        if user.username == SUPER_ADMIN_USERNAME and user_update.status is False:
+            logger.warning(f"更新用户失败，不能禁用超级管理员账号，用户ID: {user_id}")
+            raise ForbiddenError(msg="不能禁用超级管理员账号")
+
         # 检查用户名是否已被其他用户使用
         if (
             user_update.username
@@ -405,6 +413,11 @@ class UserService:
             logger.warning(f"删除用户失败，不能删除超级管理员，用户ID: {user_id}")
             raise ForbiddenError(msg="不能删除超级管理员")
 
+        # 基于用户名的额外保护
+        if user.username == SUPER_ADMIN_USERNAME:
+            logger.warning(f"删除用户失败，不能删除超级管理员账号，用户ID: {user_id}")
+            raise ForbiddenError(msg="不能删除超级管理员账号")
+
         await db.delete(user)
         await db.commit()
 
@@ -513,6 +526,10 @@ class UserService:
         # 更新状态
         update_count = 0
         for user in users:
+            # 保护超级管理员账号不被禁用
+            if user.username == SUPER_ADMIN_USERNAME and not status:
+                logger.warning(f"不能禁用超级管理员账号，用户ID: {user.id}")
+                continue
             user.status = status
             update_count += 1
 

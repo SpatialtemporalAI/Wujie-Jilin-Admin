@@ -89,6 +89,10 @@ class SysMenu(Base):
     status: Mapped[bool] = mapped_column(
         Boolean, default=True, comment="状态：True-启用，False-禁用"
     )
+    # 是否为系统内置菜单
+    is_system: Mapped[bool] = mapped_column(
+        Boolean, default=False, comment="是否为系统内置菜单"
+    )
     # 菜单类型（有默认值）
     type: Mapped[MenuType] = mapped_column(
         Enum(MenuType),

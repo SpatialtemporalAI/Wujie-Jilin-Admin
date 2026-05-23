@@ -149,6 +149,8 @@ declare namespace Api {
       buttons?: MenuButton[] | null;
       /** children menu */
       children?: Menu[] | null;
+      /** is system built-in menu */
+      is_system: Common.EnableStatus;
     }> &
       MenuPropsOfRoute;
 

@@ -32,6 +32,7 @@ class SysMenuQueryParams(PageRequest):
     name: Optional[str] = Field(None, description="菜单名称，支持模糊查询")
     status: BoolField = Field(None, description="菜单状态：True-启用，False-禁用")
     type: Optional[MenuType] = Field(None, description="菜单类型")
+    is_system: BoolField = Field(None, description="是否为系统内置菜单")
 
     @field_validator("type", mode="before")
     @classmethod
@@ -79,6 +80,7 @@ class SysMenuCreate(BaseEntity):
     meta_breadcrumb: bool = Field(True, description="是否显示面包屑")
     status: bool = Field(True, description="菜单状态：True-启用，False-禁用")
     type: MenuType = Field(MenuType.MENU, description="菜单类型")
+    is_system: bool = Field(False, description="是否为系统内置菜单")
     sort: int = Field(0, description="排序号")
 
 
@@ -102,6 +104,7 @@ class SysMenuUpdate(BaseEntity):
     status: BoolField = Field(None, description="菜单状态：True-启用，False-禁用")
     type: Optional[MenuType] = Field(None, description="菜单类型")
     sort: Optional[int] = Field(None, description="排序号")
+    is_system: Optional[bool] = Field(None, description="是否为系统内置菜单")
 
 
 class SysMenuSimpleResponse(BaseRespEntity):
@@ -118,6 +121,7 @@ class SysMenuSimpleResponse(BaseRespEntity):
     path: Optional[str] = Field(None, description="路由路径")
     type: MenuType = Field(..., description="菜单类型")
     status: bool = Field(..., description="菜单状态")
+    is_system: bool = Field(..., description="是否为系统内置菜单")
     sort: int = Field(..., description="排序号")
 
 
@@ -149,6 +153,7 @@ class SysMenuResponseData(BaseRespEntity):
     fixedIndexInTab: Optional[int] = Field(None, description="固定标签索引")
     query: Optional[dict] = Field(None, description="路由查询参数")
     status: bool = Field(..., description="菜单状态")
+    is_system: bool = Field(..., description="是否为系统内置菜单")
     createTime: Annotated[str, BeforeValidator(_format_datetime)] = Field(..., validation_alias=AliasChoices("created_at", "createTime"), description="创建时间")
     updateTime: Annotated[Optional[str], BeforeValidator(_format_datetime)] = Field(None, validation_alias=AliasChoices("updated_at", "updateTime"), description="更新时间")
     children: List["SysMenuResponseData"] = Field(default_factory=list, description="子菜单列表")
