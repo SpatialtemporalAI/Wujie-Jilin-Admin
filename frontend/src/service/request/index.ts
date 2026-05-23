@@ -110,9 +110,11 @@ export const request = createFlatRequest(
         backendErrorCode = String(error.response?.data?.code || '');
       }
 
-      // the error message is displayed in the modal
+      // HTTP 401 / 后端返回 code 401：清除登录态并跳转登录页
       const modalLogoutCodes = import.meta.env.VITE_SERVICE_MODAL_LOGOUT_CODES?.split(',') || [];
-      if (modalLogoutCodes.includes(backendErrorCode)) {
+      if (modalLogoutCodes.includes(backendErrorCode) || error.response?.status === 401) {
+        const authStore = useAuthStore();
+        authStore.resetStore();
         return;
       }
 
