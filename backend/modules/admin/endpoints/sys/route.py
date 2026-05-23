@@ -55,6 +55,7 @@ async def get_user_routes(
 )
 async def is_route_exist(
     routeName: str = Query(..., description="路由名称"),
+    user: SysUser = Depends(current_user),
     db: AsyncSession = Depends(get_session),
 ):
     exists = await RouteService.is_route_exist(db, routeName)

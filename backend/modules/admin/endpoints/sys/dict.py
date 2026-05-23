@@ -43,7 +43,9 @@ from modules.admin.schemas.sys.dict import (
 logger = logging.getLogger(__name__)
 
 # 创建字典管理路由
-dict_router = APIRouter(prefix="/dict", tags=["字典管理"])
+dict_router = APIRouter(
+    prefix="/dict", tags=["字典管理"], dependencies=[Depends(current_user)]
+)
 
 
 # ==================== 字典分类管理 ====================

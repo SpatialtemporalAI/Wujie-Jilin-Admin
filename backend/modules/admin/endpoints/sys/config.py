@@ -38,7 +38,9 @@ from app.models.sys.config import ConfigType, ConfigGroup
 logger = logging.getLogger(__name__)
 
 # 创建配置管理路由
-config_router = APIRouter(prefix="/config", tags=["系统配置"])
+config_router = APIRouter(
+    prefix="/config", tags=["系统配置"], dependencies=[Depends(current_user)]
+)
 
 
 @config_router.get("/list", response_model=ResponsePageModel[SysConfigResponseData])

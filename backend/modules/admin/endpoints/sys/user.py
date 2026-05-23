@@ -40,7 +40,9 @@ from modules.admin.schemas.sys.user import (
 logger = logging.getLogger(__name__)
 
 # 创建用户管理路由
-user_router = APIRouter(prefix="/user", tags=["用户管理"])
+user_router = APIRouter(
+    prefix="/user", tags=["用户管理"], dependencies=[Depends(current_user)]
+)
 
 
 @user_router.get("/list", response_model=ResponsePageModel[SysUserListResponse])

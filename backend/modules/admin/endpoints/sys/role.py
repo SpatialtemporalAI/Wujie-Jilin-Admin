@@ -40,7 +40,9 @@ from modules.admin.schemas.sys.role import (
 logger = logging.getLogger(__name__)
 
 # 创建角色管理路由
-role_router = APIRouter(prefix="/role", tags=["角色管理"])
+role_router = APIRouter(
+    prefix="/role", tags=["角色管理"], dependencies=[Depends(current_user)]
+)
 
 
 @role_router.get("/list", response_model=ResponsePageModel[SysRoleListResponse])

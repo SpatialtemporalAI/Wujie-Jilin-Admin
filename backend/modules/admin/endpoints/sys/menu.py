@@ -53,7 +53,9 @@ PAGE_COMPONENTS = [
 
 
 # 创建菜单管理路由
-menu_router = APIRouter(prefix="/menu", tags=["菜单管理"])
+menu_router = APIRouter(
+    prefix="/menu", tags=["菜单管理"], dependencies=[Depends(current_user)]
+)
 
 
 @menu_router.get("/pages", response_model=ResponseModel[List[str]])
