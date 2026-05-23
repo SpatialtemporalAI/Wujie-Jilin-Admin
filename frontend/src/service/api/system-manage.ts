@@ -149,13 +149,14 @@ export function fetchUpdateMenu(menuId: number, menu: Partial<Api.SystemManage.M
     url: `/admin/sys/menu/${menuId}`,
     method: 'put',
     data: {
-      parent_id: menu.parentId,
+      parent_id: menu.parentId || null,
       name: menu.menuName,
       path: menu.routePath,
       component: menu.component,
       meta_title: menu.i18nKey,
       meta_icon: menu.icon,
-      meta_hidden: menu.hideInMenu,
+      meta_hidden: menu.hideInMenu || false,
+      status: enableStatusToBoolean(menu.status),
       sort: menu.order
     }
   });
