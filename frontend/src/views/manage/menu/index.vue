@@ -5,9 +5,8 @@ import { NButton, NPopconfirm, NTag } from 'naive-ui';
 import { useBoolean } from '@sa/hooks';
 import { yesOrNoRecord } from '@/constants/common';
 import { enableStatusRecord, menuTypeRecord } from '@/constants/business';
-import { fetchBatchDeleteMenu, fetchDeleteMenu, fetchGetAllPages, fetchGetMenuList } from '@/service/api';
+import { fetchDeleteMenu, fetchGetAllPages, fetchGetMenuListTree } from '@/service/api';
 import { useAppStore } from '@/store/modules/app';
-import { defaultTransform, useNaivePaginatedTable, useTableOperate } from '@/hooks/common/table';
 import { $t } from '@/locales';
 import SvgIcon from '@/components/custom/svg-icon.vue';
 import MenuOperateModal, { type OperateType } from './modules/menu-operate-modal.vue';
@@ -18,160 +17,151 @@ const { bool: visible, setTrue: openModal } = useBoolean();
 
 const wrapperRef = ref<HTMLElement | null>(null);
 
-const { columns, columnChecks, data, loading, pagination, getData, getDataByPage } = useNaivePaginatedTable({
-  api: () => fetchGetMenuList(),
-  transform: response => defaultTransform(response),
-  columns: () => [
-    {
-      type: 'selection',
-      align: 'center',
-      width: 48
-    },
-    {
-      key: 'id',
-      title: $t('page.manage.menu.id'),
-      align: 'center'
-    },
-    {
-      key: 'menuType',
-      title: $t('page.manage.menu.menuType'),
-      align: 'center',
-      width: 80,
-      render: row => {
-        const tagMap: Record<Api.SystemManage.MenuType, NaiveUI.ThemeColor> = {
-          '1': 'default',
-          '2': 'primary'
-        };
+const loading = ref(false);
+const data = ref<Api.SystemManage.Menu[]>([]);
 
-        const label = $t(menuTypeRecord[row.menuType]);
+async function getData() {
+  loading.value = true;
+  const { data: list } = await fetchGetMenuListTree();
+  data.value = list || [];
+  loading.value = false;
+}
 
-        return <NTag type={tagMap[row.menuType]}>{label}</NTag>;
-      }
-    },
-    {
-      key: 'menuName',
-      title: $t('page.manage.menu.menuName'),
-      align: 'center',
-      minWidth: 120,
-      render: row => {
-        const { i18nKey, menuName } = row;
-
-        const label = i18nKey ? $t(i18nKey) : menuName;
-
-        return <span>{label}</span>;
-      }
-    },
-    {
-      key: 'icon',
-      title: $t('page.manage.menu.icon'),
-      align: 'center',
-      width: 60,
-      render: row => {
-        if (!row.icon) return <div class="flex-center">-</div>;
-
-        const icon = row.iconType === '1' ? row.icon : undefined;
-
-        const localIcon = row.iconType === '2' ? row.icon : undefined;
-
-        return (
-          <div class="flex-center">
-            <SvgIcon icon={icon} localIcon={localIcon} class="text-icon" />
-          </div>
-        );
-      }
-    },
-    {
-      key: 'routeName',
-      title: $t('page.manage.menu.routeName'),
-      align: 'center',
-      minWidth: 120
-    },
-    {
-      key: 'routePath',
-      title: $t('page.manage.menu.routePath'),
-      align: 'center',
-      minWidth: 120
-    },
-    {
-      key: 'status',
-      title: $t('page.manage.menu.menuStatus'),
-      align: 'center',
-      width: 80,
-      render: row => {
-        if (row.status === null) {
-          return null;
-        }
-
-        const tagMap: Record<Api.Common.EnableStatus, NaiveUI.ThemeColor> = {
-          '1': 'success',
-          '2': 'warning'
-        };
-
-        return <NTag type={tagMap[row.status]}>{$t(enableStatusRecord[row.status])}</NTag>;
-      }
-    },
-    {
-      key: 'hideInMenu',
-      title: $t('page.manage.menu.hideInMenu'),
-      align: 'center',
-      width: 80,
-      render: row => {
-        const hide: CommonType.YesOrNo = row.hideInMenu ? 'Y' : 'N';
-
-        const tagMap: Record<CommonType.YesOrNo, NaiveUI.ThemeColor> = {
-          Y: 'error',
-          N: 'default'
-        };
-
-        const label = $t(yesOrNoRecord[hide]);
-
-        return <NTag type={tagMap[hide]}>{label}</NTag>;
-      }
-    },
-    {
-      key: 'parentId',
-      title: $t('page.manage.menu.parentId'),
-      width: 90,
-      align: 'center'
-    },
-    {
-      key: 'order',
-      title: $t('page.manage.menu.order'),
-      align: 'center',
-      width: 60
-    },
-    {
-      key: 'operate',
-      title: $t('common.operate'),
-      align: 'center',
-      minWidth: 150,
-      render: row => (
-        <div class="flex flex-wrap justify-center gap-8px">
-          {row.menuType === '1' && (
-            <NButton type="primary" text size="small" onClick={() => handleAddChildMenu(row)}>
-              {$t('page.manage.menu.addChildMenu')}
-            </NButton>
-          )}
-          <NButton type="primary" text size="small" onClick={() => handleEdit(row)}>
-            {$t('common.edit')}
-          </NButton>
-          <NPopconfirm onPositiveClick={() => handleDelete(row.id)}>
-            {{
-              default: () => $t('common.confirmDelete'),
-              trigger: () => (
-                <NButton type="error" text size="small">
-                  {$t('common.delete')}
-                </NButton>
-              )
-            }}
-          </NPopconfirm>
-        </div>
-      )
+const columns = [
+  {
+    key: 'menuName',
+    title: $t('page.manage.menu.menuName'),
+    minWidth: 160,
+    render: (row: Api.SystemManage.Menu) => {
+      const { i18nKey, menuName } = row;
+      const label = i18nKey ? $t(i18nKey) : menuName;
+      return <span>{label}</span>;
     }
-  ]
-});
+  },
+  {
+    key: 'id',
+    title: $t('page.manage.menu.id'),
+    align: 'center',
+    width: 80
+  },
+  {
+    key: 'menuType',
+    title: $t('page.manage.menu.menuType'),
+    align: 'center',
+    width: 80,
+    render: (row: Api.SystemManage.Menu) => {
+      const tagMap: Record<Api.SystemManage.MenuType, NaiveUI.ThemeColor> = {
+        '1': 'default',
+        '2': 'primary'
+      };
 
-const { checkedRowKeys, onBatchDeleted, onDeleted } = useTableOperate(data, 'id', getData);
+      const label = $t(menuTypeRecord[row.menuType]);
+
+      return <NTag type={tagMap[row.menuType]}>{label}</NTag>;
+    }
+  },
+  {
+    key: 'icon',
+    title: $t('page.manage.menu.icon'),
+    align: 'center',
+    width: 60,
+    render: (row: Api.SystemManage.Menu) => {
+      if (!row.icon) return <div class="flex-center">-</div>;
+
+      const icon = row.iconType === '1' ? row.icon : undefined;
+
+      const localIcon = row.iconType === '2' ? row.icon : undefined;
+
+      return (
+        <div class="flex-center">
+          <SvgIcon icon={icon} localIcon={localIcon} class="text-icon" />
+        </div>
+      );
+    }
+  },
+  {
+    key: 'routeName',
+    title: $t('page.manage.menu.routeName'),
+    align: 'center',
+    minWidth: 120
+  },
+  {
+    key: 'routePath',
+    title: $t('page.manage.menu.routePath'),
+    align: 'center',
+    minWidth: 120
+  },
+  {
+    key: 'status',
+    title: $t('page.manage.menu.menuStatus'),
+    align: 'center',
+    width: 80,
+    render: (row: Api.SystemManage.Menu) => {
+      if (row.status === null) {
+        return null;
+      }
+
+      const tagMap: Record<Api.Common.EnableStatus, NaiveUI.ThemeColor> = {
+        '1': 'success',
+        '2': 'warning'
+      };
+
+      return <NTag type={tagMap[row.status]}>{$t(enableStatusRecord[row.status])}</NTag>;
+    }
+  },
+  {
+    key: 'hideInMenu',
+    title: $t('page.manage.menu.hideInMenu'),
+    align: 'center',
+    width: 80,
+    render: (row: Api.SystemManage.Menu) => {
+      const hide: CommonType.YesOrNo = row.hideInMenu ? 'Y' : 'N';
+
+      const tagMap: Record<CommonType.YesOrNo, NaiveUI.ThemeColor> = {
+        Y: 'error',
+        N: 'default'
+      };
+
+      const label = $t(yesOrNoRecord[hide]);
+
+      return <NTag type={tagMap[hide]}>{label}</NTag>;
+    }
+  },
+  {
+    key: 'order',
+    title: $t('page.manage.menu.order'),
+    align: 'center',
+    width: 60
+  },
+  {
+    key: 'operate',
+    title: $t('common.operate'),
+    align: 'center',
+    minWidth: 150,
+    render: (row: Api.SystemManage.Menu) => (
+      <div class="flex flex-wrap justify-center gap-8px">
+        {row.menuType === '1' && (
+          <NButton type="primary" text size="small" onClick={() => handleAddChildMenu(row)}>
+            {$t('page.manage.menu.addChildMenu')}
+          </NButton>
+        )}
+        <NButton type="primary" text size="small" onClick={() => handleEdit(row)}>
+          {$t('common.edit')}
+        </NButton>
+        <NPopconfirm onPositiveClick={() => handleDelete(row.id)}>
+          {{
+            default: () => $t('common.confirmDelete'),
+            trigger: () => (
+              <NButton type="error" text size="small">
+                {$t('common.delete')}
+              </NButton>
+            )
+          }}
+        </NPopconfirm>
+      </div>
+    )
+  }
+];
 
 const operateType = ref<OperateType>('add');
 
@@ -180,25 +170,11 @@ function handleAdd() {
   openModal();
 }
 
-async function handleBatchDelete() {
-  if (checkedRowKeys.value.length === 0) {
-    window.$message?.warning($t('common.pleaseSelect'));
-    return;
-  }
-
-  const ids = checkedRowKeys.value.map(key => Number(key));
-  const { error } = await fetchBatchDeleteMenu(ids);
-  if (!error) {
-    window.$message?.success($t('common.deleteSuccess'));
-    onBatchDeleted();
-  }
-}
-
 async function handleDelete(id: number) {
   const { error } = await fetchDeleteMenu(id);
   if (!error) {
     window.$message?.success($t('common.deleteSuccess'));
-    onDeleted();
+    await getData();
   }
 }
 
@@ -229,6 +205,7 @@ async function getAllPages() {
 
 function init() {
   getAllPages();
+  getData();
 }
 
 // init
@@ -239,26 +216,26 @@ init();
   <div ref="wrapperRef" class="flex-col-stretch gap-16px overflow-hidden lt-sm:overflow-auto">
     <NCard :title="$t('page.manage.menu.title')" :bordered="false" size="small" class="card-wrapper sm:flex-1-hidden">
       <template #header-extra>
-        <TableHeaderOperation
-          v-model:columns="columnChecks"
-          :disabled-delete="checkedRowKeys.length === 0"
-          :loading="loading"
-          @add="handleAdd"
-          @delete="handleBatchDelete"
-          @refresh="getData"
-        />
+        <NSpace>
+          <NButton type="primary" size="small" @click="handleAdd">
+            <icon-ic-round-plus class="mr-4px text-icon" />
+            {{ $t('common.add') }}
+          </NButton>
+          <NButton size="small" :loading="loading" @click="getData">
+            <icon-ic-round-refresh class="mr-4px text-icon" />
+            {{ $t('common.refresh') }}
+          </NButton>
+        </NSpace>
       </template>
       <NDataTable
-        v-model:checked-row-keys="checkedRowKeys"
         :columns="columns"
         :data="data"
         size="small"
         :flex-height="!appStore.isMobile"
         :scroll-x="1088"
         :loading="loading"
-        :row-key="row => row.id"
-        remote
-        :pagination="pagination"
+        :row-key="(row: Api.SystemManage.Menu) => row.id"
+        :default-expand-all="true"
         class="sm:h-full"
       />
       <MenuOperateModal
@@ -266,7 +243,7 @@ init();
         :operate-type="operateType"
         :row-data="editingData"
         :all-pages="allPages"
-        @submitted="getDataByPage"
+        @submitted="getData"
       />
     </NCard>
   </div>

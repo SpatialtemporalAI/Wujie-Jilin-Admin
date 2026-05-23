@@ -111,6 +111,14 @@ export function fetchGetMenuTree() {
   });
 }
 
+/** get menu list tree */
+export function fetchGetMenuListTree() {
+  return request<Api.SystemManage.Menu[]>({
+    url: '/admin/sys/menu/list-tree',
+    method: 'get'
+  });
+}
+
 /** create menu */
 export function fetchCreateMenu(menu: Partial<Api.SystemManage.Menu>) {
   return request<Api.SystemManage.Menu>({

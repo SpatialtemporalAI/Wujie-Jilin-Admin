@@ -151,6 +151,10 @@ class SysMenuResponseData(BaseRespEntity):
     status: bool = Field(..., description="菜单状态")
     createTime: Annotated[str, BeforeValidator(_format_datetime)] = Field(..., validation_alias="created_at", description="创建时间")
     updateTime: Annotated[Optional[str], BeforeValidator(_format_datetime)] = Field(None, validation_alias="updated_at", description="更新时间")
+    children: List["SysMenuResponseData"] = Field(default_factory=list, description="子菜单列表")
+
+
+SysMenuResponseData.model_rebuild()
 
 
 class SysMenuTreeResponse(BaseRespEntity):

@@ -21,6 +21,7 @@ from modules.admin.schemas.sys.menu import (
     SysMenuUpdate,
     SysMenuQueryParams,
     SysMenuTreeResponse,
+    SysMenuResponseData,
 )
 
 logger = logging.getLogger(__name__)
@@ -519,4 +520,43 @@ class MenuService:
                     parent.children.append(menu_response)
 
         logger.info(f"获取用户菜单权限树成功，共 {len(root_menus)} 个根菜单")
+        return root_menus
+
+    @staticmethod
+    async def build_menu_tree_list(db: AsyncSession) -> List[SysMenuResponseData]:
+        """
+        获取菜单树形列表（包含完整菜单信息）
+
+        Args:
+            db: 数据库会话
+
+        Returns:
+            树形菜单列表
+        """
+        base_query = select(SysMenu).options(
+            noload(SysMenu.children),
+            noload(SysMenu.parent),
+            noload(SysMenu.roles),
+        ).order_by(SysMenu.sort, SysMenu.id)
+
+        result = await db.execute(base_query)
+        menus = result.scalars().all()
+
+        # 转换为响应模型
+        menu_map: dict[int, SysMenuResponseData] = {}
+        for menu in menus:
+            menu_map[menu.id] = SysMenuResponseData.model_validate(menu)
+
+        # 构建树结构
+        root_menus: List[SysMenuResponseData] = []
+        for menu in menus:
+            resp = menu_map[menu.id]
+            if not menu.parent_id:
+                root_menus.append(resp)
+            else:
+                parent = menu_map.get(menu.parent_id)
+                if parent:
+                    parent.children.append(resp)
+
+        logger.info(f"获取菜单树形列表成功，共 {len(root_menus)} 个根菜单")
         return root_menus

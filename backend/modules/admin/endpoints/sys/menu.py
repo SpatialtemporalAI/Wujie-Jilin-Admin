@@ -99,6 +99,21 @@ async def get_menu_list(
     return response_base.page(data=page_data)
 
 
+@menu_router.get("/list-tree", response_model=ResponseModel[List[SysMenuResponseData]])
+async def get_menu_list_tree(
+    db: AsyncSession = Depends(get_session),
+):
+    """
+    获取菜单树形列表（包含完整菜单信息）
+    """
+    logger.info("获取菜单树形列表请求")
+
+    menu_tree = await MenuService.build_menu_tree_list(db)
+
+    logger.info(f"获取菜单树形列表成功")
+    return ResponseModel(data=menu_tree)
+
+
 @menu_router.get("/tree", response_model=ResponseModel[List[SysMenuTreeResponse]])
 async def get_menu_tree(
     query_params: SysMenuTreeQuery = Depends(),
