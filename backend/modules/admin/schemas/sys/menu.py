@@ -18,7 +18,7 @@ def _format_datetime(v):
 
 def _menu_type_to_str(v):
     if isinstance(v, MenuType):
-        mapping = {MenuType.CATALOG: "1", MenuType.MENU: "2", MenuType.EXTERNAL: "2", MenuType.BUTTON: "1"}
+        mapping = {MenuType.CATALOG: "1", MenuType.MENU: "2", MenuType.EXTERNAL: "2", MenuType.BUTTON: "3"}
         return mapping.get(v, v.value)
     return v
 
@@ -141,7 +141,7 @@ class SysMenuResponseData(BaseRespEntity):
     component: Optional[str] = Field(None, description="组件路径")
     icon: Optional[str] = Field(None, validation_alias=AliasChoices("meta_icon", "icon"), description="图标")
     iconType: str = Field("1", description="图标类型：1-iconify，2-本地")
-    menuType: Annotated[str, BeforeValidator(_menu_type_to_str)] = Field(..., validation_alias=AliasChoices("type", "menuType"), description="菜单类型：1-目录，2-菜单")
+    menuType: Annotated[str, BeforeValidator(_menu_type_to_str)] = Field(..., validation_alias=AliasChoices("type", "menuType"), description="菜单类型：1-目录，2-菜单，3-按钮")
     order: int = Field(..., validation_alias=AliasChoices("sort", "order"), description="排序号")
     i18nKey: Optional[str] = Field(None, description="国际化键")
     keepAlive: bool = Field(False, description="是否缓存")
@@ -173,7 +173,7 @@ class SysMenuTreeResponse(BaseRespEntity):
     id: int = Field(..., description="菜单ID")
     label: str = Field(..., description="菜单标签")
     pId: Optional[int] = Field(None, description="父菜单ID")
-    menuType: str = Field("1", description="菜单类型：1-目录, 2-菜单")
+    menuType: str = Field("1", description="菜单类型：1-目录, 2-菜单, 3-按钮")
     children: List["SysMenuTreeResponse"] = Field([], description="子菜单列表")
 
 

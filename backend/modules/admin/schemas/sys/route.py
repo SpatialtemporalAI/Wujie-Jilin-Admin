@@ -33,3 +33,4 @@ class UserRouteResponse(BaseModel):
 
     routes: list[MenuRouteResponse] = Field(..., description="路由列表")
     home: str = Field(default="home", description="首页路由名称")
+    buttons: list[str] = Field(default_factory=list, description="按钮权限标识列表")

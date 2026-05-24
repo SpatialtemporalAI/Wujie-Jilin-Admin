@@ -1,8 +1,8 @@
 import { request } from '../request';
 
-/** get user routes */
-export function fetchGetUserRoutes() {
-  return request<Api.Route.UserRoute>({ url: '/admin/sys/route/getUserRoutes' });
+/** get user permissions (routes + button permissions) */
+export function fetchGetPermissions() {
+  return request<Api.Route.UserRoute>({ url: '/admin/sys/route/getPermissions' });
 }
 
 /**

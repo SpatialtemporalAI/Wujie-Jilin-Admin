@@ -13,6 +13,7 @@ from database.db_manager import get_session
 from core.response import ResponseModel, ResponsePageModel, response_base
 from app.models.common.page import PageRequest, get_page_params
 from modules.admin.deps.auth.user_manager import current_user
+from modules.admin.deps.auth.permission import require_permission
 from app.models.sys.user import SysUser
 from modules.admin.services.sys.online_user_service import OnlineUserService
 from modules.admin.schemas.sys.online_user import (
@@ -31,6 +32,7 @@ online_user_router = APIRouter(prefix="/online-user", tags=["系统管理/在线
     "/list",
     response_model=ResponsePageModel[OnlineUserResponse],
     summary="获取在线用户列表",
+    dependencies=[Depends(require_permission("sys:online:list"))],
 )
 async def get_online_users(
     query_params: OnlineUserQueryParams = Depends(),
@@ -53,6 +55,7 @@ async def get_online_users(
     "/kick",
     response_model=ResponseModel,
     summary="踢用户下线",
+    dependencies=[Depends(require_permission("sys:online:kick"))],
 )
 async def kick_user(
     kick_req: KickUserRequest = Body(..., description="踢用户请求"),
@@ -72,6 +75,7 @@ async def kick_user(
     "/kick-all",
     response_model=ResponseModel,
     summary="踢用户所有设备下线",
+    dependencies=[Depends(require_permission("sys:online:kick"))],
 )
 async def kick_all_sessions(
     kick_req: KickAllRequest = Body(..., description="踢所有会话请求"),
@@ -91,6 +95,7 @@ async def kick_all_sessions(
     "/count",
     response_model=ResponseModel[int],
     summary="获取在线用户数",
+    dependencies=[Depends(require_permission("sys:online:list"))],
 )
 async def get_online_count(
     user: SysUser = Depends(current_user),

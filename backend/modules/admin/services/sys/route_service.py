@@ -65,10 +65,11 @@ class RouteService:
         db: AsyncSession, user: SysUser
     ) -> UserRouteResponse:
         """
-        获取当前用户可用的路由树
-        - 超级用户返回所有非 BUTTON 类型的启用菜单
+        获取当前用户可用的路由树以及按钮权限标识列表
+        - 超级用户返回所有非 BUTTON 类型的启用菜单 + 所有 BUTTON 权限
         - 普通用户通过 user.roles → role.menus 获取
         """
+        buttons: list[str] = []
         if user.is_superuser:
             stmt = (
                 select(SysMenu)
@@ -84,6 +85,15 @@ class RouteService:
             )
             result = await db.execute(stmt)
             menus = result.unique().scalars().all()
+
+            btn_stmt = select(SysMenu).where(
+                SysMenu.type == MenuType.BUTTON,
+                SysMenu.status == True,
+            )
+            btn_result = await db.execute(btn_stmt)
+            buttons = [
+                m.permission for m in btn_result.scalars().all() if m.permission
+            ]
         else:
             # 预加载 user.roles.menus
             stmt = (
@@ -98,26 +108,33 @@ class RouteService:
             result = await db.execute(stmt)
             user_with_relations = result.unique().scalar_one()
 
-            # 收集所有启用的非 BUTTON 菜单 ID
+            # 收集所有启用的非 BUTTON 菜单 ID 以及 BUTTON 权限标识
             menu_ids: set[int] = set()
+            seen_perms: set[str] = set()
             for role in user_with_relations.roles:
                 if not role.status:
                     continue
                 for menu in role.menus:
-                    if menu.status and menu.type != MenuType.BUTTON:
-                        menu_ids.add(menu.id)
-                        # 同时收集其所有祖先菜单 ID
-                        parent_id = menu.parent_id
-                        while parent_id:
-                            menu_ids.add(parent_id)
-                            parent_stmt = select(SysMenu.parent_id).where(
-                                SysMenu.id == parent_id
-                            )
-                            parent_result = await db.execute(parent_stmt)
-                            parent_id = parent_result.scalar_one_or_none()
+                    if not menu.status:
+                        continue
+                    if menu.type == MenuType.BUTTON:
+                        if menu.permission and menu.permission not in seen_perms:
+                            seen_perms.add(menu.permission)
+                            buttons.append(menu.permission)
+                        continue
+                    menu_ids.add(menu.id)
+                    # 同时收集其所有祖先菜单 ID
+                    parent_id = menu.parent_id
+                    while parent_id:
+                        menu_ids.add(parent_id)
+                        parent_stmt = select(SysMenu.parent_id).where(
+                            SysMenu.id == parent_id
+                        )
+                        parent_result = await db.execute(parent_stmt)
+                        parent_id = parent_result.scalar_one_or_none()
 
             if not menu_ids:
-                return UserRouteResponse(routes=[], home="home")
+                return UserRouteResponse(routes=[], home="home", buttons=buttons)
 
             # 查询所有相关菜单并构建树
             stmt = (
@@ -147,7 +164,7 @@ class RouteService:
             menus = [m for m in menus if m.id in menu_ids]
 
         routes = [RouteService._menu_to_route(menu) for menu in menus]
-        return UserRouteResponse(routes=routes, home="home")
+        return UserRouteResponse(routes=routes, home="home", buttons=buttons)
 
     @staticmethod
     async def get_constant_routes() -> list[MenuRouteResponse]:

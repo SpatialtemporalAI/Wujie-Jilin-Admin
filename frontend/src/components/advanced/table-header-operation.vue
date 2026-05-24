@@ -1,4 +1,6 @@
 <script setup lang="ts">
+import { computed } from 'vue';
+import { useAuth } from '@/hooks/business/auth';
 import { $t } from '@/locales';
 
 defineOptions({
@@ -9,9 +11,20 @@ interface Props {
   itemAlign?: NaiveUI.Align;
   disabledDelete?: boolean;
   loading?: boolean;
+  /** permission code required to show the add button (omit to always show) */
+  addAuth?: string;
+  /** permission code required to show the batch delete button (omit to always show) */
+  deleteAuth?: string;
+  /** explicitly hide add button (overrides addAuth) */
+  showAdd?: boolean;
+  /** explicitly hide delete button (overrides deleteAuth) */
+  showDelete?: boolean;
 }
 
-defineProps<Props>();
+const props = withDefaults(defineProps<Props>(), {
+  showAdd: true,
+  showDelete: true
+});
 
 interface Emits {
   (e: 'add'): void;
@@ -24,6 +37,11 @@ const emit = defineEmits<Emits>();
 const columns = defineModel<NaiveUI.TableColumnCheck[]>('columns', {
   default: () => []
 });
+
+const { hasAuth } = useAuth();
+
+const canShowAdd = computed(() => props.showAdd && (props.addAuth ? hasAuth(props.addAuth) : true));
+const canShowDelete = computed(() => props.showDelete && (props.deleteAuth ? hasAuth(props.deleteAuth) : true));
 
 function add() {
   emit('add');
@@ -42,13 +60,13 @@ function refresh() {
   <NSpace :align="itemAlign" wrap justify="end" class="lt-sm:w-200px">
     <slot name="prefix"></slot>
     <slot name="default">
-      <NButton size="small" ghost type="primary" @click="add">
+      <NButton v-if="canShowAdd" size="small" ghost type="primary" @click="add">
         <template #icon>
           <icon-ic-round-plus class="text-icon" />
         </template>
         {{ $t('common.add') }}
       </NButton>
-      <NPopconfirm @positive-click="batchDelete">
+      <NPopconfirm v-if="canShowDelete" @positive-click="batchDelete">
         <template #trigger>
           <NButton size="small" ghost type="error" :disabled="disabledDelete">
             <template #icon>

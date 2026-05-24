@@ -11,12 +11,14 @@ import {
 } from '@/service/api';
 import { useAppStore } from '@/store/modules/app';
 import { defaultTransform, useNaivePaginatedTable, useTableOperate } from '@/hooks/common/table';
+import { useAuth } from '@/hooks/business/auth';
 import { $t } from '@/locales';
 import ConfigOperateDrawer from './modules/config-operate-drawer.vue';
 import ConfigSearch from './modules/config-search.vue';
 
 const appStore = useAppStore();
 const message = useMessage();
+const { hasAuth } = useAuth();
 
 /** 配置搜索参数 */
 const configSearchParams: Api.SystemManage.ConfigSearchParams = reactive({
@@ -144,15 +146,17 @@ const {
       render: row => {
         return (
           <div class="flex-center gap-8px">
-            <NButton type="primary" ghost size="small" onClick={() => editConfig(row.id)}>
-              {$t('common.edit')}
-            </NButton>
-            {row.default_value && (
+            {hasAuth('sys:config:edit') && (
+              <NButton type="primary" ghost size="small" onClick={() => editConfig(row.id)}>
+                {$t('common.edit')}
+              </NButton>
+            )}
+            {row.default_value && hasAuth('sys:config:edit') && (
               <NButton type="info" ghost size="small" onClick={() => handleResetConfig(row.id)}>
                 {$t('page.manage.config.resetConfig')}
               </NButton>
             )}
-            {row.is_system !== '1' && (
+            {row.is_system !== '1' && hasAuth('sys:config:delete') && (
               <NPopconfirm onPositiveClick={() => handleDeleteConfig(row.id)}>
                 {{
                   default: () => $t('common.confirmDelete'),
@@ -254,13 +258,13 @@ async function handleBatchResetConfig() {
           @refresh="getConfigData"
         >
           <template #default>
-            <NButton size="small" ghost type="primary" @click="handleAddConfig">
+            <NButton v-if="hasAuth('sys:config:add')" size="small" ghost type="primary" @click="handleAddConfig">
               <template #icon>
                 <icon-ic-round-plus class="text-icon" />
               </template>
               {{ $t('common.add') }}
             </NButton>
-            <NPopconfirm @positive-click="handleBatchDeleteConfig">
+            <NPopconfirm v-if="hasAuth('sys:config:delete')" @positive-click="handleBatchDeleteConfig">
               <template #trigger>
                 <NButton size="small" ghost type="error" :disabled="checkedConfigRowKeys.length === 0">
                   <template #icon>
@@ -272,6 +276,7 @@ async function handleBatchResetConfig() {
               {{ $t('common.confirmDelete') }}
             </NPopconfirm>
             <NButton
+              v-if="hasAuth('sys:config:edit')"
               type="info"
               ghost
               size="small"

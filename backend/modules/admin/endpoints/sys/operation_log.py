@@ -17,6 +17,7 @@ from core.response import ResponseModel, ResponsePageModel, response_base
 from app.models.common.page import PageRequest, get_page_params, get_paginated_results
 from core.utils.excel_export import build_excel_bytes, SYNC_EXPORT_MAX_ROWS
 from modules.admin.deps.auth.user_manager import current_user
+from modules.admin.deps.auth.permission import require_permission
 from modules.admin.exports import get_export_config
 from app.models.sys.user import SysUser
 from modules.admin.services.sys.operation_log_service import OperationLogService
@@ -35,6 +36,7 @@ operation_log_router = APIRouter(prefix="/operation-log", tags=["系统管理/�
     "/list",
     response_model=ResponsePageModel[OperationLogResponse],
     summary="获取操作日志列表",
+    dependencies=[Depends(require_permission("sys:oplog:list"))],
 )
 async def get_log_list(
     query_params: OperationLogQueryParams = Depends(),
@@ -92,6 +94,7 @@ async def export_operation_logs(
     "/batch/delete",
     response_model=ResponseModel,
     summary="批量删除操作日志",
+    dependencies=[Depends(require_permission("sys:oplog:delete"))],
 )
 async def batch_delete_logs(
     log_ids: List[int] = Body(..., description="日志ID列表"),
@@ -107,6 +110,7 @@ async def batch_delete_logs(
     "/clear",
     response_model=ResponseModel,
     summary="清理过期操作日志",
+    dependencies=[Depends(require_permission("sys:oplog:delete"))],
 )
 async def clear_logs(
     days: int = Query(30, description="清理多少天前的日志"),
@@ -142,6 +146,7 @@ async def get_log_detail(
     "/{log_id}",
     response_model=ResponseModel,
     summary="删除单条操作日志",
+    dependencies=[Depends(require_permission("sys:oplog:delete"))],
 )
 async def delete_log(
     log_id: int,

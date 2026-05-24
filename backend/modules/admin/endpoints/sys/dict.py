@@ -19,6 +19,7 @@ from core.response.response_schema import (
 from app.models.common.page import PageRequest, get_page_params, get_paginated_results
 from core.decorators.operation_log import log_operation
 from modules.admin.deps.auth.user_manager import current_user
+from modules.admin.deps.auth.permission import require_permission
 from app.models.sys.user import SysUser
 
 from modules.admin.services.sys import DictService
@@ -51,7 +52,7 @@ dict_router = APIRouter(
 # ==================== 字典分类管理 ====================
 
 
-@dict_router.get("/list", response_model=ResponsePageModel[SysDictResponseData])
+@dict_router.get("/list", response_model=ResponsePageModel[SysDictResponseData], dependencies=[Depends(require_permission("sys:dict:list"))])
 async def get_dict_list(
     query_params: SysDictQueryParams = Depends(),
     page_params: PageRequest = Depends(get_page_params),
@@ -218,7 +219,7 @@ async def get_dict_with_items(
         raise
 
 
-@dict_router.post("/add", response_model=ResponseModel[SysDictResponseData])
+@dict_router.post("/add", response_model=ResponseModel[SysDictResponseData], dependencies=[Depends(require_permission("sys:dict:add"))])
 @log_operation(module="dict", action="create", description="创建字典")
 async def create_dict(
     request: Request,
@@ -245,7 +246,7 @@ async def create_dict(
         raise
 
 
-@dict_router.put("/{dict_id}", response_model=ResponseModel[SysDictResponseData])
+@dict_router.put("/{dict_id}", response_model=ResponseModel[SysDictResponseData], dependencies=[Depends(require_permission("sys:dict:edit"))])
 @log_operation(module="dict", action="update", description="更新字典")
 async def update_dict(
     dict_id: int,
@@ -273,7 +274,7 @@ async def update_dict(
         raise
 
 
-@dict_router.put("/batch/status", response_model=ResponseModel)
+@dict_router.put("/batch/status", response_model=ResponseModel, dependencies=[Depends(require_permission("sys:dict:edit"))])
 @log_operation(module="dict", action="batch_update_status", description="批量更新字典状态")
 async def batch_update_dict_status(
     request: Request,
@@ -299,7 +300,7 @@ async def batch_update_dict_status(
         raise
 
 
-@dict_router.delete("/batch/delete", response_model=ResponseModel)
+@dict_router.delete("/batch/delete", response_model=ResponseModel, dependencies=[Depends(require_permission("sys:dict:delete"))])
 @log_operation(module="dict", action="batch_delete", description="批量删除字典")
 async def batch_delete_dicts(
     request: Request,
@@ -323,7 +324,7 @@ async def batch_delete_dicts(
         raise
 
 
-@dict_router.delete("/{dict_id}", response_model=ResponseModel)
+@dict_router.delete("/{dict_id}", response_model=ResponseModel, dependencies=[Depends(require_permission("sys:dict:delete"))])
 @log_operation(module="dict", action="delete", description="删除字典")
 async def delete_dict(
     dict_id: int,
@@ -351,7 +352,8 @@ async def delete_dict(
 
 
 @dict_router.get(
-    "/item/list", response_model=ResponsePageModel[SysDictItemResponseData]
+    "/item/list", response_model=ResponsePageModel[SysDictItemResponseData],
+    dependencies=[Depends(require_permission("sys:dict:list"))]
 )
 async def get_dict_item_list(
     query_params: SysDictItemQueryParams = Depends(),
@@ -444,7 +446,7 @@ async def get_dict_item(
         raise
 
 
-@dict_router.post("/item/add", response_model=ResponseModel[SysDictItemResponseData])
+@dict_router.post("/item/add", response_model=ResponseModel[SysDictItemResponseData], dependencies=[Depends(require_permission("sys:dict:add"))])
 @log_operation(module="dict_item", action="create", description="创建字典项")
 async def create_dict_item(
     request: Request,
@@ -470,7 +472,8 @@ async def create_dict_item(
 
 
 @dict_router.put(
-    "/item/{item_id}", response_model=ResponseModel[SysDictItemResponseData]
+    "/item/{item_id}", response_model=ResponseModel[SysDictItemResponseData],
+    dependencies=[Depends(require_permission("sys:dict:edit"))]
 )
 @log_operation(module="dict_item", action="update", description="更新字典项")
 async def update_dict_item(
@@ -497,7 +500,7 @@ async def update_dict_item(
         raise
 
 
-@dict_router.put("/item/batch/status", response_model=ResponseModel)
+@dict_router.put("/item/batch/status", response_model=ResponseModel, dependencies=[Depends(require_permission("sys:dict:edit"))])
 @log_operation(module="dict_item", action="batch_update_status", description="批量更新字典项状态")
 async def batch_update_dict_item_status(
     request: Request,
@@ -521,7 +524,7 @@ async def batch_update_dict_item_status(
         raise
 
 
-@dict_router.delete("/item/batch/delete", response_model=ResponseModel)
+@dict_router.delete("/item/batch/delete", response_model=ResponseModel, dependencies=[Depends(require_permission("sys:dict:delete"))])
 @log_operation(module="dict_item", action="batch_delete", description="批量删除字典项")
 async def batch_delete_dict_items(
     request: Request,
@@ -545,7 +548,7 @@ async def batch_delete_dict_items(
         raise
 
 
-@dict_router.delete("/item/{item_id}", response_model=ResponseModel)
+@dict_router.delete("/item/{item_id}", response_model=ResponseModel, dependencies=[Depends(require_permission("sys:dict:delete"))])
 @log_operation(module="dict_item", action="delete", description="删除字典项")
 async def delete_dict_item(
     item_id: int,

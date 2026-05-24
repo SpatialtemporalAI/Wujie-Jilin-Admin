@@ -420,6 +420,7 @@ const local: App.I18n.Schema = {
         button: 'Button',
         buttonCode: 'Button Code',
         buttonDesc: 'Button Desc',
+        permission: 'Permission Code',
         menuStatus: 'Menu Status',
         isSystem: 'System Built-in',
         form: {
@@ -448,6 +449,7 @@ const local: App.I18n.Schema = {
           button: 'Please select whether it is a button',
           buttonCode: 'Please enter button code',
           buttonDesc: 'Please enter button description',
+          permission: 'Please enter permission code (e.g. sys:menu:add)',
           menuStatus: 'Please select menu status',
           isSystem: 'Please select whether it is a system built-in menu'
         },
@@ -456,7 +458,8 @@ const local: App.I18n.Schema = {
         addChildMenu: 'Add Child Menu',
         type: {
           directory: 'Directory',
-          menu: 'Menu'
+          menu: 'Menu',
+          button: 'Button'
         },
         iconType: {
           iconify: 'Iconify Icon',

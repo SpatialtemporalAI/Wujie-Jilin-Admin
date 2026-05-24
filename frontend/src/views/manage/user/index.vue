@@ -5,6 +5,7 @@ import { enableStatusRecord, userGenderRecord } from '@/constants/business';
 import { fetchDeleteUser, fetchGetUserList } from '@/service/api';
 import { useAppStore } from '@/store/modules/app';
 import { defaultTransform, useNaivePaginatedTable, useTableOperate } from '@/hooks/common/table';
+import { useAuth } from '@/hooks/business/auth';
 import { $t } from '@/locales';
 import { booleanToEnableStatus } from '@/utils/status';
 import UserOperateDrawer from './modules/user-operate-drawer.vue';
@@ -13,6 +14,7 @@ import UserSearch from './modules/user-search.vue';
 
 const appStore = useAppStore();
 const message = useMessage();
+const { hasAuth } = useAuth();
 
 // 密码修改相关状态
 const passwordDrawerVisible = ref(false);
@@ -125,22 +127,28 @@ const { columns, columnChecks, data, loading, getData, getDataByPage, mobilePagi
         }
         return (
           <div class="flex flex-wrap justify-center gap-8px">
-            <NButton type="primary" text size="small" onClick={() => edit(row.id)}>
-              {$t('common.edit')}
-            </NButton>
-            <NButton type="info" text size="small" onClick={() => openPasswordDrawer(row.id)}>
-              {$t('common.changePassword')}
-            </NButton>
-            <NPopconfirm onPositiveClick={() => handleDelete(row.id)}>
-              {{
-                default: () => $t('common.confirmDelete'),
-                trigger: () => (
-                  <NButton type="error" text size="small">
-                    {$t('common.delete')}
-                  </NButton>
-                )
-              }}
-            </NPopconfirm>
+            {hasAuth('sys:user:edit') && (
+              <NButton type="primary" text size="small" onClick={() => edit(row.id)}>
+                {$t('common.edit')}
+              </NButton>
+            )}
+            {hasAuth('sys:user:edit') && (
+              <NButton type="info" text size="small" onClick={() => openPasswordDrawer(row.id)}>
+                {$t('common.changePassword')}
+              </NButton>
+            )}
+            {hasAuth('sys:user:delete') && (
+              <NPopconfirm onPositiveClick={() => handleDelete(row.id)}>
+                {{
+                  default: () => $t('common.confirmDelete'),
+                  trigger: () => (
+                    <NButton type="error" text size="small">
+                      {$t('common.delete')}
+                    </NButton>
+                  )
+                }}
+              </NPopconfirm>
+            )}
           </div>
         );
       }
@@ -207,6 +215,8 @@ function openPasswordDrawer(id: number) {
           v-model:columns="columnChecks"
           :disabled-delete="checkedRowKeys.length === 0"
           :loading="loading"
+          add-auth="sys:user:add"
+          delete-auth="sys:user:delete"
           @add="handleAdd"
           @delete="handleBatchDelete"
           @refresh="getData"

@@ -23,6 +23,7 @@ from app.models.common.base import BoolField
 from core.decorators.operation_log import log_operation
 from core.utils.excel_export import build_excel_bytes, SYNC_EXPORT_MAX_ROWS
 from modules.admin.deps.auth.user_manager import current_user
+from modules.admin.deps.auth.permission import require_permission
 from modules.admin.exports import get_export_config
 from app.models.sys.user import SysUser
 
@@ -45,7 +46,7 @@ user_router = APIRouter(
 )
 
 
-@user_router.get("/list", response_model=ResponsePageModel[SysUserListResponse])
+@user_router.get("/list", response_model=ResponsePageModel[SysUserListResponse], dependencies=[Depends(require_permission("sys:user:list"))])
 async def get_user_list(
     page_params: PageRequest = Depends(get_page_params),
     query_params: SysUserQueryParams = Depends(),
@@ -113,7 +114,7 @@ async def get_user(
     return ResponseModel(data=user_response)
 
 
-@user_router.post("/add", response_model=ResponseModel[SysUserResponseData])
+@user_router.post("/add", response_model=ResponseModel[SysUserResponseData], dependencies=[Depends(require_permission("sys:user:add"))])
 @log_operation(module="user", action="create", description="创建用户")
 async def create_user(
     request: Request,
@@ -133,7 +134,7 @@ async def create_user(
     return ResponseModel(data=user_response, msg="创建用户成功")
 
 
-@user_router.put("/{user_id}", response_model=ResponseModel[SysUserResponseData])
+@user_router.put("/{user_id}", response_model=ResponseModel[SysUserResponseData], dependencies=[Depends(require_permission("sys:user:edit"))])
 @log_operation(module="user", action="update", description="更新用户")
 async def update_user(
     user_id: int,
@@ -154,7 +155,7 @@ async def update_user(
     return ResponseModel(data=user_response, msg="更新用户成功")
 
 
-@user_router.post("/{user_id}/roles", response_model=ResponseModel[SysUserResponseData])
+@user_router.post("/{user_id}/roles", response_model=ResponseModel[SysUserResponseData], dependencies=[Depends(require_permission("sys:user:edit"))])
 async def assign_roles_to_user(
     user_id: int,
     role_ids: List[int],
@@ -173,7 +174,7 @@ async def assign_roles_to_user(
     return ResponseModel(data=user_response, msg="分配角色成功")
 
 
-@user_router.delete("/batch", response_model=ResponseModel)
+@user_router.delete("/batch", response_model=ResponseModel, dependencies=[Depends(require_permission("sys:user:delete"))])
 @log_operation(module="user", action="batch_delete", description="批量删除用户")
 async def batch_delete_users(
     request: Request,
@@ -195,7 +196,7 @@ async def batch_delete_users(
     )
 
 
-@user_router.put("/batch/status", response_model=ResponseModel)
+@user_router.put("/batch/status", response_model=ResponseModel, dependencies=[Depends(require_permission("sys:user:edit"))])
 @log_operation(module="user", action="batch_update_status", description="批量更新用户状态")
 async def batch_update_users_status(
     request: Request,
@@ -222,7 +223,7 @@ async def batch_update_users_status(
     )
 
 
-@user_router.delete("/{user_id}", response_model=ResponseModel)
+@user_router.delete("/{user_id}", response_model=ResponseModel, dependencies=[Depends(require_permission("sys:user:delete"))])
 @log_operation(module="user", action="delete", description="删除用户")
 async def delete_user(
     user_id: int,
@@ -241,7 +242,7 @@ async def delete_user(
     return ResponseModel(msg="删除用户成功")
 
 
-@user_router.put("/{user_id}/password", response_model=ResponseModel)
+@user_router.put("/{user_id}/password", response_model=ResponseModel, dependencies=[Depends(require_permission("sys:user:edit"))])
 @log_operation(module="user", action="change_password", description="修改用户密码")
 async def change_user_password(
     user_id: int,

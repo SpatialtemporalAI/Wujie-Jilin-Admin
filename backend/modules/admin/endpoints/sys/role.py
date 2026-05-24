@@ -22,6 +22,7 @@ from app.models.common.page import PageRequest, get_page_params, get_paginated_r
 from core.decorators.operation_log import log_operation
 from core.utils.excel_export import build_excel_bytes, SYNC_EXPORT_MAX_ROWS
 from modules.admin.deps.auth.user_manager import current_user
+from modules.admin.deps.auth.permission import require_permission
 from modules.admin.exports import get_export_config
 from app.models.sys.user import SysUser
 
@@ -45,7 +46,7 @@ role_router = APIRouter(
 )
 
 
-@role_router.get("/list", response_model=ResponsePageModel[SysRoleListResponse])
+@role_router.get("/list", response_model=ResponsePageModel[SysRoleListResponse], dependencies=[Depends(require_permission("sys:role:list"))])
 async def get_role_list(
     page_params: PageRequest = Depends(get_page_params),
     query_params: SysRoleQueryParams = Depends(),
@@ -127,7 +128,7 @@ async def get_role(
     return ResponseModel(data=role_response)
 
 
-@role_router.post("/add", response_model=ResponseModel[SysRoleResponseData])
+@role_router.post("/add", response_model=ResponseModel[SysRoleResponseData], dependencies=[Depends(require_permission("sys:role:add"))])
 @log_operation(module="role", action="create", description="创建角色")
 async def create_role(
     request: Request,
@@ -149,7 +150,7 @@ async def create_role(
     return ResponseModel(data=role_response, msg="创建角色成功")
 
 
-@role_router.put("/{role_id}", response_model=ResponseModel[SysRoleResponseData])
+@role_router.put("/{role_id}", response_model=ResponseModel[SysRoleResponseData], dependencies=[Depends(require_permission("sys:role:edit"))])
 @log_operation(module="role", action="update", description="更新角色")
 async def update_role(
     role_id: int,
@@ -172,7 +173,7 @@ async def update_role(
     return ResponseModel(data=role_response, msg="更新角色成功")
 
 
-@role_router.post("/{role_id}/menus", response_model=ResponseModel[SysRoleResponseData])
+@role_router.post("/{role_id}/menus", response_model=ResponseModel[SysRoleResponseData], dependencies=[Depends(require_permission("sys:role:edit"))])
 @log_operation(module="role", action="assign_menu", description="分配菜单权限")
 async def assign_menu_to_role(
     role_id: int,
@@ -197,7 +198,7 @@ async def assign_menu_to_role(
     return ResponseModel(data=role_response, msg="分配菜单权限成功")
 
 
-@role_router.delete("/batch", response_model=ResponseModel)
+@role_router.delete("/batch", response_model=ResponseModel, dependencies=[Depends(require_permission("sys:role:delete"))])
 @log_operation(module="role", action="batch_delete", description="批量删除角色")
 async def batch_delete_roles(
     request: Request,
@@ -221,7 +222,7 @@ async def batch_delete_roles(
     )
 
 
-@role_router.put("/batch/status", response_model=ResponseModel)
+@role_router.put("/batch/status", response_model=ResponseModel, dependencies=[Depends(require_permission("sys:role:edit"))])
 @log_operation(module="role", action="batch_update_status", description="批量更新角色状态")
 async def batch_update_roles_status(
     request: Request,
@@ -248,7 +249,7 @@ async def batch_update_roles_status(
     )
 
 
-@role_router.delete("/{role_id}", response_model=ResponseModel)
+@role_router.delete("/{role_id}", response_model=ResponseModel, dependencies=[Depends(require_permission("sys:role:delete"))])
 @log_operation(module="role", action="delete", description="删除角色")
 async def delete_role(
     role_id: int,

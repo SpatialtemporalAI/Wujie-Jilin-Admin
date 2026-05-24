@@ -5,12 +5,14 @@ import { enableStatusRecord } from '@/constants/business';
 import { fetchBatchDeleteRole, fetchDeleteRole, fetchGetRoleList } from '@/service/api';
 import { useAppStore } from '@/store/modules/app';
 import { defaultTransform, useNaivePaginatedTable, useTableOperate } from '@/hooks/common/table';
+import { useAuth } from '@/hooks/business/auth';
 import { $t } from '@/locales';
 import { booleanToEnableStatus } from '@/utils/status';
 import RoleOperateDrawer from './modules/role-operate-drawer.vue';
 import RoleSearch from './modules/role-search.vue';
 
 const appStore = useAppStore();
+const { hasAuth } = useAuth();
 
 const searchParams: Api.SystemManage.RoleSearchParams = reactive({
   page: 1,
@@ -92,19 +94,23 @@ const { columns, columnChecks, data, loading, getData, getDataByPage, mobilePagi
       render: (row: Api.SystemManage.Role) => {
         return (
           <div class="flex flex-wrap justify-center gap-8px">
-            <NButton type="primary" text size="small" onClick={() => edit(row.id)}>
-              {$t('common.edit')}
-            </NButton>
-            <NPopconfirm onPositiveClick={() => handleDelete(row.id)}>
-              {{
-                default: () => $t('common.confirmDelete'),
-                trigger: () => (
-                  <NButton type="error" text size="small">
-                    {$t('common.delete')}
-                  </NButton>
-                )
-              }}
-            </NPopconfirm>
+            {hasAuth('sys:role:edit') && (
+              <NButton type="primary" text size="small" onClick={() => edit(row.id)}>
+                {$t('common.edit')}
+              </NButton>
+            )}
+            {hasAuth('sys:role:delete') && (
+              <NPopconfirm onPositiveClick={() => handleDelete(row.id)}>
+                {{
+                  default: () => $t('common.confirmDelete'),
+                  trigger: () => (
+                    <NButton type="error" text size="small">
+                      {$t('common.delete')}
+                    </NButton>
+                  )
+                }}
+              </NPopconfirm>
+            )}
           </div>
         );
       }
@@ -150,6 +156,8 @@ function edit(id: number) {
           v-model:columns="columnChecks"
           :disabled-delete="checkedRowKeys.length === 0"
           :loading="loading"
+          add-auth="sys:role:add"
+          delete-auth="sys:role:delete"
           @add="handleAdd"
           @delete="handleBatchDelete"
           @refresh="getData"

@@ -415,6 +415,7 @@ const local: App.I18n.Schema = {
         button: '按钮',
         buttonCode: '按钮编码',
         buttonDesc: '按钮描述',
+        permission: '权限标识',
         menuStatus: '菜单状态',
         isSystem: '系统内置',
         form: {
@@ -443,6 +444,7 @@ const local: App.I18n.Schema = {
           button: '请选择是否按钮',
           buttonCode: '请输入按钮编码',
           buttonDesc: '请输入按钮描述',
+          permission: '请输入权限标识（如 sys:menu:add）',
           menuStatus: '请选择菜单状态',
           isSystem: '请选择是否为系统内置菜单'
         },
@@ -451,7 +453,8 @@ const local: App.I18n.Schema = {
         addChildMenu: '新增子菜单',
         type: {
           directory: '目录',
-          menu: '菜单'
+          menu: '菜单',
+          button: '按钮'
         },
         iconType: {
           iconify: 'iconify图标',

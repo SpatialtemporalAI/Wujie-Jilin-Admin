@@ -656,6 +656,7 @@ declare namespace App {
             button: string;
             buttonCode: string;
             buttonDesc: string;
+            permission: string;
             menuStatus: string;
             form: {
               home: string;
@@ -682,6 +683,7 @@ declare namespace App {
               button: string;
               buttonCode: string;
               buttonDesc: string;
+              permission: string;
               menuStatus: string;
             };
             addMenu: string;
@@ -690,6 +692,7 @@ declare namespace App {
             type: {
               directory: string;
               menu: string;
+              button: string;
             };
             iconType: {
               iconify: string;

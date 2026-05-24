@@ -19,6 +19,7 @@ from core.response.response_schema import (
 from app.models.common.page import PageRequest, get_page_params, get_paginated_results
 from core.decorators.operation_log import log_operation
 from modules.admin.deps.auth.user_manager import current_user
+from modules.admin.deps.auth.permission import require_permission
 from app.models.sys.user import SysUser
 
 from modules.admin.services.sys import MenuService
@@ -69,7 +70,7 @@ async def get_all_pages():
     return ResponseModel(data=PAGE_COMPONENTS)
 
 
-@menu_router.get("/list", response_model=ResponsePageModel[SysMenuResponseData])
+@menu_router.get("/list", response_model=ResponsePageModel[SysMenuResponseData], dependencies=[Depends(require_permission("sys:menu:list"))])
 async def get_menu_list(
     query_params: SysMenuQueryParams = Depends(),
     page_params: PageRequest = Depends(get_page_params),
@@ -99,7 +100,7 @@ async def get_menu_list(
     return response_base.page(data=page_data)
 
 
-@menu_router.get("/list-tree", response_model=ResponseModel[List[SysMenuResponseData]])
+@menu_router.get("/list-tree", response_model=ResponseModel[List[SysMenuResponseData]], dependencies=[Depends(require_permission("sys:menu:list"))])
 async def get_menu_list_tree(
     db: AsyncSession = Depends(get_session),
 ):
@@ -114,7 +115,7 @@ async def get_menu_list_tree(
     return ResponseModel(data=menu_tree)
 
 
-@menu_router.get("/tree", response_model=ResponseModel[List[SysMenuTreeResponse]])
+@menu_router.get("/tree", response_model=ResponseModel[List[SysMenuTreeResponse]], dependencies=[Depends(require_permission("sys:menu:list"))])
 async def get_menu_tree(
     query_params: SysMenuTreeQuery = Depends(),
     db: AsyncSession = Depends(get_session),
@@ -166,7 +167,7 @@ async def get_menu(
     return ResponseModel(data=menu_response)
 
 
-@menu_router.post("/add", response_model=ResponseModel[SysMenuResponseData])
+@menu_router.post("/add", response_model=ResponseModel[SysMenuResponseData], dependencies=[Depends(require_permission("sys:menu:add"))])
 @log_operation(module="menu", action="create", description="创建菜单")
 async def create_menu(
     request: Request,
@@ -186,7 +187,7 @@ async def create_menu(
     return ResponseModel(data=menu_response, msg="创建菜单成功")
 
 
-@menu_router.put("/{menu_id}", response_model=ResponseModel[SysMenuResponseData])
+@menu_router.put("/{menu_id}", response_model=ResponseModel[SysMenuResponseData], dependencies=[Depends(require_permission("sys:menu:edit"))])
 @log_operation(module="menu", action="update", description="更新菜单")
 async def update_menu(
     menu_id: int,
@@ -207,7 +208,7 @@ async def update_menu(
     return ResponseModel(data=menu_response, msg="更新菜单成功")
 
 
-@menu_router.delete("/batch/delete", response_model=ResponseModel)
+@menu_router.delete("/batch/delete", response_model=ResponseModel, dependencies=[Depends(require_permission("sys:menu:delete"))])
 @log_operation(module="menu", action="batch_delete", description="批量删除菜单")
 async def batch_delete_menus(
     request: Request,
@@ -229,7 +230,7 @@ async def batch_delete_menus(
     )
 
 
-@menu_router.put("/batch/status", response_model=ResponseModel)
+@menu_router.put("/batch/status", response_model=ResponseModel, dependencies=[Depends(require_permission("sys:menu:edit"))])
 @log_operation(module="menu", action="batch_update_status", description="批量更新菜单状态")
 async def batch_update_menus_status(
     request: Request,
@@ -256,7 +257,7 @@ async def batch_update_menus_status(
     )
 
 
-@menu_router.delete("/{menu_id}", response_model=ResponseModel)
+@menu_router.delete("/{menu_id}", response_model=ResponseModel, dependencies=[Depends(require_permission("sys:menu:delete"))])
 @log_operation(module="menu", action="delete", description="删除菜单")
 async def delete_menu(
     menu_id: int,

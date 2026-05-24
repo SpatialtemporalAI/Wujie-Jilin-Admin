@@ -9,8 +9,6 @@ from sqlalchemy import select
 from sqlalchemy.orm import joinedload
 from core.config import settings
 from app.models.sys.user import SysUser
-from app.models.sys.role import SysRole
-from app.models.sys.menu import SysMenu, MenuType
 from database import get_session
 from core.exception import CustomError, TokenError
 from core.response import CustomErrorCode
@@ -170,15 +168,15 @@ class UserManager(BaseUserManager):
 
     async def get_user_info(self, user_id: int):
         """
-        获取用户信息，包含角色列表和按钮权限列表
+        获取用户信息，包含角色列表
         Args:
             user_id: 用户ID
         Returns:
-            dict: 用户信息字典，含 roles 和 buttons
+            dict: 用户信息字典，含 roles
         """
         stmt = (
             select(SysUser)
-            .options(joinedload(SysUser.roles).joinedload(SysRole.menus))
+            .options(joinedload(SysUser.roles))
             .where(SysUser.id == user_id)
         )
         result = await self.session.execute(stmt)
@@ -196,33 +194,6 @@ class UserManager(BaseUserManager):
         # 收集角色 code 列表
         roles: List[str] = [role.code for role in user.roles if role.status]
 
-        # 收集按钮权限：通过角色 → 关联菜单 → 筛选 type=BUTTON → 提取 permission 字段
-        buttons: List[str] = []
-        if user.is_superuser:
-            # 超级用户获取所有按钮权限
-            btn_stmt = select(SysMenu).where(
-                SysMenu.type == MenuType.BUTTON,
-                SysMenu.status == True,
-            )
-            btn_result = await self.session.execute(btn_stmt)
-            buttons = [
-                m.permission for m in btn_result.scalars().all() if m.permission
-            ]
-        else:
-            seen = set()
-            for role in user.roles:
-                if not role.status:
-                    continue
-                for menu in role.menus:
-                    if (
-                        menu.type == MenuType.BUTTON
-                        and menu.status
-                        and menu.permission
-                        and menu.permission not in seen
-                    ):
-                        seen.add(menu.permission)
-                        buttons.append(menu.permission)
-
         user_info = {
             "id": user.id,
             "username": user.username,
@@ -235,7 +206,6 @@ class UserManager(BaseUserManager):
             "last_login_at": format_datetime(user.last_login_at),
             "last_login_ip": user.last_login_ip,
             "roles": roles,
-            "buttons": buttons,
         }
         return user_info
 

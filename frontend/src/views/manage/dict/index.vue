@@ -5,6 +5,7 @@ import { enableStatusRecord } from '@/constants/business';
 import { fetchDeleteDict, fetchDeleteDictItem, fetchGetDictItemList, fetchGetDictList } from '@/service/api';
 import { useAppStore } from '@/store/modules/app';
 import { defaultTransform, useNaivePaginatedTable, useTableOperate } from '@/hooks/common/table';
+import { useAuth } from '@/hooks/business/auth';
 import { $t } from '@/locales';
 import { booleanToEnableStatus } from '@/utils/status';
 import DictOperateDrawer from './modules/dict-operate-drawer.vue';
@@ -13,6 +14,7 @@ import DictSearch from './modules/dict-search.vue';
 
 const appStore = useAppStore();
 const message = useMessage();
+const { hasAuth } = useAuth();
 
 /** 字典搜索参数 */
 const dictSearchParams: Api.SystemManage.DictSearchParams = reactive({
@@ -171,10 +173,12 @@ const {
             <NButton type="primary" ghost size="small" onClick={() => handleSelectDict(row)}>
               {$t('page.manage.dict.itemManage')}
             </NButton>
-            <NButton type="info" ghost size="small" onClick={() => editDict(row.id)}>
-              {$t('common.edit')}
-            </NButton>
-            {row.is_system !== '1' && (
+            {hasAuth('sys:dict:edit') && (
+              <NButton type="info" ghost size="small" onClick={() => editDict(row.id)}>
+                {$t('common.edit')}
+              </NButton>
+            )}
+            {row.is_system !== '1' && hasAuth('sys:dict:delete') && (
               <NPopconfirm onPositiveClick={() => handleDeleteDict(row.id)}>
                 {{
                   default: () => $t('common.confirmDelete'),
@@ -296,19 +300,23 @@ const {
       render: row => {
         return (
           <div class="flex flex-wrap justify-center gap-8px">
-            <NButton type="info" ghost size="small" onClick={() => editDictItem(row.id)}>
-              {$t('common.edit')}
-            </NButton>
-            <NPopconfirm onPositiveClick={() => handleDeleteDictItem(row.id)}>
-              {{
-                default: () => $t('common.confirmDelete'),
-                trigger: () => (
-                  <NButton type="error" ghost size="small">
-                    {$t('common.delete')}
-                  </NButton>
-                )
-              }}
-            </NPopconfirm>
+            {hasAuth('sys:dict:edit') && (
+              <NButton type="info" ghost size="small" onClick={() => editDictItem(row.id)}>
+                {$t('common.edit')}
+              </NButton>
+            )}
+            {hasAuth('sys:dict:delete') && (
+              <NPopconfirm onPositiveClick={() => handleDeleteDictItem(row.id)}>
+                {{
+                  default: () => $t('common.confirmDelete'),
+                  trigger: () => (
+                    <NButton type="error" ghost size="small">
+                      {$t('common.delete')}
+                    </NButton>
+                  )
+                }}
+              </NPopconfirm>
+            )}
           </div>
         );
       }
@@ -424,6 +432,8 @@ watch(activeTab, tab => {
               v-model:columns="dictColumnChecks"
               :disabled-delete="checkedDictRowKeys.length === 0"
               :loading="dictLoading"
+              add-auth="sys:dict:add"
+              delete-auth="sys:dict:delete"
               @add="handleAddDict"
               @delete="handleBatchDeleteDict"
               @refresh="getDictData"
@@ -485,6 +495,8 @@ watch(activeTab, tab => {
               :disabled-delete="checkedDictItemRowKeys.length === 0"
               :loading="dictItemLoading"
               :disabled-add="!selectedDict"
+              add-auth="sys:dict:add"
+              delete-auth="sys:dict:delete"
               @add="handleAddDictItem"
               @delete="handleBatchDeleteDictItem"
               @refresh="loadDictItemData"

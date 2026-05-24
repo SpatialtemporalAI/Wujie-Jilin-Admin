@@ -4,11 +4,13 @@ import { NButton, NCard, NDataTable, NPopconfirm, NTag, useMessage } from 'naive
 import { fetchBatchDeleteLoginLog, fetchClearLoginLog, fetchDeleteLoginLog, fetchGetLoginLogList } from '@/service/api';
 import { useAppStore } from '@/store/modules/app';
 import { defaultTransform, useNaivePaginatedTable, useTableOperate } from '@/hooks/common/table';
+import { useAuth } from '@/hooks/business/auth';
 import { $t } from '@/locales';
 import LoginLogSearch from './modules/login-log-search.vue';
 
 const appStore = useAppStore();
 const message = useMessage();
+const { hasAuth } = useAuth();
 
 const searchParams: Api.SystemManage.LoginLogSearchParams = reactive({
   page: 1,
@@ -100,6 +102,7 @@ const {
       align: 'center',
       width: 80,
       render: row => {
+        if (!hasAuth('sys:log:delete')) return null;
         return (
           <NPopconfirm onPositiveClick={() => handleDelete(row.id)}>
             {{
@@ -163,11 +166,12 @@ async function handleClear() {
           :disabled-delete="checkedRowKeys.length === 0"
           :loading="loading"
           :show-add="false"
+          delete-auth="sys:log:delete"
           @delete="handleBatchDelete"
           @refresh="getData"
         >
           <template #prefix>
-            <NPopconfirm @positive-click="handleClear">
+            <NPopconfirm v-if="hasAuth('sys:log:delete')" @positive-click="handleClear">
               {{ $t('page.log.loginLog.clearConfirm') }}
               <template #trigger>
                 <NButton type="warning" ghost size="small" :disabled="loading">

@@ -35,17 +35,17 @@ async def get_constant_routes():
 
 
 @route_router.get(
-    "/getUserRoutes",
+    "/getPermissions",
     response_model=ResponseModel[UserRouteResponse],
-    summary="获取当前用户路由",
-    description="根据当前登录用户的角色，返回可用的路由树",
+    summary="获取当前用户路由与按钮权限",
+    description="根据当前登录用户的角色，返回可用的路由树及按钮权限标识列表",
 )
-async def get_user_routes(
+async def get_permissions(
     user: SysUser = Depends(current_user),
     db: AsyncSession = Depends(get_session),
 ):
     result = await RouteService.get_user_routes(db, user)
-    return response_base.success(data=result, msg="获取用户路由成功")
+    return response_base.success(data=result, msg="获取用户权限成功")
 
 
 @route_router.get(

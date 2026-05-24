@@ -9,12 +9,14 @@ import {
 } from '@/service/api';
 import { useAppStore } from '@/store/modules/app';
 import { defaultTransform, useNaivePaginatedTable, useTableOperate } from '@/hooks/common/table';
+import { useAuth } from '@/hooks/business/auth';
 import { $t } from '@/locales';
 import OperationLogSearch from './modules/operation-log-search.vue';
 import OperationLogDetailDrawer from './modules/operation-log-detail-drawer.vue';
 
 const appStore = useAppStore();
 const message = useMessage();
+const { hasAuth } = useAuth();
 
 const searchParams: Api.SystemManage.OperationLogSearchParams = reactive({
   page: 1,
@@ -146,16 +148,18 @@ const {
             <NButton type="primary" text size="small" onClick={() => handleViewDetail(row.id)}>
               {$t('page.log.operationLog.viewDetail')}
             </NButton>
-            <NPopconfirm onPositiveClick={() => handleDelete(row.id)}>
-              {{
-                default: () => $t('common.confirmDelete'),
-                trigger: () => (
-                  <NButton type="error" text size="small">
-                    {$t('common.delete')}
-                  </NButton>
-                )
-              }}
-            </NPopconfirm>
+            {hasAuth('sys:oplog:delete') && (
+              <NPopconfirm onPositiveClick={() => handleDelete(row.id)}>
+                {{
+                  default: () => $t('common.confirmDelete'),
+                  trigger: () => (
+                    <NButton type="error" text size="small">
+                      {$t('common.delete')}
+                    </NButton>
+                  )
+                }}
+              </NPopconfirm>
+            )}
           </div>
         );
       }
@@ -217,11 +221,12 @@ async function handleClear() {
           :disabled-delete="checkedRowKeys.length === 0"
           :loading="loading"
           :show-add="false"
+          delete-auth="sys:oplog:delete"
           @delete="handleBatchDelete"
           @refresh="getData"
         >
           <template #prefix>
-            <NPopconfirm @positive-click="handleClear">
+            <NPopconfirm v-if="hasAuth('sys:oplog:delete')" @positive-click="handleClear">
               {{ $t('page.log.operationLog.clearConfirm') }}
               <template #trigger>
                 <NButton type="warning" ghost size="small" :disabled="loading">

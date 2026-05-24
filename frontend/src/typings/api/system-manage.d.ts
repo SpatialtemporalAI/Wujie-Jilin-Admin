@@ -92,8 +92,9 @@ declare namespace Api {
      *
      * - "1": directory
      * - "2": menu
+     * - "3": button
      */
-    type MenuType = '1' | '2';
+    type MenuType = '1' | '2' | '3';
 
     type MenuButton = {
       /**
@@ -147,6 +148,8 @@ declare namespace Api {
       iconType: IconType;
       /** buttons */
       buttons?: MenuButton[] | null;
+      /** permission code (for button-type menu) */
+      permission?: string | null;
       /** children menu */
       children?: Menu[] | null;
       /** is system built-in menu */

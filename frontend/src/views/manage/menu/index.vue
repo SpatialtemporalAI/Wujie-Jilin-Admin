@@ -7,11 +7,13 @@ import { yesOrNoRecord } from '@/constants/common';
 import { enableStatusRecord, menuTypeRecord } from '@/constants/business';
 import { fetchDeleteMenu, fetchGetAllPages, fetchGetMenuListTree } from '@/service/api';
 import { useAppStore } from '@/store/modules/app';
+import { useAuth } from '@/hooks/business/auth';
 import { $t } from '@/locales';
 import SvgIcon from '@/components/custom/svg-icon.vue';
 import MenuOperateModal, { type OperateType } from './modules/menu-operate-modal.vue';
 
 const appStore = useAppStore();
+const { hasAuth } = useAuth();
 
 const { bool: visible, setTrue: openModal } = useBoolean();
 
@@ -39,12 +41,6 @@ const columns = [
     }
   },
   {
-    key: 'id',
-    title: $t('page.manage.menu.id'),
-    align: 'center',
-    width: 80
-  },
-  {
     key: 'menuType',
     title: $t('page.manage.menu.menuType'),
     align: 'center',
@@ -52,7 +48,8 @@ const columns = [
     render: (row: Api.SystemManage.Menu) => {
       const tagMap: Record<Api.SystemManage.MenuType, NaiveUI.ThemeColor> = {
         '1': 'default',
-        '2': 'primary'
+        '2': 'primary',
+        '3': 'warning'
       };
 
       const label = $t(menuTypeRecord[row.menuType]);
@@ -155,24 +152,33 @@ const columns = [
     minWidth: 150,
     render: (row: Api.SystemManage.Menu) => (
       <div class="flex flex-wrap justify-center gap-8px">
-        {row.menuType === '1' && (
+        {row.menuType === '1' && hasAuth('sys:menu:add') && (
           <NButton type="primary" text size="small" onClick={() => handleAddChildMenu(row)}>
             {$t('page.manage.menu.addChildMenu')}
           </NButton>
         )}
-        <NButton type="primary" text size="small" onClick={() => handleEdit(row)}>
-          {$t('common.edit')}
-        </NButton>
-        <NPopconfirm onPositiveClick={() => handleDelete(row.id)}>
-          {{
-            default: () => $t('common.confirmDelete'),
-            trigger: () => (
-              <NButton type="error" text size="small">
-                {$t('common.delete')}
-              </NButton>
-            )
-          }}
-        </NPopconfirm>
+        {row.menuType === '2' && hasAuth('sys:menu:add') && (
+          <NButton type="primary" text size="small" onClick={() => handleAddChildMenu(row)}>
+            {$t('page.manage.menu.addChildMenu')}
+          </NButton>
+        )}
+        {hasAuth('sys:menu:edit') && (
+          <NButton type="primary" text size="small" onClick={() => handleEdit(row)}>
+            {$t('common.edit')}
+          </NButton>
+        )}
+        {hasAuth('sys:menu:delete') && (
+          <NPopconfirm onPositiveClick={() => handleDelete(row.id)}>
+            {{
+              default: () => $t('common.confirmDelete'),
+              trigger: () => (
+                <NButton type="error" text size="small">
+                  {$t('common.delete')}
+                </NButton>
+              )
+            }}
+          </NPopconfirm>
+        )}
       </div>
     )
   }
@@ -232,7 +238,7 @@ init();
     <NCard :title="$t('page.manage.menu.title')" :bordered="false" size="small" class="card-wrapper sm:flex-1-hidden">
       <template #header-extra>
         <NSpace>
-          <NButton type="primary" size="small" @click="handleAdd">
+          <NButton v-permission="'sys:menu:add'" type="primary" size="small" @click="handleAdd">
             <icon-ic-round-plus class="mr-4px text-icon" />
             {{ $t('common.add') }}
           </NButton>

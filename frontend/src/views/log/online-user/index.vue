@@ -4,11 +4,13 @@ import { NButton, NCard, NDataTable, NPopconfirm, NTag, useMessage } from 'naive
 import { fetchGetOnlineUserList, fetchKickUser, fetchKickAllSessions } from '@/service/api';
 import { useAppStore } from '@/store/modules/app';
 import { defaultTransform, useNaivePaginatedTable } from '@/hooks/common/table';
+import { useAuth } from '@/hooks/business/auth';
 import { $t } from '@/locales';
 import OnlineUserSearch from './modules/online-user-search.vue';
 
 const appStore = useAppStore();
 const message = useMessage();
+const { hasAuth } = useAuth();
 
 const searchParams: Api.SystemManage.OnlineUserSearchParams = reactive({
   page: 1,
@@ -77,6 +79,7 @@ const {
       align: 'center',
       width: 160,
       render: row => {
+        if (!hasAuth('sys:online:kick')) return null;
         return (
           <NSpace justify="center">
             <NPopconfirm onPositiveClick={() => handleKick(row)}>

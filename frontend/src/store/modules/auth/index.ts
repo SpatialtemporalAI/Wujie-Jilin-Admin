@@ -158,16 +158,19 @@ export const useAuthStore = defineStore(SetupStoreId.Auth, () => {
     const { data: info, error } = await fetchGetUserInfo();
 
     if (!error) {
-      // update store
+      // update store (buttons are populated separately via route store from /getPermissions)
       Object.assign(userInfo, info, {
-        roles: info.roles || [],
-        buttons: info.buttons || []
+        roles: info.roles || []
       });
 
       return true;
     }
 
     return false;
+  }
+
+  function setButtons(buttons: string[]) {
+    userInfo.buttons = buttons;
   }
 
   async function initUserInfo() {
@@ -190,6 +193,7 @@ export const useAuthStore = defineStore(SetupStoreId.Auth, () => {
     loginLoading,
     resetStore,
     login,
-    initUserInfo
+    initUserInfo,
+    setButtons
   };
 });

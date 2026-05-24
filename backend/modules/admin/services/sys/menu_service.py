@@ -27,6 +27,11 @@ from modules.admin.schemas.sys.menu import (
 logger = logging.getLogger(__name__)
 
 
+def _type_to_str(menu_type: MenuType) -> str:
+    mapping = {MenuType.CATALOG: "1", MenuType.MENU: "2", MenuType.EXTERNAL: "2", MenuType.BUTTON: "3"}
+    return mapping.get(menu_type, "1")
+
+
 class MenuService:
     """
     菜单管理服务类
@@ -192,7 +197,7 @@ class MenuService:
                 id=menu.id,
                 label=menu.name,
                 pId=menu.parent_id,
-                menuType="1" if menu.type == MenuType.CATALOG else "2",
+                menuType=_type_to_str(menu.type),
                 children=[],
             )
             menu_map[menu.id] = menu_response
@@ -260,9 +265,20 @@ class MenuService:
             result = await db.execute(
                 select(SysMenu).where(SysMenu.id == menu_create.parent_id)
             )
-            if not result.scalar_one_or_none():
+            parent_menu = result.scalar_one_or_none()
+            if not parent_menu:
                 logger.warning(f"创建菜单失败，父菜单不存在: {menu_create.parent_id}")
                 raise NotFoundError(msg=f"父菜单 {menu_create.parent_id} 不存在")
+
+            # 按钮类型菜单的上级仅允许为菜单类型
+            if menu_create.type == MenuType.BUTTON and parent_menu.type != MenuType.MENU:
+                logger.warning(f"创建菜单失败，按钮类型菜单的上级仅允许为菜单类型: parent_type={parent_menu.type}")
+                raise ConflictError(msg="按钮类型菜单的上级仅允许为菜单类型")
+
+        # 按钮类型菜单必须指定上级菜单
+        if menu_create.type == MenuType.BUTTON and not menu_create.parent_id:
+            logger.warning("创建菜单失败，按钮类型菜单必须指定上级菜单")
+            raise ConflictError(msg="按钮类型菜单必须指定上级菜单")
 
         # 创建菜单对象
         menu = SysMenu(
@@ -320,6 +336,15 @@ class MenuService:
             raise ForbiddenError(msg="不能修改系统内置菜单")
 
         # 检查父菜单
+        # 确定最终的菜单类型和父ID（优先使用更新值，否则用原值）
+        final_type = menu_update.type if menu_update.type is not None else menu.type
+        final_parent_id = menu_update.parent_id if menu_update.parent_id is not None else menu.parent_id
+
+        # 按钮类型菜单必须指定上级菜单
+        if final_type == MenuType.BUTTON and not final_parent_id:
+            logger.warning("更新菜单失败，按钮类型菜单必须指定上级菜单")
+            raise ConflictError(msg="按钮类型菜单必须指定上级菜单")
+
         if menu_update.parent_id is not None:
             # 不能将自己设置为父菜单
             if menu_update.parent_id == menu_id:
@@ -331,11 +356,17 @@ class MenuService:
                 result = await db.execute(
                     select(SysMenu).where(SysMenu.id == menu_update.parent_id)
                 )
-                if not result.scalar_one_or_none():
+                parent_menu = result.scalar_one_or_none()
+                if not parent_menu:
                     logger.warning(
                         f"更新菜单失败，父菜单不存在: {menu_update.parent_id}"
                     )
                     raise NotFoundError(msg=f"父菜单 {menu_update.parent_id} 不存在")
+
+                # 按钮类型菜单的上级仅允许为菜单类型
+                if final_type == MenuType.BUTTON and parent_menu.type != MenuType.MENU:
+                    logger.warning(f"更新菜单失败，按钮类型菜单的上级仅允许为菜单类型: parent_type={parent_menu.type}")
+                    raise ConflictError(msg="按钮类型菜单的上级仅允许为菜单类型")
 
                 # 检查循环引用：向上遍历目标父菜单的祖先链，确保当前菜单不在其中
                 ancestor_id = menu_update.parent_id
@@ -538,7 +569,7 @@ class MenuService:
                 id=menu.id,
                 label=menu.name,
                 pId=menu.parent_id,
-                menuType="1" if menu.type == MenuType.CATALOG else "2",
+                menuType=_type_to_str(menu.type),
                 children=[],
             )
             menu_map[menu.id] = menu_response

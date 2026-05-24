@@ -13,6 +13,7 @@ from database.db_manager import get_session
 from core.response import ResponseModel, ResponsePageModel, response_base
 from app.models.common.page import PageRequest, get_page_params, get_paginated_results
 from modules.admin.deps.auth.user_manager import current_user
+from modules.admin.deps.auth.permission import require_permission
 from app.models.sys.user import SysUser
 from modules.admin.services.sys.login_log_service import LoginLogService
 from modules.admin.schemas.sys.login_log import (
@@ -30,6 +31,7 @@ login_log_router = APIRouter(prefix="/login-log", tags=["系统管理/登录日�
     "/list",
     response_model=ResponsePageModel[LoginLogResponse],
     summary="获取登录日志列表",
+    dependencies=[Depends(require_permission("sys:log:list"))],
 )
 async def get_log_list(
     query_params: LoginLogQueryParams = Depends(),
@@ -52,6 +54,7 @@ async def get_log_list(
     "/batch/delete",
     response_model=ResponseModel,
     summary="批量删除登录日志",
+    dependencies=[Depends(require_permission("sys:log:delete"))],
 )
 async def batch_delete_logs(
     log_ids: List[int] = Body(..., description="日志ID列表"),
@@ -67,6 +70,7 @@ async def batch_delete_logs(
     "/clear",
     response_model=ResponseModel,
     summary="清理过期登录日志",
+    dependencies=[Depends(require_permission("sys:log:delete"))],
 )
 async def clear_logs(
     days: int = Query(30, description="清理多少天前的日志"),
@@ -102,6 +106,7 @@ async def get_log_detail(
     "/{log_id}",
     response_model=ResponseModel,
     summary="删除单条登录日志",
+    dependencies=[Depends(require_permission("sys:log:delete"))],
 )
 async def delete_log(
     log_id: int,

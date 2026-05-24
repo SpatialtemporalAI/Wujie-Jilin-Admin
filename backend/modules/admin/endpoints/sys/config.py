@@ -19,6 +19,7 @@ from core.response.response_schema import (
 from app.models.common.page import PageRequest, get_page_params, get_paginated_results
 from core.decorators.operation_log import log_operation
 from modules.admin.deps.auth.user_manager import current_user
+from modules.admin.deps.auth.permission import require_permission
 from app.models.sys.user import SysUser
 
 from modules.admin.services.sys import ConfigService
@@ -43,7 +44,7 @@ config_router = APIRouter(
 )
 
 
-@config_router.get("/list", response_model=ResponsePageModel[SysConfigResponseData])
+@config_router.get("/list", response_model=ResponsePageModel[SysConfigResponseData], dependencies=[Depends(require_permission("sys:config:list"))])
 async def get_config_list(
     query_params: SysConfigQueryParams = Depends(),
     page_params: PageRequest = Depends(get_page_params),
@@ -212,7 +213,7 @@ async def get_config_value(
         raise
 
 
-@config_router.post("/add", response_model=ResponseModel[SysConfigResponseData])
+@config_router.post("/add", response_model=ResponseModel[SysConfigResponseData], dependencies=[Depends(require_permission("sys:config:add"))])
 @log_operation(module="config", action="create", description="创建配置")
 async def create_config(
     request: Request,
@@ -239,7 +240,7 @@ async def create_config(
         raise
 
 
-@config_router.put("/{config_id}", response_model=ResponseModel[SysConfigResponseData])
+@config_router.put("/{config_id}", response_model=ResponseModel[SysConfigResponseData], dependencies=[Depends(require_permission("sys:config:edit"))])
 @log_operation(module="config", action="update", description="更新配置")
 async def update_config(
     config_id: int,
@@ -267,7 +268,7 @@ async def update_config(
         raise
 
 
-@config_router.put("/batch/update", response_model=ResponseModel)
+@config_router.put("/batch/update", response_model=ResponseModel, dependencies=[Depends(require_permission("sys:config:edit"))])
 @log_operation(module="config", action="batch_update", description="批量更新配置")
 async def batch_update_configs(
     request: Request,
@@ -293,7 +294,7 @@ async def batch_update_configs(
         raise
 
 
-@config_router.put("/batch/reset", response_model=ResponseModel)
+@config_router.put("/batch/reset", response_model=ResponseModel, dependencies=[Depends(require_permission("sys:config:edit"))])
 @log_operation(module="config", action="batch_reset", description="批量重置配置")
 async def reset_configs(
     request: Request,
@@ -319,7 +320,7 @@ async def reset_configs(
         raise
 
 
-@config_router.delete("/batch", response_model=ResponseModel)
+@config_router.delete("/batch", response_model=ResponseModel, dependencies=[Depends(require_permission("sys:config:delete"))])
 @log_operation(module="config", action="batch_delete", description="批量删除配置")
 async def batch_delete_configs(
     request: Request,
@@ -345,7 +346,7 @@ async def batch_delete_configs(
         raise
 
 
-@config_router.delete("/{config_id}", response_model=ResponseModel)
+@config_router.delete("/{config_id}", response_model=ResponseModel, dependencies=[Depends(require_permission("sys:config:delete"))])
 @log_operation(module="config", action="delete", description="删除配置")
 async def delete_config(
     config_id: int,
