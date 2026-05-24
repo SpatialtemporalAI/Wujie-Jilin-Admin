@@ -786,6 +786,20 @@ declare namespace App {
               custom: string;
             };
           };
+          ipBlacklist: {
+            title: string;
+            ip: string;
+            type: string;
+            typePermanent: string;
+            typeTemporary: string;
+            reason: string;
+            expireAt: string;
+            expireAtPlaceholder: string;
+            expireRequired: string;
+            createdAt: string;
+            reasonPlaceholder: string;
+            addTitle: string;
+          };
         };
       };
       form: {

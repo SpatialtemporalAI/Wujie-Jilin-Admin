@@ -519,3 +519,40 @@ export function fetchBatchDeleteConfig(configIds: number[]) {
     data: configIds
   });
 }
+
+/** ==================== IP 黑名单管理 API ==================== */
+
+/** get ip blacklist list */
+export function fetchGetIpBlacklistList(params?: Api.SystemManage.IpBlacklistSearchParams) {
+  return request<Api.SystemManage.IpBlacklistList>({
+    url: '/admin/sys/ip-blacklist/list',
+    method: 'get',
+    params
+  });
+}
+
+/** create ip blacklist */
+export function fetchCreateIpBlacklist(data: Api.SystemManage.IpBlacklistCreate) {
+  return request<Api.SystemManage.IpBlacklist>({
+    url: '/admin/sys/ip-blacklist/add',
+    method: 'post',
+    data
+  });
+}
+
+/** delete ip blacklist */
+export function fetchDeleteIpBlacklist(id: number) {
+  return request<void>({
+    url: `/admin/sys/ip-blacklist/${id}`,
+    method: 'delete'
+  });
+}
+
+/** batch delete ip blacklist */
+export function fetchBatchDeleteIpBlacklist(ids: number[]) {
+  return request<void>({
+    url: '/admin/sys/ip-blacklist/batch/delete',
+    method: 'delete',
+    data: { ids }
+  });
+}

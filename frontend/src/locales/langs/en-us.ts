@@ -245,6 +245,7 @@ const local: App.I18n.Schema = {
     manage_user: 'User Management',
     manage_dict: 'Dict Management',
     manage_config: 'System Config',
+    'manage_ip-blacklist': 'IP Blacklist',
     log: 'Log Management',
     'log_login-log': 'Login Log',
     'log_online-user': 'Online Users',
@@ -552,6 +553,20 @@ const local: App.I18n.Schema = {
           storage: 'Storage',
           custom: 'Custom'
         }
+      },
+      ipBlacklist: {
+        title: 'IP Blacklist',
+        ip: 'IP Address',
+        type: 'Type',
+        typePermanent: 'Permanent',
+        typeTemporary: 'Temporary',
+        reason: 'Reason',
+        expireAt: 'Expire At',
+        expireAtPlaceholder: 'Select expire time',
+        expireRequired: 'Temporary blacklist must have an expire time',
+        createdAt: 'Created At',
+        reasonPlaceholder: 'Enter reason (optional)',
+        addTitle: 'Add IP Blacklist'
       }
     },
     log: {

@@ -241,6 +241,7 @@ const local: App.I18n.Schema = {
     manage_user: '用户管理',
     manage_dict: '字典管理',
     manage_config: '系统配置',
+    'manage_ip-blacklist': '黑名单管理',
     log: '日志管理',
     'log_login-log': '登录日志',
     'log_online-user': '在线用户',
@@ -547,6 +548,20 @@ const local: App.I18n.Schema = {
           storage: '存储配置',
           custom: '自定义配置'
         }
+      },
+      ipBlacklist: {
+        title: 'IP 黑名单列表',
+        ip: 'IP 地址',
+        type: '类型',
+        typePermanent: '永久',
+        typeTemporary: '临时',
+        reason: '原因',
+        expireAt: '过期时间',
+        expireAtPlaceholder: '请选择过期时间',
+        expireRequired: '临时黑名单必须设置过期时间',
+        createdAt: '创建时间',
+        reasonPlaceholder: '请输入加入原因（选填）',
+        addTitle: '新增黑名单'
       }
     },
     log: {

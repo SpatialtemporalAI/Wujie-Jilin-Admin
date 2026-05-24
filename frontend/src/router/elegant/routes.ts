@@ -143,6 +143,15 @@ export const generatedRoutes: GeneratedRoute[] = [
         }
       },
       {
+        name: 'manage_ip-blacklist',
+        path: '/manage/ip-blacklist',
+        component: 'view.manage_ip-blacklist',
+        meta: {
+          title: 'manage_ip-blacklist',
+          i18nKey: 'route.manage_ip-blacklist'
+        }
+      },
+      {
         name: 'manage_menu',
         path: '/manage/menu',
         component: 'view.manage_menu',

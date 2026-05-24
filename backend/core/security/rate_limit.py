@@ -15,6 +15,7 @@ from fastapi import HTTPException, Request
 
 from core.config import settings
 from core.redis import RedisPool
+from core.security.rate_limit_config import RateLimitConfigProvider
 from core.utils.ip_utils import get_real_client_ip
 
 logger = getLogger(__name__)
@@ -95,7 +96,9 @@ async def add_ip_to_redis_blacklist(
     if not ip:
         return
     redis_client = RedisPool.get_client()
-    effective_ttl = ttl_seconds if ttl_seconds and ttl_seconds > 0 else settings.RATE_LIMIT.BLACKLIST_REDIS_TTL
+    effective_ttl = ttl_seconds if ttl_seconds and ttl_seconds > 0 else await RateLimitConfigProvider.get(
+        "rate_limit.blacklist_redis_ttl", settings.RATE_LIMIT.BLACKLIST_REDIS_TTL
+    )
     await redis_client.set(_blacklist_key(ip), reason or "1", ex=effective_ttl)
 
 
@@ -119,7 +122,10 @@ async def incr_login_failure(ip: str) -> int:
     key = _login_fail_key(ip)
     count = await redis_client.incr(key)
     if count == 1:
-        await redis_client.expire(key, settings.RATE_LIMIT.LOGIN_FAIL_WINDOW)
+        window = await RateLimitConfigProvider.get(
+            "rate_limit.login_fail_window", settings.RATE_LIMIT.LOGIN_FAIL_WINDOW
+        )
+        await redis_client.expire(key, window)
     return int(count)
 
 

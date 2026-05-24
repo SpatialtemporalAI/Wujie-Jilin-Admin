@@ -405,5 +405,41 @@ declare namespace Api {
 
     /** 在线用户列表 */
     type OnlineUserList = Common.PaginatingQueryRecord<OnlineUser>;
+
+    /** IP 黑名单 */
+    type IpBlacklist = {
+      id: number;
+      ip: string;
+      type: string;
+      reason: string | null;
+      expire_at: string | null;
+      creator_id: number | null;
+      created_at: string;
+      updated_at: string;
+    };
+
+    /** IP 黑名单搜索参数 */
+    type IpBlacklistSearchParams = CommonType.RecordNullable<{
+      ip?: string;
+      type?: string;
+      start_date?: string;
+      end_date?: string;
+    } & CommonSearchParams>;
+
+    /** IP 黑名单列表 */
+    type IpBlacklistList = Common.PaginatingQueryRecord<IpBlacklist>;
+
+    /** IP 黑名单新增 */
+    type IpBlacklistCreate = {
+      ip: string;
+      type: string;
+      reason?: string;
+      expire_at?: string | null;
+    };
+
+    /** IP 黑名单批量删除 */
+    type IpBlacklistBatchDelete = {
+      ids: number[];
+    };
   }
 }

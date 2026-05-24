@@ -28,13 +28,18 @@ from core.security.rate_limit import (
     enforce_user_limit,
     is_ip_blocked,
 )
+from core.security.rate_limit_config import RateLimitConfigProvider
 from core.utils.ip_utils import get_real_client_ip
 
 logger = logging.getLogger(__name__)
 
 
-def _is_whitelisted_path(path: str) -> bool:
-    for prefix in settings.RATE_LIMIT.WHITELIST_PATH_PREFIXES:
+async def _is_whitelisted_path(path: str) -> bool:
+    prefixes = await RateLimitConfigProvider.get(
+        "rate_limit.whitelist_path_prefixes",
+        list(settings.RATE_LIMIT.WHITELIST_PATH_PREFIXES),
+    )
+    for prefix in prefixes:
         if path.startswith(prefix):
             return True
     return False
@@ -71,12 +76,18 @@ def _extract_user_id(request: Request) -> Optional[int]:
     return None
 
 
-def _match_path_rule(path: str, method: str):
+async def _match_path_rule(path: str, method: str):
     """匹配第一条命中的 PATH_RULES 规则。"""
-    for rule in settings.RATE_LIMIT.PATH_RULES:
-        if not path.startswith(rule.PATH):
+    rules = await RateLimitConfigProvider.get(
+        "rate_limit.path_rules",
+        [r.model_dump() for r in settings.RATE_LIMIT.PATH_RULES],
+    )
+    for rule in rules:
+        rule_path = rule.get("path", rule.get("PATH", ""))
+        rule_method = rule.get("method", rule.get("METHOD", "*"))
+        if not path.startswith(rule_path):
             continue
-        if rule.METHOD != "*" and rule.METHOD.upper() != method.upper():
+        if rule_method != "*" and rule_method.upper() != method.upper():
             continue
         return rule
     return None
@@ -113,16 +124,21 @@ class RateLimitMiddleware(BaseHTTPMiddleware):
     """多维度限流 + IP 黑名单。"""
 
     async def dispatch(self, request: Request, call_next: Callable):
-        rate_cfg = settings.RATE_LIMIT
-        if not rate_cfg.ENABLED:
+        enabled = await RateLimitConfigProvider.get(
+            "rate_limit.enabled", settings.RATE_LIMIT.ENABLED
+        )
+        if not enabled:
             return await call_next(request)
 
         path = request.url.path
-        if _is_whitelisted_path(path):
+        if await _is_whitelisted_path(path):
             return await call_next(request)
 
         client_ip = getattr(request.state, "client_ip", "") or get_real_client_ip(request)
-        if client_ip and client_ip in rate_cfg.WHITELIST_IPS:
+        whitelist_ips = await RateLimitConfigProvider.get(
+            "rate_limit.whitelist_ips", list(settings.RATE_LIMIT.WHITELIST_IPS)
+        )
+        if client_ip and client_ip in whitelist_ips:
             return await call_next(request)
 
         request_id = getattr(request.state, "request_id", "") or ""
@@ -133,19 +149,25 @@ class RateLimitMiddleware(BaseHTTPMiddleware):
                 return _build_blocked_response(request_id)
 
             if client_ip:
-                await enforce_ip_limit(client_ip, rate_cfg.IP_PER_MINUTE, 60)
+                ip_per_minute = await RateLimitConfigProvider.get(
+                    "rate_limit.ip_per_minute", settings.RATE_LIMIT.IP_PER_MINUTE
+                )
+                await enforce_ip_limit(client_ip, ip_per_minute, 60)
 
             user_id = _extract_user_id(request)
             if user_id:
-                await enforce_user_limit(user_id, rate_cfg.USER_PER_MINUTE, 60)
+                user_per_minute = await RateLimitConfigProvider.get(
+                    "rate_limit.user_per_minute", settings.RATE_LIMIT.USER_PER_MINUTE
+                )
+                await enforce_user_limit(user_id, user_per_minute, 60)
 
-            rule = _match_path_rule(path, request.method)
+            rule = await _match_path_rule(path, request.method)
             if rule and client_ip:
                 await enforce_path_limit(
                     method=request.method,
-                    path=rule.PATH,
+                    path=rule.get("path", rule.get("PATH", "")),
                     ip=client_ip,
-                    limit=rule.PER_MINUTE,
+                    limit=rule.get("per_minute", rule.get("PER_MINUTE", 60)),
                     window_seconds=60,
                 )
         except RateLimitExceeded as exc:

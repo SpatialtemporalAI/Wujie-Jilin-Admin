@@ -34,6 +34,7 @@ from app.models.sys.association_tables import sys_user_role_association, sys_rol
 from app.models.sys.operation_log import SysOperationLog
 from app.models.sys.export_task import SysExportTask
 from app.models.sys.export_template import SysExportTemplate
+from app.models.sys.ip_blacklist import SysIpBlacklist
 from app.models.business.user import AppUser
 
 # Set target_metadata to Base.metadata

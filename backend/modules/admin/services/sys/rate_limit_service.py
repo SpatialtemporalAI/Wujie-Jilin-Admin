@@ -13,6 +13,7 @@ from core.security.rate_limit import (
     clear_login_failure as _redis_clear_login_failure,
     incr_login_failure as _redis_incr_login_failure,
 )
+from core.security.rate_limit_config import RateLimitConfigProvider
 from database import get_session
 from modules.admin.services.sys.ip_blacklist_service import IpBlacklistService
 
@@ -27,14 +28,19 @@ class RateLimitService:
         """登录失败 +1，超过阈值自动拉黑 IP（temporary，TTL = LOGIN_FAIL_BLOCK_TTL）。"""
         if not ip or ip == "unknown":
             return
-        cfg = settings.RATE_LIMIT
+        fail_max = await RateLimitConfigProvider.get(
+            "rate_limit.login_fail_max", settings.RATE_LIMIT.LOGIN_FAIL_MAX
+        )
+        block_ttl = await RateLimitConfigProvider.get(
+            "rate_limit.login_fail_block_ttl", settings.RATE_LIMIT.LOGIN_FAIL_BLOCK_TTL
+        )
         try:
             count = await _redis_incr_login_failure(ip)
         except Exception as exc:
             logger.error("登录失败计数写入 Redis 失败 ip=%s err=%s", ip, exc)
             return
 
-        if count < cfg.LOGIN_FAIL_MAX:
+        if count < fail_max:
             return
 
         reason = f"登录失败 {count} 次自动拉黑（username={username or 'unknown'}）"
@@ -44,7 +50,7 @@ class RateLimitService:
                     db=db,
                     ip=ip,
                     reason=reason,
-                    ttl_seconds=cfg.LOGIN_FAIL_BLOCK_TTL,
+                    ttl_seconds=block_ttl,
                 )
                 break
         except Exception as exc:

@@ -6,7 +6,7 @@
 
 ## 状态
 
-已完成
+已完成（含第二阶段：动态配置 + 前端管理页）
 
 ## 涉及范围
 
@@ -24,10 +24,17 @@
 - 入口：`main.py` lifespan 调用 `RateLimitService.warmup_blacklist()`
 - 登录失败接入：`modules/admin/endpoints/auth.py` 登录失败/成功分支调用 `record_login_failure` / `clear_login_failure`
 - 错误码：`error_codes.md` + `core/response/response_code.py` 新增 `RATE_LIMIT_EXCEEDED(10901)`、`IP_BLOCKED(10902)`
+- 动态配置：`core/security/rate_limit_config.py`（RateLimitConfigProvider，30s TTL 内存缓存，从 SysConfig 读 rate_limit.* 配置）
+- 缓存失效：`modules/admin/services/sys/config_service.py` 写操作触发 `RateLimitConfigProvider.invalidate()`
+- 迁移：`alembic/versions/a3b4c5d6e7f8_seed_ip_blacklist_menu_and_config.py`（菜单 + 按钮权限 + rate_limit 默认配置行）
 
 ### 前端
 
-本次未涉及前端页面。后续可在 `views/manage/` 下新增黑名单管理页面，调用 `/admin/sys/ip-blacklist/*`。
+- 页面：`views/manage/ip-blacklist/`（index.vue + search + drawer）
+- API：`src/service/api/system-manage.ts`（4 个 API 函数）
+- 类型：`src/typings/api/system-manage.d.ts`（IpBlacklist + search + create + batch delete）
+- i18n：`zh-cn.ts` / `en-us.ts` 的 `page.manage.ipBlacklist` 键 + `route.manage_ip-blacklist`
+- 路由：elegant-router 自动注册 `manage_ip-blacklist`
 
 ## 约束与备注
 

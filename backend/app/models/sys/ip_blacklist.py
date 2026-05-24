@@ -21,11 +21,11 @@ class SysIpBlacklist(Base):
         String(16), nullable=False, default="permanent", comment="类型：permanent / temporary"
     )
     reason: Mapped[str | None] = mapped_column(
-        String(255), nullable=True, comment="加入原因"
+        String(255), nullable=True, default=None, comment="加入原因"
     )
     expire_at: Mapped[datetime | None] = mapped_column(
-        DateTime(timezone=True), nullable=True, comment="过期时间（temporary 必填）"
+        DateTime(timezone=True), nullable=True, default=None, comment="过期时间（temporary 必填）"
     )
     creator_id: Mapped[int | None] = mapped_column(
-        BigInteger, nullable=True, comment="创建人ID（系统自动写入时为空）"
+        BigInteger, nullable=True, default=None, comment="创建人ID（系统自动写入时为空）"
     )

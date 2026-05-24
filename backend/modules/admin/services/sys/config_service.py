@@ -12,6 +12,7 @@ from sqlalchemy import select, delete, or_, and_, update, Select
 from typing import List, Optional, Tuple, Any
 
 from app.models.sys.config import SysConfig, ConfigType, ConfigGroup
+from core.security.rate_limit_config import RateLimitConfigProvider
 from core.exception.errors import (
     NotFoundError,
     ConflictError,
@@ -29,6 +30,12 @@ from modules.admin.schemas.sys.config import (
 
 # 获取logger
 logger = logging.getLogger(__name__)
+
+
+def _invalidate_rate_limit_cache(key: str) -> None:
+    """若 key 属于限流配置，清空 RateLimitConfigProvider 缓存。"""
+    if key.startswith("rate_limit."):
+        RateLimitConfigProvider.invalidate()
 
 
 class ConfigService:
@@ -485,6 +492,8 @@ class ConfigService:
             await db.commit()
             await db.refresh(existing_config)
 
+            _invalidate_rate_limit_cache(existing_config.key)
+
             logger.info("更新配置成功，配置ID: %d", config_id)
             return existing_config
 
@@ -514,6 +523,7 @@ class ConfigService:
             logger.info("批量更新配置，配置数量: %d", len(batch_in.configs))
 
             updated_count = 0
+            updated_keys: list[str] = []
             for config_data in batch_in.configs:
                 config_id = config_data.get("id")
                 value = config_data.get("value")
@@ -533,8 +543,12 @@ class ConfigService:
                     if ConfigService._validate_value(value, config.type):
                         config.value = value
                         updated_count += 1
+                        updated_keys.append(config.key)
 
             await db.commit()
+
+            for key in updated_keys:
+                _invalidate_rate_limit_cache(key)
 
             logger.info("批量更新配置成功，更新数量: %d", updated_count)
             return updated_count
@@ -562,6 +576,7 @@ class ConfigService:
             logger.info("重置配置，配置ID列表: %s", reset_in.ids)
 
             reset_count = 0
+            reset_keys: list[str] = []
             for config_id in reset_in.ids:
                 result = await db.execute(
                     select(SysConfig).where(SysConfig.id == config_id)
@@ -574,8 +589,12 @@ class ConfigService:
                         continue
                     config.value = config.default_value
                     reset_count += 1
+                    reset_keys.append(config.key)
 
             await db.commit()
+
+            for key in reset_keys:
+                _invalidate_rate_limit_cache(key)
 
             logger.info("重置配置成功，重置数量: %d", reset_count)
             return reset_count
