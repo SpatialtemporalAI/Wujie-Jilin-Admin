@@ -86,6 +86,8 @@ async def login(
         tokens = await user_manager.login_by_password(
             username=username,
             password=password,
+            ip=ip,
+            user_agent=user_agent,
         )
         asyncio.create_task(
             _write_login_log(username, ip, True, "登录成功", user_agent)

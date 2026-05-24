@@ -312,6 +312,18 @@ class RedisUtil:
         """
         async with await self._get_client() as client:
             return await client.mget(*keys)
+    async def scan_iter(self, match: str = "*", count: int = 100):
+        """迭代匹配模式的 key（非阻塞 SCAN）
+        Args:
+            match: 匹配模式
+            count: 每次 SCAN 的数量建议
+        Yields:
+            str: 匹配的键名
+        """
+        async with await self._get_client() as client:
+            async for key in client.scan_iter(match=match, count=count):
+                yield key
+
     async def publish(self, channel: str, message: Any) -> int:
         """向指定频道发布消息
         Args:

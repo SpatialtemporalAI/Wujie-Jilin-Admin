@@ -1,21 +1,17 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 
-from optparse import Option
-from typing import Optional, Generic, TypeVar, Any
-from sqlalchemy.ext.asyncio import AsyncSession
-from database import get_session
+import json
+from typing import Optional, Any
 from core.redis import get_redis_util
 from core.config import settings
-from core.security.oauth.jwt import JWTAuthManager, Token, oauth2_scheme
-from app.models.business.user import AppUser
-
+from core.security.oauth.jwt import JWTAuthManager
 from core.utils.session_utils import generate_session_id
-from fastapi import Request
-from logging import getLogger
-from datetime import datetime, timedelta, timezone
+from datetime import datetime, timezone
 
-logger = getLogger(__name__)
+import logging
+
+logger = logging.getLogger(__name__)
 
 
 class BaseUserManager:
@@ -30,24 +26,32 @@ class BaseUserManager:
         self.jwt_manager = JWTAuthManager()
 
     async def create_token(
-        self, user_id: int, user_role: str = "app", session_id: str = None, username: str = None
+        self,
+        user_id: int,
+        user_role: str = "app",
+        session_id: str = None,
+        username: str = None,
+        ip: str = "",
+        user_agent: str = "",
     ):
         """
-        创建token
+        创建token，使用 Redis Hash 存储会话元数据以支持多会话追踪
         """
         new_session = False
         if session_id is None:
             session_id = generate_session_id(user_id)
             new_session = True
-        # 使用JWTAuthManager创建令牌
         token_data = {"id": user_id, "session_id": session_id, "role": user_role, "username": username}
         if new_session:
-            # 保存session_id到redis - 添加用户角色区分
-            await get_redis_util().set(
-                settings.JWT.SESSION_PREFIX + user_role + str(token_data.get("id")),
-                token_data.get("session_id"),
-                settings.JWT.REFRESH_LIFETIME,
-            )
+            redis_key = settings.JWT.SESSION_PREFIX + user_role + str(token_data.get("id"))
+            session_meta = json.dumps({
+                "session_id": session_id,
+                "login_time": datetime.now(timezone.utc).isoformat(),
+                "ip": ip,
+                "user_agent": user_agent,
+            })
+            await get_redis_util().hset(redis_key, session_id, session_meta)
+            await get_redis_util().expire(redis_key, settings.JWT.REFRESH_LIFETIME)
         tokens = JWTAuthManager.create_tokens(token_data)
         return tokens
 

@@ -15,36 +15,44 @@ class SessionCache:
     def __init__(self, ttl: float = 5, max_size: int = 1024):
         self._ttl = ttl
         self._max_size = max_size
-        self._store: OrderedDict[str, Tuple[float, str]] = OrderedDict()
+        self._store: OrderedDict[str, Tuple[float, bool]] = OrderedDict()
         self._lock = threading.Lock()
 
-    def get(self, key: str) -> Optional[str]:
-        """返回缓存的 session_id，未命中或已过期返回 None"""
+    def get(self, redis_key: str, session_id: str) -> Optional[bool]:
+        """返回缓存是否命中，未命中或已过期返回 None"""
+        composite_key = f"{redis_key}:{session_id}"
         with self._lock:
-            entry = self._store.get(key)
+            entry = self._store.get(composite_key)
             if entry is None:
                 return None
-            expires_at, session_id = entry
+            expires_at, _ = entry
             if time.monotonic() > expires_at:
-                del self._store[key]
+                del self._store[composite_key]
                 return None
-            self._store.move_to_end(key)
-            return session_id
+            self._store.move_to_end(composite_key)
+            return True
 
-    def set(self, key: str, session_id: str) -> None:
-        """存储 session_id，TTL 自动过期"""
+    def set(self, redis_key: str, session_id: str) -> None:
+        """存储会话验证结果，TTL 自动过期"""
+        composite_key = f"{redis_key}:{session_id}"
         with self._lock:
             expires_at = time.monotonic() + self._ttl
-            if key in self._store:
-                self._store.move_to_end(key)
-            self._store[key] = (expires_at, session_id)
+            if composite_key in self._store:
+                self._store.move_to_end(composite_key)
+            self._store[composite_key] = (expires_at, True)
             while len(self._store) > self._max_size:
                 self._store.popitem(last=False)
 
-    def invalidate(self, key: str) -> None:
-        """移除指定缓存条目"""
+    def invalidate(self, redis_key: str, session_id: str = None) -> None:
+        """移除缓存条目，session_id 为 None 时清除该 redis_key 下的所有条目"""
         with self._lock:
-            self._store.pop(key, None)
+            if session_id is not None:
+                self._store.pop(f"{redis_key}:{session_id}", None)
+            else:
+                prefix = f"{redis_key}:"
+                keys_to_remove = [k for k in self._store if k.startswith(prefix)]
+                for k in keys_to_remove:
+                    del self._store[k]
 
 
 _session_cache = SessionCache()

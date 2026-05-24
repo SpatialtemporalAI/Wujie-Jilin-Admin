@@ -42,7 +42,7 @@ class UserManager(BaseUserManager):
         self.jwt_manager = JWTAuthManager()
 
     async def login_by_password(
-        self, username: str, password: str
+        self, username: str, password: str, ip: str = "", user_agent: str = ""
     ) -> Optional[Dict[str, str]]:
         """
         密码登录
@@ -72,7 +72,10 @@ class UserManager(BaseUserManager):
                 error=CustomErrorCode.USER_LOGIN_FAILED,
             )
         # 生成JWT令牌
-        tokens = await self.create_token(user_id=user.id, user_role="admin", username=user.username)
+        tokens = await self.create_token(
+            user_id=user.id, user_role="admin", username=user.username,
+            ip=ip, user_agent=user_agent,
+        )
         await self.on_after_login(user=user)
         response_model = {
             **tokens.model_dump(),
@@ -149,19 +152,21 @@ class UserManager(BaseUserManager):
         if not user_role:
             raise TokenError()
         cache_key = settings.JWT.SESSION_PREFIX + user_role + str(user_id)
-        cached_session_id = get_session_cache().get(cache_key)
-        if cached_session_id is not None:
-            if cached_session_id != session_id:
-                raise TokenError()
-        else:
-            local_session_id = await get_redis_util().get(cache_key)
-            if local_session_id != session_id:
-                raise TokenError()
-            if local_session_id is not None:
-                get_session_cache().set(cache_key, local_session_id)
-        if user_id is None:
-            raise TokenError()
-        return int(user_id), session_id
+        # 检查内存缓存
+        cached_valid = get_session_cache().get(cache_key, session_id)
+        if cached_valid is not None:
+            return int(user_id), session_id
+        # 从 Redis 验证（Hash 结构）
+        local_session_meta = await get_redis_util().hget(cache_key, session_id)
+        if local_session_meta is not None:
+            get_session_cache().set(cache_key, session_id)
+            return int(user_id), session_id
+        # Fallback: 兼容旧格式（纯字符串存储），过渡期使用
+        local_session_id = await get_redis_util().get(cache_key)
+        if local_session_id is not None and local_session_id == session_id:
+            get_session_cache().set(cache_key, session_id)
+            return int(user_id), session_id
+        raise TokenError()
 
     async def get_user_info(self, user_id: int):
         """

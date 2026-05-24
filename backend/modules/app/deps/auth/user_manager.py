@@ -278,19 +278,21 @@ class UserManager:
         if not user_role:
             raise TokenError()
         cache_key = settings.JWT.SESSION_PREFIX + user_role + str(user_id)
-        cached_session_id = get_session_cache().get(cache_key)
-        if cached_session_id is not None:
-            if cached_session_id != session_id:
-                raise TokenError()
-        else:
-            local_session_id = await get_redis_util().get(cache_key)
-            if local_session_id != session_id:
-                raise TokenError()
-            if local_session_id is not None:
-                get_session_cache().set(cache_key, local_session_id)
-        if user_id is None:
-            raise TokenError()
-        return int(user_id), session_id
+        # 检查内存缓存
+        cached_valid = get_session_cache().get(cache_key, session_id)
+        if cached_valid is not None:
+            return int(user_id), session_id
+        # 从 Redis 验证（Hash 结构）
+        local_session_meta = await get_redis_util().hget(cache_key, session_id)
+        if local_session_meta is not None:
+            get_session_cache().set(cache_key, session_id)
+            return int(user_id), session_id
+        # Fallback: 兼容旧格式（纯字符串存储），过渡期使用
+        local_session_id = await get_redis_util().get(cache_key)
+        if local_session_id is not None and local_session_id == session_id:
+            get_session_cache().set(cache_key, session_id)
+            return int(user_id), session_id
+        raise TokenError()
 
     async def on_after_register(self, user: AppUser, request: Optional[Request] = None):
         """
@@ -303,13 +305,13 @@ class UserManager:
         logger.info(f"用户 {user.id} 注册成功")
         # 这里可以添加注册成功后的逻辑，如发送邮件通知等
 
-    async def logout(self, user_id: int):
+    async def logout(self, user_id: int, session_id: str):
         """
-        退出登录
+        退出登录，删除指定会话
         """
-        cache_key = settings.JWT.SESSION_PREFIX + str(user_id)
-        get_session_cache().invalidate(cache_key)
-        await get_redis_util().delete(cache_key)
+        cache_key = settings.JWT.SESSION_PREFIX + "app" + str(user_id)
+        get_session_cache().invalidate(cache_key, session_id)
+        await get_redis_util().hdel(cache_key, session_id)
 
     async def current_user(self, token: str) -> AppUser:
         """
