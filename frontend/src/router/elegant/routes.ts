@@ -84,6 +84,15 @@ export const generatedRoutes: GeneratedRoute[] = [
         }
       },
       {
+        name: 'log_online-user',
+        path: '/log/online-user',
+        component: 'view.log_online-user',
+        meta: {
+          title: 'log_online-user',
+          i18nKey: 'route.log_online-user'
+        }
+      },
+      {
         name: 'log_operation-log',
         path: '/log/operation-log',
         component: 'view.log_operation-log',

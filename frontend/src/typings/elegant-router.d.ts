@@ -24,6 +24,7 @@ declare module "@elegant-router/types" {
     "iframe-page": "/iframe-page/:url";
     "log": "/log";
     "log_login-log": "/log/login-log";
+    "log_online-user": "/log/online-user";
     "log_operation-log": "/log/operation-log";
     "login": "/login/:module(pwd-login|code-login|register|reset-pwd|bind-wechat)?";
     "manage": "/manage";
@@ -94,6 +95,7 @@ declare module "@elegant-router/types" {
     | "login"
     | "home"
     | "log_login-log"
+    | "log_online-user"
     | "log_operation-log"
     | "manage_config"
     | "manage_dict"

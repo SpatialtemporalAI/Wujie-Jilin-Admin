@@ -81,3 +81,40 @@ export function fetchClearOperationLog(days?: number) {
     params: { days }
   });
 }
+
+/** ==================== 在线用户 API ==================== */
+
+/** get online user list */
+export function fetchGetOnlineUserList(params?: Api.SystemManage.OnlineUserSearchParams) {
+  return request<Api.SystemManage.OnlineUserList>({
+    url: '/admin/sys/online-user/list',
+    method: 'get',
+    params
+  });
+}
+
+/** kick user offline */
+export function fetchKickUser(data: { user_id: number; session_id: string }) {
+  return request<void>({
+    url: '/admin/sys/online-user/kick',
+    method: 'post',
+    data
+  });
+}
+
+/** kick all sessions for a user */
+export function fetchKickAllSessions(data: { user_id: number }) {
+  return request<void>({
+    url: '/admin/sys/online-user/kick-all',
+    method: 'post',
+    data
+  });
+}
+
+/** get online user count */
+export function fetchGetOnlineUserCount() {
+  return request<number>({
+    url: '/admin/sys/online-user/count',
+    method: 'get'
+  });
+}

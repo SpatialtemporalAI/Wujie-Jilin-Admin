@@ -380,5 +380,26 @@ declare namespace Api {
 
     /** 操作日志列表 */
     type OperationLogList = Common.PaginatingQueryRecord<OperationLog>;
+
+    /** 在线用户搜索参数 */
+    type OnlineUserSearchParams = CommonType.RecordNullable<{
+      username?: string;
+      ip?: string;
+    } & CommonSearchParams>;
+
+    /** 在线用户 */
+    type OnlineUser = {
+      user_id: number;
+      username: string | null;
+      nickname: string | null;
+      avatar: string | null;
+      session_id: string;
+      ip: string | null;
+      user_agent: string | null;
+      login_time: string | null;
+    };
+
+    /** 在线用户列表 */
+    type OnlineUserList = Common.PaginatingQueryRecord<OnlineUser>;
   }
 }

@@ -243,6 +243,7 @@ const local: App.I18n.Schema = {
     manage_config: '系统配置',
     log: '日志管理',
     'log_login-log': '登录日志',
+    'log_online-user': '在线用户',
     'log_operation-log': '操作日志'
   },
   page: {
@@ -590,6 +591,24 @@ const local: App.I18n.Schema = {
           timeRange: '时间范围',
           startTime: '开始时间',
           endTime: '结束时间'
+        }
+      },
+      onlineUser: {
+        title: '在线用户列表',
+        username: '用户名',
+        nickname: '昵称',
+        ip: '登录IP',
+        userAgent: '登录设备',
+        loginTime: '登录时间',
+        kick: '踢下线',
+        kickAll: '全部踢下线',
+        kickConfirm: '确认将该用户踢下线？',
+        kickAllConfirm: '确认将该用户所有设备踢下线？',
+        kickSuccess: '已踢下线',
+        kickAllSuccess: '已踢除所有在线会话',
+        form: {
+          username: '请输入用户名',
+          ip: '请输入IP地址'
         }
       }
     }

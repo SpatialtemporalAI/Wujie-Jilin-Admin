@@ -247,6 +247,7 @@ const local: App.I18n.Schema = {
     manage_config: 'System Config',
     log: 'Log Management',
     'log_login-log': 'Login Log',
+    'log_online-user': 'Online Users',
     'log_operation-log': 'Operation Log'
   },
   page: {
@@ -595,6 +596,24 @@ const local: App.I18n.Schema = {
           timeRange: 'Time Range',
           startTime: 'Start time',
           endTime: 'End time'
+        }
+      },
+      onlineUser: {
+        title: 'Online Users',
+        username: 'Username',
+        nickname: 'Nickname',
+        ip: 'Login IP',
+        userAgent: 'Device',
+        loginTime: 'Login Time',
+        kick: 'Kick',
+        kickAll: 'Kick All',
+        kickConfirm: 'Confirm to kick this user offline?',
+        kickAllConfirm: 'Confirm to kick all sessions for this user?',
+        kickSuccess: 'User kicked offline',
+        kickAllSuccess: 'All sessions kicked offline',
+        form: {
+          username: 'Enter username',
+          ip: 'Enter IP address'
         }
       }
     }
