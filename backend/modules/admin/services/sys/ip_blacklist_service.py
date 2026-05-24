@@ -74,8 +74,17 @@ class IpBlacklistService:
         expire_at: Optional[datetime] = None
         ttl_seconds: Optional[int] = None
         if req.type == "temporary":
-            ttl_seconds = req.ttl_seconds or 3600
-            expire_at = datetime.now(timezone.utc) + timedelta(seconds=ttl_seconds)
+            now = datetime.now(timezone.utc)
+            if req.expire_at:
+                expire_at = req.expire_at
+                if expire_at.tzinfo is None:
+                    expire_at = expire_at.replace(tzinfo=timezone.utc)
+                ttl_seconds = int((expire_at - now).total_seconds())
+                if ttl_seconds < 0:
+                    ttl_seconds = 0
+            else:
+                ttl_seconds = req.ttl_seconds or 3600
+                expire_at = now + timedelta(seconds=ttl_seconds)
 
         if existing:
             existing.type = req.type

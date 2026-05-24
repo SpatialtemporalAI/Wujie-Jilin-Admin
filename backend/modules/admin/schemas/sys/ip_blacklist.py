@@ -24,8 +24,12 @@ class IpBlacklistCreateRequest(BaseEntity):
     reason: Optional[str] = Field(None, description="加入原因", max_length=255)
     ttl_seconds: Optional[int] = Field(
         None,
-        description="过期时长(秒)。仅 temporary 时生效；为空时按 1 小时处理",
+        description="过期时长(秒)。仅 temporary 时生效；与 expire_at 二选一",
         ge=1,
+    )
+    expire_at: Optional[datetime] = Field(
+        None,
+        description="过期时间点(ISO8601)。仅 temporary 时生效；优先级高于 ttl_seconds",
     )
 
     @field_validator("type")
