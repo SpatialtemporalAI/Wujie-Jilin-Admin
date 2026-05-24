@@ -1,6 +1,6 @@
 <script setup lang="tsx">
 import { reactive } from 'vue';
-import { NButton, NCard, NDataTable, NPopconfirm, NTag, useMessage } from 'naive-ui';
+import { NButton, NCard, NDataTable, NPopconfirm, NTag } from 'naive-ui';
 import {
   fetchBatchDeleteIpBlacklist,
   fetchDeleteIpBlacklist,
@@ -14,7 +14,6 @@ import IpBlacklistOperateDrawer from './modules/ip-blacklist-operate-drawer.vue'
 import IpBlacklistSearch from './modules/ip-blacklist-search.vue';
 
 const appStore = useAppStore();
-const message = useMessage();
 const { hasAuth } = useAuth();
 
 const searchParams: Api.SystemManage.IpBlacklistSearchParams = reactive({
@@ -134,26 +133,18 @@ const {
 } = useTableOperate(tableData, 'id', getData);
 
 async function handleDelete(id: number) {
-  try {
-    await fetchDeleteIpBlacklist(id);
-    message.success($t('common.deleteSuccess'));
-    onDeleted();
-  } catch (error) {
-    console.error('删除失败:', error);
-  }
+  const { error } = await fetchDeleteIpBlacklist(id);
+  if (error) return;
+  onDeleted();
 }
 
 async function handleBatchDelete() {
   if (checkedRowKeys.value.length === 0) {
     return;
   }
-  try {
-    await fetchBatchDeleteIpBlacklist(checkedRowKeys.value.map(Number));
-    message.success($t('common.deleteSuccess'));
-    onBatchDeleted();
-  } catch (error) {
-    console.error('批量删除失败:', error);
-  }
+  const { error } = await fetchBatchDeleteIpBlacklist(checkedRowKeys.value.map(Number));
+  if (error) return;
+  onBatchDeleted();
 }
 </script>
 

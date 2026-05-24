@@ -65,11 +65,10 @@ class IpBlacklistService:
     ) -> SysIpBlacklist:
         ip = _validate_ip(req.ip)
 
-        exists_q = select(SysIpBlacklist).where(
-            and_(SysIpBlacklist.ip == ip, SysIpBlacklist.deleted_at.is_(None))
-        )
-        existing = (await db.execute(exists_q)).scalar_one_or_none()
-        if existing:
+        existing = (
+            await db.execute(select(SysIpBlacklist).where(SysIpBlacklist.ip == ip))
+        ).scalar_one_or_none()
+        if existing and existing.deleted_at is None:
             raise ConflictError(msg=f"IP {ip} 已在黑名单中")
 
         expire_at: Optional[datetime] = None
@@ -78,14 +77,22 @@ class IpBlacklistService:
             ttl_seconds = req.ttl_seconds or 3600
             expire_at = datetime.now(timezone.utc) + timedelta(seconds=ttl_seconds)
 
-        entry = SysIpBlacklist(
-            ip=ip,
-            type=req.type,
-            reason=req.reason,
-            expire_at=expire_at,
-            creator_id=creator_id,
-        )
-        db.add(entry)
+        if existing:
+            existing.type = req.type
+            existing.reason = req.reason
+            existing.expire_at = expire_at
+            existing.deleted_at = None
+            existing.creator_id = creator_id
+            entry = existing
+        else:
+            entry = SysIpBlacklist(
+                ip=ip,
+                type=req.type,
+                reason=req.reason,
+                expire_at=expire_at,
+                creator_id=creator_id,
+            )
+            db.add(entry)
         await db.commit()
         await db.refresh(entry)
 
@@ -159,24 +166,52 @@ class IpBlacklistService:
         reason: str,
         ttl_seconds: int,
     ) -> Optional[SysIpBlacklist]:
-        """系统自动拉黑（如登录失败超限）。已存在则跳过。"""
+        """系统自动拉黑（如登录失败超限）。
+
+        ip 字段在 DB 层有 UNIQUE 约束，所以无论该 IP 是否已被软删除，都复用同一行：
+        - 未过期 / permanent：保持原样
+        - temporary 已过期：原地更新 expire_at / reason，复活记录
+        - 之前被软删除：清空 deleted_at 并按 temporary 重新写入
+        """
         ip = _validate_ip(ip)
-        exists_q = select(SysIpBlacklist).where(
-            and_(SysIpBlacklist.ip == ip, SysIpBlacklist.deleted_at.is_(None))
-        )
-        existing = (await db.execute(exists_q)).scalar_one_or_none()
-        if existing:
+        now = datetime.now(timezone.utc)
+        existing = (
+            await db.execute(select(SysIpBlacklist).where(SysIpBlacklist.ip == ip))
+        ).scalar_one_or_none()
+
+        if existing and existing.deleted_at is None and existing.type == "permanent":
+            try:
+                await add_ip_to_redis_blacklist(
+                    ip, ttl_seconds=None, reason=existing.reason or reason
+                )
+            except Exception as exc:
+                logger.error("auto_block 刷新 Redis 失败 ip=%s err=%s", ip, exc)
             return existing
 
-        expire_at = datetime.now(timezone.utc) + timedelta(seconds=ttl_seconds)
-        entry = SysIpBlacklist(
-            ip=ip,
-            type="temporary",
-            reason=reason,
-            expire_at=expire_at,
-            creator_id=None,
-        )
-        db.add(entry)
+        if existing and existing.deleted_at is None:
+            existing_expire = existing.expire_at
+            if existing_expire and existing_expire.tzinfo is None:
+                existing_expire = existing_expire.replace(tzinfo=timezone.utc)
+            if existing_expire and existing_expire > now:
+                return existing
+
+        expire_at = now + timedelta(seconds=ttl_seconds)
+        if existing:
+            existing.type = "temporary"
+            existing.reason = reason
+            existing.expire_at = expire_at
+            existing.deleted_at = None
+            existing.creator_id = None
+            entry = existing
+        else:
+            entry = SysIpBlacklist(
+                ip=ip,
+                type="temporary",
+                reason=reason,
+                expire_at=expire_at,
+                creator_id=None,
+            )
+            db.add(entry)
         await db.commit()
         await db.refresh(entry)
         try:

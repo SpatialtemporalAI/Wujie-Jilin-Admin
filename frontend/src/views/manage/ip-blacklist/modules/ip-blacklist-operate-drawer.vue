@@ -7,7 +7,6 @@ import {
   NDrawer,
   NDrawerContent,
   NForm,
-  NFormItem,
   NFormItemGi,
   NGrid,
   NInput,
@@ -98,12 +97,13 @@ async function handleSubmit() {
       reason: form.reason || undefined,
       expire_at: form.type === 'temporary' && form.expire_at ? new Date(form.expire_at).toISOString() : null
     };
-    await fetchCreateIpBlacklist(data);
+    const { error } = await fetchCreateIpBlacklist(data);
+    if (error) return;
     message.success($t('common.addSuccess'));
     emit('submitted');
     visible.value = false;
-  } catch (error) {
-    console.error('提交失败:', error);
+  } catch {
+    // 表单校验失败：交给 NForm 自动提示
   }
 }
 </script>
