@@ -32,6 +32,13 @@ async def lifespan(app: FastAPI):
     logger.info("初始化 Redis 连接池")
     await RedisPool.init_pool()
     logger.info("Redis 连接池初始化完成")
+    # 预热 IP 黑名单到 Redis
+    try:
+        from modules.admin.services.sys.rate_limit_service import RateLimitService
+        count = await RateLimitService.warmup_blacklist()
+        logger.info("IP 黑名单预热数量: %s", count)
+    except Exception as exc:
+        logger.error("IP 黑名单预热异常: %s", exc)
     yield
     # 关闭 Redis 连接池
     logger.info("关闭 Redis 连接池")

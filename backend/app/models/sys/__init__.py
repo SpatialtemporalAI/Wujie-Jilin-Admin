@@ -8,4 +8,5 @@ from .config import SysConfig
 from .dict import SysDict, SysDictItem
 from .operation_log import SysOperationLog
 from .login_log import SysLoginLog
-__all__ = ["SysMenu", "SysRole", "SysUser", "SysConfig", "SysDict", "SysDictItem", "SysOperationLog", "SysLoginLog"]
+from .ip_blacklist import SysIpBlacklist
+__all__ = ["SysMenu", "SysRole", "SysUser", "SysConfig", "SysDict", "SysDictItem", "SysOperationLog", "SysLoginLog", "SysIpBlacklist"]

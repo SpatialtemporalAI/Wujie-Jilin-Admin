@@ -115,6 +115,42 @@ class MCPModel(BaseModel):
     PROCESS_META_FILE: str = Field("mcp_process.json", description="进程元数据文件")
 
 
+class RateLimitPathRuleModel(BaseModel):
+    """按接口路径细粒度限流规则"""
+
+    PATH: str = Field(..., description="路径前缀匹配（startswith）")
+    METHOD: str = Field("*", description="HTTP 方法，* 表示全部")
+    PER_MINUTE: int = Field(..., description="每分钟允许次数（按 IP 聚合）")
+
+
+class RateLimitModel(BaseModel):
+    """限流与黑名单配置"""
+
+    ENABLED: bool = Field(True, description="是否启用限流中间件")
+    IP_PER_MINUTE: int = Field(120, description="单 IP 每分钟最大请求数")
+    USER_PER_MINUTE: int = Field(300, description="单用户每分钟最大请求数")
+    LOGIN_FAIL_MAX: int = Field(5, description="登录失败次数上限")
+    LOGIN_FAIL_WINDOW: int = Field(600, description="登录失败统计窗口(秒)")
+    LOGIN_FAIL_BLOCK_TTL: int = Field(1800, description="登录失败拉黑时长(秒)")
+    BLACKLIST_REDIS_TTL: int = Field(86400, description="Redis 黑名单兜底 TTL(秒)，到期重新从 DB 同步")
+    WHITELIST_PATH_PREFIXES: Tuple[str, ...] = Field(
+        (
+            "/docs",
+            "/redoc",
+            "/openapi.json",
+        ),
+        description="不参与限流的路径前缀白名单",
+    )
+    WHITELIST_IPS: Tuple[str, ...] = Field(
+        ("127.0.0.1", "::1"),
+        description="不参与限流和黑名单检查的 IP 白名单",
+    )
+    PATH_RULES: List[RateLimitPathRuleModel] = Field(
+        default_factory=list,
+        description="按路径细粒度限流规则（按 IP 聚合）",
+    )
+
+
 class RedisPoolModel(BaseModel):
     """Redis连接池模型"""
 

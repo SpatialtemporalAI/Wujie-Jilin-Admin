@@ -1,15 +1,36 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 
+"""限流与 IP 黑名单 Redis 工具。
+
+提供两类能力：
+1. 端点级显式限流：`limit_by_ip` / `check_rate_limit`（供已有登录等场景调用）
+2. 中间件层多维度限流和黑名单短路：`enforce_rate_limit` / `is_ip_blocked`
+   等高阶函数，被 `RateLimitMiddleware` 使用。
+"""
 from logging import getLogger
 from typing import Optional
 
 from fastapi import HTTPException, Request
 
+from core.config import settings
 from core.redis import RedisPool
 from core.utils.ip_utils import get_real_client_ip
 
 logger = getLogger(__name__)
+
+
+BLACKLIST_KEY_PREFIX = "blacklist:ip:"
+RATE_LIMIT_KEY_PREFIX = "ratelimit:"
+LOGIN_FAIL_KEY_PREFIX = "ratelimit:login:fail:"
+
+
+def _blacklist_key(ip: str) -> str:
+    return f"{BLACKLIST_KEY_PREFIX}{ip}"
+
+
+def _login_fail_key(ip: str) -> str:
+    return f"{LOGIN_FAIL_KEY_PREFIX}{ip}"
 
 
 async def check_rate_limit(
@@ -42,7 +63,7 @@ async def limit_by_ip(
 ) -> None:
     client_ip = get_real_client_ip(request)
     suffix = f":{extra_suffix}" if extra_suffix else ""
-    key = f"ratelimit:{scope}:{action}:ip:{client_ip}{suffix}"
+    key = f"{RATE_LIMIT_KEY_PREFIX}{scope}:{action}:ip:{client_ip}{suffix}"
     await check_rate_limit(
         key=key,
         limit=limit,
@@ -50,3 +71,106 @@ async def limit_by_ip(
         block_message="请求过于频繁",
     )
 
+
+# ---------------------------------------------------------------------------
+# 黑名单
+# ---------------------------------------------------------------------------
+
+
+async def is_ip_blocked(ip: str) -> bool:
+    """检查 IP 是否在 Redis 黑名单中。"""
+    if not ip:
+        return False
+    redis_client = RedisPool.get_client()
+    exists = await redis_client.exists(_blacklist_key(ip))
+    return bool(exists)
+
+
+async def add_ip_to_redis_blacklist(
+    ip: str,
+    ttl_seconds: Optional[int] = None,
+    reason: str = "",
+) -> None:
+    """写入 Redis 黑名单。永久黑名单也会带兜底 TTL，到期由后台 warmup 重新加载。"""
+    if not ip:
+        return
+    redis_client = RedisPool.get_client()
+    effective_ttl = ttl_seconds if ttl_seconds and ttl_seconds > 0 else settings.RATE_LIMIT.BLACKLIST_REDIS_TTL
+    await redis_client.set(_blacklist_key(ip), reason or "1", ex=effective_ttl)
+
+
+async def remove_ip_from_redis_blacklist(ip: str) -> None:
+    if not ip:
+        return
+    redis_client = RedisPool.get_client()
+    await redis_client.delete(_blacklist_key(ip))
+
+
+# ---------------------------------------------------------------------------
+# 登录失败计数
+# ---------------------------------------------------------------------------
+
+
+async def incr_login_failure(ip: str) -> int:
+    """登录失败 +1，返回当前计数。窗口由 LOGIN_FAIL_WINDOW 控制。"""
+    if not ip:
+        return 0
+    redis_client = RedisPool.get_client()
+    key = _login_fail_key(ip)
+    count = await redis_client.incr(key)
+    if count == 1:
+        await redis_client.expire(key, settings.RATE_LIMIT.LOGIN_FAIL_WINDOW)
+    return int(count)
+
+
+async def clear_login_failure(ip: str) -> None:
+    if not ip:
+        return
+    redis_client = RedisPool.get_client()
+    await redis_client.delete(_login_fail_key(ip))
+
+
+# ---------------------------------------------------------------------------
+# 多维度限流（供中间件调用）
+# ---------------------------------------------------------------------------
+
+
+class RateLimitExceeded(Exception):
+    """限流触发的领域异常。中间件捕获后转换为 429 ORJSONResponse。"""
+
+    def __init__(self, reason: str, retry_after: int):
+        super().__init__(reason)
+        self.reason = reason
+        self.retry_after = max(retry_after, 1)
+
+
+async def _incr_window(key: str, limit: int, window_seconds: int, dim: str) -> None:
+    redis_client = RedisPool.get_client()
+    current = await redis_client.incr(key)
+    if current == 1:
+        await redis_client.expire(key, window_seconds)
+    if current > limit:
+        ttl = await redis_client.ttl(key)
+        logger.warning("middleware 限流 dim=%s key=%s count=%s ttl=%s", dim, key, current, ttl)
+        raise RateLimitExceeded(reason=f"{dim} 维度请求过于频繁", retry_after=ttl)
+
+
+async def enforce_ip_limit(ip: str, limit: int, window_seconds: int = 60) -> None:
+    if not ip or limit <= 0:
+        return
+    key = f"{RATE_LIMIT_KEY_PREFIX}ip:{ip}"
+    await _incr_window(key, limit, window_seconds, "ip")
+
+
+async def enforce_user_limit(user_id: int, limit: int, window_seconds: int = 60) -> None:
+    if not user_id or limit <= 0:
+        return
+    key = f"{RATE_LIMIT_KEY_PREFIX}user:{user_id}"
+    await _incr_window(key, limit, window_seconds, "user")
+
+
+async def enforce_path_limit(method: str, path: str, ip: str, limit: int, window_seconds: int = 60) -> None:
+    if not ip or limit <= 0:
+        return
+    key = f"{RATE_LIMIT_KEY_PREFIX}path:{method}:{path}:ip:{ip}"
+    await _incr_window(key, limit, window_seconds, "path")

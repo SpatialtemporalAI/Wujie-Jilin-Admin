@@ -75,6 +75,9 @@ class CustomErrorCode(CustomCodeBase):
     ROBOT_TASK_NETWORK_ERROR = (10506, "任务网络错误")
     ROBOT_TASK_RUNNING = (10507, "任务正在运行")
     ROBOT_TASK_COMPLETED = (10508, "任务已完成")
+    # 限流与安全 10901-11000
+    RATE_LIMIT_EXCEEDED = (10901, "请求过于频繁")
+    IP_BLOCKED = (10902, "IP 已被加入黑名单")
 @dataclass
 class CustomResponse:
     """

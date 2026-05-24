@@ -20,6 +20,7 @@ from .settings_model import (
     LocalUploadModel,
     SecurityModel,
     MCPModel,
+    RateLimitModel,
 )
 
 
@@ -55,3 +56,5 @@ class GlobalSetting(BaseSettings):
     UPLOAD_LOCAL: LocalUploadModel = LocalUploadModel()
     # MCP 配置
     MCP: MCPModel = MCPModel()
+    # 限流配置
+    RATE_LIMIT: RateLimitModel = RateLimitModel()

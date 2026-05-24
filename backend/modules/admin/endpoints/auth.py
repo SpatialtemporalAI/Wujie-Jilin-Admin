@@ -26,6 +26,7 @@ from modules.admin.schemas.auth import (
     UserInfoResponseData,
 )
 from core.security.rate_limit import limit_by_ip
+from modules.admin.services.sys.rate_limit_service import RateLimitService
 
 logger = logging.getLogger(__name__)
 
@@ -92,6 +93,7 @@ async def login(
         asyncio.create_task(
             _write_login_log(username, ip, True, "登录成功", user_agent)
         )
+        asyncio.create_task(RateLimitService.clear_login_failure(ip))
         return response_base.success(
             data=tokens,
             msg="登录成功",
@@ -100,6 +102,7 @@ async def login(
         asyncio.create_task(
             _write_login_log(username, ip, False, e.msg, user_agent)
         )
+        asyncio.create_task(RateLimitService.record_login_failure(ip, username))
         raise
 
 
