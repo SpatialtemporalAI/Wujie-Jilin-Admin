@@ -396,6 +396,7 @@ const local: App.I18n.Schema = {
         title: 'Menu List',
         id: 'ID',
         parentId: 'Parent ID',
+        parentMenu: 'Parent Menu',
         menuType: 'Menu Type',
         menuName: 'Menu Name',
         routeName: 'Route Name',
@@ -423,6 +424,7 @@ const local: App.I18n.Schema = {
         isSystem: 'System Built-in',
         form: {
           home: 'Please select home',
+          parentMenu: 'Please select parent menu',
           menuType: 'Please select menu type',
           menuName: 'Please enter menu name',
           routeName: 'Please enter route name',

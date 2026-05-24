@@ -391,6 +391,7 @@ const local: App.I18n.Schema = {
         title: '菜单列表',
         id: 'ID',
         parentId: '父级菜单ID',
+        parentMenu: '父级菜单',
         menuType: '菜单类型',
         menuName: '菜单名称',
         routeName: '路由名称',
@@ -418,6 +419,7 @@ const local: App.I18n.Schema = {
         isSystem: '系统内置',
         form: {
           home: '请选择首页',
+          parentMenu: '请选择父级菜单',
           menuType: '请选择菜单类型',
           menuName: '请输入菜单名称',
           routeName: '请输入路由名称',

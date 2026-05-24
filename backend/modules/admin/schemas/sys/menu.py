@@ -173,6 +173,7 @@ class SysMenuTreeResponse(BaseRespEntity):
     id: int = Field(..., description="菜单ID")
     label: str = Field(..., description="菜单标签")
     pId: Optional[int] = Field(None, description="父菜单ID")
+    menuType: str = Field("1", description="菜单类型：1-目录, 2-菜单")
     children: List["SysMenuTreeResponse"] = Field([], description="子菜单列表")
 
 

@@ -44,6 +44,8 @@ class BaseUserManager:
         token_data = {"id": user_id, "session_id": session_id, "role": user_role, "username": username}
         if new_session:
             redis_key = settings.JWT.SESSION_PREFIX + user_role + str(token_data.get("id"))
+            # 删除旧格式的 key（简单字符串），避免与 Hash 结构冲突
+            await get_redis_util().delete(redis_key)
             session_meta = json.dumps({
                 "session_id": session_id,
                 "login_time": datetime.now(timezone.utc).isoformat(),

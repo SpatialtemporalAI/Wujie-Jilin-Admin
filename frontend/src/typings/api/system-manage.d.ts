@@ -161,6 +161,7 @@ declare namespace Api {
       id: number;
       label: string;
       pId: number;
+      menuType: MenuType;
       children?: MenuTree[];
     };
 

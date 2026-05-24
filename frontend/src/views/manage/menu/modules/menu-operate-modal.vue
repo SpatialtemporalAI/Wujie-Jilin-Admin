@@ -2,7 +2,7 @@
 import { computed, ref, watch } from 'vue';
 import type { SelectOption } from 'naive-ui';
 import { enableStatusOptions, menuIconTypeOptions, menuTypeOptions } from '@/constants/business';
-import { fetchCreateMenu, fetchGetAllRoles, fetchUpdateMenu } from '@/service/api';
+import { fetchCreateMenu, fetchGetAllRoles, fetchGetMenuTree, fetchUpdateMenu } from '@/service/api';
 import { useFormRules, useNaiveForm } from '@/hooks/common/form';
 import { getLocalIcons } from '@/utils/icon';
 import { $t } from '@/locales';
@@ -85,6 +85,63 @@ type Model = Pick<
 
 const model = ref(createDefaultModel());
 
+const menuTreeRaw = ref<Api.SystemManage.MenuTree[]>([]);
+
+async function getMenuTree() {
+  const { data } = await fetchGetMenuTree();
+  menuTreeRaw.value = data || [];
+}
+
+function collectDescendantIds(trees: Api.SystemManage.MenuTree[], excludeId: number): Set<number> {
+  const ids = new Set<number>();
+  function walk(nodes: Api.SystemManage.MenuTree[]) {
+    for (const node of nodes) {
+      if (node.id === excludeId) {
+        ids.add(node.id);
+        if (node.children) walk(node.children);
+        continue;
+      }
+      if (node.children) walk(node.children);
+    }
+  }
+  walk(trees);
+  return ids;
+}
+
+function filterTree(
+  trees: Api.SystemManage.MenuTree[],
+  excludeIds: Set<number>
+): Api.SystemManage.MenuTree[] {
+  return trees
+    .filter(t => !excludeIds.has(t.id))
+    .map(t => ({
+      ...t,
+      children: t.children ? filterTree(t.children, excludeIds) : undefined
+    }));
+}
+
+function filterTreeByType(trees: Api.SystemManage.MenuTree[]): Api.SystemManage.MenuTree[] {
+  return trees
+    .filter(t => t.menuType === '1')
+    .map(t => ({
+      ...t,
+      children: t.children ? filterTreeByType(t.children) : undefined
+    }));
+}
+
+const parentMenuOptions = computed(() => {
+  let trees = menuTreeRaw.value;
+  if (props.operateType === 'edit' && props.rowData) {
+    const excludeIds = collectDescendantIds(trees, props.rowData.id);
+    excludeIds.add(props.rowData.id);
+    trees = filterTree(trees, excludeIds);
+  }
+  if (model.value.menuType === '2') {
+    trees = filterTreeByType(trees);
+  }
+  return trees;
+});
+
 function createDefaultModel(): Model {
   return {
     menuType: '1',
@@ -136,7 +193,7 @@ const localIconOptions = localIcons.map<SelectOption>(item => ({
   value: item
 }));
 
-const showLayout = computed(() => model.value.parentId === 0);
+const showLayout = computed(() => !model.value.parentId);
 
 const showPage = computed(() => model.value.menuType === '2');
 
@@ -278,6 +335,7 @@ watch(visible, () => {
     handleInitModel();
     restoreValidation();
     getRoleOptions();
+    getMenuTree();
   }
 });
 
@@ -295,6 +353,18 @@ watch(
     <NScrollbar class="h-480px pr-20px">
       <NForm ref="formRef" :model="model" :rules="rules" label-placement="left" :label-width="100">
         <NGrid responsive="screen" item-responsive>
+          <NFormItemGi span="24 m:12" :label="$t('page.manage.menu.parentMenu')" path="parentId">
+            <NTreeSelect
+              v-model:value="model.parentId"
+              :options="parentMenuOptions"
+              key-field="id"
+              label-field="label"
+              children-field="children"
+              :placeholder="$t('page.manage.menu.form.parentMenu')"
+              clearable
+              default-expand-all
+            />
+          </NFormItemGi>
           <NFormItemGi span="24 m:12" :label="$t('page.manage.menu.menuType')" path="menuType">
             <NRadioGroup v-model:value="model.menuType" :disabled="disabledMenuType">
               <NRadio v-for="item in menuTypeOptions" :key="item.value" :value="item.value" :label="item.label" />

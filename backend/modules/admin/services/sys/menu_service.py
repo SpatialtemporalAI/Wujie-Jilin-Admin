@@ -192,6 +192,7 @@ class MenuService:
                 id=menu.id,
                 label=menu.name,
                 pId=menu.parent_id,
+                menuType="1" if menu.type == MenuType.CATALOG else "2",
                 children=[],
             )
             menu_map[menu.id] = menu_response
@@ -335,6 +336,19 @@ class MenuService:
                         f"更新菜单失败，父菜单不存在: {menu_update.parent_id}"
                     )
                     raise NotFoundError(msg=f"父菜单 {menu_update.parent_id} 不存在")
+
+                # 检查循环引用：向上遍历目标父菜单的祖先链，确保当前菜单不在其中
+                ancestor_id = menu_update.parent_id
+                checked = set()
+                while ancestor_id and ancestor_id not in checked:
+                    if ancestor_id == menu_id:
+                        logger.warning(f"更新菜单失败，循环引用: 菜单 {menu_id} 的后代不能作为父菜单")
+                        raise ConflictError(msg="不能将自己的子菜单设置为父菜单")
+                    checked.add(ancestor_id)
+                    anc_result = await db.execute(
+                        select(SysMenu.parent_id).where(SysMenu.id == ancestor_id)
+                    )
+                    ancestor_id = anc_result.scalar_one_or_none()
 
         # 更新菜单信息
         update_data = menu_update.model_dump(exclude_unset=True)
@@ -524,6 +538,7 @@ class MenuService:
                 id=menu.id,
                 label=menu.name,
                 pId=menu.parent_id,
+                menuType="1" if menu.type == MenuType.CATALOG else "2",
                 children=[],
             )
             menu_map[menu.id] = menu_response
