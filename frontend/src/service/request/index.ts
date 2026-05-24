@@ -104,8 +104,12 @@ export const request = createFlatRequest(
       let message = error.message;
       let backendErrorCode = '';
 
-      // get backend error message and code
-      if (error.code === BACKEND_ERROR_CODE || error.code === BACKEND_REQUEST_ERROR_CODE) {
+      // 优先从响应体读取后端统一返回结构 {code, msg, ...}
+      const responseData: any = error.response?.data;
+      if (responseData && typeof responseData === 'object') {
+        if (responseData.msg) message = responseData.msg;
+        if (responseData.code !== undefined) backendErrorCode = String(responseData.code);
+      } else if (error.code === BACKEND_ERROR_CODE || error.code === BACKEND_REQUEST_ERROR_CODE) {
         message = error.response?.data?.msg || message;
         backendErrorCode = String(error.response?.data?.code || '');
       }
