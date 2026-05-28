@@ -8,7 +8,6 @@ import { useFormRules, useNaiveForm } from '@/hooks/common/form';
 import { $t } from '@/locales';
 import { booleanToEnableStatus } from '@/utils/status';
 import MenuAuthModal from './menu-auth-modal.vue';
-import ButtonAuthModal from './button-auth-modal.vue';
 
 defineOptions({
   name: 'RoleOperateDrawer'
@@ -36,7 +35,6 @@ const visible = defineModel<boolean>('visible', {
 const { formRef, validate, restoreValidation } = useNaiveForm();
 const { defaultRequiredRule } = useFormRules();
 const { bool: menuAuthVisible, setTrue: openMenuAuthModal } = useBoolean();
-const { bool: buttonAuthVisible, setTrue: openButtonAuthModal } = useBoolean();
 
 const title = computed(() => {
   const titles: Record<NaiveUI.TableOperateType, string> = {
@@ -138,8 +136,6 @@ watch(visible, () => {
       <NSpace v-if="isEdit">
         <NButton @click="openMenuAuthModal">{{ $t('page.manage.role.menuAuth') }}</NButton>
         <MenuAuthModal v-model:visible="menuAuthVisible" :role-id="roleId" />
-        <NButton @click="openButtonAuthModal">{{ $t('page.manage.role.buttonAuth') }}</NButton>
-        <ButtonAuthModal v-model:visible="buttonAuthVisible" :role-id="roleId" />
       </NSpace>
       <template #footer>
         <NSpace :size="16">

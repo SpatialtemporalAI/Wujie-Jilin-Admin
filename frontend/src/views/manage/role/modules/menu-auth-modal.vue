@@ -1,6 +1,8 @@
 <script setup lang="ts">
-import { computed, shallowRef, watch } from 'vue';
+import { computed, h, shallowRef, watch } from 'vue';
+import { NTag } from 'naive-ui';
 import { fetchAssignMenuToRole, fetchGetAllPages, fetchGetMenuTree, fetchGetRole } from '@/service/api';
+import { menuTypeRecord } from '@/constants/business';
 import { $t } from '@/locales';
 
 defineOptions({
@@ -23,6 +25,12 @@ function closeModal() {
 }
 
 const title = computed(() => $t('common.edit') + $t('page.manage.role.menuAuth'));
+
+const tagTypeMap: Record<string, NaiveUI.ThemeColor> = {
+  '1': 'default',
+  '2': 'primary',
+  '3': 'warning'
+};
 
 const home = shallowRef('');
 
@@ -73,6 +81,35 @@ async function getChecks() {
   }
 }
 
+const expandedKeys = shallowRef<number[]>([]);
+
+function getAncestorKeys(treeData: Api.SystemManage.MenuTree[], targetIds: number[]): number[] {
+  const ancestorSet = new Set<number>();
+
+  function findAncestors(nodes: Api.SystemManage.MenuTree[], targetId: number, currentPath: number[]): boolean {
+    for (const node of nodes) {
+      if (node.id === targetId) {
+        for (const ancestorId of currentPath) {
+          ancestorSet.add(ancestorId);
+        }
+        return true;
+      }
+      if (node.children && node.children.length > 0) {
+        if (findAncestors(node.children, targetId, [...currentPath, node.id])) {
+          return true;
+        }
+      }
+    }
+    return false;
+  }
+
+  for (const targetId of targetIds) {
+    findAncestors(treeData, targetId, []);
+  }
+
+  return Array.from(ancestorSet);
+}
+
 async function handleSubmit() {
   const { error } = await fetchAssignMenuToRole(props.roleId, checks.value);
 
@@ -82,11 +119,30 @@ async function handleSubmit() {
   }
 }
 
-function init() {
+function renderLabel({ option }: { option: Api.SystemManage.MenuTree }) {
+  const tagType = tagTypeMap[option.menuType];
+
+  if (option.menuType === '3') {
+    return h(
+      'span',
+      { class: 'flex items-center gap-8px' },
+      {
+        default: () => [
+          h(NTag, { type: tagType, size: 'small', bordered: false }, { default: () => $t(menuTypeRecord[option.menuType]) }),
+          option.label
+        ]
+      }
+    );
+  }
+
+  return option.label;
+}
+
+async function init() {
   getHome();
   getPages();
-  getTree();
-  getChecks();
+  await Promise.all([getTree(), getChecks()]);
+  expandedKeys.value = getAncestorKeys(tree.value, checks.value);
 }
 
 watch(visible, val => {
@@ -104,12 +160,15 @@ watch(visible, val => {
     </div>
     <NTree
       v-model:checked-keys="checks"
+      v-model:expanded-keys="expandedKeys"
       :data="tree"
       key-field="id"
       checkable
+      cascade
       expand-on-click
       virtual-scroll
       block-line
+      :render-label="renderLabel"
       class="h-280px"
     />
     <template #footer>

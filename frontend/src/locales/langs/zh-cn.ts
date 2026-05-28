@@ -340,7 +340,7 @@ const local: App.I18n.Schema = {
         roleCode: '角色编码',
         roleStatus: '角色状态',
         roleDesc: '角色描述',
-        menuAuth: '菜单权限',
+        menuAuth: '权限配置',
         buttonAuth: '按钮权限',
         form: {
           roleName: '请输入角色名称',
