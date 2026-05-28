@@ -700,7 +700,13 @@ const local: App.I18n.Schema = {
     title: '通知中心',
     markAllAsRead: '全部已读',
     noNotifications: '暂无通知',
-    markAllReadSuccess: '已全部标记为已读'
+    markAllReadSuccess: '已全部标记为已读',
+    priority: {
+      low: '低',
+      normal: '普通',
+      high: '高',
+      urgent: '紧急'
+    }
   }
 };
 

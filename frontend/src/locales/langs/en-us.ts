@@ -705,7 +705,13 @@ const local: App.I18n.Schema = {
     title: 'Notification Center',
     markAllAsRead: 'Mark all as read',
     noNotifications: 'No notifications',
-    markAllReadSuccess: 'Marked all as read'
+    markAllReadSuccess: 'Marked all as read',
+    priority: {
+      low: 'Low',
+      normal: 'Normal',
+      high: 'High',
+      urgent: 'Urgent'
+    }
   }
 };
 

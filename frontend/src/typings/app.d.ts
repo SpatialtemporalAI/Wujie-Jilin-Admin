@@ -837,6 +837,12 @@ declare namespace App {
         markAllAsRead: string;
         noNotifications: string;
         markAllReadSuccess: string;
+        priority: {
+          low: string;
+          normal: string;
+          high: string;
+          urgent: string;
+        };
       };
     };
 

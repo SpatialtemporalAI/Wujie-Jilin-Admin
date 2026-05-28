@@ -1,9 +1,10 @@
 <script setup lang="ts">
 import { ref, onMounted, onUnmounted } from 'vue';
-import { NBadge, NButton, NPopover, NList, NListItem, NEmpty, NDivider } from 'naive-ui';
+import { NBadge, NButton, NPopover, NList, NListItem, NEmpty, NDivider, NModal, NSpace } from 'naive-ui';
 import { useAuthStore } from '@/store/modules/auth';
-import { fetchGetMyNoticeList, fetchGetUnreadCount, fetchMarkAllAsRead } from '@/service/api';
+import { fetchGetMyNoticeList, fetchGetUnreadCount, fetchMarkAllAsRead, fetchMarkAsRead } from '@/service/api';
 import { $t } from '@/locales';
+import SvgIcon from '@/components/custom/svg-icon.vue';
 
 const authStore = useAuthStore();
 
@@ -11,6 +12,8 @@ const unreadCount = ref(0);
 const recentNotices = ref<Api.Notification.MyNotice[]>([]);
 const showPopover = ref(false);
 const loading = ref(false);
+const showDetailModal = ref(false);
+const selectedNotice = ref<Api.Notification.MyNotice | null>(null);
 
 /** 获取未读数量 */
 async function getUnreadCount() {
@@ -42,10 +45,24 @@ async function handleMarkAllAsRead() {
   }
 }
 
+/** 点击通知项：查看详情并标记已读 */
+async function handleNoticeClick(notice: Api.Notification.MyNotice) {
+  selectedNotice.value = notice;
+  showDetailModal.value = true;
+  showPopover.value = false;
+
+  if (!notice.is_read) {
+    const { error } = await fetchMarkAsRead(notice.id);
+    if (!error) {
+      notice.is_read = true;
+      unreadCount.value = Math.max(0, unreadCount.value - 1);
+    }
+  }
+}
+
 /** 处理 WebSocket 通知事件 */
 function handleWsNotification(event: CustomEvent) {
   unreadCount.value += 1;
-  // 如果弹窗打开，刷新列表
   if (showPopover.value) {
     getRecentNotices();
   }
@@ -53,10 +70,10 @@ function handleWsNotification(event: CustomEvent) {
 
 /** 优先级标签映射 */
 const priorityMap: Record<Api.Notification.NoticePriority, { label: string; type: 'default' | 'success' | 'warning' | 'error' }> = {
-  low: { label: '低', type: 'default' },
-  normal: { label: '普通', type: 'success' },
-  high: { label: '高', type: 'warning' },
-  urgent: { label: '紧急', type: 'error' }
+  low: { label: $t('notification.priority.low'), type: 'default' },
+  normal: { label: $t('notification.priority.normal'), type: 'success' },
+  high: { label: $t('notification.priority.high'), type: 'warning' },
+  urgent: { label: $t('notification.priority.urgent'), type: 'error' }
 };
 
 onMounted(() => {
@@ -88,7 +105,7 @@ function onShowChange(show: boolean) {
     <template #trigger>
       <div class="relative cursor-pointer px-8px hover:bg-[#f6f6f6] dark:hover:bg-[#333] rounded-full transition-colors">
         <NBadge :value="unreadCount" :max="99" :show="unreadCount > 0">
-          <div class="i-material-symbols:notifications-outline text-20px" />
+          <SvgIcon icon="material-symbols:notifications-outline" class="text-20px" />
         </NBadge>
       </div>
     </template>
@@ -102,7 +119,7 @@ function onShowChange(show: boolean) {
     </template>
     <div class="max-h-400px overflow-y-auto">
       <NList v-if="recentNotices.length > 0" hoverable clickable :show-divider="false">
-        <NListItem v-for="notice in recentNotices" :key="notice.id">
+        <NListItem v-for="notice in recentNotices" :key="notice.id" @click="handleNoticeClick(notice)">
           <div class="flex flex-col gap-4px">
             <div class="flex items-center justify-between">
               <span class="font-medium truncate flex-1" :class="{ 'text-gray': notice.is_read }">
@@ -129,9 +146,36 @@ function onShowChange(show: boolean) {
       <NDivider class="!my-0" />
       <div class="px-12px py-8px text-center">
         <NButton text size="small" @click="showPopover = false">
-          关闭
+          {{ $t('common.close') }}
         </NButton>
       </div>
     </template>
   </NPopover>
+
+  <!-- 通知详情弹窗 -->
+  <NModal
+    v-model:show="showDetailModal"
+    :title="selectedNotice?.title"
+    preset="card"
+    :style="{ width: '520px', maxWidth: '90vw' }"
+    :bordered="false"
+    size="small"
+  >
+    <div v-if="selectedNotice" class="flex flex-col gap-12px">
+      <div class="flex items-center gap-12px text-14px text-gray">
+        <span>{{ selectedNotice.sender_name }}</span>
+        <NBadge
+          v-if="priorityMap[selectedNotice.priority]"
+          :value="priorityMap[selectedNotice.priority].label"
+          :type="priorityMap[selectedNotice.priority].type"
+          size="small"
+        />
+        <span v-if="selectedNotice.published_at">{{ selectedNotice.published_at }}</span>
+      </div>
+      <NDivider class="!my-0" />
+      <div class="text-14px leading-relaxed whitespace-pre-wrap">
+        {{ selectedNotice.content }}
+      </div>
+    </div>
+  </NModal>
 </template>
