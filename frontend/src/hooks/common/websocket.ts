@@ -3,21 +3,28 @@ import { ref } from 'vue';
 const WS_BASE_URL = `${window.location.protocol === 'https:' ? 'wss' : 'ws'}://${window.location.host}`;
 
 let ws: WebSocket | null = null;
+let reconnectTimer: ReturnType<typeof setTimeout> | null = null;
+let heartbeatTimer: ReturnType<typeof setInterval> | null = null;
+let currentToken: string | null = null;
+let shouldReconnect = false;
+let reconnectAttempts = 0;
+const MAX_RECONNECT_ATTEMPTS = 5;
+const BASE_RECONNECT_INTERVAL = 3000;
+const HEARTBEAT_INTERVAL = 30000;
+
 const connected = ref(false);
 const lastMessage = ref<any>(null);
 
 export function useWebSocketNotification() {
-  function connect(token: string) {
-    if (ws) {
-      disconnect();
-    }
-
+  function doConnect(token: string) {
     const wsUrl = `${WS_BASE_URL}/admin/ws/notifications?token=${token}`;
     ws = new WebSocket(wsUrl);
 
     ws.onopen = () => {
       connected.value = true;
+      reconnectAttempts = 0;
       console.log('[WebSocket] 连接已建立');
+      startHeartbeat();
     };
 
     ws.onmessage = (event) => {
@@ -37,7 +44,21 @@ export function useWebSocketNotification() {
     ws.onclose = () => {
       connected.value = false;
       ws = null;
+      stopHeartbeat();
       console.log('[WebSocket] 连接已关闭');
+
+      if (shouldReconnect && reconnectAttempts < MAX_RECONNECT_ATTEMPTS) {
+        reconnectAttempts += 1;
+        const delay = BASE_RECONNECT_INTERVAL * Math.pow(2, reconnectAttempts - 1);
+        console.log(`[WebSocket] ${delay}ms 后尝试第 ${reconnectAttempts} 次重连...`);
+        reconnectTimer = setTimeout(() => {
+          if (currentToken) {
+            doConnect(currentToken);
+          }
+        }, delay);
+      } else if (reconnectAttempts >= MAX_RECONNECT_ATTEMPTS) {
+        console.warn('[WebSocket] 已达到最大重连次数，停止重连');
+      }
     };
 
     ws.onerror = (error) => {
@@ -45,11 +66,55 @@ export function useWebSocketNotification() {
     };
   }
 
-  function disconnect() {
+  function connect(token: string) {
+    // 清理旧状态
+    shouldReconnect = true;
+    currentToken = token;
+    reconnectAttempts = 0;
+    clearTimers();
+
     if (ws) {
       ws.close();
       ws = null;
-      connected.value = false;
+    }
+
+    doConnect(token);
+  }
+
+  function disconnect() {
+    shouldReconnect = false;
+    currentToken = null;
+    reconnectAttempts = 0;
+    clearTimers();
+
+    if (ws) {
+      ws.close();
+      ws = null;
+    }
+    connected.value = false;
+  }
+
+  function clearTimers() {
+    if (reconnectTimer) {
+      clearTimeout(reconnectTimer);
+      reconnectTimer = null;
+    }
+    stopHeartbeat();
+  }
+
+  function startHeartbeat() {
+    stopHeartbeat();
+    heartbeatTimer = setInterval(() => {
+      if (ws && ws.readyState === WebSocket.OPEN) {
+        ws.send(JSON.stringify({ type: 'ping' }));
+      }
+    }, HEARTBEAT_INTERVAL);
+  }
+
+  function stopHeartbeat() {
+    if (heartbeatTimer) {
+      clearInterval(heartbeatTimer);
+      heartbeatTimer = null;
     }
   }
 

@@ -57,6 +57,7 @@ def upgrade() -> None:
             sa.Column('notice_id', sa.BigInteger(), nullable=False, comment='通知ID'),
             sa.Column('is_read', sa.Boolean(), nullable=False, comment='是否已读'),
             sa.Column('read_at', sa.DateTime(timezone=True), nullable=True, comment='阅读时间'),
+            sa.Column('deleted_at', sa.DateTime(timezone=True), nullable=True, comment='删除时间，为空则未删除'),
             sa.Column('created_at', sa.DateTime(timezone=True), nullable=False, comment='创建时间'),
             sa.Column('updated_at', sa.DateTime(timezone=True), nullable=True, comment='更新时间'),
             sa.PrimaryKeyConstraint('id'),

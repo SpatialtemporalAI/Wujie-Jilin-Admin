@@ -695,6 +695,12 @@ const local: App.I18n.Schema = {
       right: '右固定',
       unFixed: '取消固定'
     }
+  },
+  notification: {
+    title: '通知中心',
+    markAllAsRead: '全部已读',
+    noNotifications: '暂无通知',
+    markAllReadSuccess: '已全部标记为已读'
   }
 };
 

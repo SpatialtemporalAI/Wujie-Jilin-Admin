@@ -144,29 +144,6 @@ async def update_notice(
 
 
 @notice_router.delete(
-    "/{notice_id}",
-    response_model=ResponseModel,
-    dependencies=[Depends(require_permission("sys:notice:delete"))],
-)
-@log_operation(module="notice", action="delete", description="删除通知")
-async def delete_notice(
-    notice_id: int,
-    request: Request,
-    db: AsyncSession = Depends(get_session),
-    user: SysUser = Depends(current_user),
-):
-    """
-    删除通知
-    """
-    logger.info(f"删除通知请求，通知ID: {notice_id}")
-
-    await NoticeService.delete_notice(db, notice_id)
-
-    logger.info(f"删除通知成功，通知ID: {notice_id}")
-    return ResponseModel(msg="删除通知成功")
-
-
-@notice_router.delete(
     "/batch",
     response_model=ResponseModel,
     dependencies=[Depends(require_permission("sys:notice:delete"))],
@@ -190,6 +167,29 @@ async def batch_delete_notices(
         msg=f"批量删除成功，共删除 {delete_count} 条通知",
         data={"delete_count": delete_count},
     )
+
+
+@notice_router.delete(
+    "/{notice_id}",
+    response_model=ResponseModel,
+    dependencies=[Depends(require_permission("sys:notice:delete"))],
+)
+@log_operation(module="notice", action="delete", description="删除通知")
+async def delete_notice(
+    notice_id: int,
+    request: Request,
+    db: AsyncSession = Depends(get_session),
+    user: SysUser = Depends(current_user),
+):
+    """
+    删除通知
+    """
+    logger.info(f"删除通知请求，通知ID: {notice_id}")
+
+    await NoticeService.delete_notice(db, notice_id)
+
+    logger.info(f"删除通知成功，通知ID: {notice_id}")
+    return ResponseModel(msg="删除通知成功")
 
 
 @notice_router.post(

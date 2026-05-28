@@ -3,6 +3,7 @@ import { ref, onMounted, onUnmounted } from 'vue';
 import { NBadge, NButton, NPopover, NList, NListItem, NEmpty, NDivider } from 'naive-ui';
 import { useAuthStore } from '@/store/modules/auth';
 import { fetchGetMyNoticeList, fetchGetUnreadCount, fetchMarkAllAsRead } from '@/service/api';
+import { $t } from '@/locales';
 
 const authStore = useAuthStore();
 
@@ -37,7 +38,7 @@ async function handleMarkAllAsRead() {
   if (!error) {
     unreadCount.value = 0;
     recentNotices.value = recentNotices.value.map(n => ({ ...n, is_read: true }));
-    window.$message?.success('已全部标记为已读');
+    window.$message?.success($t('notification.markAllReadSuccess'));
   }
 }
 
@@ -93,9 +94,9 @@ function onShowChange(show: boolean) {
     </template>
     <template #header>
       <div class="flex items-center justify-between px-12px py-8px">
-        <span class="font-bold">通知中心</span>
+        <span class="font-bold">{{ $t('notification.title') }}</span>
         <NButton v-if="unreadCount > 0" text size="small" @click="handleMarkAllAsRead">
-          全部已读
+          {{ $t('notification.markAllAsRead') }}
         </NButton>
       </div>
     </template>
@@ -122,7 +123,7 @@ function onShowChange(show: boolean) {
           </div>
         </NListItem>
       </NList>
-      <NEmpty v-else description="暂无通知" />
+      <NEmpty v-else :description="$t('notification.noNotifications')" />
     </div>
     <template #footer>
       <NDivider class="!my-0" />

@@ -700,6 +700,12 @@ const local: App.I18n.Schema = {
       right: 'Right Fixed',
       unFixed: 'Unfixed'
     }
+  },
+  notification: {
+    title: 'Notification Center',
+    markAllAsRead: 'Mark all as read',
+    noNotifications: 'No notifications',
+    markAllReadSuccess: 'Marked all as read'
   }
 };
 

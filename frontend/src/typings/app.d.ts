@@ -832,6 +832,12 @@ declare namespace App {
           unFixed: string;
         };
       };
+      notification: {
+        title: string;
+        markAllAsRead: string;
+        noNotifications: string;
+        markAllReadSuccess: string;
+      };
     };
 
     type GetI18nKey<T extends Record<string, unknown>, K extends keyof T = keyof T> = K extends string
