@@ -568,7 +568,29 @@ const local: App.I18n.Schema = {
         addTitle: '新增黑名单'
       },
       announcement: {
-        title: '通知公告列表'
+        title: '通知公告列表',
+        noticeType: '类型',
+        targetTypeLabel: '推送范围',
+        priority: '优先级',
+        senderName: '发送人',
+        publishedAt: '发布时间',
+        publish: '发布',
+        publishSuccess: '发布成功',
+        status: {
+          published: '已发布',
+          draft: '草稿'
+        },
+        type: {
+          announcement: '公告',
+          system: '系统',
+          operation: '操作提醒',
+          approval: '审批通知'
+        },
+        targetType: {
+          all: '全员',
+          role: '按角色',
+          user: '按用户'
+        }
       }
     },
     log: {

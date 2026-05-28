@@ -1,5 +1,12 @@
 <script setup lang="ts">
+import { toRaw } from 'vue';
+import { jsonClone } from '@sa/utils';
+import { enableStatusOptions } from '@/constants/business';
 import { $t } from '@/locales';
+
+defineOptions({
+  name: 'NoticeSearch'
+});
 
 interface Emits {
   (e: 'search'): void;
@@ -10,106 +17,98 @@ const emit = defineEmits<Emits>();
 
 const model = defineModel<Api.Notification.NoticeSearchParams>('model', { required: true });
 
-function handleSearch() {
-  emit('search');
+const defaultModel = jsonClone(toRaw(model.value));
+
+/** 通知类型选项 */
+const noticeTypeOptions = [
+  { label: $t('page.manage.announcement.type.announcement'), value: 'announcement' },
+  { label: $t('page.manage.announcement.type.system'), value: 'system' },
+  { label: $t('page.manage.announcement.type.operation'), value: 'operation' },
+  { label: $t('page.manage.announcement.type.approval'), value: 'approval' }
+];
+
+/** 推送范围选项 */
+const targetTypeOptions = [
+  { label: $t('page.manage.announcement.targetType.all'), value: 'all' },
+  { label: $t('page.manage.announcement.targetType.role'), value: 'role' },
+  { label: $t('page.manage.announcement.targetType.user'), value: 'user' }
+];
+
+/** 优先级选项 */
+const priorityOptions = [
+  { label: $t('notification.priority.low'), value: 'low' },
+  { label: $t('notification.priority.normal'), value: 'normal' },
+  { label: $t('notification.priority.high'), value: 'high' },
+  { label: $t('notification.priority.urgent'), value: 'urgent' }
+];
+
+function resetModel() {
+  Object.assign(model.value, defaultModel);
+  emit('reset');
 }
 
-function handleReset() {
-  model.value = {
-    page: 1,
-    page_size: 10,
-    title: null,
-    type: null,
-    target_type: null,
-    status: null,
-    priority: null
-  };
-  emit('reset');
+function search() {
+  emit('search');
 }
 </script>
 
 <template>
   <NCard :bordered="false" size="small" class="card-wrapper">
-    <NForm
-      :model="model"
-      label-placement="left"
-      :label-width="80"
-      inline
-      :show-feedback="false"
-    >
-      <NFormItem :label="$t('common.title')" path="title">
-        <NInput
-          v-model:value="model.title"
-          :placeholder="$t('common.pleaseEnter') + $t('common.title')"
-          clearable
-          @keyup.enter="handleSearch"
-        />
-      </NFormItem>
-      <NFormItem label="类型" path="type">
-        <NSelect
-          v-model:value="model.type"
-          :options="[
-            { label: '公告', value: 'announcement' },
-            { label: '系统', value: 'system' },
-            { label: '操作提醒', value: 'operation' },
-            { label: '审批通知', value: 'approval' }
-          ]"
-          clearable
-          placeholder="请选择类型"
-          class="w-160px"
-        />
-      </NFormItem>
-      <NFormItem label="推送范围" path="target_type">
-        <NSelect
-          v-model:value="model.target_type"
-          :options="[
-            { label: '全员', value: 'all' },
-            { label: '按角色', value: 'role' },
-            { label: '按用户', value: 'user' }
-          ]"
-          clearable
-          placeholder="请选择推送范围"
-          class="w-160px"
-        />
-      </NFormItem>
-      <NFormItem label="状态" path="status">
-        <NSelect
-          v-model:value="model.status"
-          :options="[
-            { label: '已发布', value: '1' },
-            { label: '草稿', value: '2' }
-          ]"
-          clearable
-          placeholder="请选择状态"
-          class="w-160px"
-        />
-      </NFormItem>
-      <NFormItem label="优先级" path="priority">
-        <NSelect
-          v-model:value="model.priority"
-          :options="[
-            { label: '低', value: 'low' },
-            { label: '普通', value: 'normal' },
-            { label: '高', value: 'high' },
-            { label: '紧急', value: 'urgent' }
-          ]"
-          clearable
-          placeholder="请选择优先级"
-          class="w-160px"
-        />
-      </NFormItem>
-      <NFormItem>
-        <NSpace>
-          <NButton type="primary" @click="handleSearch">
-            <icon-ic-round-search class="text-20px"></icon-ic-round-search>
-            {{ $t('common.search') }}
-          </NButton>
-          <NButton @click="handleReset">
-            <icon-ic-round-refresh class="text-20px"></icon-ic-round-refresh>
-            {{ $t('common.reset') }}
-          </NButton>
-        </NSpace>
-      </NFormItem>
-    </NForm>
+    <NCollapse :default-expanded-names="['notice-search']">
+      <NCollapseItem :title="$t('common.search')" name="notice-search">
+        <NForm :model="model" label-placement="left" :label-width="80">
+          <NGrid responsive="screen" item-responsive>
+            <NFormItemGi
+              span="24 s:12 m:6"
+              :label="$t('common.title')"
+              path="title"
+              class="pr-24px"
+            >
+              <NInput v-model:value="model.title" :placeholder="$t('common.keywordSearch')" clearable />
+            </NFormItemGi>
+            <NFormItemGi span="24 s:12 m:6" :label="$t('page.manage.announcement.noticeType')" path="type" class="pr-24px">
+              <NSelect v-model:value="model.type" :options="noticeTypeOptions" :placeholder="$t('common.pleaseSelect')" clearable />
+            </NFormItemGi>
+            <NFormItemGi
+              span="24 s:12 m:6"
+              :label="$t('page.manage.announcement.targetTypeLabel')"
+              path="target_type"
+              class="pr-24px"
+            >
+              <NSelect v-model:value="model.target_type" :options="targetTypeOptions" :placeholder="$t('common.pleaseSelect')" clearable />
+            </NFormItemGi>
+            <NFormItemGi span="24 s:12 m:6" :label="$t('common.status')" path="status" class="pr-24px">
+              <NSelect v-model:value="model.status" :options="enableStatusOptions" :placeholder="$t('common.pleaseSelect')" clearable />
+            </NFormItemGi>
+            <NFormItemGi
+              span="24 s:12 m:6"
+              :label="$t('page.manage.announcement.priority')"
+              path="priority"
+              class="pr-24px"
+            >
+              <NSelect v-model:value="model.priority" :options="priorityOptions" :placeholder="$t('common.pleaseSelect')" clearable />
+            </NFormItemGi>
+            <NFormItemGi span="24 m:12" class="pr-24px">
+              <NSpace class="w-full" justify="end">
+                <NButton @click="resetModel">
+                  <template #icon>
+                    <icon-ic-round-refresh class="text-icon" />
+                  </template>
+                  {{ $t('common.reset') }}
+                </NButton>
+                <NButton type="primary" ghost @click="search">
+                  <template #icon>
+                    <icon-ic-round-search class="text-icon" />
+                  </template>
+                  {{ $t('common.search') }}
+                </NButton>
+              </NSpace>
+            </NFormItemGi>
+          </NGrid>
+        </NForm>
+      </NCollapseItem>
+    </NCollapse>
   </NCard>
 </template>
+
+<style scoped></style>

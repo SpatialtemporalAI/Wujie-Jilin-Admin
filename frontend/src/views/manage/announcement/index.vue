@@ -1,23 +1,25 @@
 <script setup lang="tsx">
-import { reactive } from 'vue';
-import { NButton, NPopconfirm, NTag, NSpace } from 'naive-ui';
-import { useAppStore } from '@/store/modules/app';
-import { defaultTransform, useNaivePaginatedTable, useTableOperate } from '@/hooks/common/table';
-import { useAuth } from '@/hooks/business/auth';
-import { $t } from '@/locales';
-import { booleanToEnableStatus } from '@/utils/status';
+import { reactive, ref } from 'vue';
+import { NButton, NCard, NDataTable, NPopconfirm, NTag, useMessage } from 'naive-ui';
 import {
   fetchGetNoticeList,
   fetchDeleteNotice,
   fetchBatchDeleteNotice,
   fetchPublishNotice
 } from '@/service/api';
+import { useAppStore } from '@/store/modules/app';
+import { defaultTransform, useNaivePaginatedTable, useTableOperate } from '@/hooks/common/table';
+import { useAuth } from '@/hooks/business/auth';
+import { $t } from '@/locales';
+import { booleanToEnableStatus } from '@/utils/status';
 import NoticeOperateDrawer from './modules/notice-operate-drawer.vue';
 import NoticeSearch from './modules/notice-search.vue';
 
 const appStore = useAppStore();
+const message = useMessage();
 const { hasAuth } = useAuth();
 
+/** 通知搜索参数 */
 const searchParams: Api.Notification.NoticeSearchParams = reactive({
   page: 1,
   page_size: 10,
@@ -28,27 +30,39 @@ const searchParams: Api.Notification.NoticeSearchParams = reactive({
   priority: null
 });
 
-const priorityMap: Record<Api.Notification.NoticePriority, { label: string; type: 'default' | 'success' | 'warning' | 'error' }> = {
-  low: { label: '低', type: 'default' },
-  normal: { label: '普通', type: 'success' },
-  high: { label: '高', type: 'warning' },
-  urgent: { label: '紧急', type: 'error' }
-};
+/** 优先级选项 */
+const priorityOptions = [
+  { label: $t('notification.priority.low'), value: 'low' },
+  { label: $t('notification.priority.normal'), value: 'normal' },
+  { label: $t('notification.priority.high'), value: 'high' },
+  { label: $t('notification.priority.urgent'), value: 'urgent' }
+];
 
-const typeMap: Record<Api.Notification.NoticeType, string> = {
-  announcement: '公告',
-  system: '系统',
-  operation: '操作提醒',
-  approval: '审批通知'
-};
+/** 类型选项 */
+const typeOptions = [
+  { label: $t('page.manage.announcement.type.announcement'), value: 'announcement' },
+  { label: $t('page.manage.announcement.type.system'), value: 'system' },
+  { label: $t('page.manage.announcement.type.operation'), value: 'operation' },
+  { label: $t('page.manage.announcement.type.approval'), value: 'approval' }
+];
 
-const targetTypeMap: Record<Api.Notification.NoticeTargetType, string> = {
-  all: '全员',
-  role: '按角色',
-  user: '按用户'
-};
+/** 推送范围选项 */
+const targetTypeOptions = [
+  { label: $t('page.manage.announcement.targetType.all'), value: 'all' },
+  { label: $t('page.manage.announcement.targetType.role'), value: 'role' },
+  { label: $t('page.manage.announcement.targetType.user'), value: 'user' }
+];
 
-const { columns, columnChecks, data, loading, getData, getDataByPage, mobilePagination } = useNaivePaginatedTable({
+/** 通知表格 */
+const {
+  columns: noticeColumns,
+  columnChecks: noticeColumnChecks,
+  data: noticeData,
+  getData: getNoticeData,
+  getDataByPage: getNoticeDataByPage,
+  loading: noticeLoading,
+  mobilePagination: noticeMobilePagination
+} = useNaivePaginatedTable({
   api: () => fetchGetNoticeList(searchParams),
   transform: response => {
     const result = defaultTransform(response);
@@ -71,13 +85,13 @@ const { columns, columnChecks, data, loading, getData, getDataByPage, mobilePagi
     {
       key: 'index',
       title: $t('common.index'),
-      width: 64,
       align: 'center',
+      width: 64,
       render: (_, index) => index + 1
     },
     {
       key: 'title',
-      title: '标题',
+      title: $t('common.title'),
       align: 'center',
       minWidth: 180,
       ellipsis: {
@@ -86,31 +100,33 @@ const { columns, columnChecks, data, loading, getData, getDataByPage, mobilePagi
     },
     {
       key: 'type',
-      title: '类型',
+      title: $t('page.manage.announcement.noticeType'),
       align: 'center',
       width: 100,
-      render: (row: Api.Notification.Notice) => {
-        return <span>{ typeMap[row.type] || row.type }</span>;
+      render: row => {
+        const typeLabel = typeOptions.find(opt => opt.value === row.type)?.label || row.type;
+        return <NTag type="info" size="small">{typeLabel}</NTag>;
       }
     },
     {
       key: 'target_type',
-      title: '推送范围',
+      title: $t('page.manage.announcement.targetTypeLabel'),
       align: 'center',
       width: 100,
-      render: (row: Api.Notification.Notice) => {
-        return <span>{ targetTypeMap[row.target_type] || row.target_type }</span>;
+      render: row => {
+        const targetLabel = targetTypeOptions.find(opt => opt.value === row.target_type)?.label || row.target_type;
+        return <NTag type="default" size="small">{targetLabel}</NTag>;
       }
     },
     {
       key: 'priority',
-      title: '优先级',
+      title: $t('page.manage.announcement.priority'),
       align: 'center',
       width: 90,
-      render: (row: Api.Notification.Notice) => {
-        const pm = priorityMap[row.priority];
+      render: row => {
+        const pm = priorityOptions.find(opt => opt.value === row.priority);
         if (!pm) return null;
-        return <NTag type={pm.type} size="small">{pm.label}</NTag>;
+        return <NTag type={pm.value === 'low' ? 'default' : pm.value === 'normal' ? 'success' : pm.value === 'high' ? 'warning' : 'error'} size="small">{pm.label}</NTag>;
       }
     },
     {
@@ -118,7 +134,7 @@ const { columns, columnChecks, data, loading, getData, getDataByPage, mobilePagi
       title: $t('common.status'),
       align: 'center',
       width: 80,
-      render: (row: Api.Notification.Notice) => {
+      render: row => {
         if (row.status === null) {
           return null;
         }
@@ -126,43 +142,43 @@ const { columns, columnChecks, data, loading, getData, getDataByPage, mobilePagi
           '1': 'success',
           '2': 'warning'
         };
-        const label = row.status === '1' ? '已发布' : '草稿';
-        return <NTag type={tagMap[row.status]}>{label}</NTag>;
+        const label = row.status === '1' ? $t('page.manage.announcement.status.published') : $t('page.manage.announcement.status.draft');
+        return <NTag type={tagMap[row.status]} size="small">{label}</NTag>;
       }
     },
     {
       key: 'sender_name',
-      title: '发送人',
+      title: $t('page.manage.announcement.senderName'),
       align: 'center',
       width: 100
     },
     {
       key: 'published_at',
-      title: '发布时间',
+      title: $t('page.manage.announcement.publishedAt'),
       align: 'center',
       width: 160,
-      render: (row: Api.Notification.Notice) => {
-        return <span>{ row.published_at || '-' }</span>;
+      render: row => {
+        return <span>{row.published_at || '-'}</span>;
       }
     },
     {
       key: 'operate',
       title: $t('common.operate'),
       align: 'center',
-      width: 200,
+      width: 240,
       fixed: 'right',
-      render: (row: Api.Notification.Notice) => {
+      render: row => {
         const isDraft = row.status === '2';
         return (
-          <div class="flex flex-wrap justify-center gap-8px">
+          <div class="flex-center gap-8px">
             {hasAuth('sys:notice:edit') && isDraft && (
-              <NButton type="primary" text size="small" onClick={() => edit(row.id)}>
-                { $t('common.edit') }
+              <NButton type="primary" ghost size="small" onClick={() => editNotice(row.id)}>
+                {$t('common.edit')}
               </NButton>
             )}
             {hasAuth('sys:notice:publish') && isDraft && (
-              <NButton type="warning" text size="small" onClick={() => handlePublish(row.id)}>
-                发布
+              <NButton type="warning" ghost size="small" onClick={() => handlePublish(row.id)}>
+                {$t('page.manage.announcement.publish')}
               </NButton>
             )}
             {hasAuth('sys:notice:delete') && (
@@ -170,8 +186,8 @@ const { columns, columnChecks, data, loading, getData, getDataByPage, mobilePagi
                 {{
                   default: () => $t('common.confirmDelete'),
                   trigger: () => (
-                    <NButton type="error" text size="small">
-                      { $t('common.delete') }
+                    <NButton type="error" ghost size="small">
+                      {$t('common.delete')}
                     </NButton>
                   )
                 }}
@@ -184,77 +200,133 @@ const { columns, columnChecks, data, loading, getData, getDataByPage, mobilePagi
   ]
 });
 
-const { drawerVisible, operateType, editingData, handleAdd, handleEdit, checkedRowKeys, onBatchDeleted, onDeleted } =
-  useTableOperate(data, 'id', getData);
+/** 通知操作 */
+const {
+  drawerVisible: noticeDrawerVisible,
+  operateType: noticeOperateType,
+  editingData: editingNoticeData,
+  handleAdd: handleAddNotice,
+  handleEdit: handleEditNotice,
+  checkedRowKeys: checkedNoticeRowKeys,
+  onBatchDeleted: onNoticeBatchDeleted,
+  onDeleted: onNoticeDeleted
+} = useTableOperate(noticeData, 'id', getNoticeData);
 
+/** 编辑通知 */
+function editNotice(id: number) {
+  handleEditNotice(id);
+}
+
+/** 删除通知 */
+async function handleDelete(id: number) {
+  try {
+    await fetchDeleteNotice(id);
+    message.success($t('common.deleteSuccess'));
+    onNoticeDeleted();
+  } catch (error) {
+    console.error('删除通知失败:', error);
+  }
+}
+
+/** 发布通知 */
+async function handlePublish(id: number) {
+  try {
+    await fetchPublishNotice(id);
+    message.success($t('page.manage.announcement.publishSuccess'));
+    getNoticeDataByPage();
+  } catch (error) {
+    console.error('发布通知失败:', error);
+  }
+}
+
+/** 批量删除通知 */
 async function handleBatchDelete() {
-  if (checkedRowKeys.value.length === 0) {
-    window.$message?.warning($t('common.pleaseSelect'));
+  if (checkedNoticeRowKeys.value.length === 0) {
+    message.warning($t('common.pleaseSelect'));
     return;
   }
-  const { error } = await fetchBatchDeleteNotice(checkedRowKeys.value);
-  if (!error) {
-    window.$message?.success($t('common.deleteSuccess'));
-    onBatchDeleted();
+  try {
+    await fetchBatchDeleteNotice(checkedNoticeRowKeys.value);
+    message.success($t('common.deleteSuccess'));
+    onNoticeBatchDeleted();
+  } catch (error) {
+    console.error('批量删除通知失败:', error);
   }
-}
-
-async function handleDelete(id: number) {
-  const { error } = await fetchDeleteNotice(id);
-  if (!error) {
-    window.$message?.success($t('common.deleteSuccess'));
-    onDeleted();
-  }
-}
-
-async function handlePublish(id: number) {
-  const { error } = await fetchPublishNotice(id);
-  if (!error) {
-    window.$message?.success('发布成功');
-    getData();
-  }
-}
-
-function edit(id: number) {
-  handleEdit(id);
 }
 </script>
 
 <template>
   <div class="min-h-500px flex-col-stretch gap-16px overflow-hidden lt-sm:overflow-auto">
-    <NoticeSearch v-model:model="searchParams" @search="getDataByPage" />
-    <NCard :title="$t('page.manage.announcement.title')" :bordered="false" size="small" class="card-wrapper sm:flex-1-hidden">
+    <NoticeSearch v-model:model="searchParams" @search="getNoticeDataByPage" @reset="getNoticeDataByPage" />
+    <NCard
+      :title="$t('page.manage.announcement.title')"
+      :bordered="false"
+      size="small"
+      class="card-wrapper sm:flex-1-hidden"
+    >
       <template #header-extra>
         <TableHeaderOperation
-          v-model:columns="columnChecks"
-          :disabled-delete="checkedRowKeys.length === 0"
-          :loading="loading"
-          add-auth="sys:notice:add"
-          delete-auth="sys:notice:delete"
-          @add="handleAdd"
-          @delete="handleBatchDelete"
-          @refresh="getData"
-        />
+          v-model:columns="noticeColumnChecks"
+          :disabled-delete="checkedNoticeRowKeys.length === 0"
+          :loading="noticeLoading"
+          @refresh="getNoticeData"
+        >
+          <template #default>
+            <NButton
+              v-if="hasAuth('sys:notice:add')"
+              size="small"
+              ghost
+              type="primary"
+              @click="handleAddNotice"
+            >
+              <template #icon>
+                <icon-ic-round-plus class="text-icon" />
+              </template>
+              {{ $t('common.add') }}
+            </NButton>
+            <NPopconfirm
+              v-if="hasAuth('sys:notice:delete')"
+              @positive-click="handleBatchDelete"
+            >
+              <template #trigger>
+                <NButton
+                  size="small"
+                  ghost
+                  type="error"
+                  :disabled="checkedNoticeRowKeys.length === 0"
+                >
+                  <template #icon>
+                    <icon-ic-round-delete class="text-icon" />
+                  </template>
+                  {{ $t('common.batchDelete') }}
+                </NButton>
+              </template>
+              {{ $t('common.confirmDelete') }}
+            </NPopconfirm>
+          </template>
+        </TableHeaderOperation>
       </template>
       <NDataTable
-        v-model:checked-row-keys="checkedRowKeys"
-        :columns="columns"
-        :data="data"
+        v-model:checked-row-keys="checkedNoticeRowKeys"
+        :columns="noticeColumns"
+        :data="noticeData"
         size="small"
         :flex-height="!appStore.isMobile"
-        :scroll-x="1100"
-        :loading="loading"
+        :scroll-x="1200"
+        :loading="noticeLoading"
         remote
         :row-key="row => row.id"
-        :pagination="mobilePagination"
+        :pagination="noticeMobilePagination"
         class="sm:h-full"
       />
       <NoticeOperateDrawer
-        v-model:visible="drawerVisible"
-        :operate-type="operateType"
-        :row-data="editingData"
-        @submitted="getDataByPage"
+        v-model:visible="noticeDrawerVisible"
+        :operate-type="noticeOperateType"
+        :row-data="editingNoticeData"
+        @submitted="getNoticeDataByPage"
       />
     </NCard>
   </div>
 </template>
+
+<style scoped></style>

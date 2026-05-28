@@ -573,7 +573,29 @@ const local: App.I18n.Schema = {
         addTitle: 'Add IP Blacklist'
       },
       announcement: {
-        title: 'Announcement List'
+        title: 'Announcement List',
+        noticeType: 'Type',
+        targetTypeLabel: 'Target',
+        priority: 'Priority',
+        senderName: 'Sender',
+        publishedAt: 'Published At',
+        publish: 'Publish',
+        publishSuccess: 'Published successfully',
+        status: {
+          published: 'Published',
+          draft: 'Draft'
+        },
+        type: {
+          announcement: 'Announcement',
+          system: 'System',
+          operation: 'Operation',
+          approval: 'Approval'
+        },
+        targetType: {
+          all: 'All',
+          role: 'Role',
+          user: 'User'
+        }
       }
     },
     log: {

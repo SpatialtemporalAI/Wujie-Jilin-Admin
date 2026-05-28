@@ -800,6 +800,31 @@ declare namespace App {
             reasonPlaceholder: string;
             addTitle: string;
           };
+          announcement: {
+            title: string;
+            noticeType: string;
+            targetTypeLabel: string;
+            priority: string;
+            senderName: string;
+            publishedAt: string;
+            publish: string;
+            publishSuccess: string;
+            status: {
+              published: string;
+              draft: string;
+            };
+            type: {
+              announcement: string;
+              system: string;
+              operation: string;
+              approval: string;
+            };
+            targetType: {
+              all: string;
+              role: string;
+              user: string;
+            };
+          };
         };
       };
       form: {
