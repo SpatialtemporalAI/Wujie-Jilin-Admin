@@ -565,7 +565,11 @@ const local: App.I18n.Schema = {
         expireRequired: '临时黑名单必须设置过期时间',
         createdAt: '创建时间',
         reasonPlaceholder: '请输入加入原因（选填）',
-        addTitle: '新增黑名单'
+        addTitle: '新增黑名单',
+        form: {
+          ip: '请输入IP地址',
+          type: '请选择黑名单类型'
+        }
       },
       announcement: {
         title: '通知公告列表',
@@ -590,6 +594,13 @@ const local: App.I18n.Schema = {
           all: '全员',
           role: '按角色',
           user: '按用户'
+        },
+        form: {
+          title: '请输入标题',
+          type: '请选择通知类型',
+          targetType: '请选择推送范围',
+          status: '请选择状态',
+          priority: '请选择优先级'
         }
       }
     },

@@ -55,7 +55,7 @@ function search() {
         <NForm :model="model" label-placement="left" :label-width="80">
           <NGrid responsive="screen" item-responsive>
             <NFormItemGi span="24 s:12 m:6" :label="$t('page.manage.config.configKey')" path="key" class="pr-24px">
-              <NInput v-model:value="model.key" :placeholder="$t('common.keywordSearch')" clearable />
+              <NInput v-model:value="model.key" :placeholder="$t('page.manage.config.form.configKey')" clearable />
             </NFormItemGi>
             <NFormItemGi
               span="24 s:12 m:6"
@@ -63,13 +63,13 @@ function search() {
               path="description"
               class="pr-24px"
             >
-              <NInput v-model:value="model.description" :placeholder="$t('common.keywordSearch')" clearable />
+              <NInput v-model:value="model.description" :placeholder="$t('page.manage.config.form.configDesc')" clearable />
             </NFormItemGi>
             <NFormItemGi span="24 s:12 m:6" :label="$t('page.manage.config.configType')" path="type" class="pr-24px">
               <NSelect
                 v-model:value="model.type"
                 :options="configTypeOptions"
-                :placeholder="$t('common.keywordSearch')"
+                :placeholder="$t('page.manage.config.form.configType')"
                 clearable
               />
             </NFormItemGi>
@@ -77,7 +77,7 @@ function search() {
               <NSelect
                 v-model:value="model.group"
                 :options="configGroupOptions"
-                :placeholder="$t('common.keywordSearch')"
+                :placeholder="$t('page.manage.config.form.configGroup')"
                 clearable
               />
             </NFormItemGi>
@@ -85,7 +85,7 @@ function search() {
               <NSelect
                 v-model:value="model.is_system"
                 :options="yesOrNoOptions"
-                :placeholder="$t('common.keywordSearch')"
+                :placeholder="$t('page.manage.config.form.isSystem')"
                 clearable
               />
             </NFormItemGi>

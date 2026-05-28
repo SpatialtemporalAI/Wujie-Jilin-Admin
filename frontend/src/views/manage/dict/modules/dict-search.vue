@@ -48,16 +48,16 @@ function search() {
         <NForm :model="model" label-placement="left" :label-width="80">
           <NGrid responsive="screen" item-responsive>
             <NFormItemGi span="24 s:12 m:6" :label="$t('page.manage.dict.dictName')" path="name" class="pr-24px">
-              <NInput v-model:value="model.name" :placeholder="$t('common.keywordSearch')" clearable />
+              <NInput v-model:value="model.name" :placeholder="$t('page.manage.dict.form.dictName')" clearable />
             </NFormItemGi>
             <NFormItemGi span="24 s:12 m:6" :label="$t('page.manage.dict.dictCode')" path="code" class="pr-24px">
-              <NInput v-model:value="model.code" :placeholder="$t('common.keywordSearch')" clearable />
+              <NInput v-model:value="model.code" :placeholder="$t('page.manage.dict.form.dictCode')" clearable />
             </NFormItemGi>
             <NFormItemGi span="24 s:12 m:6" :label="$t('page.manage.dict.dictStatus')" path="status" class="pr-24px">
               <NSelect
                 v-model:value="model.status"
                 :options="enableStatusOptions"
-                :placeholder="$t('common.keywordSearch')"
+                :placeholder="$t('page.manage.dict.form.dictStatus')"
                 clearable
               />
             </NFormItemGi>
@@ -65,7 +65,7 @@ function search() {
               <NSelect
                 v-model:value="model.is_system"
                 :options="yesOrNoOptions"
-                :placeholder="$t('common.keywordSearch')"
+                :placeholder="$t('page.manage.dict.form.isSystem')"
                 clearable
               />
             </NFormItemGi>

@@ -570,7 +570,11 @@ const local: App.I18n.Schema = {
         expireRequired: 'Temporary blacklist must have an expire time',
         createdAt: 'Created At',
         reasonPlaceholder: 'Enter reason (optional)',
-        addTitle: 'Add IP Blacklist'
+        addTitle: 'Add IP Blacklist',
+        form: {
+          ip: 'Please enter IP address',
+          type: 'Please select blacklist type'
+        }
       },
       announcement: {
         title: 'Announcement List',
@@ -595,6 +599,13 @@ const local: App.I18n.Schema = {
           all: 'All',
           role: 'Role',
           user: 'User'
+        },
+        form: {
+          title: 'Please enter title',
+          type: 'Please select notice type',
+          targetType: 'Please select target type',
+          status: 'Please select status',
+          priority: 'Please select priority'
         }
       }
     },
