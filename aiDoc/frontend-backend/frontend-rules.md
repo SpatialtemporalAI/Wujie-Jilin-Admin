@@ -73,6 +73,16 @@
 - 新增模块时必须更新 `App.I18n.Schema` 类型约束
 - 模板中使用 `$t('key')` 或 `{{ $t('key') }}`
 
+### 键的引用与定义
+
+- **引用已有 `common.*` 键前，必须先在 `zh-cn.ts` / `en-us.ts` 中确认该 key 已存在**
+  - 当前 `common` 命名空间已有的 key：index、operate、action、add、edit、delete、confirmDelete、search、reset、refresh、saveSuccess、updateSuccess、deleteSuccess、addSuccess、loadDataFailed、pleaseSelect、selectAtLeastOne、yesOrNo、keywordSearch、config、confirm、cancel、close、check、selectAll、expandColumn、columnSetting、batchDelete、backToHome、back、warning、error、noData、pleaseCheckValue、modify、modifySuccess、update、updateFailed、userCenter、changePassword、tip、trigger、switch、lookForward、logout、logoutConfirm
+  - **若不在上述列表中，不允许直接写 `$t('common.xxx')`，必须走页面级 key**
+- **页面级文本统一使用 `page.manage.<module>.<field>` 或 `page.<module>.<field>` 命名**，不混用 `common.*`
+  - 例如：列表标题 `page.manage.announcement.title`、状态列 `page.manage.announcement.status`、搜索表单 label `page.manage.announcement.form.title`
+  - 表单 placeholder 统一格式：`$t('page.manage.xxx.form.xxx')`
+- **新增/修改 i18n 键后，必须执行 `pnpm typecheck`**，利用 `App.I18n.Schema` 类型约束捕获未定义键
+
 ## 环境变量
 
 - 前缀 `VITE_*`，通过 `import.meta.env.VITE_*` 访问

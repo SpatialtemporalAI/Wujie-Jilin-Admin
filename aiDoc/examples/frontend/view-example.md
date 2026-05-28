@@ -63,6 +63,63 @@ async function handleDelete(row: Api.SystemManage.UserInfo) {
 </template>
 ```
 
+### 搜索表单 `modules/search.vue`（含 i18n 示例）
+
+```vue
+<template>
+  <NFormItem
+    :label="$t('page.manage.announcement.form.title')"
+    path="title"
+  >
+    <NInput
+      v-model:value="model.title"
+      :placeholder="$t('page.manage.announcement.form.titlePlaceholder')"
+      clearable
+    />
+  </NFormItem>
+  <NFormItem
+    :label="$t('page.manage.announcement.form.status')"
+    path="status"
+  >
+    <NSelect
+      v-model:value="model.status"
+      :placeholder="$t('page.manage.announcement.form.statusPlaceholder')"
+      :options="[
+        { label: $t('page.manage.announcement.status.published'), value: '1' },
+        { label: $t('page.manage.announcement.status.draft'), value: '2' }
+      ]"
+    />
+  </NFormItem>
+</template>
+```
+
+对应 locale 定义（`zh-cn.ts` / `en-us.ts`）：
+
+```ts
+page: {
+  manage: {
+    announcement: {
+      title: '通知公告列表',
+      form: {
+        title: '通知标题',
+        titlePlaceholder: '请输入通知标题',
+        status: '状态',
+        statusPlaceholder: '请选择状态'
+      },
+      status: {
+        published: '已发布',
+        draft: '草稿'
+      }
+    }
+  }
+}
+```
+
+**注意**：
+- 页面级文本全部放在 `page.manage.xxx.*` 下，不直接使用 `common.*`
+- 若需引用 `common.*`（如 `common.search`、`common.reset`），必须先确认该 key 在 `common` 命名空间中已存在
+- 新增键必须同时添加到 `zh-cn.ts`、`en-us.ts` 和 `src/typings/app.d.ts` 的 `App.I18n.Schema`
+
 ## 关键点
 
 - 页面组件只负责布局和交互，业务逻辑通过 API 函数调用
