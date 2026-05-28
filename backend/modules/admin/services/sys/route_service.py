@@ -31,7 +31,7 @@ class RouteService:
         """将 SysMenu 模型转换为 MenuRouteResponse"""
         meta = RouteMetaResponse(
             title=menu.meta_title or menu.name,
-            i18nKey=f"route.{menu.name}",
+            i18nKey=menu.i18n_key or f"route.{menu.name}",
             icon=menu.meta_icon,
             order=menu.sort if menu.sort else None,
             hideInMenu=menu.meta_hidden if menu.meta_hidden else None,

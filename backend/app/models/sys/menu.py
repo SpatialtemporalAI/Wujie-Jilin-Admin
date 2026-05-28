@@ -47,6 +47,10 @@ class SysMenu(Base):
     permission: Mapped[str] = mapped_column(
         String(100), nullable=True, comment="权限标识，如 sys:user:list"
     )
+    # 国际化键
+    i18n_key: Mapped[str] = mapped_column(
+        String(100), nullable=True, comment="国际化键，如 route.home"
+    )
     # 路由元信息
     meta_title: Mapped[str] = mapped_column(
         String(100), nullable=True, comment="路由标题"

@@ -249,7 +249,8 @@ const local: App.I18n.Schema = {
     log: '日志管理',
     'log_login-log': '登录日志',
     'log_online-user': '在线用户',
-    'log_operation-log': '操作日志'
+    'log_operation-log': '操作日志',
+    monitor: '监控仪表盘'
   },
   page: {
     login: {
@@ -326,6 +327,22 @@ const local: App.I18n.Schema = {
         desc5: 'SmileX 刚才把工作台页面随便写了一些，凑合能看了！'
       },
       creativity: '创意'
+    },
+    monitor: {
+      systemResources: '系统资源',
+      apiStats: 'API 服务质量',
+      systemInfo: '系统信息',
+      cpuUsage: 'CPU 使用率',
+      memoryUsage: '内存使用率',
+      diskUsage: '磁盘使用率',
+      avgResponseTime: '平均响应时间',
+      errorRate: '错误率',
+      uptime: '运行时长',
+      processCount: '进程数',
+      pythonVersion: 'Python 版本',
+      day: '天',
+      hour: '小时',
+      minute: '分钟'
     },
     manage: {
       common: {

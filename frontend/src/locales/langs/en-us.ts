@@ -253,7 +253,8 @@ const local: App.I18n.Schema = {
     log: 'Log Management',
     'log_login-log': 'Login Log',
     'log_online-user': 'Online Users',
-    'log_operation-log': 'Operation Log'
+    'log_operation-log': 'Operation Log',
+    monitor: 'Monitor Dashboard'
   },
   page: {
     login: {
@@ -330,6 +331,22 @@ const local: App.I18n.Schema = {
         desc5: 'SmileX just wrote some of the workbench pages casually, and it was enough to see!'
       },
       creativity: 'Creativity'
+    },
+    monitor: {
+      systemResources: 'System Resources',
+      apiStats: 'API Service Quality',
+      systemInfo: 'System Info',
+      cpuUsage: 'CPU Usage',
+      memoryUsage: 'Memory Usage',
+      diskUsage: 'Disk Usage',
+      avgResponseTime: 'Avg Response Time',
+      errorRate: 'Error Rate',
+      uptime: 'Uptime',
+      processCount: 'Process Count',
+      pythonVersion: 'Python Version',
+      day: 'd',
+      hour: 'h',
+      minute: 'm'
     },
 
     manage: {

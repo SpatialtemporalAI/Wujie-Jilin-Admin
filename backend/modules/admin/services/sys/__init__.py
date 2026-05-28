@@ -14,6 +14,7 @@ from .mcp_service import MCPService
 from .route_service import RouteService
 from .operation_log_service import OperationLogService
 from .notice_service import NoticeService
+from .monitor_service import MonitorService
 
 __all__ = [
     "ConfigService",
@@ -26,4 +27,5 @@ __all__ = [
     "RouteService",
     "OperationLogService",
     "NoticeService",
+    "MonitorService",
 ]

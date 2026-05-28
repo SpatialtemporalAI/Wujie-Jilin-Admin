@@ -82,6 +82,7 @@ class SysMenuCreate(BaseEntity):
     type: MenuType = Field(MenuType.MENU, description="菜单类型")
     is_system: bool = Field(False, description="是否为系统内置菜单")
     sort: int = Field(0, description="排序号")
+    i18n_key: Optional[str] = Field(None, description="国际化键", max_length=100)
 
 
 class SysMenuUpdate(BaseEntity):
@@ -105,6 +106,7 @@ class SysMenuUpdate(BaseEntity):
     type: Optional[MenuType] = Field(None, description="菜单类型")
     sort: Optional[int] = Field(None, description="排序号")
     is_system: Optional[bool] = Field(None, description="是否为系统内置菜单")
+    i18n_key: Optional[str] = Field(None, description="国际化键", max_length=100)
 
 
 class SysMenuSimpleResponse(BaseRespEntity):
@@ -143,7 +145,7 @@ class SysMenuResponseData(BaseRespEntity):
     iconType: str = Field("1", description="图标类型：1-iconify，2-本地")
     menuType: Annotated[str, BeforeValidator(_menu_type_to_str)] = Field(..., validation_alias=AliasChoices("type", "menuType"), description="菜单类型：1-目录，2-菜单，3-按钮")
     order: int = Field(..., validation_alias=AliasChoices("sort", "order"), description="排序号")
-    i18nKey: Optional[str] = Field(None, description="国际化键")
+    i18nKey: Optional[str] = Field(None, validation_alias=AliasChoices("i18n_key", "i18nKey"), description="国际化键")
     keepAlive: bool = Field(False, description="是否缓存")
     constant: bool = Field(False, description="是否常量路由")
     href: Optional[str] = Field(None, description="外链地址")
@@ -152,6 +154,7 @@ class SysMenuResponseData(BaseRespEntity):
     multiTab: bool = Field(True, description="是否多标签")
     fixedIndexInTab: Optional[int] = Field(None, description="固定标签索引")
     query: Optional[dict] = Field(None, description="路由查询参数")
+    permission: Optional[str] = Field(None, description="权限标识")
     status: bool = Field(..., description="菜单状态")
     is_system: bool = Field(..., description="是否为系统内置菜单")
     createTime: Annotated[str, BeforeValidator(_format_datetime)] = Field(..., validation_alias=AliasChoices("created_at", "createTime"), description="创建时间")

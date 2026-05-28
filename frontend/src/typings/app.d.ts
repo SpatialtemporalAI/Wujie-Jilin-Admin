@@ -563,6 +563,22 @@ declare namespace App {
           };
           creativity: string;
         };
+        monitor: {
+          systemResources: string;
+          apiStats: string;
+          systemInfo: string;
+          cpuUsage: string;
+          memoryUsage: string;
+          diskUsage: string;
+          avgResponseTime: string;
+          errorRate: string;
+          uptime: string;
+          processCount: string;
+          pythonVersion: string;
+          day: string;
+          hour: string;
+          minute: string;
+        };
 
         manage: {
           common: {

@@ -188,5 +188,16 @@ export const generatedRoutes: GeneratedRoute[] = [
         }
       }
     ]
+  },
+  {
+    name: 'monitor',
+    path: '/monitor',
+    component: 'layout.base$view.monitor',
+    meta: {
+      title: 'monitor',
+      i18nKey: 'route.monitor',
+      icon: 'mdi:chart-areaspline-variant',
+      order: 4
+    }
   }
 ];

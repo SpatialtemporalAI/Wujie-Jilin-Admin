@@ -35,6 +35,7 @@ declare module "@elegant-router/types" {
     "manage_menu": "/manage/menu";
     "manage_role": "/manage/role";
     "manage_user": "/manage/user";
+    "monitor": "/monitor";
   };
 
   /**
@@ -74,6 +75,7 @@ declare module "@elegant-router/types" {
     | "log"
     | "login"
     | "manage"
+    | "monitor"
   >;
 
   /**
@@ -106,6 +108,7 @@ declare module "@elegant-router/types" {
     | "manage_menu"
     | "manage_role"
     | "manage_user"
+    | "monitor"
   >;
 
   /**

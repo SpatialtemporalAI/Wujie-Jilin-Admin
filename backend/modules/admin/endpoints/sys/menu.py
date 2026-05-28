@@ -52,6 +52,7 @@ PAGE_COMPONENTS = [
     "manage_user",
     "log_login-log",
     "log_operation-log",
+    "monitor",
 ]
 
 

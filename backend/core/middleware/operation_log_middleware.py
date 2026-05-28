@@ -27,6 +27,7 @@ WHITELIST_PREFIXES = (
     "/admin/auth",
     "/admin/sys/operation-log",
     "/admin/sys/login-log",
+    "/admin/sys/monitor",
     "/docs",
     "/redoc",
     "/openapi.json",
