@@ -51,6 +51,16 @@ from .config import (
     SysConfigReset,
     SysConfigByGroupQuery,
 )
+from .notice import (
+    SysNoticeQueryParams,
+    SysNoticeCreate,
+    SysNoticeUpdate,
+    SysNoticeListResponse,
+    SysNoticeResponse,
+    MyNoticeQueryParams,
+    MyNoticeResponse,
+    BatchReadRequest,
+)
 
 __all__ = [
     # 用户相关
@@ -100,4 +110,13 @@ __all__ = [
     "SysConfigResponseData",
     "SysConfigReset",
     "SysConfigByGroupQuery",
+    # 通知相关
+    "SysNoticeQueryParams",
+    "SysNoticeCreate",
+    "SysNoticeUpdate",
+    "SysNoticeListResponse",
+    "SysNoticeResponse",
+    "MyNoticeQueryParams",
+    "MyNoticeResponse",
+    "BatchReadRequest",
 ]

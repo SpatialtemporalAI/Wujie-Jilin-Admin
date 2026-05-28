@@ -19,6 +19,7 @@ from .export_task import export_router
 from .export_template import export_template_router
 from .online_user import online_user_router
 from .ip_blacklist import ip_blacklist_router
+from .notice import notice_router
 
 # 创建系统管理主路由器
 sys_router = APIRouter(
@@ -41,6 +42,7 @@ sys_router.include_router(export_router)
 sys_router.include_router(export_template_router)
 sys_router.include_router(online_user_router)
 sys_router.include_router(ip_blacklist_router)
+sys_router.include_router(notice_router)
 
 __all__ = ["sys_router"]
 

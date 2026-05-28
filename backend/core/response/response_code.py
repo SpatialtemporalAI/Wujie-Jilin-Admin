@@ -78,6 +78,9 @@ class CustomErrorCode(CustomCodeBase):
     # 限流与安全 10901-11000
     RATE_LIMIT_EXCEEDED = (10901, "请求过于频繁")
     IP_BLOCKED = (10902, "IP 已被加入黑名单")
+    # 通知管理 10601-10700
+    NOTICE_NOT_FOUND = (10601, "通知不存在")
+    NOTICE_ALREADY_PUBLISHED = (10602, "通知已发布，不可编辑")
 @dataclass
 class CustomResponse:
     """

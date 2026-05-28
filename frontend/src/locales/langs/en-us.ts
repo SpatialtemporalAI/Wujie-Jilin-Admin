@@ -245,6 +245,7 @@ const local: App.I18n.Schema = {
     manage_user: 'User Management',
     manage_dict: 'Dict Management',
     manage_config: 'System Config',
+    manage_announcement: 'Announcement',
     'manage_ip-blacklist': 'IP Blacklist',
     log: 'Log Management',
     'log_login-log': 'Login Log',
@@ -567,6 +568,9 @@ const local: App.I18n.Schema = {
         createdAt: 'Created At',
         reasonPlaceholder: 'Enter reason (optional)',
         addTitle: 'Add IP Blacklist'
+      },
+      announcement: {
+        title: 'Announcement List'
       }
     },
     log: {

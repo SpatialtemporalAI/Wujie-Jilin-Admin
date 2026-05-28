@@ -241,6 +241,7 @@ const local: App.I18n.Schema = {
     manage_user: '用户管理',
     manage_dict: '字典管理',
     manage_config: '系统配置',
+    manage_announcement: '通知公告',
     'manage_ip-blacklist': '黑名单管理',
     log: '日志管理',
     'log_login-log': '登录日志',
@@ -562,6 +563,9 @@ const local: App.I18n.Schema = {
         createdAt: '创建时间',
         reasonPlaceholder: '请输入加入原因（选填）',
         addTitle: '新增黑名单'
+      },
+      announcement: {
+        title: '通知公告列表'
       }
     },
     log: {

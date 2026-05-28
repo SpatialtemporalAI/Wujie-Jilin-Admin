@@ -10,6 +10,7 @@ import { $t } from '@/locales';
 import { useRouteStore } from '../route';
 import { useTabStore } from '../tab';
 import { clearAuthStorage, getToken } from './shared';
+import { useWebSocketNotification } from '@/hooks/common/websocket';
 
 export const useAuthStore = defineStore(SetupStoreId.Auth, () => {
   const route = useRoute();
@@ -49,6 +50,10 @@ export const useAuthStore = defineStore(SetupStoreId.Auth, () => {
   /** Reset auth store */
   async function resetStore() {
     recordUserId();
+
+    // disconnect WebSocket
+    const { disconnect } = useWebSocketNotification();
+    disconnect();
 
     clearAuthStorage();
 
@@ -147,6 +152,10 @@ export const useAuthStore = defineStore(SetupStoreId.Auth, () => {
 
     if (pass) {
       token.value = tokenWithType;
+
+      // 3. connect WebSocket for real-time notifications
+      const { connect } = useWebSocketNotification();
+      connect(tokenWithType);
 
       return true;
     }
