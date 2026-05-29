@@ -40,11 +40,9 @@ class MonitorService:
         """
         # CPU: 非阻塞调用，首次可能返回0
         cpu_percent = psutil.cpu_percent(interval=None)
-        # 如果首次调用返回0，尝试获取 per_cpu 的平均值作为备选
-        if cpu_percent == 0.0:
-            per_cpu = psutil.cpu_percent(interval=None, percpu=True)
-            if per_cpu:
-                cpu_percent = round(sum(per_cpu) / len(per_cpu), 1)
+        cpu_percent_per_core = psutil.cpu_percent(interval=None, percpu=True)
+        if cpu_percent == 0.0 and cpu_percent_per_core:
+            cpu_percent = round(sum(cpu_percent_per_core) / len(cpu_percent_per_core), 1)
 
         # 内存
         mem = psutil.virtual_memory()
@@ -53,6 +51,9 @@ class MonitorService:
             "used": MonitorService._bytes_to_gb(mem.used),
             "free": MonitorService._bytes_to_gb(mem.available),
             "percent": mem.percent,
+            "total_mb": MonitorService._bytes_to_mb(mem.total),
+            "used_mb": MonitorService._bytes_to_mb(mem.used),
+            "free_mb": MonitorService._bytes_to_mb(mem.available),
         }
 
         # 磁盘（取根分区）
@@ -73,6 +74,7 @@ class MonitorService:
 
         return {
             "cpu_percent": cpu_percent,
+            "cpu_percent_per_core": cpu_percent_per_core,
             "memory": memory,
             "disk": disk_info,
             "boot_time": boot_time,

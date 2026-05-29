@@ -11,6 +11,9 @@ declare namespace Api {
       used: number;
       free: number;
       percent: number;
+      total_mb: number;
+      used_mb: number;
+      free_mb: number;
     };
 
     /** 磁盘信息 */
@@ -26,6 +29,7 @@ declare namespace Api {
     /** 系统指标 */
     type SystemMetrics = {
       cpu_percent: number;
+      cpu_percent_per_core: number[];
       memory: MemoryInfo;
       disk: DiskInfo;
       boot_time: string;

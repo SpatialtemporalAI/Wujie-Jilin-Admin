@@ -18,6 +18,9 @@ class MemoryInfo(BaseModel):
     used: int = Field(..., description="已用内存(GB)")
     free: int = Field(..., description="可用内存(GB)")
     percent: float = Field(..., description="使用率(%)")
+    total_mb: int = Field(..., description="总内存(MB)")
+    used_mb: int = Field(..., description="已用内存(MB)")
+    free_mb: int = Field(..., description="可用内存(MB)")
 
 
 class DiskInfo(BaseModel):
@@ -33,6 +36,7 @@ class DiskInfo(BaseModel):
 class SystemMetricsResponse(BaseEntity):
     """系统指标响应模型"""
     cpu_percent: float = Field(..., description="CPU使用率(%)")
+    cpu_percent_per_core: list[float] = Field(..., description="每核CPU使用率(%)")
     memory: MemoryInfo = Field(..., description="内存信息")
     disk: DiskInfo = Field(..., description="磁盘信息")
     boot_time: datetime = Field(..., description="系统启动时间")

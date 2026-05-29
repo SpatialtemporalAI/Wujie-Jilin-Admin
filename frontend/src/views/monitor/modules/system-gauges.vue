@@ -1,29 +1,16 @@
 <script setup lang="ts">
-import { watch } from 'vue';
+import { watch, computed } from 'vue';
 import { useEcharts } from '@/hooks/common/echarts';
 import { $t } from '@/locales';
+import type { Api } from '@/typings/api';
 
 interface Props {
-  cpuPercent?: number;
-  memoryPercent?: number;
-  diskPercent?: number;
-  diskTotalMb?: number;
-  diskUsedMb?: number;
-  diskTotalGb?: number;
-  diskUsedGb?: number;
+  metrics?: Api.Monitor.SystemMetrics;
 }
 
-const props = withDefaults(defineProps<Props>(), {
-  cpuPercent: 0,
-  memoryPercent: 0,
-  diskPercent: 0,
-  diskTotalMb: 0,
-  diskUsedMb: 0,
-  diskTotalGb: 0,
-  diskUsedGb: 0
-});
+const props = defineProps<Props>();
 
-function getGaugeOption(title: string, value: number, color: string) {
+function getCompactGaugeOption(title: string, value: number, color: string) {
   return {
     series: [
       {
@@ -32,142 +19,197 @@ function getGaugeOption(title: string, value: number, color: string) {
         endAngle: -20,
         min: 0,
         max: 100,
-        splitNumber: 10,
-        itemStyle: {
-          color
-        },
-        progress: {
-          show: true,
-          width: 12
-        },
-        pointer: {
-          show: true,
-          width: 4
-        },
-        axisLine: {
-          lineStyle: {
-            width: 12
-          }
-        },
+        splitNumber: 5,
+        itemStyle: { color },
+        progress: { show: true, width: 8 },
+        pointer: { show: true, width: 3 },
+        axisLine: { lineStyle: { width: 8 } },
         axisTick: {
-          distance: -18,
-          splitNumber: 5,
-          lineStyle: {
-            width: 1,
-            color: '#999'
-          }
+          distance: -14,
+          splitNumber: 3,
+          lineStyle: { width: 1, color: '#999' }
         },
         splitLine: {
-          distance: -22,
-          length: 8,
-          lineStyle: {
-            width: 2,
-            color: '#999'
-          }
+          distance: -16,
+          length: 6,
+          lineStyle: { width: 1, color: '#999' }
         },
-        axisLabel: {
-          distance: -14,
-          color: '#999',
-          fontSize: 10
-        },
+        axisLabel: { distance: -10, color: '#999', fontSize: 9 },
         anchor: {
           show: true,
-          size: 15,
-          itemStyle: {
-            borderWidth: 2
-          }
+          size: 12,
+          itemStyle: { borderWidth: 2 }
         },
-        title: {
-          show: true,
-          offsetCenter: [0, '70%'],
-          fontSize: 14
-        },
+        title: { show: true, offsetCenter: [0, '70%'], fontSize: 12 },
         detail: {
           valueAnimation: true,
-          fontSize: 20,
+          fontSize: 16,
           offsetCenter: [0, '50%'],
           formatter: '{value}%'
         },
-        data: [
-          {
-            value: Math.round(value),
-            name: title
-          }
-        ]
+        data: [{ value: Math.round(value), name: title }]
       }
     ]
   };
 }
 
 const { domRef: cpuDomRef, updateOptions: updateCpu } = useEcharts(() =>
-  getGaugeOption($t('page.monitor.cpuUsage'), 0, '#5470c6')
+  getCompactGaugeOption($t('page.monitor.cpuUsage'), 0, '#5470c6')
 );
 const { domRef: memoryDomRef, updateOptions: updateMemory } = useEcharts(() =>
-  getGaugeOption($t('page.monitor.memoryUsage'), 0, '#91cc75')
+  getCompactGaugeOption($t('page.monitor.memoryUsage'), 0, '#91cc75')
 );
 const { domRef: diskDomRef, updateOptions: updateDisk } = useEcharts(() =>
-  getGaugeOption($t('page.monitor.diskUsage'), 0, '#fac858')
+  getCompactGaugeOption($t('page.monitor.diskUsage'), 0, '#fac858')
 );
 
 watch(
-  () => props.cpuPercent,
+  () => props.metrics?.cpu_percent,
   val => {
-    updateCpu(opts => {
-      opts.series[0].data[0].value = Math.round(val);
-      return opts;
-    });
+    if (val != null)
+      updateCpu(opts => {
+        opts.series[0].data[0].value = Math.round(val);
+        return opts;
+      });
   }
 );
 
 watch(
-  () => props.memoryPercent,
+  () => props.metrics?.memory?.percent,
   val => {
-    updateMemory(opts => {
-      opts.series[0].data[0].value = Math.round(val);
-      return opts;
-    });
+    if (val != null)
+      updateMemory(opts => {
+        opts.series[0].data[0].value = Math.round(val);
+        return opts;
+      });
   }
 );
 
 watch(
-  () => props.diskPercent,
+  () => props.metrics?.disk?.percent,
   val => {
-    updateDisk(opts => {
-      opts.series[0].data[0].value = Math.round(val);
-      return opts;
-    });
+    if (val != null)
+      updateDisk(opts => {
+        opts.series[0].data[0].value = Math.round(val);
+        return opts;
+      });
   }
 );
+
+const cpuCores = computed(() => props.metrics?.cpu_percent_per_core ?? []);
+
+const uptime = computed(() => {
+  const bootTime = props.metrics?.boot_time;
+  if (!bootTime) return '-';
+  const boot = new Date(bootTime);
+  const now = new Date();
+  const diff = Math.floor((now.getTime() - boot.getTime()) / 1000);
+  const days = Math.floor(diff / 86400);
+  const hours = Math.floor((diff % 86400) / 3600);
+  const minutes = Math.floor((diff % 3600) / 60);
+  return `${days}${$t('page.monitor.day')} ${hours}${$t('page.monitor.hour')} ${minutes}${$t('page.monitor.minute')}`;
+});
+
+function getCoreColor(val: number): string {
+  if (val >= 80) return '#e88080';
+  if (val >= 60) return '#f0c060';
+  return '#91cc75';
+}
 </script>
 
 <template>
   <NGrid cols="s:1 m:2" responsive="screen" :x-gap="16" :y-gap="16">
+    <!-- CPU -->
     <NGi>
-      <div ref="cpuDomRef" class="h-260px overflow-hidden"></div>
+      <NCard size="small" :title="$t('page.monitor.cpuUsage')">
+        <div class="flex items-center gap-16px" style="min-height: 220px">
+          <div class="flex-1 flex flex-col gap-6px">
+            <div v-for="(val, idx) in cpuCores" :key="idx" class="flex items-center gap-8px">
+              <span class="w-50px shrink-0 text-12px text-gray">Core {{ idx }}</span>
+              <div class="h-10px flex-1 overflow-hidden rounded-full" style="background: var(--n-border-color)">
+                <div
+                  class="h-full rounded-full transition-all duration-500"
+                  :style="{ width: `${Math.max(val, 2)}%`, backgroundColor: getCoreColor(val) }"
+                ></div>
+              </div>
+              <span class="w-38px shrink-0 text-right text-12px">{{ Math.round(val) }}%</span>
+            </div>
+          </div>
+          <div ref="cpuDomRef" class="h-200px w-200px shrink-0"></div>
+        </div>
+      </NCard>
     </NGi>
+
+    <!-- Memory -->
     <NGi>
-      <div ref="memoryDomRef" class="h-260px overflow-hidden"></div>
+      <NCard size="small" :title="$t('page.monitor.memoryUsage')">
+        <div class="flex items-center gap-16px" style="min-height: 220px">
+          <div class="flex-1">
+            <NDescriptions label-placement="left" :column="1" bordered size="small">
+              <NDescriptionsItem label="Total (MB)">
+                {{ (metrics?.memory?.total_mb ?? 0).toLocaleString() }}
+              </NDescriptionsItem>
+              <NDescriptionsItem label="Used (MB)">
+                {{ (metrics?.memory?.used_mb ?? 0).toLocaleString() }}
+              </NDescriptionsItem>
+              <NDescriptionsItem label="Free (MB)">
+                {{ (metrics?.memory?.free_mb ?? 0).toLocaleString() }}
+              </NDescriptionsItem>
+            </NDescriptions>
+          </div>
+          <div ref="memoryDomRef" class="h-200px w-200px shrink-0"></div>
+        </div>
+      </NCard>
     </NGi>
-    <NGi span="m:2">
-      <div class="flex items-center">
-        <div class="flex-1">
+
+    <!-- System Info -->
+    <NGi>
+      <NCard size="small" :title="$t('page.monitor.systemInfo')">
+        <div class="flex flex-col justify-center" style="min-height: 220px">
           <NDescriptions label-placement="left" :column="1" bordered size="small">
-            <NDescriptionsItem label="Total (MB)">
-              {{ props.diskTotalMb?.toLocaleString() }}
+            <NDescriptionsItem :label="$t('page.monitor.osName')">
+              {{ metrics?.os_name ?? '-' }}
             </NDescriptionsItem>
-            <NDescriptionsItem label="Used (MB)">
-              {{ props.diskUsedMb?.toLocaleString() }}
+            <NDescriptionsItem :label="$t('page.monitor.cpuCount')">
+              {{ metrics?.cpu_count ?? '-' }}
             </NDescriptionsItem>
-            <NDescriptionsItem label="Total (GB)">
-              {{ props.diskTotalGb?.toLocaleString() }}
+            <NDescriptionsItem :label="$t('page.monitor.pythonVersion')">
+              {{ metrics?.python_version ?? '-' }}
             </NDescriptionsItem>
-            <NDescriptionsItem label="Used (GB)">
-              {{ props.diskUsedGb?.toLocaleString() }}
+            <NDescriptionsItem :label="$t('page.monitor.uptime')">
+              {{ uptime }}
+            </NDescriptionsItem>
+            <NDescriptionsItem :label="$t('page.monitor.processCount')">
+              {{ metrics?.process_count ?? '-' }}
             </NDescriptionsItem>
           </NDescriptions>
         </div>
-        <div ref="diskDomRef" class="h-260px w-300px flex-shrink-0 overflow-hidden"></div>
-      </div>
+      </NCard>
+    </NGi>
+
+    <!-- Disk -->
+    <NGi>
+      <NCard size="small" :title="$t('page.monitor.diskUsage')">
+        <div class="flex items-center gap-16px" style="min-height: 220px">
+          <div class="flex-1">
+            <NDescriptions label-placement="left" :column="1" bordered size="small">
+              <NDescriptionsItem label="Total (MB)">
+                {{ (metrics?.disk?.total_mb ?? 0).toLocaleString() }}
+              </NDescriptionsItem>
+              <NDescriptionsItem label="Used (MB)">
+                {{ (metrics?.disk?.used_mb ?? 0).toLocaleString() }}
+              </NDescriptionsItem>
+              <NDescriptionsItem label="Total (GB)">
+                {{ (metrics?.disk?.total ?? 0).toLocaleString() }}
+              </NDescriptionsItem>
+              <NDescriptionsItem label="Used (GB)">
+                {{ (metrics?.disk?.used ?? 0).toLocaleString() }}
+              </NDescriptionsItem>
+            </NDescriptions>
+          </div>
+          <div ref="diskDomRef" class="h-200px w-200px shrink-0"></div>
+        </div>
+      </NCard>
     </NGi>
   </NGrid>
 </template>
