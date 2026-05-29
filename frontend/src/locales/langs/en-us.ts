@@ -498,9 +498,10 @@ const local: App.I18n.Schema = {
           menuStatus: 'Please select menu status',
           isSystem: 'Please select whether it is a system built-in menu'
         },
-        addMenu: 'Add Menu',
+        addMenu: 'Add Catalog',
         editMenu: 'Edit Menu',
         addChildMenu: 'Add Child Menu',
+        addChildButton: 'Add Button',
         type: {
           directory: 'Directory',
           menu: 'Menu',

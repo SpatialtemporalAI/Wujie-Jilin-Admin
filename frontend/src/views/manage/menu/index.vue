@@ -159,7 +159,7 @@ const columns = [
         )}
         {row.menuType === '2' && hasAuth('sys:menu:add') && (
           <NButton type="primary" text size="small" onClick={() => handleAddChildMenu(row)}>
-            {$t('page.manage.menu.addChildMenu')}
+            {$t('page.manage.menu.addChildButton')}
           </NButton>
         )}
         {hasAuth('sys:menu:edit') && (

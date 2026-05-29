@@ -123,6 +123,8 @@ function filterTreeByType(
 }
 
 const parentMenuOptions = computed(() => {
+  if (model.value.menuType === '1') return [];
+
   let trees = menuTreeRaw.value;
   if (props.operateType === 'edit' && props.rowData) {
     const excludeIds = collectDescendantIds(trees, props.rowData.id);
@@ -179,7 +181,14 @@ const rules = computed<Record<RuleKey, App.Global.FormRule>>(() => {
   } as Record<RuleKey, App.Global.FormRule>;
 });
 
-const disabledMenuType = computed(() => props.operateType === 'edit');
+const disabledMenuType = computed(() => props.operateType !== 'add');
+
+const availableMenuTypeOptions = computed(() => {
+  if (props.operateType === 'add') {
+    return menuTypeOptions.filter(opt => opt.value !== '3');
+  }
+  return menuTypeOptions;
+});
 
 const localIcons = getLocalIcons();
 const localIconOptions = localIcons.map<SelectOption>(item => ({
@@ -193,8 +202,6 @@ const localIconOptions = localIcons.map<SelectOption>(item => ({
 }));
 
 const showLayout = computed(() => !model.value.parentId);
-
-const showPage = computed(() => model.value.menuType === '2');
 
 const isButton = computed(() => model.value.menuType === '3');
 
@@ -227,11 +234,13 @@ const layoutOptions = computed<CommonType.Option[]>(() => [
 function handleInitModel() {
   model.value = createDefaultModel();
 
-  if (!props.rowData) return;
+  if (!props.rowData) {
+    return;
+  }
 
   if (props.operateType === 'addChild') {
-    const { id } = props.rowData;
-
+    const { id, menuType } = props.rowData;
+    model.value.menuType = menuType === '1' ? '2' : '3';
     Object.assign(model.value, { parentId: id });
   }
 
@@ -322,6 +331,7 @@ watch(
             <NTreeSelect
               v-model:value="model.parentId"
               :options="parentMenuOptions"
+              :disabled="model.menuType === '1'"
               key-field="id"
               label-field="label"
               children-field="children"
@@ -332,7 +342,7 @@ watch(
           </NFormItemGi>
           <NFormItemGi span="24 m:12" :label="$t('page.manage.menu.menuType')" path="menuType">
             <NRadioGroup v-model:value="model.menuType" :disabled="disabledMenuType">
-              <NRadio v-for="item in menuTypeOptions" :key="item.value" :value="item.value" :label="item.label" />
+              <NRadio v-for="item in availableMenuTypeOptions" :key="item.value" :value="item.value" :label="item.label" />
             </NRadioGroup>
           </NFormItemGi>
           <NFormItemGi span="24 m:12" :label="$t('page.manage.menu.menuName')" path="menuName">
@@ -356,10 +366,11 @@ watch(
               :placeholder="$t('page.manage.menu.form.layout')"
             />
           </NFormItemGi>
-          <NFormItemGi v-if="!isButton && showPage" span="24 m:12" :label="$t('page.manage.menu.page')" path="page">
+          <NFormItemGi v-if="!isButton" span="24 m:12" :label="$t('page.manage.menu.page')" path="page">
             <NSelect
               v-model:value="model.page"
               :options="pageOptions"
+              :disabled="model.menuType !== '2'"
               :placeholder="$t('page.manage.menu.form.page')"
             />
           </NFormItemGi>

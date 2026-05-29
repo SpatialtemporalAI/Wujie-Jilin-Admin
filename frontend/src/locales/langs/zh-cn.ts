@@ -493,9 +493,10 @@ const local: App.I18n.Schema = {
           menuStatus: '请选择菜单状态',
           isSystem: '请选择是否为系统内置菜单'
         },
-        addMenu: '新增菜单',
+        addMenu: '新增目录',
         editMenu: '编辑菜单',
         addChildMenu: '新增子菜单',
+        addChildButton: '新增按钮',
         type: {
           directory: '目录',
           menu: '菜单',
