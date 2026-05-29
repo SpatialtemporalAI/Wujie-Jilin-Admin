@@ -41,13 +41,13 @@ declare namespace Api {
       /** record id */
       id: number;
       /** record creator */
-      createBy: string;
+      created_by: string;
       /** record create time */
-      createTime: string;
+      created_at: string;
       /** record updater */
-      updateBy: string;
+      updated_by: string;
       /** record update time */
-      updateTime: string;
+      updated_at: string;
       /** record status */
       status: EnableStatus | null;
     } & T;

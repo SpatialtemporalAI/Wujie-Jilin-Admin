@@ -1,11 +1,18 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 
-from typing import Optional, List
-from pydantic import Field, ConfigDict
+from typing import Optional, List, Annotated
+from pydantic import Field, ConfigDict, BeforeValidator
 from datetime import datetime
+from zoneinfo import ZoneInfo
 from app.models.common.base import BaseRespEntity, BaseEntity, BoolField
 from app.models.common.page import PageRequest
+
+
+def _format_datetime(v):
+    if isinstance(v, datetime):
+        return v.astimezone(ZoneInfo("Asia/Shanghai")).strftime("%Y-%m-%d %H:%M:%S")
+    return v
 
 
 class SysRoleQueryParams(PageRequest):
@@ -68,7 +75,7 @@ class SysRoleListResponse(BaseRespEntity):
     用于角色列表展示，不包含关联菜单数据
     """
 
-    model_config = ConfigDict(from_attributes=True, populate_by_name=True)
+    model_config = ConfigDict(from_attributes=True)
 
     id: int = Field(..., description="角色ID")
     name: str = Field(..., description="角色名称")
@@ -78,8 +85,8 @@ class SysRoleListResponse(BaseRespEntity):
     is_default: bool = Field(..., description="是否为默认角色")
     is_system: bool = Field(..., description="是否为系统内置角色")
     sort: int = Field(..., description="排序号")
-    createTime: Optional[str] = Field(None, description="创建时间")
-    updateTime: Optional[str] = Field(None, description="更新时间")
+    created_at: Annotated[Optional[str], BeforeValidator(_format_datetime)] = Field(None, description="创建时间")
+    updated_at: Annotated[Optional[str], BeforeValidator(_format_datetime)] = Field(None, description="更新时间")
 
 
 class SysRoleResponseData(BaseRespEntity):
@@ -88,7 +95,7 @@ class SysRoleResponseData(BaseRespEntity):
     用于展示角色完整信息，包括关联的菜单
     """
 
-    model_config = ConfigDict(from_attributes=True, populate_by_name=True)
+    model_config = ConfigDict(from_attributes=True)
 
     id: int = Field(..., description="角色ID")
     name: str = Field(..., description="角色名称")
@@ -98,8 +105,8 @@ class SysRoleResponseData(BaseRespEntity):
     is_default: bool = Field(..., description="是否为默认角色")
     is_system: bool = Field(..., description="是否为系统内置角色")
     sort: int = Field(..., description="排序号")
-    createTime: Optional[str] = Field(None, description="创建时间")
-    updateTime: Optional[str] = Field(None, description="更新时间")
+    created_at: Annotated[Optional[str], BeforeValidator(_format_datetime)] = Field(None, description="创建时间")
+    updated_at: Annotated[Optional[str], BeforeValidator(_format_datetime)] = Field(None, description="更新时间")
     menu_ids: List[int] = Field([], description="菜单ID列表")
 
 

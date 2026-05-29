@@ -153,8 +153,8 @@ class SysMenuResponseData(BaseRespEntity):
     permission: Optional[str] = Field(None, description="权限标识")
     status: bool = Field(..., description="菜单状态")
     is_system: bool = Field(..., description="是否为系统内置菜单")
-    createTime: Annotated[str, BeforeValidator(_format_datetime)] = Field(..., validation_alias=AliasChoices("created_at", "createTime"), description="创建时间")
-    updateTime: Annotated[Optional[str], BeforeValidator(_format_datetime)] = Field(None, validation_alias=AliasChoices("updated_at", "updateTime"), description="更新时间")
+    created_at: Annotated[str, BeforeValidator(_format_datetime)] = Field(..., description="创建时间")
+    updated_at: Annotated[Optional[str], BeforeValidator(_format_datetime)] = Field(None, description="更新时间")
     children: List["SysMenuResponseData"] = Field(default_factory=list, description="子菜单列表")
 
     @model_validator(mode="after")

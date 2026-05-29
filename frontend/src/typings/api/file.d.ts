@@ -19,7 +19,7 @@ declare namespace Api {
       /** 存储平台 */
       storage_platform: string;
       /** 上传时间 */
-      createTime: string;
+      created_at: string;
     };
 
     /** 文件列表项 (含上传者) */

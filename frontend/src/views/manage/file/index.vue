@@ -104,7 +104,7 @@ const {
       }
     },
     {
-      key: 'createTime',
+      key: 'created_at',
       title: $t('page.manage.file.uploadTime'),
       align: 'center',
       width: 180

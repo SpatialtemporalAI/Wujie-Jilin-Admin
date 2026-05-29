@@ -6,7 +6,7 @@
 """
 from datetime import datetime
 from typing import Optional, List, Annotated
-from pydantic import Field, ConfigDict, BeforeValidator, AliasChoices
+from pydantic import Field, ConfigDict, BeforeValidator
 from zoneinfo import ZoneInfo
 
 from app.models.common.base import BaseRespEntity, BaseEntity
@@ -40,7 +40,7 @@ class SysFileUploadResponse(BaseRespEntity):
     mime_type: str = Field(..., description="MIME类型")
     extension: str = Field(..., description="扩展名")
     storage_platform: str = Field(..., description="存储平台")
-    createTime: Annotated[Optional[str], BeforeValidator(_format_datetime)] = Field(None, validation_alias=AliasChoices("created_at", "createTime"), description="上传时间")
+    created_at: Annotated[Optional[str], BeforeValidator(_format_datetime)] = Field(None, description="上传时间")
 
 
 class SysFileListResponse(BaseRespEntity):
@@ -57,4 +57,4 @@ class SysFileListResponse(BaseRespEntity):
     extension: str = Field(..., description="扩展名")
     storage_platform: str = Field(..., description="存储平台")
     created_by: int = Field(..., description="上传者用户ID")
-    createTime: Annotated[Optional[str], BeforeValidator(_format_datetime)] = Field(None, validation_alias=AliasChoices("created_at", "createTime"), description="上传时间")
+    created_at: Annotated[Optional[str], BeforeValidator(_format_datetime)] = Field(None, description="上传时间")
