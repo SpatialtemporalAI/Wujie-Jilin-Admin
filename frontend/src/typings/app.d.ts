@@ -678,6 +678,8 @@ declare namespace App {
             routePath: string;
             pathParam: string;
             layout: string;
+            layoutBase: string;
+            layoutBlank: string;
             page: string;
             i18nKey: string;
             icon: string;

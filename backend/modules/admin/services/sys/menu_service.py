@@ -232,7 +232,11 @@ class MenuService:
         """
         logger.info(f"获取菜单信息，菜单ID: {menu_id}")
 
-        result = await db.execute(select(SysMenu).where(SysMenu.id == menu_id))
+        result = await db.execute(
+            select(SysMenu)
+            .options(noload(SysMenu.children))
+            .where(SysMenu.id == menu_id)
+        )
         menu = result.scalar_one_or_none()
 
         if not menu:

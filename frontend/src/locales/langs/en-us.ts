@@ -255,7 +255,8 @@ const local: App.I18n.Schema = {
     'log_online-user': 'Online Users',
     'log_operation-log': 'Operation Log',
     monitor: 'Monitor Dashboard',
-    demo: 'Upload Demo',
+    demo: 'Example',
+    demo_upload: 'Upload Demo',
     manage_file: 'File Management'
   },
   page: {
@@ -445,6 +446,8 @@ const local: App.I18n.Schema = {
         routePath: 'Route Path',
         pathParam: 'Path Param',
         layout: 'Layout Component',
+        layoutBase: 'Base Layout',
+        layoutBlank: 'Blank Layout',
         page: 'Page Component',
         i18nKey: 'I18n Key',
         icon: 'Icon',

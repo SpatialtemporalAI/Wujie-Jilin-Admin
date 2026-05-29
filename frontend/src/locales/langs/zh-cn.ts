@@ -251,7 +251,8 @@ const local: App.I18n.Schema = {
     'log_online-user': '在线用户',
     'log_operation-log': '操作日志',
     monitor: '监控仪表盘',
-    demo: '上传演示',
+    demo: '示例',
+    demo_upload: '上传演示',
     manage_file: '文件管理'
   },
   page: {
@@ -440,6 +441,8 @@ const local: App.I18n.Schema = {
         routePath: '路由路径',
         pathParam: '路径参数',
         layout: '布局',
+        layoutBase: '基础布局',
+        layoutBlank: '空白布局',
         page: '页面组件',
         i18nKey: '国际化key',
         icon: '图标',

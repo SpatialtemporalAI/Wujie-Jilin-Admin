@@ -42,11 +42,25 @@ export const generatedRoutes: GeneratedRoute[] = [
   {
     name: 'demo',
     path: '/demo',
-    component: 'layout.base$view.demo',
+    component: 'layout.base',
     meta: {
       title: 'demo',
-      i18nKey: 'route.demo'
-    }
+      i18nKey: 'route.demo',
+      order: 5,
+      icon: 'arcticons:example'
+    },
+    children: [
+      {
+        name: 'demo_upload',
+        path: '/demo/upload',
+        component: 'view.demo_upload',
+        meta: {
+          title: 'demo_upload',
+          i18nKey: 'route.demo_upload',
+          icon: 'mdi:upload'
+        }
+      }
+    ]
   },
   {
     name: 'home',

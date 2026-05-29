@@ -29,9 +29,11 @@ class RouteService:
     @staticmethod
     def _menu_to_route(menu: SysMenu) -> MenuRouteResponse:
         """将 SysMenu 模型转换为 MenuRouteResponse"""
+        route_name = menu.meta_title or menu.name
+
         meta = RouteMetaResponse(
-            title=menu.meta_title or menu.name,
-            i18nKey=menu.i18n_key or f"route.{menu.name}",
+            title=menu.name,
+            i18nKey=menu.i18n_key or f"route.{route_name}",
             icon=menu.meta_icon,
             order=menu.sort if menu.sort else None,
             hideInMenu=menu.meta_hidden if menu.meta_hidden else None,
@@ -50,9 +52,25 @@ class RouteService:
             if child_routes:
                 children = child_routes
 
+        # Flatten: if a catalog has a single child with the same route name and no
+        # component on the catalog itself, merge them into one route to avoid
+        # Vue Router "same name as ancestor" conflicts.
+        if children and len(children) == 1 and not menu.component:
+            only_child = children[0]
+            if only_child.name == route_name:
+                return MenuRouteResponse(
+                    id=only_child.id,
+                    name=only_child.name,
+                    path=menu.path or only_child.path,
+                    component=only_child.component,
+                    redirect=only_child.redirect or menu.redirect,
+                    meta=only_child.meta,
+                    children=only_child.children,
+                )
+
         return MenuRouteResponse(
             id=str(menu.id),
-            name=menu.name,
+            name=route_name,
             path=menu.path or "",
             component=menu.component,
             redirect=menu.redirect,

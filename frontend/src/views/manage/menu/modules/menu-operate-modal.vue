@@ -156,7 +156,7 @@ function createDefaultModel(): Model {
     routePath: '',
     pathParam: '',
     component: '',
-    layout: '',
+    layout: 'base',
     page: '',
     i18nKey: null,
     icon: '',
@@ -235,16 +235,16 @@ const pageOptions = computed(() => {
   return opts;
 });
 
-const layoutOptions: CommonType.Option[] = [
+const layoutOptions = computed<CommonType.Option[]>(() => [
   {
-    label: 'base',
+    label: $t('page.manage.menu.layoutBase'),
     value: 'base'
   },
   {
-    label: 'blank',
+    label: $t('page.manage.menu.layoutBlank'),
     value: 'blank'
   }
-];
+]);
 
 /** the enabled role options */
 const roleOptions = ref<CommonType.Option<string>[]>([]);
@@ -333,7 +333,9 @@ function getSubmitParams() {
     return params;
   }
 
-  const component = transformLayoutAndPageToComponent(layout, page);
+  // Child menus inherit layout from parent, so only include layout for top-level menus
+  const effectiveLayout = model.value.parentId ? '' : layout;
+  const component = transformLayoutAndPageToComponent(effectiveLayout, page);
   const routePath = getRoutePathWithParam(model.value.routePath, pathParam);
 
   params.component = component;
@@ -451,11 +453,16 @@ watch(
           </NFormItemGi>
           <NFormItemGi v-if="!isButton" span="24 m:12" :label="$t('page.manage.menu.icon')" path="icon">
             <template v-if="model.iconType === '1'">
-              <NInput v-model:value="model.icon" :placeholder="$t('page.manage.menu.form.icon')" class="flex-1">
-                <template #suffix>
-                  <SvgIcon v-if="model.icon" :icon="model.icon" class="text-icon" />
-                </template>
-              </NInput>
+              <div class="flex-y-center gap-8px w-full">
+                <NInput v-model:value="model.icon" :placeholder="$t('page.manage.menu.form.icon')" class="flex-1">
+                  <template #suffix>
+                    <SvgIcon v-if="model.icon" :icon="model.icon" class="text-icon" />
+                  </template>
+                </NInput>
+                <NButton @click="window.open('https://icon-sets.iconify.design/', '_blank')">
+                  <icon-ic:round-launch class="text-icon" />
+                </NButton>
+              </div>
             </template>
             <template v-if="model.iconType === '2'">
               <NSelect

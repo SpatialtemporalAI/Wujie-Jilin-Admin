@@ -8,7 +8,7 @@ from pydantic import (
 )
 from datetime import datetime
 from zoneinfo import ZoneInfo
-from typing import Type, TypeVar, Optional, Annotated
+from typing import ClassVar, Type, TypeVar, Optional, Annotated
 
 T = TypeVar("T")
 
@@ -50,6 +50,14 @@ class BaseRespEntity(BaseEntity):
     @field_serializer("is_system", check_fields=False)
     def serialize_is_system_output(self, value: bool):
         return "1" if value else "2"
+
+    JS_MAX_SAFE_INTEGER: ClassVar[int] = 9007199254740992  # 2^53
+
+    @field_serializer("id", check_fields=False)
+    def serialize_id_output(self, value: int):
+        if isinstance(value, int) and value >= self.JS_MAX_SAFE_INTEGER:
+            raise ValueError(f"ID {value} 超出JavaScript安全整数范围，请运行迁移修复")
+        return value
 
 
 EMPTY_VALUES = {"", " ", "null", "undefined", None}
