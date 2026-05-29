@@ -19,7 +19,7 @@ const selectedNotice = ref<Api.Notification.MyNotice | null>(null);
 async function getUnreadCount() {
   if (!authStore.isLogin) return;
   const { data } = await fetchGetUnreadCount();
-  if (data !== undefined) {
+  if (data != null) {
     unreadCount.value = data;
   }
 }

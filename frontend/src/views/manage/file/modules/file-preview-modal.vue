@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { computed } from 'vue';
-import { NModal, NImage, NVideo } from 'naive-ui';
+import { NModal, NImage } from 'naive-ui';
 import { getFilePreviewUrl } from '@/service/api/file';
 
 defineOptions({

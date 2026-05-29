@@ -2,10 +2,9 @@
 import { watch, computed } from 'vue';
 import { useEcharts } from '@/hooks/common/echarts';
 import { $t } from '@/locales';
-import type { Api } from '@/typings/api';
 
 interface Props {
-  metrics?: Api.Monitor.SystemMetrics;
+  metrics?: Api.Monitor.SystemMetrics | null;
 }
 
 const props = defineProps<Props>();

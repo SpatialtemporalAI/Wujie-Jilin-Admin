@@ -133,13 +133,14 @@ const {
       title: $t('page.manage.dict.dictStatus'),
       align: 'center',
       width: 100,
-      render: row => {
+      render: (row: any) => {
+        const status = row.status as Api.Common.EnableStatus;
         const tagMap: Record<Api.Common.EnableStatus, NaiveUI.ThemeColor> = {
           '1': 'success',
           '2': 'warning'
         };
-        const label = $t(enableStatusRecord[row.status]);
-        return <NTag type={tagMap[row.status]}>{label}</NTag>;
+        const label = $t(enableStatusRecord[status]);
+        return <NTag type={tagMap[status]}>{label}</NTag>;
       }
     },
     {
@@ -277,13 +278,14 @@ const {
       title: $t('page.manage.dict.itemStatus'),
       align: 'center',
       width: 100,
-      render: row => {
+      render: (row: any) => {
+        const status = row.status as Api.Common.EnableStatus;
         const tagMap: Record<Api.Common.EnableStatus, NaiveUI.ThemeColor> = {
           '1': 'success',
           '2': 'warning'
         };
-        const label = $t(enableStatusRecord[row.status]);
-        return <NTag type={tagMap[row.status]}>{label}</NTag>;
+        const label = $t(enableStatusRecord[status]);
+        return <NTag type={tagMap[status]}>{label}</NTag>;
       }
     },
     {
@@ -297,7 +299,7 @@ const {
       title: $t('common.operate'),
       align: 'center',
       minWidth: 180,
-      render: row => {
+      render: (row: any) => {
         return (
           <div class="flex flex-wrap justify-center gap-8px">
             {hasAuth('sys:dict:edit') && (
@@ -441,7 +443,7 @@ watch(activeTab, tab => {
           </template>
           <NDataTable
             v-model:checked-row-keys="checkedDictRowKeys"
-            :columns="dictColumns"
+            :columns="dictColumns as any"
             :data="dictData"
             size="small"
             :flex-height="!appStore.isMobile"
@@ -511,8 +513,8 @@ watch(activeTab, tab => {
             <NDataTable
               v-else
               v-model:checked-row-keys="checkedDictItemRowKeys"
-              :columns="dictItemColumns"
-              :data="dictItemData"
+              :columns="dictItemColumns as any"
+              :data="dictItemData as any"
               size="small"
               :flex-height="!appStore.isMobile"
               :scroll-x="962"

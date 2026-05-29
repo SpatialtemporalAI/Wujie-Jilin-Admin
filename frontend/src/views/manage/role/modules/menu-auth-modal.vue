@@ -119,23 +119,24 @@ async function handleSubmit() {
   }
 }
 
-function renderLabel({ option }: { option: Api.SystemManage.MenuTree }) {
-  const tagType = tagTypeMap[option.menuType];
+function renderLabel({ option }: { option: Record<string, unknown> }) {
+  const node = option as unknown as Api.SystemManage.MenuTree;
+  const tagType = tagTypeMap[node.menuType];
 
-  if (option.menuType === '3') {
+  if (node.menuType === '3') {
     return h(
       'span',
       { class: 'flex items-center gap-8px' },
       {
         default: () => [
-          h(NTag, { type: tagType, size: 'small', bordered: false }, { default: () => $t(menuTypeRecord[option.menuType]) }),
-          option.label
+          h(NTag, { type: tagType, size: 'small', bordered: false }, { default: () => $t(menuTypeRecord[node.menuType]) }),
+          node.label
         ]
       }
     );
   }
 
-  return option.label;
+  return node.label;
 }
 
 async function init() {

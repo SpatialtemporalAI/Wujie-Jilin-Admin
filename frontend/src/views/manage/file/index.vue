@@ -46,7 +46,7 @@ const {
   mobilePagination
 } = useNaivePaginatedTable({
   api: () => fetchGetFileList(searchParams),
-  transform: defaultTransform,
+  transform: defaultTransform as any,
   onPaginationParamsChange: params => {
     searchParams.page = params.page;
     searchParams.page_size = params.pageSize;
@@ -75,7 +75,7 @@ const {
       title: $t('page.manage.file.fileSize'),
       align: 'center',
       width: 120,
-      render: row => formatFileSize(row.file_size)
+      render: (row: any) => formatFileSize(row.file_size)
     },
     {
       key: 'mime_type',
@@ -88,14 +88,14 @@ const {
       title: $t('page.manage.file.fileExtension'),
       align: 'center',
       width: 100,
-      render: row => <NTag size="small">.{row.extension}</NTag>
+      render: (row: any) => <NTag size="small">.{row.extension}</NTag>
     },
     {
       key: 'storage_platform',
       title: $t('page.manage.file.storagePlatform'),
       align: 'center',
       width: 120,
-      render: row => {
+      render: (row: any) => {
         const platformMap: Record<string, string> = {
           local: $t('page.manage.file.platform.local'),
           oss: $t('page.manage.file.platform.oss')
@@ -114,7 +114,7 @@ const {
       title: $t('common.operate'),
       align: 'center',
       width: 240,
-      render: row => {
+      render: (row: any) => {
         return (
           <div class="flex flex-wrap justify-center gap-8px">
             {isPreviewable(row.extension) && hasAuth('sys:file:download') && (
@@ -152,7 +152,7 @@ const {
   checkedRowKeys,
   onBatchDeleted,
   onDeleted
-} = useTableOperate(data, 'id', getData);
+} = useTableOperate(data as any, 'id', getData);
 
 function handlePreview(row: Api.FileManage.FileListItem) {
   previewFile.value = row;
@@ -215,8 +215,8 @@ async function handleBatchDelete() {
       </template>
       <NDataTable
         v-model:checked-row-keys="checkedRowKeys"
-        :columns="columns"
-        :data="data"
+        :columns="columns as any"
+        :data="data as any"
         size="small"
         :flex-height="!appStore.isMobile"
         :scroll-x="1200"

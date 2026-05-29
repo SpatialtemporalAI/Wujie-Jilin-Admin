@@ -90,7 +90,7 @@ const {
           PATCH: 'default'
         };
         return (
-          <NTag type={methodColorMap[row.method] || 'default'} size="small">
+          <NTag type={methodColorMap[row.method ?? ''] || 'default'} size="small">
             {row.method}
           </NTag>
         );

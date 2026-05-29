@@ -246,7 +246,7 @@ async function handleBatchDelete() {
     return;
   }
   try {
-    await fetchBatchDeleteNotice(checkedNoticeRowKeys.value);
+    await fetchBatchDeleteNotice(checkedNoticeRowKeys.value.map(Number));
     message.success($t('common.deleteSuccess'));
     onNoticeBatchDeleted();
   } catch (error) {

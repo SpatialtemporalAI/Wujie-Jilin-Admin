@@ -570,6 +570,8 @@ declare namespace App {
           systemResources: string;
           apiStats: string;
           systemInfo: string;
+          osName: string;
+          cpuCount: string;
           cpuUsage: string;
           memoryUsage: string;
           diskUsage: string;

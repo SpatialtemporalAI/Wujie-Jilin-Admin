@@ -59,7 +59,7 @@ function search() {
             <NFormItemGi span="24 s:24 m:12" :label="$t('page.log.operationLog.form.timeRange')" class="pr-24px">
               <NSpace align="center" :size="8" :wrap="false" class="w-full">
                 <NDatePicker
-                  v-model:value="model.start_time"
+                  :value="null"
                   type="datetime"
                   :placeholder="$t('page.log.operationLog.form.startTime')"
                   clearable
@@ -68,7 +68,7 @@ function search() {
                 />
                 <span>~</span>
                 <NDatePicker
-                  v-model:value="model.end_time"
+                  :value="null"
                   type="datetime"
                   :placeholder="$t('page.log.operationLog.form.endTime')"
                   clearable

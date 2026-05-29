@@ -42,7 +42,7 @@ async function handleUpload({ file, onFinish, onError }: { file: UploadFileInfo;
       emit('submitted');
       onFinish();
     } else {
-      message.error(error?.msg || $t('page.demo.upload.uploadFailed'));
+      message.error((error?.response?.data as any)?.msg || $t('page.demo.upload.uploadFailed'));
       onError();
     }
   } catch {

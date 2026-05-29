@@ -84,7 +84,7 @@ function handleSingleCustomRequest({ file, onFinish, onError }: { file: UploadFi
       updateResult(idx, { name: data.original_name, size: data.file_size, extension: data.extension, status: 'success' });
       onFinish();
     } else {
-      updateResult(idx, { status: 'error', message: error?.msg || 'Upload failed' });
+      updateResult(idx, { status: 'error', message: (error?.response?.data as any)?.msg || 'Upload failed' });
       onError();
     }
   }).catch(() => {
@@ -111,7 +111,7 @@ async function doBatchUpload() {
       if (!error && data) {
         updateResult(idx, { name: data.original_name, size: data.file_size, extension: data.extension, status: 'success' });
       } else {
-        updateResult(idx, { status: 'error', message: error?.msg || 'Upload failed' });
+        updateResult(idx, { status: 'error', message: (error?.response?.data as any)?.msg || 'Upload failed' });
       }
     } catch {
       updateResult(idx, { status: 'error', message: 'Network error' });

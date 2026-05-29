@@ -19,7 +19,7 @@ const emit = defineEmits<Emits>();
 
 const defaultModel = jsonClone(toRaw(model.value));
 
-const statusOptions = [
+const statusOptions: { label: string; value: boolean }[] = [
   { label: $t('page.log.loginLog.success'), value: true },
   { label: $t('page.log.loginLog.failed'), value: false }
 ];
@@ -56,8 +56,8 @@ function search() {
             </NFormItemGi>
             <NFormItemGi span="24 s:12 m:6" :label="$t('page.log.loginLog.status')" path="status" class="pr-24px">
               <NSelect
-                v-model:value="model.status"
-                :options="statusOptions"
+                v-model:value="model.status as any"
+                :options="statusOptions as any"
                 :placeholder="$t('page.log.loginLog.form.status')"
                 clearable
               />
@@ -65,7 +65,7 @@ function search() {
             <NFormItemGi span="24 s:24 m:12" :label="$t('page.log.loginLog.form.timeRange')" class="pr-24px">
               <NSpace align="center" :size="8" :wrap="false" class="w-full">
                 <NDatePicker
-                  v-model:value="model.start_time"
+                  :value="null"
                   type="datetime"
                   :placeholder="$t('page.log.loginLog.form.startTime')"
                   clearable
@@ -74,7 +74,7 @@ function search() {
                 />
                 <span>~</span>
                 <NDatePicker
-                  v-model:value="model.end_time"
+                  :value="null"
                   type="datetime"
                   :placeholder="$t('page.log.loginLog.form.endTime')"
                   clearable
