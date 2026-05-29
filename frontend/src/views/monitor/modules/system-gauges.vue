@@ -198,17 +198,14 @@ function getCoreColor(val: number): string {
           <div class="flex items-center gap-16px h-full">
             <div class="flex-1">
               <NDescriptions label-placement="left" :column="1" bordered size="small">
-                <NDescriptionsItem label="Total (MB)">
-                  {{ (metrics?.disk?.total_mb ?? 0).toLocaleString() }}
-                </NDescriptionsItem>
-                <NDescriptionsItem label="Used (MB)">
-                  {{ (metrics?.disk?.used_mb ?? 0).toLocaleString() }}
-                </NDescriptionsItem>
                 <NDescriptionsItem label="Total (GB)">
                   {{ (metrics?.disk?.total ?? 0).toLocaleString() }}
                 </NDescriptionsItem>
                 <NDescriptionsItem label="Used (GB)">
                   {{ (metrics?.disk?.used ?? 0).toLocaleString() }}
+                </NDescriptionsItem>
+                <NDescriptionsItem label="Free (GB)">
+                  {{ (metrics?.disk?.free ?? 0).toLocaleString() }}
                 </NDescriptionsItem>
               </NDescriptions>
             </div>
