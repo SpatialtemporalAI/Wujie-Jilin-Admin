@@ -6,7 +6,7 @@
 """
 from datetime import datetime
 from typing import Optional, List, Annotated
-from pydantic import Field, ConfigDict, BeforeValidator
+from pydantic import Field, ConfigDict, BeforeValidator, AliasChoices
 from zoneinfo import ZoneInfo
 
 from app.models.common.base import BaseRespEntity, BaseEntity
@@ -30,7 +30,7 @@ class SysFileQueryParams(PageRequest):
 class SysFileUploadResponse(BaseRespEntity):
     """文件上传响应"""
 
-    model_config = ConfigDict(from_attributes=True, populate_by_name=True)
+    model_config = ConfigDict(from_attributes=True)
 
     id: int = Field(..., description="文件ID")
     original_name: str = Field(..., description="原始文件名")
@@ -40,13 +40,13 @@ class SysFileUploadResponse(BaseRespEntity):
     mime_type: str = Field(..., description="MIME类型")
     extension: str = Field(..., description="扩展名")
     storage_platform: str = Field(..., description="存储平台")
-    createTime: Annotated[Optional[str], BeforeValidator(_format_datetime)] = Field(None, description="上传时间", alias="created_at")
+    createTime: Annotated[Optional[str], BeforeValidator(_format_datetime)] = Field(None, validation_alias=AliasChoices("created_at", "createTime"), description="上传时间")
 
 
 class SysFileListResponse(BaseRespEntity):
     """文件列表响应"""
 
-    model_config = ConfigDict(from_attributes=True, populate_by_name=True)
+    model_config = ConfigDict(from_attributes=True)
 
     id: int = Field(..., description="文件ID")
     original_name: str = Field(..., description="原始文件名")
@@ -57,4 +57,4 @@ class SysFileListResponse(BaseRespEntity):
     extension: str = Field(..., description="扩展名")
     storage_platform: str = Field(..., description="存储平台")
     created_by: int = Field(..., description="上传者用户ID")
-    createTime: Annotated[Optional[str], BeforeValidator(_format_datetime)] = Field(None, description="上传时间", alias="created_at")
+    createTime: Annotated[Optional[str], BeforeValidator(_format_datetime)] = Field(None, validation_alias=AliasChoices("created_at", "createTime"), description="上传时间")
