@@ -141,7 +141,7 @@ class SysMenuResponseData(BaseRespEntity):
     routeName: Optional[str] = Field(None, validation_alias=AliasChoices("meta_title", "routeName"), description="路由名称")
     routePath: Optional[str] = Field(None, validation_alias=AliasChoices("path", "routePath"), description="路由路径")
     component: Optional[str] = Field(None, description="组件路径")
-    icon: Optional[str] = Field(None, validation_alias=AliasChoices("meta_icon", "icon"), description="图标")
+    icon: Optional[str] = Field(None, validation_alias="meta_icon", description="图标")
     iconType: str = Field("1", description="图标类型：1-iconify，2-本地")
     menuType: Annotated[str, BeforeValidator(_menu_type_to_str)] = Field(..., validation_alias=AliasChoices("type", "menuType"), description="菜单类型：1-目录，2-菜单，3-按钮")
     order: int = Field(..., validation_alias=AliasChoices("sort", "order"), description="排序号")

@@ -32,8 +32,6 @@ class SysMenu(Base):
         nullable=True,
         comment="父菜单ID，顶级菜单为0或NULL",
     )
-    # 菜单图标（没有默认值）
-    icon: Mapped[str] = mapped_column(String(50), nullable=True, comment="菜单图标")
     # 菜单基本信息
     name: Mapped[str] = mapped_column(String(100), nullable=False, comment="菜单名称")
     path: Mapped[str] = mapped_column(String(255), nullable=True, comment="路由路径")

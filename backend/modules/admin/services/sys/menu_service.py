@@ -288,7 +288,6 @@ class MenuService:
         menu = SysMenu(
             parent_id=menu_create.parent_id,
             name=menu_create.name,
-            icon=menu_create.meta_icon,
             path=menu_create.path,
             component=menu_create.component,
             redirect=menu_create.redirect,
