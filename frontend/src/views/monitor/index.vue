@@ -7,8 +7,8 @@ const { systemMetrics, apiStats, loading } = useMonitorData();
 </script>
 
 <template>
-  <NSpace vertical :size="16">
-    <NSpin :show="loading">
+  <NSpin :show="loading">
+    <NSpace vertical :size="16">
       <!-- 四宫格: CPU / 内存 / 系统信息 / 磁盘 -->
       <SystemGauges :metrics="systemMetrics" />
 
@@ -16,8 +16,8 @@ const { systemMetrics, apiStats, loading } = useMonitorData();
       <NCard :bordered="false" :title="$t('page.monitor.apiStats')" class="card-wrapper">
         <ApiStatsChart :data="apiStats" />
       </NCard>
-    </NSpin>
-  </NSpace>
+    </NSpace>
+  </NSpin>
 </template>
 
 <style scoped></style>
