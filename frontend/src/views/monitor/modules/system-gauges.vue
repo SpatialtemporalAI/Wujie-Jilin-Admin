@@ -118,7 +118,7 @@ function getCoreColor(val: number): string {
 </script>
 
 <template>
-  <NGrid cols="s:1 m:2" responsive="screen" :x-gap="16" :y-gap="16">
+  <NGrid cols="1 s:2" responsive="screen" :x-gap="16" :y-gap="16">
     <!-- CPU -->
     <NGi>
       <NCard size="small" :title="$t('page.monitor.cpuUsage')">
