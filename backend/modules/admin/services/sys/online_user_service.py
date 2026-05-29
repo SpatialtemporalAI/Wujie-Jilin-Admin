@@ -6,7 +6,9 @@
 """
 import json
 import logging
+from datetime import datetime, timezone
 from typing import List
+from zoneinfo import ZoneInfo
 
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select
@@ -21,6 +23,18 @@ from modules.admin.schemas.sys.online_user import OnlineUserResponse
 logger = logging.getLogger(__name__)
 
 SESSION_PREFIX = settings.JWT.SESSION_PREFIX
+
+_SHANGHAI = ZoneInfo("Asia/Shanghai")
+
+
+def _format_login_time(raw: str | None) -> str:
+    if not raw:
+        return ""
+    try:
+        dt = datetime.fromisoformat(raw)
+        return dt.astimezone(_SHANGHAI).strftime("%Y-%m-%d %H:%M:%S")
+    except (ValueError, TypeError):
+        return raw
 
 
 class OnlineUserService:
@@ -59,7 +73,7 @@ class OnlineUserService:
                     "session_id": sid,
                     "ip": meta.get("ip", ""),
                     "user_agent": meta.get("user_agent", ""),
-                    "login_time": meta.get("login_time", ""),
+                    "login_time": _format_login_time(meta.get("login_time")),
                 })
         return sessions
 

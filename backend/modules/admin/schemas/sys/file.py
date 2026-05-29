@@ -5,11 +5,18 @@
 文件管理 Schema
 """
 from datetime import datetime
-from typing import Optional, List
-from pydantic import Field, ConfigDict
+from typing import Optional, List, Annotated
+from pydantic import Field, ConfigDict, BeforeValidator
+from zoneinfo import ZoneInfo
 
 from app.models.common.base import BaseRespEntity, BaseEntity
 from app.models.common.page import PageRequest
+
+
+def _format_datetime(v):
+    if isinstance(v, datetime):
+        return v.astimezone(ZoneInfo("Asia/Shanghai")).strftime("%Y-%m-%d %H:%M:%S")
+    return v
 
 
 class SysFileQueryParams(PageRequest):
@@ -33,7 +40,7 @@ class SysFileUploadResponse(BaseRespEntity):
     mime_type: str = Field(..., description="MIME类型")
     extension: str = Field(..., description="扩展名")
     storage_platform: str = Field(..., description="存储平台")
-    createTime: Optional[datetime] = Field(None, description="上传时间", alias="created_at")
+    createTime: Annotated[Optional[str], BeforeValidator(_format_datetime)] = Field(None, description="上传时间", alias="created_at")
 
 
 class SysFileListResponse(BaseRespEntity):
@@ -50,4 +57,4 @@ class SysFileListResponse(BaseRespEntity):
     extension: str = Field(..., description="扩展名")
     storage_platform: str = Field(..., description="存储平台")
     created_by: int = Field(..., description="上传者用户ID")
-    createTime: Optional[datetime] = Field(None, description="上传时间", alias="created_at")
+    createTime: Annotated[Optional[str], BeforeValidator(_format_datetime)] = Field(None, description="上传时间", alias="created_at")
