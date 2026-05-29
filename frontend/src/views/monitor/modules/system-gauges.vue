@@ -122,20 +122,22 @@ function getCoreColor(val: number): string {
     <!-- CPU -->
     <NGi>
       <NCard size="small" :title="$t('page.monitor.cpuUsage')">
-        <div class="flex items-center gap-16px" style="min-height: 220px">
-          <div class="flex-1 flex flex-col gap-6px">
-            <div v-for="(val, idx) in cpuCores" :key="idx" class="flex items-center gap-8px">
-              <span class="w-50px shrink-0 text-12px text-gray">Core {{ idx }}</span>
-              <div class="h-10px flex-1 overflow-hidden rounded-full" style="background: var(--n-border-color)">
-                <div
-                  class="h-full rounded-full transition-all duration-500"
-                  :style="{ width: `${Math.max(val, 2)}%`, backgroundColor: getCoreColor(val) }"
-                ></div>
+        <div class="card-body">
+          <div class="flex items-center gap-16px h-full">
+            <div class="flex-1 grid grid-cols-2 gap-x-12px gap-y-6px">
+              <div v-for="(val, idx) in cpuCores" :key="idx" class="flex items-center gap-6px">
+                <span class="w-42px shrink-0 text-12px text-gray">C{{ idx }}</span>
+                <div class="h-8px flex-1 overflow-hidden rounded-full" style="background: var(--n-border-color)">
+                  <div
+                    class="h-full rounded-full transition-all duration-500"
+                    :style="{ width: `${Math.max(val, 2)}%`, backgroundColor: getCoreColor(val) }"
+                  ></div>
+                </div>
+                <span class="w-32px shrink-0 text-right text-12px">{{ Math.round(val) }}%</span>
               </div>
-              <span class="w-38px shrink-0 text-right text-12px">{{ Math.round(val) }}%</span>
             </div>
+            <div ref="cpuDomRef" class="h-200px w-200px shrink-0"></div>
           </div>
-          <div ref="cpuDomRef" class="h-200px w-200px shrink-0"></div>
         </div>
       </NCard>
     </NGi>
@@ -143,21 +145,23 @@ function getCoreColor(val: number): string {
     <!-- Memory -->
     <NGi>
       <NCard size="small" :title="$t('page.monitor.memoryUsage')">
-        <div class="flex items-center gap-16px" style="min-height: 220px">
-          <div class="flex-1">
-            <NDescriptions label-placement="left" :column="1" bordered size="small">
-              <NDescriptionsItem label="Total (MB)">
-                {{ (metrics?.memory?.total_mb ?? 0).toLocaleString() }}
-              </NDescriptionsItem>
-              <NDescriptionsItem label="Used (MB)">
-                {{ (metrics?.memory?.used_mb ?? 0).toLocaleString() }}
-              </NDescriptionsItem>
-              <NDescriptionsItem label="Free (MB)">
-                {{ (metrics?.memory?.free_mb ?? 0).toLocaleString() }}
-              </NDescriptionsItem>
-            </NDescriptions>
+        <div class="card-body">
+          <div class="flex items-center gap-16px h-full">
+            <div class="flex-1">
+              <NDescriptions label-placement="left" :column="1" bordered size="small">
+                <NDescriptionsItem label="Total (MB)">
+                  {{ (metrics?.memory?.total_mb ?? 0).toLocaleString() }}
+                </NDescriptionsItem>
+                <NDescriptionsItem label="Used (MB)">
+                  {{ (metrics?.memory?.used_mb ?? 0).toLocaleString() }}
+                </NDescriptionsItem>
+                <NDescriptionsItem label="Free (MB)">
+                  {{ (metrics?.memory?.free_mb ?? 0).toLocaleString() }}
+                </NDescriptionsItem>
+              </NDescriptions>
+            </div>
+            <div ref="memoryDomRef" class="h-200px w-200px shrink-0"></div>
           </div>
-          <div ref="memoryDomRef" class="h-200px w-200px shrink-0"></div>
         </div>
       </NCard>
     </NGi>
@@ -165,7 +169,7 @@ function getCoreColor(val: number): string {
     <!-- System Info -->
     <NGi>
       <NCard size="small" :title="$t('page.monitor.systemInfo')">
-        <div class="flex flex-col justify-center" style="min-height: 220px">
+        <div class="card-body flex flex-col justify-center">
           <NDescriptions label-placement="left" :column="1" bordered size="small">
             <NDescriptionsItem :label="$t('page.monitor.osName')">
               {{ metrics?.os_name ?? '-' }}
@@ -190,28 +194,35 @@ function getCoreColor(val: number): string {
     <!-- Disk -->
     <NGi>
       <NCard size="small" :title="$t('page.monitor.diskUsage')">
-        <div class="flex items-center gap-16px" style="min-height: 220px">
-          <div class="flex-1">
-            <NDescriptions label-placement="left" :column="1" bordered size="small">
-              <NDescriptionsItem label="Total (MB)">
-                {{ (metrics?.disk?.total_mb ?? 0).toLocaleString() }}
-              </NDescriptionsItem>
-              <NDescriptionsItem label="Used (MB)">
-                {{ (metrics?.disk?.used_mb ?? 0).toLocaleString() }}
-              </NDescriptionsItem>
-              <NDescriptionsItem label="Total (GB)">
-                {{ (metrics?.disk?.total ?? 0).toLocaleString() }}
-              </NDescriptionsItem>
-              <NDescriptionsItem label="Used (GB)">
-                {{ (metrics?.disk?.used ?? 0).toLocaleString() }}
-              </NDescriptionsItem>
-            </NDescriptions>
+        <div class="card-body">
+          <div class="flex items-center gap-16px h-full">
+            <div class="flex-1">
+              <NDescriptions label-placement="left" :column="1" bordered size="small">
+                <NDescriptionsItem label="Total (MB)">
+                  {{ (metrics?.disk?.total_mb ?? 0).toLocaleString() }}
+                </NDescriptionsItem>
+                <NDescriptionsItem label="Used (MB)">
+                  {{ (metrics?.disk?.used_mb ?? 0).toLocaleString() }}
+                </NDescriptionsItem>
+                <NDescriptionsItem label="Total (GB)">
+                  {{ (metrics?.disk?.total ?? 0).toLocaleString() }}
+                </NDescriptionsItem>
+                <NDescriptionsItem label="Used (GB)">
+                  {{ (metrics?.disk?.used ?? 0).toLocaleString() }}
+                </NDescriptionsItem>
+              </NDescriptions>
+            </div>
+            <div ref="diskDomRef" class="h-200px w-200px shrink-0"></div>
           </div>
-          <div ref="diskDomRef" class="h-200px w-200px shrink-0"></div>
         </div>
       </NCard>
     </NGi>
   </NGrid>
 </template>
 
-<style scoped></style>
+<style scoped>
+.card-body {
+  height: 280px;
+  overflow-y: auto;
+}
+</style>
