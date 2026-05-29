@@ -352,6 +352,9 @@ declare namespace App {
         noData: string;
         operate: string;
         pleaseCheckValue: string;
+        pleaseEnter: string;
+        status: string;
+        title: string;
         refresh: string;
         reset: string;
         search: string;
@@ -595,6 +598,7 @@ declare namespace App {
             fileName: string;
             uploadResult: string;
             dragOrClick: string;
+            startUpload: string;
           };
         };
 
@@ -667,6 +671,7 @@ declare namespace App {
             title: string;
             id: string;
             parentId: string;
+            parentMenu: string;
             menuType: string;
             menuName: string;
             routeName: string;
@@ -691,9 +696,11 @@ declare namespace App {
             buttonCode: string;
             buttonDesc: string;
             permission: string;
+            isSystem: string;
             menuStatus: string;
             form: {
               home: string;
+              parentMenu: string;
               menuType: string;
               menuName: string;
               routeName: string;
@@ -718,6 +725,7 @@ declare namespace App {
               buttonCode: string;
               buttonDesc: string;
               permission: string;
+              isSystem: string;
               menuStatus: string;
             };
             addMenu: string;
@@ -833,6 +841,10 @@ declare namespace App {
             createdAt: string;
             reasonPlaceholder: string;
             addTitle: string;
+            form: {
+              ip: string;
+              type: string;
+            };
           };
           announcement: {
             title: string;
@@ -858,6 +870,13 @@ declare namespace App {
               role: string;
               user: string;
             };
+            form: {
+              title: string;
+              type: string;
+              targetType: string;
+              status: string;
+              priority: string;
+            };
           };
           file: {
             title: string;
@@ -881,6 +900,75 @@ declare namespace App {
             };
           };
         };
+        
+      log: {
+        loginLog: {
+          title: string;
+          username: string;
+          ip: string;
+          status: string;
+          detail: string;
+          userAgent: string;
+          loginTime: string;
+          success: string;
+          failed: string;
+          clear: string;
+          clearConfirm: string;
+          form: {
+            username: string;
+            ip: string;
+            status: string;
+            timeRange: string;
+            startTime: string;
+            endTime: string;
+          };
+        };
+        operationLog: {
+          title: string;
+          username: string;
+          module: string;
+          action: string;
+          description: string;
+          method: string;
+          path: string;
+          ip: string;
+          responseCode: string;
+          responseResult: string;
+          elapsedMs: string;
+          requestParams: string;
+          operateTime: string;
+          viewDetail: string;
+          detailTitle: string;
+          clear: string;
+          clearConfirm: string;
+          form: {
+            username: string;
+            module: string;
+            action: string;
+            timeRange: string;
+            startTime: string;
+            endTime: string;
+          };
+        };
+        onlineUser: {
+          title: string;
+          username: string;
+          nickname: string;
+          ip: string;
+          userAgent: string;
+          loginTime: string;
+          kick: string;
+          kickAll: string;
+          kickConfirm: string;
+          kickAllConfirm: string;
+          kickSuccess: string;
+          kickAllSuccess: string;
+          form: {
+            username: string;
+            ip: string;
+          };
+        };
+      };
       };
       form: {
         required: string;
