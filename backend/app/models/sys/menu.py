@@ -74,6 +74,9 @@ class SysMenu(Base):
     meta_hidden: Mapped[bool] = mapped_column(
         Boolean, default=False, comment="是否隐藏菜单"
     )
+    meta_href: Mapped[str] = mapped_column(
+        String(500), nullable=True, default=None, comment="外部链接地址"
+    )
     meta_affix: Mapped[bool] = mapped_column(
         Boolean, default=False, comment="是否固定标签"
     )

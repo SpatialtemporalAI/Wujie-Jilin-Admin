@@ -130,13 +130,13 @@ export function fetchCreateMenu(menu: Partial<Api.SystemManage.Menu>) {
       path: menu.routePath,
       component: menu.component,
       redirect: null,
-      permission: null,
+      permission: menu.permission || null,
       meta_icon: menu.icon,
       meta_hidden: menu.hideInMenu || false,
-      meta_affix: menu.fixedIndexInTab !== null,
       meta_breadcrumb: true,
+      meta_href: menu.href || null,
       status: true,
-      type: menu.menuType === '1' ? 'catalog' : 'menu',
+      type: menu.menuType === '1' ? 'catalog' : menu.menuType === '3' ? 'button' : 'menu',
       sort: menu.order || 0,
       is_system: enableStatusToBoolean(menu.is_system)
     }
@@ -155,6 +155,7 @@ export function fetchUpdateMenu(menuId: number, menu: Partial<Api.SystemManage.M
       component: menu.component,
       meta_icon: menu.icon,
       meta_hidden: menu.hideInMenu || false,
+      meta_href: menu.href || null,
       status: enableStatusToBoolean(menu.status),
       sort: menu.order,
       is_system: enableStatusToBoolean(menu.is_system)

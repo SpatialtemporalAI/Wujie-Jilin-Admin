@@ -37,7 +37,7 @@ class RouteService:
             icon=menu.meta_icon,
             order=menu.sort if menu.sort else None,
             hideInMenu=menu.meta_hidden if menu.meta_hidden else None,
-            href=menu.component if menu.type == MenuType.EXTERNAL else None,
+            href=menu.meta_href if menu.meta_href else None,
         )
 
         children = None
@@ -72,7 +72,7 @@ class RouteService:
             id=str(menu.id),
             name=route_name,
             path=menu.path or "",
-            component=menu.component,
+            component=None if menu.meta_href else menu.component,
             redirect=menu.redirect,
             meta=meta,
             children=children,
