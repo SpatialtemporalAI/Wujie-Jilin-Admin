@@ -37,6 +37,7 @@ class RouteService:
             icon=menu.meta_icon,
             order=menu.sort if menu.sort else None,
             hideInMenu=menu.meta_hidden if menu.meta_hidden else None,
+            keepAlive=menu.meta_keep_alive if menu.meta_keep_alive else None,
             href=menu.meta_href if menu.meta_href else None,
         )
 

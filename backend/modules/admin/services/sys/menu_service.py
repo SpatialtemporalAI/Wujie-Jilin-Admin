@@ -297,6 +297,7 @@ class MenuService:
             meta_affix=menu_create.meta_affix,
             meta_breadcrumb=menu_create.meta_breadcrumb,
             meta_href=menu_create.meta_href,
+            meta_keep_alive=menu_create.meta_keep_alive,
             status=menu_create.status,
             type=menu_create.type,
             sort=menu_create.sort,

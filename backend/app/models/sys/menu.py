@@ -77,6 +77,9 @@ class SysMenu(Base):
     meta_href: Mapped[str] = mapped_column(
         String(500), nullable=True, default=None, comment="外部链接地址"
     )
+    meta_keep_alive: Mapped[bool] = mapped_column(
+        Boolean, default=False, comment="是否缓存路由"
+    )
     meta_affix: Mapped[bool] = mapped_column(
         Boolean, default=False, comment="是否固定标签"
     )

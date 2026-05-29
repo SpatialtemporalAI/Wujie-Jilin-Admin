@@ -135,6 +135,7 @@ export function fetchCreateMenu(menu: Partial<Api.SystemManage.Menu>) {
       meta_hidden: menu.hideInMenu || false,
       meta_breadcrumb: true,
       meta_href: menu.href || null,
+      meta_keep_alive: menu.keepAlive || false,
       status: true,
       type: menu.menuType === '1' ? 'catalog' : menu.menuType === '3' ? 'button' : 'menu',
       sort: menu.order || 0,
@@ -156,6 +157,7 @@ export function fetchUpdateMenu(menuId: number, menu: Partial<Api.SystemManage.M
       meta_icon: menu.icon,
       meta_hidden: menu.hideInMenu || false,
       meta_href: menu.href || null,
+      meta_keep_alive: menu.keepAlive || false,
       status: enableStatusToBoolean(menu.status),
       sort: menu.order,
       is_system: enableStatusToBoolean(menu.is_system)
