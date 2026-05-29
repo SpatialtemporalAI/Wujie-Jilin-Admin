@@ -19,6 +19,8 @@ declare namespace Api {
       used: number;
       free: number;
       percent: number;
+      total_mb: number;
+      used_mb: number;
     };
 
     /** 系统指标 */
@@ -29,6 +31,8 @@ declare namespace Api {
       boot_time: string;
       process_count: number;
       python_version: string;
+      os_name: string;
+      cpu_count: number;
     };
 
     /** API统计 */

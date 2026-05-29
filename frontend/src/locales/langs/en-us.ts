@@ -347,6 +347,8 @@ const local: App.I18n.Schema = {
       uptime: 'Uptime',
       processCount: 'Process Count',
       pythonVersion: 'Python Version',
+      osName: 'OS',
+      cpuCount: 'CPU Cores',
       day: 'd',
       hour: 'h',
       minute: 'm'

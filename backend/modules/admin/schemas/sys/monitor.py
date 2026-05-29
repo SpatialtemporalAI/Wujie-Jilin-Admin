@@ -26,6 +26,8 @@ class DiskInfo(BaseModel):
     used: int = Field(..., description="已用磁盘(GB)")
     free: int = Field(..., description="可用磁盘(GB)")
     percent: float = Field(..., description="使用率(%)")
+    total_mb: int = Field(..., description="总磁盘(MB)")
+    used_mb: int = Field(..., description="已用磁盘(MB)")
 
 
 class SystemMetricsResponse(BaseEntity):
@@ -36,6 +38,8 @@ class SystemMetricsResponse(BaseEntity):
     boot_time: datetime = Field(..., description="系统启动时间")
     process_count: int = Field(..., description="进程数量")
     python_version: str = Field(..., description="Python版本")
+    os_name: str = Field(..., description="操作系统")
+    cpu_count: int = Field(..., description="CPU核心数")
 
 
 class ApiStatsQueryParams(BaseEntity):

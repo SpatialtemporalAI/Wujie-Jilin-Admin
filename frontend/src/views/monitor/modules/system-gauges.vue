@@ -7,12 +7,20 @@ interface Props {
   cpuPercent?: number;
   memoryPercent?: number;
   diskPercent?: number;
+  diskTotalMb?: number;
+  diskUsedMb?: number;
+  diskTotalGb?: number;
+  diskUsedGb?: number;
 }
 
 const props = withDefaults(defineProps<Props>(), {
   cpuPercent: 0,
   memoryPercent: 0,
-  diskPercent: 0
+  diskPercent: 0,
+  diskTotalMb: 0,
+  diskUsedMb: 0,
+  diskTotalGb: 0,
+  diskUsedGb: 0
 });
 
 function getGaugeOption(title: string, value: number, color: string) {
@@ -133,15 +141,33 @@ watch(
 </script>
 
 <template>
-  <NGrid cols="s:1 m:3" responsive="screen" :x-gap="16" :y-gap="16">
+  <NGrid cols="s:1 m:2" responsive="screen" :x-gap="16" :y-gap="16">
     <NGi>
       <div ref="cpuDomRef" class="h-260px overflow-hidden"></div>
     </NGi>
     <NGi>
       <div ref="memoryDomRef" class="h-260px overflow-hidden"></div>
     </NGi>
-    <NGi>
-      <div ref="diskDomRef" class="h-260px overflow-hidden"></div>
+    <NGi span="m:2">
+      <div class="flex items-center">
+        <div class="flex-1">
+          <NDescriptions label-placement="left" :column="1" bordered size="small">
+            <NDescriptionsItem label="Total (MB)">
+              {{ props.diskTotalMb?.toLocaleString() }}
+            </NDescriptionsItem>
+            <NDescriptionsItem label="Used (MB)">
+              {{ props.diskUsedMb?.toLocaleString() }}
+            </NDescriptionsItem>
+            <NDescriptionsItem label="Total (GB)">
+              {{ props.diskTotalGb?.toLocaleString() }}
+            </NDescriptionsItem>
+            <NDescriptionsItem label="Used (GB)">
+              {{ props.diskUsedGb?.toLocaleString() }}
+            </NDescriptionsItem>
+          </NDescriptions>
+        </div>
+        <div ref="diskDomRef" class="h-260px w-300px flex-shrink-0 overflow-hidden"></div>
+      </div>
     </NGi>
   </NGrid>
 </template>

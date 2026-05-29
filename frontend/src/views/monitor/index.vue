@@ -18,6 +18,8 @@ const diskPercent = computed(() => systemMetrics.value?.disk.percent ?? 0);
 const bootTime = computed(() => systemMetrics.value?.boot_time ?? '');
 const processCount = computed(() => systemMetrics.value?.process_count ?? 0);
 const pythonVersion = computed(() => systemMetrics.value?.python_version ?? '');
+const osName = computed(() => systemMetrics.value?.os_name ?? '');
+const cpuCount = computed(() => systemMetrics.value?.cpu_count ?? 0);
 </script>
 
 <template>
@@ -25,7 +27,15 @@ const pythonVersion = computed(() => systemMetrics.value?.python_version ?? '');
     <NSpin :show="loading">
       <!-- 仪表盘: CPU / 内存 / 磁盘 -->
       <NCard :bordered="false" :title="$t('page.monitor.systemResources')" class="card-wrapper">
-        <SystemGauges :cpu-percent="cpuPercent" :memory-percent="memoryPercent" :disk-percent="diskPercent" />
+        <SystemGauges
+          :cpu-percent="cpuPercent"
+          :memory-percent="memoryPercent"
+          :disk-percent="diskPercent"
+          :disk-total-mb="systemMetrics?.disk?.total_mb ?? 0"
+          :disk-used-mb="systemMetrics?.disk?.used_mb ?? 0"
+          :disk-total-gb="systemMetrics?.disk?.total ?? 0"
+          :disk-used-gb="systemMetrics?.disk?.used ?? 0"
+        />
       </NCard>
 
       <!-- API 统计折线图 -->
@@ -39,7 +49,13 @@ const pythonVersion = computed(() => systemMetrics.value?.python_version ?? '');
 
       <!-- 系统信息卡片 -->
       <NCard :bordered="false" :title="$t('page.monitor.systemInfo')" class="card-wrapper">
-        <SystemInfoCards :boot-time="bootTime" :process-count="processCount" :python-version="pythonVersion" />
+        <SystemInfoCards
+          :boot-time="bootTime"
+          :process-count="processCount"
+          :python-version="pythonVersion"
+          :os-name="osName"
+          :cpu-count="cpuCount"
+        />
       </NCard>
     </NSpin>
   </NSpace>

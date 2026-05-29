@@ -343,6 +343,8 @@ const local: App.I18n.Schema = {
       uptime: '运行时长',
       processCount: '进程数',
       pythonVersion: 'Python 版本',
+      osName: '操作系统',
+      cpuCount: 'CPU 核心数',
       day: '天',
       hour: '小时',
       minute: '分钟'

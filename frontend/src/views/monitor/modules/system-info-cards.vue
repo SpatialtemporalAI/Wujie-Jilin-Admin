@@ -6,12 +6,16 @@ interface Props {
   bootTime?: string;
   processCount?: number;
   pythonVersion?: string;
+  osName?: string;
+  cpuCount?: number;
 }
 
 const props = withDefaults(defineProps<Props>(), {
   bootTime: '',
   processCount: 0,
-  pythonVersion: ''
+  pythonVersion: '',
+  osName: '',
+  cpuCount: 0
 });
 
 const uptime = computed(() => {
@@ -26,6 +30,18 @@ const uptime = computed(() => {
 });
 
 const cards = computed(() => [
+  {
+    key: 'osName',
+    title: $t('page.monitor.osName'),
+    value: props.osName || '-',
+    icon: 'mdi:monitor-dashboard'
+  },
+  {
+    key: 'cpuCount',
+    title: $t('page.monitor.cpuCount'),
+    value: String(props.cpuCount),
+    icon: 'mdi:chip'
+  },
   {
     key: 'uptime',
     title: $t('page.monitor.uptime'),
@@ -48,7 +64,7 @@ const cards = computed(() => [
 </script>
 
 <template>
-  <NGrid cols="s:1 m:3" responsive="screen" :x-gap="16" :y-gap="16">
+  <NGrid cols="s:1 m:2 l:5" responsive="screen" :x-gap="16" :y-gap="16">
     <NGi v-for="item in cards" :key="item.key">
       <NCard size="small">
         <div class="flex items-center gap-12px">

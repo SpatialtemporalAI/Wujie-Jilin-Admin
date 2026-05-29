@@ -26,6 +26,11 @@ class MonitorService:
         return round(n / (1024 ** 3))
 
     @staticmethod
+    def _bytes_to_mb(n: int) -> int:
+        """将字节转换为MB（取整）"""
+        return round(n / (1024 ** 2))
+
+    @staticmethod
     async def get_system_metrics() -> dict:
         """
         获取系统实时指标
@@ -57,6 +62,8 @@ class MonitorService:
             "used": MonitorService._bytes_to_gb(disk.used),
             "free": MonitorService._bytes_to_gb(disk.free),
             "percent": disk.percent,
+            "total_mb": MonitorService._bytes_to_mb(disk.total),
+            "used_mb": MonitorService._bytes_to_mb(disk.used),
         }
 
         # 系统信息
@@ -71,6 +78,8 @@ class MonitorService:
             "boot_time": boot_time,
             "process_count": process_count,
             "python_version": python_version,
+            "os_name": platform.platform(),
+            "cpu_count": psutil.cpu_count(logical=True),
         }
 
     @staticmethod
