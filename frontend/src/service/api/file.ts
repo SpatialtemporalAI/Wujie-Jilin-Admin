@@ -8,7 +8,7 @@ const { baseURL } = getServiceBaseURL(import.meta.env, isHttpProxy);
 
 function getAuthHeader() {
   const token = localStg.get('token');
-  return token ? `Bearer ${token}` : '';
+  return token || '';
 }
 
 /** 上传单个文件 */
@@ -61,8 +61,10 @@ export async function fetchDownloadFile(fileId: number): Promise<Blob> {
 
 /** 获取文件预览 URL (用于 img/video src) */
 export function getFilePreviewUrl(fileId: number): string {
+  // localStg 存的是 "Bearer eyJ..."，query 参数只需传纯 token
   const token = localStg.get('token');
-  return `${baseURL}/admin/sys/file/${fileId}/preview?token=${token}`;
+  const rawToken = token?.replace(/^Bearer\s+/i, '') || '';
+  return `${baseURL}/admin/sys/file/${fileId}/preview?token=${rawToken}`;
 }
 
 /** 删除文件 */

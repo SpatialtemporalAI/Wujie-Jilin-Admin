@@ -5,6 +5,7 @@
 存储后端抽象基类
 """
 from abc import ABC, abstractmethod
+from collections.abc import AsyncGenerator
 
 
 class StorageBackend(ABC):
@@ -27,7 +28,7 @@ class StorageBackend(ABC):
     @abstractmethod
     async def read(self, file_path: str) -> bytes:
         """
-        读取文件
+        读取文件（全量，小文件用）
 
         Args:
             file_path: 文件存储路径
@@ -58,4 +59,26 @@ class StorageBackend(ABC):
 
         Returns:
             文件访问 URL
+        """
+
+    @abstractmethod
+    def file_size(self, file_path: str) -> int:
+        """获取文件大小（字节）"""
+
+    @abstractmethod
+    def get_full_path(self, file_path: str) -> str:
+        """获取文件系统绝对路径"""
+
+    @abstractmethod
+    def stream(
+        self, file_path: str, start: int = 0, end: int | None = None, chunk_size: int = 64 * 1024
+    ) -> AsyncGenerator[bytes, None]:
+        """
+        分块流式读取文件
+
+        Args:
+            file_path: 文件存储路径
+            start: 起始字节偏移
+            end: 结束字节偏移（含），None 表示文件末尾
+            chunk_size: 每块大小（字节）
         """

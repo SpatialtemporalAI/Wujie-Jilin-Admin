@@ -4,12 +4,12 @@
 """
 文件管理接口
 """
-import io
 import logging
 from typing import List
+from urllib.parse import quote
 
 from fastapi import APIRouter, Depends, UploadFile, File, Query, Request
-from fastapi.responses import StreamingResponse, Response
+from fastapi.responses import StreamingResponse, FileResponse, Response
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from database.db_manager import get_session
@@ -25,12 +25,17 @@ from modules.admin.schemas.sys.file import (
     SysFileListResponse,
 )
 from core.security.oauth.jwt import JWTAuthManager
+from core.storage import get_storage_backend
 
 logger = logging.getLogger(__name__)
 
 file_router = APIRouter(
     prefix="/file", tags=["系统管理/文件管理"], dependencies=[Depends(current_user)]
 )
+
+# 预览路由独立，不走 router 级别的 current_user 依赖
+# 浏览器通过 <img>/<video> src 直接访问，不会携带 Authorization header
+preview_router = APIRouter(prefix="/file", tags=["系统管理/文件管理"])
 
 
 @file_router.post(
@@ -132,17 +137,19 @@ async def download_file(
     db: AsyncSession = Depends(get_session),
 ):
     """下载文件"""
-    sys_file, content = await FileService.get_file_content(db, file_id)
-    return StreamingResponse(
-        io.BytesIO(content),
+    sys_file = await FileService.get_file(db, file_id)
+    storage = get_storage_backend()
+    full_path = storage.get_full_path(sys_file.file_path)
+    encoded_name = quote(sys_file.original_name)
+    return FileResponse(
+        full_path,
         media_type=sys_file.mime_type,
-        headers={
-            "Content-Disposition": f'attachment; filename="{sys_file.original_name}"'
-        },
+        filename=sys_file.original_name,
+        headers={"Content-Disposition": f"attachment; filename*=UTF-8''{encoded_name}"},
     )
 
 
-@file_router.get(
+@preview_router.get(
     "/{file_id}/preview",
     summary="在线预览文件",
 )
@@ -152,38 +159,37 @@ async def preview_file(
     request: Request = None,
     db: AsyncSession = Depends(get_session),
 ):
-    """在线预览文件（图片/视频），支持 Range 请求"""
-    # 通过 query 参数验证 token
+    """在线预览文件（图片/视频），通过 query 参数 token 鉴权，支持 Range 请求"""
+    raw_token = token.removeprefix("Bearer ")
     try:
-        JWTAuthManager.decode_token(token)
+        JWTAuthManager.decode_token(raw_token)
     except Exception:
         return Response(status_code=401, content="Unauthorized")
 
-    sys_file, content = await FileService.get_file_content(db, file_id)
-    total_size = len(content)
+    sys_file = await FileService.get_file(db, file_id)
+    storage = get_storage_backend()
+    total_size = storage.file_size(sys_file.file_path)
 
-    # 处理 Range 请求（视频播放需要）
     range_header = request.headers.get("range") if request else None
     if range_header:
         range_match = range_header.replace("bytes=", "").split("-")
         start = int(range_match[0]) if range_match[0] else 0
         end = int(range_match[1]) if range_match[1] else total_size - 1
         end = min(end, total_size - 1)
-        chunk = content[start:end + 1]
-        return Response(
-            content=chunk,
+        return StreamingResponse(
+            storage.stream(sys_file.file_path, start, end),
             status_code=206,
             media_type=sys_file.mime_type,
             headers={
                 "Content-Range": f"bytes {start}-{end}/{total_size}",
                 "Accept-Ranges": "bytes",
-                "Content-Length": str(len(chunk)),
+                "Content-Length": str(end - start + 1),
                 "Cache-Control": "private, max-age=3600",
             },
         )
 
-    return Response(
-        content=content,
+    return StreamingResponse(
+        storage.stream(sys_file.file_path),
         media_type=sys_file.mime_type,
         headers={
             "Accept-Ranges": "bytes",
