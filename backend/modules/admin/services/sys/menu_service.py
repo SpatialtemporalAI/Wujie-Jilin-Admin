@@ -292,8 +292,6 @@ class MenuService:
             component=menu_create.component,
             redirect=menu_create.redirect,
             permission=menu_create.permission,
-            i18n_key=menu_create.i18n_key,
-            meta_title=menu_create.meta_title,
             meta_icon=menu_create.meta_icon,
             meta_hidden=menu_create.meta_hidden,
             meta_affix=menu_create.meta_affix,

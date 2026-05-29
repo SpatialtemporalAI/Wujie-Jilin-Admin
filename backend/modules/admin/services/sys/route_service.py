@@ -29,11 +29,11 @@ class RouteService:
     @staticmethod
     def _menu_to_route(menu: SysMenu) -> MenuRouteResponse:
         """将 SysMenu 模型转换为 MenuRouteResponse"""
-        route_name = menu.meta_title or menu.name
+        route_name = menu.name
 
         meta = RouteMetaResponse(
             title=menu.name,
-            i18nKey=menu.i18n_key or f"route.{route_name}",
+            i18nKey=f"route.{menu.name}",
             icon=menu.meta_icon,
             order=menu.sort if menu.sort else None,
             hideInMenu=menu.meta_hidden if menu.meta_hidden else None,

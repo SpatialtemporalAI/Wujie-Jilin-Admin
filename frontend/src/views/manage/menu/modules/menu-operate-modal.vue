@@ -58,11 +58,9 @@ type Model = Pick<
   Api.SystemManage.Menu,
   | 'menuType'
   | 'menuName'
-  | 'routeName'
   | 'routePath'
   | 'component'
   | 'order'
-  | 'i18nKey'
   | 'icon'
   | 'iconType'
   | 'status'
@@ -152,13 +150,11 @@ function createDefaultModel(): Model {
   return {
     menuType: '1',
     menuName: '',
-    routeName: '',
     routePath: '',
     pathParam: '',
     component: '',
     layout: 'base',
     page: '',
-    i18nKey: null,
     icon: '',
     iconType: '1',
     parentId: 0,
@@ -178,20 +174,18 @@ function createDefaultModel(): Model {
   };
 }
 
-type RuleKey = Extract<keyof Model, 'menuName' | 'status' | 'routeName' | 'routePath' | 'permission'>;
+type RuleKey = Extract<keyof Model, 'menuName' | 'status' | 'routePath' | 'permission'>;
 
 const rules = computed<Record<RuleKey, App.Global.FormRule>>(() => {
   const base: Record<RuleKey, App.Global.FormRule> = {
     menuName: defaultRequiredRule,
     status: defaultRequiredRule,
-    routeName: defaultRequiredRule,
     routePath: defaultRequiredRule,
     permission: defaultRequiredRule
   };
   if (model.value.menuType === '3') {
     return {
       ...base,
-      routeName: { required: false },
       routePath: { required: false }
     } as Record<RuleKey, App.Global.FormRule>;
   }
@@ -223,8 +217,8 @@ const isButton = computed(() => model.value.menuType === '3');
 const pageOptions = computed(() => {
   const allPages = [...props.allPages];
 
-  if (model.value.routeName && !allPages.includes(model.value.routeName)) {
-    allPages.unshift(model.value.routeName);
+  if (model.value.menuName && !allPages.includes(model.value.menuName)) {
+    allPages.unshift(model.value.menuName);
   }
 
   const opts: CommonType.Option[] = allPages.map(page => ({
@@ -295,19 +289,11 @@ function closeDrawer() {
   visible.value = false;
 }
 
-function handleUpdateRoutePathByRouteName() {
-  if (model.value.routeName) {
-    model.value.routePath = getRoutePathByRouteName(model.value.routeName);
+function handleUpdateRoutePathByMenuName() {
+  if (model.value.menuName) {
+    model.value.routePath = getRoutePathByRouteName(model.value.menuName);
   } else {
     model.value.routePath = '';
-  }
-}
-
-function handleUpdateI18nKeyByRouteName() {
-  if (model.value.routeName) {
-    model.value.i18nKey = `route.${model.value.routeName}` as App.I18n.I18nKey;
-  } else {
-    model.value.i18nKey = null;
   }
 }
 
@@ -324,7 +310,6 @@ function getSubmitParams() {
   const { layout, page, pathParam, ...params } = model.value;
 
   if (model.value.menuType === '3') {
-    params.routeName = '';
     params.routePath = '';
     params.component = '';
     params.icon = '';
@@ -376,10 +361,9 @@ watch(visible, () => {
 });
 
 watch(
-  () => model.value.routeName,
+  () => model.value.menuName,
   () => {
-    handleUpdateRoutePathByRouteName();
-    handleUpdateI18nKeyByRouteName();
+    handleUpdateRoutePathByMenuName();
   }
 );
 </script>
@@ -417,9 +401,6 @@ watch(
           >
             <NInput v-model:value="model.permission" :placeholder="$t('page.manage.menu.form.permission')" />
           </NFormItemGi>
-          <NFormItemGi v-if="!isButton" span="24 m:12" :label="$t('page.manage.menu.routeName')" path="routeName">
-            <NInput v-model:value="model.routeName" :placeholder="$t('page.manage.menu.form.routeName')" />
-          </NFormItemGi>
           <NFormItemGi v-if="!isButton" span="24 m:12" :label="$t('page.manage.menu.routePath')" path="routePath">
             <NInput v-model:value="model.routePath" disabled :placeholder="$t('page.manage.menu.form.routePath')" />
           </NFormItemGi>
@@ -439,9 +420,6 @@ watch(
               :options="pageOptions"
               :placeholder="$t('page.manage.menu.form.page')"
             />
-          </NFormItemGi>
-          <NFormItemGi v-if="!isButton" span="24 m:12" :label="$t('page.manage.menu.i18nKey')" path="i18nKey">
-            <NInput v-model:value="model.i18nKey" :placeholder="$t('page.manage.menu.form.i18nKey')" />
           </NFormItemGi>
           <NFormItemGi span="24 m:12" :label="$t('page.manage.menu.order')" path="order">
             <NInputNumber v-model:value="model.order" class="w-full" :placeholder="$t('page.manage.menu.form.order')" />

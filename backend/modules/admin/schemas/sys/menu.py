@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 
 from typing import Optional, List, Annotated
-from pydantic import Field, ConfigDict, field_validator, BeforeValidator, AliasChoices
+from pydantic import Field, ConfigDict, field_validator, model_validator, BeforeValidator, AliasChoices
 from datetime import datetime
 from zoneinfo import ZoneInfo
 from app.models.common.base import BaseRespEntity, BaseEntity, BoolField
@@ -73,7 +73,6 @@ class SysMenuCreate(BaseEntity):
     component: Optional[str] = Field(None, description="组件路径", max_length=255)
     redirect: Optional[str] = Field(None, description="重定向路径", max_length=255)
     permission: Optional[str] = Field(None, description="权限标识", max_length=100)
-    meta_title: Optional[str] = Field(None, description="路由标题", max_length=100)
     meta_icon: Optional[str] = Field(None, description="路由图标", max_length=50)
     meta_hidden: bool = Field(False, description="是否隐藏菜单")
     meta_affix: bool = Field(False, description="是否固定标签")
@@ -82,7 +81,6 @@ class SysMenuCreate(BaseEntity):
     type: MenuType = Field(MenuType.MENU, description="菜单类型")
     is_system: bool = Field(False, description="是否为系统内置菜单")
     sort: int = Field(0, description="排序号")
-    i18n_key: Optional[str] = Field(None, description="国际化键", max_length=100)
 
 
 class SysMenuUpdate(BaseEntity):
@@ -97,7 +95,6 @@ class SysMenuUpdate(BaseEntity):
     component: Optional[str] = Field(None, description="组件路径", max_length=255)
     redirect: Optional[str] = Field(None, description="重定向路径", max_length=255)
     permission: Optional[str] = Field(None, description="权限标识", max_length=100)
-    meta_title: Optional[str] = Field(None, description="路由标题", max_length=100)
     meta_icon: Optional[str] = Field(None, description="路由图标", max_length=50)
     meta_hidden: Optional[bool] = Field(None, description="是否隐藏菜单")
     meta_affix: Optional[bool] = Field(None, description="是否固定标签")
@@ -106,7 +103,6 @@ class SysMenuUpdate(BaseEntity):
     type: Optional[MenuType] = Field(None, description="菜单类型")
     sort: Optional[int] = Field(None, description="排序号")
     is_system: Optional[bool] = Field(None, description="是否为系统内置菜单")
-    i18n_key: Optional[str] = Field(None, description="国际化键", max_length=100)
 
 
 class SysMenuSimpleResponse(BaseRespEntity):
@@ -138,14 +134,14 @@ class SysMenuResponseData(BaseRespEntity):
     id: int = Field(..., description="菜单ID")
     parentId: Optional[int] = Field(None, validation_alias=AliasChoices("parent_id", "parentId"), description="父菜单ID")
     menuName: str = Field(..., validation_alias=AliasChoices("name", "menuName"), description="菜单名称")
-    routeName: Optional[str] = Field(None, validation_alias=AliasChoices("meta_title", "routeName"), description="路由名称")
+    routeName: Optional[str] = Field(None, validation_alias="name", description="路由名称")
     routePath: Optional[str] = Field(None, validation_alias=AliasChoices("path", "routePath"), description="路由路径")
     component: Optional[str] = Field(None, description="组件路径")
     icon: Optional[str] = Field(None, validation_alias="meta_icon", description="图标")
     iconType: str = Field("1", description="图标类型：1-iconify，2-本地")
     menuType: Annotated[str, BeforeValidator(_menu_type_to_str)] = Field(..., validation_alias=AliasChoices("type", "menuType"), description="菜单类型：1-目录，2-菜单，3-按钮")
     order: int = Field(..., validation_alias=AliasChoices("sort", "order"), description="排序号")
-    i18nKey: Optional[str] = Field(None, validation_alias=AliasChoices("i18n_key", "i18nKey"), description="国际化键")
+    i18nKey: Optional[str] = Field(None, description="国际化键")
     keepAlive: bool = Field(False, description="是否缓存")
     constant: bool = Field(False, description="是否常量路由")
     href: Optional[str] = Field(None, description="外链地址")
@@ -160,6 +156,12 @@ class SysMenuResponseData(BaseRespEntity):
     createTime: Annotated[str, BeforeValidator(_format_datetime)] = Field(..., validation_alias=AliasChoices("created_at", "createTime"), description="创建时间")
     updateTime: Annotated[Optional[str], BeforeValidator(_format_datetime)] = Field(None, validation_alias=AliasChoices("updated_at", "updateTime"), description="更新时间")
     children: List["SysMenuResponseData"] = Field(default_factory=list, description="子菜单列表")
+
+    @model_validator(mode="after")
+    def set_auto_fields(self):
+        if self.i18nKey is None and self.menuName:
+            self.i18nKey = f"route.{self.menuName}"
+        return self
 
 
 SysMenuResponseData.model_rebuild()
