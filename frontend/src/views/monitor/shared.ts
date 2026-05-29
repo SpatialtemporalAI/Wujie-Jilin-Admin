@@ -25,7 +25,7 @@ export function useMonitorData() {
     }
   }
 
-  function startPolling(interval = 5000) {
+  function startPolling(interval = 30000) {
     refresh(true);
     timer = setInterval(() => refresh(false), interval);
   }
