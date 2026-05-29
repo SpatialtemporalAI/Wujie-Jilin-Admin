@@ -16,6 +16,7 @@ const props = withDefaults(defineProps<Props>(), {
 interface UploadResult {
   name: string;
   size: number;
+  extension: string;
   status: 'success' | 'error' | 'uploading';
   message?: string;
 }
@@ -53,9 +54,9 @@ function renderStatus(row: UploadResult) {
 
 const tableColumns = computed(() => [
   { title: $t('page.demo.upload.fileName'), key: 'name', ellipsis: { tooltip: true } },
+  { title: $t('page.demo.upload.fileType'), key: 'extension', width: 100, render: (row: UploadResult) => row.extension || '-' },
   { title: $t('page.demo.upload.fileSize'), key: 'size', width: 120, render: (row: UploadResult) => formatFileSize(row.size) },
-  { title: $t('page.demo.upload.uploadResult'), key: 'status', width: 120, render: renderStatus },
-  { title: $t('page.demo.upload.fileType'), key: 'message', width: 200, render: (row: UploadResult) => row.message || '-' }
+  { title: $t('page.demo.upload.uploadResult'), key: 'status', width: 120, render: renderStatus }
 ]);
 
 /** 将新结果插入数组头部，返回响应式代理的索引 */
@@ -75,11 +76,12 @@ function handleSingleCustomRequest({ file, onFinish, onError }: { file: UploadFi
     return;
   }
 
-  const idx = pushResult({ name: file.name, size: file.file.size, status: 'uploading' });
+  const ext = file.name.includes('.') ? `.${file.name.split('.').pop()!}` : '';
+  const idx = pushResult({ name: file.name, size: file.file.size, extension: ext, status: 'uploading' });
 
   fetchUploadFile(file.file).then(({ data, error }) => {
     if (!error && data) {
-      updateResult(idx, { name: data.original_name, size: data.file_size, status: 'success' });
+      updateResult(idx, { name: data.original_name, size: data.file_size, extension: data.extension, status: 'success' });
       onFinish();
     } else {
       updateResult(idx, { status: 'error', message: error?.msg || 'Upload failed' });
@@ -101,12 +103,13 @@ async function doBatchUpload() {
   uploadedCount.value = 0;
 
   for (const file of files) {
-    const idx = pushResult({ name: file.name, size: file.size, status: 'uploading' });
+    const ext = file.name.includes('.') ? `.${file.name.split('.').pop()!}` : '';
+    const idx = pushResult({ name: file.name, size: file.size, extension: ext, status: 'uploading' });
 
     try {
       const { data, error } = await fetchUploadFile(file);
       if (!error && data) {
-        updateResult(idx, { name: data.original_name, size: data.file_size, status: 'success' });
+        updateResult(idx, { name: data.original_name, size: data.file_size, extension: data.extension, status: 'success' });
       } else {
         updateResult(idx, { status: 'error', message: error?.msg || 'Upload failed' });
       }
