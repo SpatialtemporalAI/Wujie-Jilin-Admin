@@ -66,6 +66,11 @@ from .monitor import (
     ApiStatsQueryParams,
     ApiStatsResponse,
 )
+from .file import (
+    SysFileQueryParams,
+    SysFileUploadResponse,
+    SysFileListResponse,
+)
 
 __all__ = [
     # 用户相关
@@ -128,4 +133,8 @@ __all__ = [
     "SystemMetricsResponse",
     "ApiStatsQueryParams",
     "ApiStatsResponse",
+    # 文件相关
+    "SysFileQueryParams",
+    "SysFileUploadResponse",
+    "SysFileListResponse",
 ]

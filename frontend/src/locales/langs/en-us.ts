@@ -254,7 +254,9 @@ const local: App.I18n.Schema = {
     'log_login-log': 'Login Log',
     'log_online-user': 'Online Users',
     'log_operation-log': 'Operation Log',
-    monitor: 'Monitor Dashboard'
+    monitor: 'Monitor Dashboard',
+    demo: 'Upload Demo',
+    manage_file: 'File Management'
   },
   page: {
     login: {
@@ -347,6 +349,23 @@ const local: App.I18n.Schema = {
       day: 'd',
       hour: 'h',
       minute: 'm'
+    },
+    demo: {
+      upload: {
+        title: 'File Upload Demo',
+        singleUpload: 'Single File Upload',
+        multiUpload: 'Multi-File Upload',
+        selectFile: 'Select File',
+        selectFiles: 'Select Multiple Files',
+        uploading: 'Uploading...',
+        uploadSuccess: 'Upload Success',
+        uploadFailed: 'Upload Failed',
+        fileSize: 'File Size',
+        fileType: 'File Type',
+        fileName: 'File Name',
+        uploadResult: 'Upload Result',
+        dragOrClick: 'Click or drag files to this area to upload'
+      }
     },
 
     manage: {
@@ -623,6 +642,27 @@ const local: App.I18n.Schema = {
           targetType: 'Please select target type',
           status: 'Please select status',
           priority: 'Please select priority'
+        }
+      },
+      file: {
+        title: 'File List',
+        fileName: 'File Name',
+        fileSize: 'File Size',
+        fileType: 'File Type',
+        fileExtension: 'Extension',
+        storagePlatform: 'Storage',
+        uploadTime: 'Upload Time',
+        upload: 'Upload Files',
+        download: 'Download',
+        preview: 'Preview',
+        platform: {
+          local: 'Local Storage',
+          oss: 'Aliyun OSS'
+        },
+        form: {
+          fileName: 'Enter file name',
+          fileExtension: 'Enter extension',
+          storagePlatform: 'Select storage platform'
         }
       }
     },

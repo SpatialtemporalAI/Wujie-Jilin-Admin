@@ -250,7 +250,9 @@ const local: App.I18n.Schema = {
     'log_login-log': '登录日志',
     'log_online-user': '在线用户',
     'log_operation-log': '操作日志',
-    monitor: '监控仪表盘'
+    monitor: '监控仪表盘',
+    demo: '上传演示',
+    manage_file: '文件管理'
   },
   page: {
     login: {
@@ -343,6 +345,23 @@ const local: App.I18n.Schema = {
       day: '天',
       hour: '小时',
       minute: '分钟'
+    },
+    demo: {
+      upload: {
+        title: '文件上传演示',
+        singleUpload: '单文件上传',
+        multiUpload: '多文件上传',
+        selectFile: '选择文件',
+        selectFiles: '选择多个文件',
+        uploading: '上传中...',
+        uploadSuccess: '上传成功',
+        uploadFailed: '上传失败',
+        fileSize: '文件大小',
+        fileType: '文件类型',
+        fileName: '文件名称',
+        uploadResult: '上传结果',
+        dragOrClick: '点击或拖拽文件到此区域上传'
+      }
     },
     manage: {
       common: {
@@ -618,6 +637,27 @@ const local: App.I18n.Schema = {
           targetType: '请选择推送范围',
           status: '请选择状态',
           priority: '请选择优先级'
+        }
+      },
+      file: {
+        title: '文件列表',
+        fileName: '文件名称',
+        fileSize: '文件大小',
+        fileType: '文件类型',
+        fileExtension: '扩展名',
+        storagePlatform: '存储平台',
+        uploadTime: '上传时间',
+        upload: '上传文件',
+        download: '下载',
+        preview: '预览',
+        platform: {
+          local: '本地存储',
+          oss: '阿里云OSS'
+        },
+        form: {
+          fileName: '请输入文件名称',
+          fileExtension: '请输入扩展名',
+          storagePlatform: '请选择存储平台'
         }
       }
     },

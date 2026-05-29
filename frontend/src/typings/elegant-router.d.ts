@@ -20,6 +20,7 @@ declare module "@elegant-router/types" {
     "403": "/403";
     "404": "/404";
     "500": "/500";
+    "demo": "/demo";
     "home": "/home";
     "iframe-page": "/iframe-page/:url";
     "log": "/log";
@@ -31,6 +32,7 @@ declare module "@elegant-router/types" {
     "manage_announcement": "/manage/announcement";
     "manage_config": "/manage/config";
     "manage_dict": "/manage/dict";
+    "manage_file": "/manage/file";
     "manage_ip-blacklist": "/manage/ip-blacklist";
     "manage_menu": "/manage/menu";
     "manage_role": "/manage/role";
@@ -70,6 +72,7 @@ declare module "@elegant-router/types" {
     | "403"
     | "404"
     | "500"
+    | "demo"
     | "home"
     | "iframe-page"
     | "log"
@@ -97,6 +100,7 @@ declare module "@elegant-router/types" {
     | "500"
     | "iframe-page"
     | "login"
+    | "demo"
     | "home"
     | "log_login-log"
     | "log_online-user"
@@ -104,6 +108,7 @@ declare module "@elegant-router/types" {
     | "manage_announcement"
     | "manage_config"
     | "manage_dict"
+    | "manage_file"
     | "manage_ip-blacklist"
     | "manage_menu"
     | "manage_role"

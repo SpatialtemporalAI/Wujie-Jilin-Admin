@@ -40,6 +40,15 @@ export const generatedRoutes: GeneratedRoute[] = [
     }
   },
   {
+    name: 'demo',
+    path: '/demo',
+    component: 'layout.base$view.demo',
+    meta: {
+      title: 'demo',
+      i18nKey: 'route.demo'
+    }
+  },
+  {
     name: 'home',
     path: '/home',
     component: 'layout.base$view.home',
@@ -149,6 +158,15 @@ export const generatedRoutes: GeneratedRoute[] = [
         meta: {
           title: 'manage_dict',
           i18nKey: 'route.manage_dict'
+        }
+      },
+      {
+        name: 'manage_file',
+        path: '/manage/file',
+        component: 'view.manage_file',
+        meta: {
+          title: 'manage_file',
+          i18nKey: 'route.manage_file'
         }
       },
       {

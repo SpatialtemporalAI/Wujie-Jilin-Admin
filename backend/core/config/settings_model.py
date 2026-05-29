@@ -37,9 +37,15 @@ class LocalUploadModel(BaseModel):
 
     BASE_DIR: str = Field("uploads", description="本地上传基础目录")
     MAX_FILE_SIZE: int = Field(10 * 1024 * 1024, description="最大文件大小(字节)")
-    ALLOWED_EXTENSIONS: Optional[Tuple[str, ...]] = Field(
+    ALLOWED_EXTENSIONS: Optional[List[str]] = Field(
         None, description="允许的文件扩展名"
     )
+
+
+class StorageModel(BaseModel):
+    """存储平台配置模型"""
+
+    PLATFORM: str = Field("local", description="存储平台：local, oss")
 
 
 class LogModel(BaseModel):

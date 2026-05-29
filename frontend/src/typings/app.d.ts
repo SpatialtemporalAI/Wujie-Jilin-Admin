@@ -580,6 +580,24 @@ declare namespace App {
           minute: string;
         };
 
+        demo: {
+          upload: {
+            title: string;
+            singleUpload: string;
+            multiUpload: string;
+            selectFile: string;
+            selectFiles: string;
+            uploading: string;
+            uploadSuccess: string;
+            uploadFailed: string;
+            fileSize: string;
+            fileType: string;
+            fileName: string;
+            uploadResult: string;
+            dragOrClick: string;
+          };
+        };
+
         manage: {
           common: {
             status: {
@@ -839,6 +857,27 @@ declare namespace App {
               all: string;
               role: string;
               user: string;
+            };
+          };
+          file: {
+            title: string;
+            fileName: string;
+            fileSize: string;
+            fileType: string;
+            fileExtension: string;
+            storagePlatform: string;
+            uploadTime: string;
+            upload: string;
+            download: string;
+            preview: string;
+            platform: {
+              local: string;
+              oss: string;
+            };
+            form: {
+              fileName: string;
+              fileExtension: string;
+              storagePlatform: string;
             };
           };
         };

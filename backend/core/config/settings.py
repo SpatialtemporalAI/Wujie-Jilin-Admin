@@ -18,6 +18,7 @@ from .settings_model import (
     JWTModel,
     RedisPoolModel,
     LocalUploadModel,
+    StorageModel,
     SecurityModel,
     MCPModel,
     RateLimitModel,
@@ -54,6 +55,8 @@ class GlobalSetting(BaseSettings):
     REDIS: RedisPoolModel = RedisPoolModel()
     # 本地上传配置
     UPLOAD_LOCAL: LocalUploadModel = LocalUploadModel()
+    # 存储平台配置
+    STORAGE: StorageModel = StorageModel()
     # MCP 配置
     MCP: MCPModel = MCPModel()
     # 限流配置

@@ -48,3 +48,7 @@ yarn.lock
 
 # VSCode插件
 .VSCodeCounter
+
+# uploads
+uploads
+uploads/*

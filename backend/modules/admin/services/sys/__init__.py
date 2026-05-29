@@ -15,6 +15,7 @@ from .route_service import RouteService
 from .operation_log_service import OperationLogService
 from .notice_service import NoticeService
 from .monitor_service import MonitorService
+from .file_service import FileService
 
 __all__ = [
     "ConfigService",
@@ -28,4 +29,5 @@ __all__ = [
     "OperationLogService",
     "NoticeService",
     "MonitorService",
+    "FileService",
 ]

@@ -4,3 +4,4 @@ export * from './system-manage';
 export * from './log';
 export * from './notification';
 export * from './monitor';
+export * from './file';
