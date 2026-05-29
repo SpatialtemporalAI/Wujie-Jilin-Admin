@@ -360,7 +360,8 @@ const local: App.I18n.Schema = {
         fileType: '文件类型',
         fileName: '文件名称',
         uploadResult: '上传结果',
-        dragOrClick: '点击或拖拽文件到此区域上传'
+        dragOrClick: '点击或拖拽文件到此区域上传',
+        startUpload: '开始上传'
       }
     },
     manage: {

@@ -1,7 +1,9 @@
 <script setup lang="ts">
-import { ref } from 'vue';
+import { ref, computed, h } from 'vue';
+import { NTag } from 'naive-ui';
 import type { UploadFileInfo } from 'naive-ui';
-import { fetchUploadFile, fetchUploadFiles } from '@/service/api/file';
+import { fetchUploadFile } from '@/service/api/file';
+import { $t } from '@/locales';
 
 interface Props {
   multiple?: boolean;
@@ -14,12 +16,20 @@ const props = withDefaults(defineProps<Props>(), {
 interface UploadResult {
   name: string;
   size: number;
-  status: 'success' | 'error';
+  status: 'success' | 'error' | 'uploading';
   message?: string;
 }
 
+const fileList = ref<UploadFileInfo[]>([]);
 const results = ref<UploadResult[]>([]);
 const uploading = ref(false);
+const uploadedCount = ref(0);
+const totalCount = ref(0);
+
+const uploadProgress = computed(() => {
+  if (totalCount.value === 0) return 0;
+  return Math.round((uploadedCount.value / totalCount.value) * 100);
+});
 
 function formatFileSize(bytes: number): string {
   if (bytes < 1024) return `${bytes} B`;
@@ -27,78 +37,107 @@ function formatFileSize(bytes: number): string {
   return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
 }
 
-async function handleUpload({ file, onFinish, onError }: { file: UploadFileInfo; onFinish: () => void; onError: () => void }) {
+function handleFileChange({ fileList: newFileList }: { file: UploadFileInfo; fileList: UploadFileInfo[] }) {
+  fileList.value = newFileList;
+}
+
+function renderStatus(row: UploadResult) {
+  const typeMap = { success: 'success', error: 'error', uploading: 'warning' } as const;
+  const labelMap = {
+    success: $t('page.demo.upload.uploadSuccess'),
+    error: $t('page.demo.upload.uploadFailed'),
+    uploading: $t('page.demo.upload.uploading')
+  };
+  return h(NTag, { type: typeMap[row.status], size: 'small', round: true }, { default: () => labelMap[row.status] });
+}
+
+const tableColumns = computed(() => [
+  { title: $t('page.demo.upload.fileName'), key: 'name', ellipsis: { tooltip: true } },
+  { title: $t('page.demo.upload.fileSize'), key: 'size', width: 120, render: (row: UploadResult) => formatFileSize(row.size) },
+  { title: $t('page.demo.upload.uploadResult'), key: 'status', width: 120, render: renderStatus },
+  { title: $t('page.demo.upload.fileType'), key: 'message', width: 200, render: (row: UploadResult) => row.message || '-' }
+]);
+
+/** 将新结果插入数组头部，返回响应式代理的索引 */
+function pushResult(result: UploadResult): number {
+  results.value.unshift(result);
+  return 0;
+}
+
+function updateResult(index: number, patch: Partial<UploadResult>) {
+  Object.assign(results.value[index], patch);
+}
+
+/** 单文件 custom-request 回调 */
+function handleSingleCustomRequest({ file, onFinish, onError }: { file: UploadFileInfo; onFinish: () => void; onError: () => void }) {
   if (!file.file) {
     onError();
     return;
   }
 
-  try {
-    const { data, error } = await fetchUploadFile(file.file);
+  const idx = pushResult({ name: file.name, size: file.file.size, status: 'uploading' });
+
+  fetchUploadFile(file.file).then(({ data, error }) => {
     if (!error && data) {
-      results.value.unshift({
-        name: data.original_name,
-        size: data.file_size,
-        status: 'success'
-      });
+      updateResult(idx, { name: data.original_name, size: data.file_size, status: 'success' });
       onFinish();
     } else {
-      results.value.unshift({
-        name: file.name,
-        size: file.file?.size ?? 0,
-        status: 'error',
-        message: error?.msg || 'Upload failed'
-      });
+      updateResult(idx, { status: 'error', message: error?.msg || 'Upload failed' });
       onError();
     }
-  } catch {
-    results.value.unshift({
-      name: file.name,
-      size: file.file?.size ?? 0,
-      status: 'error',
-      message: 'Network error'
-    });
+  }).catch(() => {
+    updateResult(idx, { status: 'error', message: 'Network error' });
     onError();
-  }
+  });
 }
 
-async function handleBatchUpload({ fileList, onFinish, onError }: { fileList: UploadFileInfo[]; onFinish: () => void; onError: () => void }) {
-  const files = fileList.map(f => f.file).filter((f): f is File => f !== null);
-  if (files.length === 0) {
-    onError();
-    return;
-  }
+/** 多文件：点击按钮触发逐个上传 */
+async function doBatchUpload() {
+  const files = fileList.value.map(f => f.file).filter((f): f is File => f !== null);
+  if (files.length === 0) return;
 
   uploading.value = true;
-  try {
-    const { data, error } = await fetchUploadFiles(files);
-    if (!error && data) {
-      data.forEach(f => {
-        results.value.unshift({
-          name: f.original_name,
-          size: f.file_size,
-          status: 'success'
-        });
-      });
-      onFinish();
-    } else {
-      onError();
+  totalCount.value = files.length;
+  uploadedCount.value = 0;
+
+  for (const file of files) {
+    const idx = pushResult({ name: file.name, size: file.size, status: 'uploading' });
+
+    try {
+      const { data, error } = await fetchUploadFile(file);
+      if (!error && data) {
+        updateResult(idx, { name: data.original_name, size: data.file_size, status: 'success' });
+      } else {
+        updateResult(idx, { status: 'error', message: error?.msg || 'Upload failed' });
+      }
+    } catch {
+      updateResult(idx, { status: 'error', message: 'Network error' });
     }
-  } catch {
-    onError();
-  } finally {
-    uploading.value = false;
+
+    uploadedCount.value++;
   }
+
+  uploading.value = false;
+  fileList.value = [];
+  totalCount.value = 0;
+  uploadedCount.value = 0;
 }
+
+const canUpload = computed(() => {
+  if (!props.multiple) return false;
+  return fileList.value.some(f => f.status === 'pending');
+});
+
+const pendingCount = computed(() => fileList.value.filter(f => f.status === 'pending').length);
 </script>
 
 <template>
   <NSpace vertical :size="12">
     <NUpload
       :multiple="props.multiple"
-      :custom-request="props.multiple ? undefined : handleUpload"
-      @change="props.multiple ? undefined : undefined"
+      :custom-request="props.multiple ? () => {} : handleSingleCustomRequest"
       :directory-dnd="true"
+      @change="handleFileChange"
     >
       <NUploadDragger>
         <div style="padding: 20px 0">
@@ -108,55 +147,43 @@ async function handleBatchUpload({ fileList, onFinish, onError }: { fileList: Up
             </svg>
           </NIcon>
           <NText style="font-size: 16px">{{ $t('page.demo.upload.dragOrClick') }}</NText>
+          <NP v-if="props.multiple" style="margin-top: 4px" depth="3">
+            {{ $t('page.demo.upload.selectFiles') }}
+          </NP>
         </div>
       </NUploadDragger>
     </NUpload>
 
-    <NButton
-      v-if="props.multiple"
-      type="primary"
-      :loading="uploading"
-      @click="() => {
-        const input = document.createElement('input');
-        input.type = 'file';
-        input.multiple = true;
-        input.onchange = async (e) => {
-          const files = Array.from((e.target as HTMLInputElement).files || []);
-          if (files.length === 0) return;
-          uploading.value = true;
-          try {
-            const { data, error } = await fetchUploadFiles(files);
-            if (!error && data) {
-              data.forEach(f => {
-                results.value.unshift({ name: f.original_name, size: f.file_size, status: 'success' });
-              });
-              window.$message?.success($t('page.demo.upload.uploadSuccess'));
-            }
-          } finally {
-            uploading.value = false;
-          }
-        };
-        input.click();
-      }"
-    >
-      {{ $t('page.demo.upload.selectFiles') }}
-    </NButton>
+    <!-- Multi-file: upload button + progress -->
+    <template v-if="props.multiple">
+      <NProgress
+        v-if="uploading"
+        type="line"
+        :percentage="uploadProgress"
+        indicator-placement="inside"
+        processing
+      />
+
+      <NSpace>
+        <NButton
+          type="primary"
+          :disabled="!canUpload"
+          :loading="uploading"
+          @click="doBatchUpload"
+        >
+          {{ $t('page.demo.upload.startUpload') }}
+          <template v-if="pendingCount > 0"> ({{ pendingCount }})</template>
+        </NButton>
+      </NSpace>
+    </template>
 
     <NDataTable
       v-if="results.length > 0"
-      :columns="[
-        { title: $t('page.demo.upload.fileName'), key: 'name' },
-        { title: $t('page.demo.upload.fileSize'), key: 'size', render: (row: UploadResult) => formatFileSize(row.size) },
-        { title: $t('page.demo.upload.status'), key: 'status', render: (row: UploadResult) => h(NTag, { type: row.status === 'success' ? 'success' : 'error', size: 'small' }, { default: () => row.status === 'success' ? $t('page.demo.upload.uploadSuccess') : $t('page.demo.upload.uploadFailed') }) },
-        { title: 'Message', key: 'message', render: (row: UploadResult) => row.message || '-' }
-      ]"
+      :columns="tableColumns"
       :data="results"
       :bordered="false"
       size="small"
+      :max-height="300"
     />
   </NSpace>
 </template>
-
-<script lang="ts">
-import { h } from 'vue';
-</script>

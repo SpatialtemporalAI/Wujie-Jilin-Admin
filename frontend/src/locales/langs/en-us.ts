@@ -364,7 +364,8 @@ const local: App.I18n.Schema = {
         fileType: 'File Type',
         fileName: 'File Name',
         uploadResult: 'Upload Result',
-        dragOrClick: 'Click or drag files to this area to upload'
+        dragOrClick: 'Click or drag files to this area to upload',
+        startUpload: 'Start Upload'
       }
     },
 

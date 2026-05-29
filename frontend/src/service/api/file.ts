@@ -18,7 +18,8 @@ export function fetchUploadFile(file: File) {
   return request<Api.FileManage.FileInfo>({
     url: '/admin/sys/file/upload',
     method: 'post',
-    data: formData
+    data: formData,
+    headers: { 'Content-Type': 'multipart/form-data' }
   });
 }
 
@@ -29,7 +30,8 @@ export function fetchUploadFiles(files: File[]) {
   return request<Api.FileManage.FileInfo[]>({
     url: '/admin/sys/file/upload/batch',
     method: 'post',
-    data: formData
+    data: formData,
+    headers: { 'Content-Type': 'multipart/form-data' }
   });
 }
 
