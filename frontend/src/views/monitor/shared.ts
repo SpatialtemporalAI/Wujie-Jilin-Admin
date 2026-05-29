@@ -7,8 +7,8 @@ export function useMonitorData() {
   const loading = ref(false);
   let timer: ReturnType<typeof setInterval> | null = null;
 
-  async function refresh() {
-    loading.value = true;
+  async function refresh(showLoading = false) {
+    if (showLoading) loading.value = true;
     try {
       const [{ data: metrics }, { data: stats }] = await Promise.all([
         fetchGetSystemMetrics(),
@@ -21,13 +21,13 @@ export function useMonitorData() {
         apiStats.value = stats;
       }
     } finally {
-      loading.value = false;
+      if (showLoading) loading.value = false;
     }
   }
 
   function startPolling(interval = 5000) {
-    refresh();
-    timer = setInterval(refresh, interval);
+    refresh(true);
+    timer = setInterval(() => refresh(false), interval);
   }
 
   function stopPolling() {
