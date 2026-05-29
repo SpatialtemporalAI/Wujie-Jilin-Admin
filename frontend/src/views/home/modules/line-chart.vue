@@ -12,9 +12,9 @@ const appStore = useAppStore();
 
 const { domRef, updateOptions } = useEcharts(() => ({
   tooltip: {
-    trigger: 'axis',
+    trigger: 'axis' as const,
     axisPointer: {
-      type: 'cross',
+      type: 'cross' as const,
       label: {
         backgroundColor: '#6a7985'
       }
@@ -31,23 +31,23 @@ const { domRef, updateOptions } = useEcharts(() => ({
     top: '15%'
   },
   xAxis: {
-    type: 'category',
+    type: 'category' as const,
     boundaryGap: false,
     data: [] as string[]
   },
   yAxis: {
-    type: 'value'
+    type: 'value' as const
   },
   series: [
     {
       color: '#8e9dff',
       name: $t('page.home.downloadCount'),
-      type: 'line',
+      type: 'line' as const,
       smooth: true,
       stack: 'Total',
       areaStyle: {
         color: {
-          type: 'linear',
+          type: 'linear' as const,
           x: 0,
           y: 0,
           x2: 0,
@@ -72,12 +72,12 @@ const { domRef, updateOptions } = useEcharts(() => ({
     {
       color: '#26deca',
       name: $t('page.home.registerCount'),
-      type: 'line',
+      type: 'line' as const,
       smooth: true,
       stack: 'Total',
       areaStyle: {
         color: {
-          type: 'linear',
+          type: 'linear' as const,
           x: 0,
           y: 0,
           x2: 0,

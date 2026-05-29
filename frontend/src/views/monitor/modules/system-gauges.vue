@@ -14,7 +14,7 @@ function getCompactGaugeOption(title: string, value: number, color: string) {
   return {
     series: [
       {
-        type: 'gauge',
+        type: 'gauge' as const,
         startAngle: 200,
         endAngle: -20,
         min: 0,

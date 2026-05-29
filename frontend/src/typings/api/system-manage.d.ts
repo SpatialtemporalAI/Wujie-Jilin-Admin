@@ -58,6 +58,11 @@ declare namespace Api {
       last_login_ip?: string;
     }>;
 
+    /** raw user response from backend (before transform) */
+    type RawUser = Omit<User, 'userRoles'> & {
+      roles?: { id: number; name: string; code: string }[];
+    };
+
     /** user search params */
     type UserSearchParams = CommonType.RecordNullable<
       Pick<Api.SystemManage.User, 'username' | 'nickname' | 'phone' | 'email' | 'is_superuser' | 'status'> &

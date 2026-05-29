@@ -87,7 +87,7 @@ const {
   api: () => fetchGetDictList(dictSearchParams),
   transform: response => {
     const result = defaultTransform(response);
-    result.data = result.data.map((dict: any) => ({
+    result.data = result.data.map((dict: Api.SystemManage.Dict) => ({
       ...dict,
       status: booleanToEnableStatus(dict.status)
     }));
@@ -360,7 +360,7 @@ async function handleDeleteDict(id: number) {
 
 /** 编辑字典项 */
 function editDictItem(id: number) {
-  (handleEditDictItem as any)(id);
+  handleEditDictItem(id as number);
 }
 
 /** 删除字典项 */
@@ -525,7 +525,7 @@ watch(activeTab, tab => {
           <DictItemOperateDrawer
             v-model:visible="dictItemDrawerVisible"
             :operate-type="dictItemOperateType"
-            :row-data="editingDictItemData as any"
+            :row-data="(editingDictItemData as any)"
             :dict-id="selectedDict?.id"
             @submitted="loadDictItemData"
           />

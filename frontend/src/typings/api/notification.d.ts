@@ -14,7 +14,7 @@ declare namespace Api {
     /** notice priority */
     type NoticePriority = 'low' | 'normal' | 'high' | 'urgent';
 
-    /** notice */
+    /** notice (after transform: status is EnableStatus, not boolean) */
     type Notice = Common.CommonRecord<{
       /** notice title */
       title: string;
@@ -34,8 +34,6 @@ declare namespace Api {
       sender_name: string;
       /** priority */
       priority: NoticePriority;
-      /** status: true=published, false=draft */
-      status: boolean;
       /** published at */
       published_at?: string | null;
     }>;

@@ -26,7 +26,7 @@ const { columns, columnChecks, data, loading, getData, getDataByPage, mobilePagi
   api: () => fetchGetRoleList(searchParams),
   transform: response => {
     const result = defaultTransform(response);
-    result.data = result.data.map((role: any) => ({
+    result.data = result.data.map((role: Api.SystemManage.Role) => ({
       ...role,
       status: booleanToEnableStatus(role.status)
     }));

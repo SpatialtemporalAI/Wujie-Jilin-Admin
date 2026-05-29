@@ -12,7 +12,7 @@ const appStore = useAppStore();
 
 const { domRef, updateOptions } = useEcharts(() => ({
   tooltip: {
-    trigger: 'item'
+    trigger: 'item' as const
   },
   legend: {
     bottom: '1%',
@@ -25,7 +25,7 @@ const { domRef, updateOptions } = useEcharts(() => ({
     {
       color: ['#5da8ff', '#8e9dff', '#fedc69', '#26deca'],
       name: $t('page.home.schedule'),
-      type: 'pie',
+      type: 'pie' as const,
       radius: ['45%', '75%'],
       avoidLabelOverlap: false,
       itemStyle: {

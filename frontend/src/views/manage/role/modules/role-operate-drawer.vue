@@ -89,7 +89,7 @@ function closeDrawer() {
 async function handleSubmit() {
   await validate();
 
-  let error: any = null;
+  let error: unknown = null;
 
   if (isEdit.value) {
     const result = await fetchUpdateRole(roleId.value, model.value);

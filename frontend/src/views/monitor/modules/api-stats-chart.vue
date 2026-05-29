@@ -13,9 +13,9 @@ const props = withDefaults(defineProps<Props>(), {
 
 const { domRef, updateOptions } = useEcharts(() => ({
   tooltip: {
-    trigger: 'axis',
+    trigger: 'axis' as const,
     axisPointer: {
-      type: 'cross'
+      type: 'cross' as const
     }
   },
   legend: {
@@ -30,23 +30,23 @@ const { domRef, updateOptions } = useEcharts(() => ({
     containLabel: true
   },
   xAxis: {
-    type: 'category',
+    type: 'category' as const,
     boundaryGap: false,
     data: [] as string[]
   },
   yAxis: [
     {
-      type: 'value',
+      type: 'value' as const,
       name: $t('page.monitor.avgResponseTime'),
-      position: 'left',
+      position: 'left' as const,
       axisLabel: {
         formatter: '{value} ms'
       }
     },
     {
-      type: 'value',
+      type: 'value' as const,
       name: $t('page.monitor.errorRate'),
-      position: 'right',
+      position: 'right' as const,
       axisLabel: {
         formatter: '{value} %'
       }
@@ -55,14 +55,14 @@ const { domRef, updateOptions } = useEcharts(() => ({
   series: [
     {
       name: $t('page.monitor.avgResponseTime'),
-      type: 'line',
+      type: 'line' as const,
       smooth: true,
       yAxisIndex: 0,
       data: [] as number[]
     },
     {
       name: $t('page.monitor.errorRate'),
-      type: 'line',
+      type: 'line' as const,
       smooth: true,
       yAxisIndex: 1,
       data: [] as number[]

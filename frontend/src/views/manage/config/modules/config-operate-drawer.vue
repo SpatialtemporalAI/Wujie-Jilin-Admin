@@ -124,7 +124,7 @@ const formRules = computed(() => {
     value: [
       defaultRequiredRule,
       {
-        validator: (rule: any, value: string) => {
+        validator: (_rule: App.Global.FormRule, value: string) => {
           const result = validateConfigValue(value, form.type);
           if (result !== true) {
             return new Error(result as string);
@@ -136,7 +136,7 @@ const formRules = computed(() => {
     ],
     default_value: [
       {
-        validator: (rule: any, value: string) => {
+        validator: (_rule: App.Global.FormRule, value: string) => {
           if (value) {
             const result = validateConfigValue(value, form.type);
             if (result !== true) {

@@ -198,7 +198,7 @@ async function handleSubmit() {
         userRoles: model.value.userRoles,
         // 额外传递 role_ids 给后端
         role_ids: roleIds
-      } as any);
+      });
       window.$message?.success($t('common.addSuccess'));
     } else if (props.operateType === 'edit' && props.rowData) {
       // 更新用户
@@ -211,7 +211,7 @@ async function handleSubmit() {
         userRoles: model.value.userRoles,
         // 额外传递 role_ids 给后端
         role_ids: roleIds
-      } as any);
+      });
       window.$message?.success($t('common.updateSuccess'));
     }
     closeDrawer();

@@ -35,11 +35,10 @@ const { columns, columnChecks, data, loading, getData, getDataByPage, mobilePagi
   api: () => fetchGetUserList(searchParams),
   transform: response => {
     const result = defaultTransform(response);
-    result.data = result.data.map((user: any) => ({
+    result.data = result.data.map((user: Api.SystemManage.RawUser) => ({
       ...user,
       status: booleanToEnableStatus(user.status),
-      // 从roles中提取code作为userRoles
-      userRoles: user.roles ? user.roles.map((r: any) => r.code) : []
+      userRoles: user.roles ? user.roles.map(r => r.code) : []
     }));
     return result;
   },

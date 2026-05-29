@@ -63,7 +63,7 @@ const formRules = computed(() => ({
   type: [defaultRequiredRule],
   expire_at: [
     {
-      validator: (_rule: any, value: number | null) => {
+      validator: (_rule: App.Global.FormRule, value: number | null) => {
         if (form.type === 'temporary' && !value) {
           return new Error($t('page.manage.ipBlacklist.expireRequired'));
         }

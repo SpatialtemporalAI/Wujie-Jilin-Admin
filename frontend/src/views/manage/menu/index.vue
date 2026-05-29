@@ -43,7 +43,7 @@ const columns = [
   {
     key: 'menuType',
     title: $t('page.manage.menu.menuType'),
-    align: 'center',
+    align: 'center' as const,
     width: 80,
     render: (row: Api.SystemManage.Menu) => {
       const tagMap: Record<Api.SystemManage.MenuType, NaiveUI.ThemeColor> = {
@@ -60,7 +60,7 @@ const columns = [
   {
     key: 'icon',
     title: $t('page.manage.menu.icon'),
-    align: 'center',
+    align: 'center' as const,
     width: 60,
     render: (row: Api.SystemManage.Menu) => {
       if (!row.icon) return <div class="flex-center">-</div>;
@@ -79,19 +79,19 @@ const columns = [
   {
     key: 'routeName',
     title: $t('page.manage.menu.routeName'),
-    align: 'center',
+    align: 'center' as const,
     minWidth: 120
   },
   {
     key: 'routePath',
     title: $t('page.manage.menu.routePath'),
-    align: 'center',
+    align: 'center' as const,
     minWidth: 120
   },
   {
     key: 'status',
     title: $t('page.manage.menu.menuStatus'),
-    align: 'center',
+    align: 'center' as const,
     width: 80,
     render: (row: Api.SystemManage.Menu) => {
       if (row.status === null) {
@@ -109,7 +109,7 @@ const columns = [
   {
     key: 'is_system',
     title: $t('page.manage.menu.isSystem'),
-    align: 'center',
+    align: 'center' as const,
     width: 80,
     render: (row: Api.SystemManage.Menu) => {
       const isSystem = row.is_system === '1';
@@ -124,7 +124,7 @@ const columns = [
   {
     key: 'hideInMenu',
     title: $t('page.manage.menu.hideInMenu'),
-    align: 'center',
+    align: 'center' as const,
     width: 80,
     render: (row: Api.SystemManage.Menu) => {
       const hide: CommonType.YesOrNo = row.hideInMenu ? 'Y' : 'N';
@@ -142,13 +142,13 @@ const columns = [
   {
     key: 'order',
     title: $t('page.manage.menu.order'),
-    align: 'center',
+    align: 'center' as const,
     width: 60
   },
   {
     key: 'operate',
     title: $t('common.operate'),
-    align: 'center',
+    align: 'center' as const,
     minWidth: 150,
     render: (row: Api.SystemManage.Menu) => (
       <div class="flex flex-wrap justify-center gap-8px">

@@ -258,6 +258,10 @@ function closeDrawer() {
   visible.value = false;
 }
 
+function openIconLibrary() {
+  window.open('https://icon-sets.iconify.design/', '_blank');
+}
+
 function handleUpdateRoutePathByMenuName() {
   if (model.value.menuName) {
     model.value.routePath = getRoutePathByRouteName(model.value.menuName);
@@ -289,7 +293,7 @@ async function handleSubmit() {
 
   const params = getSubmitParams();
 
-  let error: any = null;
+  let error: unknown = null;
 
   if (props.operateType === 'edit') {
     const result = await fetchUpdateMenu(props.rowData!.id, params);
@@ -390,8 +394,8 @@ watch(
                     <SvgIcon v-if="model.icon" :icon="model.icon" class="text-icon" />
                   </template>
                 </NInput>
-                <NButton @click="window.open('https://icon-sets.iconify.design/', '_blank')">
-                  <icon-ic:round-launch class="text-icon" />
+                <NButton @click="openIconLibrary()">
+                  <icon-ic-round-launch class="text-icon" />
                 </NButton>
               </div>
             </template>

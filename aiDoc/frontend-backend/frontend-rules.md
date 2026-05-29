@@ -26,6 +26,58 @@
 - 修改数据结构时必须同步更新对应类型声明
 - 提交前执行 `pnpm typecheck` 确保类型安全
 
+### 禁止与限制
+
+- **禁止 `any`**：变量声明、函数参数、返回值不允许使用 `any`。错误对象用 `unknown`，无法确定的类型用具体联合类型或泛型
+- **禁止 `as any` 断言**：类型不匹配时应修复根因（补全类型定义、调整函数签名），不使用 `as any` 绕过
+- **禁止 `@ts-ignore`**：修复类型错误，不压制检查
+- **禁止在模板中直接访问 `window`**：应在 `<script setup>` 中定义函数包装后调用
+
+### 字面量类型保留
+
+TS 函数返回值中字面量类型会被拓宽（`'gauge'` → `string`），导致无法匹配 ECharts、NaiveUI 等联合类型。使用 `as const` 保留字面量：
+
+```typescript
+// ECharts 选项中的 type 字段
+{ type: 'gauge' as const, ... }
+{ type: 'line' as const, ... }
+{ trigger: 'axis' as const }
+
+// NaiveUI 表格列的 align 字段
+{ key: 'name', align: 'center' as const, ... }
+```
+
+### transform 回调类型
+
+列表页的 `transform` 回调中，API 数据会经过 `booleanToEnableStatus` 等转换。若类型在转换前后不变（如 `Role.status` 始终为 `EnableStatus`），用具体类型标注参数；若转换改变字段类型（如 `User.roles` → `userRoles`），在 `src/typings/api/` 中定义 `RawXxx` 类型用于回调参数：
+
+```typescript
+// 类型不变的 transform — 使用具体类型
+result.data.map((role: Api.SystemManage.Role) => ({ ... }))
+
+// 类型变化的 transform — 使用 Raw 类型
+result.data.map((user: Api.SystemManage.RawUser) => ({ ... }))
+```
+
+### 表单验证器
+
+- 未使用的参数以 `_` 前缀命名（如 `_rule`），不要用 `any`
+- 若需要类型标注，使用 `App.Global.FormRule`
+
+```typescript
+// 正确
+validator: (_rule: App.Global.FormRule, value: string) => { ... }
+
+// 错误
+validator: (rule: any, value: string) => { ... }
+```
+
+### 类型复用
+
+- 复用项目已有类型别名：`App.Global.FormRule`、`Api.Common.EnableStatus`、`NaiveUI.ThemeColor` 等
+- ECharts 选项类型统一使用 `ECOption`（来自 `@/hooks/common/echarts`）
+- `Common.CommonRecord` 的泛型参数中不要重复定义 `status` 字段（会产生交叉冲突），若需覆盖 `status` 类型应使用 `Omit`
+
 ## 组件规范
 
 - 公共组件放在 `src/components/`
