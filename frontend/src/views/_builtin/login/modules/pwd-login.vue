@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, reactive } from 'vue';
+import { computed, reactive, ref } from 'vue';
 import { loginModuleRecord } from '@/constants/app';
 import { useAuthStore } from '@/store/modules/auth';
 import { useRouterPush } from '@/hooks/common/router';
@@ -15,6 +15,7 @@ defineOptions({
 const authStore = useAuthStore();
 const { toggleLoginModule } = useRouterPush();
 const { formRef, validate } = useNaiveForm();
+const sliderCaptchaRef = ref<InstanceType<typeof SliderCaptcha>>();
 
 const {
   captchaRequired,
@@ -29,6 +30,10 @@ const {
   resetCaptcha,
   fetchCaptcha
 } = useSliderCaptcha();
+
+const loginDisabled = computed(() => {
+  return captchaRequired.value && !captchaToken.value;
+});
 
 interface FormModel {
   userName: string;
@@ -64,6 +69,7 @@ async function handleSubmit() {
     showCaptcha();
   } else if (errCode) {
     captchaToken.value = null;
+    showCaptcha();
   } else {
     resetCaptcha();
   }
@@ -135,8 +141,12 @@ async function handleAccountLogin(account: Account) {
       </div>
       <!-- Slider Captcha -->
       <div v-if="captchaRequired" class="captcha-wrapper">
+        <NText v-if="loginDisabled" depth="3" class="captcha-hint">
+          请先完成下方滑块验证后再登录
+        </NText>
         <NSpin :show="captchaLoading">
           <SliderCaptcha
+            ref="sliderCaptchaRef"
             :captcha-id="captchaId"
             :background-image="backgroundImage"
             :puzzle-image="puzzleImage"
@@ -148,8 +158,16 @@ async function handleAccountLogin(account: Account) {
           />
         </NSpin>
       </div>
-      <NButton type="primary" size="large" round block :loading="authStore.loginLoading" @click="handleSubmit">
-        {{ $t('common.confirm') }}
+      <NButton
+        type="primary"
+        size="large"
+        round
+        block
+        :loading="authStore.loginLoading"
+        :disabled="loginDisabled"
+        @click="handleSubmit"
+      >
+        {{ $t('route.login') }}
       </NButton>
       <!-- <div class="flex-y-center justify-between gap-12px">
         <NButton class="flex-1" block @click="toggleLoginModule('code-login')">
@@ -172,7 +190,13 @@ async function handleAccountLogin(account: Account) {
 <style scoped>
 .captcha-wrapper {
   display: flex;
-  justify-content: center;
-  padding: 4px 0;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+}
+
+.captcha-hint {
+  font-size: 13px;
+  text-align: center;
 }
 </style>

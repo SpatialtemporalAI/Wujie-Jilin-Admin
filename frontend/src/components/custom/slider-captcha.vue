@@ -96,6 +96,8 @@ onMounted(() => {
   document.addEventListener('touchmove', onDrag);
 });
 
+defineExpose({ verifyLoading });
+
 onBeforeUnmount(() => {
   document.removeEventListener('mouseup', endDrag);
   document.removeEventListener('touchend', endDrag);
