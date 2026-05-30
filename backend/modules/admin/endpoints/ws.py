@@ -74,7 +74,10 @@ async def notification_websocket(
             if cached_valid is None:
                 local_session_meta = await get_redis_util().hget(cache_key, session_id)
                 if local_session_meta is None:
-                    local_session_id = await get_redis_util().get(cache_key)
+                    try:
+                        local_session_id = await get_redis_util().get(cache_key)
+                    except Exception:
+                        local_session_id = None
                     if local_session_id is None or local_session_id != session_id:
                         await websocket.close(code=1008, reason="Session expired")
                         return

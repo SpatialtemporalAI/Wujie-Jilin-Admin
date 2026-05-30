@@ -162,7 +162,10 @@ class UserManager(BaseUserManager):
             get_session_cache().set(cache_key, session_id)
             return int(user_id), session_id
         # Fallback: 兼容旧格式（纯字符串存储），过渡期使用
-        local_session_id = await get_redis_util().get(cache_key)
+        try:
+            local_session_id = await get_redis_util().get(cache_key)
+        except Exception:
+            local_session_id = None
         if local_session_id is not None and local_session_id == session_id:
             get_session_cache().set(cache_key, session_id)
             return int(user_id), session_id
