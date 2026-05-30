@@ -72,7 +72,8 @@ async def _write_login_log(username: str, ip: str | None, status: bool, detail: 
     summary="获取滑块验证码",
     description="生成滑块拼图验证码图片，返回背景图、拼图块及位置信息",
 )
-async def get_captcha():
+async def get_captcha(request: Request):
+    await limit_by_ip(request=request, action="captcha", limit=10, window_seconds=60, scope="admin")
     data = await CaptchaService.generate_captcha()
     return response_base.success(data=data, msg="获取验证码成功")
 
@@ -83,7 +84,8 @@ async def get_captcha():
     summary="验证滑块位置",
     description="验证用户拖动滑块的位置是否正确，正确则返回验证码令牌",
 )
-async def verify_captcha(req: CaptchaVerifyRequest = Body(...)):
+async def verify_captcha(request: Request, req: CaptchaVerifyRequest = Body(...)):
+    await limit_by_ip(request=request, action="captcha_verify", limit=20, window_seconds=60, scope="admin")
     token = await CaptchaService.verify_captcha(req.captcha_id, req.slide_x)
     return response_base.success(
         data=CaptchaVerifyResponse(captcha_token=token),
