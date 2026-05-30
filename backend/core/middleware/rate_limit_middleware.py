@@ -12,6 +12,7 @@
     3. 解析 JWT 拿 user_id（可选，沿用 operation_log_middleware 的方式）
     4. 顺序检查：全局 IP -> 用户 -> 路径细粒度
 """
+import asyncio
 import logging
 from typing import Callable, Optional
 
@@ -144,32 +145,40 @@ class RateLimitMiddleware(BaseHTTPMiddleware):
         request_id = getattr(request.state, "request_id", "") or ""
 
         try:
+            # 黑名单短路：单独检查，命中直接返回
             if client_ip and await is_ip_blocked(client_ip):
                 logger.warning("IP 命中黑名单 ip=%s path=%s", client_ip, path)
                 return _build_blocked_response(request_id)
 
+            # 并行读取所有限流配置
+            config_keys = ["rate_limit.ip_per_minute", "rate_limit.user_per_minute"]
+            config_defaults = [settings.RATE_LIMIT.IP_PER_MINUTE, settings.RATE_LIMIT.USER_PER_MINUTE]
+            configs = await asyncio.gather(
+                *(RateLimitConfigProvider.get(k, d) for k, d in zip(config_keys, config_defaults))
+            )
+            ip_per_minute, user_per_minute = configs
+
+            # 构建并行限流任务
+            tasks = []
             if client_ip:
-                ip_per_minute = await RateLimitConfigProvider.get(
-                    "rate_limit.ip_per_minute", settings.RATE_LIMIT.IP_PER_MINUTE
-                )
-                await enforce_ip_limit(client_ip, ip_per_minute, 60)
+                tasks.append(enforce_ip_limit(client_ip, ip_per_minute, 60))
 
             user_id = _extract_user_id(request)
             if user_id:
-                user_per_minute = await RateLimitConfigProvider.get(
-                    "rate_limit.user_per_minute", settings.RATE_LIMIT.USER_PER_MINUTE
-                )
-                await enforce_user_limit(user_id, user_per_minute, 60)
+                tasks.append(enforce_user_limit(user_id, user_per_minute, 60))
 
             rule = await _match_path_rule(path, request.method)
             if rule and client_ip:
-                await enforce_path_limit(
+                tasks.append(enforce_path_limit(
                     method=request.method,
                     path=rule.get("path", rule.get("PATH", "")),
                     ip=client_ip,
                     limit=rule.get("per_minute", rule.get("PER_MINUTE", 60)),
                     window_seconds=60,
-                )
+                ))
+
+            if tasks:
+                await asyncio.gather(*tasks)
         except RateLimitExceeded as exc:
             return _build_429_response(request_id, exc.reason, exc.retry_after)
         except Exception as exc:  # Redis 故障等 -> 失败放行，避免阻塞业务

@@ -56,22 +56,23 @@ async def get_paginated_results(
     返回:
         分页查询结果对象
     """
+    import asyncio
     # 保留未分页的 query 用于 count
     base_query = query
     # 分页
     offset = (page_params.page - 1) * page_params.page_size
-    query = query.offset(offset).limit(page_params.page_size)
-    # 查询分页数据
-    result = await db.execute(query)
-    # 使用 unique() 处理 joined eager loads 的情况
-    items = result.unique().scalars().all()
+    data_query = query.offset(offset).limit(page_params.page_size)
+    count_query = base_query.with_only_columns(func.count()).order_by(None)
+
+    # 并行执行数据查询和总数统计
+    data_result, count_result = await asyncio.gather(
+        db.execute(data_query),
+        db.execute(count_query),
+    )
+    items = data_result.unique().scalars().all()
+    total = count_result.scalar() or 0
 
     records = [schema.model_validate(item) for item in items] if schema else items
-
-    # 正确统计总数（不用分页后的 query）
-    count_query = base_query.with_only_columns(func.count()).order_by(None)
-    result = await db.execute(count_query)
-    total = result.scalar() or 0
     pages = (total + page_params.page_size - 1) // page_params.page_size
     # 返回分页结果
     return ResponsePageDataModel(

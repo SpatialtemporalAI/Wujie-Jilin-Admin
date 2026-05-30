@@ -101,20 +101,22 @@ class UserManager(BaseUserManager):
 
     async def current_user(self, token: str) -> SysUser:
         """
-        获取当前认证的用户
-        这是一个直接可用的FastAPI依赖项，封装了JWTAuthManager.current_user方法，
-        用于在路由处理函数中验证并获取当前已认证的用户信息。
-        Args:
-            token: 通过OAuth2密码流程获取的JWT令牌
-            db: 数据库会话依赖
-        Returns:
-            AppUser: 当前认证用户的数据库模型实例
+        获取当前认证的用户（同一请求内缓存，避免重复查询）
         """
+        request: Request = request_ctx.get()
+        if request is not None:
+            cached = getattr(request.state, "_cached_current_user", None)
+            if cached is not None:
+                return cached
+
         user_id, _ = await self.verify_token_session(token)
         user = await self.session.execute(select(SysUser).where(SysUser.id == user_id))
         user = user.scalars().first()
         if user is None:
             raise TokenError()
+
+        if request is not None:
+            request.state._cached_current_user = user
         return user
 
     async def verify_token_session(
