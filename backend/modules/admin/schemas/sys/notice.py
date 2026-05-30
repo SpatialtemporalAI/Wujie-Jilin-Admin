@@ -11,6 +11,7 @@ from datetime import datetime
 
 from app.models.common.base import BaseRespEntity, BaseEntity, BoolField
 from app.models.common.page import PageRequest
+from core.security.sanitize import sanitize_rich_text
 
 
 class SysNoticeQueryParams(PageRequest):
@@ -44,6 +45,11 @@ class SysNoticeCreate(BaseEntity):
         if v not in allowed:
             raise ValueError(f"通知类型必须是以下之一: {allowed}")
         return v
+
+    @field_validator("content")
+    @classmethod
+    def sanitize_content(cls, v):
+        return sanitize_rich_text(v)
 
     @field_validator("target_type")
     @classmethod
@@ -100,6 +106,13 @@ class SysNoticeUpdate(BaseEntity):
         if v not in allowed:
             raise ValueError(f"通知类型必须是以下之一: {allowed}")
         return v
+
+    @field_validator("content")
+    @classmethod
+    def sanitize_content(cls, v):
+        if v is None:
+            return v
+        return sanitize_rich_text(v)
 
     @field_validator("target_type")
     @classmethod
