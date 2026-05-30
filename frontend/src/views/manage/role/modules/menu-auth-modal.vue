@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { computed, h, shallowRef, watch } from 'vue';
 import { NTag } from 'naive-ui';
-import { fetchAssignMenuToRole, fetchGetAllPages, fetchGetMenuTree, fetchGetRole } from '@/service/api';
+import { fetchAssignMenuToRole, fetchGetAllPages, fetchGetAssignMenuTree, fetchGetRole } from '@/service/api';
 import { menuTypeRecord } from '@/constants/business';
 import { $t } from '@/locales';
 
@@ -64,7 +64,7 @@ const pageSelectOptions = computed(() => {
 const tree = shallowRef<Api.SystemManage.MenuTree[]>([]);
 
 async function getTree() {
-  const { error, data } = await fetchGetMenuTree();
+  const { error, data } = await fetchGetAssignMenuTree();
 
   if (!error) {
     tree.value = data;

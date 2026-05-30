@@ -111,6 +111,14 @@ export function fetchGetMenuTree() {
   });
 }
 
+/** get user-scoped menu tree for role permission assignment (includes buttons) */
+export function fetchGetAssignMenuTree() {
+  return request<Api.SystemManage.MenuTree[]>({
+    url: '/admin/sys/menu/assign-tree',
+    method: 'get'
+  });
+}
+
 /** get menu list tree */
 export function fetchGetMenuListTree() {
   return request<Api.SystemManage.Menu[]>({

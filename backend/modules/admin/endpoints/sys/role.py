@@ -26,7 +26,7 @@ from modules.admin.deps.auth.permission import require_permission
 from modules.admin.exports import get_export_config
 from app.models.sys.user import SysUser
 
-from modules.admin.services.sys import RoleService
+from modules.admin.services.sys import RoleService, MenuService
 from modules.admin.schemas.sys.role import (
     SysRoleResponseData,
     SysRoleListResponse,
@@ -44,6 +44,13 @@ logger = logging.getLogger(__name__)
 role_router = APIRouter(
     prefix="/role", tags=["角色管理"], dependencies=[Depends(current_user)]
 )
+
+
+def _build_role_response(role) -> SysRoleResponseData:
+    """构建角色响应，从 ORM menus 关系中提取 menu_ids"""
+    resp = SysRoleResponseData.model_validate(role)
+    resp.menu_ids = [m.id for m in role.menus]
+    return resp
 
 
 @role_router.get("/list", response_model=ResponsePageModel[SysRoleListResponse], dependencies=[Depends(require_permission("sys:role:list"))])
@@ -122,7 +129,7 @@ async def get_role(
     logger.info(f"获取单个角色请求，角色ID: {role_id}")
 
     role = await RoleService.get_role(db, role_id)
-    role_response = SysRoleResponseData.model_validate(role)
+    role_response = _build_role_response(role)
 
     logger.info(f"获取单个角色成功，角色ID: {role_id}")
     return ResponseModel(data=role_response)
@@ -144,7 +151,7 @@ async def create_role(
     role = await RoleService.create_role(
         db, role_create, is_superuser=user.is_superuser
     )
-    role_response = SysRoleResponseData.model_validate(role)
+    role_response = _build_role_response(role)
 
     logger.info(f"创建角色成功，角色ID: {role.id}")
     return ResponseModel(data=role_response, msg="创建角色成功")
@@ -167,7 +174,7 @@ async def update_role(
     role = await RoleService.update_role(
         db, role_id, role_update, is_superuser=user.is_superuser
     )
-    role_response = SysRoleResponseData.model_validate(role)
+    role_response = _build_role_response(role)
 
     logger.info(f"更新角色成功，角色ID: {role_id}")
     return ResponseModel(data=role_response, msg="更新角色成功")
@@ -189,10 +196,15 @@ async def assign_menu_to_role(
         f"为角色分配菜单权限请求，角色ID: {role_id}, 菜单ID: {assign_in.menu_ids}"
     )
 
+    # 获取当前用户可分配的菜单范围
+    permitted_menu_ids = await MenuService.get_user_permitted_menu_ids(db, user)
+
     role = await RoleService.assign_menu_to_role(
-        db, role_id, assign_in.menu_ids, is_superuser=user.is_superuser
+        db, role_id, assign_in.menu_ids,
+        is_superuser=user.is_superuser,
+        permitted_menu_ids=permitted_menu_ids,
     )
-    role_response = SysRoleResponseData.model_validate(role)
+    role_response = _build_role_response(role)
 
     logger.info(f"为角色分配菜单权限成功，角色ID: {role_id}")
     return ResponseModel(data=role_response, msg="分配菜单权限成功")

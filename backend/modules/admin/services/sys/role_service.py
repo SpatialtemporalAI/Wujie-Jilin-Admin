@@ -276,7 +276,14 @@ class RoleService:
                 setattr(role, key, value)
 
         await db.commit()
-        await db.refresh(role)
+
+        # 重新查询以预加载菜单关系
+        result = await db.execute(
+            select(SysRole)
+            .options(joinedload(SysRole.menus))
+            .where(SysRole.id == role.id)
+        )
+        role = result.unique().scalar_one()
 
         logger.info("更新角色信息成功，角色ID: %s", role_id)
         return role
@@ -288,6 +295,7 @@ class RoleService:
         menu_ids: List[int],
         *,
         is_superuser: bool = False,
+        permitted_menu_ids: set[int] | None = None,
     ) -> SysRole:
         """
         为角色分配菜单权限
@@ -296,13 +304,14 @@ class RoleService:
             db: 数据库会话
             role_id: 角色ID
             menu_ids: 菜单ID列表
+            permitted_menu_ids: 当前用户被允许分配的菜单ID集合，None 表示不限制
 
         Returns:
             更新后的角色对象
 
         Raises:
             NotFoundError: 角色不存在
-            ForbiddenError: 不能修改系统内置角色
+            ForbiddenError: 不能修改系统内置角色或越权分配
         """
         logger.info("为角色分配菜单权限，角色ID: %s, 菜单ID列表: %s", role_id, menu_ids)
 
@@ -313,6 +322,13 @@ class RoleService:
         if role.is_system and not is_superuser:
             logger.warning("分配菜单失败，不能修改系统内置角色，角色ID: %s", role_id)
             raise ForbiddenError(msg="不能修改系统内置角色")
+
+        # 校验越权：非超管只能分配自身拥有的菜单
+        if permitted_menu_ids is not None and menu_ids:
+            unauthorized = set(menu_ids) - permitted_menu_ids
+            if unauthorized:
+                logger.warning("分配菜单失败，越权分配菜单ID: %s", unauthorized)
+                raise ForbiddenError(msg="不能分配自身没有的菜单权限")
 
         # 获取菜单
         if menu_ids:
@@ -331,7 +347,14 @@ class RoleService:
             role.menus = []
 
         await db.commit()
-        await db.refresh(role)
+
+        # 重新查询以预加载菜单关系
+        result = await db.execute(
+            select(SysRole)
+            .options(joinedload(SysRole.menus))
+            .where(SysRole.id == role.id)
+        )
+        role = result.unique().scalar_one()
 
         logger.info("为角色分配菜单权限成功，角色ID: %s", role_id)
         return role

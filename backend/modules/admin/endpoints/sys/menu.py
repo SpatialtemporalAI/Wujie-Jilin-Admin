@@ -132,6 +132,23 @@ async def get_menu_tree(
     return ResponseModel(data=menu_tree)
 
 
+@menu_router.get("/assign-tree", response_model=ResponseModel[List[SysMenuTreeResponse]])
+async def get_assign_menu_tree(
+    user: SysUser = Depends(current_user),
+    db: AsyncSession = Depends(get_session),
+):
+    """
+    获取当前用户可分配的菜单权限树（含按钮）。
+    用于角色权限分配时，只展示当前用户自身拥有的菜单和按钮。
+    """
+    logger.info(f"获取用户可分配菜单树，用户ID: {user.id}")
+
+    menu_tree = await MenuService.get_user_assign_menu_tree(db, user)
+
+    logger.info(f"获取用户可分配菜单树成功，共 {len(menu_tree)} 个根菜单")
+    return ResponseModel(data=menu_tree)
+
+
 @menu_router.get(
     "/user-menus", response_model=ResponseModel[List[SysMenuTreeResponse]]
 )

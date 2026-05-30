@@ -639,6 +639,171 @@ class MenuService:
         return root_menus
 
     @staticmethod
+    async def get_user_assign_menu_tree(
+        db: AsyncSession, user: SysUser
+    ) -> List[SysMenuTreeResponse]:
+        """
+        获取当前用户可分配的菜单权限树（包含按钮类型）。
+        超级用户返回全部菜单，普通用户仅返回自身角色拥有的菜单和按钮。
+
+        Args:
+            db: 数据库会话
+            user: 当前用户
+
+        Returns:
+            菜单权限树（含按钮）
+        """
+        logger.debug("获取用户可分配菜单树，用户ID: %s", user.id)
+
+        if user.is_superuser:
+            stmt = (
+                select(SysMenu)
+                .options(
+                    noload(SysMenu.children),
+                    noload(SysMenu.parent),
+                    noload(SysMenu.roles),
+                )
+                .where(SysMenu.status == True)
+                .order_by(SysMenu.sort, SysMenu.id)
+            )
+            result = await db.execute(stmt)
+            menus = result.scalars().all()
+        else:
+            # 预加载 user.roles.menus（包含按钮类型）
+            stmt = (
+                select(SysUser)
+                .options(
+                    joinedload(SysUser.roles).options(
+                        joinedload(SysRole.menus)
+                    )
+                )
+                .where(SysUser.id == user.id)
+            )
+            result = await db.execute(stmt)
+            user_with_relations = result.unique().scalar_one()
+
+            # 收集所有启用的菜单 ID（包含按钮）
+            menu_ids: set[int] = set()
+            for role in user_with_relations.roles:
+                if not role.status:
+                    continue
+                for menu in role.menus:
+                    if menu.status:
+                        menu_ids.add(menu.id)
+
+            # 补全祖先节点
+            if menu_ids:
+                parent_result = await db.execute(
+                    select(SysMenu.id, SysMenu.parent_id)
+                )
+                parent_map = dict(parent_result.all())
+                queue = list(menu_ids)
+                while queue:
+                    current = queue.pop()
+                    pid = parent_map.get(current)
+                    if pid and pid not in menu_ids:
+                        menu_ids.add(pid)
+                        queue.append(pid)
+
+            if not menu_ids:
+                return []
+
+            stmt = (
+                select(SysMenu)
+                .options(
+                    noload(SysMenu.children),
+                    noload(SysMenu.parent),
+                    noload(SysMenu.roles),
+                )
+                .where(
+                    SysMenu.id.in_(menu_ids),
+                    SysMenu.status == True,
+                )
+                .order_by(SysMenu.sort, SysMenu.id)
+            )
+            result = await db.execute(stmt)
+            menus = result.scalars().all()
+
+        # 构建菜单树
+        menu_map = {}
+        root_menus = []
+
+        for menu in menus:
+            menu_response = SysMenuTreeResponse(
+                id=menu.id,
+                label=menu.name,
+                pId=menu.parent_id,
+                menuType=_type_to_str(menu.type),
+                children=[],
+            )
+            menu_map[menu.id] = menu_response
+
+        for menu in menus:
+            menu_response = menu_map[menu.id]
+            if not menu.parent_id:
+                root_menus.append(menu_response)
+            else:
+                parent = menu_map.get(menu.parent_id)
+                if parent:
+                    parent.children.append(menu_response)
+
+        logger.debug("获取用户可分配菜单树成功，共 %s 个根菜单", len(root_menus))
+        return root_menus
+
+    @staticmethod
+    async def get_user_permitted_menu_ids(
+        db: AsyncSession, user: SysUser
+    ) -> set[int]:
+        """
+        获取用户有权限的菜单 ID 集合（含按钮）。超管返回 None 表示全部允许。
+
+        Args:
+            db: 数据库会话
+            user: 当前用户
+
+        Returns:
+            菜单 ID 集合，超管返回 None
+        """
+        if user.is_superuser:
+            return None
+
+        stmt = (
+            select(SysUser)
+            .options(
+                joinedload(SysUser.roles).options(
+                    joinedload(SysRole.menus)
+                )
+            )
+            .where(SysUser.id == user.id)
+        )
+        result = await db.execute(stmt)
+        user_with_relations = result.unique().scalar_one()
+
+        menu_ids: set[int] = set()
+        for role in user_with_relations.roles:
+            if not role.status:
+                continue
+            for menu in role.menus:
+                if menu.status:
+                    menu_ids.add(menu.id)
+
+        # 补全祖先节点
+        if menu_ids:
+            parent_result = await db.execute(
+                select(SysMenu.id, SysMenu.parent_id)
+            )
+            parent_map = dict(parent_result.all())
+            queue = list(menu_ids)
+            while queue:
+                current = queue.pop()
+                pid = parent_map.get(current)
+                if pid and pid not in menu_ids:
+                    menu_ids.add(pid)
+                    queue.append(pid)
+
+        return menu_ids
+
+    @staticmethod
     async def build_menu_tree_list(db: AsyncSession) -> List[SysMenuResponseData]:
         """
         获取菜单树形列表（包含完整菜单信息）
