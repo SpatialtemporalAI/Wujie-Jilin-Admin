@@ -12,6 +12,7 @@ import time
 from typing import Callable
 
 import jwt
+from starlette.background import BackgroundTask
 from starlette.middleware.base import BaseHTTPMiddleware
 from starlette.requests import Request
 from starlette.responses import Response
@@ -41,12 +42,8 @@ def _is_whitelisted(path: str) -> bool:
     return False
 
 
-def _extract_user_from_token(request: Request) -> tuple[int | None, str | None]:
-    """从 Authorization 头解析 JWT 获取 user_id 和 username，同时将 payload 存入 request.state 供下游复用"""
-    auth_header = request.headers.get("authorization", "")
-    if not auth_header.startswith("Bearer "):
-        return None, None
-    token = auth_header[7:]
+def _decode_jwt_sync(token: str) -> tuple[dict | None, str | None]:
+    """同步解析 JWT，供 asyncio.to_thread 调用"""
     try:
         payload = jwt.decode(
             token,
@@ -55,15 +52,24 @@ def _extract_user_from_token(request: Request) -> tuple[int | None, str | None]:
             audience=settings.JWT.AUDIENCE,
             options={"verify_exp": True},
         )
-        request.state._jwt_payload = payload
-        request.state._jwt_raw_token = token
         user_id = payload.get("user_id")
         username = payload.get("username")
-        if user_id:
-            return int(user_id), username or "unknown"
+        return payload, (int(user_id) if user_id else None, username or "unknown")
     except Exception:
-        pass
-    return None, None
+        return None, None
+
+
+async def _extract_user_from_token(request: Request) -> tuple[int | None, str | None]:
+    """从 Authorization 头解析 JWT，CPU 密集部分放到线程池"""
+    auth_header = request.headers.get("authorization", "")
+    if not auth_header.startswith("Bearer "):
+        return None, None
+    token = auth_header[7:]
+    payload, user_info = await asyncio.to_thread(_decode_jwt_sync, token)
+    if payload:
+        request.state._jwt_payload = payload
+        request.state._jwt_raw_token = token
+    return user_info or (None, None)
 
 
 async def _capture_request_body(request: Request) -> str | None:
@@ -86,7 +92,7 @@ async def _capture_request_body(request: Request) -> str | None:
 
 
 def _read_response_body_fast(response: Response) -> str | None:
-    """从已缓冲的响应中快速读取 body（BaseHTTPMiddleware 已缓冲，无需遍历 body_iterator）"""
+    """从已缓冲的响应中快速读取 body"""
     try:
         body = getattr(response, "body", None)
         if body:
@@ -110,7 +116,7 @@ async def _write_operation_log(
     response_result: str | None,
     elapsed_ms: float | None,
 ):
-    """异步写入操作日志到数据库"""
+    """异步写入操作日志到数据库，在响应发送后由 BackgroundTask 触发"""
     try:
         from database import get_session
         from app.models.sys.operation_log import SysOperationLog
@@ -133,7 +139,7 @@ async def _write_operation_log(
             db.add(log_entry)
             await db.commit()
     except Exception as e:
-        logger.error(f"写入操作日志失败: {e}")
+        logger.error("写入操作日志失败: %s", e)
 
 
 class OperationLogMiddleware(BaseHTTPMiddleware):
@@ -147,7 +153,7 @@ class OperationLogMiddleware(BaseHTTPMiddleware):
 
         start = time.monotonic()
 
-        user_id, username = _extract_user_from_token(request)
+        user_id, username = await _extract_user_from_token(request)
         ip = get_real_client_ip(request)
         request_params = await _capture_request_body(request)
 
@@ -157,18 +163,18 @@ class OperationLogMiddleware(BaseHTTPMiddleware):
 
         response_result = _read_response_body_fast(response)
 
-        asyncio.create_task(
-            _write_operation_log(
-                user_id=user_id,
-                username=username,
-                method=request.method,
-                path=path,
-                ip=ip,
-                request_params=request_params,
-                response_code=response.status_code,
-                response_result=response_result,
-                elapsed_ms=elapsed_ms,
-            )
+        # 用 BackgroundTask 附加到响应，在响应发送后才写 DB
+        response.background = BackgroundTask(
+            _write_operation_log,
+            user_id=user_id,
+            username=username,
+            method=request.method,
+            path=path,
+            ip=ip,
+            request_params=request_params,
+            response_code=response.status_code,
+            response_result=response_result,
+            elapsed_ms=elapsed_ms,
         )
 
         return response

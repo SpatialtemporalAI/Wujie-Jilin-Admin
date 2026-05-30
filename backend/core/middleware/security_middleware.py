@@ -8,6 +8,7 @@ import time
 
 from fastapi import Request
 from fastapi.responses import ORJSONResponse
+from starlette.background import BackgroundTask
 from starlette.middleware.base import BaseHTTPMiddleware
 
 from core.config import settings
@@ -15,6 +16,17 @@ from core.utils.ip_utils import get_real_client_ip
 from core.log.request_id_filter import set_request_id
 
 logger = getLogger(__name__)
+
+
+def _log_request(
+    method: str, path: str, status_code: int,
+    elapsed_ms: float, client_ip: str, request_id: str,
+):
+    """同步写审计日志，由 BackgroundTask 在响应发送后调用"""
+    logger.info(
+        "request completed: method=%s path=%s status=%s elapsed=%.1fms client_ip=%s request_id=%s",
+        method, path, status_code, elapsed_ms, client_ip, request_id,
+    )
 
 
 class RequestAuditMiddleware(BaseHTTPMiddleware):
@@ -32,8 +44,10 @@ class RequestAuditMiddleware(BaseHTTPMiddleware):
         response = await call_next(request)
         elapsed_ms = (time.monotonic() - start) * 1000
         response.headers[settings.TRACE_ID.REQUEST_HEADER_KEY] = request_id
-        logger.info(
-            "request completed: method=%s path=%s status=%s elapsed=%.1fms client_ip=%s request_id=%s",
+
+        # 审计日志移到响应发送后执行，不阻塞响应返回
+        response.background = BackgroundTask(
+            _log_request,
             request.method,
             request.url.path,
             response.status_code,
@@ -41,6 +55,7 @@ class RequestAuditMiddleware(BaseHTTPMiddleware):
             client_ip,
             request_id,
         )
+
         return response
 
 
