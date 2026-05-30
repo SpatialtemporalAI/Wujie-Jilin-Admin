@@ -9,6 +9,7 @@ class LoginPwdModel(BaseModel):
 
     username: str = Field(..., description="用户名")
     password: str = Field(..., description="密码")
+    captcha_token: str | None = Field(None, description="滑块验证码令牌")
 
 
 class LoginResponseData(BaseModel):

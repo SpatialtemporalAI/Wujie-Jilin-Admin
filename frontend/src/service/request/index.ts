@@ -130,6 +130,12 @@ export const request = createFlatRequest(
         return;
       }
 
+      // suppress captcha-related errors (handled by login component)
+      const captchaErrCode = responseData?.err_code;
+      if (captchaErrCode === 10911 || captchaErrCode === 10912 || captchaErrCode === 10913) {
+        return;
+      }
+
       showErrorMsg(request.state, message);
     }
   }

@@ -4,7 +4,9 @@ import { loginModuleRecord } from '@/constants/app';
 import { useAuthStore } from '@/store/modules/auth';
 import { useRouterPush } from '@/hooks/common/router';
 import { useFormRules, useNaiveForm } from '@/hooks/common/form';
+import { useSliderCaptcha } from '@/hooks/business/slider-captcha';
 import { $t } from '@/locales';
+import SliderCaptcha from '@/components/custom/slider-captcha.vue';
 
 defineOptions({
   name: 'PwdLogin'
@@ -13,6 +15,20 @@ defineOptions({
 const authStore = useAuthStore();
 const { toggleLoginModule } = useRouterPush();
 const { formRef, validate } = useNaiveForm();
+
+const {
+  captchaRequired,
+  captchaToken,
+  captchaId,
+  backgroundImage,
+  puzzleImage,
+  puzzleY,
+  sliderWidth,
+  loading: captchaLoading,
+  showCaptcha,
+  resetCaptcha,
+  fetchCaptcha
+} = useSliderCaptcha();
 
 interface FormModel {
   userName: string;
@@ -36,7 +52,34 @@ const rules = computed<Record<keyof FormModel, App.Global.FormRule[]>>(() => {
 
 async function handleSubmit() {
   await validate();
-  await authStore.login(model.userName, model.password);
+
+  if (captchaRequired.value && !captchaToken.value) {
+    showCaptcha();
+    return;
+  }
+
+  const errCode = await authStore.login(model.userName, model.password, captchaToken.value ?? undefined);
+
+  if (errCode === 10911) {
+    showCaptcha();
+  } else if (errCode) {
+    captchaToken.value = null;
+  } else {
+    resetCaptcha();
+  }
+}
+
+function onCaptchaSuccess(token: string) {
+  captchaToken.value = token;
+  handleSubmit();
+}
+
+function onCaptchaFail() {
+  captchaToken.value = null;
+}
+
+function onCaptchaRefresh() {
+  fetchCaptcha();
 }
 
 type AccountKey = 'super' | 'admin' | 'user';
@@ -90,6 +133,21 @@ async function handleAccountLogin(account: Account) {
           {{ $t('page.login.pwdLogin.forgetPassword') }}
         </NButton> -->
       </div>
+      <!-- Slider Captcha -->
+      <div v-if="captchaRequired" class="captcha-wrapper">
+        <NSpin :show="captchaLoading">
+          <SliderCaptcha
+            :captcha-id="captchaId"
+            :background-image="backgroundImage"
+            :puzzle-image="puzzleImage"
+            :puzzle-y="puzzleY"
+            :slider-width="sliderWidth"
+            @success="onCaptchaSuccess"
+            @fail="onCaptchaFail"
+            @refresh="onCaptchaRefresh"
+          />
+        </NSpin>
+      </div>
       <NButton type="primary" size="large" round block :loading="authStore.loginLoading" @click="handleSubmit">
         {{ $t('common.confirm') }}
       </NButton>
@@ -111,4 +169,10 @@ async function handleAccountLogin(account: Account) {
   </NForm>
 </template>
 
-<style scoped></style>
+<style scoped>
+.captcha-wrapper {
+  display: flex;
+  justify-content: center;
+  padding: 4px 0;
+}
+</style>

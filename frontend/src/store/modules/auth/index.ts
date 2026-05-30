@@ -107,12 +107,14 @@ export const useAuthStore = defineStore(SetupStoreId.Auth, () => {
    *
    * @param userName User name
    * @param password Password
+   * @param captchaToken Captcha token (required after failed attempts)
    * @param [redirect=true] Whether to redirect after login. Default is `true`
+   * @returns err_code from backend response, or undefined on success
    */
-  async function login(userName: string, password: string, redirect = true) {
+  async function login(userName: string, password: string, captchaToken?: string, redirect = true) {
     startLoading();
 
-    const { data: loginToken, error } = await fetchLogin(userName, password);
+    const { data: loginToken, error, response } = await fetchLogin(userName, password, captchaToken);
 
     if (!error) {
       const pass = await loginByToken(loginToken);
@@ -135,7 +137,12 @@ export const useAuthStore = defineStore(SetupStoreId.Auth, () => {
         });
       }
     } else {
-      resetStore();
+      const errCode = (response?.data as any)?.err_code;
+      if (errCode !== 10911) {
+        resetStore();
+      }
+      endLoading();
+      return errCode;
     }
 
     endLoading();

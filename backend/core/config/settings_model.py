@@ -138,6 +138,10 @@ class RateLimitModel(BaseModel):
     LOGIN_FAIL_MAX: int = Field(5, description="登录失败次数上限")
     LOGIN_FAIL_WINDOW: int = Field(600, description="登录失败统计窗口(秒)")
     LOGIN_FAIL_BLOCK_TTL: int = Field(1800, description="登录失败拉黑时长(秒)")
+    CAPTCHA_TRIGGER_THRESHOLD: int = Field(2, description="触发滑块验证的登录失败次数")
+    CAPTCHA_TOLERANCE: int = Field(5, description="滑块验证位置容差(像素)")
+    CAPTCHA_TOKEN_TTL: int = Field(300, description="验证码令牌有效期(秒)")
+    CAPTCHA_MAX_VERIFY_ATTEMPTS: int = Field(5, description="单次验证码最大验证次数")
     BLACKLIST_REDIS_TTL: int = Field(86400, description="Redis 黑名单兜底 TTL(秒)，到期重新从 DB 同步")
     WHITELIST_PATH_PREFIXES: Tuple[str, ...] = Field(
         (

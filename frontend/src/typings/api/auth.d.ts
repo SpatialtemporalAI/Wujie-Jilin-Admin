@@ -26,5 +26,22 @@ declare namespace Api {
       roles: string[];
       buttons: string[];
     }
+
+    interface CaptchaImageData {
+      captcha_id: string;
+      background_image: string;
+      puzzle_image: string;
+      puzzle_y: number;
+      slider_width: number;
+    }
+
+    interface CaptchaVerifyResponse {
+      captcha_token: string;
+    }
+
+    interface CaptchaCheckResponse {
+      required: boolean;
+      fail_count: number;
+    }
   }
 }

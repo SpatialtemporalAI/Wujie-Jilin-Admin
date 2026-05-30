@@ -78,6 +78,9 @@ class CustomErrorCode(CustomCodeBase):
     # 限流与安全 10901-11000
     RATE_LIMIT_EXCEEDED = (10901, "请求过于频繁")
     IP_BLOCKED = (10902, "IP 已被加入黑名单")
+    CAPTCHA_REQUIRED = (10911, "请完成滑块验证")
+    CAPTCHA_INVALID = (10912, "滑块验证码无效或已过期")
+    CAPTCHA_VERIFY_FAILED = (10913, "滑块验证失败，请重试")
     # 通知管理 10601-10700
     NOTICE_NOT_FOUND = (10601, "通知不存在")
     NOTICE_ALREADY_PUBLISHED = (10602, "通知已发布，不可编辑")

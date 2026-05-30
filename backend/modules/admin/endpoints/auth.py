@@ -27,6 +27,14 @@ from modules.admin.schemas.auth import (
 )
 from core.security.rate_limit import limit_by_ip
 from modules.admin.services.sys.rate_limit_service import RateLimitService
+from modules.admin.services.captcha_service import CaptchaService
+from modules.admin.schemas.captcha import (
+    CaptchaVerifyRequest,
+    CaptchaImageData,
+    CaptchaVerifyResponse,
+    CaptchaCheckResponse,
+)
+from core.security.rate_limit_config import RateLimitConfigProvider
 
 logger = logging.getLogger(__name__)
 
@@ -53,7 +61,58 @@ async def _write_login_log(username: str, ip: str | None, status: bool, detail: 
         logger.error(f"写入登录日志失败: {e}")
 
 
-# 登录路由
+# ---------------------------------------------------------------------------
+# 滑块验证码端点
+# ---------------------------------------------------------------------------
+
+
+@router.get(
+    "/captcha",
+    response_model=ResponseModel[CaptchaImageData],
+    summary="获取滑块验证码",
+    description="生成滑块拼图验证码图片，返回背景图、拼图块及位置信息",
+)
+async def get_captcha():
+    data = await CaptchaService.generate_captcha()
+    return response_base.success(data=data, msg="获取验证码成功")
+
+
+@router.post(
+    "/captcha/verify",
+    response_model=ResponseModel[CaptchaVerifyResponse],
+    summary="验证滑块位置",
+    description="验证用户拖动滑块的位置是否正确，正确则返回验证码令牌",
+)
+async def verify_captcha(req: CaptchaVerifyRequest = Body(...)):
+    token = await CaptchaService.verify_captcha(req.captcha_id, req.slide_x)
+    return response_base.success(
+        data=CaptchaVerifyResponse(captcha_token=token),
+        msg="验证成功",
+    )
+
+
+@router.get(
+    "/captcha/check",
+    response_model=ResponseModel[CaptchaCheckResponse],
+    summary="检查是否需要验证码",
+    description="根据当前IP的登录失败次数判断是否需要滑块验证",
+)
+async def check_captcha(request: Request):
+    ip = get_real_client_ip(request)
+    fail_count = await CaptchaService.get_failure_count(ip)
+    threshold = await RateLimitConfigProvider.get(
+        "rate_limit.captcha_trigger_threshold", settings.RATE_LIMIT.CAPTCHA_TRIGGER_THRESHOLD
+    )
+    return response_base.success(
+        data=CaptchaCheckResponse(required=fail_count >= threshold, fail_count=fail_count),
+    )
+
+
+# ---------------------------------------------------------------------------
+# 登录端点
+# ---------------------------------------------------------------------------
+
+
 @router.post(
     "/login",
     response_model=ResponseModel[LoginResponseData],
@@ -81,6 +140,19 @@ async def login(
         scope="admin",
         extra_suffix=username.lower(),
     )
+
+    # 滑块验证码检查
+    fail_count = await CaptchaService.get_failure_count(ip)
+    threshold = await RateLimitConfigProvider.get(
+        "rate_limit.captcha_trigger_threshold", settings.RATE_LIMIT.CAPTCHA_TRIGGER_THRESHOLD
+    )
+    if fail_count >= threshold:
+        from core.exception.errors import CustomErrorCode
+
+        if not login_pwd.captcha_token:
+            raise CustomError(error=CustomErrorCode.CAPTCHA_REQUIRED)
+        if not await CaptchaService.validate_captcha_token(login_pwd.captcha_token):
+            raise CustomError(error=CustomErrorCode.CAPTCHA_INVALID)
 
     try:
         password = login_pwd.password
