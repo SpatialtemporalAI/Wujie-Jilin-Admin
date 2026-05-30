@@ -83,7 +83,7 @@ class DictService:
             (字典列表, 总数)
         """
         try:
-            logger.info(
+            logger.debug(
                 "获取字典列表，查询参数: %s", query_params.model_dump(exclude_none=True)
             )
 
@@ -104,7 +104,7 @@ class DictService:
             result = await db.execute(query)
             dicts = result.scalars().all()
 
-            logger.info("获取字典列表成功，共 %d 条记录", total)
+            logger.debug("获取字典列表成功，共 %d 条记录", total)
             return dicts, total
 
         except Exception as e:
@@ -127,16 +127,20 @@ class DictService:
             NotFoundError: 字典不存在
         """
         try:
-            logger.info("获取字典详情，字典ID: %d", dict_id)
+            logger.debug("获取字典详情，字典ID: %d", dict_id)
 
-            result = await db.execute(select(SysDict).where(SysDict.id == dict_id))
+            result = await db.execute(
+                select(SysDict)
+                .options(noload(SysDict.dict_items))
+                .where(SysDict.id == dict_id)
+            )
             dict_obj = result.scalar_one_or_none()
 
             if not dict_obj:
                 logger.warning("字典不存在，字典ID: %d", dict_id)
                 raise NotFoundError(msg=f"字典 {dict_id} 不存在")
 
-            logger.info("获取字典详情成功，字典ID: %d", dict_id)
+            logger.debug("获取字典详情成功，字典ID: %d", dict_id)
             return dict_obj
 
         except NotFoundError:
@@ -161,16 +165,20 @@ class DictService:
             NotFoundError: 字典不存在
         """
         try:
-            logger.info("通过编码获取字典，字典编码: %s", code)
+            logger.debug("通过编码获取字典，字典编码: %s", code)
 
-            result = await db.execute(select(SysDict).where(SysDict.code == code))
+            result = await db.execute(
+                select(SysDict)
+                .options(noload(SysDict.dict_items))
+                .where(SysDict.code == code)
+            )
             dict_obj = result.scalar_one_or_none()
 
             if not dict_obj:
                 logger.warning("字典不存在，字典编码: %s", code)
                 raise NotFoundError(msg=f"字典编码 {code} 不存在")
 
-            logger.info("通过编码获取字典成功，字典编码: %s", code)
+            logger.debug("通过编码获取字典成功，字典编码: %s", code)
             return dict_obj
 
         except NotFoundError:
@@ -195,7 +203,7 @@ class DictService:
             NotFoundError: 字典不存在
         """
         try:
-            logger.info("获取字典及其字典项，字典ID: %d", dict_id)
+            logger.debug("获取字典及其字典项，字典ID: %d", dict_id)
 
             from sqlalchemy.orm import joinedload
 
@@ -210,7 +218,7 @@ class DictService:
                 logger.warning("字典不存在，字典ID: %d", dict_id)
                 raise NotFoundError(msg=f"字典 {dict_id} 不存在")
 
-            logger.info("获取字典及其字典项成功，字典ID: %d", dict_id)
+            logger.debug("获取字典及其字典项成功，字典ID: %d", dict_id)
             return dict_obj
 
         except NotFoundError:
@@ -241,7 +249,9 @@ class DictService:
 
             # 检查字典编码是否已存在
             result = await db.execute(
-                select(SysDict).where(SysDict.code == dict_in.code)
+                select(SysDict)
+                .options(noload(SysDict.dict_items))
+                .where(SysDict.code == dict_in.code)
             )
             if result.scalar_one_or_none():
                 logger.warning("字典编码已存在，编码: %s", dict_in.code)
@@ -303,7 +313,11 @@ class DictService:
             )
 
             # 查询字典
-            result = await db.execute(select(SysDict).where(SysDict.id == dict_id))
+            result = await db.execute(
+                select(SysDict)
+                .options(noload(SysDict.dict_items))
+                .where(SysDict.id == dict_id)
+            )
             existing_dict = result.scalar_one_or_none()
 
             if not existing_dict:
@@ -405,7 +419,11 @@ class DictService:
             logger.info("删除字典，字典ID: %d", dict_id)
 
             # 查询字典
-            result = await db.execute(select(SysDict).where(SysDict.id == dict_id))
+            result = await db.execute(
+                select(SysDict)
+                .options(noload(SysDict.dict_items))
+                .where(SysDict.id == dict_id)
+            )
             dict_obj = result.scalar_one_or_none()
 
             if not dict_obj:
@@ -481,7 +499,7 @@ class DictService:
             (字典项列表, 总数)
         """
         try:
-            logger.info(
+            logger.debug(
                 "获取字典项列表，查询参数: %s",
                 query_params.model_dump(exclude_none=True),
             )
@@ -503,7 +521,7 @@ class DictService:
             result = await db.execute(query)
             dict_items = result.scalars().all()
 
-            logger.info("获取字典项列表成功，共 %d 条记录", total)
+            logger.debug("获取字典项列表成功，共 %d 条记录", total)
             return dict_items, total
 
         except Exception as e:
@@ -525,10 +543,11 @@ class DictService:
             字典项列表
         """
         try:
-            logger.info("通过字典编码获取字典项，字典编码: %s", dict_code)
+            logger.debug("通过字典编码获取字典项，字典编码: %s", dict_code)
 
             query = (
                 select(SysDictItem)
+                .options(noload(SysDictItem.dict))
                 .join(SysDict, SysDictItem.dict_id == SysDict.id)
                 .where(SysDict.code == dict_code)
                 .where(SysDictItem.status == True)
@@ -539,7 +558,7 @@ class DictService:
             result = await db.execute(query)
             dict_items = result.scalars().all()
 
-            logger.info(
+            logger.debug(
                 "通过字典编码获取字典项成功，字典编码: %s，数量: %d",
                 dict_code,
                 len(dict_items),
@@ -566,10 +585,12 @@ class DictService:
             NotFoundError: 字典项不存在
         """
         try:
-            logger.info("获取字典项详情，字典项ID: %d", item_id)
+            logger.debug("获取字典项详情，字典项ID: %d", item_id)
 
             result = await db.execute(
-                select(SysDictItem).where(SysDictItem.id == item_id)
+                select(SysDictItem)
+                .options(noload(SysDictItem.dict))
+                .where(SysDictItem.id == item_id)
             )
             dict_item = result.scalar_one_or_none()
 
@@ -577,7 +598,7 @@ class DictService:
                 logger.warning("字典项不存在，字典项ID: %d", item_id)
                 raise NotFoundError(msg=f"字典项 {item_id} 不存在")
 
-            logger.info("获取字典项详情成功，字典项ID: %d", item_id)
+            logger.debug("获取字典项详情成功，字典项ID: %d", item_id)
             return dict_item
 
         except NotFoundError:
@@ -610,7 +631,9 @@ class DictService:
 
             # 检查字典是否存在
             result = await db.execute(
-                select(SysDict).where(SysDict.id == item_in.dict_id)
+                select(SysDict)
+                .options(noload(SysDict.dict_items))
+                .where(SysDict.id == item_in.dict_id)
             )
             if not result.scalar_one_or_none():
                 logger.warning("字典不存在，字典ID: %d", item_in.dict_id)
@@ -669,7 +692,9 @@ class DictService:
 
             # 查询字典项
             result = await db.execute(
-                select(SysDictItem).where(SysDictItem.id == item_id)
+                select(SysDictItem)
+                .options(noload(SysDictItem.dict))
+                .where(SysDictItem.id == item_id)
             )
             existing_item = result.scalar_one_or_none()
 
@@ -757,7 +782,9 @@ class DictService:
 
             # 查询字典项
             result = await db.execute(
-                select(SysDictItem).where(SysDictItem.id == item_id)
+                select(SysDictItem)
+                .options(noload(SysDictItem.dict))
+                .where(SysDictItem.id == item_id)
             )
             dict_item = result.scalar_one_or_none()
 

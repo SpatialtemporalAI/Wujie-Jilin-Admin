@@ -54,13 +54,13 @@ class SysMenu(Base):
     roles: Mapped[List["SysRole"]] = relationship(
         secondary=sys_role_menu_association,
         back_populates="menus",
-        lazy="selectin",
+        lazy="noload",
         init=False,
     )
     # 与自身的一对多关系（子菜单）
     children: Mapped[List["SysMenu"]] = relationship(
         back_populates="parent",
-        lazy="selectin",
+        lazy="noload",
         cascade="all, delete-orphan",
         init=False,
     )
@@ -68,7 +68,7 @@ class SysMenu(Base):
     parent: Mapped["SysMenu"] = relationship(
         back_populates="children",
         remote_side="SysMenu.id",
-        lazy="selectin",
+        lazy="noload",
         init=False,
     )
     meta_hidden: Mapped[bool] = mapped_column(

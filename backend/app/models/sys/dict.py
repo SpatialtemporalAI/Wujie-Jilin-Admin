@@ -24,7 +24,7 @@ class SysDict(Base):
     # 关联关系
     # 与字典数据表的一对多关系
     dict_items: Mapped[List["SysDictItem"]] = relationship(
-        back_populates="dict", lazy="selectin", init=False
+        back_populates="dict", lazy="noload", init=False
     )
     # 是否启用
     status: Mapped[bool] = mapped_column(
@@ -64,7 +64,7 @@ class SysDictItem(Base):
     )
     # 关联关系
     # 与字典表的多对一关系
-    dict: Mapped["SysDict"] = relationship(back_populates="dict_items", lazy="selectin", init=False)
+    dict: Mapped["SysDict"] = relationship(back_populates="dict_items", lazy="noload", init=False)
     # 是否启用
     status: Mapped[bool] = mapped_column(
         Boolean, default=True, comment="状态：True-启用，False-禁用"

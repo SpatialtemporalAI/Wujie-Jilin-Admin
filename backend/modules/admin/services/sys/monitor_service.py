@@ -4,6 +4,7 @@
 """
 系统监控服务
 """
+import asyncio
 import logging
 import platform
 from datetime import datetime, timedelta, timezone
@@ -31,13 +32,8 @@ class MonitorService:
         return round(n / (1024 ** 2))
 
     @staticmethod
-    async def get_system_metrics() -> dict:
-        """
-        获取系统实时指标
-
-        Returns:
-            包含CPU、内存、磁盘等系统信息的字典
-        """
+    def _collect_system_metrics() -> dict:
+        """同步收集系统指标（在线程中执行）"""
         # CPU: 非阻塞调用，首次可能返回0
         cpu_percent = psutil.cpu_percent(interval=None)
         cpu_percent_per_core = psutil.cpu_percent(interval=None, percpu=True)
@@ -83,6 +79,16 @@ class MonitorService:
             "os_name": platform.platform(),
             "cpu_count": psutil.cpu_count(logical=True),
         }
+
+    @staticmethod
+    async def get_system_metrics() -> dict:
+        """
+        获取系统实时指标
+
+        Returns:
+            包含CPU、内存、磁盘等系统信息的字典
+        """
+        return await asyncio.to_thread(MonitorService._collect_system_metrics)
 
     @staticmethod
     async def get_api_stats(db: AsyncSession, minutes: int = 60) -> list[dict]:

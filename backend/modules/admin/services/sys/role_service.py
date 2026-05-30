@@ -8,7 +8,7 @@
 import logging
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select, func, and_, Select
-from sqlalchemy.orm import joinedload
+from sqlalchemy.orm import joinedload, noload
 from typing import List, Optional, Tuple
 
 from app.models.sys.role import SysRole
@@ -78,7 +78,7 @@ class RoleService:
         Returns:
             Tuple[角色列表, 总记录数]
         """
-        logger.info(f"获取角色列表，查询参数: {query_params}")
+        logger.debug("获取角色列表，查询参数: %s", query_params)
 
         # 构建查询
         base_query = RoleService.build_role_query(query_params)
@@ -96,7 +96,7 @@ class RoleService:
         result = await db.execute(paginated_query)
         roles = result.unique().scalars().all()
 
-        logger.info(f"获取角色列表成功，共 {total} 条记录")
+        logger.debug("获取角色列表成功，共 %s 条记录", total)
         return roles, total
 
     @staticmethod
@@ -114,7 +114,7 @@ class RoleService:
         Raises:
             NotFoundError: 角色不存在
         """
-        logger.info(f"获取角色信息，角色ID: {role_id}")
+        logger.debug("获取角色信息，角色ID: %s", role_id)
 
         result = await db.execute(
             select(SysRole)
@@ -124,10 +124,10 @@ class RoleService:
         role = result.unique().scalar_one_or_none()
 
         if not role:
-            logger.warning(f"角色不存在，角色ID: {role_id}")
+            logger.warning("角色不存在，角色ID: %s", role_id)
             raise NotFoundError(msg=f"角色 {role_id} 不存在")
 
-        logger.info(f"获取角色信息成功，角色名: {role.name}")
+        logger.debug("获取角色信息成功，角色名: %s", role.name)
         return role
 
     @staticmethod
@@ -162,11 +162,11 @@ class RoleService:
         Raises:
             ConflictError: 角色编码已存在
         """
-        logger.info(f"创建角色，角色名: {role_create.name}, 编码: {role_create.code}")
+        logger.info("创建角色，角色名: %s, 编码: %s", role_create.name, role_create.code)
 
         # 检查角色编码是否已存在
         if await RoleService.get_role_by_code(db, role_create.code):
-            logger.warning(f"创建角色失败，角色编码已存在: {role_create.code}")
+            logger.warning("创建角色失败，角色编码已存在: %s", role_create.code)
             raise ConflictError(msg="角色编码已存在")
 
         # 创建角色对象
@@ -183,7 +183,13 @@ class RoleService:
         # 分配菜单
         if role_create.menu_ids:
             result = await db.execute(
-                select(SysMenu).where(SysMenu.id.in_(role_create.menu_ids))
+                select(SysMenu)
+                .options(
+                    noload(SysMenu.children),
+                    noload(SysMenu.parent),
+                    noload(SysMenu.roles),
+                )
+                .where(SysMenu.id.in_(role_create.menu_ids))
             )
             menus = result.scalars().all()
             role.menus = menus
@@ -200,7 +206,7 @@ class RoleService:
         )
         role_with_menus = result.unique().scalar_one()
 
-        logger.info(f"创建角色成功，角色ID: {role.id}")
+        logger.info("创建角色成功，角色ID: %s", role.id)
         return role_with_menus
 
     @staticmethod
@@ -226,21 +232,21 @@ class RoleService:
             NotFoundError: 角色不存在
             ForbiddenError: 不能修改系统内置角色
         """
-        logger.info(f"更新角色信息，角色ID: {role_id}")
+        logger.info("更新角色信息，角色ID: %s", role_id)
 
         # 获取角色
         role = await RoleService.get_role(db, role_id)
 
         # 检查是否为系统内置角色
         if role.is_system and not is_superuser:
-            logger.warning(f"更新角色失败，不能修改系统内置角色，角色ID: {role_id}")
+            logger.warning("更新角色失败，不能修改系统内置角色，角色ID: %s", role_id)
             raise ForbiddenError(msg="不能修改系统内置角色")
 
         # 检查角色编码是否已存在（如果要更新编码的话）
         if role_update.code and role_update.code != role.code:
             existing_role = await RoleService.get_role_by_code(db, role_update.code)
             if existing_role:
-                logger.warning(f"更新角色失败，角色编码已存在: {role_update.code}")
+                logger.warning("更新角色失败，角色编码已存在: %s", role_update.code)
                 raise ConflictError(msg="角色编码已存在")
 
         # 更新角色信息
@@ -251,7 +257,13 @@ class RoleService:
             menu_ids = update_data.pop("menu_ids")
             if menu_ids:
                 result = await db.execute(
-                    select(SysMenu).where(SysMenu.id.in_(menu_ids))
+                    select(SysMenu)
+                    .options(
+                        noload(SysMenu.children),
+                        noload(SysMenu.parent),
+                        noload(SysMenu.roles),
+                    )
+                    .where(SysMenu.id.in_(menu_ids))
                 )
                 menus = result.scalars().all()
                 role.menus = menus
@@ -266,7 +278,7 @@ class RoleService:
         await db.commit()
         await db.refresh(role)
 
-        logger.info(f"更新角色信息成功，角色ID: {role_id}")
+        logger.info("更新角色信息成功，角色ID: %s", role_id)
         return role
 
     @staticmethod
@@ -292,19 +304,27 @@ class RoleService:
             NotFoundError: 角色不存在
             ForbiddenError: 不能修改系统内置角色
         """
-        logger.info(f"为角色分配菜单权限，角色ID: {role_id}, 菜单ID列表: {menu_ids}")
+        logger.info("为角色分配菜单权限，角色ID: %s, 菜单ID列表: %s", role_id, menu_ids)
 
         # 获取角色
         role = await RoleService.get_role(db, role_id)
 
         # 检查是否为系统内置角色
         if role.is_system and not is_superuser:
-            logger.warning(f"分配菜单失败，不能修改系统内置角色，角色ID: {role_id}")
+            logger.warning("分配菜单失败，不能修改系统内置角色，角色ID: %s", role_id)
             raise ForbiddenError(msg="不能修改系统内置角色")
 
         # 获取菜单
         if menu_ids:
-            result = await db.execute(select(SysMenu).where(SysMenu.id.in_(menu_ids)))
+            result = await db.execute(
+                select(SysMenu)
+                .options(
+                    noload(SysMenu.children),
+                    noload(SysMenu.parent),
+                    noload(SysMenu.roles),
+                )
+                .where(SysMenu.id.in_(menu_ids))
+            )
             menus = result.scalars().all()
             role.menus = menus
         else:
@@ -313,7 +333,7 @@ class RoleService:
         await db.commit()
         await db.refresh(role)
 
-        logger.info(f"为角色分配菜单权限成功，角色ID: {role_id}")
+        logger.info("为角色分配菜单权限成功，角色ID: %s", role_id)
         return role
 
     @staticmethod
@@ -334,24 +354,24 @@ class RoleService:
             NotFoundError: 角色不存在
             ForbiddenError: 不能删除系统内置角色或默认角色
         """
-        logger.info(f"删除角色，角色ID: {role_id}")
+        logger.info("删除角色，角色ID: %s", role_id)
 
         # 获取角色
         role = await RoleService.get_role(db, role_id)
 
         # 检查是否为系统内置角色或默认角色
         if role.is_system and not is_superuser:
-            logger.warning(f"删除角色失败，不能删除系统内置角色，角色ID: {role_id}")
+            logger.warning("删除角色失败，不能删除系统内置角色，角色ID: %s", role_id)
             raise ForbiddenError(msg="不能删除系统内置角色")
 
         if role.is_default:
-            logger.warning(f"删除角色失败，不能删除默认角色，角色ID: {role_id}")
+            logger.warning("删除角色失败，不能删除默认角色，角色ID: %s", role_id)
             raise ForbiddenError(msg="不能删除默认角色")
 
         await db.delete(role)
         await db.commit()
 
-        logger.info(f"删除角色成功，角色ID: {role_id}")
+        logger.info("删除角色成功，角色ID: %s", role_id)
         return True
 
     @staticmethod
@@ -368,7 +388,7 @@ class RoleService:
         Returns:
             删除的角色数量
         """
-        logger.info(f"批量删除角色，角色ID列表: {role_ids}")
+        logger.info("批量删除角色，角色ID列表: %s", role_ids)
 
         delete_count = 0
         for role_id in role_ids:
@@ -379,7 +399,7 @@ class RoleService:
                 logger.error(f"删除角色失败，角色ID: {role_id}, 错误: {str(e)}")
                 raise e
 
-        logger.info(f"批量删除角色成功，共删除 {delete_count} 个角色")
+        logger.info("批量删除角色成功，共删除 %s 个角色", delete_count)
         return delete_count
 
     @staticmethod
@@ -401,7 +421,7 @@ class RoleService:
         Returns:
             更新的角色数量
         """
-        logger.info(f"批量更新角色状态，角色ID列表: {role_ids}, 状态: {status}")
+        logger.info("批量更新角色状态，角色ID列表: %s, 状态: %s", role_ids, status)
 
         # 获取角色
         result = await db.execute(
@@ -416,11 +436,11 @@ class RoleService:
                 role.status = status
                 update_count += 1
             else:
-                logger.warning(f"不能修改系统内置角色状态，角色ID: {role.id}")
+                logger.warning("不能修改系统内置角色状态，角色ID: %s", role.id)
 
         await db.commit()
 
-        logger.info(f"批量更新角色状态成功，共 {update_count} 个角色被更新")
+        logger.info("批量更新角色状态成功，共 %s 个角色被更新", update_count)
         return update_count
 
     @staticmethod
@@ -434,15 +454,14 @@ class RoleService:
         Returns:
             启用的角色列表
         """
-        logger.info("获取所有启用的角色")
+        logger.debug("获取所有启用的角色")
 
         query = (
             select(SysRole)
-            .options(joinedload(SysRole.menus))
             .where(SysRole.status == True)
         )
         result = await db.execute(query)
-        roles = result.unique().scalars().all()
+        roles = result.scalars().all()
 
-        logger.info(f"获取所有启用的角色成功，共 {len(roles)} 个角色")
+        logger.debug("获取所有启用的角色成功，共 %s 个角色", len(roles))
         return roles

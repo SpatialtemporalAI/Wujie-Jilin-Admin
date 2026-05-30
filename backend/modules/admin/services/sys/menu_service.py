@@ -8,7 +8,7 @@
 import logging
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select, and_,Select
-from sqlalchemy.orm import noload, joinedload
+from sqlalchemy.orm import noload, joinedload, selectinload
 from typing import List, Optional, Tuple
 
 from sqlalchemy import func
@@ -52,12 +52,14 @@ class MenuService:
         Returns:
             菜单列表
         """
-        logger.info(f"获取菜单列表，查询参数: {query_params}")
+        logger.debug("获取菜单列表，查询参数: %s", query_params)
 
         # 构建基础查询
-        base_query = select(SysMenu)
-
-        # 添加查询条件
+        base_query = select(SysMenu).options(
+            noload(SysMenu.children),
+            noload(SysMenu.parent),
+            noload(SysMenu.roles),
+        )
         conditions = []
         if query_params.status is not None:
             conditions.append(SysMenu.status == query_params.status)
@@ -76,7 +78,7 @@ class MenuService:
         result = await db.execute(base_query)
         menus = result.scalars().all()
 
-        logger.info(f"获取菜单列表成功，共 {len(menus)} 条记录")
+        logger.debug("获取菜单列表成功，共 %s 条记录", len(menus))
         return menus
 
     @staticmethod
@@ -137,8 +139,9 @@ class MenuService:
         Returns:
             Tuple[菜单列表, 总记录数]
         """
-        logger.info(
-            f"获取菜单列表（分页），查询参数: {query_params}, 页码: {page}, 每页条数: {page_size}"
+        logger.debug(
+            "获取菜单列表（分页），查询参数: %s, 页码: %s, 每页条数: %s",
+            query_params, page, page_size,
         )
 
         # 构建查询
@@ -157,8 +160,9 @@ class MenuService:
         result = await db.execute(paginated_query)
         menus = result.scalars().all()
 
-        logger.info(
-            f"获取菜单列表（分页）成功，共 {total} 条记录，当前页 {len(menus)} 条"
+        logger.debug(
+            "获取菜单列表（分页）成功，共 %s 条记录，当前页 %s 条",
+            total, len(menus),
         )
         return menus, total
 
@@ -177,10 +181,14 @@ class MenuService:
         Returns:
             菜单树结构
         """
-        logger.info(f"获取菜单树结构，状态: {status}")
+        logger.debug("获取菜单树结构，状态: %s", status)
 
         # 先获取所有菜单
-        base_query = select(SysMenu).order_by(SysMenu.sort, SysMenu.id)
+        base_query = select(SysMenu).options(
+            noload(SysMenu.children),
+            noload(SysMenu.parent),
+            noload(SysMenu.roles),
+        ).order_by(SysMenu.sort, SysMenu.id)
         if status is not None:
             base_query = base_query.where(SysMenu.status == status)
 
@@ -212,7 +220,7 @@ class MenuService:
                 if parent:
                     parent.children.append(menu_response)
 
-        logger.info(f"获取菜单树结构成功，共 {len(root_menus)} 个根菜单")
+        logger.debug("获取菜单树结构成功，共 %s 个根菜单", len(root_menus))
         return root_menus
 
     @staticmethod
@@ -230,20 +238,24 @@ class MenuService:
         Raises:
             NotFoundError: 菜单不存在
         """
-        logger.info(f"获取菜单信息，菜单ID: {menu_id}")
+        logger.debug("获取菜单信息，菜单ID: %s", menu_id)
 
         result = await db.execute(
             select(SysMenu)
-            .options(noload(SysMenu.children))
+            .options(
+                noload(SysMenu.children),
+                noload(SysMenu.parent),
+                noload(SysMenu.roles),
+            )
             .where(SysMenu.id == menu_id)
         )
         menu = result.scalar_one_or_none()
 
         if not menu:
-            logger.warning(f"菜单不存在，菜单ID: {menu_id}")
+            logger.warning("菜单不存在，菜单ID: %s", menu_id)
             raise NotFoundError(msg=f"菜单 {menu_id} 不存在")
 
-        logger.info(f"获取菜单信息成功，菜单名称: {menu.name}")
+        logger.debug("获取菜单信息成功，菜单名称: %s", menu.name)
         return menu
 
     @staticmethod
@@ -262,21 +274,27 @@ class MenuService:
             NotFoundError: 父菜单不存在
             ConflictError: 菜单名称已存在
         """
-        logger.info(f"创建菜单，菜单名称: {menu_create.name}")
+        logger.info("创建菜单，菜单名称: %s", menu_create.name)
 
         # 检查父菜单是否存在
         if menu_create.parent_id:
             result = await db.execute(
-                select(SysMenu).where(SysMenu.id == menu_create.parent_id)
+                select(SysMenu)
+                .options(
+                    noload(SysMenu.children),
+                    noload(SysMenu.parent),
+                    noload(SysMenu.roles),
+                )
+                .where(SysMenu.id == menu_create.parent_id)
             )
             parent_menu = result.scalar_one_or_none()
             if not parent_menu:
-                logger.warning(f"创建菜单失败，父菜单不存在: {menu_create.parent_id}")
+                logger.warning("创建菜单失败，父菜单不存在: %s", menu_create.parent_id)
                 raise NotFoundError(msg=f"父菜单 {menu_create.parent_id} 不存在")
 
             # 按钮类型菜单的上级仅允许为菜单类型
             if menu_create.type == MenuType.BUTTON and parent_menu.type != MenuType.MENU:
-                logger.warning(f"创建菜单失败，按钮类型菜单的上级仅允许为菜单类型: parent_type={parent_menu.type}")
+                logger.warning("创建菜单失败，按钮类型菜单的上级仅允许为菜单类型: parent_type=%s", parent_menu.type)
                 raise ConflictError(msg="按钮类型菜单的上级仅允许为菜单类型")
 
         # 按钮类型菜单必须指定上级菜单
@@ -308,7 +326,7 @@ class MenuService:
         await db.commit()
         await db.refresh(menu)
 
-        logger.info(f"创建菜单成功，菜单ID: {menu.id}")
+        logger.info("创建菜单成功，菜单ID: %s", menu.id)
         return menu
 
     @staticmethod
@@ -330,14 +348,14 @@ class MenuService:
             NotFoundError: 菜单不存在或父菜单不存在
             ConflictError: 不能将自己设置为父菜单
         """
-        logger.info(f"更新菜单信息，菜单ID: {menu_id}")
+        logger.info("更新菜单信息，菜单ID: %s", menu_id)
 
         # 获取菜单
         menu = await MenuService.get_menu(db, menu_id)
 
         # 检查是否为系统内置菜单
         if menu.is_system and not is_superuser:
-            logger.warning(f"更新菜单失败，不能修改系统内置菜单，菜单ID: {menu_id}")
+            logger.warning("更新菜单失败，不能修改系统内置菜单，菜单ID: %s", menu_id)
             raise ForbiddenError(msg="不能修改系统内置菜单")
 
         # 检查父菜单
@@ -353,24 +371,30 @@ class MenuService:
         if menu_update.parent_id is not None:
             # 不能将自己设置为父菜单
             if menu_update.parent_id == menu_id:
-                logger.warning(f"更新菜单失败，不能将自己设置为父菜单: {menu_id}")
+                logger.warning("更新菜单失败，不能将自己设置为父菜单: %s", menu_id)
                 raise ConflictError(msg="不能将自己设置为父菜单")
 
             # 检查父菜单是否存在
             if menu_update.parent_id:
                 result = await db.execute(
-                    select(SysMenu).where(SysMenu.id == menu_update.parent_id)
+                    select(SysMenu)
+                    .options(
+                        noload(SysMenu.children),
+                        noload(SysMenu.parent),
+                        noload(SysMenu.roles),
+                    )
+                    .where(SysMenu.id == menu_update.parent_id)
                 )
                 parent_menu = result.scalar_one_or_none()
                 if not parent_menu:
                     logger.warning(
-                        f"更新菜单失败，父菜单不存在: {menu_update.parent_id}"
+                        "更新菜单失败，父菜单不存在: %s", menu_update.parent_id,
                     )
                     raise NotFoundError(msg=f"父菜单 {menu_update.parent_id} 不存在")
 
                 # 按钮类型菜单的上级仅允许为菜单类型
                 if final_type == MenuType.BUTTON and parent_menu.type != MenuType.MENU:
-                    logger.warning(f"更新菜单失败，按钮类型菜单的上级仅允许为菜单类型: parent_type={parent_menu.type}")
+                    logger.warning("更新菜单失败，按钮类型菜单的上级仅允许为菜单类型: parent_type=%s", parent_menu.type)
                     raise ConflictError(msg="按钮类型菜单的上级仅允许为菜单类型")
 
                 # 检查循环引用：向上遍历目标父菜单的祖先链，确保当前菜单不在其中
@@ -378,7 +402,7 @@ class MenuService:
                 checked = set()
                 while ancestor_id and ancestor_id not in checked:
                     if ancestor_id == menu_id:
-                        logger.warning(f"更新菜单失败，循环引用: 菜单 {menu_id} 的后代不能作为父菜单")
+                        logger.warning("更新菜单失败，循环引用: 菜单 %s 的后代不能作为父菜单", menu_id)
                         raise ConflictError(msg="不能将自己的子菜单设置为父菜单")
                     checked.add(ancestor_id)
                     anc_result = await db.execute(
@@ -395,7 +419,7 @@ class MenuService:
         await db.commit()
         await db.refresh(menu)
 
-        logger.info(f"更新菜单信息成功，菜单ID: {menu_id}")
+        logger.info("更新菜单信息成功，菜单ID: %s", menu_id)
         return menu
 
     @staticmethod
@@ -413,20 +437,20 @@ class MenuService:
         Raises:
             NotFoundError: 菜单不存在
         """
-        logger.info(f"删除菜单，菜单ID: {menu_id}")
+        logger.info("删除菜单，菜单ID: %s", menu_id)
 
         # 获取菜单
         menu = await MenuService.get_menu(db, menu_id)
 
         # 检查是否为系统内置菜单
         if menu.is_system and not is_superuser:
-            logger.warning(f"删除菜单失败，不能删除系统内置菜单，菜单ID: {menu_id}")
+            logger.warning("删除菜单失败，不能删除系统内置菜单，菜单ID: %s", menu_id)
             raise ForbiddenError(msg="不能删除系统内置菜单")
 
         await db.delete(menu)
         await db.commit()
 
-        logger.info(f"删除菜单成功，菜单ID: {menu_id}")
+        logger.info("删除菜单成功，菜单ID: %s", menu_id)
         return True
 
     @staticmethod
@@ -444,10 +468,18 @@ class MenuService:
         Returns:
             更新的菜单数量
         """
-        logger.info(f"批量更新菜单状态，菜单ID列表: {menu_ids}, 状态: {status}")
+        logger.info("批量更新菜单状态，菜单ID列表: %s, 状态: %s", menu_ids, status)
 
         # 获取菜单
-        result = await db.execute(select(SysMenu).where(SysMenu.id.in_(menu_ids)))
+        result = await db.execute(
+            select(SysMenu)
+            .options(
+                noload(SysMenu.children),
+                noload(SysMenu.parent),
+                noload(SysMenu.roles),
+            )
+            .where(SysMenu.id.in_(menu_ids))
+        )
         menus = result.scalars().all()
 
         # 更新状态
@@ -457,11 +489,11 @@ class MenuService:
                 menu.status = status
                 update_count += 1
             else:
-                logger.warning(f"不能修改系统内置菜单状态，菜单ID: {menu.id}")
+                logger.warning("不能修改系统内置菜单状态，菜单ID: %s", menu.id)
 
         await db.commit()
 
-        logger.info(f"批量更新菜单状态成功，共更新 {update_count} 个菜单")
+        logger.info("批量更新菜单状态成功，共更新 %s 个菜单", update_count)
         return update_count
 
     @staticmethod
@@ -476,7 +508,7 @@ class MenuService:
         Returns:
             删除的菜单数量
         """
-        logger.info(f"批量删除菜单，菜单ID列表: {menu_ids}")
+        logger.info("批量删除菜单，菜单ID列表: %s", menu_ids)
 
         delete_count = 0
         for menu_id in menu_ids:
@@ -484,12 +516,12 @@ class MenuService:
                 await MenuService.delete_menu(db, menu_id, is_superuser=is_superuser)
                 delete_count += 1
             except NotFoundError:
-                logger.warning(f"菜单不存在，跳过: {menu_id}")
+                logger.warning("菜单不存在，跳过: %s", menu_id)
             except ForbiddenError as e:
-                logger.warning(f"跳过系统内置菜单: {menu_id}")
+                logger.warning("跳过系统内置菜单: %s", menu_id)
                 raise e
 
-        logger.info(f"批量删除菜单成功，共删除 {delete_count} 个菜单")
+        logger.info("批量删除菜单成功，共删除 %s 个菜单", delete_count)
         return delete_count
 
     @staticmethod
@@ -506,11 +538,16 @@ class MenuService:
         Returns:
             菜单权限树
         """
-        logger.info(f"获取用户菜单权限树，用户ID: {user.id}")
+        logger.debug("获取用户菜单权限树，用户ID: %s", user.id)
 
         if user.is_superuser:
             stmt = (
                 select(SysMenu)
+                .options(
+                    noload(SysMenu.children),
+                    noload(SysMenu.parent),
+                    noload(SysMenu.roles),
+                )
                 .where(
                     SysMenu.type != MenuType.BUTTON,
                     SysMenu.status == True,
@@ -541,21 +578,31 @@ class MenuService:
                 for menu in role.menus:
                     if menu.status and menu.type != MenuType.BUTTON:
                         menu_ids.add(menu.id)
-                        # 同时收集其所有祖先菜单 ID
-                        parent_id = menu.parent_id
-                        while parent_id:
-                            menu_ids.add(parent_id)
-                            parent_stmt = select(SysMenu.parent_id).where(
-                                SysMenu.id == parent_id
-                            )
-                            parent_result = await db.execute(parent_stmt)
-                            parent_id = parent_result.scalar_one_or_none()
+
+            # 一次性加载 id->parent_id 映射，在内存中解析祖先
+            if menu_ids:
+                parent_result = await db.execute(
+                    select(SysMenu.id, SysMenu.parent_id)
+                )
+                parent_map = dict(parent_result.all())
+                queue = list(menu_ids)
+                while queue:
+                    current = queue.pop()
+                    pid = parent_map.get(current)
+                    if pid and pid not in menu_ids:
+                        menu_ids.add(pid)
+                        queue.append(pid)
 
             if not menu_ids:
                 return []
 
             stmt = (
                 select(SysMenu)
+                .options(
+                    noload(SysMenu.children),
+                    noload(SysMenu.parent),
+                    noload(SysMenu.roles),
+                )
                 .where(
                     SysMenu.id.in_(menu_ids),
                     SysMenu.status == True,
@@ -588,7 +635,7 @@ class MenuService:
                 if parent:
                     parent.children.append(menu_response)
 
-        logger.info(f"获取用户菜单权限树成功，共 {len(root_menus)} 个根菜单")
+        logger.debug("获取用户菜单权限树成功，共 %s 个根菜单", len(root_menus))
         return root_menus
 
     @staticmethod
@@ -627,5 +674,5 @@ class MenuService:
                 if parent:
                     parent.children.append(resp)
 
-        logger.info(f"获取菜单树形列表成功，共 {len(root_menus)} 个根菜单")
+        logger.debug("获取菜单树形列表成功，共 %s 个根菜单", len(root_menus))
         return root_menus

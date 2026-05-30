@@ -8,7 +8,7 @@
 import logging
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select, func, and_, Select
-from sqlalchemy.orm import joinedload, selectinload
+from sqlalchemy.orm import joinedload, selectinload, load_only
 from typing import List, Optional, Tuple
 
 from app.models.sys.user import SysUser
@@ -74,7 +74,22 @@ class UserService:
         Returns:
             SQLAlchemy查询对象
         """
-        base_query = select(SysUser)
+        base_query = select(SysUser).options(
+            load_only(
+                SysUser.id,
+                SysUser.username,
+                SysUser.nickname,
+                SysUser.email,
+                SysUser.phone,
+                SysUser.avatar,
+                SysUser.status,
+                SysUser.is_superuser,
+                SysUser.last_login_at,
+                SysUser.last_login_ip,
+                SysUser.created_at,
+                SysUser.updated_at,
+            )
+        )
         return UserService._apply_user_filters(base_query, query_params)
 
     @staticmethod
@@ -108,10 +123,10 @@ class UserService:
         Returns:
             Tuple[用户列表, 总记录数]
         """
-        logger.info(f"获取用户列表，查询参数: {query_params}")
+        logger.debug("获取用户列表，查询参数: %s", query_params)
 
-        # 构建查询
-        base_query = UserService.build_user_query(query_params)
+        # 构建查询（列表页不需要角色信息）
+        base_query = UserService.build_user_list_query(query_params)
 
         # 统计总数
         count_query = select(func.count()).select_from(base_query.subquery())
@@ -124,9 +139,9 @@ class UserService:
 
         # 执行查询
         result = await db.execute(paginated_query)
-        users = result.unique().scalars().all()
+        users = result.scalars().all()
 
-        logger.info(f"获取用户列表成功，共 {total} 条记录")
+        logger.debug("获取用户列表成功，共 %s 条记录", total)
         return users, total
 
     @staticmethod
@@ -144,7 +159,7 @@ class UserService:
         Raises:
             NotFoundError: 用户不存在
         """
-        logger.info(f"获取用户信息，用户ID: {user_id}")
+        logger.debug("获取用户信息，用户ID: %s", user_id)
 
         result = await db.execute(
             select(SysUser)
@@ -154,10 +169,10 @@ class UserService:
         user = result.unique().scalar_one_or_none()
 
         if not user:
-            logger.warning(f"用户不存在，用户ID: {user_id}")
+            logger.warning("用户不存在，用户ID: %s", user_id)
             raise NotFoundError(msg=f"用户 {user_id} 不存在")
 
-        logger.info(f"获取用户信息成功，用户名: {user.username}")
+        logger.debug("获取用户信息成功，用户名: %s", user.username)
         return user
 
     @staticmethod
@@ -192,11 +207,11 @@ class UserService:
         Raises:
             ConflictError: 用户名/邮箱/手机号已存在
         """
-        logger.info(f"创建用户，用户名: {user_create.username}")
+        logger.info("创建用户，用户名: %s", user_create.username)
 
         # 检查用户名是否已存在
         if await UserService.get_user_by_username(db, user_create.username):
-            logger.warning(f"创建用户失败，用户名已存在: {user_create.username}")
+            logger.warning("创建用户失败，用户名已存在: %s", user_create.username)
             raise ConflictError(msg="用户名已存在")
 
         # 检查邮箱是否已存在
@@ -205,7 +220,7 @@ class UserService:
                 select(SysUser).where(SysUser.email == user_create.email)
             )
             if result.scalar_one_or_none():
-                logger.warning(f"创建用户失败，邮箱已存在: {user_create.email}")
+                logger.warning("创建用户失败，邮箱已存在: %s", user_create.email)
                 raise ConflictError(msg="邮箱已存在")
 
         # 检查手机号是否已存在
@@ -214,7 +229,7 @@ class UserService:
                 select(SysUser).where(SysUser.phone == user_create.phone)
             )
             if result.scalar_one_or_none():
-                logger.warning(f"创建用户失败，手机号已存在: {user_create.phone}")
+                logger.warning("创建用户失败，手机号已存在: %s", user_create.phone)
                 raise ConflictError(msg="手机号已存在")
 
         # 加密密码
@@ -241,7 +256,7 @@ class UserService:
         await db.commit()
         await db.refresh(user)
 
-        logger.info(f"创建用户成功，用户ID: {user.id}")
+        logger.info("创建用户成功，用户ID: %s", user.id)
         return user
 
     @staticmethod
@@ -263,14 +278,14 @@ class UserService:
             NotFoundError: 用户不存在
             ConflictError: 用户名/邮箱/手机号已被其他用户使用
         """
-        logger.info(f"更新用户信息，用户ID: {user_id}")
+        logger.info("更新用户信息，用户ID: %s", user_id)
 
         # 获取用户
         user = await UserService.get_user(db, user_id)
 
         # 保护超级管理员账号不被禁用
         if user.username == SUPER_ADMIN_USERNAME and user_update.status is False:
-            logger.warning(f"更新用户失败，不能禁用超级管理员账号，用户ID: {user_id}")
+            logger.warning("更新用户失败，不能禁用超级管理员账号，用户ID: %s", user_id)
             raise ForbiddenError(msg="不能禁用超级管理员账号")
 
         # 检查用户名是否已被其他用户使用
@@ -286,7 +301,7 @@ class UserService:
             )
             if result.scalar_one_or_none():
                 logger.warning(
-                    f"更新用户失败，用户名已被其他用户使用: {user_update.username}"
+                    "更新用户失败，用户名已被其他用户使用: %s", user_update.username
                 )
                 raise ConflictError(msg="用户名已被其他用户使用")
 
@@ -303,7 +318,7 @@ class UserService:
             )
             if result.scalar_one_or_none():
                 logger.warning(
-                    f"更新用户失败，邮箱已被其他用户使用: {user_update.email}"
+                    "更新用户失败，邮箱已被其他用户使用: %s", user_update.email
                 )
                 raise ConflictError(msg="邮箱已被其他用户使用")
 
@@ -320,7 +335,7 @@ class UserService:
             )
             if result.scalar_one_or_none():
                 logger.warning(
-                    f"更新用户失败，手机号已被其他用户使用: {user_update.phone}"
+                    "更新用户失败，手机号已被其他用户使用: %s", user_update.phone
                 )
                 raise ConflictError(msg="手机号已被其他用户使用")
 
@@ -347,7 +362,7 @@ class UserService:
         await db.commit()
         await db.refresh(user)
 
-        logger.info(f"更新用户信息成功，用户ID: {user_id}")
+        logger.info("更新用户信息成功，用户ID: %s", user_id)
         return user
 
     @staticmethod
@@ -368,7 +383,7 @@ class UserService:
         Raises:
             NotFoundError: 用户不存在
         """
-        logger.info(f"为用户分配角色，用户ID: {user_id}, 角色ID列表: {role_ids}")
+        logger.info("为用户分配角色，用户ID: %s, 角色ID列表: %s", user_id, role_ids)
 
         # 获取用户
         user = await UserService.get_user(db, user_id)
@@ -384,7 +399,7 @@ class UserService:
         await db.commit()
         await db.refresh(user)
 
-        logger.info(f"为用户分配角色成功，用户ID: {user_id}")
+        logger.info("为用户分配角色成功，用户ID: %s", user_id)
         return user
 
     @staticmethod
@@ -403,25 +418,25 @@ class UserService:
             NotFoundError: 用户不存在
             ForbiddenError: 不能删除超级管理员
         """
-        logger.info(f"删除用户，用户ID: {user_id}")
+        logger.info("删除用户，用户ID: %s", user_id)
 
         # 获取用户
         user = await UserService.get_user(db, user_id)
 
         # 检查是否为超级管理员
         if user.is_superuser:
-            logger.warning(f"删除用户失败，不能删除超级管理员，用户ID: {user_id}")
+            logger.warning("删除用户失败，不能删除超级管理员，用户ID: %s", user_id)
             raise ForbiddenError(msg="不能删除超级管理员")
 
         # 基于用户名的额外保护
         if user.username == SUPER_ADMIN_USERNAME:
-            logger.warning(f"删除用户失败，不能删除超级管理员账号，用户ID: {user_id}")
+            logger.warning("删除用户失败，不能删除超级管理员账号，用户ID: %s", user_id)
             raise ForbiddenError(msg="不能删除超级管理员账号")
 
         await db.delete(user)
         await db.commit()
 
-        logger.info(f"删除用户成功，用户ID: {user_id}")
+        logger.info("删除用户成功，用户ID: %s", user_id)
         return True
 
     @staticmethod
@@ -439,7 +454,7 @@ class UserService:
         Raises:
             ForbiddenError: 不能删除超级管理员
         """
-        logger.info(f"批量删除用户，用户ID列表: {user_ids}")
+        logger.info("批量删除用户，用户ID列表: %s", user_ids)
 
         delete_count = 0
         for user_id in user_ids:
@@ -450,7 +465,7 @@ class UserService:
                 logger.error(f"删除用户失败，用户ID: {user_id}, 错误: {str(e)}")
                 raise e
 
-        logger.info(f"批量删除用户成功，共删除 {delete_count} 个用户")
+        logger.info("批量删除用户成功，共删除 %s 个用户", delete_count)
         return delete_count
 
     @staticmethod
@@ -476,14 +491,14 @@ class UserService:
             NotFoundError: 用户不存在
             ForbiddenError: 密码错误或无权限修改超级管理员密码
         """
-        logger.info(f"修改用户密码，用户ID: {user_id}")
+        logger.info("修改用户密码，用户ID: %s", user_id)
 
         # 获取用户
         user = await UserService.get_user(db, user_id)
 
         # 检查是否为超级管理员（只有超级管理员自己可以修改自己的密码）
         if user.is_superuser and (not current_user or current_user.id != user_id):
-            logger.warning(f"修改密码失败，无权限修改超级管理员密码，用户ID: {user_id}")
+            logger.warning("修改密码失败，无权限修改超级管理员密码，用户ID: %s", user_id)
             raise ForbiddenError(msg="无权限修改超级管理员密码")
 
         # 如果提供了旧密码，需要验证
@@ -491,7 +506,7 @@ class UserService:
             if not PasswordHasher.verify(
                 password_update.old_password, user.password
             ):
-                logger.warning(f"修改密码失败，旧密码错误，用户ID: {user_id}")
+                logger.warning("修改密码失败，旧密码错误，用户ID: %s", user_id)
                 raise ForbiddenError(msg="旧密码错误")
 
         # 加密新密码
@@ -499,7 +514,7 @@ class UserService:
 
         await db.commit()
 
-        logger.info(f"修改用户密码成功，用户ID: {user_id}")
+        logger.info("修改用户密码成功，用户ID: %s", user_id)
         return True
 
     @staticmethod
@@ -517,7 +532,7 @@ class UserService:
         Returns:
             更新的用户数量
         """
-        logger.info(f"批量更新用户状态，用户ID列表: {user_ids}, 状态: {status}")
+        logger.info("批量更新用户状态，用户ID列表: %s, 状态: %s", user_ids, status)
 
         # 获取用户
         result = await db.execute(select(SysUser).where(SysUser.id.in_(user_ids)))
@@ -528,12 +543,12 @@ class UserService:
         for user in users:
             # 保护超级管理员账号不被禁用
             if user.username == SUPER_ADMIN_USERNAME and not status:
-                logger.warning(f"不能禁用超级管理员账号，用户ID: {user.id}")
+                logger.warning("不能禁用超级管理员账号，用户ID: %s", user.id)
                 continue
             user.status = status
             update_count += 1
 
         await db.commit()
 
-        logger.info(f"批量更新用户状态成功，共更新 {update_count} 个用户")
+        logger.info("批量更新用户状态成功，共更新 %s 个用户", update_count)
         return update_count

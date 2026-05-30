@@ -8,7 +8,7 @@
 import logging
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select
-from sqlalchemy.orm import joinedload, selectinload
+from sqlalchemy.orm import joinedload, selectinload, noload
 from typing import List
 
 from app.models.sys.user import SysUser
@@ -98,14 +98,20 @@ class RouteService:
                     SysMenu.parent_id.is_(None),
                 )
                 .options(
-                    selectinload(SysMenu.children).selectinload(SysMenu.children)
+                    selectinload(SysMenu.children).selectinload(SysMenu.children),
+                    noload(SysMenu.roles),
+                    noload(SysMenu.parent),
                 )
                 .order_by(SysMenu.sort, SysMenu.id)
             )
             result = await db.execute(stmt)
             menus = result.unique().scalars().all()
 
-            btn_stmt = select(SysMenu).where(
+            btn_stmt = select(SysMenu).options(
+                noload(SysMenu.children),
+                noload(SysMenu.parent),
+                noload(SysMenu.roles),
+            ).where(
                 SysMenu.type == MenuType.BUTTON,
                 SysMenu.status == True,
             )
@@ -142,15 +148,20 @@ class RouteService:
                             buttons.append(menu.permission)
                         continue
                     menu_ids.add(menu.id)
-                    # 同时收集其所有祖先菜单 ID
-                    parent_id = menu.parent_id
-                    while parent_id:
-                        menu_ids.add(parent_id)
-                        parent_stmt = select(SysMenu.parent_id).where(
-                            SysMenu.id == parent_id
-                        )
-                        parent_result = await db.execute(parent_stmt)
-                        parent_id = parent_result.scalar_one_or_none()
+
+            # 一次性加载 id->parent_id 映射，在内存中解析祖先
+            if menu_ids:
+                parent_result = await db.execute(
+                    select(SysMenu.id, SysMenu.parent_id)
+                )
+                parent_map = dict(parent_result.all())
+                queue = list(menu_ids)
+                while queue:
+                    current = queue.pop()
+                    pid = parent_map.get(current)
+                    if pid and pid not in menu_ids:
+                        menu_ids.add(pid)
+                        queue.append(pid)
 
             if not menu_ids:
                 return UserRouteResponse(routes=[], home="home", buttons=buttons)
@@ -163,7 +174,9 @@ class RouteService:
                     SysMenu.parent_id.is_(None),
                 )
                 .options(
-                    selectinload(SysMenu.children).selectinload(SysMenu.children)
+                    selectinload(SysMenu.children).selectinload(SysMenu.children),
+                    noload(SysMenu.roles),
+                    noload(SysMenu.parent),
                 )
                 .order_by(SysMenu.sort, SysMenu.id)
             )
@@ -223,6 +236,6 @@ class RouteService:
     @staticmethod
     async def is_route_exist(db: AsyncSession, route_name: str) -> bool:
         """检查路由名称是否存在于菜单表中"""
-        stmt = select(SysMenu).where(SysMenu.name == route_name)
+        stmt = select(SysMenu.id).where(SysMenu.name == route_name)
         result = await db.execute(stmt)
         return result.scalar_one_or_none() is not None

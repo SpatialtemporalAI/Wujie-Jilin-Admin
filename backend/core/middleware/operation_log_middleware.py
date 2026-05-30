@@ -149,10 +149,9 @@ class OperationLogMiddleware(BaseHTTPMiddleware):
 
         user_id, username = _extract_user_from_token(request)
         ip = get_real_client_ip(request)
+        request_params = await _capture_request_body(request)
 
         response = await call_next(request)
-
-        request_params = await _capture_request_body(request)
 
         elapsed_ms = (time.monotonic() - start) * 1000
 
