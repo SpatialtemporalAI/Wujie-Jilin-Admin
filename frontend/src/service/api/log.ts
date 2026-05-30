@@ -111,6 +111,14 @@ export function fetchKickAllSessions(data: { user_id: number }) {
   });
 }
 
+/** kick all online users */
+export function fetchKickAllOnlineUsers() {
+  return request<void>({
+    url: '/admin/sys/online-user/kick-all-online',
+    method: 'post'
+  });
+}
+
 /** get online user count */
 export function fetchGetOnlineUserCount() {
   return request<number>({

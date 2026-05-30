@@ -732,7 +732,7 @@ const local: App.I18n.Schema = {
         kick: 'Kick',
         kickAll: 'Kick All',
         kickConfirm: 'Confirm to kick this user offline?',
-        kickAllConfirm: 'Confirm to kick all sessions for this user?',
+        kickAllConfirm: 'Confirm to kick all online users offline?',
         kickSuccess: 'User kicked offline',
         kickAllSuccess: 'All sessions kicked offline',
         form: {

@@ -155,6 +155,19 @@ class OnlineUserService:
         return count
 
     @staticmethod
+    async def kick_all_online_users(role: str = "admin") -> int:
+        """踢除所有在线用户的所有会话"""
+        redis_util = get_redis_util()
+        pattern = f"{SESSION_PREFIX}{role}*"
+        count = 0
+        async for key in redis_util.scan_iter(match=pattern):
+            all_fields = await redis_util.hgetall(key)
+            count += len(all_fields) if all_fields else 0
+            await redis_util.delete(key)
+            get_session_cache().invalidate(key)
+        return count
+
+    @staticmethod
     async def get_online_count(role: str = "admin") -> int:
         """获取在线用户数（按独立用户计数）"""
         redis_util = get_redis_util()

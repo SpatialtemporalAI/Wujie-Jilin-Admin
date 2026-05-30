@@ -91,6 +91,23 @@ async def kick_all_sessions(
     )
 
 
+@online_user_router.post(
+    "/kick-all-online",
+    response_model=ResponseModel,
+    summary="踢所有在线用户下线",
+    dependencies=[Depends(require_permission("sys:online:kick"))],
+)
+async def kick_all_online_users(
+    user: SysUser = Depends(current_user),
+):
+    """踢除所有在线用户的所有会话"""
+    count = await OnlineUserService.kick_all_online_users()
+    return response_base.success(
+        data={"sessions_removed": count},
+        msg=f"已踢除 {count} 个在线会话",
+    )
+
+
 @online_user_router.get(
     "/count",
     response_model=ResponseModel[int],

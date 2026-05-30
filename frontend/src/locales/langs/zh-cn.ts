@@ -727,7 +727,7 @@ const local: App.I18n.Schema = {
         kick: '踢下线',
         kickAll: '全部踢下线',
         kickConfirm: '确认将该用户踢下线？',
-        kickAllConfirm: '确认将该用户所有设备踢下线？',
+        kickAllConfirm: '确认将所有在线用户踢下线？',
         kickSuccess: '已踢下线',
         kickAllSuccess: '已踢除所有在线会话',
         form: {

@@ -1,7 +1,7 @@
 <script setup lang="tsx">
 import { reactive } from 'vue';
-import { NButton, NCard, NDataTable, NPopconfirm, NTag, useMessage } from 'naive-ui';
-import { fetchGetOnlineUserList, fetchKickUser, fetchKickAllSessions } from '@/service/api';
+import { NButton, NCard, NDataTable, NPopconfirm, NSpace, useMessage } from 'naive-ui';
+import { fetchGetOnlineUserList, fetchKickUser, fetchKickAllOnlineUsers } from '@/service/api';
 import { useAppStore } from '@/store/modules/app';
 import { defaultTransform, useNaivePaginatedTable } from '@/hooks/common/table';
 import { useAuth } from '@/hooks/business/auth';
@@ -77,7 +77,7 @@ const {
       key: 'operate',
       title: $t('common.operate'),
       align: 'center',
-      width: 160,
+      width: 100,
       render: row => {
         if (!hasAuth('sys:online:kick')) return null;
         return (
@@ -88,16 +88,6 @@ const {
                 trigger: () => (
                   <NButton type="warning" text size="small">
                     {$t('page.log.onlineUser.kick')}
-                  </NButton>
-                )
-              }}
-            </NPopconfirm>
-            <NPopconfirm onPositiveClick={() => handleKickAll(row)}>
-              {{
-                default: () => $t('page.log.onlineUser.kickAllConfirm'),
-                trigger: () => (
-                  <NButton type="error" text size="small">
-                    {$t('page.log.onlineUser.kickAll')}
                   </NButton>
                 )
               }}
@@ -119,9 +109,9 @@ async function handleKick(row: Api.SystemManage.OnlineUser) {
   }
 }
 
-async function handleKickAll(row: Api.SystemManage.OnlineUser) {
+async function handleKickAllOnline() {
   try {
-    await fetchKickAllSessions({ user_id: row.user_id });
+    await fetchKickAllOnlineUsers();
     message.success($t('page.log.onlineUser.kickAllSuccess'));
     getData();
   } catch (error) {
@@ -141,7 +131,21 @@ async function handleKickAll(row: Api.SystemManage.OnlineUser) {
           :show-add="false"
           :show-delete="false"
           @refresh="getData"
-        />
+        >
+          <template #suffix>
+            <NPopconfirm v-if="hasAuth('sys:online:kick')" @positive-click="handleKickAllOnline">
+              <template #trigger>
+                <NButton size="small" ghost type="error">
+                  <template #icon>
+                    <icon-ic-round-delete-forever class="text-icon" />
+                  </template>
+                  {{ $t('page.log.onlineUser.kickAll') }}
+                </NButton>
+              </template>
+              {{ $t('page.log.onlineUser.kickAllConfirm') }}
+            </NPopconfirm>
+          </template>
+        </TableHeaderOperation>
       </template>
       <NDataTable
         :columns="columns"
