@@ -1,0 +1,1414 @@
+{
+  "nodes": [
+    {
+      "id": "boundary_frontback_boundary",
+      "label": "Frontend-Backend Boundary & Data Contract",
+      "file_type": "document",
+      "source_file": "aiDoc/frontend-backend/boundary.md",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "boundary_status_bridge",
+      "label": "Status Field Bridge (bool ↔ string)",
+      "file_type": "rationale",
+      "source_file": "aiDoc/frontend-backend/boundary.md",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "boundary_time_bridge",
+      "label": "Time Field Bridge (datetime serialization)",
+      "file_type": "rationale",
+      "source_file": "aiDoc/frontend-backend/boundary.md",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "boundary_unified_response",
+      "label": "Unified Response Structure",
+      "file_type": "rationale",
+      "source_file": "aiDoc/frontend-backend/boundary.md",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "boundary_paginated_response",
+      "label": "Paginated Response Structure",
+      "file_type": "rationale",
+      "source_file": "aiDoc/frontend-backend/boundary.md",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "frontend_rules_frontend_rules",
+      "label": "Frontend Development Rules",
+      "file_type": "document",
+      "source_file": "aiDoc/frontend-backend/frontend-rules.md",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "frontend_utils_frontend_utils",
+      "label": "Frontend Utility Reuse Rules",
+      "file_type": "document",
+      "source_file": "aiDoc/frontend-backend/frontend-utils.md",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "sa_axios_package",
+      "label": "@sa/axios HTTP Client Package",
+      "file_type": "rationale",
+      "source_file": "aiDoc/frontend-backend/frontend-utils.md",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "sa_utils_package",
+      "label": "@sa/utils Workspace Package",
+      "file_type": "rationale",
+      "source_file": "aiDoc/frontend-backend/frontend-utils.md",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "memory_project_memory",
+      "label": "Project Memory Index",
+      "file_type": "document",
+      "source_file": "aiDoc/memory/project-memory.md",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "memory_readme",
+      "label": "Memory Layer Documentation",
+      "file_type": "document",
+      "source_file": "aiDoc/memory/README.md",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "business_rate_limit_blacklist",
+      "label": "API Rate Limiting / IP Blacklist Requirement",
+      "file_type": "document",
+      "source_file": "aiDoc/memory/business/2026-05-24_rate_limit_blacklist.md",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "business_readme",
+      "label": "Business Requirements Memory Index",
+      "file_type": "document",
+      "source_file": "aiDoc/memory/business/README.md",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "business_template",
+      "label": "Business Requirement Template",
+      "file_type": "document",
+      "source_file": "aiDoc/memory/business/TEMPLATE.md",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "longterm_readme",
+      "label": "Long-term Memory Documentation",
+      "file_type": "document",
+      "source_file": "aiDoc/memory/long-term/README.md",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "longterm_web_security",
+      "label": "Web Security Protection Status",
+      "file_type": "document",
+      "source_file": "aiDoc/memory/long-term/web-security.md",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "modules_backend_layer_rules",
+      "label": "Backend Layer Rules",
+      "file_type": "document",
+      "source_file": "aiDoc/modules/backend-layer-rules.md",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "modules_mcp_guide",
+      "label": "MCP Usage Guide",
+      "file_type": "document",
+      "source_file": "aiDoc/modules/mcp-guide.md",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "modules_module_development",
+      "label": "Module Development Guide",
+      "file_type": "document",
+      "source_file": "aiDoc/modules/module-development.md",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "relations_dev_workflow",
+      "label": "Development Workflow",
+      "file_type": "document",
+      "source_file": "aiDoc/relations/development-workflow.md",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "relations_repo_profile",
+      "label": "Repository Profile & Tech Stack",
+      "file_type": "document",
+      "source_file": "aiDoc/relations/repo-profile.md",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "relations_system_map",
+      "label": "System Architecture & Component Map",
+      "file_type": "document",
+      "source_file": "aiDoc/relations/system-map.md",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "backend_modules_rules",
+      "label": "Backend Module Development Rules",
+      "file_type": "document",
+      "source_file": "backend/MODULES_RULES.md",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "backend_readme",
+      "label": "Backend README",
+      "file_type": "document",
+      "source_file": "backend/README.md",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "backend_requirements",
+      "label": "Backend Python Dependencies",
+      "file_type": "document",
+      "source_file": "backend/requirements.txt",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "specs_system_management",
+      "label": "System Management Module Spec",
+      "file_type": "document",
+      "source_file": "backend/.trae/specs/system_management_spec.md",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "concept_rbac_permission",
+      "label": "RBAC Permission Model",
+      "file_type": "rationale",
+      "source_file": "aiDoc/relations/repo-profile.md",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "concept_jwt_session",
+      "label": "JWT + Redis Session Authentication",
+      "file_type": "rationale",
+      "source_file": "aiDoc/relations/repo-profile.md",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "concept_snowflake_id",
+      "label": "Snowflake ID Primary Key",
+      "file_type": "rationale",
+      "source_file": "aiDoc/relations/repo-profile.md",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "concept_endpoint_service_model",
+      "label": "Endpoint -> Service -> Model Layering",
+      "file_type": "rationale",
+      "source_file": "aiDoc/modules/backend-layer-rules.md",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "concept_mcp_tool_platform",
+      "label": "MCP Tool Platform Architecture",
+      "file_type": "rationale",
+      "source_file": "aiDoc/modules/mcp-guide.md",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "concept_soft_delete",
+      "label": "Soft Delete via deleted_at",
+      "file_type": "rationale",
+      "source_file": "aiDoc/relations/repo-profile.md",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "concept_audit_fields",
+      "label": "Audit Fields (created_at/updated_at/created_by/updated_by)",
+      "file_type": "rationale",
+      "source_file": "aiDoc/relations/repo-profile.md",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "concept_xss_protection",
+      "label": "XSS Protection (bleach + CSP)",
+      "file_type": "rationale",
+      "source_file": "aiDoc/memory/long-term/web-security.md",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "concept_csrf_strategy",
+      "label": "CSRF Mitigation via JWT in localStorage",
+      "file_type": "rationale",
+      "source_file": "aiDoc/memory/long-term/web-security.md",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "concept_rate_limiting",
+      "label": "Multi-dimensional Rate Limiting",
+      "file_type": "rationale",
+      "source_file": "aiDoc/memory/business/2026-05-24_rate_limit_blacklist.md",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "concept_ip_blacklist",
+      "label": "IP Blacklist with Redis + DB Persistence",
+      "file_type": "rationale",
+      "source_file": "aiDoc/memory/business/2026-05-24_rate_limit_blacklist.md",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "concept_snake_case_naming",
+      "label": "snake_case Field Naming Convention",
+      "file_type": "rationale",
+      "source_file": "aiDoc/frontend-backend/boundary.md",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "concept_boolfield_deserialize",
+      "label": "BoolField Frontend-to-Backend Deserialization",
+      "file_type": "rationale",
+      "source_file": "aiDoc/frontend-backend/boundary.md",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "concept_enablestatus_type",
+      "label": "EnableStatus TypeScript Type (1|2)",
+      "file_type": "rationale",
+      "source_file": "aiDoc/frontend-backend/boundary.md",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "concept_rich_text_sanitize",
+      "label": "Rich Text Sanitization (bleach whitelist)",
+      "file_type": "rationale",
+      "source_file": "aiDoc/memory/long-term/web-security.md",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "concept_git_branching",
+      "label": "Git Branching Strategy (main/develop/feature/hotfix)",
+      "file_type": "rationale",
+      "source_file": "aiDoc/relations/development-workflow.md",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "concept_commit_convention",
+      "label": "Conventional Commit Messages (type(scope): desc)",
+      "file_type": "rationale",
+      "source_file": "aiDoc/relations/development-workflow.md",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "concept_pydantic_schema_layer",
+      "label": "Pydantic Schema Layer (BaseEntity/BaseReqEntity/BaseRespEntity)",
+      "file_type": "rationale",
+      "source_file": "aiDoc/modules/backend-layer-rules.md",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "concept_error_code_allocation",
+      "label": "Error Code Allocation by Domain Range",
+      "file_type": "rationale",
+      "source_file": "aiDoc/modules/backend-layer-rules.md",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "concept_i18n_localization",
+      "label": "i18n Localization (zh-cn + en-us)",
+      "file_type": "rationale",
+      "source_file": "aiDoc/frontend-backend/frontend-rules.md",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "concept_no_any_typescript",
+      "label": "TypeScript No-any Policy",
+      "file_type": "rationale",
+      "source_file": "aiDoc/frontend-backend/frontend-rules.md",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "concept_timezone_handling",
+      "label": "Timezone Handling (Asia/Shanghai display, UTC storage)",
+      "file_type": "rationale",
+      "source_file": "aiDoc/frontend-backend/boundary.md",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "concept_mcp_embedded_standalone",
+      "label": "MCP Embedded vs Standalone Deployment Modes",
+      "file_type": "rationale",
+      "source_file": "aiDoc/modules/mcp-guide.md",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "concept_sql_injection_prevention",
+      "label": "SQL Injection Prevention (ORM + parameterized queries)",
+      "file_type": "rationale",
+      "source_file": "aiDoc/memory/long-term/web-security.md",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "concept_token_storage_localstorage",
+      "label": "JWT Token Storage in localStorage",
+      "file_type": "rationale",
+      "source_file": "aiDoc/memory/long-term/web-security.md",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    }
+  ],
+  "edges": [
+    {
+      "source": "boundary_status_bridge",
+      "target": "concept_boolfield_deserialize",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "aiDoc/frontend-backend/boundary.md",
+      "source_location": null,
+      "weight": 1.0
+    },
+    {
+      "source": "boundary_status_bridge",
+      "target": "concept_enablestatus_type",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "aiDoc/frontend-backend/boundary.md",
+      "source_location": null,
+      "weight": 1.0
+    },
+    {
+      "source": "boundary_time_bridge",
+      "target": "concept_timezone_handling",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "aiDoc/frontend-backend/boundary.md",
+      "source_location": null,
+      "weight": 1.0
+    },
+    {
+      "source": "modules_backend_layer_rules",
+      "target": "concept_endpoint_service_model",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "aiDoc/modules/backend-layer-rules.md",
+      "source_location": null,
+      "weight": 1.0
+    },
+    {
+      "source": "modules_backend_layer_rules",
+      "target": "concept_pydantic_schema_layer",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "aiDoc/modules/backend-layer-rules.md",
+      "source_location": null,
+      "weight": 1.0
+    },
+    {
+      "source": "modules_backend_layer_rules",
+      "target": "concept_error_code_allocation",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "aiDoc/modules/backend-layer-rules.md",
+      "source_location": null,
+      "weight": 1.0
+    },
+    {
+      "source": "modules_backend_layer_rules",
+      "target": "boundary_unified_response",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "aiDoc/modules/backend-layer-rules.md",
+      "source_location": null,
+      "weight": 1.0
+    },
+    {
+      "source": "modules_backend_layer_rules",
+      "target": "boundary_paginated_response",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "aiDoc/modules/backend-layer-rules.md",
+      "source_location": null,
+      "weight": 1.0
+    },
+    {
+      "source": "modules_backend_layer_rules",
+      "target": "concept_snowflake_id",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "aiDoc/modules/backend-layer-rules.md",
+      "source_location": null,
+      "weight": 1.0
+    },
+    {
+      "source": "modules_backend_layer_rules",
+      "target": "concept_soft_delete",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "aiDoc/modules/backend-layer-rules.md",
+      "source_location": null,
+      "weight": 1.0
+    },
+    {
+      "source": "modules_backend_layer_rules",
+      "target": "concept_audit_fields",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "aiDoc/modules/backend-layer-rules.md",
+      "source_location": null,
+      "weight": 1.0
+    },
+    {
+      "source": "modules_backend_layer_rules",
+      "target": "boundary_status_bridge",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "aiDoc/modules/backend-layer-rules.md",
+      "source_location": null,
+      "weight": 1.0
+    },
+    {
+      "source": "backend_modules_rules",
+      "target": "concept_endpoint_service_model",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "backend/MODULES_RULES.md",
+      "source_location": null,
+      "weight": 1.0
+    },
+    {
+      "source": "backend_modules_rules",
+      "target": "modules_backend_layer_rules",
+      "relation": "semantically_similar_to",
+      "confidence": "INFERRED",
+      "confidence_score": 0.95,
+      "source_file": "backend/MODULES_RULES.md",
+      "source_location": null,
+      "weight": 0.95
+    },
+    {
+      "source": "modules_mcp_guide",
+      "target": "concept_mcp_tool_platform",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "aiDoc/modules/mcp-guide.md",
+      "source_location": null,
+      "weight": 1.0
+    },
+    {
+      "source": "modules_mcp_guide",
+      "target": "concept_mcp_embedded_standalone",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "aiDoc/modules/mcp-guide.md",
+      "source_location": null,
+      "weight": 1.0
+    },
+    {
+      "source": "modules_mcp_guide",
+      "target": "boundary_time_bridge",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "aiDoc/modules/mcp-guide.md",
+      "source_location": null,
+      "weight": 1.0
+    },
+    {
+      "source": "relations_repo_profile",
+      "target": "concept_rbac_permission",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "aiDoc/relations/repo-profile.md",
+      "source_location": null,
+      "weight": 1.0
+    },
+    {
+      "source": "relations_repo_profile",
+      "target": "concept_jwt_session",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "aiDoc/relations/repo-profile.md",
+      "source_location": null,
+      "weight": 1.0
+    },
+    {
+      "source": "relations_repo_profile",
+      "target": "concept_snowflake_id",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "aiDoc/relations/repo-profile.md",
+      "source_location": null,
+      "weight": 1.0
+    },
+    {
+      "source": "relations_repo_profile",
+      "target": "concept_soft_delete",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "aiDoc/relations/repo-profile.md",
+      "source_location": null,
+      "weight": 1.0
+    },
+    {
+      "source": "relations_repo_profile",
+      "target": "concept_audit_fields",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "aiDoc/relations/repo-profile.md",
+      "source_location": null,
+      "weight": 1.0
+    },
+    {
+      "source": "relations_repo_profile",
+      "target": "boundary_unified_response",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "aiDoc/relations/repo-profile.md",
+      "source_location": null,
+      "weight": 1.0
+    },
+    {
+      "source": "relations_repo_profile",
+      "target": "boundary_paginated_response",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "aiDoc/relations/repo-profile.md",
+      "source_location": null,
+      "weight": 1.0
+    },
+    {
+      "source": "relations_repo_profile",
+      "target": "boundary_status_bridge",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "aiDoc/relations/repo-profile.md",
+      "source_location": null,
+      "weight": 1.0
+    },
+    {
+      "source": "relations_repo_profile",
+      "target": "concept_mcp_tool_platform",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "aiDoc/relations/repo-profile.md",
+      "source_location": null,
+      "weight": 1.0
+    },
+    {
+      "source": "relations_repo_profile",
+      "target": "sa_axios_package",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "aiDoc/relations/repo-profile.md",
+      "source_location": null,
+      "weight": 1.0
+    },
+    {
+      "source": "relations_system_map",
+      "target": "concept_endpoint_service_model",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "aiDoc/relations/system-map.md",
+      "source_location": null,
+      "weight": 1.0
+    },
+    {
+      "source": "relations_system_map",
+      "target": "concept_mcp_tool_platform",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "aiDoc/relations/system-map.md",
+      "source_location": null,
+      "weight": 1.0
+    },
+    {
+      "source": "relations_system_map",
+      "target": "sa_axios_package",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "aiDoc/relations/system-map.md",
+      "source_location": null,
+      "weight": 1.0
+    },
+    {
+      "source": "relations_system_map",
+      "target": "modules_mcp_guide",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "aiDoc/relations/system-map.md",
+      "source_location": null,
+      "weight": 1.0
+    },
+    {
+      "source": "longterm_web_security",
+      "target": "concept_xss_protection",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "aiDoc/memory/long-term/web-security.md",
+      "source_location": null,
+      "weight": 1.0
+    },
+    {
+      "source": "longterm_web_security",
+      "target": "concept_csrf_strategy",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "aiDoc/memory/long-term/web-security.md",
+      "source_location": null,
+      "weight": 1.0
+    },
+    {
+      "source": "longterm_web_security",
+      "target": "concept_sql_injection_prevention",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "aiDoc/memory/long-term/web-security.md",
+      "source_location": null,
+      "weight": 1.0
+    },
+    {
+      "source": "longterm_web_security",
+      "target": "concept_token_storage_localstorage",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "aiDoc/memory/long-term/web-security.md",
+      "source_location": null,
+      "weight": 1.0
+    },
+    {
+      "source": "longterm_web_security",
+      "target": "concept_rich_text_sanitize",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "aiDoc/memory/long-term/web-security.md",
+      "source_location": null,
+      "weight": 1.0
+    },
+    {
+      "source": "longterm_web_security",
+      "target": "concept_rate_limiting",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "aiDoc/memory/long-term/web-security.md",
+      "source_location": null,
+      "weight": 1.0
+    },
+    {
+      "source": "longterm_web_security",
+      "target": "concept_jwt_session",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "aiDoc/memory/long-term/web-security.md",
+      "source_location": null,
+      "weight": 1.0
+    },
+    {
+      "source": "longterm_web_security",
+      "target": "concept_rbac_permission",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "aiDoc/memory/long-term/web-security.md",
+      "source_location": null,
+      "weight": 1.0
+    },
+    {
+      "source": "business_rate_limit_blacklist",
+      "target": "concept_rate_limiting",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "aiDoc/memory/business/2026-05-24_rate_limit_blacklist.md",
+      "source_location": null,
+      "weight": 1.0
+    },
+    {
+      "source": "business_rate_limit_blacklist",
+      "target": "concept_ip_blacklist",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "aiDoc/memory/business/2026-05-24_rate_limit_blacklist.md",
+      "source_location": null,
+      "weight": 1.0
+    },
+    {
+      "source": "business_rate_limit_blacklist",
+      "target": "boundary_unified_response",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "aiDoc/memory/business/2026-05-24_rate_limit_blacklist.md",
+      "source_location": null,
+      "weight": 1.0
+    },
+    {
+      "source": "business_readme",
+      "target": "business_rate_limit_blacklist",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "aiDoc/memory/business/README.md",
+      "source_location": null,
+      "weight": 1.0
+    },
+    {
+      "source": "business_readme",
+      "target": "business_template",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "aiDoc/memory/business/README.md",
+      "source_location": null,
+      "weight": 1.0
+    },
+    {
+      "source": "memory_project_memory",
+      "target": "business_readme",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "aiDoc/memory/project-memory.md",
+      "source_location": null,
+      "weight": 1.0
+    },
+    {
+      "source": "memory_project_memory",
+      "target": "longterm_readme",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "aiDoc/memory/project-memory.md",
+      "source_location": null,
+      "weight": 1.0
+    },
+    {
+      "source": "memory_readme",
+      "target": "memory_project_memory",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "aiDoc/memory/README.md",
+      "source_location": null,
+      "weight": 1.0
+    },
+    {
+      "source": "memory_readme",
+      "target": "longterm_readme",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "aiDoc/memory/README.md",
+      "source_location": null,
+      "weight": 1.0
+    },
+    {
+      "source": "memory_readme",
+      "target": "business_readme",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "aiDoc/memory/README.md",
+      "source_location": null,
+      "weight": 1.0
+    },
+    {
+      "source": "frontend_rules_frontend_rules",
+      "target": "concept_i18n_localization",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "aiDoc/frontend-backend/frontend-rules.md",
+      "source_location": null,
+      "weight": 1.0
+    },
+    {
+      "source": "frontend_rules_frontend_rules",
+      "target": "concept_no_any_typescript",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "aiDoc/frontend-backend/frontend-rules.md",
+      "source_location": null,
+      "weight": 1.0
+    },
+    {
+      "source": "frontend_rules_frontend_rules",
+      "target": "sa_axios_package",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "aiDoc/frontend-backend/frontend-rules.md",
+      "source_location": null,
+      "weight": 1.0
+    },
+    {
+      "source": "frontend_rules_frontend_rules",
+      "target": "concept_snake_case_naming",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "aiDoc/frontend-backend/frontend-rules.md",
+      "source_location": null,
+      "weight": 1.0
+    },
+    {
+      "source": "frontend_utils_frontend_utils",
+      "target": "sa_axios_package",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "aiDoc/frontend-backend/frontend-utils.md",
+      "source_location": null,
+      "weight": 1.0
+    },
+    {
+      "source": "frontend_utils_frontend_utils",
+      "target": "sa_utils_package",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "aiDoc/frontend-backend/frontend-utils.md",
+      "source_location": null,
+      "weight": 1.0
+    },
+    {
+      "source": "frontend_utils_frontend_utils",
+      "target": "concept_enablestatus_type",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "aiDoc/frontend-backend/frontend-utils.md",
+      "source_location": null,
+      "weight": 1.0
+    },
+    {
+      "source": "frontend_utils_frontend_utils",
+      "target": "boundary_status_bridge",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "aiDoc/frontend-backend/frontend-utils.md",
+      "source_location": null,
+      "weight": 1.0
+    },
+    {
+      "source": "relations_dev_workflow",
+      "target": "concept_git_branching",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "aiDoc/relations/development-workflow.md",
+      "source_location": null,
+      "weight": 1.0
+    },
+    {
+      "source": "relations_dev_workflow",
+      "target": "concept_commit_convention",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "aiDoc/relations/development-workflow.md",
+      "source_location": null,
+      "weight": 1.0
+    },
+    {
+      "source": "relations_dev_workflow",
+      "target": "concept_endpoint_service_model",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "aiDoc/relations/development-workflow.md",
+      "source_location": null,
+      "weight": 1.0
+    },
+    {
+      "source": "modules_module_development",
+      "target": "concept_endpoint_service_model",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "aiDoc/modules/module-development.md",
+      "source_location": null,
+      "weight": 1.0
+    },
+    {
+      "source": "modules_module_development",
+      "target": "boundary_status_bridge",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "aiDoc/modules/module-development.md",
+      "source_location": null,
+      "weight": 1.0
+    },
+    {
+      "source": "modules_module_development",
+      "target": "concept_i18n_localization",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "aiDoc/modules/module-development.md",
+      "source_location": null,
+      "weight": 1.0
+    },
+    {
+      "source": "modules_module_development",
+      "target": "sa_axios_package",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "aiDoc/modules/module-development.md",
+      "source_location": null,
+      "weight": 1.0
+    },
+    {
+      "source": "specs_system_management",
+      "target": "concept_rbac_permission",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "backend/.trae/specs/system_management_spec.md",
+      "source_location": null,
+      "weight": 1.0
+    },
+    {
+      "source": "specs_system_management",
+      "target": "boundary_unified_response",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "backend/.trae/specs/system_management_spec.md",
+      "source_location": null,
+      "weight": 1.0
+    },
+    {
+      "source": "specs_system_management",
+      "target": "boundary_paginated_response",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "backend/.trae/specs/system_management_spec.md",
+      "source_location": null,
+      "weight": 1.0
+    },
+    {
+      "source": "backend_readme",
+      "target": "concept_mcp_tool_platform",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "backend/README.md",
+      "source_location": null,
+      "weight": 1.0
+    },
+    {
+      "source": "backend_readme",
+      "target": "concept_jwt_session",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "backend/README.md",
+      "source_location": null,
+      "weight": 1.0
+    },
+    {
+      "source": "backend_readme",
+      "target": "concept_rbac_permission",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "backend/README.md",
+      "source_location": null,
+      "weight": 1.0
+    },
+    {
+      "source": "backend_readme",
+      "target": "backend_requirements",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "backend/README.md",
+      "source_location": null,
+      "weight": 1.0
+    },
+    {
+      "source": "concept_csrf_strategy",
+      "target": "concept_token_storage_localstorage",
+      "relation": "conceptually_related_to",
+      "confidence": "INFERRED",
+      "confidence_score": 0.85,
+      "source_file": "aiDoc/memory/long-term/web-security.md",
+      "source_location": null,
+      "weight": 0.85
+    },
+    {
+      "source": "concept_xss_protection",
+      "target": "concept_token_storage_localstorage",
+      "relation": "conceptually_related_to",
+      "confidence": "INFERRED",
+      "confidence_score": 0.85,
+      "source_file": "aiDoc/memory/long-term/web-security.md",
+      "source_location": null,
+      "weight": 0.85
+    },
+    {
+      "source": "concept_rate_limiting",
+      "target": "concept_ip_blacklist",
+      "relation": "conceptually_related_to",
+      "confidence": "INFERRED",
+      "confidence_score": 0.85,
+      "source_file": "aiDoc/memory/business/2026-05-24_rate_limit_blacklist.md",
+      "source_location": null,
+      "weight": 0.85
+    },
+    {
+      "source": "concept_jwt_session",
+      "target": "concept_token_storage_localstorage",
+      "relation": "conceptually_related_to",
+      "confidence": "INFERRED",
+      "confidence_score": 0.85,
+      "source_file": "aiDoc/memory/long-term/web-security.md",
+      "source_location": null,
+      "weight": 0.85
+    },
+    {
+      "source": "concept_snowflake_id",
+      "target": "concept_soft_delete",
+      "relation": "conceptually_related_to",
+      "confidence": "INFERRED",
+      "confidence_score": 0.75,
+      "source_file": "aiDoc/modules/backend-layer-rules.md",
+      "source_location": null,
+      "weight": 0.75
+    },
+    {
+      "source": "concept_boolfield_deserialize",
+      "target": "concept_enablestatus_type",
+      "relation": "semantically_similar_to",
+      "confidence": "INFERRED",
+      "confidence_score": 0.85,
+      "source_file": "aiDoc/frontend-backend/boundary.md",
+      "source_location": null,
+      "weight": 0.85
+    },
+    {
+      "source": "modules_module_development",
+      "target": "backend_modules_rules",
+      "relation": "semantically_similar_to",
+      "confidence": "INFERRED",
+      "confidence_score": 0.85,
+      "source_file": "aiDoc/modules/module-development.md",
+      "source_location": null,
+      "weight": 0.85
+    },
+    {
+      "source": "relations_system_map",
+      "target": "relations_repo_profile",
+      "relation": "conceptually_related_to",
+      "confidence": "INFERRED",
+      "confidence_score": 0.85,
+      "source_file": "aiDoc/relations/system-map.md",
+      "source_location": null,
+      "weight": 0.85
+    },
+    {
+      "source": "frontend_rules_frontend_rules",
+      "target": "frontend_utils_frontend_utils",
+      "relation": "conceptually_related_to",
+      "confidence": "INFERRED",
+      "confidence_score": 0.85,
+      "source_file": "aiDoc/frontend-backend/frontend-rules.md",
+      "source_location": null,
+      "weight": 0.85
+    }
+  ],
+  "hyperedges": [
+    {
+      "id": "status_bridge_full_flow",
+      "label": "Status Field Bridge Full Flow (Backend bool -> API string -> Frontend EnableStatus)",
+      "nodes": [
+        "concept_boolfield_deserialize",
+        "concept_enablestatus_type",
+        "boundary_status_bridge",
+        "modules_backend_layer_rules"
+      ],
+      "relation": "implement",
+      "confidence": "EXTRACTED",
+      "confidence_score": 0.95,
+      "source_file": "aiDoc/frontend-backend/boundary.md"
+    },
+    {
+      "id": "endpoint_service_model_trio",
+      "label": "Backend Layered Architecture (Endpoint -> Service -> Model)",
+      "nodes": [
+        "concept_endpoint_service_model",
+        "modules_backend_layer_rules",
+        "backend_modules_rules",
+        "modules_module_development"
+      ],
+      "relation": "implement",
+      "confidence": "EXTRACTED",
+      "confidence_score": 0.95,
+      "source_file": "aiDoc/modules/backend-layer-rules.md"
+    },
+    {
+      "id": "web_security_defense_layers",
+      "label": "Web Security Defense Layers (XSS + CSRF + SQL Injection + Rate Limiting)",
+      "nodes": [
+        "concept_xss_protection",
+        "concept_csrf_strategy",
+        "concept_sql_injection_prevention",
+        "concept_rate_limiting",
+        "longterm_web_security"
+      ],
+      "relation": "form",
+      "confidence": "EXTRACTED",
+      "confidence_score": 0.95,
+      "source_file": "aiDoc/memory/long-term/web-security.md"
+    }
+  ],
+  "input_tokens": 0,
+  "output_tokens": 0
+}
