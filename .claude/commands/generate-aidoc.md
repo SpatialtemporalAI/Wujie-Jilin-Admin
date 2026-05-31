@@ -1,5 +1,5 @@
 ---
-description: 分析项目代码库并生成 AGENT.MD + aiDoc/ 分层约束文档体系
+description: 分析项目代码库并生成 AGENTS.MD + aiDoc/ 分层约束文档体系
 ---
 
 # 项目约束文档生成器
@@ -83,14 +83,14 @@ description: 分析项目代码库并生成 AGENT.MD + aiDoc/ 分层约束文档
 
 ---
 
-#### 文件 1：`AGENT.MD`
+#### 文件 1：`AGENTS.MD`
 
 项目根目录的 AI 协作规则唯一真源。
 
 内容要求：
 
 ```markdown
-# AGENT.MD
+# AGENTS.MD
 
 ## 目的
 
@@ -100,12 +100,12 @@ description: 分析项目代码库并生成 AGENT.MD + aiDoc/ 分层约束文档
 
 ## 读取顺序
 
-1. AGENT.MD
+1. AGENTS.MD
 2. aiDoc/README.md
 3. 按任务读取 aiDoc/ 子目录
 4. 仅在当前工具确实依赖时，再读取工具目录下的适配文件
 
-若内容冲突，以 AGENT.MD 为准。
+若内容冲突，以 AGENTS.MD 为准。
 
 ## 仓库概览
 
@@ -129,7 +129,7 @@ description: 分析项目代码库并生成 AGENT.MD + aiDoc/ 分层约束文档
 [固定文本：long-term/ 稳定偏好，business/ 每次业务需求]
 
 ### 文档维护
-[固定文本：高层在 AGENT.MD，细节在 aiDoc/]
+[固定文本：高层在 AGENTS.MD，细节在 aiDoc/]
 
 ### 代码读取约束
 [固定文本：不读 node_modules/、.venv/、__pycache__/、vendor/ 等]
@@ -153,7 +153,7 @@ aiDoc/ 是本仓库的结构化 AI 文档层，用于把长期有效的项目上
 
 ## 使用方式
 
-1. 先读取 AGENT.MD
+1. 先读取 AGENTS.MD
 2. 再查看本索引文件
 3. 按任务只打开相关子目录
 4. 不再把项目级规则塞回工具私有目录
@@ -174,7 +174,7 @@ aiDoc/ 是本仓库的结构化 AI 文档层，用于把长期有效的项目上
 
 - 稳定规则放这里，不放到工具私有目录里
 - 临时会话草稿不要入库
-- 项目级规则先写进 AGENT.MD，细节拆到 aiDoc/
+- 项目级规则先写进 AGENTS.MD，细节拆到 aiDoc/
 ```
 
 ---
@@ -485,7 +485,7 @@ aiDoc/memory/ 是 AI 的记忆层。
 ---
 tool: [trae/cursor/claude/codex]
 role: compatibility-adapter
-canonical_source: /AGENT.MD
+canonical_source: /AGENTS.MD
 structured_context: /aiDoc
 ---
 
@@ -497,14 +497,14 @@ structured_context: /aiDoc
 
 请按下面顺序读取：
 
-1. /AGENT.MD
+1. /AGENTS.MD
 2. /aiDoc/README.md
 3. /aiDoc/ 中与当前任务相关的文件
 
 ## 适配层约束
 
 - 不要在这里扩写项目级规则
-- 项目级规则变更时，先更新 /AGENT.MD 与 /aiDoc/
+- 项目级规则变更时，先更新 /AGENTS.MD 与 /aiDoc/
 - 工具目录只保留薄适配层职责
 ```
 
@@ -525,7 +525,7 @@ structured_context: /aiDoc
 
 生成全部文件后，执行以下检查：
 
-1. AGENT.MD 中的 AI 文档索引是否覆盖所有已生成的 aiDoc/ 文件
+1. AGENTS.MD 中的 AI 文档索引是否覆盖所有已生成的 aiDoc/ 文件
 2. 所有文件中引用的路径是否与项目实际结构一致
 3. 示例文件中引用的"真实参考文件"是否存在
 4. 前后端契约（boundary.md）中的数据结构是否与实际代码一致
