@@ -36,15 +36,16 @@ from app.models.sys.export_task import SysExportTask
 from app.models.sys.export_template import SysExportTemplate
 from app.models.sys.ip_blacklist import SysIpBlacklist
 from app.models.sys.file import SysFile
+from app.models.sys.notice import SysNotice
+from app.models.sys.notice_read import SysNoticeRead
+from app.models.sys.login_log import SysLoginLog
 from app.models.business.user import AppUser
+
+# 插件框架会通过 register_alembic_models() 动态注册插件模型到 Base.metadata
+# 无需在此手动添加插件模型的 import
 
 # Set target_metadata to Base.metadata
 target_metadata = Base.metadata
-
-# other values from the config, defined by the needs of env.py,
-# can be acquired:
-# my_important_option = config.get_main_option("my_important_option")
-# ... etc.
 
 
 def run_migrations_offline() -> None:
@@ -53,7 +54,7 @@ def run_migrations_offline() -> None:
     This configures the context with just a URL
     and not an Engine, though an Engine is acceptable
     here as well.  By skipping the Engine creation
-    we don't even need a DBAPI to be available.
+    we don't even need to DBAPI to be available.
 
     Calls to context.execute() here emit the given string to the
     script output.
@@ -75,7 +76,7 @@ def run_migrations_online() -> None:
     """Run migrations in 'online' mode.
 
     In this scenario we need to create an Engine
-    and associate a connection with the context.
+    and associate it with the context.
 
     """
     connectable = engine_from_config(

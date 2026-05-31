@@ -22,6 +22,7 @@ from .settings_model import (
     SecurityModel,
     MCPModel,
     RateLimitModel,
+    PluginModel,
 )
 
 
@@ -61,3 +62,5 @@ class GlobalSetting(BaseSettings):
     MCP: MCPModel = MCPModel()
     # 限流配置
     RATE_LIMIT: RateLimitModel = RateLimitModel()
+    # 插件配置
+    PLUGINS: PluginModel = PluginModel()

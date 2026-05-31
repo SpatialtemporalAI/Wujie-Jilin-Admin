@@ -161,6 +161,15 @@ class RateLimitModel(BaseModel):
     )
 
 
+class PluginModel(BaseModel):
+    """插件配置模型"""
+
+    ENABLED: List[str] = Field(
+        default_factory=list,
+        description="启用的插件列表，如 ['multi_tenant']",
+    )
+
+
 class RedisPoolModel(BaseModel):
     """Redis连接池模型"""
 

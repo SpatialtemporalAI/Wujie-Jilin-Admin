@@ -46,3 +46,7 @@ def setup_app(app: FastAPI, settings: GlobalSetting):
     setup_soft_delete_plug()
     # 注册日志
     setup_logging()
+    # 加载插件
+    if settings.PLUGINS.ENABLED:
+        from plugins import load_plugins
+        load_plugins(app, settings.PLUGINS.ENABLED)

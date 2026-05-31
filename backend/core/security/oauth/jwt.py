@@ -170,11 +170,14 @@ class JWTAuthManager:
             )
 
     @classmethod
-    def create_tokens(cls, user_data: Dict[str, Any]) -> Token:
+    def create_tokens(
+        cls, user_data: Dict[str, Any], extra_claims: Optional[Dict[str, Any]] = None
+    ) -> Token:
         """
         创建访问令牌和刷新令牌
         Args:
             user_data: 用户数据
+            extra_claims: 额外声明（如 tenant_id），可选
         Returns:
             Token: 包含访问令牌和刷新令牌的响应模型
         """
@@ -194,6 +197,9 @@ class JWTAuthManager:
             "scope": "refresh",
             "role": user_data.get("role", ""),
         }
+        if extra_claims:
+            access_token_data.update(extra_claims)
+            refresh_token_data.update(extra_claims)
         # 创建访问令牌和刷新令牌
         access_token = cls.create_access_token(access_token_data)
         refresh_token = cls.create_refresh_token(refresh_token_data)

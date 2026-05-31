@@ -9,6 +9,7 @@ import GlobalSearch from '../global-search/index.vue';
 import ThemeButton from './components/theme-button.vue';
 import UserAvatar from './components/user-avatar.vue';
 import NotificationCenter from './components/notification-center.vue';
+import { getHeaderPlugins } from '@/plugins/plugin-registry';
 
 defineOptions({
   name: 'GlobalHeader'
@@ -28,6 +29,9 @@ defineProps<Props>();
 const appStore = useAppStore();
 const themeStore = useThemeStore();
 const { isFullscreen, toggle } = useFullscreen();
+
+// 从插件注册表读取 Header 插件组件（插件安装前为空数组）
+const headerPlugins = getHeaderPlugins();
 </script>
 
 <template>
@@ -53,6 +57,7 @@ const { isFullscreen, toggle } = useFullscreen();
         @switch="themeStore.toggleThemeScheme"
       />
       <NotificationCenter />
+      <component v-for="plugin in headerPlugins" :key="plugin.name || plugin" :is="plugin" />
       <ThemeButton />
       <UserAvatar />
     </div>

@@ -127,5 +127,5 @@ settings: GlobalSetting = load_config()
 # print(settings.model_dump())
 # 打印加载结果（便于调试，生产环境可注释）
 print(
-    f"✅ 配置加载完成 | 当前环境：{settings.ENVIR} | 服务名称：{settings.SERVICE.NAME}"
+    f"[OK] 配置加载完成 | 当前环境: {settings.ENVIR} | 服务名称: {settings.SERVICE.NAME}"
 )

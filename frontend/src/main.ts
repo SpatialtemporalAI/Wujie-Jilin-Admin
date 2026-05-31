@@ -21,6 +21,10 @@ async function setupApp() {
 
   app.directive('permission', permission);
 
+  // 加载前端插件（从 plugins/*/index.ts 自动发现）
+  const { initPlugins } = await import('./plugins/loader');
+  await initPlugins();
+
   setupStore(app);
 
   await setupRouter(app);
