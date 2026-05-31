@@ -90,6 +90,7 @@
 - `aiDoc/modules/backend-layer-rules.md`
 - `aiDoc/modules/module-development.md`
 - `aiDoc/modules/mcp-guide.md`
+- `aiDoc/modules/plugin-development.md`
 - `aiDoc/frontend-backend/boundary.md`
 - `aiDoc/frontend-backend/frontend-rules.md`
 - `aiDoc/frontend-backend/frontend-utils.md`

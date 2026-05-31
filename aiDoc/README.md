@@ -25,6 +25,7 @@
 - `modules/backend-layer-rules.md`: 后端分层、统一响应、错误码约束
 - `modules/module-development.md`: 后端/前端模块开发流程
 - `modules/mcp-guide.md`: MCP 工具平台使用指南（部署模式、工具开发、管理接口）
+- `modules/plugin-development.md`: 插件开发与管理指南（生命周期、CLI、多租户集成）
 - `frontend-backend/boundary.md`: 前后端契约与字段类型约束
 - `frontend-backend/frontend-rules.md`: 前端代码、状态、路由、样式规范
 - `frontend-backend/frontend-utils.md`: 工具函数的强制复用规则
