@@ -1019,13 +1019,15 @@ declare namespace App {
       };
     };
 
+    interface PluginI18nSchema {}
+
     type GetI18nKey<T extends Record<string, unknown>, K extends keyof T = keyof T> = K extends string
       ? T[K] extends Record<string, unknown>
         ? `${K}.${GetI18nKey<T[K]>}`
         : K
       : never;
 
-    type I18nKey = GetI18nKey<Schema>;
+    type I18nKey = GetI18nKey<Schema> | GetI18nKey<PluginI18nSchema>;
 
     type TranslateOptions<Locales extends string> = import('vue-i18n').TranslateOptions<Locales>;
 

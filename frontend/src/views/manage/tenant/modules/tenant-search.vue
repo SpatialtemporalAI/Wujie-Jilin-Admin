@@ -1,6 +1,6 @@
 <script setup lang="ts">
-import { ref } from 'vue';
 import { NInput, NSelect } from 'naive-ui';
+import { $t } from '@/locales';
 
 interface Emits {
   (e: 'search'): void;
@@ -20,28 +20,27 @@ defineProps<Props>();
 const emit = defineEmits<Emits>();
 
 const statusOptions = [
-  { label: '全部', value: null },
-  { label: '启用', value: '1' },
-  { label: '禁用', value: '2' }
+  { label: $t('page.manage.common.status.enable'), value: '1' },
+  { label: $t('page.manage.common.status.disable'), value: '2' }
 ];
 </script>
 
 <template>
   <NCard :bordered="false" size="small">
     <NForm :model="model" label-placement="left" :label-width="60" inline>
-      <NFormItem label="名称">
-        <NInput v-model:value="model.name" placeholder="租户名称" clearable class="w-160px" />
+      <NFormItem :label="$t('page.manage.tenant.search.name')">
+        <NInput v-model:value="model.name" :placeholder="$t('page.manage.tenant.search.namePlaceholder')" clearable class="w-160px" />
       </NFormItem>
-      <NFormItem label="编码">
-        <NInput v-model:value="model.code" placeholder="租户编码" clearable class="w-160px" />
+      <NFormItem :label="$t('page.manage.tenant.search.code')">
+        <NInput v-model:value="model.code" :placeholder="$t('page.manage.tenant.search.codePlaceholder')" clearable class="w-160px" />
       </NFormItem>
-      <NFormItem label="状态">
-        <NSelect v-model:value="model.status" :options="statusOptions" placeholder="全部" clearable class="w-100px" />
+      <NFormItem :label="$t('common.status')">
+        <NSelect v-model:value="model.status" :options="statusOptions" clearable class="w-100px" />
       </NFormItem>
       <NFormItem>
         <NButton type="primary" @click="emit('search')">
           <template #icon><icon-ic-round-search /></template>
-          搜索
+          {{ $t('common.search') }}
         </NButton>
       </NFormItem>
     </NForm>

@@ -1,7 +1,8 @@
 <script setup lang="ts">
 import { computed, ref, watch } from 'vue';
-import { NInput, NInputNumber, NSelect } from 'naive-ui';
+import { NInput, NInputNumber } from 'naive-ui';
 import { fetchCreateTenant, fetchUpdateTenant, fetchGetTenant } from '@/plugins/multi_tenant/api/tenant';
+import { $t } from '@/locales';
 
 interface Props {
   visible: boolean;
@@ -29,14 +30,16 @@ const formData = ref({
 });
 
 const rules = {
-  name: [{ required: true, message: '请输入租户名称', trigger: 'blur' }],
+  name: [{ required: true, message: $t('page.manage.tenant.form.tenantName'), trigger: 'blur' }],
   code: [
-    { required: true, message: '请输入租户编码', trigger: 'blur' },
-    { pattern: /^[a-z0-9_-]+$/, message: '仅支持小写字母、数字、下划线和连字符', trigger: 'blur' }
+    { required: true, message: $t('page.manage.tenant.form.tenantCode'), trigger: 'blur' },
+    { pattern: /^[a-z0-9_-]+$/, message: $t('page.manage.tenant.form.tenantCodeRule'), trigger: 'blur' }
   ]
 };
 
-const title = computed(() => (props.operateType === 'add' ? '新增租户' : '编辑租户'));
+const title = computed(() =>
+  props.operateType === 'add' ? $t('page.manage.tenant.addTenant') : $t('page.manage.tenant.editTenant')
+);
 
 watch(
   () => props.visible,
@@ -71,14 +74,14 @@ async function handleSubmit() {
     if (props.operateType === 'add') {
       const { error } = await fetchCreateTenant(formData.value);
       if (!error) {
-        window.$message?.success('创建成功');
+        window.$message?.success($t('page.manage.tenant.createSuccess'));
         emit('submitted');
         handleClose();
       }
     } else if (props.rowData) {
       const { error } = await fetchUpdateTenant(props.rowData.id, formData.value);
       if (!error) {
-        window.$message?.success('更新成功');
+        window.$message?.success($t('page.manage.tenant.updateSuccess'));
         emit('submitted');
         handleClose();
       }
@@ -93,32 +96,32 @@ async function handleSubmit() {
   <NDrawer :show="visible" :width="480" @update:show="handleClose">
     <NDrawerContent :title="title" closable>
       <NForm ref="formRef" :model="formData" :rules="rules" label-placement="top">
-        <NFormItem label="租户名称" path="name">
-          <NInput v-model:value="formData.name" placeholder="请输入租户名称" />
+        <NFormItem :label="$t('page.manage.tenant.tenantName')" path="name">
+          <NInput v-model:value="formData.name" :placeholder="$t('page.manage.tenant.form.tenantName')" />
         </NFormItem>
-        <NFormItem label="租户编码" path="code">
-          <NInput v-model:value="formData.code" placeholder="仅限小写字母、数字" :disabled="operateType === 'edit'" />
+        <NFormItem :label="$t('page.manage.tenant.tenantCode')" path="code">
+          <NInput v-model:value="formData.code" :placeholder="$t('page.manage.tenant.form.tenantCodePlaceholder')" :disabled="operateType === 'edit'" />
         </NFormItem>
-        <NFormItem label="描述">
-          <NInput v-model:value="formData.description" type="textarea" placeholder="租户描述（可选）" :rows="3" />
+        <NFormItem :label="$t('page.manage.tenant.description')">
+          <NInput v-model:value="formData.description" type="textarea" :placeholder="$t('page.manage.tenant.form.description')" :rows="3" />
         </NFormItem>
-        <NFormItem label="联系人">
-          <NInput v-model:value="formData.contact_name" placeholder="联系人姓名" />
+        <NFormItem :label="$t('page.manage.tenant.contactName')">
+          <NInput v-model:value="formData.contact_name" :placeholder="$t('page.manage.tenant.form.contactName')" />
         </NFormItem>
-        <NFormItem label="联系邮箱">
-          <NInput v-model:value="formData.contact_email" placeholder="联系邮箱" />
+        <NFormItem :label="$t('page.manage.tenant.contactEmail')">
+          <NInput v-model:value="formData.contact_email" :placeholder="$t('page.manage.tenant.form.contactEmail')" />
         </NFormItem>
-        <NFormItem label="联系手机">
-          <NInput v-model:value="formData.contact_phone" placeholder="联系手机号" />
+        <NFormItem :label="$t('page.manage.tenant.contactPhone')">
+          <NInput v-model:value="formData.contact_phone" :placeholder="$t('page.manage.tenant.form.contactPhone')" />
         </NFormItem>
-        <NFormItem label="最大用户数">
+        <NFormItem :label="$t('page.manage.tenant.maxUsersLabel')">
           <NInputNumber v-model:value="formData.max_users" :min="1" :max="99999" class="w-full" />
         </NFormItem>
       </NForm>
       <template #footer>
         <NSpace>
-          <NButton @click="handleClose">取消</NButton>
-          <NButton type="primary" :loading="loading" @click="handleSubmit">提交</NButton>
+          <NButton @click="handleClose">{{ $t('common.cancel') }}</NButton>
+          <NButton type="primary" :loading="loading" @click="handleSubmit">{{ $t('common.confirm') }}</NButton>
         </NSpace>
       </template>
     </NDrawerContent>
