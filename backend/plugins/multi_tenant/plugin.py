@@ -11,22 +11,56 @@ from plugins.multi_tenant.middleware.tenant_middleware import TenantContextMiddl
 
 logger = logging.getLogger(__name__)
 
-# 需要添加 tenant_id 列的表
-TENANT_SCOPED_TABLES = [
+# 严格租户隔离的表（查询只返回当前租户数据）
+TENANT_STRICT_TABLES = [
     "sys_role",
     "sys_config",
     "sys_dict",
     "sys_dict_item",
     "sys_file",
     "app_user",
+    "sys_operation_log",
+    "sys_login_log",
 ]
+
+# 可选租户隔离的表（查询返回当前租户 + 全局数据，tenant_id IS NULL 为全局）
+TENANT_OPTIONAL_TABLES = [
+    "sys_menu",
+    "sys_notice",
+]
+
+# 所有需要添加 tenant_id 列的表
+TENANT_SCOPED_TABLES = TENANT_STRICT_TABLES + TENANT_OPTIONAL_TABLES
+
+# 模型路径映射
+MODEL_MAP = {
+    "sys_role": "app.models.sys.role:SysRole",
+    "sys_config": "app.models.sys.config:SysConfig",
+    "sys_dict": "app.models.sys.dict:SysDict",
+    "sys_dict_item": "app.models.sys.dict:SysDictItem",
+    "sys_file": "app.models.sys.file:SysFile",
+    "app_user": "app.models.business.user:AppUser",
+    "sys_operation_log": "app.models.sys.operation_log:SysOperationLog",
+    "sys_login_log": "app.models.sys.login_log:SysLoginLog",
+    "sys_menu": "app.models.sys.menu:SysMenu",
+    "sys_notice": "app.models.sys.notice:SysNotice",
+}
+
+
+def _import_model(model_path: str):
+    """动态导入模型类"""
+    import importlib
+
+    module_path, class_name = model_path.rsplit(":", 1)
+    module = importlib.import_module(module_path)
+    return getattr(module, class_name)
 
 
 class MultiTenantPlugin(PluginBase):
     """多租户插件"""
 
     name = "multi_tenant"
-    version = "1.0.0"
+    version = "1.1.0"
     description = "多租户隔离插件，支持行级数据隔离和租户管理"
 
     # ---- Alembic 模型注册 ----
@@ -39,27 +73,11 @@ class MultiTenantPlugin(PluginBase):
         """
         from plugins.models import PluginRegistry
         from plugins.multi_tenant.models.tenant import Tenant, sys_user_tenant_association
-        from plugins.multi_tenant.models.tenant_mixin import TenantMixin
         from sqlalchemy import BigInteger, Column
 
-        # 导入即注册（声明式模型的 __init_subclass__ 会自动加入 Base.metadata）
-        # Tenant, PluginRegistry, sys_user_tenant_association 已在函数内 import
-
         # 给目标模型动态追加 tenant_id 列
-        model_map = {
-            "sys_role": "app.models.sys.role:SysRole",
-            "sys_config": "app.models.sys.config:SysConfig",
-            "sys_dict": "app.models.sys.dict:SysDict",
-            "sys_dict_item": "app.models.sys.dict:SysDictItem",
-            "sys_file": "app.models.sys.file:SysFile",
-            "app_user": "app.models.business.user:AppUser",
-        }
-
-        for table_name, model_path in model_map.items():
-            module_path, class_name = model_path.rsplit(":", 1)
-            import importlib
-            module = importlib.import_module(module_path)
-            model_cls = getattr(module, class_name)
+        for table_name, model_path in MODEL_MAP.items():
+            model_cls = _import_model(model_path)
 
             if "tenant_id" not in model_cls.__table__.columns:
                 model_cls.__table__.append_column(
@@ -106,62 +124,78 @@ class MultiTenantPlugin(PluginBase):
                 )
                 print(f"  默认租户创建成功 (ID: {tenant_id})")
 
-            # 2. 迁移现有数据到默认租户
-            for table in TENANT_SCOPED_TABLES:
-                try:
-                    col_check = await db.execute(
-                        text(
-                            "SELECT column_name FROM information_schema.columns "
-                            "WHERE table_name = :table AND column_name = 'tenant_id'"
-                        ),
-                        {"table": table},
-                    )
-                    if col_check.scalar_one_or_none():
-                        result = await db.execute(
-                            text(
-                                f"UPDATE {table} SET tenant_id = :tid "
-                                f"WHERE tenant_id = 0 OR tenant_id IS NULL"
-                            ),
-                            {"tid": tenant_id},
-                        )
-                        if result.rowcount > 0:
-                            print(f"  {table}: 迁移 {result.rowcount} 条记录")
-                    else:
-                        print(f"  {table}: tenant_id 列不存在，跳过")
-                except Exception as e:
-                    print(f"  {table}: 迁移失败 - {e}")
+            # 2. 迁移严格隔离的表数据到默认租户
+            for table in TENANT_STRICT_TABLES:
+                await self._migrate_strict_table(db, table, tenant_id)
 
-            # 3. 分配超级管理员到默认租户
-            result = await db.execute(
-                text("SELECT id FROM sys_user WHERE is_superuser = true LIMIT 1")
-            )
-            superuser_id = result.scalar_one_or_none()
-            if superuser_id:
-                check = await db.execute(
-                    text(
-                        "SELECT 1 FROM sys_user_tenant "
-                        "WHERE user_id = :uid AND tenant_id = :tid"
-                    ),
-                    {"uid": superuser_id, "tid": tenant_id},
-                )
-                if not check.scalar_one_or_none():
-                    await db.execute(
-                        text(
-                            "INSERT INTO sys_user_tenant (user_id, tenant_id, role) "
-                            "VALUES (:uid, :tid, 'owner')"
-                        ),
-                        {"uid": superuser_id, "tid": tenant_id},
-                    )
-                    print(f"  超级管理员 (ID: {superuser_id}) 已分配到默认租户")
+            # 3. optional 表保持 tenant_id = NULL（全局数据不变）
+            for table in TENANT_OPTIONAL_TABLES:
+                print(f"  {table}: 全局表，保持 tenant_id = NULL")
 
-            # 4. 种子菜单
+            # 4. 分配超级管理员到默认租户
+            await self._assign_superuser(db, tenant_id)
+
+            # 5. 种子菜单
             await self._seed_menus(db)
 
             await db.commit()
             print("  多租户插件安装完成")
 
-        # 5. 安装前端文件
+        # 6. 安装前端文件
         self._install_frontend()
+
+    async def _migrate_strict_table(self, db, table: str, tenant_id: int) -> None:
+        """迁移严格隔离表的数据到默认租户"""
+        from sqlalchemy import text
+
+        try:
+            col_check = await db.execute(
+                text(
+                    "SELECT column_name FROM information_schema.columns "
+                    "WHERE table_name = :table AND column_name = 'tenant_id'"
+                ),
+                {"table": table},
+            )
+            if col_check.scalar_one_or_none():
+                result = await db.execute(
+                    text(
+                        f"UPDATE {table} SET tenant_id = :tid "
+                        f"WHERE tenant_id = 0 OR tenant_id IS NULL"
+                    ),
+                    {"tid": tenant_id},
+                )
+                if result.rowcount > 0:
+                    print(f"  {table}: 迁移 {result.rowcount} 条记录")
+            else:
+                print(f"  {table}: tenant_id 列不存在，跳过")
+        except Exception as e:
+            print(f"  {table}: 迁移失败 - {e}")
+
+    async def _assign_superuser(self, db, tenant_id: int) -> None:
+        """分配超级管理员到默认租户"""
+        from sqlalchemy import text
+
+        result = await db.execute(
+            text("SELECT id FROM sys_user WHERE is_superuser = true LIMIT 1")
+        )
+        superuser_id = result.scalar_one_or_none()
+        if superuser_id:
+            check = await db.execute(
+                text(
+                    "SELECT 1 FROM sys_user_tenant "
+                    "WHERE user_id = :uid AND tenant_id = :tid"
+                ),
+                {"uid": superuser_id, "tid": tenant_id},
+            )
+            if not check.scalar_one_or_none():
+                await db.execute(
+                    text(
+                        "INSERT INTO sys_user_tenant (user_id, tenant_id, role) "
+                        "VALUES (:uid, :tid, 'owner')"
+                    ),
+                    {"uid": superuser_id, "tid": tenant_id},
+                )
+                print(f"  超级管理员 (ID: {superuser_id}) 已分配到默认租户")
 
     async def on_uninstall(self) -> None:
         """卸载：清理种子菜单数据，删除前端文件"""
@@ -253,6 +287,10 @@ class MultiTenantPlugin(PluginBase):
     def on_activate(self, app: FastAPI) -> None:
         from app.models.sys.user import SysUser
         from plugins.multi_tenant.models.tenant import Tenant
+        from plugins.multi_tenant.database.tenant_filter import (
+            register_tenant_strict,
+            register_tenant_optional,
+        )
         from sqlalchemy.orm import relationship
 
         # 双向设置 Tenant.users 和 SysUser.tenants
@@ -274,7 +312,22 @@ class MultiTenantPlugin(PluginBase):
                 lazy="noload",
                 default_factory=list,
             )
-        logger.info("多租户插件已激活")
+
+        # 注册严格隔离模型
+        for table_name in TENANT_STRICT_TABLES:
+            model_cls = _import_model(MODEL_MAP[table_name])
+            register_tenant_strict(model_cls)
+
+        # 注册可选隔离模型
+        for table_name in TENANT_OPTIONAL_TABLES:
+            model_cls = _import_model(MODEL_MAP[table_name])
+            register_tenant_optional(model_cls)
+
+        logger.info(
+            "多租户插件已激活 (strict: %d, optional: %d)",
+            len(TENANT_STRICT_TABLES),
+            len(TENANT_OPTIONAL_TABLES),
+        )
 
     # ---- 注册 ----
 

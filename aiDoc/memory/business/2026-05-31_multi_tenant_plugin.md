@@ -13,7 +13,11 @@
 - **租户识别**: JWT Token claim（tenant_id 写入 JWT）
 - **用户-租户关系**: 多对多，带租户切换器
 - **数据隔离**: 行级（tenant_id 列），复用软删除的 `with_loader_criteria` 模式
-- **隔离范围**: 业务表 + 角色/字典/配置/文件按租户隔离；用户/菜单/日志全局共享
+- **隔离范围**:
+  - 严格隔离（strict）：sys_role, sys_config, sys_dict, sys_dict_item, sys_file, app_user, sys_operation_log, sys_login_log
+  - 可选隔离（optional）：sys_menu, sys_notice（全局 + 租户级）
+  - 纯全局：sys_user, sys_ip_blacklist
+- **权限分级**: 详见 `2026-05-31_tenant_table_permissions.md`
 
 ## 涉及模块
 
