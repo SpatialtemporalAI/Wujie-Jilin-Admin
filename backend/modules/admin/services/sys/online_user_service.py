@@ -16,6 +16,7 @@ from sqlalchemy import select
 from core.config import settings
 from core.redis import get_redis_util
 from core.utils.session_cache import get_session_cache
+from core.security.oauth.user_manager import build_session_key
 from app.models.sys.user import SysUser
 from app.models.common.page import ResponsePageDataModel
 from modules.admin.schemas.sys.online_user import OnlineUserResponse
@@ -41,15 +42,28 @@ class OnlineUserService:
     """在线用户监控服务"""
 
     @staticmethod
-    async def _collect_online_sessions(role: str = "admin") -> list[dict]:
-        """从 Redis 收集所有在线会话信息"""
+    async def _collect_online_sessions(role: str = "admin", tenant_id: int | None = None) -> list[dict]:
+        """从 Redis 收集所有在线会话信息，支持按 tenant_id 过滤。
+
+        Key 格式：
+        - admin: JWT_SESSION:ADMIN:{tenant_id}:{user_id}
+        - app:   JWT_SESSION:APP:{user_id}
+        """
         redis_util = get_redis_util()
         sessions = []
-        pattern = f"{SESSION_PREFIX}{role}*"
+        role_upper = role.upper()
+
+        # 构建 scan pattern
+        if role == "admin" and tenant_id is not None:
+            # 精确扫描指定租户
+            pattern = f"{SESSION_PREFIX}ADMIN:{tenant_id}:*"
+        else:
+            # 扫描该 role 下所有 key
+            pattern = f"{SESSION_PREFIX}{role_upper}:*"
 
         async for key in redis_util.scan_iter(match=pattern):
-            # 从 key 中提取 user_id: JWT_SESSION:admin123 -> 123
-            user_id_str = key[len(f"{SESSION_PREFIX}{role}"):]
+            # 从 key 中提取 user_id（取最后一个冒号后的部分）
+            user_id_str = key.rsplit(":", maxsplit=1)[-1]
             try:
                 user_id = int(user_id_str)
             except ValueError:
@@ -68,6 +82,7 @@ class OnlineUserService:
                     meta = json.loads(meta_raw)
                 except (json.JSONDecodeError, TypeError):
                     meta = {"session_id": sid}
+
                 sessions.append({
                     "user_id": user_id,
                     "session_id": sid,
@@ -85,9 +100,10 @@ class OnlineUserService:
         ip: str | None = None,
         page: int = 1,
         page_size: int = 10,
+        tenant_id: int | None = None,
     ) -> ResponsePageDataModel:
-        """获取在线用户分页列表"""
-        sessions = await OnlineUserService._collect_online_sessions(role)
+        """获取在线用户分页列表，支持按租户过滤"""
+        sessions = await OnlineUserService._collect_online_sessions(role, tenant_id=tenant_id)
 
         # 按 user_id 批量查询用户信息
         user_ids = list({s["user_id"] for s in sessions})
@@ -137,17 +153,17 @@ class OnlineUserService:
         )
 
     @staticmethod
-    async def kick_user(user_id: int, session_id: str, role: str = "admin") -> bool:
+    async def kick_user(user_id: int, session_id: str, role: str = "admin", tenant_id: int = 0) -> bool:
         """踢除指定会话"""
-        redis_key = SESSION_PREFIX + role + str(user_id)
+        redis_key = build_session_key(role, user_id, tenant_id=tenant_id)
         result = await get_redis_util().hdel(redis_key, session_id)
         get_session_cache().invalidate(redis_key, session_id)
         return result > 0
 
     @staticmethod
-    async def kick_all_sessions(user_id: int, role: str = "admin") -> int:
+    async def kick_all_sessions(user_id: int, role: str = "admin", tenant_id: int = 0) -> int:
         """踢除用户所有会话"""
-        redis_key = SESSION_PREFIX + role + str(user_id)
+        redis_key = build_session_key(role, user_id, tenant_id=tenant_id)
         all_fields = await get_redis_util().hgetall(redis_key)
         count = len(all_fields) if all_fields else 0
         await get_redis_util().delete(redis_key)
@@ -158,7 +174,8 @@ class OnlineUserService:
     async def kick_all_online_users(role: str = "admin") -> int:
         """踢除所有在线用户的所有会话"""
         redis_util = get_redis_util()
-        pattern = f"{SESSION_PREFIX}{role}*"
+        role_upper = role.upper()
+        pattern = f"{SESSION_PREFIX}{role_upper}:*"
         count = 0
         async for key in redis_util.scan_iter(match=pattern):
             all_fields = await redis_util.hgetall(key)
@@ -171,10 +188,11 @@ class OnlineUserService:
     async def get_online_count(role: str = "admin") -> int:
         """获取在线用户数（按独立用户计数）"""
         redis_util = get_redis_util()
-        pattern = f"{SESSION_PREFIX}{role}*"
+        role_upper = role.upper()
+        pattern = f"{SESSION_PREFIX}{role_upper}:*"
         user_ids = set()
         async for key in redis_util.scan_iter(match=pattern):
-            user_id_str = key[len(f"{SESSION_PREFIX}{role}"):]
+            user_id_str = key.rsplit(":", maxsplit=1)[-1]
             try:
                 user_ids.add(int(user_id_str))
             except ValueError:

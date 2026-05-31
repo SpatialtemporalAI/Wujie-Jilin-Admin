@@ -41,12 +41,21 @@ async def get_online_users(
     db: AsyncSession = Depends(get_session),
 ):
     """分页查询当前在线用户列表"""
+    # 从租户上下文获取 tenant_id（多租户插件启用时自动注入）
+    tenant_id = None
+    try:
+        from plugins.multi_tenant.deps.tenant_context import get_current_tenant_id
+        tenant_id = get_current_tenant_id()
+    except ImportError:
+        pass
+
     page_data = await OnlineUserService.get_online_user_page(
         db=db,
         username=query_params.username,
         ip=query_params.ip,
         page=page_params.page,
         page_size=page_params.page_size,
+        tenant_id=tenant_id,
     )
     return response_base.page(data=page_data)
 

@@ -43,6 +43,16 @@
 | sys_user | 用户身份全局唯一 |
 | sys_ip_blacklist | 安全策略全局统一 |
 
+### Redis 会话（在线用户）
+
+非数据库表，基于 Redis Hash 存储（`JWT_SESSION:{role}{user_id}`），会话元数据中包含 `tenant_id` 字段。
+
+| 场景 | 说明 |
+|---|------|
+| select_tenant | 切换租户时将 tenant_id 写入 Redis session 元数据 |
+| 在线用户查询 | 按 tenant_id 过滤，租户管理员只看本租户在线用户 |
+| 踢人操作 | 租户管理员只能踢本租户的在线用户 |
+
 ## 权限分级
 
 ### 超级管理员（平台级，is_superuser=true）
@@ -56,11 +66,12 @@
 - 管理（增删改）本租户的 optional 表数据
 - **只读**本租户的 SysOperationLog、SysLoginLog（不可删除/篡改）
 - **只读**全局的 SysIpBlacklist（不可修改安全规则）
+- 查看本租户在线用户，踢本租户在线用户
 
 ### 普通租户用户（tenant role: member）
 
 - 使用本租户的功能和数据
-- 不可见 SysOperationLog、SysLoginLog、SysIpBlacklist
+- 不可见 SysOperationLog、SysLoginLog、SysIpBlacklist、在线用户
 
 ## 过滤机制
 

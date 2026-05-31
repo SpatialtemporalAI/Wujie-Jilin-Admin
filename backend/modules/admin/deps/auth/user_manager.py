@@ -12,7 +12,7 @@ from app.models.sys.user import SysUser
 from database import get_session
 from core.exception import CustomError, TokenError
 from core.response import CustomErrorCode
-from core.security.oauth.user_manager import base_user_manager, BaseUserManager
+from core.security.oauth.user_manager import base_user_manager, BaseUserManager, build_session_key, build_session_key_legacy
 from core.security.oauth.jwt import JWTAuthManager, Token, oauth2_scheme
 from core.security.password import PasswordHasher
 from core.redis import get_redis_util
@@ -143,6 +143,7 @@ class UserManager(BaseUserManager):
         session_id = payload.get("session_id")
         user_id = payload.get("user_id")
         user_role = payload.get("role")
+        tenant_id = int(payload.get("tenant_id", 0)) if payload.get("tenant_id") else 0
         if payload.get("scope") != _type:
             raise TokenError()
         if not user_id:
@@ -151,7 +152,9 @@ class UserManager(BaseUserManager):
             raise TokenError()
         if not user_role:
             raise TokenError()
-        cache_key = settings.JWT.SESSION_PREFIX + user_role + str(user_id)
+
+        # 新格式 key
+        cache_key = build_session_key(user_role, int(user_id), tenant_id=tenant_id)
         # 检查内存缓存
         cached_valid = get_session_cache().get(cache_key, session_id)
         if cached_valid is not None:
@@ -161,14 +164,22 @@ class UserManager(BaseUserManager):
         if local_session_meta is not None:
             get_session_cache().set(cache_key, session_id)
             return int(user_id), session_id
-        # Fallback: 兼容旧格式（纯字符串存储），过渡期使用
-        try:
-            local_session_id = await get_redis_util().get(cache_key)
-        except Exception:
-            local_session_id = None
-        if local_session_id is not None and local_session_id == session_id:
-            get_session_cache().set(cache_key, session_id)
-            return int(user_id), session_id
+
+        # Fallback: 兼容旧格式 key（JWT_SESSION:admin123），过渡期使用
+        legacy_key = build_session_key_legacy(user_role, int(user_id))
+        if legacy_key != cache_key:
+            legacy_meta = await get_redis_util().hget(legacy_key, session_id)
+            if legacy_meta is not None:
+                get_session_cache().set(legacy_key, session_id)
+                return int(user_id), session_id
+            try:
+                legacy_sid = await get_redis_util().get(legacy_key)
+            except Exception:
+                legacy_sid = None
+            if legacy_sid is not None and legacy_sid == session_id:
+                get_session_cache().set(legacy_key, session_id)
+                return int(user_id), session_id
+
         raise TokenError()
 
     async def get_user_info(self, user_id: int):

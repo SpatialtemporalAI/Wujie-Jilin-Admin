@@ -3,14 +3,17 @@
 
 """租户选择/切换接口"""
 
+import json
 import logging
 from fastapi import APIRouter, Depends
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from database.db_manager import get_session
+from core.config import settings
+from core.redis import get_redis_util
 from core.response.response_schema import ResponseModel
 from core.exception.errors import NotFoundError, ForbiddenError
-from core.security.oauth.user_manager import base_user_manager
+from core.security.oauth.user_manager import base_user_manager, build_session_key
 from core.security.oauth.jwt import JWTAuthManager
 from app.models.sys.user import SysUser
 from modules.admin.deps.auth.user_manager import current_user
@@ -53,7 +56,9 @@ async def select_tenant(
         user_id=user.id,
         user_role="admin",
         username=user.username,
+        tenant_id=target.id,
     )
+
     # 重新编码，加入 tenant_id
     extra_claims = {"tenant_id": str(target.id)}
 
