@@ -24,6 +24,8 @@ from plugins.multi_tenant.schemas.tenant import (
     TenantListResponse,
     TenantAssignUser,
     TenantUserInfo,
+    TenantConfigResponse,
+    TenantConfigUpdate,
 )
 
 logger = logging.getLogger(__name__)
@@ -139,6 +141,35 @@ async def update_tenant_status(
     """更新租户状态"""
     tenant = await TenantService.update_status(db, tenant_id, status)
     return ResponseModel(data=TenantResponse.model_validate(tenant), msg="更新状态成功")
+
+
+@tenant_router.get(
+    "/{tenant_id}/config",
+    response_model=ResponseModel[TenantConfigResponse],
+    dependencies=[Depends(require_permission("tenant:tenant:config"))],
+)
+async def get_tenant_config(
+    tenant_id: int,
+    db: AsyncSession = Depends(get_session),
+):
+    """获取租户配置"""
+    config = await TenantService.get_tenant_config(db, tenant_id)
+    return ResponseModel(data=config)
+
+
+@tenant_router.put(
+    "/{tenant_id}/config",
+    response_model=ResponseModel[TenantConfigResponse],
+    dependencies=[Depends(require_permission("tenant:tenant:config"))],
+)
+async def update_tenant_config(
+    tenant_id: int,
+    config_update: TenantConfigUpdate,
+    db: AsyncSession = Depends(get_session),
+):
+    """更新租户配置"""
+    config = await TenantService.update_tenant_config(db, tenant_id, config_update)
+    return ResponseModel(data=config, msg="更新租户配置成功")
 
 
 @tenant_router.get(

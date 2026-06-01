@@ -120,3 +120,31 @@ export function fetchSelectTenant(tenantId: number) {
     data: { tenant_id: tenantId }
   });
 }
+
+/** 获取租户配置 */
+export function fetchGetTenantConfig(tenantId: number) {
+  return request({
+    url: `/admin/sys/tenant/${tenantId}/config`,
+    method: 'get'
+  });
+}
+
+/** 更新租户配置 */
+export function fetchUpdateTenantConfig(
+  tenantId: number,
+  data: {
+    jwt_config?: {
+      secret_key?: string | null;
+      algorithm?: string | null;
+      access_lifetime?: number | null;
+      refresh_lifetime?: number | null;
+    } | null;
+    login_url?: string | null;
+  }
+) {
+  return request({
+    url: `/admin/sys/tenant/${tenantId}/config`,
+    method: 'put',
+    data
+  });
+}

@@ -253,7 +253,8 @@ const local: App.I18n.Schema = {
     monitor: '监控仪表盘',
     demo: '示例',
     demo_upload: '上传演示',
-    manage_file: '文件管理'
+    manage_file: '文件管理',
+    'manage_tenant-config': '租户配置'
   },
   page: {
     login: {

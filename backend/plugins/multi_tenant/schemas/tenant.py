@@ -95,6 +95,21 @@ class TenantSimpleResponse(BaseRespEntity):
     status: bool = True
 
 
+class TenantConfigResponse(BaseRespEntity):
+    """租户配置响应"""
+
+    tenant_id: int = Field(..., description="租户ID")
+    jwt_config: Optional[TenantJwtConfig] = Field(None, description="JWT配置")
+    login_url: Optional[str] = Field(None, description="登录URL")
+
+
+class TenantConfigUpdate(BaseEntity):
+    """更新租户配置请求"""
+
+    jwt_config: Optional[TenantJwtConfig] = Field(None, description="JWT配置（为空则使用全局配置）")
+    login_url: Optional[str] = Field(None, description="登录URL")
+
+
 class TenantAssignUser(BaseEntity):
     """分配用户到租户"""
 

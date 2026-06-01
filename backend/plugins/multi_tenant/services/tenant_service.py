@@ -15,6 +15,8 @@ from plugins.multi_tenant.schemas.tenant import (
     TenantCreate,
     TenantUpdate,
     TenantQueryParams,
+    TenantConfigResponse,
+    TenantConfigUpdate,
 )
 from plugins.multi_tenant.schemas.tenant_config import (
     TenantJwtConfig,
@@ -301,6 +303,46 @@ class TenantService:
         redis = get_redis_util()
         cache_key = _TENANT_JWT_CONFIG_KEY.format(tenant_id=tenant_id)
         await redis.delete(cache_key)
+
+    # ---- Tenant Config ----
+
+    @staticmethod
+    async def get_tenant_config(db: AsyncSession, tenant_id: int) -> TenantConfigResponse:
+        """获取租户配置"""
+        tenant = await TenantService.get_tenant(db, tenant_id)
+        config = parse_tenant_config(tenant.config)
+        return TenantConfigResponse(
+            tenant_id=tenant_id,
+            jwt_config=config.jwt,
+            login_url=config.login_url,
+        )
+
+    @staticmethod
+    async def update_tenant_config(
+        db: AsyncSession, tenant_id: int, config_update: TenantConfigUpdate
+    ) -> TenantConfigResponse:
+        """更新租户配置"""
+        tenant = await TenantService.get_tenant(db, tenant_id)
+        existing_config = parse_tenant_config(tenant.config)
+        update_data = config_update.model_dump(exclude_unset=True)
+
+        if "jwt_config" in update_data:
+            jwt_data = update_data.pop("jwt_config")
+            existing_config.jwt = TenantJwtConfig(**jwt_data) if jwt_data else None
+            await TenantService._invalidate_jwt_config_cache(tenant_id)
+
+        if "login_url" in update_data:
+            existing_config.login_url = update_data.pop("login_url")
+
+        tenant.config = serialize_tenant_config(existing_config)
+        await db.commit()
+        await db.refresh(tenant)
+        logger.info("更新租户配置成功，ID: %s", tenant_id)
+        return TenantConfigResponse(
+            tenant_id=tenant_id,
+            jwt_config=existing_config.jwt,
+            login_url=existing_config.login_url,
+        )
 
     # ---- Last Tenant Persistence ----
 

@@ -202,6 +202,9 @@ class MultiTenantPlugin(PluginBase):
             await db.execute(
                 text("DELETE FROM sys_menu WHERE path = '/manage/tenant' OR name = 'manage_tenant'")
             )
+            await db.execute(
+                text("DELETE FROM sys_menu WHERE path = '/manage/tenant-config' OR name = 'tenant_config'")
+            )
             await db.commit()
             print("  已清理租户管理菜单数据")
 
@@ -231,7 +234,6 @@ class MultiTenantPlugin(PluginBase):
             meta_icon="ic-outline-business",
             type=MenuType.CATALOG,
             sort=90,
-            tenant_id=None,
         )
         db.add(catalog)
         await db.flush()
@@ -247,7 +249,6 @@ class MultiTenantPlugin(PluginBase):
             meta_icon="ic-outline-business",
             type=MenuType.MENU,
             sort=1,
-            tenant_id=None,
         )
         db.add(menu)
         await db.flush()
@@ -274,9 +275,22 @@ class MultiTenantPlugin(PluginBase):
                 meta_icon=None,
                 type=MenuType.BUTTON,
                 sort=0,
-                tenant_id=None,
             )
             db.add(btn)
+
+        # 菜单：租户配置
+        config_menu = SysMenu(
+            parent_id=catalog.id,
+            name="tenant_config",
+            path="/manage/tenant-config",
+            component="view.manage_tenant-config",
+            redirect=None,
+            permission="tenant:tenant:config",
+            meta_icon="ic-outline-settings",
+            type=MenuType.MENU,
+            sort=2,
+        )
+        db.add(config_menu)
 
     # ---- 激活 ----
 
@@ -388,13 +402,21 @@ class MultiTenantPlugin(PluginBase):
         src_views = os.path.join(src, "views")
         dst_views = os.path.join(dst, "views")
         if os.path.exists(src_views):
-            # 只复制 manage/tenant
+            # 复制 manage/tenant
             src_tenant = os.path.join(src_views, "manage", "tenant")
             dst_tenant = os.path.join(dst_views, "manage", "tenant")
             if os.path.exists(src_tenant):
                 os.makedirs(os.path.dirname(dst_tenant), exist_ok=True)
                 shutil.copytree(src_tenant, dst_tenant, dirs_exist_ok=True)
                 print(f"  前端视图已复制: views/manage/tenant/")
+
+            # 复制 manage/tenant-config
+            src_tenant_config = os.path.join(src_views, "manage", "tenant-config")
+            dst_tenant_config = os.path.join(dst_views, "manage", "tenant-config")
+            if os.path.exists(src_tenant_config):
+                os.makedirs(os.path.dirname(dst_tenant_config), exist_ok=True)
+                shutil.copytree(src_tenant_config, dst_tenant_config, dirs_exist_ok=True)
+                print(f"  前端视图已复制: views/manage/tenant-config/")
 
         # 复制 plugins (API, store, components, index.ts)
         src_plugins = os.path.join(src, "plugins", "multi_tenant")
@@ -418,6 +440,12 @@ class MultiTenantPlugin(PluginBase):
         if os.path.exists(tenant_views):
             shutil.rmtree(tenant_views)
             print("  已删除 views/manage/tenant/")
+
+        # 删除 views/manage/tenant-config
+        tenant_config_views = os.path.join(dst, "views", "manage", "tenant-config")
+        if os.path.exists(tenant_config_views):
+            shutil.rmtree(tenant_config_views)
+            print("  已删除 views/manage/tenant-config/")
 
         # 删除 plugins/multi_tenant
         tenant_plugins = os.path.join(dst, "plugins", "multi_tenant")

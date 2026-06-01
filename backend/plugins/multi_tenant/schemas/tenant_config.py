@@ -19,12 +19,18 @@ class TenantJwtConfig(BaseModel):
     access_lifetime: Optional[int] = Field(
         None, gt=0, le=86400, description="Access token lifetime (seconds)"
     )
+    refresh_lifetime: Optional[int] = Field(
+        None, gt=0, le=604800, description="Refresh token lifetime (seconds)"
+    )
 
 
 class TenantConfigSchema(BaseModel):
     """Full JSON structure stored in tenant.config column."""
 
     jwt: Optional[TenantJwtConfig] = Field(None, description="JWT settings")
+    login_url: Optional[str] = Field(
+        None, pattern=r"^https?://.*", description="Custom login URL for this tenant"
+    )
 
 
 def parse_tenant_config(config_str: Optional[str]) -> TenantConfigSchema:

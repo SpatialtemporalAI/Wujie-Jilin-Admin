@@ -257,7 +257,8 @@ const local: App.I18n.Schema = {
     monitor: 'Monitor Dashboard',
     demo: 'Example',
     demo_upload: 'Upload Demo',
-    manage_file: 'File Management'
+    manage_file: 'File Management',
+    'manage_tenant-config': 'Tenant Config'
   },
   page: {
     login: {
