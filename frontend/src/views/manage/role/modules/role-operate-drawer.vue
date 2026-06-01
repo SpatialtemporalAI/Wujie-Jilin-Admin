@@ -1,13 +1,12 @@
 <script setup lang="ts">
-import { computed, ref, watch } from 'vue';
+import { computed, h, ref, shallowRef, watch } from 'vue';
 import { jsonClone } from '@sa/utils';
-import { useBoolean } from '@sa/hooks';
-import { enableStatusOptions } from '@/constants/business';
-import { fetchCreateRole, fetchUpdateRole } from '@/service/api';
+import { enableStatusOptions, menuTypeRecord } from '@/constants/business';
+import { fetchCreateRole, fetchUpdateRole, fetchGetAssignMenuTree, fetchGetRole } from '@/service/api';
 import { useFormRules, useNaiveForm } from '@/hooks/common/form';
 import { $t } from '@/locales';
 import { booleanToEnableStatus } from '@/utils/status';
-import MenuAuthModal from './menu-auth-modal.vue';
+import { NTag } from 'naive-ui';
 
 defineOptions({
   name: 'RoleOperateDrawer'
@@ -34,7 +33,6 @@ const visible = defineModel<boolean>('visible', {
 
 const { formRef, validate, restoreValidation } = useNaiveForm();
 const { defaultRequiredRule } = useFormRules();
-const { bool: menuAuthVisible, setTrue: openMenuAuthModal } = useBoolean();
 
 const title = computed(() => {
   const titles: Record<NaiveUI.TableOperateType, string> = {
@@ -69,12 +67,89 @@ const roleId = computed(() => props.rowData?.id || -1);
 
 const isEdit = computed(() => props.operateType === 'edit');
 
+// Menu tree
+const menuTree = shallowRef<Api.SystemManage.MenuTree[]>([]);
+const menuChecks = ref<number[]>([]);
+const menuExpandedKeys = ref<number[]>([]);
+
+const tagTypeMap: Record<string, NaiveUI.ThemeColor> = {
+  '1': 'default',
+  '2': 'primary',
+  '3': 'warning'
+};
+
+function renderMenuLabel({ option }: { option: Record<string, unknown> }) {
+  const node = option as unknown as Api.SystemManage.MenuTree;
+  const tagType = tagTypeMap[node.menuType];
+
+  if (node.menuType === '3') {
+    return h(
+      'span',
+      { class: 'flex items-center gap-8px' },
+      {
+        default: () => [
+          h(NTag, { type: tagType, size: 'small', bordered: false }, { default: () => $t(menuTypeRecord[node.menuType]) }),
+          node.label
+        ]
+      }
+    );
+  }
+
+  return node.label;
+}
+
+async function loadMenuTree() {
+  const { error, data } = await fetchGetAssignMenuTree();
+  if (!error) {
+    menuTree.value = data;
+  }
+}
+
+function getAncestorKeys(treeData: Api.SystemManage.MenuTree[], targetIds: number[]): number[] {
+  const ancestorSet = new Set<number>();
+
+  function findAncestors(nodes: Api.SystemManage.MenuTree[], targetId: number, currentPath: number[]): boolean {
+    for (const node of nodes) {
+      if (node.id === targetId) {
+        for (const ancestorId of currentPath) {
+          ancestorSet.add(ancestorId);
+        }
+        return true;
+      }
+      if (node.children && node.children.length > 0) {
+        if (findAncestors(node.children, targetId, [...currentPath, node.id])) {
+          return true;
+        }
+      }
+    }
+    return false;
+  }
+
+  for (const targetId of targetIds) {
+    findAncestors(treeData, targetId, []);
+  }
+
+  return Array.from(ancestorSet);
+}
+
+async function loadRoleMenuIds() {
+  if (isEdit.value && roleId.value > 0) {
+    const { error, data } = await fetchGetRole(roleId.value);
+    if (!error && data) {
+      menuChecks.value = data.menu_ids || [];
+      menuExpandedKeys.value = getAncestorKeys(menuTree.value, menuChecks.value);
+    }
+  } else {
+    menuChecks.value = [];
+    menuExpandedKeys.value = [];
+  }
+}
+
 function handleInitModel() {
   model.value = createDefaultModel();
 
   if (props.operateType === 'edit' && props.rowData) {
     const clonedData = jsonClone(props.rowData);
-    // 将 rowData 的字段映射到 model 的字段
     model.value.name = clonedData.name || '';
     model.value.code = clonedData.code || '';
     model.value.desc = clonedData.desc || '';
@@ -91,11 +166,16 @@ async function handleSubmit() {
 
   let error: unknown = null;
 
+  const submitData = {
+    ...model.value,
+    menu_ids: menuChecks.value
+  };
+
   if (isEdit.value) {
-    const result = await fetchUpdateRole(roleId.value, model.value);
+    const result = await fetchUpdateRole(roleId.value, submitData);
     error = result.error;
   } else {
-    const result = await fetchCreateRole(model.value);
+    const result = await fetchCreateRole(submitData);
     error = result.error;
   }
 
@@ -106,10 +186,12 @@ async function handleSubmit() {
   }
 }
 
-watch(visible, () => {
+watch(visible, async () => {
   if (visible.value) {
     handleInitModel();
     restoreValidation();
+    await loadMenuTree();
+    await loadRoleMenuIds();
   }
 });
 </script>
@@ -132,11 +214,22 @@ watch(visible, () => {
         <NFormItem :label="$t('page.manage.role.roleDesc')" path="desc">
           <NInput v-model:value="model.desc" :placeholder="$t('page.manage.role.form.roleDesc')" />
         </NFormItem>
+        <NFormItem :label="$t('page.manage.role.menuAuth')">
+          <NTree
+            v-model:checked-keys="menuChecks"
+            v-model:expanded-keys="menuExpandedKeys"
+            :data="menuTree"
+            key-field="id"
+            checkable
+            cascade
+            expand-on-click
+            virtual-scroll
+            block-line
+            :render-label="renderMenuLabel"
+            class="h-280px w-full"
+          />
+        </NFormItem>
       </NForm>
-      <NSpace v-if="isEdit">
-        <NButton @click="openMenuAuthModal">{{ $t('page.manage.role.menuAuth') }}</NButton>
-        <MenuAuthModal v-model:visible="menuAuthVisible" :role-id="roleId" />
-      </NSpace>
       <template #footer>
         <NSpace :size="16">
           <NButton @click="closeDrawer">{{ $t('common.cancel') }}</NButton>

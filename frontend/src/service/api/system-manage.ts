@@ -30,7 +30,7 @@ export function fetchGetRole(roleId: number) {
 }
 
 /** create role */
-export function fetchCreateRole(role: Partial<Api.SystemManage.Role>) {
+export function fetchCreateRole(role: Partial<Api.SystemManage.Role> & { menu_ids?: number[] }) {
   return request<Api.SystemManage.Role>({
     url: '/admin/sys/role/add',
     method: 'post',
@@ -40,13 +40,13 @@ export function fetchCreateRole(role: Partial<Api.SystemManage.Role>) {
       desc: role.desc,
       status: enableStatusToBoolean(role.status),
       sort: 0,
-      menu_ids: []
+      menu_ids: role.menu_ids || []
     }
   });
 }
 
 /** update role */
-export function fetchUpdateRole(roleId: number, role: Partial<Api.SystemManage.Role>) {
+export function fetchUpdateRole(roleId: number, role: Partial<Api.SystemManage.Role> & { menu_ids?: number[] }) {
   return request<Api.SystemManage.Role>({
     url: `/admin/sys/role/${roleId}`,
     method: 'put',
@@ -54,7 +54,8 @@ export function fetchUpdateRole(roleId: number, role: Partial<Api.SystemManage.R
       name: role.name,
       code: role.code,
       desc: role.desc,
-      status: enableStatusToBoolean(role.status)
+      status: enableStatusToBoolean(role.status),
+      menu_ids: role.menu_ids || []
     }
   });
 }
