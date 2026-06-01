@@ -105,6 +105,7 @@ class TenantAssignUser(BaseEntity):
 class TenantUserInfo(BaseRespEntity):
     """租户中的用户信息"""
 
+    id: int = Field(..., description="用户ID")
     username: str
     nickname: Optional[str] = None
     email: Optional[str] = None
