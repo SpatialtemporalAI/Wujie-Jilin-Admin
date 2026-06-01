@@ -37,8 +37,6 @@ declare module "@elegant-router/types" {
     "manage_ip-blacklist": "/manage/ip-blacklist";
     "manage_menu": "/manage/menu";
     "manage_role": "/manage/role";
-    "manage_tenant": "/manage/tenant";
-    "manage_tenant-config": "/manage/tenant-config";
     "manage_user": "/manage/user";
     "monitor": "/monitor";
   };
@@ -115,8 +113,6 @@ declare module "@elegant-router/types" {
     | "manage_ip-blacklist"
     | "manage_menu"
     | "manage_role"
-    | "manage_tenant-config"
-    | "manage_tenant"
     | "manage_user"
     | "monitor"
   >;
