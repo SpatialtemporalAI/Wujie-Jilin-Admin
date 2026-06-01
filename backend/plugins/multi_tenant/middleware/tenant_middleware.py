@@ -2,7 +2,6 @@
 # -*- coding: utf-8 -*-
 
 from starlette.types import ASGIApp, Receive, Scope, Send
-from starlette.requests import Request
 from typing import Optional
 
 from plugins.multi_tenant.deps.tenant_context import (
@@ -43,7 +42,12 @@ class TenantContextMiddleware:
             from core.security.oauth.jwt import JWTAuthManager
 
             token_str = auth_header[7:]
-            payload = JWTAuthManager.decode_token(token_str)
+            # 先用全局密钥尝试解码
+            try:
+                payload = JWTAuthManager.decode_token(token_str)
+            except Exception:
+                # 全局密钥失败（可能使用租户密钥签名），从未验证 payload 中提取 tenant_id
+                payload = JWTAuthManager.decode_token_unverified(token_str)
             tid = payload.get("tenant_id")
             return int(tid) if tid else None
         except Exception:

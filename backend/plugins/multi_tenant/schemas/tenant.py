@@ -2,8 +2,14 @@
 # -*- coding: utf-8 -*-
 
 from typing import Optional, List
-from pydantic import Field
+from pydantic import Field, model_validator
 from app.models.common.base import BaseEntity, BaseRespEntity
+from plugins.multi_tenant.schemas.tenant_config import (
+    TenantJwtConfig,
+    TenantConfigSchema,
+    parse_tenant_config,
+    serialize_tenant_config,
+)
 
 
 class TenantCreate(BaseEntity):
@@ -16,6 +22,7 @@ class TenantCreate(BaseEntity):
     contact_email: Optional[str] = Field(None, description="联系邮箱")
     contact_phone: Optional[str] = Field(None, description="联系手机")
     max_users: int = Field(100, description="最大用户数")
+    jwt_config: Optional[TenantJwtConfig] = Field(None, description="JWT配置（为空则使用全局配置）")
 
 
 class TenantUpdate(BaseEntity):
@@ -27,6 +34,7 @@ class TenantUpdate(BaseEntity):
     contact_email: Optional[str] = Field(None, description="联系邮箱")
     contact_phone: Optional[str] = Field(None, description="联系手机")
     max_users: Optional[int] = Field(None, description="最大用户数")
+    jwt_config: Optional[TenantJwtConfig] = Field(None, description="JWT配置（为空则使用全局配置）")
 
 
 class TenantQueryParams(BaseEntity):
@@ -47,10 +55,22 @@ class TenantResponse(BaseRespEntity):
     description: Optional[str] = None
     status: bool = True
     config: Optional[str] = None
+    jwt_config: Optional[TenantJwtConfig] = None
     contact_name: Optional[str] = None
     contact_email: Optional[str] = None
     contact_phone: Optional[str] = None
     max_users: int = 100
+
+    @model_validator(mode="before")
+    @classmethod
+    def parse_config(cls, values):
+        if isinstance(values, dict):
+            config_str = values.get("config")
+            if config_str and not values.get("jwt_config"):
+                parsed = parse_tenant_config(config_str)
+                if parsed.jwt:
+                    values["jwt_config"] = parsed.jwt
+        return values
 
 
 class TenantListResponse(BaseRespEntity):

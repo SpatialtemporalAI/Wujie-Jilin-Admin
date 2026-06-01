@@ -3,19 +3,31 @@
 
 import logging
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy import select, and_, Select
+from sqlalchemy import select, and_, Select, update
 from typing import List, Optional
 
 from plugins.multi_tenant.models.tenant import Tenant, sys_user_tenant_association
 from app.models.sys.user import SysUser
+from core.config import settings
+from core.redis import get_redis_util
 from core.exception.errors import NotFoundError, ConflictError, ForbiddenError
 from plugins.multi_tenant.schemas.tenant import (
     TenantCreate,
     TenantUpdate,
     TenantQueryParams,
 )
+from plugins.multi_tenant.schemas.tenant_config import (
+    TenantJwtConfig,
+    TenantConfigSchema,
+    parse_tenant_config,
+    serialize_tenant_config,
+)
 
 logger = logging.getLogger(__name__)
+
+# Redis key templates
+_TENANT_JWT_CONFIG_KEY = "TENANT_JWT_CONFIG:{tenant_id}"
+_USER_LAST_TENANT_KEY = "USER_LAST_TENANT:{user_id}"
 
 
 class TenantService:
@@ -63,10 +75,17 @@ class TenantService:
         if result.scalar_one_or_none():
             raise ConflictError(msg="租户名称已存在")
 
+        # 序列化 jwt_config 到 config JSON
+        config_str = None
+        if tenant_create.jwt_config:
+            config_schema = TenantConfigSchema(jwt=tenant_create.jwt_config)
+            config_str = serialize_tenant_config(config_schema)
+
         tenant = Tenant(
             name=tenant_create.name,
             code=tenant_create.code,
             description=tenant_create.description,
+            config=config_str,
             contact_name=tenant_create.contact_name,
             contact_email=tenant_create.contact_email,
             contact_phone=tenant_create.contact_phone,
@@ -85,6 +104,16 @@ class TenantService:
         """更新租户"""
         tenant = await TenantService.get_tenant(db, tenant_id)
         update_data = tenant_update.model_dump(exclude_unset=True)
+
+        # 处理 jwt_config: 序列化到 config JSON
+        jwt_config_data = update_data.pop("jwt_config", None)
+        if jwt_config_data is not None:
+            existing_config = parse_tenant_config(tenant.config)
+            existing_config.jwt = TenantJwtConfig(**jwt_config_data) if jwt_config_data else None
+            tenant.config = serialize_tenant_config(existing_config)
+            # 清除 JWT config 缓存
+            await TenantService._invalidate_jwt_config_cache(tenant_id)
+
         for key, value in update_data.items():
             if hasattr(tenant, key) and value is not None:
                 setattr(tenant, key, value)
@@ -240,3 +269,71 @@ class TenantService:
             }
             users.append(user_dict)
         return users
+
+    # ---- Tenant JWT Config ----
+
+    @staticmethod
+    async def get_tenant_jwt_config(db: AsyncSession, tenant_id: int) -> Optional[TenantJwtConfig]:
+        """Get tenant JWT config, returns None if tenant has no custom JWT config."""
+        tenant = await TenantService.get_tenant(db, tenant_id)
+        config = parse_tenant_config(tenant.config)
+        return config.jwt
+
+    @staticmethod
+    async def get_tenant_jwt_config_cached(tenant_id: int) -> Optional[TenantJwtConfig]:
+        """Get tenant JWT config with Redis cache (TTL 5 minutes)."""
+        redis = get_redis_util()
+        cache_key = _TENANT_JWT_CONFIG_KEY.format(tenant_id=tenant_id)
+        cached = await redis.get(cache_key)
+        if cached:
+            return TenantJwtConfig.model_validate_json(cached)
+
+        from database import get_session as _get_session
+        async for db in _get_session():
+            jwt_config = await TenantService.get_tenant_jwt_config(db, tenant_id)
+            if jwt_config:
+                await redis.setex(cache_key, 300, jwt_config.model_dump_json())
+            return jwt_config
+
+    @staticmethod
+    async def _invalidate_jwt_config_cache(tenant_id: int) -> None:
+        """Invalidate JWT config Redis cache for a tenant."""
+        redis = get_redis_util()
+        cache_key = _TENANT_JWT_CONFIG_KEY.format(tenant_id=tenant_id)
+        await redis.delete(cache_key)
+
+    # ---- Last Tenant Persistence ----
+
+    @staticmethod
+    async def get_last_tenant(user_id: int, db: AsyncSession = None) -> Optional[int]:
+        """Get last tenant from Redis first, then DB fallback."""
+        redis = get_redis_util()
+        cached = await redis.get(_USER_LAST_TENANT_KEY.format(user_id=user_id))
+        if cached:
+            return int(cached)
+        # DB fallback
+        if db:
+            return await TenantService.get_last_tenant_from_db(db, user_id)
+        return None
+
+    @staticmethod
+    async def get_last_tenant_from_db(db: AsyncSession, user_id: int) -> Optional[int]:
+        """Get last tenant from DB (SysUser.last_tenant_id)."""
+        result = await db.execute(
+            select(SysUser.last_tenant_id).where(SysUser.id == user_id)
+        )
+        return result.scalar_one_or_none()
+
+    @staticmethod
+    async def save_last_tenant(db: AsyncSession, user_id: int, tenant_id: int) -> None:
+        """Dual write: Redis + DB."""
+        redis = get_redis_util()
+        # Redis
+        await redis.set(
+            _USER_LAST_TENANT_KEY.format(user_id=user_id),
+            str(tenant_id),
+            expire=settings.JWT.REFRESH_LIFETIME,
+        )
+        # DB
+        stmt = update(SysUser).where(SysUser.id == user_id).values(last_tenant_id=tenant_id)
+        await db.execute(stmt)

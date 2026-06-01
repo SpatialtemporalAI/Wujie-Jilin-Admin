@@ -7,6 +7,7 @@ from core.redis import get_redis_util
 from core.security.oauth.jwt import JWTAuthManager
 from core.utils.session_utils import generate_session_id
 from datetime import datetime, timezone
+from typing import Optional
 
 import logging
 
@@ -50,6 +51,9 @@ class BaseUserManager:
         ip: str = "",
         user_agent: str = "",
         tenant_id: int = 0,
+        secret_key: Optional[str] = None,
+        algorithm: Optional[str] = None,
+        access_lifetime: Optional[int] = None,
     ):
         """
         创建token，使用 Redis Hash 存储会话元数据以支持多会话追踪
@@ -59,6 +63,10 @@ class BaseUserManager:
             session_id = generate_session_id(user_id)
             new_session = True
         token_data = {"id": user_id, "session_id": session_id, "role": user_role, "username": username}
+        extra_claims = {}
+        if tenant_id:
+            extra_claims["tenant_id"] = str(tenant_id)
+
         if new_session:
             redis_key = build_session_key(user_role, user_id, tenant_id=tenant_id)
 
@@ -80,7 +88,14 @@ class BaseUserManager:
             })
             await get_redis_util().hset(redis_key, session_id, session_meta)
             await get_redis_util().expire(redis_key, settings.JWT.REFRESH_LIFETIME)
-        tokens = JWTAuthManager.create_tokens(token_data)
+
+        tokens = JWTAuthManager.create_tokens(
+            token_data,
+            extra_claims=extra_claims if extra_claims else None,
+            secret_key=secret_key,
+            algorithm=algorithm,
+            access_lifetime=access_lifetime,
+        )
         return tokens
 
 

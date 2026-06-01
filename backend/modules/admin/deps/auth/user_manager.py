@@ -27,6 +27,11 @@ import logging
 logger = logging.getLogger(__name__)
 
 
+def _is_multi_tenant_enabled() -> bool:
+    """Check if multi_tenant plugin is enabled."""
+    return "multi_tenant" in settings.PLUGINS.ENABLED
+
+
 class UserManager(BaseUserManager):
     """
     用户管理器类
@@ -69,33 +74,85 @@ class UserManager(BaseUserManager):
                 msg="密码错误",
                 error=CustomErrorCode.USER_LOGIN_FAILED,
             )
-        # 生成JWT令牌
+
+        # 自动选择租户
+        tenant_id = 0
+        tenant_list = []
+        secret_key = None
+        algorithm = None
+        access_lifetime = None
+
+        if _is_multi_tenant_enabled():
+            tenant_id, tenant_list, secret_key, algorithm, access_lifetime = (
+                await self._auto_select_tenant(user.id)
+            )
+
+        # 生成JWT令牌（含 tenant_id 和租户 JWT 配置）
         tokens = await self.create_token(
             user_id=user.id, user_role="admin", username=user.username,
-            ip=ip, user_agent=user_agent,
+            ip=ip, user_agent=user_agent, tenant_id=tenant_id,
+            secret_key=secret_key, algorithm=algorithm, access_lifetime=access_lifetime,
         )
         await self.on_after_login(user=user)
+
         response_model = {
             **tokens.model_dump(),
+            "tenant_id": tenant_id if tenant_id else None,
+            "tenants": tenant_list if tenant_list else None,
         }
+
+        # 保存最后选择的租户
+        if tenant_id and _is_multi_tenant_enabled():
+            from plugins.multi_tenant.services.tenant_service import TenantService
+            await TenantService.save_last_tenant(self.session, user.id, tenant_id)
+
         await self.session.commit()
         return response_model
+
+    async def _auto_select_tenant(self, user_id: int):
+        """
+        自动选择租户：优先使用上次登录的租户，否则使用第一个租户。
+        Returns: (tenant_id, tenant_list, secret_key, algorithm, access_lifetime)
+        """
+        from plugins.multi_tenant.services.tenant_service import TenantService
+
+        tenants = await TenantService.get_user_tenants(self.session, user_id)
+        if not tenants:
+            return 0, [], None, None, None
+
+        tenant_list = [
+            {"id": t.id, "name": t.name, "code": t.code}
+            for t in tenants
+        ]
+
+        # 优先使用上次选择的租户
+        selected = None
+        last_tid = await TenantService.get_last_tenant(user_id, db=self.session)
+        if last_tid:
+            for t in tenants:
+                if t.id == last_tid:
+                    selected = t
+                    break
+        if not selected:
+            selected = tenants[0]
+
+        # 查找租户 JWT 配置
+        jwt_config = await TenantService.get_tenant_jwt_config_cached(selected.id)
+        secret_key = jwt_config.secret_key if jwt_config else None
+        algorithm = jwt_config.algorithm if jwt_config else None
+        access_lifetime = jwt_config.access_lifetime if jwt_config else None
+
+        return selected.id, tenant_list, secret_key, algorithm, access_lifetime
 
     async def on_after_login(self, user: SysUser):
         """
         用户登录后的回调
-        可以在这里实现用户登录后的额外逻辑，如更新最后登录时间、记录登录IP等
-        Args:
-            user: 登录的用户对象
-            request: 请求对象（可选）
-            response: 响应对象（可选）
         """
         logger.info(f"用户 {user.id} 登录成功")
 
         request: Request = request_ctx.get()
 
         if request is not None:
-            # 这里可以添加登录成功后的逻辑，如更新登录时间、记录登录IP等
             user.last_login_ip = get_real_client_ip(request)
             user.last_login_at = datetime.now(timezone.utc)
 
@@ -124,11 +181,6 @@ class UserManager(BaseUserManager):
     ) -> Tuple[int, str]:
         """
         验证token中的session_id是否有效
-        Args:
-            token: JWT令牌
-        Returns:
-            user_id: 用户id
-            session_id: 会话id
         """
         # 优先复用中间件已解码的 JWT payload，避免重复解码
         request: Request = request_ctx.get()
@@ -152,6 +204,10 @@ class UserManager(BaseUserManager):
             raise TokenError()
         if not user_role:
             raise TokenError()
+
+        # 混合验证：如果租户有自定义密钥，用租户密钥重新验证
+        if tenant_id and _is_multi_tenant_enabled():
+            payload = await self._verify_with_tenant_key(token, payload, tenant_id)
 
         # 新格式 key
         cache_key = build_session_key(user_role, int(user_id), tenant_id=tenant_id)
@@ -182,13 +238,25 @@ class UserManager(BaseUserManager):
 
         raise TokenError()
 
+    async def _verify_with_tenant_key(self, token: str, payload: dict, tenant_id: int) -> dict:
+        """用租户自定义密钥验证 token（混合模式）"""
+        from plugins.multi_tenant.services.tenant_service import TenantService
+        jwt_config = await TenantService.get_tenant_jwt_config_cached(tenant_id)
+        if jwt_config and jwt_config.secret_key:
+            try:
+                payload = self.jwt_manager.decode_token(
+                    token,
+                    secret_key=jwt_config.secret_key,
+                    algorithm=jwt_config.algorithm,
+                )
+            except Exception:
+                # 租户密钥验证失败，回退到全局密钥（payload 已经通过全局密钥解码）
+                pass
+        return payload
+
     async def get_user_info(self, user_id: int):
         """
         获取用户信息，包含角色列表
-        Args:
-            user_id: 用户ID
-        Returns:
-            dict: 用户信息字典，含 roles
         """
         stmt = (
             select(SysUser)
@@ -231,10 +299,6 @@ async def get_user_manager(
 ):
     """
     获取用户管理器实例
-    Args:
-        user_db: 用户数据库实例
-    Yields:
-        UserManager: 用户管理器实例
     """
     yield UserManager(user_db)
 
@@ -245,32 +309,5 @@ async def current_user(
 ) -> SysUser:
     """
     获取当前认证用户的数据库模型实例
-    Args:
-        user_manager: 用户管理器实例
-        token: 通过OAuth2密码流程获取的JWT令牌
-    Returns:
-        SysUser: 当前认证用户的数据库模型实例
     """
     return await user_manager.current_user(token)
-
-
-# # 定义认证后端
-# bearer_transport = BearerTransport(tokenUrl="/admin/auth/login")
-# # 只显示需要修改的部分
-# def get_redis_strategy(
-#     redis_client: Redis = Depends(get_redis_client),
-# ) -> RedisStrategy:
-#     """
-#     获取Redis策略实例
-#     使用Redis连接池和设置中的密钥和过期时间
-#     Returns:
-#         RedisStrategy: Redis策略实例
-#     """
-#     return RedisStrategy(
-#         redis_client, lifetime_seconds=3600, key_prefix="sys_user_token:")
-# # 创建认证后端实例
-# auth_backend = AuthenticationBackend(
-#     name="redis",
-#     transport=bearer_transport,
-#     get_strategy=get_redis_strategy,
-# )

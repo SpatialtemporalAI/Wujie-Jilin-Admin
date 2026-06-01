@@ -37,7 +37,7 @@ class Token(BaseModel):
 
 
 # 定义用户模型类型变量
-t = TypeVar("T")
+t = TypeVar("t")
 
 
 class JWTAuthManager:
@@ -45,25 +45,34 @@ class JWTAuthManager:
 
     @classmethod
     def create_access_token(
-        cls, data: Dict[str, Any], expires_delta: Optional[timedelta] = None
+        cls,
+        data: Dict[str, Any],
+        expires_delta: Optional[timedelta] = None,
+        secret_key: Optional[str] = None,
+        algorithm: Optional[str] = None,
+        access_lifetime: Optional[int] = None,
     ) -> str:
         """
         创建访问令牌
         Args:
             data: 要编码的数据
             expires_delta: 过期时间增量
+            secret_key: 签名密钥（为空则使用全局配置）
+            algorithm: 签名算法（为空则使用全局配置）
+            access_lifetime: 有效期秒数（为空则使用全局配置）
         Returns:
             str: 编码后的JWT令牌
         """
         try:
             to_encode = data.copy()
+            _key = secret_key or settings.JWT.SECRET_KEY
+            _alg = algorithm or settings.JWT.ALGORITHM
+            _lifetime = access_lifetime or settings.JWT.ACCESS_LIFETIME
             # 设置过期时间
             if expires_delta:
                 expire = datetime.now(timezone.utc) + expires_delta
             else:
-                expire = datetime.now(timezone.utc) + timedelta(
-                    seconds=settings.JWT.ACCESS_LIFETIME
-                )
+                expire = datetime.now(timezone.utc) + timedelta(seconds=_lifetime)
             to_encode.update(
                 {
                     "exp": expire,
@@ -72,9 +81,7 @@ class JWTAuthManager:
                     "iss": "spatialtemporal-ai-cloud",
                 }
             )
-            encoded_jwt = jwt.encode(
-                to_encode, settings.JWT.SECRET_KEY, algorithm=settings.JWT.ALGORITHM
-            )
+            encoded_jwt = jwt.encode(to_encode, _key, algorithm=_alg)
             return encoded_jwt
         except Exception as e:
             logger.exception("创建访问令牌异常: %s", str(e))
@@ -84,18 +91,26 @@ class JWTAuthManager:
 
     @classmethod
     def create_refresh_token(
-        cls, data: Dict[str, Any], expires_delta: Optional[timedelta] = None
+        cls,
+        data: Dict[str, Any],
+        expires_delta: Optional[timedelta] = None,
+        secret_key: Optional[str] = None,
+        algorithm: Optional[str] = None,
     ) -> str:
         """
         创建刷新令牌
         Args:
             data: 要编码的数据
             expires_delta: 过期时间增量
+            secret_key: 签名密钥（为空则使用全局配置）
+            algorithm: 签名算法（为空则使用全局配置）
         Returns:
             str: 编码后的刷新令牌
         """
         try:
             to_encode = data.copy()
+            _key = secret_key or settings.JWT.SECRET_KEY
+            _alg = algorithm or settings.JWT.ALGORITHM
             # 设置过期时间，通常刷新令牌有效期更长
             if expires_delta:
                 expire = datetime.now(timezone.utc) + expires_delta
@@ -112,9 +127,7 @@ class JWTAuthManager:
                     "type": "refresh",
                 }
             )
-            encoded_jwt = jwt.encode(
-                to_encode, settings.JWT.SECRET_KEY, algorithm=settings.JWT.ALGORITHM
-            )
+            encoded_jwt = jwt.encode(to_encode, _key, algorithm=_alg)
             return encoded_jwt
         except Exception as e:
             logger.exception("创建刷新令牌异常: %s", str(e))
@@ -124,21 +137,30 @@ class JWTAuthManager:
             )
 
     @classmethod
-    def decode_token(cls, token: str) -> Dict[str, Any]:
+    def decode_token(
+        cls,
+        token: str,
+        secret_key: Optional[str] = None,
+        algorithm: Optional[str] = None,
+    ) -> Dict[str, Any]:
         """
         解码JWT令牌
         Args:
             token: JWT令牌字符串
+            secret_key: 签名密钥（为空则使用全局配置）
+            algorithm: 签名算法（为空则使用全局配置）
         Returns:
             Dict[str, Any]: 解码后的令牌数据
         Raises:
             HTTPException: 令牌无效或已过期
         """
+        _key = secret_key or settings.JWT.SECRET_KEY
+        _alg = algorithm or settings.JWT.ALGORITHM
         try:
             payload = jwt.decode(
                 token,
-                settings.JWT.SECRET_KEY,
-                algorithms=[settings.JWT.ALGORITHM],
+                _key,
+                algorithms=[_alg],
                 audience=settings.JWT.AUDIENCE,
                 options={"verify_signature": True},
             )
@@ -170,14 +192,34 @@ class JWTAuthManager:
             )
 
     @classmethod
+    def decode_token_unverified(cls, token: str) -> Dict[str, Any]:
+        """解码JWT令牌但不验证签名（仅用于提取 tenant_id 等非敏感信息）"""
+        try:
+            return jwt.decode(
+                token,
+                options={"verify_signature": False},
+                audience=settings.JWT.AUDIENCE,
+            )
+        except Exception:
+            return {}
+
+    @classmethod
     def create_tokens(
-        cls, user_data: Dict[str, Any], extra_claims: Optional[Dict[str, Any]] = None
+        cls,
+        user_data: Dict[str, Any],
+        extra_claims: Optional[Dict[str, Any]] = None,
+        secret_key: Optional[str] = None,
+        algorithm: Optional[str] = None,
+        access_lifetime: Optional[int] = None,
     ) -> Token:
         """
         创建访问令牌和刷新令牌
         Args:
             user_data: 用户数据
             extra_claims: 额外声明（如 tenant_id），可选
+            secret_key: 签名密钥（为空则使用全局配置）
+            algorithm: 签名算法（为空则使用全局配置）
+            access_lifetime: 有效期秒数（为空则使用全局配置）
         Returns:
             Token: 包含访问令牌和刷新令牌的响应模型
         """
@@ -201,11 +243,21 @@ class JWTAuthManager:
             access_token_data.update(extra_claims)
             refresh_token_data.update(extra_claims)
         # 创建访问令牌和刷新令牌
-        access_token = cls.create_access_token(access_token_data)
-        refresh_token = cls.create_refresh_token(refresh_token_data)
+        access_token = cls.create_access_token(
+            access_token_data,
+            secret_key=secret_key,
+            algorithm=algorithm,
+            access_lifetime=access_lifetime,
+        )
+        refresh_token = cls.create_refresh_token(
+            refresh_token_data,
+            secret_key=secret_key,
+            algorithm=algorithm,
+        )
+        _lifetime = access_lifetime or settings.JWT.ACCESS_LIFETIME
         return Token(
             access_token=access_token,
             token_type=token_type,
-            expires_in=settings.JWT.ACCESS_LIFETIME,
+            expires_in=_lifetime,
             refresh_token=refresh_token,
         )

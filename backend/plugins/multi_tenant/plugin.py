@@ -313,6 +313,25 @@ class MultiTenantPlugin(PluginBase):
                 default_factory=list,
             )
 
+        # 为所有需要租户隔离的模型动态追加 tenant_id Mapped 属性
+        from sqlalchemy import BigInteger
+        from sqlalchemy.orm import column_property
+
+        for table_name in TENANT_SCOPED_TABLES:
+            model_cls = _import_model(MODEL_MAP[table_name])
+            if "tenant_id" not in model_cls.__mapper__.columns:
+                # 确保表也有该列
+                if "tenant_id" not in model_cls.__table__.columns:
+                    from sqlalchemy import Column
+                    model_cls.__table__.append_column(
+                        Column("tenant_id", BigInteger, nullable=True, comment="租户ID"),
+                    )
+                # 通过 mapper.add_property 将已有列注册为 ORM 属性
+                model_cls.__mapper__.add_property(
+                    "tenant_id",
+                    model_cls.__table__.c.tenant_id,
+                )
+
         # 注册严格隔离模型
         for table_name in TENANT_STRICT_TABLES:
             model_cls = _import_model(MODEL_MAP[table_name])

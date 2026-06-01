@@ -3,7 +3,7 @@
 
 from core.models.base import Base
 from sqlalchemy.orm import mapped_column, Mapped, relationship
-from sqlalchemy import String, Text, Boolean, ForeignKey, DateTime, Table, Column
+from sqlalchemy import String, Text, Boolean, BigInteger, ForeignKey, DateTime, Table, Column
 from typing import List, Optional
 from datetime import datetime
 from .association_tables import sys_user_role_association
@@ -51,6 +51,10 @@ class SysUser(Base):
     )
     avatar: Mapped[Optional[str]] = mapped_column(
         Text, nullable=True, comment="头像URL", server_default=None, default=None
+    )
+    last_tenant_id: Mapped[Optional[int]] = mapped_column(
+        BigInteger, nullable=True, default=None, comment="最后选择的租户ID",
+        server_default=None,
     )
     # 关联关系
     # 与角色表的多对多关系
