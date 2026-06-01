@@ -14,9 +14,6 @@ logger = logging.getLogger(__name__)
 # 严格租户隔离的表（查询只返回当前租户数据）
 TENANT_STRICT_TABLES = [
     "sys_role",
-    "sys_config",
-    "sys_dict",
-    "sys_dict_item",
     "sys_file",
     "app_user",
     "sys_operation_log",
@@ -35,9 +32,6 @@ TENANT_SCOPED_TABLES = TENANT_STRICT_TABLES + TENANT_OPTIONAL_TABLES
 # 模型路径映射
 MODEL_MAP = {
     "sys_role": "app.models.sys.role:SysRole",
-    "sys_config": "app.models.sys.config:SysConfig",
-    "sys_dict": "app.models.sys.dict:SysDict",
-    "sys_dict_item": "app.models.sys.dict:SysDictItem",
     "sys_file": "app.models.sys.file:SysFile",
     "app_user": "app.models.business.user:AppUser",
     "sys_operation_log": "app.models.sys.operation_log:SysOperationLog",
