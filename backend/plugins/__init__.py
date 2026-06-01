@@ -2,7 +2,10 @@
 # -*- coding: utf-8 -*-
 
 import importlib
+import json
 import logging
+import os
+import re
 from typing import Dict, List, Optional
 
 from fastapi import FastAPI
@@ -58,6 +61,61 @@ def is_plugin_active(name: str) -> bool:
 # ---------------------------------------------------------------------------
 # 安装 / 卸载 / 状态查询
 # ---------------------------------------------------------------------------
+
+
+def _get_env_files() -> List[str]:
+    """返回需要更新 PLUGINS__ENABLED 的 .env 文件绝对路径列表"""
+    backend_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+    project_dir = os.path.dirname(backend_dir)
+    candidates = [
+        os.path.join(backend_dir, ".env"),
+        os.path.join(backend_dir, ".env.dev"),
+        os.path.join(project_dir, "frontend", ".env"),
+    ]
+    return [f for f in candidates if os.path.isfile(f)]
+
+
+def _update_plugins_env(plugin_name: str, add: bool = True) -> None:
+    """
+    在所有 .env 文件中更新 PLUGINS__ENABLED 列表。
+
+    add=True  → 添加 plugin_name（若不存在）
+    add=False → 移除 plugin_name（若存在）
+    """
+    pattern = re.compile(r"^(PLUGINS__ENABLED\s*=\s*)(.*)$", re.MULTILINE)
+
+    for env_file in _get_env_files():
+        with open(env_file, "r", encoding="utf-8") as f:
+            content = f.read()
+
+        match = pattern.search(content)
+        if not match:
+            continue
+
+        raw_value = match.group(2).strip()
+        try:
+            plugins = json.loads(raw_value)
+        except (json.JSONDecodeError, TypeError):
+            plugins = []
+
+        if not isinstance(plugins, list):
+            plugins = []
+
+        changed = False
+        if add and plugin_name not in plugins:
+            plugins.append(plugin_name)
+            changed = True
+        elif not add and plugin_name in plugins:
+            plugins.remove(plugin_name)
+            changed = True
+
+        if changed:
+            new_value = json.dumps(plugins, ensure_ascii=False)
+            new_line = f"PLUGINS__ENABLED={new_value}"
+            content = content[: match.start()] + new_line + content[match.end() :]
+            with open(env_file, "w", encoding="utf-8") as f:
+                f.write(content)
+            logger.info("Updated PLUGINS__ENABLED in %s: %s", env_file, new_value)
 
 
 async def _ensure_registry_exists(db: AsyncSession) -> None:
@@ -139,6 +197,9 @@ async def install_plugin(plugin_name: str) -> None:
         await plugin.on_install()
         await db.commit()
 
+    # 5. 自动更新 .env 中的 PLUGINS__ENABLED
+    _update_plugins_env(plugin_name, add=True)
+
     print(f"\n插件 '{plugin_name}' v{plugin.version} 安装完成\n")
 
 
@@ -190,6 +251,9 @@ async def uninstall_plugin(plugin_name: str) -> None:
     generate_removal_and_upgrade(plugin_name)
 
     print(f"\n插件 '{plugin_name}' 已卸载\n")
+
+    # 4. 从 .env 的 PLUGINS__ENABLED 中移除
+    _update_plugins_env(plugin_name, add=False)
 
 
 async def list_plugins() -> List[dict]:
