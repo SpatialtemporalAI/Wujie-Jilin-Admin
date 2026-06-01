@@ -119,9 +119,15 @@ async function handleSubmit() {
   }
 }
 
+function getTranslatedLabel(node: Api.SystemManage.MenuTree): string {
+  const i18nKey = `route.${node.label}` as App.I18n.I18nKey;
+  return $t(i18nKey);
+}
+
 function renderLabel({ option }: { option: Record<string, unknown> }) {
   const node = option as unknown as Api.SystemManage.MenuTree;
   const tagType = tagTypeMap[node.menuType];
+  const displayLabel = getTranslatedLabel(node);
 
   if (node.menuType === '3') {
     return h(
@@ -130,13 +136,13 @@ function renderLabel({ option }: { option: Record<string, unknown> }) {
       {
         default: () => [
           h(NTag, { type: tagType, size: 'small', bordered: false }, { default: () => $t(menuTypeRecord[node.menuType]) }),
-          node.label
+          displayLabel
         ]
       }
     );
   }
 
-  return node.label;
+  return displayLabel;
 }
 
 async function init() {

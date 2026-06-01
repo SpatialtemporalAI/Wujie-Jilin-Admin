@@ -42,14 +42,13 @@ const title = computed(() => {
   return titles[props.operateType];
 });
 
-type Model = Pick<Api.SystemManage.Role, 'name' | 'code' | 'desc' | 'status'>;
+type Model = Pick<Api.SystemManage.Role, 'name' | 'desc' | 'status'>;
 
 const model = ref(createDefaultModel());
 
 function createDefaultModel(): Model {
   return {
     name: '',
-    code: '',
     desc: '',
     status: '1'
   };
@@ -59,7 +58,6 @@ type RuleKey = Exclude<keyof Model, 'desc'>;
 
 const rules: Record<RuleKey, App.Global.FormRule> = {
   name: defaultRequiredRule,
-  code: defaultRequiredRule,
   status: defaultRequiredRule
 };
 
@@ -78,9 +76,15 @@ const tagTypeMap: Record<string, NaiveUI.ThemeColor> = {
   '3': 'warning'
 };
 
+function getTranslatedLabel(node: Api.SystemManage.MenuTree): string {
+  const i18nKey = `route.${node.label}` as App.I18n.I18nKey;
+  return $t(i18nKey);
+}
+
 function renderMenuLabel({ option }: { option: Record<string, unknown> }) {
   const node = option as unknown as Api.SystemManage.MenuTree;
   const tagType = tagTypeMap[node.menuType];
+  const displayLabel = getTranslatedLabel(node);
 
   if (node.menuType === '3') {
     return h(
@@ -89,13 +93,13 @@ function renderMenuLabel({ option }: { option: Record<string, unknown> }) {
       {
         default: () => [
           h(NTag, { type: tagType, size: 'small', bordered: false }, { default: () => $t(menuTypeRecord[node.menuType]) }),
-          node.label
+          displayLabel
         ]
       }
     );
   }
 
-  return node.label;
+  return displayLabel;
 }
 
 async function loadMenuTree() {
@@ -151,7 +155,6 @@ function handleInitModel() {
   if (props.operateType === 'edit' && props.rowData) {
     const clonedData = jsonClone(props.rowData);
     model.value.name = clonedData.name || '';
-    model.value.code = clonedData.code || '';
     model.value.desc = clonedData.desc || '';
     model.value.status = booleanToEnableStatus(clonedData.status);
   }
@@ -203,9 +206,6 @@ watch(visible, async () => {
         <NFormItem :label="$t('page.manage.role.roleName')" path="roleName">
           <NInput v-model:value="model.name" :placeholder="$t('page.manage.role.form.roleName')" />
         </NFormItem>
-        <NFormItem :label="$t('page.manage.role.roleCode')" path="roleCode">
-          <NInput v-model:value="model.code" :placeholder="$t('page.manage.role.form.roleCode')" />
-        </NFormItem>
         <NFormItem :label="$t('page.manage.role.roleStatus')" path="status">
           <NRadioGroup v-model:value="model.status">
             <NRadio v-for="item in enableStatusOptions" :key="item.value" :value="item.value" :label="item.label" />
@@ -214,7 +214,7 @@ watch(visible, async () => {
         <NFormItem :label="$t('page.manage.role.roleDesc')" path="desc">
           <NInput v-model:value="model.desc" :placeholder="$t('page.manage.role.form.roleDesc')" />
         </NFormItem>
-        <NFormItem :label="$t('page.manage.role.menuAuth')">
+        <NFormItem :label="$t('page.manage.role.menuAuth')" class="flex-1-hidden">
           <NTree
             v-model:checked-keys="menuChecks"
             v-model:expanded-keys="menuExpandedKeys"
@@ -226,7 +226,7 @@ watch(visible, async () => {
             virtual-scroll
             block-line
             :render-label="renderMenuLabel"
-            class="h-280px w-full"
+            class="flex-1-hidden w-full"
           />
         </NFormItem>
       </NForm>
