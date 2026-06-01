@@ -183,6 +183,7 @@ const routeMap: RouteMap = {
   "manage_ip-blacklist": "/manage/ip-blacklist",
   "manage_menu": "/manage/menu",
   "manage_role": "/manage/role",
+  "manage_tenant": "/manage/tenant",
   "manage_user": "/manage/user",
   "monitor": "/monitor"
 };

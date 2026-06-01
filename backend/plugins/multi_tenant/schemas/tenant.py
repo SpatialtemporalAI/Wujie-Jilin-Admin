@@ -3,7 +3,7 @@
 
 from typing import Optional, List
 from pydantic import Field, model_validator
-from app.models.common.base import BaseEntity, BaseRespEntity
+from app.models.common.base import BaseEntity, BaseRespEntity, BoolField
 from plugins.multi_tenant.schemas.tenant_config import (
     TenantJwtConfig,
     TenantConfigSchema,
@@ -42,7 +42,7 @@ class TenantQueryParams(BaseEntity):
 
     name: Optional[str] = Field(None, description="租户名称（模糊匹配）")
     code: Optional[str] = Field(None, description="租户编码（模糊匹配）")
-    status: Optional[bool] = Field(None, description="状态筛选")
+    status: BoolField = Field(None, description="状态筛选")
     page: int = Field(1, ge=1, description="页码")
     page_size: int = Field(100, ge=1, le=200, description="每页条数")
 

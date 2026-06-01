@@ -85,7 +85,6 @@ class MultiTenantPlugin(PluginBase):
                         "tenant_id",
                         BigInteger,
                         nullable=True,
-                        default=0,
                         comment="租户ID",
                     )
                 )
@@ -227,7 +226,7 @@ class MultiTenantPlugin(PluginBase):
         if result.scalar_one_or_none():
             return
 
-        # 目录：租户管理
+        # 目录：租户管理（tenant_id=NULL 表示全局菜单，所有租户可见）
         catalog = SysMenu(
             parent_id=None,
             name="tenant",
@@ -238,6 +237,7 @@ class MultiTenantPlugin(PluginBase):
             meta_icon="ic-outline-business",
             type=MenuType.CATALOG,
             sort=90,
+            tenant_id=None,
         )
         db.add(catalog)
         await db.flush()
@@ -253,6 +253,7 @@ class MultiTenantPlugin(PluginBase):
             meta_icon="ic-outline-business",
             type=MenuType.MENU,
             sort=1,
+            tenant_id=None,
         )
         db.add(menu)
         await db.flush()
@@ -279,6 +280,7 @@ class MultiTenantPlugin(PluginBase):
                 meta_icon=None,
                 type=MenuType.BUTTON,
                 sort=0,
+                tenant_id=None,
             )
             db.add(btn)
 
