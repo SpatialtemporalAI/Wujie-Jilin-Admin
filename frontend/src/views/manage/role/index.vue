@@ -18,7 +18,6 @@ const searchParams: Api.SystemManage.RoleSearchParams = reactive({
   page: 1,
   page_size: 10,
   name: null,
-  code: null,
   status: null
 });
 
@@ -52,12 +51,6 @@ const { columns, columnChecks, data, loading, getData, getDataByPage, mobilePagi
     {
       key: 'name',
       title: $t('page.manage.role.roleName'),
-      align: 'center',
-      minWidth: 120
-    },
-    {
-      key: 'code',
-      title: $t('page.manage.role.roleCode'),
       align: 'center',
       minWidth: 120
     },

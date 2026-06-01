@@ -22,7 +22,6 @@ class SysRoleQueryParams(PageRequest):
     """
 
     name: Optional[str] = Field(None, description="角色名称，支持模糊查询")
-    code: Optional[str] = Field(None, description="角色编码，支持模糊查询")
     status: BoolField = Field(None, description="角色状态：True-启用，False-禁用")
     is_system: BoolField = Field(None, description="是否为系统内置角色")
 
@@ -34,7 +33,6 @@ class SysRoleCreate(BaseEntity):
     """
 
     name: str = Field(..., description="角色名称", max_length=100)
-    code: str = Field(..., description="角色编码", max_length=100)
     desc: Optional[str] = Field(None, description="角色描述")
     status: bool = Field(True, description="角色状态：1-启用，2-禁用")
     sort: int = Field(0, description="排序号")
@@ -48,7 +46,6 @@ class SysRoleUpdate(BaseEntity):
     """
 
     name: Optional[str] = Field(None, description="角色名称", max_length=100)
-    code: Optional[str] = Field(None, description="角色编码", max_length=100)
     desc: Optional[str] = Field(None, description="角色描述")
     status: BoolField = Field(None, description="角色状态：True-启用，False-禁用")
     sort: Optional[int] = Field(None, description="排序号")
@@ -65,7 +62,6 @@ class SysRoleSimpleResponse(BaseRespEntity):
 
     id: int = Field(..., description="角色ID")
     name: str = Field(..., description="角色名称")
-    code: str = Field(..., description="角色编码")
     status: bool = Field(..., description="角色状态")
 
 
@@ -79,7 +75,6 @@ class SysRoleListResponse(BaseRespEntity):
 
     id: int = Field(..., description="角色ID")
     name: str = Field(..., description="角色名称")
-    code: str = Field(..., description="角色编码")
     desc: Optional[str] = Field(None, description="角色描述")
     status: bool = Field(True, description="角色状态：1-启用，2-禁用")
     is_default: bool = Field(..., description="是否为默认角色")
@@ -99,7 +94,6 @@ class SysRoleResponseData(BaseRespEntity):
 
     id: int = Field(..., description="角色ID")
     name: str = Field(..., description="角色名称")
-    code: str = Field(..., description="角色编码")
     desc: Optional[str] = Field(None, description="角色描述")
     status: bool = Field(True, description="角色状态：1-启用，2-禁用")
     is_default: bool = Field(..., description="是否为默认角色")

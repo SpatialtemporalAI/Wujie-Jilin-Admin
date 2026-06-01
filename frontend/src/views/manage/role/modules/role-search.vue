@@ -36,9 +36,6 @@ function search() {
             <NFormItemGi span="24 s:12 m:6" :label="$t('page.manage.role.roleName')" path="name" class="pr-24px">
               <NInput v-model:value="model.name" :placeholder="$t('page.manage.role.form.roleName')" />
             </NFormItemGi>
-            <NFormItemGi span="24 s:12 m:6" :label="$t('page.manage.role.roleCode')" path="code" class="pr-24px">
-              <NInput v-model:value="model.code" :placeholder="$t('page.manage.role.form.roleCode')" />
-            </NFormItemGi>
             <NFormItemGi span="24 s:12 m:6" :label="$t('page.manage.role.roleStatus')" path="status" class="pr-24px">
               <NSelect
                 v-model:value="model.status"

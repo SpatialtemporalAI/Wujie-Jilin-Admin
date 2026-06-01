@@ -50,8 +50,6 @@ class RoleService:
             conditions.append(SysRole.status == query_params.status)
         if query_params.name:
             conditions.append(SysRole.name.like(f"%{query_params.name}%"))
-        if query_params.code:
-            conditions.append(SysRole.code.like(f"%{query_params.code}%"))
         if query_params.is_system is not None:
             conditions.append(SysRole.is_system == query_params.is_system)
 
@@ -131,21 +129,6 @@ class RoleService:
         return role
 
     @staticmethod
-    async def get_role_by_code(db: AsyncSession, code: str) -> Optional[SysRole]:
-        """
-        根据角色编码获取角色
-
-        Args:
-            db: 数据库会话
-            code: 角色编码
-
-        Returns:
-            角色对象或None
-        """
-        result = await db.execute(select(SysRole).where(SysRole.code == code))
-        return result.scalar_one_or_none()
-
-    @staticmethod
     async def create_role(
         db: AsyncSession, role_create: SysRoleCreate, *, is_superuser: bool = False
     ) -> SysRole:
@@ -160,19 +143,13 @@ class RoleService:
             创建后的角色对象
 
         Raises:
-            ConflictError: 角色编码已存在
+            ConflictError: 角色名称已存在
         """
-        logger.info("创建角色，角色名: %s, 编码: %s", role_create.name, role_create.code)
-
-        # 检查角色编码是否已存在
-        if await RoleService.get_role_by_code(db, role_create.code):
-            logger.warning("创建角色失败，角色编码已存在: %s", role_create.code)
-            raise ConflictError(msg="角色编码已存在")
+        logger.info("创建角色，角色名: %s", role_create.name)
 
         # 创建角色对象
         role = SysRole(
             name=role_create.name,
-            code=role_create.code,
             desc=role_create.desc,
             status=role_create.status,
             sort=role_create.sort,
@@ -241,13 +218,6 @@ class RoleService:
         if role.is_system and not is_superuser:
             logger.warning("更新角色失败，不能修改系统内置角色，角色ID: %s", role_id)
             raise ForbiddenError(msg="不能修改系统内置角色")
-
-        # 检查角色编码是否已存在（如果要更新编码的话）
-        if role_update.code and role_update.code != role.code:
-            existing_role = await RoleService.get_role_by_code(db, role_update.code)
-            if existing_role:
-                logger.warning("更新角色失败，角色编码已存在: %s", role_update.code)
-                raise ConflictError(msg="角色编码已存在")
 
         # 更新角色信息
         update_data = role_update.model_dump(exclude_unset=True)

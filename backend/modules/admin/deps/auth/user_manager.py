@@ -276,7 +276,7 @@ class UserManager(BaseUserManager):
             return None
 
         # 收集角色 code 列表
-        roles: List[str] = [role.code for role in user.roles if role.status]
+        roles: List[str] = [role.name for role in user.roles if role.status]
 
         user_info = {
             "id": user.id,

@@ -203,7 +203,7 @@ watch(visible, async () => {
   <NDrawer v-model:show="visible" display-directive="show" :width="360">
     <NDrawerContent :title="title" :native-scrollbar="false" closable>
       <NForm ref="formRef" :model="model" :rules="rules">
-        <NFormItem :label="$t('page.manage.role.roleName')" path="roleName">
+        <NFormItem :label="$t('page.manage.role.roleName')" path="name">
           <NInput v-model:value="model.name" :placeholder="$t('page.manage.role.form.roleName')" />
         </NFormItem>
         <NFormItem :label="$t('page.manage.role.roleStatus')" path="status">

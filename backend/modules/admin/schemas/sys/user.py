@@ -154,7 +154,6 @@ class SysRoleSimpleResponseForUser(BaseRespEntity):
     model_config = ConfigDict(from_attributes=True)
     id: int = Field(..., description="角色ID")
     name: str = Field(..., description="角色名称")
-    code: str = Field(..., description="角色编码")
     status: bool = Field(..., description="角色状态")
 
 

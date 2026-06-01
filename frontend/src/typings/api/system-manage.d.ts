@@ -11,8 +11,6 @@ declare namespace Api {
     type Role = Common.CommonRecord<{
       /** role name */
       name: string;
-      /** role code */
-      code: string;
       /** role description */
       desc: string;
       /** menu ids */
@@ -21,14 +19,14 @@ declare namespace Api {
 
     /** role search params */
     type RoleSearchParams = CommonType.RecordNullable<
-      Pick<Api.SystemManage.Role, 'name' | 'code' | 'status'> & CommonSearchParams
+      Pick<Api.SystemManage.Role, 'name' | 'status'> & CommonSearchParams
     >;
 
     /** role list */
     type RoleList = Common.PaginatingQueryRecord<Role>;
 
     /** all role */
-    type AllRole = Pick<Role, 'id' | 'name' | 'code'>;
+    type AllRole = Pick<Role, 'id' | 'name'>;
 
     /**
      * user gender
@@ -50,7 +48,7 @@ declare namespace Api {
       email: string;
       /** is super user */
       is_superuser: boolean;
-      /** user role code collection */
+      /** user role name collection */
       userRoles: string[];
       /** last login time */
       last_login_at?: string;
@@ -60,7 +58,7 @@ declare namespace Api {
 
     /** raw user response from backend (before transform) */
     type RawUser = Omit<User, 'userRoles'> & {
-      roles?: { id: number; name: string; code: string }[];
+      roles?: { id: number; name: string }[];
     };
 
     /** user search params */
@@ -82,13 +80,13 @@ declare namespace Api {
     type UserCreate = Pick<User, 'username' | 'nickname' | 'phone' | 'email' | 'status'> & {
       /** user password */
       password: string;
-      /** user role code collection */
+      /** user role name collection */
       userRoles: string[];
     };
 
     /** user update */
     type UserUpdate = Pick<User, 'username' | 'nickname' | 'phone' | 'email' | 'status'> & {
-      /** user role code collection */
+      /** user role name collection */
       userRoles: string[];
     };
 

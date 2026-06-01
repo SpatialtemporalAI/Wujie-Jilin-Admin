@@ -36,7 +36,6 @@ export function fetchCreateRole(role: Partial<Api.SystemManage.Role> & { menu_id
     method: 'post',
     data: {
       name: role.name,
-      code: role.code,
       desc: role.desc,
       status: enableStatusToBoolean(role.status),
       sort: 0,
@@ -52,7 +51,6 @@ export function fetchUpdateRole(roleId: number, role: Partial<Api.SystemManage.R
     method: 'put',
     data: {
       name: role.name,
-      code: role.code,
       desc: role.desc,
       status: enableStatusToBoolean(role.status),
       menu_ids: role.menu_ids || []

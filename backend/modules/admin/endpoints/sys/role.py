@@ -146,7 +146,7 @@ async def create_role(
     """
     创建角色
     """
-    logger.info(f"创建角色请求，角色名: {role_create.name}, 编码: {role_create.code}")
+    logger.info(f"创建角色请求，角色名: {role_create.name}")
 
     role = await RoleService.create_role(
         db, role_create, is_superuser=user.is_superuser

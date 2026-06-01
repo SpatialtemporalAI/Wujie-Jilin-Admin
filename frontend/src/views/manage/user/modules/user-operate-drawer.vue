@@ -144,10 +144,10 @@ const rules: Record<RuleKey, App.Global.FormRule | App.Global.FormRule[]> = {
 /** the enabled role options */
 const roleOptions = ref<CommonType.Option<string>[]>([]);
 
-/** 将角色编码数组转换为角色ID数组 */
-function roleCodesToIds(codes: string[]): number[] {
-  return codes
-    .map(code => allRoles.value.find(r => r.code === code)?.id)
+/** 将角色名称数组转换为角色ID数组 */
+function roleNamesToIds(names: string[]): number[] {
+  return names
+    .map(name => allRoles.value.find(r => r.name === name)?.id)
     .filter((id): id is number => id !== undefined);
 }
 
@@ -183,8 +183,8 @@ async function handleSubmit() {
   await validate();
 
   try {
-    // 将角色编码转换为角色ID
-    const roleIds = roleCodesToIds(model.value.userRoles);
+    // 将角色名称转换为角色ID
+    const roleIds = roleNamesToIds(model.value.userRoles);
 
     if (props.operateType === 'add') {
       // 创建用户
