@@ -1,0 +1,39 @@
+[Unit]
+Description=SmileX Cloud Backend (FastAPI + Gunicorn)
+After=network.target postgresql.service redis.service
+Wants=postgresql.service redis.service
+
+[Service]
+Type=notify
+User=smilex
+Group=smilex
+WorkingDirectory=/opt/smilex-cloud/backend
+EnvironmentFile=/opt/smilex-cloud/backend/.env.prod
+Environment=PATH=/opt/smilex-cloud/backend/.venv/bin:/usr/local/bin:/usr/bin:/bin
+ExecStart=/opt/smilex-cloud/backend/.venv/bin/gunicorn main:app \
+    -w 4 \
+    -k uvicorn.workers.UvicornWorker \
+    -b 0.0.0.0:8000 \
+    --timeout 120 \
+    --max-requests 5000 \
+    --max-requests-jitter 500 \
+    --access-logfile /var/log/smilex_cloud/access.log \
+    --error-logfile /var/log/smilex_cloud/error.log \
+    --log-level info
+
+ExecReload=/bin/kill -s HUP $MAINPID
+KillMode=mixed
+KillSignal=SIGQUIT
+TimeoutStopSec=30
+Restart=always
+RestartSec=5
+
+# 安全加固
+NoNewPrivileges=true
+ProtectSystem=strict
+ProtectHome=true
+ReadWritePaths=/opt/smilex-cloud/backend /var/log/smilex_cloud
+PrivateTmp=true
+
+[Install]
+WantedBy=multi-user.target
