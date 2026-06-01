@@ -50,6 +50,7 @@ class TenantQueryParams(BaseEntity):
 class TenantResponse(BaseRespEntity):
     """租户响应数据"""
 
+    id: int = Field(..., description="租户ID")
     name: str
     code: str
     description: Optional[str] = None
@@ -76,6 +77,7 @@ class TenantResponse(BaseRespEntity):
 class TenantListResponse(BaseRespEntity):
     """租户列表项"""
 
+    id: int = Field(..., description="租户ID")
     name: str
     code: str
     description: Optional[str] = None
@@ -87,6 +89,7 @@ class TenantListResponse(BaseRespEntity):
 class TenantSimpleResponse(BaseRespEntity):
     """租户简要信息（用于选择器）"""
 
+    id: int = Field(..., description="租户ID")
     name: str
     code: str
     status: bool = True
