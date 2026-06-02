@@ -32,6 +32,8 @@ export const views: Record<LastLevelRouteKey, RouteComponent | (() => Promise<Ro
   "manage_ip-blacklist": () => import("@/views/manage/ip-blacklist/index.vue"),
   manage_menu: () => import("@/views/manage/menu/index.vue"),
   manage_role: () => import("@/views/manage/role/index.vue"),
+  "manage_scheduler-log": () => import("@/views/manage/scheduler-log/index.vue"),
+  manage_scheduler: () => import("@/views/manage/scheduler/index.vue"),
   manage_user: () => import("@/views/manage/user/index.vue"),
   monitor: () => import("@/views/monitor/index.vue"),
 };

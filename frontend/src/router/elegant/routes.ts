@@ -211,6 +211,24 @@ export const generatedRoutes: GeneratedRoute[] = [
         }
       },
       {
+        name: 'manage_scheduler',
+        path: '/manage/scheduler',
+        component: 'view.manage_scheduler',
+        meta: {
+          title: 'manage_scheduler',
+          i18nKey: 'route.manage_scheduler'
+        }
+      },
+      {
+        name: 'manage_scheduler-log',
+        path: '/manage/scheduler-log',
+        component: 'view.manage_scheduler-log',
+        meta: {
+          title: 'manage_scheduler-log',
+          i18nKey: 'route.manage_scheduler-log'
+        }
+      },
+      {
         name: 'manage_user',
         path: '/manage/user',
         component: 'view.manage_user',
