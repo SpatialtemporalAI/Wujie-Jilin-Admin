@@ -44,7 +44,26 @@ async def lifespan(app: FastAPI):
         logger.info("IP 黑名单预热数量: %s", count)
     except Exception as exc:
         logger.error("IP 黑名单预热异常: %s", exc)
+    # 同步定时任务到调度器
+    try:
+        from plugins import is_plugin_active
+        if is_plugin_active("scheduler"):
+            from plugins.scheduler.core.scheduler import SchedulerManager
+            manager = SchedulerManager.get_instance()
+            async for db_sync in get_session():
+                await manager.sync_jobs_from_db(db_sync)
+            logger.info("定时任务同步完成")
+    except Exception as exc:
+        logger.error("定时任务同步异常: %s", exc)
     yield
+    # 停止定时任务调度器
+    try:
+        from plugins import is_plugin_active
+        if is_plugin_active("scheduler"):
+            from plugins.scheduler.core.scheduler import SchedulerManager
+            SchedulerManager.get_instance().stop()
+    except Exception as exc:
+        logger.error("定时任务调度器停止异常: %s", exc)
     # 关闭 Redis 连接池
     logger.info("关闭 Redis 连接池")
     await RedisPool.close_pool()

@@ -20,6 +20,7 @@ _plugin_registry: Dict[str, PluginBase] = {}
 
 PLUGIN_MODULES = {
     "multi_tenant": "plugins.multi_tenant.plugin:MultiTenantPlugin",
+    "scheduler": "plugins.scheduler.plugin:SchedulerPlugin",
 }
 
 

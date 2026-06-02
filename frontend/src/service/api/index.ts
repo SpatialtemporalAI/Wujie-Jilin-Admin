@@ -5,3 +5,4 @@ export * from './log';
 export * from './notification';
 export * from './monitor';
 export * from './file';
+export * from './scheduler';
