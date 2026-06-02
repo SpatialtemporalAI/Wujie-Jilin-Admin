@@ -1,7 +1,7 @@
 """remove role code column
 
 Revision ID: i2j3k4l5m6n7
-Revises: h1i2j3k4l5m6
+Revises: f15c128af6cb
 Create Date: 2026-06-01
 
 """
@@ -13,7 +13,7 @@ import sqlalchemy as sa
 
 # revision identifiers, used by Alembic.
 revision: str = 'i2j3k4l5m6n7'
-down_revision: Union[str, Sequence[str], None] = 'h1i2j3k4l5m6'
+down_revision: Union[str, Sequence[str], None] = 'f15c128af6cb'
 branch_labels: Union[str, Sequence[str], None] = None
 depends_on: Union[str, Sequence[str], None] = None
 
