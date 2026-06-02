@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { toRaw } from 'vue';
+import { toRaw, computed } from 'vue';
 import dayjs from 'dayjs';
 import { jsonClone } from '@sa/utils';
 import { $t } from '@/locales';
@@ -23,6 +23,23 @@ const statusOptions: { label: string; value: boolean }[] = [
   { label: $t('page.log.loginLog.success'), value: true },
   { label: $t('page.log.loginLog.failed'), value: false }
 ];
+
+const timeRange = computed<[number, number] | null>({
+  get() {
+    const start = model.value.start_time ? dayjs(model.value.start_time).valueOf() : null;
+    const end = model.value.end_time ? dayjs(model.value.end_time).valueOf() : null;
+    return start && end ? [start, end] : null;
+  },
+  set(val: [number, number] | null) {
+    if (val) {
+      model.value.start_time = dayjs(val[0]).format();
+      model.value.end_time = dayjs(val[1]).format();
+    } else {
+      model.value.start_time = undefined;
+      model.value.end_time = undefined;
+    }
+  }
+});
 
 function resetModel() {
   Object.assign(model.value, defaultModel);
@@ -63,25 +80,12 @@ function search() {
               />
             </NFormItemGi>
             <NFormItemGi span="24 s:24 m:12" :label="$t('page.log.loginLog.form.timeRange')" class="pr-24px">
-              <NSpace align="center" :size="8" :wrap="false" class="w-full">
-                <NDatePicker
-                  :value="null"
-                  type="datetime"
-                  :placeholder="$t('page.log.loginLog.form.startTime')"
-                  clearable
-                  class="flex-1"
-                  @update:value="(val: number | null) => { model.start_time = val ? dayjs(val).format() : null }"
-                />
-                <span>~</span>
-                <NDatePicker
-                  :value="null"
-                  type="datetime"
-                  :placeholder="$t('page.log.loginLog.form.endTime')"
-                  clearable
-                  class="flex-1"
-                  @update:value="(val: number | null) => { model.end_time = val ? dayjs(val).format() : null }"
-                />
-              </NSpace>
+              <NDatePicker
+                v-model:value="timeRange"
+                type="datetimerange"
+                clearable
+                class="w-full"
+              />
             </NFormItemGi>
             <NFormItemGi span="24 m:12" class="pr-24px">
               <NSpace class="w-full" justify="end">
