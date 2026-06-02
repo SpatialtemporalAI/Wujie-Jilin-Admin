@@ -1,6 +1,6 @@
 const local: App.I18n.Schema = {
   system: {
-    title: 'SoybeanAdmin',
+    title: import.meta.env.VITE_APP_TITLE,
     updateTitle: 'System Version Update Notification',
     updateContent: 'A new version of the system has been detected. Do you want to refresh the page immediately?',
     updateConfirm: 'Refresh immediately',
@@ -257,8 +257,7 @@ const local: App.I18n.Schema = {
     monitor: 'Monitor Dashboard',
     demo: 'Example',
     demo_upload: 'Upload Demo',
-    manage_file: 'File Management',
-    'manage_tenant-config': 'Tenant Config'
+    manage_file: 'File Management'
   },
   page: {
     login: {

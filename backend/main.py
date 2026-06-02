@@ -56,7 +56,7 @@ async def lifespan(app: FastAPI):
 
 
 app = FastAPI(
-    title="SmileX_Cloud",
+    title=settings.SERVICE.NAME,
     description="这是一个使用FastAPI构建的示例API",
     version="1.0.0",
     contact={

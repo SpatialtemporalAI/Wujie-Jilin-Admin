@@ -1,6 +1,6 @@
 const local: App.I18n.Schema = {
   system: {
-    title: 'SmileX 管理系统',
+    title: import.meta.env.VITE_APP_TITLE,
     updateTitle: '系统版本更新通知',
     updateContent: '检测到系统有新版本发布，是否立即刷新页面？',
     updateConfirm: '立即刷新',
@@ -253,8 +253,7 @@ const local: App.I18n.Schema = {
     monitor: '监控仪表盘',
     demo: '示例',
     demo_upload: '上传演示',
-    manage_file: '文件管理',
-    'manage_tenant-config': '租户配置'
+    manage_file: '文件管理'
   },
   page: {
     login: {
