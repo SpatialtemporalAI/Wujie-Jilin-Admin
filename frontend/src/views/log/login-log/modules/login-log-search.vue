@@ -58,34 +58,17 @@ function search() {
         <NForm :model="model" label-placement="left" :label-width="80">
           <NGrid responsive="screen" item-responsive>
             <NFormItemGi span="24 s:12 m:6" :label="$t('page.log.loginLog.username')" path="username" class="pr-24px">
-              <NInput
-                v-model:value="model.username"
-                :placeholder="$t('page.log.loginLog.form.username')"
-                clearable
-              />
+              <NInput v-model:value="model.username" :placeholder="$t('page.log.loginLog.form.username')" clearable />
             </NFormItemGi>
             <NFormItemGi span="24 s:12 m:6" :label="$t('page.log.loginLog.ip')" path="ip" class="pr-24px">
-              <NInput
-                v-model:value="model.ip"
-                :placeholder="$t('page.log.loginLog.form.ip')"
-                clearable
-              />
+              <NInput v-model:value="model.ip" :placeholder="$t('page.log.loginLog.form.ip')" clearable />
             </NFormItemGi>
             <NFormItemGi span="24 s:12 m:6" :label="$t('page.log.loginLog.status')" path="status" class="pr-24px">
-              <NSelect
-                v-model:value="model.status as any"
-                :options="statusOptions as any"
-                :placeholder="$t('page.log.loginLog.form.status')"
-                clearable
-              />
+              <NSelect v-model:value="model.status as any" :options="statusOptions as any"
+                :placeholder="$t('page.log.loginLog.form.status')" clearable />
             </NFormItemGi>
-            <NFormItemGi span="24 s:24 m:12" :label="$t('page.log.loginLog.form.timeRange')" class="pr-24px">
-              <NDatePicker
-                v-model:value="timeRange"
-                type="datetimerange"
-                clearable
-                class="w-full"
-              />
+            <NFormItemGi span="24 s:12 m:6" :label="$t('page.log.loginLog.form.timeRange')" class="pr-24px">
+              <NDatePicker v-model:value="timeRange" type="datetimerange" clearable class="w-full" />
             </NFormItemGi>
             <NFormItemGi span="24 m:12" class="pr-24px">
               <NSpace class="w-full" justify="end">

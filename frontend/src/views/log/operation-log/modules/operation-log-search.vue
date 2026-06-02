@@ -52,34 +52,19 @@ function search() {
       <NCollapseItem :title="$t('common.search')" name="operation-log-search">
         <NForm :model="model" label-placement="left" :label-width="80">
           <NGrid responsive="screen" item-responsive>
-            <NFormItemGi span="24 s:12 m:6" :label="$t('page.log.operationLog.username')" path="username" class="pr-24px">
-              <NInput
-                v-model:value="model.username"
-                :placeholder="$t('page.log.operationLog.form.username')"
-                clearable
-              />
+            <NFormItemGi span="24 s:12 m:6" :label="$t('page.log.operationLog.username')" path="username"
+              class="pr-24px">
+              <NInput v-model:value="model.username" :placeholder="$t('page.log.operationLog.form.username')"
+                clearable />
             </NFormItemGi>
             <NFormItemGi span="24 s:12 m:6" :label="$t('page.log.operationLog.module')" path="module" class="pr-24px">
-              <NInput
-                v-model:value="model.module"
-                :placeholder="$t('page.log.operationLog.form.module')"
-                clearable
-              />
+              <NInput v-model:value="model.module" :placeholder="$t('page.log.operationLog.form.module')" clearable />
             </NFormItemGi>
             <NFormItemGi span="24 s:12 m:6" :label="$t('page.log.operationLog.action')" path="action" class="pr-24px">
-              <NInput
-                v-model:value="model.action"
-                :placeholder="$t('page.log.operationLog.form.action')"
-                clearable
-              />
+              <NInput v-model:value="model.action" :placeholder="$t('page.log.operationLog.form.action')" clearable />
             </NFormItemGi>
-            <NFormItemGi span="24 s:24 m:12" :label="$t('page.log.operationLog.form.timeRange')" class="pr-24px">
-              <NDatePicker
-                v-model:value="timeRange"
-                type="datetimerange"
-                clearable
-                class="w-full"
-              />
+            <NFormItemGi span="24 s:12 m:6" :label="$t('page.log.operationLog.form.timeRange')" class="pr-24px">
+              <NDatePicker v-model:value="timeRange" type="datetimerange" clearable class="w-full" />
             </NFormItemGi>
             <NFormItemGi span="24 m:12" class="pr-24px">
               <NSpace class="w-full" justify="end">
