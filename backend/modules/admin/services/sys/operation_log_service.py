@@ -10,7 +10,7 @@ from sqlalchemy import select, and_, delete
 from typing import List
 from datetime import datetime, timezone
 
-from app.models.sys.operation_log import SysOperationLog
+from database.models.sys.operation_log import SysOperationLog
 from core.exception.errors import NotFoundError
 from modules.admin.schemas.sys.operation_log import OperationLogQueryParams
 

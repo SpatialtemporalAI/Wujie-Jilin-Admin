@@ -12,7 +12,7 @@ import time
 from typing import Any
 
 from core.config import settings
-from app.models.sys.config import ConfigType, ConfigGroup
+from database.models.sys.config import ConfigType, ConfigGroup
 
 logger = logging.getLogger(__name__)
 
@@ -49,7 +49,7 @@ class RateLimitConfigProvider:
     async def _refresh(cls) -> None:
         from database import get_session
         from sqlalchemy import select
-        from app.models.sys.config import SysConfig
+        from database.models.sys.config import SysConfig
 
         cache: dict[str, Any] = {}
         async for db in get_session():

@@ -10,7 +10,7 @@ from datetime import datetime
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select, and_, Select
 
-from app.models.sys.file import SysFile
+from database.models.sys.file import SysFile
 from core.config import settings
 from core.exception.errors import NotFoundError
 from core.storage import (

@@ -11,7 +11,7 @@ from sqlalchemy import select, delete, or_, and_, func, Select
 from sqlalchemy.orm import noload
 from typing import List, Optional, Tuple
 
-from app.models.sys.dict import SysDict, SysDictItem
+from database.models.sys.dict import SysDict, SysDictItem
 from core.exception.errors import NotFoundError, ConflictError, ForbiddenError
 from modules.admin.schemas.sys.dict import (
     SysDictCreate,

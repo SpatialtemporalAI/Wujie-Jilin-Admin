@@ -10,7 +10,7 @@ from fastapi import APIRouter, Body, Depends
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.models.common.page import PageRequest, get_page_params, get_paginated_results
-from app.models.sys.user import SysUser
+from database.models.sys.user import SysUser
 from core.response import ResponseModel, ResponsePageModel, response_base
 from database.db_manager import get_session
 from modules.admin.deps.auth.permission import require_permission

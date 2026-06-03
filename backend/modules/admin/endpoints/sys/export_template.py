@@ -16,8 +16,8 @@ from core.response import ResponseModel, response_base
 from core.decorators.operation_log import log_operation
 from core.exception.errors import NotFoundError
 from modules.admin.deps.auth.user_manager import current_user
-from app.models.sys.user import SysUser
-from app.models.sys.export_template import SysExportTemplate
+from database.models.sys.user import SysUser
+from database.models.sys.export_template import SysExportTemplate
 from modules.admin.schemas.sys.export_template import (
     ExportTemplateCreate,
     ExportTemplateUpdate,

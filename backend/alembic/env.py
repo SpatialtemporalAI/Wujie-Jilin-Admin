@@ -24,22 +24,22 @@ if config.config_file_name is not None:
 from database.models.base import Base
 
 # Import all models to ensure they are registered with Base
-from app.models.sys.user import SysUser
-from app.models.sys.role import SysRole
-from app.models.sys.permission import SysPermission
-from app.models.sys.menu import SysMenu
-from app.models.sys.config import SysConfig
-from app.models.sys.dict import SysDict, SysDictItem
-from app.models.sys.association_tables import sys_user_role_association, sys_role_menu_association
-from app.models.sys.operation_log import SysOperationLog
-from app.models.sys.export_task import SysExportTask
-from app.models.sys.export_template import SysExportTemplate
-from app.models.sys.ip_blacklist import SysIpBlacklist
-from app.models.sys.file import SysFile
-from app.models.sys.notice import SysNotice
-from app.models.sys.notice_read import SysNoticeRead
-from app.models.sys.login_log import SysLoginLog
-from app.models.business.user import AppUser
+from database.models.sys.user import SysUser
+from database.models.sys.role import SysRole
+from database.models.sys.permission import SysPermission
+from database.models.sys.menu import SysMenu
+from database.models.sys.config import SysConfig
+from database.models.sys.dict import SysDict, SysDictItem
+from database.models.sys.association_tables import sys_user_role_association, sys_role_menu_association
+from database.models.sys.operation_log import SysOperationLog
+from database.models.sys.export_task import SysExportTask
+from database.models.sys.export_template import SysExportTemplate
+from database.models.sys.ip_blacklist import SysIpBlacklist
+from database.models.sys.file import SysFile
+from database.models.sys.notice import SysNotice
+from database.models.sys.notice_read import SysNoticeRead
+from database.models.sys.login_log import SysLoginLog
+from database.models.business.user import AppUser
 
 # 插件框架会通过 register_alembic_models() 动态注册插件模型到 Base.metadata
 # 无需在此手动添加插件模型的 import

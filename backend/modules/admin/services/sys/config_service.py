@@ -11,7 +11,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select, delete, or_, and_, update, Select
 from typing import List, Optional, Tuple, Any
 
-from app.models.sys.config import SysConfig, ConfigType, ConfigGroup
+from database.models.sys.config import SysConfig, ConfigType, ConfigGroup
 from core.security.rate_limit_config import RateLimitConfigProvider
 from core.exception.errors import (
     NotFoundError,

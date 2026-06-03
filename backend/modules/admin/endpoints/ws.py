@@ -14,8 +14,8 @@ from fastapi import APIRouter, WebSocket, WebSocketDisconnect, Query
 from sqlalchemy import select
 from sqlalchemy.orm import joinedload
 
-from app.models.sys.user import SysUser
-from app.models.sys.role import SysRole
+from database.models.sys.user import SysUser
+from database.models.sys.role import SysRole
 from core.security.oauth.jwt import JWTAuthManager
 from core.config import settings
 from core.exception import TokenError

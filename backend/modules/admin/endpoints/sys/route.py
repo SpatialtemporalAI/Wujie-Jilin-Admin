@@ -11,7 +11,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from database.db_manager import get_session
 from core.response import ResponseModel, response_base
 from modules.admin.deps.auth.user_manager import current_user
-from app.models.sys.user import SysUser
+from database.models.sys.user import SysUser
 from modules.admin.services.sys.route_service import RouteService
 from modules.admin.schemas.sys.route import (
     MenuRouteResponse,

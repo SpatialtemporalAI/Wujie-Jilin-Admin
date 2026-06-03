@@ -13,7 +13,7 @@ import psutil
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select, func, case
 
-from app.models.sys.operation_log import SysOperationLog
+from database.models.sys.operation_log import SysOperationLog
 
 logger = logging.getLogger(__name__)
 

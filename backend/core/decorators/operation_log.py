@@ -15,7 +15,7 @@ from fastapi import BackgroundTasks, Request
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from database import get_session
-from app.models.sys.operation_log import SysOperationLog
+from database.models.sys.operation_log import SysOperationLog
 from core.middleware.share_middleware import request_ctx
 
 logger = logging.getLogger(__name__)

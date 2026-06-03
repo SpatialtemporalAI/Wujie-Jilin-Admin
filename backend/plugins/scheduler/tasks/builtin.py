@@ -22,7 +22,7 @@ from plugins.scheduler.core.registry import scheduled_task
 async def cleanup_operation_logs():
     """清理过期操作日志"""
     from database.db_manager import get_session
-    from app.models.sys.operation_log import SysOperationLog
+    from database.models.sys.operation_log import SysOperationLog
 
     cutoff = datetime.now(timezone.utc) - timedelta(days=30)
     total = 0
@@ -44,7 +44,7 @@ async def cleanup_operation_logs():
 async def cleanup_login_logs():
     """清理过期登录日志"""
     from database.db_manager import get_session
-    from app.models.sys.login_log import SysLoginLog
+    from database.models.sys.login_log import SysLoginLog
 
     cutoff = datetime.now(timezone.utc) - timedelta(days=30)
     total = 0

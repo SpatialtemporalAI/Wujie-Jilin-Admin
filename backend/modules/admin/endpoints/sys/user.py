@@ -25,7 +25,7 @@ from core.utils.excel_export import build_excel_bytes, SYNC_EXPORT_MAX_ROWS
 from modules.admin.deps.auth.user_manager import current_user
 from modules.admin.deps.auth.permission import require_permission
 from modules.admin.exports import get_export_config
-from app.models.sys.user import SysUser
+from database.models.sys.user import SysUser
 
 from modules.admin.services.sys import UserService
 from modules.admin.schemas.sys.user import (

@@ -119,7 +119,7 @@ async def _write_operation_log(
     """异步写入操作日志到数据库，在响应发送后由 BackgroundTask 触发"""
     try:
         from database import get_session
-        from app.models.sys.operation_log import SysOperationLog
+        from database.models.sys.operation_log import SysOperationLog
 
         async for db in get_session():
             log_entry = SysOperationLog(

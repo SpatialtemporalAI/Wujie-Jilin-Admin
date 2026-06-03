@@ -11,9 +11,9 @@ from sqlalchemy import select
 from sqlalchemy.orm import joinedload, selectinload, noload
 from typing import List
 
-from app.models.sys.user import SysUser
-from app.models.sys.menu import SysMenu, MenuType
-from app.models.sys.role import SysRole
+from database.models.sys.user import SysUser
+from database.models.sys.menu import SysMenu, MenuType
+from database.models.sys.role import SysRole
 from modules.admin.schemas.sys.route import (
     MenuRouteResponse,
     RouteMetaResponse,

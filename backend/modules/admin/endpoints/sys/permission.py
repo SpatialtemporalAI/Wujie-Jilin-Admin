@@ -12,7 +12,7 @@ from database.db_manager import get_session
 from core.response.response_schema import ResponseModel
 from core.decorators.operation_log import log_operation
 from modules.admin.deps.auth.user_manager import current_user
-from app.models.sys.user import SysUser
+from database.models.sys.user import SysUser
 
 from modules.admin.services.sys import PermissionService
 from modules.admin.schemas.sys.permission import (

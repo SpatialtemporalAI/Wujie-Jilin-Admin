@@ -8,7 +8,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select
 from sqlalchemy.orm import joinedload
 from core.config import settings
-from app.models.sys.user import SysUser
+from database.models.sys.user import SysUser
 from database import get_session
 from core.exception import CustomError, TokenError
 from core.response import CustomErrorCode

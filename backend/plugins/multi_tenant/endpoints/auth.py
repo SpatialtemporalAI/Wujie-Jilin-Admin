@@ -14,7 +14,7 @@ from core.security.oauth.user_manager import base_user_manager
 from plugins.multi_tenant.services.tenant_service import TenantService
 from plugins.multi_tenant.schemas.tenant import SelectTenantRequest
 from modules.admin.deps.auth.user_manager import current_user
-from app.models.sys.user import SysUser
+from database.models.sys.user import SysUser
 
 logger = logging.getLogger(__name__)
 

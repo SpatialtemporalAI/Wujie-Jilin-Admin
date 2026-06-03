@@ -83,7 +83,7 @@ class SchedulerPlugin(PluginBase):
 
     async def _seed_menus(self, db) -> None:
         """插入定时任务管理菜单"""
-        from app.models.sys.menu import SysMenu, MenuType
+        from database.models.sys.menu import SysMenu, MenuType
         from sqlalchemy import select
 
         # 检查是否已存在

@@ -21,7 +21,7 @@ from app.models.common.page import PageRequest, get_page_params, get_paginated_r
 from core.decorators.operation_log import log_operation
 from modules.admin.deps.auth.user_manager import current_user
 from modules.admin.deps.auth.permission import require_permission
-from app.models.sys.user import SysUser
+from database.models.sys.user import SysUser
 
 from modules.admin.services.sys import NoticeService
 from modules.admin.schemas.sys.notice import (

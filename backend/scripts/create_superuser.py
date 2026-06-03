@@ -15,7 +15,7 @@ import os
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 from database.models.base import Base
-from app.models.sys.user import SysUser
+from database.models.sys.user import SysUser
 from core.config import settings
 from core.security.password import PasswordHasher
 

@@ -10,7 +10,7 @@ from sqlalchemy import select, and_
 from typing import List
 from datetime import datetime, timezone, timedelta
 
-from app.models.sys.login_log import SysLoginLog
+from database.models.sys.login_log import SysLoginLog
 from core.exception.errors import NotFoundError
 from modules.admin.schemas.sys.login_log import LoginLogQueryParams
 

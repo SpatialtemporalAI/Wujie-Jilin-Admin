@@ -14,9 +14,9 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select, func, and_, Select, update
 from sqlalchemy.orm import joinedload
 
-from app.models.sys.notice import SysNotice, NoticeType, NoticeTargetType, NoticePriority
-from app.models.sys.notice_read import SysNoticeRead
-from app.models.sys.user import SysUser
+from database.models.sys.notice import SysNotice, NoticeType, NoticeTargetType, NoticePriority
+from database.models.sys.notice_read import SysNoticeRead
+from database.models.sys.user import SysUser
 from core.exception.errors import NotFoundError, ForbiddenError, ConflictError
 from core.websocket.manager import ConnectionManager
 from database.utils.timezone import timezone
@@ -277,8 +277,8 @@ class NoticeService:
             for role_id in notice.target_role_ids:
                 await connection_manager.send_to_role(role_id, push_message)
             # 获取具有目标角色的用户ID
-            from app.models.sys.role import SysRole
-            from app.models.sys.association_tables import sys_user_role_association
+            from database.models.sys.role import SysRole
+            from database.models.sys.association_tables import sys_user_role_association
             result = await db.execute(
                 select(sys_user_role_association.c.user_id)
                 .where(sys_user_role_association.c.role_id.in_(notice.target_role_ids))

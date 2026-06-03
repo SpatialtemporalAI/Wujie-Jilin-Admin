@@ -11,8 +11,8 @@ from sqlalchemy import select, func, and_, Select
 from sqlalchemy.orm import joinedload, noload
 from typing import List, Optional, Tuple
 
-from app.models.sys.role import SysRole
-from app.models.sys.menu import SysMenu
+from database.models.sys.role import SysRole
+from database.models.sys.menu import SysMenu
 from core.exception.errors import NotFoundError, ConflictError, ForbiddenError
 from modules.admin.schemas.sys.role import (
     SysRoleCreate,

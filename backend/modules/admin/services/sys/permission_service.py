@@ -9,7 +9,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select
 from typing import List, Optional
 
-from app.models.sys.permission import SysPermission
+from database.models.sys.permission import SysPermission
 from core.exception.errors import NotFoundError, ConflictError
 from modules.admin.schemas.sys.permission import (
     SysPermissionCreate,

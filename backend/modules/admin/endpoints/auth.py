@@ -7,7 +7,7 @@ import logging
 from fastapi import APIRouter, Depends, Request, Body
 from pydantic import BaseModel, Field
 from redis import Redis
-from app.models.sys.user import SysUser
+from database.models.sys.user import SysUser
 from core.config import settings
 from core.response import (
     ResponseModel,

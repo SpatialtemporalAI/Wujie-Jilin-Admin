@@ -11,8 +11,8 @@ from sqlalchemy import select, func, and_, Select
 from sqlalchemy.orm import joinedload, selectinload, load_only
 from typing import List, Optional, Tuple
 
-from app.models.sys.user import SysUser
-from app.models.sys.role import SysRole
+from database.models.sys.user import SysUser
+from database.models.sys.role import SysRole
 from core.exception.errors import NotFoundError, ConflictError, ForbiddenError
 from core.security.oauth.jwt import JWTAuthManager
 from core.security.password import PasswordHasher

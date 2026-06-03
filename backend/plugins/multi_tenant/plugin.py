@@ -213,7 +213,7 @@ class MultiTenantPlugin(PluginBase):
 
     async def _seed_menus(self, db) -> None:
         """插入租户管理菜单种子数据"""
-        from app.models.sys.menu import SysMenu, MenuType
+        from database.models.sys.menu import SysMenu, MenuType
         from sqlalchemy import select
 
         # 检查是否已存在
@@ -295,7 +295,7 @@ class MultiTenantPlugin(PluginBase):
     # ---- 激活 ----
 
     def on_activate(self, app: FastAPI) -> None:
-        from app.models.sys.user import SysUser
+        from database.models.sys.user import SysUser
         from plugins.multi_tenant.models.tenant import Tenant
         from plugins.multi_tenant.database.tenant_filter import (
             register_tenant_strict,

@@ -4,7 +4,7 @@
 from fastapi import APIRouter, Body, Depends, Request, Response, HTTPException, status
 from pydantic import BaseModel
 from sqlalchemy import select
-from app.models.business.user import AppUser
+from database.models.business.user import AppUser
 from sqlalchemy.orm import Session
 from modules.app.deps.auth.user_manager import (
     UserManager,

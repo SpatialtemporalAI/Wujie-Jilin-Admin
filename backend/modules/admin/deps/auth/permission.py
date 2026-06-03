@@ -11,9 +11,9 @@ from sqlalchemy import select
 from sqlalchemy.orm import joinedload
 
 from database.db_manager import get_session
-from app.models.sys.user import SysUser
-from app.models.sys.role import SysRole
-from app.models.sys.menu import SysMenu, MenuType
+from database.models.sys.user import SysUser
+from database.models.sys.role import SysRole
+from database.models.sys.menu import SysMenu, MenuType
 from core.exception.errors import ForbiddenError
 from modules.admin.deps.auth.user_manager import current_user
 

@@ -20,7 +20,7 @@ from app.models.common.page import PageRequest, get_page_params, get_paginated_r
 from core.decorators.operation_log import log_operation
 from modules.admin.deps.auth.user_manager import current_user
 from modules.admin.deps.auth.permission import require_permission
-from app.models.sys.user import SysUser
+from database.models.sys.user import SysUser
 
 from modules.admin.services.sys import ConfigService
 from modules.admin.schemas.sys.config import (
@@ -33,7 +33,7 @@ from modules.admin.schemas.sys.config import (
     SysConfigReset,
     SysConfigByGroupQuery,
 )
-from app.models.sys.config import ConfigType, ConfigGroup
+from database.models.sys.config import ConfigType, ConfigGroup
 
 # 获取logger
 logger = logging.getLogger(__name__)

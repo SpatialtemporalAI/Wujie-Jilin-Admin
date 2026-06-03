@@ -7,7 +7,7 @@ from sqlalchemy import select, and_, Select, update
 from typing import List, Optional
 
 from plugins.multi_tenant.models.tenant import Tenant, sys_user_tenant_association
-from app.models.sys.user import SysUser
+from database.models.sys.user import SysUser
 from core.config import settings
 from core.redis import get_redis_util
 from core.exception.errors import NotFoundError, ConflictError, ForbiddenError

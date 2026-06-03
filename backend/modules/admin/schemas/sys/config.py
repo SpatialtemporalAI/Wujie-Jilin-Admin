@@ -10,7 +10,7 @@ from pydantic import (
 from datetime import datetime
 from app.models.common.base import BaseRespEntity, BaseEntity, BoolField
 from app.models.common.page import PageRequest
-from app.models.sys.config import ConfigType, ConfigGroup
+from database.models.sys.config import ConfigType, ConfigGroup
 
 
 def parse_config_type(v):

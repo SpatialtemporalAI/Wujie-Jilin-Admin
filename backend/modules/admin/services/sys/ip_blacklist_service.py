@@ -12,7 +12,7 @@ from typing import List, Optional
 from sqlalchemy import and_, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.models.sys.ip_blacklist import SysIpBlacklist
+from database.models.sys.ip_blacklist import SysIpBlacklist
 from core.exception.errors import ConflictError, NotFoundError, RequestError
 from core.security.rate_limit import (
     add_ip_to_redis_blacklist,

@@ -14,7 +14,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from database.db_manager import get_session
 from core.response import ResponseModel, response_base
 from modules.admin.deps.auth.user_manager import current_user
-from app.models.sys.user import SysUser
+from database.models.sys.user import SysUser
 from modules.admin.services.sys.export_task_service import ExportTaskService
 from modules.admin.schemas.sys.export_task import (
     ExportTaskSubmit,

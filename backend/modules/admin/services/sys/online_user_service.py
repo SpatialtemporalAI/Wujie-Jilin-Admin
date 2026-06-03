@@ -17,7 +17,7 @@ from core.config import settings
 from core.redis import get_redis_util
 from core.utils.session_cache import get_session_cache
 from core.security.oauth.user_manager import build_session_key
-from app.models.sys.user import SysUser
+from database.models.sys.user import SysUser
 from app.models.common.page import ResponsePageDataModel
 from modules.admin.schemas.sys.online_user import OnlineUserResponse
 

@@ -7,7 +7,7 @@ from datetime import datetime
 from zoneinfo import ZoneInfo
 from app.models.common.base import BaseRespEntity, BaseEntity, BoolField
 from app.models.common.page import PageRequest
-from app.models.sys.menu import MenuType
+from database.models.sys.menu import MenuType
 
 
 def _format_datetime(v):

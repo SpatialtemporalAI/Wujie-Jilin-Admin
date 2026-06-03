@@ -12,9 +12,9 @@ from sqlalchemy.orm import noload, joinedload, selectinload
 from typing import List, Optional, Tuple
 
 from sqlalchemy import func
-from app.models.sys.menu import SysMenu, MenuType
-from app.models.sys.user import SysUser
-from app.models.sys.role import SysRole
+from database.models.sys.menu import SysMenu, MenuType
+from database.models.sys.user import SysUser
+from database.models.sys.role import SysRole
 from core.exception.errors import NotFoundError, ConflictError, ForbiddenError
 from modules.admin.schemas.sys.menu import (
     SysMenuCreate,

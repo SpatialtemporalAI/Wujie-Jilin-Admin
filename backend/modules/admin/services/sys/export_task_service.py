@@ -14,8 +14,8 @@ from typing import List, Tuple
 from sqlalchemy import select, func
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.models.sys.export_task import SysExportTask
-from app.models.sys.export_template import SysExportTemplate
+from database.models.sys.export_task import SysExportTask
+from database.models.sys.export_template import SysExportTemplate
 from core.config import settings
 from core.exception.errors import NotFoundError, CustomError
 from core.response import CustomErrorCode

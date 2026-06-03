@@ -13,7 +13,7 @@ from core.response.response_schema import ResponseModel, ResponsePageModel
 from app.models.common.page import get_page_params, get_paginated_results, PageRequest
 from modules.admin.deps.auth.user_manager import current_user
 from modules.admin.deps.auth.permission import require_permission
-from app.models.sys.user import SysUser
+from database.models.sys.user import SysUser
 
 from plugins.multi_tenant.services.tenant_service import TenantService
 from plugins.multi_tenant.schemas.tenant import (
