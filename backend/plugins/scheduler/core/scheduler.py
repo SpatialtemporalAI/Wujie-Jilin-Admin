@@ -190,7 +190,7 @@ async def _execute_task(
     triggered_by: str = "scheduler",
 ):
     """执行单个任务：创建日志 -> 执行 -> 更新状态"""
-    from core.utils.timezone import timezone as tz
+    from database.utils.timezone import timezone as tz
 
     now = tz.now()
     log = SysScheduledTaskLog(

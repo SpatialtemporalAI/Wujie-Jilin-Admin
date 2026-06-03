@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 
-from core.models.base import Base, DataClassBase, snowflake_id_key
+from database.models.base import Base, DataClassBase, snowflake_id_key
 from sqlalchemy.orm import mapped_column, Mapped, relationship
 from sqlalchemy import String, Boolean, ForeignKey, text
 from typing import TYPE_CHECKING, List, Optional

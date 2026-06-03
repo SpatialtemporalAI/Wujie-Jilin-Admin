@@ -199,7 +199,7 @@ class ExportTaskService:
         返回 dict 列表，key 格式为 "table_name.field_name"。
         """
         from sqlalchemy import Table, Column as SaColumn
-        from core.models.base import Base
+        from database.models.base import Base
 
         metadata = Base.metadata
 

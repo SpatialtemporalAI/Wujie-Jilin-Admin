@@ -14,7 +14,7 @@ import os
 # 添加当前目录到 Python 搜索路径
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-from core.models.base import Base
+from database.models.base import Base
 from app.models.sys.user import SysUser
 from core.config import settings
 from core.security.password import PasswordHasher

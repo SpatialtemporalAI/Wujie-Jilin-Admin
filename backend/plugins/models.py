@@ -5,8 +5,8 @@ from datetime import datetime
 from sqlalchemy.orm import mapped_column, Mapped
 from sqlalchemy import String, Boolean, DateTime
 
-from core.models.base import Base
-from core.utils.timezone import timezone
+from database.models.base import Base
+from database.utils.timezone import timezone
 
 
 class PluginRegistry(Base):

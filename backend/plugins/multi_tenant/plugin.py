@@ -93,8 +93,8 @@ class MultiTenantPlugin(PluginBase):
         """
         from database.db_manager import get_session
         from sqlalchemy import text
-        from core.utils.snowflake import snowflake
-        from core.utils.timezone import timezone
+        from database.utils.snowflake import snowflake
+        from database.utils.timezone import timezone
 
         async for db in get_session():
             # 1. 创建默认租户

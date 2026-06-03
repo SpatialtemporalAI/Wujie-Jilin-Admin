@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 
-from core.models.base import Base
+from database.models.base import Base
 from sqlalchemy.orm import mapped_column, Mapped
 from sqlalchemy import String, Text, Boolean
 

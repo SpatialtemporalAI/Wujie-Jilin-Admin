@@ -19,7 +19,7 @@ from app.models.sys.notice_read import SysNoticeRead
 from app.models.sys.user import SysUser
 from core.exception.errors import NotFoundError, ForbiddenError, ConflictError
 from core.websocket.manager import ConnectionManager
-from core.utils.timezone import timezone
+from database.utils.timezone import timezone
 from modules.admin.schemas.sys.notice import (
     SysNoticeCreate,
     SysNoticeUpdate,

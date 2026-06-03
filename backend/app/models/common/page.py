@@ -14,7 +14,7 @@ from sqlalchemy.sql import func
 from core.response import ResponsePageModel, response_base, ResponsePageDataModel
 from sqlalchemy.sql.elements import BinaryExpression
 from fastapi import Query
-from core.models.base import Base
+from database.models.base import Base
 
 T = TypeVar("SchemaT")
 

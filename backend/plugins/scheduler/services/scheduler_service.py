@@ -107,7 +107,7 @@ class SchedulerService:
         if task.is_system:
             raise ConflictError(msg="系统任务不可删除")
 
-        from core.utils.timezone import timezone
+        from database.utils.timezone import timezone
 
         task.deleted_at = timezone.now()
         await db.flush()

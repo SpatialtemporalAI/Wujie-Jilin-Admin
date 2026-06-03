@@ -19,7 +19,7 @@ from core.storage import (
     validate_file_size,
     generate_stored_name,
 )
-from core.utils.timezone import timezone
+from database.utils.timezone import timezone
 from modules.admin.schemas.sys.file import SysFileQueryParams
 
 logger = logging.getLogger(__name__)

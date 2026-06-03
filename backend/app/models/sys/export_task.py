@@ -6,7 +6,7 @@ from datetime import datetime
 from sqlalchemy import String, Text, Integer, BigInteger, DateTime
 from sqlalchemy.orm import Mapped, mapped_column
 
-from core.models.base import Base
+from database.models.base import Base
 
 
 class SysExportTask(Base):

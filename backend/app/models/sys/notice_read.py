@@ -12,7 +12,7 @@ from typing import Optional
 from sqlalchemy import BigInteger, Boolean, DateTime, UniqueConstraint
 from sqlalchemy.orm import mapped_column, Mapped
 
-from core.models.base import Base
+from database.models.base import Base
 
 
 class SysNoticeRead(Base):

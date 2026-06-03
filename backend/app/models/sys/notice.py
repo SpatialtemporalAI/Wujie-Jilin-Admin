@@ -13,7 +13,7 @@ from sqlalchemy import String, Text, Boolean, DateTime, BigInteger
 from sqlalchemy.dialects.postgresql import ARRAY
 from sqlalchemy.orm import mapped_column, Mapped
 
-from core.models.base import Base
+from database.models.base import Base
 
 
 class NoticeType:

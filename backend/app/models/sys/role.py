@@ -1,11 +1,11 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 
-from core.models.base import Base
+from database.models.base import Base
 from sqlalchemy.orm import mapped_column, Mapped, relationship
 from sqlalchemy import String, Text, Boolean, ForeignKey, Table, Column
 from typing import List, Optional
-from core.models.base import Base, DataClassBase
+from database.models.base import Base, DataClassBase
 from .association_tables import sys_role_menu_association, sys_user_role_association
 
 

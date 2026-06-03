@@ -25,7 +25,7 @@ def upgrade() -> None:
     backend_dir = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
     if backend_dir not in sys.path:
         sys.path.insert(0, backend_dir)
-    from core.utils.snowflake import snowflake
+    from database.utils.snowflake import snowflake
     from datetime import datetime, timezone
 
     now = datetime.now(timezone.utc)

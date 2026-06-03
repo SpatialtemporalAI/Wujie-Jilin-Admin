@@ -3,7 +3,7 @@
 
 from sqlalchemy import Column, ForeignKey, Table, String
 from sqlalchemy.orm import Mapped, relationship
-from core.models.base import Base
+from database.models.base import Base
 
 # 角色菜单关联表(重复定义是为了确保每个文件独立可用)
 sys_role_menu_association = Table(
