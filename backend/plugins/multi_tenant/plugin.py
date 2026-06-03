@@ -31,13 +31,13 @@ TENANT_SCOPED_TABLES = TENANT_STRICT_TABLES + TENANT_OPTIONAL_TABLES
 
 # 模型路径映射
 MODEL_MAP = {
-    "sys_role": "app.models.sys.role:SysRole",
-    "sys_file": "app.models.sys.file:SysFile",
-    "app_user": "app.models.business.user:AppUser",
-    "sys_operation_log": "app.models.sys.operation_log:SysOperationLog",
-    "sys_login_log": "app.models.sys.login_log:SysLoginLog",
-    "sys_menu": "app.models.sys.menu:SysMenu",
-    "sys_notice": "app.models.sys.notice:SysNotice",
+    "sys_role": "database.models.sys.role:SysRole",
+    "sys_file": "database.models.sys.file:SysFile",
+    "app_user": "database.models.business.user:AppUser",
+    "sys_operation_log": "database.models.sys.operation_log:SysOperationLog",
+    "sys_login_log": "database.models.sys.login_log:SysLoginLog",
+    "sys_menu": "database.models.sys.menu:SysMenu",
+    "sys_notice": "database.models.sys.notice:SysNotice",
 }
 
 
