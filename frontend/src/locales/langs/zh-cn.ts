@@ -253,6 +253,7 @@ const local: App.I18n.Schema = {
     monitor: '监控仪表盘',
     demo: '示例',
     demo_upload: '上传演示',
+    demo_dict: '字典组件演示',
     manage_file: '文件管理',
     scheduler: '定时任务',
     manage_scheduler: '任务管理',
@@ -368,6 +369,17 @@ const local: App.I18n.Schema = {
         uploadResult: '上传结果',
         dragOrClick: '点击或拖拽文件到此区域上传',
         startUpload: '开始上传'
+      },
+      dict: {
+        selectDemo: 'DictSelect 下拉选择',
+        selectLabel: '基础用法：通过 dict-code 加载字典选项',
+        selectWithDefault: '带默认值：v-model 绑定初始值',
+        tagDemo: 'DictTag 标签展示',
+        tagLabel: '根据字典 value 展示对应 label 标签',
+        textDemo: 'DictText 文本展示',
+        textLabel: '根据字典 value 展示对应 label 纯文本',
+        tableDemo: '表格中展示字典',
+        tableLabel: '在 NDataTable 中使用 DictText 和 DictTag 自定义列渲染'
       }
     },
     manage: {

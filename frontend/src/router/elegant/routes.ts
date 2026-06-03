@@ -59,6 +59,16 @@ export const generatedRoutes: GeneratedRoute[] = [
           i18nKey: 'route.demo_upload',
           icon: 'mdi:upload'
         }
+      },
+      {
+        name: 'demo_dict',
+        path: '/demo/dict',
+        component: 'view.demo_dict',
+        meta: {
+          title: 'demo_dict',
+          i18nKey: 'route.demo_dict',
+          icon: 'mdi:book-alphabet'
+        }
       }
     ]
   },

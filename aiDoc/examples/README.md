@@ -21,6 +21,7 @@
 1. `frontend/api-example.md` — 如何封装 API 调用
 2. `frontend/view-example.md` — 如何组织页面组件
 3. `frontend/utils-usage-example.md` — 如何使用工具函数
+4. `frontend/dict-component-example.md` — 如何使用字典通用组件（DictSelect / DictTag / DictText）
 
 ## 原则
 

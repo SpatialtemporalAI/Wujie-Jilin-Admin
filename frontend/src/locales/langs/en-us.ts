@@ -257,6 +257,7 @@ const local: App.I18n.Schema = {
     monitor: 'Monitor Dashboard',
     demo: 'Example',
     demo_upload: 'Upload Demo',
+    demo_dict: 'Dict Component Demo',
     manage_file: 'File Management',
     scheduler: 'Scheduler',
     manage_scheduler: 'Task Management',
@@ -372,6 +373,17 @@ const local: App.I18n.Schema = {
         uploadResult: 'Upload Result',
         dragOrClick: 'Click or drag files to this area to upload',
         startUpload: 'Start Upload'
+      },
+      dict: {
+        selectDemo: 'DictSelect Dropdown',
+        selectLabel: 'Basic usage: load dict options via dict-code',
+        selectWithDefault: 'With default value: v-model binds initial value',
+        tagDemo: 'DictTag Display',
+        tagLabel: 'Show label tag based on dict value',
+        textDemo: 'DictText Display',
+        textLabel: 'Show label text based on dict value',
+        tableDemo: 'Dict in Table',
+        tableLabel: 'Use DictText and DictTag for custom column rendering in NDataTable'
       }
     },
 
