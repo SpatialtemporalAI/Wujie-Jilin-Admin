@@ -5,13 +5,13 @@ from datetime import datetime
 
 from pydantic import Field
 
-from app.models.common.base import BaseEntity
+from app.models.common.base import BaseEntity, OptionalIntField
 
 
 class TaskLogQueryParams(BaseEntity):
     """任务执行日志查询参数"""
 
-    task_id: int | None = Field(None, description="任务ID")
+    task_id: OptionalIntField = Field(None, description="任务ID")
     task_key: str | None = Field(None, description="任务标识")
     status: str | None = Field(None, description="执行状态")
     start_time: str | None = Field(None, description="开始时间")

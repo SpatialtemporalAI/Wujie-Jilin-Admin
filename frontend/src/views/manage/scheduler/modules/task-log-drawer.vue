@@ -47,10 +47,10 @@ function formatJson(str: string | null): string {
 }
 
 const statusMap: Record<string, { type: NaiveUI.ThemeColor; label: string }> = {
-  running: { type: 'info', label: '运行中' },
-  success: { type: 'success', label: '成功' },
-  failed: { type: 'error', label: '失败' },
-  timeout: { type: 'warning', label: '超时' }
+  running: { type: 'info', label: $t('page.manage.scheduler.lastStatuses.running') },
+  success: { type: 'success', label: $t('page.manage.scheduler.lastStatuses.success') },
+  failed: { type: 'error', label: $t('page.manage.scheduler.lastStatuses.failed') },
+  timeout: { type: 'warning', label: $t('page.manage.scheduler.lastStatuses.timeout') }
 };
 </script>
 

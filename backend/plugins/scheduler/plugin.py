@@ -149,7 +149,7 @@ class SchedulerPlugin(PluginBase):
         # 菜单：执行日志
         log_menu = SysMenu(
             parent_id=catalog.id,
-            name="scheduler_log",
+            name="manage_scheduler-log",
             path="/manage/scheduler-log",
             component="view.manage_scheduler-log",
             redirect=None,

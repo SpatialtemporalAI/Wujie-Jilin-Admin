@@ -86,3 +86,14 @@ def parse_bool(value):
 
 
 BoolField = Annotated[Optional[bool], BeforeValidator(parse_bool)]
+
+
+def parse_optional_int(value):
+    if isinstance(value, str):
+        value = value.strip()
+    if value in EMPTY_VALUES:
+        return None
+    return int(value)
+
+
+OptionalIntField = Annotated[Optional[int], BeforeValidator(parse_optional_int)]
