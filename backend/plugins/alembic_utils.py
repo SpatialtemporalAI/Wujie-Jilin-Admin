@@ -54,6 +54,10 @@ def autogenerate_and_upgrade(message: str) -> str:
 
     cfg = _get_alembic_config()
 
+    # 先将数据库同步到当前 head，否则 autogenerate 会报 "Target database is not up to date"
+    logger.info("同步数据库到当前 head")
+    command.upgrade(cfg, "head")
+
     # 生成迁移
     logger.info("生成 alembic 迁移: %s", message)
     command.revision(cfg, message=message, autogenerate=True)

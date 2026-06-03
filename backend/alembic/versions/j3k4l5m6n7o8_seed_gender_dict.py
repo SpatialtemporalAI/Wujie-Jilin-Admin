@@ -67,9 +67,9 @@ def upgrade() -> None:
     dict_id = result.scalar_one()
 
     op.bulk_insert(item_table, [
-        {'dict_id': dict_id, 'value': '1', 'label': '男', 'status': True, 'sort': 1},
-        {'dict_id': dict_id, 'value': '2', 'label': '女', 'status': True, 'sort': 2},
-        {'dict_id': dict_id, 'value': '0', 'label': '未知', 'status': True, 'sort': 3},
+        {'dict_id': dict_id, 'value': '1', 'label': '男', 'status': True, 'sort': 1, 'created_at': now, 'updated_at': now},
+        {'dict_id': dict_id, 'value': '2', 'label': '女', 'status': True, 'sort': 2, 'created_at': now, 'updated_at': now},
+        {'dict_id': dict_id, 'value': '0', 'label': '未知', 'status': True, 'sort': 3, 'created_at': now, 'updated_at': now},
     ])
 
 
