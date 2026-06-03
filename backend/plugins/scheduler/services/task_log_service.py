@@ -18,6 +18,8 @@ class TaskLogService:
     def build_log_query(query_params: TaskLogQueryParams):
         """构建日志查询"""
         conditions = []
+        if query_params.task_name:
+            conditions.append(SysScheduledTaskLog.task_name.like(f"%{query_params.task_name}%"))
         if query_params.task_id:
             conditions.append(SysScheduledTaskLog.task_id == query_params.task_id)
         if query_params.task_key:

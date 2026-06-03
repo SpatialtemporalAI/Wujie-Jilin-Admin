@@ -755,7 +755,12 @@ const local: App.I18n.Schema = {
         viewDetail: '详情',
         clear: '清理日志',
         clearConfirm: '确认清理30天前的执行日志？',
-        detailTitle: '执行日志详情'
+        detailTitle: '执行日志详情',
+        form: {
+          taskName: '请输入任务名称',
+          status: '请选择执行状态',
+          timeRange: '时间范围'
+        }
       }
     },
     log: {

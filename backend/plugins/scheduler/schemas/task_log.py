@@ -12,6 +12,7 @@ class TaskLogQueryParams(BaseEntity):
     """任务执行日志查询参数"""
 
     task_id: OptionalIntField = Field(None, description="任务ID")
+    task_name: str | None = Field(None, description="任务名称")
     task_key: str | None = Field(None, description="任务标识")
     status: str | None = Field(None, description="执行状态")
     start_time: str | None = Field(None, description="开始时间")

@@ -760,7 +760,12 @@ const local: App.I18n.Schema = {
         viewDetail: 'Detail',
         clear: 'Clear Logs',
         clearConfirm: 'Clear execution logs older than 30 days?',
-        detailTitle: 'Execution Log Detail'
+        detailTitle: 'Execution Log Detail',
+        form: {
+          taskName: 'Enter task name',
+          status: 'Select status',
+          timeRange: 'Time Range'
+        }
       }
     },
     log: {

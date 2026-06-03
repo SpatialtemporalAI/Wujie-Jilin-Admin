@@ -6,6 +6,7 @@ import { useAppStore } from '@/store/modules/app';
 import { defaultTransform, useNaivePaginatedTable, useTableOperate } from '@/hooks/common/table';
 import { useAuth } from '@/hooks/business/auth';
 import { $t } from '@/locales';
+import TaskLogSearch from './modules/task-log-search.vue';
 import TaskLogDrawer from '../scheduler/modules/task-log-drawer.vue';
 
 defineOptions({ name: 'SchedulerLogPage' });
@@ -18,6 +19,7 @@ const searchParams: Api.Scheduler.TaskLogSearchParams = reactive({
   page: 1,
   page_size: 10,
   task_id: null,
+  task_name: null,
   task_key: null,
   status: null,
   start_time: null,
@@ -159,6 +161,7 @@ async function handleClear() {
 
 <template>
   <div class="min-h-500px flex-col-stretch gap-16px overflow-hidden lt-sm:overflow-auto">
+    <TaskLogSearch v-model:model="searchParams" @search="getDataByPage" />
     <NCard :title="$t('page.manage.schedulerLog.title')" :bordered="false" size="small" class="flex-1-hidden card-wrapper">
       <template #header-extra>
         <TableHeaderOperation

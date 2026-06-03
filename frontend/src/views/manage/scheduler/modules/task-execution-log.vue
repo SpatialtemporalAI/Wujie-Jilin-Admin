@@ -1,5 +1,6 @@
 <script setup lang="tsx">
-import { reactive, ref, watch } from 'vue';
+import { computed, reactive, ref, watch } from 'vue';
+import dayjs from 'dayjs';
 import { NButton, NDataTable, NPopconfirm, NTag, useMessage } from 'naive-ui';
 import { defaultTransform, useNaivePaginatedTable } from '@/hooks/common/table';
 import { useAuth } from '@/hooks/business/auth';
@@ -22,6 +23,7 @@ const searchParams: Api.Scheduler.TaskLogSearchParams = reactive({
   page: 1,
   page_size: 10,
   task_id: null,
+  task_name: null,
   task_key: null,
   status: null,
   start_time: null,
@@ -39,6 +41,30 @@ watch(
   },
   { immediate: true }
 );
+
+const statusOptions = [
+  { label: $t('page.manage.scheduler.lastStatuses.success'), value: 'success' },
+  { label: $t('page.manage.scheduler.lastStatuses.failed'), value: 'failed' },
+  { label: $t('page.manage.scheduler.lastStatuses.running'), value: 'running' },
+  { label: $t('page.manage.scheduler.lastStatuses.timeout'), value: 'timeout' }
+];
+
+const timeRange = computed<[number, number] | null>({
+  get() {
+    const start = searchParams.start_time ? dayjs(searchParams.start_time).valueOf() : null;
+    const end = searchParams.end_time ? dayjs(searchParams.end_time).valueOf() : null;
+    return start && end ? [start, end] : null;
+  },
+  set(val: [number, number] | null) {
+    if (val) {
+      searchParams.start_time = dayjs(val[0]).format();
+      searchParams.end_time = dayjs(val[1]).format();
+    } else {
+      searchParams.start_time = undefined;
+      searchParams.end_time = undefined;
+    }
+  }
+});
 
 const statusMap: Record<string, { type: NaiveUI.ThemeColor; label: string }> = {
   running: { type: 'info', label: $t('page.manage.scheduler.lastStatuses.running') },
@@ -165,7 +191,22 @@ async function handleClear() {
 
 <template>
   <div class="flex-col-stretch gap-8px">
-    <NSpace justify="end">
+    <NSpace align="center" :wrap="true">
+      <NSelect
+        v-model:value="searchParams.status"
+        :options="statusOptions"
+        :placeholder="$t('page.manage.schedulerLog.form.status')"
+        clearable
+        size="small"
+        style="width: 120px"
+      />
+      <NDatePicker
+        v-model:value="timeRange"
+        type="datetimerange"
+        clearable
+        size="small"
+        style="width: 340px"
+      />
       <NPopconfirm v-if="hasAuth('sys:scheduler:log:delete')" @positive-click="handleClear">
         {{ $t('page.manage.schedulerLog.clearConfirm') }}
         <template #trigger>

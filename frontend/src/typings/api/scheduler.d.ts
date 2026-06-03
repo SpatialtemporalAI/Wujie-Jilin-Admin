@@ -90,6 +90,7 @@ declare namespace Api {
     type TaskLogSearchParams = CommonType.RecordNullable<
       {
         task_id?: number;
+        task_name?: string;
         task_key?: string;
         status?: string;
         start_time?: string;
