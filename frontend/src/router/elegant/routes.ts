@@ -51,16 +51,6 @@ export const generatedRoutes: GeneratedRoute[] = [
     },
     children: [
       {
-        name: 'demo_upload',
-        path: '/demo/upload',
-        component: 'view.demo_upload',
-        meta: {
-          title: 'demo_upload',
-          i18nKey: 'route.demo_upload',
-          icon: 'mdi:upload'
-        }
-      },
-      {
         name: 'demo_dict',
         path: '/demo/dict',
         component: 'view.demo_dict',
@@ -68,6 +58,16 @@ export const generatedRoutes: GeneratedRoute[] = [
           title: 'demo_dict',
           i18nKey: 'route.demo_dict',
           icon: 'mdi:book-alphabet'
+        }
+      },
+      {
+        name: 'demo_upload',
+        path: '/demo/upload',
+        component: 'view.demo_upload',
+        meta: {
+          title: 'demo_upload',
+          i18nKey: 'route.demo_upload',
+          icon: 'mdi:upload'
         }
       }
     ]
