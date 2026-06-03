@@ -34,9 +34,10 @@ Base = DataClassBase + LogicMixin + DateTimeMixin
 
 | 目录 | 用途 |
 |------|------|
-| `app/models/sys/` | 系统模型（用户、角色、权限、菜单、字典、配置） |
-| `app/models/business/` | 业务模型 |
-| `app/models/common/` | 公共基础（Base、Mixin、Page） |
+| `database/models/sys/` | 系统模型（用户、角色、权限、菜单、字典、配置） |
+| `database/models/business/` | 业务模型 |
+| `database/models/base.py` | ORM 公共基类（`Base`、`DataClassBase`、`LogicMixin`、`DateTimeMixin`） |
+| `app/models/common/` | Pydantic Schema 基类（`BaseEntity`、`PageRequest` 等） |
 
 ---
 

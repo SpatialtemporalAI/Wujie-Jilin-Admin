@@ -58,6 +58,6 @@ class SysUser(Base, UserMixin):
 
 ## 真实参考文件
 
-- `backend/app/models/sys/user.py`
-- `backend/app/models/sys/role.py`
+- `backend/database/models/sys/user.py`
+- `backend/database/models/sys/role.py`
 - `backend/database/models/base.py`

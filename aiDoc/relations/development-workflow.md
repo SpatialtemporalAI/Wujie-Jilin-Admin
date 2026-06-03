@@ -3,7 +3,7 @@
 ## 推荐开发顺序
 
 1. **需求分析**：明确功能范围和接口契约
-2. **模型设计**：在 `app/models/` 定义 ORM 模型
+2. **模型设计**：在 `database/models/` 定义 ORM 模型
 3. **Schema 定义**：在 `modules/<name>/schemas/` 定义请求/响应 Schema
 4. **Service 实现**：在 `modules/<name>/services/` 实现业务逻辑
 5. **Endpoint 实现**：在 `modules/<name>/endpoints/` 创建 API 端点，在 `router.py` 注册路由

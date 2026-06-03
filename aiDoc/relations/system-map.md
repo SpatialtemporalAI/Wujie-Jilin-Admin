@@ -12,14 +12,14 @@
 ## 后端分层关系
 
 ```
-main.py                          # 应用入口，注册路由、中间件、生命周期
-  └─ modules/<name>/router.py    # 模块路由注册
-       └─ endpoints/             # API 端点层（HTTP 参数提取、响应格式化）
-            └─ services/         # 业务服务层（纯业务逻辑，不依赖 HTTP）
-                 └─ app/models/  # ORM 模型层（SQLAlchemy 数据映射）
-                      ├─ sys/    # 系统模型（用户、角色、权限、菜单、字典、配置）
+main.py                            # 应用入口，注册路由、中间件、生命周期
+  └─ modules/<name>/router.py      # 模块路由注册
+       └─ endpoints/               # API 端点层（HTTP 参数提取、响应格式化）
+            └─ services/           # 业务服务层（纯业务逻辑，不依赖 HTTP）
+                 └─ database/models/ # ORM 模型层（SQLAlchemy 数据映射）
+                      ├─ sys/      # 系统模型（用户、角色、权限、菜单、字典、配置）
                       ├─ business/ # 业务模型
-                      └─ common/ # 公共基础模型（Base、Page、Mixin）
+                      └─ base.py   # 公共基类（Base、DataClassBase、Mixin）
 ```
 
 ### MCP 工具平台 `mcp/`
@@ -56,13 +56,28 @@ main.py                          # 应用入口，注册路由、中间件、生
 
 | 目录/文件 | 职责 |
 |-----------|------|
+| `__init__.py` | 统一导出接口（ORM 基类、管理器、工具函数） |
+| `config.py` | 数据库配置（`DatabaseModel`、`DatabaseType`、驱动枚举） |
 | `db_manager.py` | 数据库连接池管理 |
-| `models/base.py` | ORM 基类（`MappedBase`、`DataClassBase`、`Base`、Mixin） |
-| `manager/async_manager.py` | 异步数据库管理器 |
+| `models/base.py` | ORM 基类（`MappedBase`、`DataClassBase`、`Base`、`LogicMixin`、`DateTimeMixin`、`UserMixin`） |
+| `models/sys/` | 系统模型（用户、角色、权限、菜单、字典、配置等） |
+| `models/business/` | 业务模型 |
+| `models/dataclasses.py` | 数据类（`IpInfo`、`AccessToken`、`RefreshToken` 等） |
+| `manager/async_manager.py` | 异步数据库管理器（`get_session`、`get_session_cr`） |
 | `manager/sync_manager.py` | 同步数据库管理器 |
+| `plugins/setup_database.py` | 数据库插件（软删除自动过滤等） |
 | `utils/snowflake.py` | 雪花 ID 生成 |
 | `utils/str_utils.py` | 字符串工具（`camel_to_snake` 等） |
 | `utils/timezone.py` | 时区工具 |
+| `utils/url_builder.py` | 数据库 URL 构建器 |
+
+### Pydantic Schema 基类 `app/models/common/`
+
+| 文件 | 职责 |
+|------|------|
+| `base.py` | Pydantic 基类（`BaseEntity`、`BaseReqEntity`、`BaseRespEntity`、`BoolField`） |
+| `page.py` | 分页基类（`PageRequest`、`get_page_params`、`get_paginated_results`） |
+| `mixin.py` | Schema Mixin |
 
 ## 前端数据流
 

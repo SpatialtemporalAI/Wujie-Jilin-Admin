@@ -22,11 +22,11 @@ backend/modules/<name>/
 
 ### 2. 定义 ORM 模型
 
-在 `app/models/` 对应目录（`sys/` 或 `business/`）中创建模型文件。
+在 `database/models/` 对应目录（`sys/` 或 `business/`）中创建模型文件。
 
 继承 `Base`（来自 `database/models/base.py`），使用 `Mapped[]` + `mapped_column()`。
 
-参考：`app/models/sys/user.py`
+参考：`database/models/sys/user.py`
 
 ### 3. 定义 Pydantic Schema
 

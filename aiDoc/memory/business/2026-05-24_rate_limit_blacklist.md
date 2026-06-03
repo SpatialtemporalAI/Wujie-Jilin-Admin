@@ -15,7 +15,7 @@
 - 配置：`core/config/settings_model.py` 新增 `RateLimitModel`、`RateLimitPathRuleModel`；`core/config/settings.py` 挂载 `RATE_LIMIT`
 - 中间件：`core/middleware/rate_limit_middleware.py`，在 `core/registry/setup_registry.py` 中注册
 - 限流工具：`core/security/rate_limit.py` 扩展黑名单、登录失败计数、多维度限流函数
-- 模型：`app/models/sys/ip_blacklist.py` (`SysIpBlacklist`)
+- 模型：`database/models/sys/ip_blacklist.py` (`SysIpBlacklist`)
 - Schema：`modules/admin/schemas/sys/ip_blacklist.py`
 - Service：
   - `modules/admin/services/sys/ip_blacklist_service.py`（CRUD + warmup + auto_block）
@@ -52,7 +52,7 @@
 - `backend/core/middleware/rate_limit_middleware.py`
 - `backend/core/registry/setup_registry.py`
 - `backend/core/response/response_code.py`
-- `backend/app/models/sys/ip_blacklist.py`
+- `backend/database/models/sys/ip_blacklist.py`
 - `backend/modules/admin/schemas/sys/ip_blacklist.py`
 - `backend/modules/admin/services/sys/ip_blacklist_service.py`
 - `backend/modules/admin/services/sys/rate_limit_service.py`

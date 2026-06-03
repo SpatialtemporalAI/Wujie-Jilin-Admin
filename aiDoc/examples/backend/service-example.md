@@ -20,7 +20,7 @@ from sqlalchemy import select
 from sqlalchemy.orm import selectinload, joinedload
 from core.exception.errors import NotFoundError, ConflictError, CustomError
 from core.response.response_code import CustomErrorCode
-from app.models.sys.user import SysUser
+from database.models.sys.user import SysUser
 
 
 class UserService:

@@ -31,7 +31,7 @@
 - `modules/admin/schemas/auth.py` — LoginResponseData 增加 tenant_id/tenants
 - `plugins/multi_tenant/endpoints/auth.py` — select-tenant 使用租户 JWT 配置 + 保存 last tenant
 - `plugins/multi_tenant/middleware/tenant_middleware.py` — 兼容租户签名 token
-- `app/models/sys/user.py` — 新增 last_tenant_id 列
+- `database/models/sys/user.py` — 新增 last_tenant_id 列
 - `alembic/versions/h1i2j3k4l5m6_add_last_tenant_id_to_sys_user.py` — 迁移
 
 ## 记录日期
