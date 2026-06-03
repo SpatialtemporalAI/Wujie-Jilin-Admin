@@ -18,11 +18,11 @@ class SysScheduledTask(Base):
     task_key: Mapped[str] = mapped_column(
         String(200), nullable=False, unique=True, index=True, comment="任务唯一标识"
     )
-    description: Mapped[str | None] = mapped_column(
-        String(500), nullable=True, default=None, comment="任务描述"
-    )
     cron_expression: Mapped[str] = mapped_column(
         String(100), nullable=False, comment="Cron 表达式"
+    )
+    description: Mapped[str | None] = mapped_column(
+        String(500), nullable=True, default=None, comment="任务描述"
     )
     trigger_type: Mapped[str] = mapped_column(
         String(20), nullable=False, default="cron", comment="触发类型: cron/interval/date"

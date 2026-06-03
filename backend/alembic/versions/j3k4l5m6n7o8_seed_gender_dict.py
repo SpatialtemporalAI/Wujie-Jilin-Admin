@@ -5,6 +5,8 @@ Revises: i2j3k4l5m6n7
 Create Date: 2026-06-03
 
 """
+from datetime import datetime
+
 from alembic import op
 import sqlalchemy as sa
 
@@ -16,6 +18,8 @@ depends_on = None
 
 
 def upgrade() -> None:
+    now = datetime.now()
+
     dict_table = sa.table(
         'sys_dict',
         sa.column('id', sa.BigInteger),
@@ -25,6 +29,8 @@ def upgrade() -> None:
         sa.column('status', sa.Boolean),
         sa.column('is_system', sa.Boolean),
         sa.column('sort', sa.Integer),
+        sa.column('created_at', sa.DateTime),
+        sa.column('updated_at', sa.DateTime),
     )
 
     item_table = sa.table(
@@ -36,6 +42,8 @@ def upgrade() -> None:
         sa.column('description', sa.Text),
         sa.column('status', sa.Boolean),
         sa.column('sort', sa.Integer),
+        sa.column('created_at', sa.DateTime),
+        sa.column('updated_at', sa.DateTime),
     )
 
     op.bulk_insert(dict_table, [
@@ -46,6 +54,8 @@ def upgrade() -> None:
             'status': True,
             'is_system': True,
             'sort': 1,
+            'created_at': now,
+            'updated_at': now,
         },
     ])
 
