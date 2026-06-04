@@ -194,8 +194,15 @@ class SchedulerService:
             await db.flush()
         else:
             # 调度器未运行时，用 trigger 计算下次执行时间
-            task.next_run_at = manager.preview_cron(task.cron_expression, count=1)[0] if task.status else None
-            if task.next_run_at:
-                from datetime import datetime
-                task.next_run_at = datetime.fromisoformat(task.next_run_at)
+            if not task.status:
+                task.next_run_at = None
+            elif task.trigger_type == "cron" and task.cron_expression:
+                next_str = manager.preview_cron(task.cron_expression, count=1)
+                if next_str:
+                    from datetime import datetime
+                    task.next_run_at = datetime.fromisoformat(next_str[0])
+                else:
+                    task.next_run_at = None
+            else:
+                task.next_run_at = None
             await db.flush()

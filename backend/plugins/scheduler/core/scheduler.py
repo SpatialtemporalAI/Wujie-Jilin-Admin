@@ -86,7 +86,10 @@ class SchedulerManager:
     async def add_task_job(self, task: SysScheduledTask):
         """添加单个任务到调度器"""
         job_id = str(task.id)
-        self._scheduler.remove_job(job_id)
+        try:
+            self._scheduler.remove_job(job_id)
+        except Exception:
+            pass
         if task.status:
             self._add_job_from_task(task)
             task.next_run_at = self._get_job_next_run(job_id)
