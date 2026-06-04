@@ -1,10 +1,34 @@
-<script setup lang="ts">
+<script setup lang="tsx">
 import { ref } from 'vue';
 
 defineOptions({ name: 'DictDemoPage' });
 
 const selectedGender = ref<string | null>(null);
 const selectedGender2 = ref<string | null>('0');
+
+const tableData = [
+  { name: 'Alice', gender: '1' },
+  { name: 'Bob', gender: '2' },
+  { name: 'Unknown', gender: '0' }
+];
+
+const tableColumns = [
+  { key: 'name', title: 'Name', align: 'center' as const, width: 120 },
+  {
+    key: 'gender_text',
+    title: 'Gender (DictText)',
+    align: 'center' as const,
+    width: 160,
+    render: (row: any) => <DictText dictCode="gender" value={row.gender} />
+  },
+  {
+    key: 'gender_tag',
+    title: 'Gender (DictTag)',
+    align: 'center' as const,
+    width: 160,
+    render: (row: any) => <DictTag dictCode="gender" value={row.gender} type="primary" />
+  }
+];
 </script>
 
 <template>
@@ -60,24 +84,9 @@ const selectedGender2 = ref<string | null>('0');
         <NText>{{ $t('page.demo.dict.tableLabel') }}</NText>
         <NDataTable
           :bordered="false"
-          :columns="[
-            { key: 'name', title: 'Name' },
-            { key: 'gender', title: 'Gender (DictText)' },
-            { key: 'tag', title: 'Gender (DictTag)' }
-          ]"
-          :data="[
-            { name: 'Alice', gender: '1', tag: '1' },
-            { name: 'Bob', gender: '2', tag: '2' },
-            { name: 'Unknown', gender: '0', tag: '0' }
-          ]"
-        >
-          <template #gender="{ row }">
-            <DictText dict-code="gender" :value="row.gender" />
-          </template>
-          <template #tag="{ row }">
-            <DictTag dict-code="gender" :value="row.tag" />
-          </template>
-        </NDataTable>
+          :columns="tableColumns"
+          :data="tableData"
+        />
       </NSpace>
     </NCard>
   </NSpace>

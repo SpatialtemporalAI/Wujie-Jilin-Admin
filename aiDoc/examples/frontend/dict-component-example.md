@@ -68,23 +68,33 @@ const { items, options, loading, getLabelByValue, refresh } = useDict('gender');
 
 ```vue
 <template>
-  <NDataTable :columns="columns" :data="data">
-    <template #gender="{ row }">
-      <DictTag dict-code="gender" :value="row.gender" />
-    </template>
-  </NDataTable>
+  <NDataTable :columns="columns" :data="data" />
 </template>
 
 <script setup lang="ts">
-import { useDict } from '@/hooks/business/dict';
-
-// 在 render 函数中使用 composable
-const { getLabelByValue } = useDict('gender');
+// 方式一：使用 DictTag / DictText 组件（JSX，推荐）
 const columns = [
+  {
+    key: 'gender_tag',
+    title: '性别 (DictTag)',
+    render: row => <DictTag dictCode="gender" value={row.gender} type="primary" />,
+  },
+  {
+    key: 'gender_text',
+    title: '性别 (DictText)',
+    render: row => <DictText dictCode="gender" value={row.gender} />,
+  },
+];
+
+// 方式二：使用 useDict composable + 纯文本渲染
+import { useDict } from '@/hooks/business/dict';
+const { getLabelByValue } = useDict('gender');
+
+const columns2 = [
   {
     key: 'gender_text',
     title: '性别',
-    render: row => h('span', getLabelByValue(row.gender)),
+    render: row => <span>{getLabelByValue(row.gender)}</span>,
   },
 ];
 </script>
@@ -96,6 +106,7 @@ const columns = [
 - `dict-code` 是必填 prop，对应后端 `sys_dict.code`
 - 未找到字典值时，DictTag/DictText 回退显示 value 原值
 - useDict 内部调用 `fetchGetDictItemsByDictCode(code)`，后端仅返回启用的字典项
+- **在 NDataTable 自定义列渲染时，必须使用 column 的 `render` 函数（JSX 语法），不能使用模板插槽**
 
 ## 参考文件
 
