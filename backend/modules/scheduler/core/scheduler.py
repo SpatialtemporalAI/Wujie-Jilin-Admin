@@ -19,9 +19,9 @@ from apscheduler.triggers.date import DateTrigger
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from plugins.scheduler.core.registry import get_task_definition
-from plugins.scheduler.models.scheduled_task import SysScheduledTask
-from plugins.scheduler.models.task_log import SysScheduledTaskLog
+from modules.scheduler.core.registry import get_task_definition
+from modules.scheduler.models.scheduled_task import SysScheduledTask
+from modules.scheduler.models.task_log import SysScheduledTaskLog
 
 logger = logging.getLogger(__name__)
 

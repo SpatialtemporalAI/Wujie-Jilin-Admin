@@ -5,14 +5,14 @@ from sqlalchemy import select, and_
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from core.exception.errors import NotFoundError, ConflictError
-from plugins.scheduler.models.scheduled_task import SysScheduledTask
-from plugins.scheduler.schemas.scheduled_task import (
+from modules.scheduler.models.scheduled_task import SysScheduledTask
+from modules.scheduler.schemas.scheduled_task import (
     ScheduledTaskCreate,
     ScheduledTaskUpdate,
     ScheduledTaskQueryParams,
 )
-from plugins.scheduler.core.registry import get_registered_tasks
-from plugins.scheduler.core.scheduler import SchedulerManager
+from modules.scheduler.core.registry import get_registered_tasks
+from modules.scheduler.core.scheduler import SchedulerManager
 
 
 class SchedulerService:

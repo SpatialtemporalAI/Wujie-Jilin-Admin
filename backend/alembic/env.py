@@ -40,9 +40,8 @@ from database.models.sys.notice import SysNotice
 from database.models.sys.notice_read import SysNoticeRead
 from database.models.sys.login_log import SysLoginLog
 from database.models.business.user import AppUser
-
-# 插件框架会通过 register_alembic_models() 动态注册插件模型到 Base.metadata
-# 无需在此手动添加插件模型的 import
+from modules.scheduler.models.scheduled_task import SysScheduledTask
+from modules.scheduler.models.task_log import SysScheduledTaskLog
 
 # Set target_metadata to Base.metadata
 target_metadata = Base.metadata

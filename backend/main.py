@@ -45,24 +45,31 @@ async def lifespan(app: FastAPI):
         logger.info("IP 黑名单预热数量: %s", count)
     except Exception as exc:
         logger.error("IP 黑名单预热异常: %s", exc)
-    # 同步定时任务到调度器
+    # 启动定时任务调度器
     try:
-        from plugins import is_plugin_active
-        if is_plugin_active("scheduler"):
-            from plugins.scheduler.core.scheduler import SchedulerManager
-            manager = SchedulerManager.get_instance()
-            async for db_sync in get_session():
-                await manager.sync_jobs_from_db(db_sync)
-            logger.info("定时任务同步完成")
+        from modules.scheduler.core.scheduler import SchedulerManager
+        import modules.scheduler.tasks.builtin  # noqa: F401
+
+        manager = SchedulerManager.get_instance()
+        manager.start()
+        app.state.scheduler_manager = manager
+        async for db_sync in get_session():
+            await manager.sync_jobs_from_db(db_sync)
+        logger.info("定时任务同步完成")
     except Exception as exc:
         logger.error("定时任务同步异常: %s", exc)
+    # 种子数据：菜单 + 同步装饰器注册的任务
+    try:
+        from modules.scheduler.seed import seed_scheduler
+        async for db_seed in get_session():
+            await seed_scheduler(db_seed)
+    except Exception as exc:
+        logger.error("定时任务种子数据异常: %s", exc)
     yield
     # 停止定时任务调度器
     try:
-        from plugins import is_plugin_active
-        if is_plugin_active("scheduler"):
-            from plugins.scheduler.core.scheduler import SchedulerManager
-            SchedulerManager.get_instance().stop()
+        from modules.scheduler.core.scheduler import SchedulerManager
+        SchedulerManager.get_instance().stop()
     except Exception as exc:
         logger.error("定时任务调度器停止异常: %s", exc)
     # 关闭 Redis 连接池

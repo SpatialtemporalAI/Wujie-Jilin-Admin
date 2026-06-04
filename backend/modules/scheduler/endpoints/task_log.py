@@ -10,8 +10,8 @@ from app.models.common.page import PageRequest, get_page_params, get_paginated_r
 from modules.admin.deps.auth.user_manager import current_user
 from modules.admin.deps.auth.permission import require_permission
 from database.models.sys.user import SysUser
-from plugins.scheduler.services.task_log_service import TaskLogService
-from plugins.scheduler.schemas.task_log import (
+from modules.scheduler.services.task_log_service import TaskLogService
+from modules.scheduler.schemas.task_log import (
     TaskLogQueryParams,
     TaskLogResponse,
     TaskLogDetailResponse,

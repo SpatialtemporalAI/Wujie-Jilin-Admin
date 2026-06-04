@@ -22,6 +22,8 @@ from .ip_blacklist import ip_blacklist_router
 from .notice import notice_router
 from .monitor import monitor_router
 from .file import file_router, preview_router
+from modules.scheduler.endpoints.scheduled_task import scheduler_task_router
+from modules.scheduler.endpoints.task_log import scheduler_log_router
 
 # 创建系统管理主路由器
 sys_router = APIRouter(
@@ -48,6 +50,8 @@ sys_router.include_router(notice_router)
 sys_router.include_router(monitor_router)
 sys_router.include_router(file_router)
 sys_router.include_router(preview_router)
+sys_router.include_router(scheduler_task_router)
+sys_router.include_router(scheduler_log_router)
 
 __all__ = ["sys_router"]
 

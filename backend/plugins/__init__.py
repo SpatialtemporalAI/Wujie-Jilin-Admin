@@ -20,14 +20,14 @@ _plugin_registry: Dict[str, PluginBase] = {}
 
 PLUGIN_MODULES = {
     "multi_tenant": "plugins.multi_tenant.plugin:MultiTenantPlugin",
-    "scheduler": "plugins.scheduler.plugin:SchedulerPlugin",
 }
 
 
 def _load_plugin_class(plugin_name: str) -> PluginBase:
     """根据名称实例化插件类"""
     if plugin_name not in PLUGIN_MODULES:
-        raise ValueError(f"Unknown plugin: {plugin_name}")
+        logger.warning("Plugin '%s' not found in PLUGIN_MODULES, skipping", plugin_name)
+        return None
     module_path, class_name = PLUGIN_MODULES[plugin_name].rsplit(":", 1)
     module = importlib.import_module(module_path)
     plugin_cls = getattr(module, class_name)
@@ -40,6 +40,8 @@ def load_plugins(app: FastAPI, enabled_plugins: list[str]) -> None:
         plugin_name = plugin_name.strip()
         try:
             plugin = _load_plugin_class(plugin_name)
+            if plugin is None:
+                continue
             plugin.register_database_plugins()
             plugin.register_middleware(app)
             plugin.register_routes(app)

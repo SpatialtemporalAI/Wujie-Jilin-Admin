@@ -9,7 +9,7 @@
 from sqlalchemy import delete, text
 from datetime import datetime, timedelta, timezone
 
-from plugins.scheduler.core.registry import scheduled_task
+from modules.scheduler.core.registry import scheduled_task
 
 
 @scheduled_task(

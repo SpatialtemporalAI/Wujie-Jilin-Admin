@@ -12,9 +12,9 @@ from app.models.common.page import PageRequest, get_page_params, get_paginated_r
 from modules.admin.deps.auth.user_manager import current_user
 from modules.admin.deps.auth.permission import require_permission
 from database.models.sys.user import SysUser
-from plugins.scheduler.services.scheduler_service import SchedulerService
-from plugins.scheduler.services.task_log_service import TaskLogService
-from plugins.scheduler.schemas.scheduled_task import (
+from modules.scheduler.services.scheduler_service import SchedulerService
+from modules.scheduler.services.task_log_service import TaskLogService
+from modules.scheduler.schemas.scheduled_task import (
     ScheduledTaskCreate,
     ScheduledTaskUpdate,
     ScheduledTaskQueryParams,
@@ -23,8 +23,8 @@ from plugins.scheduler.schemas.scheduled_task import (
     CronPreviewResponse,
     RegistryTaskResponse,
 )
-from plugins.scheduler.schemas.task_log import TaskLogQueryParams, TaskLogResponse
-from plugins.scheduler.core.registry import get_registered_tasks
+from modules.scheduler.schemas.task_log import TaskLogQueryParams, TaskLogResponse
+from modules.scheduler.core.registry import get_registered_tasks
 
 scheduler_task_router = APIRouter(
     prefix="/scheduler-task",
