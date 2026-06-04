@@ -8,6 +8,7 @@
 2. 中间件层多维度限流和黑名单短路：`enforce_rate_limit` / `is_ip_blocked`
    等高阶函数，被 `RateLimitMiddleware` 使用。
 """
+import asyncio
 from logging import getLogger
 from typing import Optional
 
@@ -26,6 +27,14 @@ BLACKLIST_KEY_PREFIX = "blacklist:ip:"
 RATE_LIMIT_KEY_PREFIX = "ratelimit:"
 LOGIN_FAIL_KEY_PREFIX = "ratelimit:login:fail:"
 
+LUA_INCR_EXPIRE = """
+local c = redis.call('INCR', KEYS[1])
+if c == 1 then
+    redis.call('EXPIRE', KEYS[1], ARGV[1])
+end
+return c
+"""
+
 
 def _blacklist_key(ip: str) -> str:
     return f"{BLACKLIST_KEY_PREFIX}{ip}"
@@ -41,11 +50,9 @@ async def check_rate_limit(
     window_seconds: int,
     block_message: str,
 ) -> None:
-    """基于 Redis INCR + EXPIRE 的固定窗口限流。"""
+    """基于 Redis Lua 脚本的固定窗口限流（INCR + EXPIRE 原子操作）。"""
     redis_client = RedisPool.get_client()
-    current = await redis_client.incr(key)
-    if current == 1:
-        await redis_client.expire(key, window_seconds)
+    current = await redis_client.eval(LUA_INCR_EXPIRE, 1, key, window_seconds)
     if current > limit:
         ttl = await redis_client.ttl(key)
         logger.warning("限流触发 key=%s count=%s ttl=%s", key, current, ttl)
@@ -80,18 +87,31 @@ async def limit_by_ip(
 
 
 async def is_ip_blocked(ip: str) -> bool:
-    """检查 IP 是否在 Redis 黑名单中。"""
+    """检查 IP 是否在 Redis 黑名单中。使用 stale-while-revalidate 策略避免 Redis 回源阻塞。"""
     if not ip:
         return False
     _cache = get_memory_cache()
-    cached = _cache.get(CacheNamespace.IP_BLACKLIST, ip)
+    cached, is_stale = _cache.get_stale(CacheNamespace.IP_BLACKLIST, ip)
     if cached is not None:
+        if is_stale:
+            asyncio.ensure_future(_refresh_ip_blocklist(ip))
         return cached
     redis_client = RedisPool.get_client()
     exists = await redis_client.exists(_blacklist_key(ip))
     result = bool(exists)
     _cache.set(CacheNamespace.IP_BLACKLIST, ip, result, ttl=10)
     return result
+
+
+async def _refresh_ip_blocklist(ip: str) -> None:
+    """后台刷新单个 IP 的黑名单缓存。"""
+    try:
+        redis_client = RedisPool.get_client()
+        exists = await redis_client.exists(_blacklist_key(ip))
+        _cache = get_memory_cache()
+        _cache.set(CacheNamespace.IP_BLACKLIST, ip, bool(exists), ttl=10)
+    except Exception:
+        logger.debug("后台刷新 IP 黑名单缓存失败 ip=%s", ip, exc_info=True)
 
 
 async def add_ip_to_redis_blacklist(
@@ -127,12 +147,10 @@ async def incr_login_failure(ip: str) -> int:
         return 0
     redis_client = RedisPool.get_client()
     key = _login_fail_key(ip)
-    count = await redis_client.incr(key)
-    if count == 1:
-        window = await RateLimitConfigProvider.get(
-            "rate_limit.login_fail_window", settings.RATE_LIMIT.LOGIN_FAIL_WINDOW
-        )
-        await redis_client.expire(key, window)
+    window = await RateLimitConfigProvider.get(
+        "rate_limit.login_fail_window", settings.RATE_LIMIT.LOGIN_FAIL_WINDOW
+    )
+    count = await redis_client.eval(LUA_INCR_EXPIRE, 1, key, window)
     return int(count)
 
 
@@ -159,9 +177,7 @@ class RateLimitExceeded(Exception):
 
 async def _incr_window(key: str, limit: int, window_seconds: int, dim: str) -> None:
     redis_client = RedisPool.get_client()
-    current = await redis_client.incr(key)
-    if current == 1:
-        await redis_client.expire(key, window_seconds)
+    current = await redis_client.eval(LUA_INCR_EXPIRE, 1, key, window_seconds)
     if current > limit:
         ttl = await redis_client.ttl(key)
         logger.warning("middleware 限流 dim=%s key=%s count=%s ttl=%s", dim, key, current, ttl)

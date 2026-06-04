@@ -14,6 +14,7 @@ from typing import Any, Optional
 @dataclass
 class _CacheEntry:
     expires_at: float
+    stale_at: float
     value: Any
 
 
@@ -27,8 +28,9 @@ class CacheNamespace:
 class MemoryCache:
     """基于 OrderedDict 的 LRU + TTL 通用内存缓存，支持 namespace 隔离。"""
 
-    def __init__(self, max_entries_per_namespace: int = 1024):
+    def __init__(self, max_entries_per_namespace: int = 1024, stale_ratio: float = 0.5):
         self._max_entries = max_entries_per_namespace
+        self._stale_ratio = stale_ratio
         self._namespaces: dict[str, OrderedDict[str, _CacheEntry]] = {}
         self._locks: dict[str, threading.Lock] = {}
         self._global_lock = threading.Lock()
@@ -53,15 +55,40 @@ class MemoryCache:
             store.move_to_end(key)
             return entry.value
 
+    def get_stale(self, namespace: str, key: str) -> tuple[Any | None, bool]:
+        """获取缓存值并返回是否过期但仍在宽限期内。
+
+        Returns:
+            (value, is_stale): value 为缓存值（可能为 None），
+            is_stale=True 表示已过期但仍在宽限期内，建议后台刷新。
+            若完全未命中或超过宽限期，返回 (None, False)。
+        """
+        store, lock = self._get_namespace(namespace)
+        with lock:
+            entry = store.get(key)
+            if entry is None:
+                return None, False
+            now = time.monotonic()
+            if now > entry.expires_at:
+                del store[key]
+                return None, False
+            if now > entry.stale_at:
+                store.move_to_end(key)
+                return entry.value, True
+            store.move_to_end(key)
+            return entry.value, False
+
     def set(self, namespace: str, key: str, value: Any, ttl: float) -> None:
         if ttl <= 0:
             return
         store, lock = self._get_namespace(namespace)
         with lock:
-            expires_at = time.monotonic() + ttl
+            now = time.monotonic()
+            expires_at = now + ttl
+            stale_at = now + ttl * (1 - self._stale_ratio)
             if key in store:
                 store.move_to_end(key)
-            store[key] = _CacheEntry(expires_at=expires_at, value=value)
+            store[key] = _CacheEntry(expires_at=expires_at, stale_at=stale_at, value=value)
             while len(store) > self._max_entries:
                 store.popitem(last=False)
 

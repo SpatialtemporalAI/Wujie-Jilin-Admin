@@ -40,10 +40,14 @@ class RateLimitConfigProvider:
     async def _ensure_cache(cls) -> None:
         if time.time() < cls._expire_at:
             return
+        logger.debug("RateLimitConfigProvider 缓存已过期，等待后台定时任务刷新")
+
+    @classmethod
+    async def force_refresh(cls) -> None:
         try:
             await cls._refresh()
         except Exception as exc:
-            logger.error("RateLimitConfigProvider 刷新失败，使用旧缓存或 fallback: %s", exc)
+            logger.error("RateLimitConfigProvider 刷新失败: %s", exc)
 
     @classmethod
     async def _refresh(cls) -> None:
