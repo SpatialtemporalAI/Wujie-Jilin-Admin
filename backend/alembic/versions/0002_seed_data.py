@@ -1,4 +1,4 @@
-"""seed initial data
+"""seed initial data (merged from init.sql)
 
 Revision ID: 0002
 Revises: 0001
@@ -17,6 +17,10 @@ down_revision: Union[str, Sequence[str], None] = '0001'
 branch_labels: Union[str, Sequence[str], None] = None
 depends_on: Union[str, Sequence[str], None] = None
 
+
+# ================================================================
+# sys_config
+# ================================================================
 
 SYS_CONFIG_DATA = [
     {
@@ -161,6 +165,10 @@ SYS_CONFIG_DATA = [
     },
 ]
 
+# ================================================================
+# sys_dict + sys_dict_item
+# ================================================================
+
 SYS_DICT_DATA = [
     {
         'id': 8,
@@ -175,6 +183,99 @@ SYS_DICT_DATA = [
         'updated_at': datetime(2026, 6, 3, 21, 52, 40),
     },
 ]
+
+SYS_DICT_ITEM_DATA = [
+    {
+        'id': 7,
+        'dict_id': 8,
+        'value': '1',
+        'label': '男',
+        'description': None,
+        'ext_info': None,
+        'status': True,
+        'sort': 1,
+        'deleted_at': None,
+        'created_at': datetime(2026, 6, 3, 21, 52, 40),
+        'updated_at': datetime(2026, 6, 3, 21, 52, 40),
+    },
+    {
+        'id': 8,
+        'dict_id': 8,
+        'value': '2',
+        'label': '女',
+        'description': None,
+        'ext_info': None,
+        'status': True,
+        'sort': 2,
+        'deleted_at': None,
+        'created_at': datetime(2026, 6, 3, 21, 52, 40),
+        'updated_at': datetime(2026, 6, 3, 21, 52, 40),
+    },
+    {
+        'id': 9,
+        'dict_id': 8,
+        'value': '0',
+        'label': '未知',
+        'description': None,
+        'ext_info': None,
+        'status': True,
+        'sort': 3,
+        'deleted_at': None,
+        'created_at': datetime(2026, 6, 3, 21, 52, 40),
+        'updated_at': datetime(2026, 6, 3, 21, 52, 40),
+    },
+]
+
+# ================================================================
+# sys_user
+# ================================================================
+
+ADMIN_USER_ID = 2250298479026176
+
+SYS_USER_DATA = [
+    {
+        'id': ADMIN_USER_ID,
+        'username': 'admin',
+        'password': '$2b$12$MPXWjrezSywnujoarubtJuKUJKBXugHEEqobTbIWtbJRXAp2aaTUy',
+        'nickname': '超级管理员',
+        'email': 'admin@example.com',
+        'phone': '13800138000',
+        'avatar': '',
+        'last_login_at': None,
+        'last_login_ip': '',
+        'status': True,
+        'is_superuser': True,
+        'deleted_at': None,
+        'created_at': datetime(2026, 2, 2, 10, 0, 29),
+        'updated_at': datetime(2026, 2, 2, 10, 0, 29),
+        'last_tenant_id': None,
+    },
+]
+
+# ================================================================
+# sys_role
+# ================================================================
+
+ADMIN_ROLE_ID = 2874692539129900
+
+SYS_ROLE_DATA = [
+    {
+        'id': ADMIN_ROLE_ID,
+        'name': '管理员',
+        'status': True,
+        'is_default': True,
+        'is_system': True,
+        'sort': 0,
+        'deleted_at': None,
+        'created_at': datetime(2026, 1, 1, 0, 0, 0),
+        'updated_at': None,
+        'desc': '系统默认管理员角色，拥有所有菜单权限',
+    },
+]
+
+# ================================================================
+# sys_menu
+# ================================================================
 
 SYS_MENU_DATA = [
     {
@@ -309,6 +410,7 @@ SYS_MENU_DATA = [
         'created_at': datetime(2026, 6, 4, 15, 32, 41),
         'updated_at': None,
     },
+    # --- manage 子菜单 ---
     {
         'id': 2874692539129859,
         'parent_id': 2874692539129857,
@@ -420,50 +522,6 @@ SYS_MENU_DATA = [
         'updated_at': None,
     },
     {
-        'id': 2874692539129864,
-        'parent_id': 2874692539129858,
-        'name': 'log_login-log',
-        'path': '/log/login-log',
-        'component': 'view.log_login-log',
-        'redirect': None,
-        'permission': 'sys:login-log:list',
-        'meta_icon': None,
-        'meta_hidden': False,
-        'meta_affix': False,
-        'meta_breadcrumb': True,
-        'status': True,
-        'type': 'MENU',
-        'sort': 1,
-        'is_system': True,
-        'meta_href': None,
-        'meta_keep_alive': False,
-        'deleted_at': None,
-        'created_at': datetime(2026, 5, 23, 16, 32, 7),
-        'updated_at': None,
-    },
-    {
-        'id': 2874692539129865,
-        'parent_id': 2874692539129858,
-        'name': 'log_operation-log',
-        'path': '/log/operation-log',
-        'component': 'view.log_operation-log',
-        'redirect': None,
-        'permission': 'sys:operation-log:list',
-        'meta_icon': None,
-        'meta_hidden': False,
-        'meta_affix': False,
-        'meta_breadcrumb': True,
-        'status': True,
-        'type': 'MENU',
-        'sort': 2,
-        'is_system': True,
-        'meta_href': None,
-        'meta_keep_alive': False,
-        'deleted_at': None,
-        'created_at': datetime(2026, 5, 23, 16, 32, 7),
-        'updated_at': datetime(2026, 5, 24, 14, 6, 24),
-    },
-    {
         'id': 2879249581154304,
         'parent_id': 2874692539129857,
         'name': 'log_online-user',
@@ -508,28 +566,6 @@ SYS_MENU_DATA = [
         'updated_at': None,
     },
     {
-        'id': 2886339278741504,
-        'parent_id': 2874692539129857,
-        'name': 'manage_announcement',
-        'path': '/manage/announcement',
-        'component': 'view.manage_announcement',
-        'redirect': None,
-        'permission': 'sys:notice:list',
-        'meta_icon': None,
-        'meta_hidden': False,
-        'meta_affix': False,
-        'meta_breadcrumb': True,
-        'status': True,
-        'type': 'MENU',
-        'sort': 11,
-        'is_system': True,
-        'meta_href': None,
-        'meta_keep_alive': False,
-        'deleted_at': None,
-        'created_at': datetime(2026, 5, 25, 17, 54, 2),
-        'updated_at': None,
-    },
-    {
         'id': 2907499345027076,
         'parent_id': 2874692539129857,
         'name': 'manage_file',
@@ -551,6 +587,119 @@ SYS_MENU_DATA = [
         'created_at': datetime(2026, 5, 28, 23, 8, 7),
         'updated_at': None,
     },
+    {
+        'id': 2886339278741504,
+        'parent_id': 2874692539129857,
+        'name': 'manage_announcement',
+        'path': '/manage/announcement',
+        'component': 'view.manage_announcement',
+        'redirect': None,
+        'permission': 'sys:notice:list',
+        'meta_icon': None,
+        'meta_hidden': False,
+        'meta_affix': False,
+        'meta_breadcrumb': True,
+        'status': True,
+        'type': 'MENU',
+        'sort': 11,
+        'is_system': True,
+        'meta_href': None,
+        'meta_keep_alive': False,
+        'deleted_at': None,
+        'created_at': datetime(2026, 5, 25, 17, 54, 2),
+        'updated_at': None,
+    },
+    # --- log 子菜单 ---
+    {
+        'id': 2874692539129864,
+        'parent_id': 2874692539129858,
+        'name': 'log_login-log',
+        'path': '/log/login-log',
+        'component': 'view.log_login-log',
+        'redirect': None,
+        'permission': 'sys:login-log:list',
+        'meta_icon': None,
+        'meta_hidden': False,
+        'meta_affix': False,
+        'meta_breadcrumb': True,
+        'status': True,
+        'type': 'MENU',
+        'sort': 1,
+        'is_system': True,
+        'meta_href': None,
+        'meta_keep_alive': False,
+        'deleted_at': None,
+        'created_at': datetime(2026, 5, 23, 16, 32, 7),
+        'updated_at': None,
+    },
+    {
+        'id': 2874692539129865,
+        'parent_id': 2874692539129858,
+        'name': 'log_operation-log',
+        'path': '/log/operation-log',
+        'component': 'view.log_operation-log',
+        'redirect': None,
+        'permission': 'sys:operation-log:list',
+        'meta_icon': None,
+        'meta_hidden': False,
+        'meta_affix': False,
+        'meta_breadcrumb': True,
+        'status': True,
+        'type': 'MENU',
+        'sort': 2,
+        'is_system': True,
+        'meta_href': None,
+        'meta_keep_alive': False,
+        'deleted_at': None,
+        'created_at': datetime(2026, 5, 23, 16, 32, 7),
+        'updated_at': datetime(2026, 5, 24, 14, 6, 24),
+    },
+    # --- demo 子菜单 ---
+    {
+        'id': 2907499345027075,
+        'parent_id': 2907499345027072,
+        'name': 'demo_upload',
+        'path': '/demo/upload',
+        'component': 'view.demo_upload',
+        'redirect': None,
+        'permission': None,
+        'meta_icon': 'mdi:upload',
+        'meta_hidden': False,
+        'meta_affix': False,
+        'meta_breadcrumb': True,
+        'status': True,
+        'type': 'MENU',
+        'sort': 5,
+        'is_system': True,
+        'meta_href': None,
+        'meta_keep_alive': False,
+        'deleted_at': None,
+        'created_at': datetime(2026, 5, 28, 23, 8, 7),
+        'updated_at': datetime(2026, 5, 29, 15, 13, 41),
+    },
+    {
+        'id': 2907499345027081,
+        'parent_id': 2907499345027072,
+        'name': 'demo_dict',
+        'path': '/demo/dict',
+        'component': 'view.demo_dict',
+        'redirect': None,
+        'permission': None,
+        'meta_icon': 'mdi:book-alphabet',
+        'meta_hidden': False,
+        'meta_affix': False,
+        'meta_breadcrumb': True,
+        'status': True,
+        'type': 'MENU',
+        'sort': 4,
+        'is_system': True,
+        'meta_href': None,
+        'meta_keep_alive': False,
+        'deleted_at': None,
+        'created_at': datetime(2026, 6, 4, 16, 0, 0),
+        'updated_at': None,
+    },
+    # --- scheduler 子菜单 ---
     {
         'id': 2942406615113728,
         'parent_id': 2942406613671936,
@@ -595,28 +744,7 @@ SYS_MENU_DATA = [
         'created_at': datetime(2026, 6, 4, 15, 32, 41),
         'updated_at': None,
     },
-    {
-        'id': 2907499345027075,
-        'parent_id': 2907499345027072,
-        'name': 'demo_upload',
-        'path': '/demo/upload',
-        'component': 'view.demo_upload',
-        'redirect': None,
-        'permission': None,
-        'meta_icon': 'mdi:upload',
-        'meta_hidden': False,
-        'meta_affix': False,
-        'meta_breadcrumb': True,
-        'status': True,
-        'type': 'MENU',
-        'sort': 5,
-        'is_system': True,
-        'meta_href': None,
-        'meta_keep_alive': False,
-        'deleted_at': None,
-        'created_at': datetime(2026, 5, 28, 23, 8, 7),
-        'updated_at': datetime(2026, 5, 29, 15, 13, 41),
-    },
+    # --- BUTTON 权限 ---
     {
         'id': 2907499345027074,
         'parent_id': 2907499345027073,
@@ -728,7 +856,7 @@ SYS_MENU_DATA = [
         'updated_at': None,
     },
     {
-        'id': 2880160334749697,
+        'id': 2880160334684162,
         'parent_id': 2874692539129862,
         'name': 'manage_role_list',
         'path': None,
@@ -772,7 +900,7 @@ SYS_MENU_DATA = [
         'updated_at': None,
     },
     {
-        'id': 2880160334749698,
+        'id': 2880160334749697,
         'parent_id': 2874692539129862,
         'name': 'manage_role_edit',
         'path': None,
@@ -786,6 +914,28 @@ SYS_MENU_DATA = [
         'status': True,
         'type': 'BUTTON',
         'sort': 3,
+        'is_system': True,
+        'meta_href': None,
+        'meta_keep_alive': False,
+        'deleted_at': None,
+        'created_at': datetime(2026, 5, 24, 15, 42, 39),
+        'updated_at': None,
+    },
+    {
+        'id': 2880160334749698,
+        'parent_id': 2874692539129862,
+        'name': 'manage_role_delete',
+        'path': None,
+        'component': None,
+        'redirect': None,
+        'permission': 'sys:role:delete',
+        'meta_icon': None,
+        'meta_hidden': True,
+        'meta_affix': False,
+        'meta_breadcrumb': True,
+        'status': True,
+        'type': 'BUTTON',
+        'sort': 4,
         'is_system': True,
         'meta_href': None,
         'meta_keep_alive': False,
@@ -1453,6 +1603,7 @@ SYS_MENU_DATA = [
         'created_at': datetime(2026, 5, 28, 23, 8, 7),
         'updated_at': None,
     },
+    # --- scheduler buttons ---
     {
         'id': 2942406615965696,
         'parent_id': 2942406615113728,
@@ -1631,102 +1782,35 @@ SYS_MENU_DATA = [
     },
 ]
 
-SYS_ROLE_DATA = [
-    {
-        'id': 2874692539129900,
-        'name': '管理员',
-        'status': True,
-        'is_default': True,
-        'is_system': True,
-        'sort': 0,
-        'deleted_at': None,
-        'created_at': datetime(2026, 1, 1, 0, 0, 0),
-        'updated_at': None,
-        'desc': '系统默认管理员角色，拥有所有菜单权限',
-    },
-]
+# ================================================================
+# sys_role_menu (管理员 -> 所有菜单)
+# ================================================================
 
-SYS_USER_DATA = [
-    {
-        'id': 2250298479026176,
-        'username': 'admin',
-        'password': '$2b$12$MPXWjrezSywnujoarubtJuKUJKBXugHEEqobTbIWtbJRXAp2aaTUy',
-        'nickname': '超级管理员',
-        'email': 'admin@example.com',
-        'phone': '13800138000',
-        'avatar': '',
-        'last_login_at': None,
-        'last_login_ip': '',
-        'status': True,
-        'is_superuser': True,
-        'deleted_at': None,
-        'created_at': datetime(2026, 2, 2, 10, 0, 29),
-        'updated_at': datetime(2026, 2, 2, 10, 0, 29),
-        'last_tenant_id': None,
-    },
-]
-
-SYS_DICT_ITEM_DATA = [
-    {
-        'id': 7,
-        'dict_id': 8,
-        'value': '1',
-        'label': '男',
-        'description': None,
-        'ext_info': None,
-        'status': True,
-        'sort': 1,
-        'deleted_at': None,
-        'created_at': datetime(2026, 6, 3, 21, 52, 40),
-        'updated_at': datetime(2026, 6, 3, 21, 52, 40),
-    },
-    {
-        'id': 8,
-        'dict_id': 8,
-        'value': '2',
-        'label': '女',
-        'description': None,
-        'ext_info': None,
-        'status': True,
-        'sort': 2,
-        'deleted_at': None,
-        'created_at': datetime(2026, 6, 3, 21, 52, 40),
-        'updated_at': datetime(2026, 6, 3, 21, 52, 40),
-    },
-    {
-        'id': 9,
-        'dict_id': 8,
-        'value': '0',
-        'label': '未知',
-        'description': None,
-        'ext_info': None,
-        'status': True,
-        'sort': 3,
-        'deleted_at': None,
-        'created_at': datetime(2026, 6, 3, 21, 52, 40),
-        'updated_at': datetime(2026, 6, 3, 21, 52, 40),
-    },
-]
-
-_ALL_MENU_IDS = [
-    row['id'] for row in SYS_MENU_DATA
-]
+_ALL_MENU_IDS = [row['id'] for row in SYS_MENU_DATA]
 
 SYS_ROLE_MENU_DATA = [
     {
-        'role_id': 2874692539129900,
+        'role_id': ADMIN_ROLE_ID,
         'menu_id': mid,
         'permission': 'read',
     }
     for mid in _ALL_MENU_IDS
 ]
 
+# ================================================================
+# sys_user_role (admin -> 管理员)
+# ================================================================
+
 SYS_USER_ROLE_DATA = [
     {
-        'user_id': 2250298479026176,
-        'role_id': 2874692539129900,
+        'user_id': ADMIN_USER_ID,
+        'role_id': ADMIN_ROLE_ID,
     },
 ]
+
+# ================================================================
+# sys_scheduled_task
+# ================================================================
 
 SYS_SCHEDULED_TASK_DATA = [
     {
@@ -1837,6 +1921,45 @@ def upgrade() -> None:
 
     op.bulk_insert(
         sa.table(
+            'sys_user',
+            sa.column('id', sa.BigInteger),
+            sa.column('username', sa.String),
+            sa.column('password', sa.String),
+            sa.column('nickname', sa.String),
+            sa.column('email', sa.String),
+            sa.column('phone', sa.String),
+            sa.column('avatar', sa.String),
+            sa.column('last_login_at', sa.DateTime),
+            sa.column('last_login_ip', sa.String),
+            sa.column('status', sa.Boolean),
+            sa.column('is_superuser', sa.Boolean),
+            sa.column('deleted_at', sa.DateTime),
+            sa.column('created_at', sa.DateTime),
+            sa.column('updated_at', sa.DateTime),
+            sa.column('last_tenant_id', sa.BigInteger),
+        ),
+        SYS_USER_DATA,
+    )
+
+    op.bulk_insert(
+        sa.table(
+            'sys_role',
+            sa.column('id', sa.BigInteger),
+            sa.column('name', sa.String),
+            sa.column('status', sa.Boolean),
+            sa.column('is_default', sa.Boolean),
+            sa.column('is_system', sa.Boolean),
+            sa.column('sort', sa.Integer),
+            sa.column('deleted_at', sa.DateTime),
+            sa.column('created_at', sa.DateTime),
+            sa.column('updated_at', sa.DateTime),
+            sa.column('desc', sa.String),
+        ),
+        SYS_ROLE_DATA,
+    )
+
+    op.bulk_insert(
+        sa.table(
             'sys_menu',
             sa.column('id', sa.BigInteger),
             sa.column('parent_id', sa.BigInteger),
@@ -1860,45 +1983,6 @@ def upgrade() -> None:
             sa.column('updated_at', sa.DateTime),
         ),
         SYS_MENU_DATA,
-    )
-
-    op.bulk_insert(
-        sa.table(
-            'sys_role',
-            sa.column('id', sa.BigInteger),
-            sa.column('name', sa.String),
-            sa.column('status', sa.Boolean),
-            sa.column('is_default', sa.Boolean),
-            sa.column('is_system', sa.Boolean),
-            sa.column('sort', sa.Integer),
-            sa.column('deleted_at', sa.DateTime),
-            sa.column('created_at', sa.DateTime),
-            sa.column('updated_at', sa.DateTime),
-            sa.column('desc', sa.String),
-        ),
-        SYS_ROLE_DATA,
-    )
-
-    op.bulk_insert(
-        sa.table(
-            'sys_user',
-            sa.column('id', sa.BigInteger),
-            sa.column('username', sa.String),
-            sa.column('password', sa.String),
-            sa.column('nickname', sa.String),
-            sa.column('email', sa.String),
-            sa.column('phone', sa.String),
-            sa.column('avatar', sa.String),
-            sa.column('last_login_at', sa.DateTime),
-            sa.column('last_login_ip', sa.String),
-            sa.column('status', sa.Boolean),
-            sa.column('is_superuser', sa.Boolean),
-            sa.column('deleted_at', sa.DateTime),
-            sa.column('created_at', sa.DateTime),
-            sa.column('updated_at', sa.DateTime),
-            sa.column('last_tenant_id', sa.BigInteger),
-        ),
-        SYS_USER_DATA,
     )
 
     op.bulk_insert(
