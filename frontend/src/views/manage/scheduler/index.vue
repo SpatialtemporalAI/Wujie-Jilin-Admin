@@ -1,6 +1,7 @@
 <script setup lang="tsx">
-import { reactive, ref } from 'vue';
+import { reactive } from 'vue';
 import { NButton, NCard, NDataTable, NPopconfirm, NTag, useMessage } from 'naive-ui';
+import { useRouter } from 'vue-router';
 import {
   fetchGetScheduledTaskList,
   fetchDeleteScheduledTask,
@@ -16,11 +17,10 @@ import { booleanToEnableStatus } from '@/utils/status';
 import { $t } from '@/locales';
 import TaskSearch from './modules/task-search.vue';
 import TaskOperateDrawer from './modules/task-operate-drawer.vue';
-import TaskLogDrawer from './modules/task-log-drawer.vue';
-import TaskExecutionLog from './modules/task-execution-log.vue';
 
 defineOptions({ name: 'SchedulerPage' });
 
+const router = useRouter();
 const appStore = useAppStore();
 const message = useMessage();
 const { hasAuth } = useAuth();
@@ -191,7 +191,7 @@ const {
                 }}
               </NPopconfirm>
             )}
-            <NButton type="primary" text size="small" onClick={() => handleViewLogs(row.id)}>
+            <NButton type="primary" text size="small" onClick={() => handleViewLogs(row.name)}>
               {$t('page.manage.scheduler.viewLogs')}
             </NButton>
             {hasAuth('sys:scheduler:delete') && row.is_system !== '1' && (
@@ -224,14 +224,6 @@ const {
   onDeleted
 } = useTableOperate(data, 'id', getData);
 
-// 日志抽屉
-const logDrawerVisible = ref(false);
-const logTaskId = ref<number | null>(null);
-
-// 执行日志页面
-const executionLogVisible = ref(false);
-const executionLogTaskId = ref<number | null>(null);
-
 async function handleToggleStatus(taskId: number, currentStatus: string) {
   const newStatus = currentStatus !== '1';
   const { error } = await fetchToggleScheduledTaskStatus(taskId, newStatus);
@@ -249,9 +241,8 @@ async function handleManualTrigger(taskId: number) {
   }
 }
 
-function handleViewLogs(taskId: number) {
-  executionLogTaskId.value = taskId;
-  executionLogVisible.value = true;
+function handleViewLogs(taskName: string) {
+  router.push({ path: '/manage/scheduler-log', query: { task_name: taskName } });
 }
 
 async function handleDelete(taskId: number) {
@@ -331,17 +322,5 @@ async function handleSyncRegistry() {
       :row-data="editingData"
       @submitted="getData"
     />
-    <TaskLogDrawer
-      v-model:visible="logDrawerVisible"
-      :log-id="null"
-    />
-    <NDrawer v-model:show="executionLogVisible" :width="900">
-      <NDrawerContent :title="$t('page.manage.schedulerLog.title')" :native-scrollbar="false" closable>
-        <TaskExecutionLog :task-id="executionLogTaskId" />
-        <template #footer>
-          <NButton @click="executionLogVisible = false">{{ $t('common.close') }}</NButton>
-        </template>
-      </NDrawerContent>
-    </NDrawer>
   </div>
 </template>

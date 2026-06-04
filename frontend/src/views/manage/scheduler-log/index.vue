@@ -1,5 +1,6 @@
 <script setup lang="tsx">
-import { reactive, ref } from 'vue';
+import { onMounted, reactive, ref } from 'vue';
+import { useRoute } from 'vue-router';
 import { NButton, NCard, NDataTable, NPopconfirm, NTag, useMessage } from 'naive-ui';
 import { fetchGetTaskLogList, fetchBatchDeleteTaskLog, fetchClearTaskLog } from '@/service/api';
 import { useAppStore } from '@/store/modules/app';
@@ -11,6 +12,7 @@ import TaskLogDrawer from '../scheduler/modules/task-log-drawer.vue';
 
 defineOptions({ name: 'SchedulerLogPage' });
 
+const route = useRoute();
 const appStore = useAppStore();
 const message = useMessage();
 const { hasAuth } = useAuth();
@@ -141,6 +143,13 @@ function handleViewDetail(logId: number) {
   detailLogId.value = logId;
   detailVisible.value = true;
 }
+
+onMounted(() => {
+  if (route.query.task_name) {
+    searchParams.task_name = route.query.task_name as string;
+    getData();
+  }
+});
 
 async function handleBatchDelete() {
   const { error } = await fetchBatchDeleteTaskLog(checkedRowKeys.value as number[]);
