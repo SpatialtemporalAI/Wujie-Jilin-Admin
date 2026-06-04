@@ -26,7 +26,6 @@ from database.models.base import Base
 # Import all models to ensure they are registered with Base
 from database.models.sys.user import SysUser
 from database.models.sys.role import SysRole
-from database.models.sys.permission import SysPermission
 from database.models.sys.menu import SysMenu
 from database.models.sys.config import SysConfig
 from database.models.sys.dict import SysDict, SysDictItem
