@@ -12,6 +12,7 @@ from fastapi import FastAPI
 from core.config import settings  # 导入配置
 from logging import getLogger
 from database.db_manager import init_pool, close_pool
+from database.manager.async_manager import get_session
 from core.redis import RedisPool
 
 from modules.app.router import router as app_app_router

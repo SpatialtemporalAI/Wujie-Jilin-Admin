@@ -191,3 +191,11 @@ class SchedulerService:
         manager = SchedulerManager.get_instance()
         if manager.running:
             await manager.add_task_job(task)
+            await db.flush()
+        else:
+            # 调度器未运行时，用 trigger 计算下次执行时间
+            task.next_run_at = manager.preview_cron(task.cron_expression, count=1)[0] if task.status else None
+            if task.next_run_at:
+                from datetime import datetime
+                task.next_run_at = datetime.fromisoformat(task.next_run_at)
+            await db.flush()

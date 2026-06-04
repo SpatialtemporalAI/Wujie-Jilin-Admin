@@ -75,10 +75,12 @@ class SchedulerManager:
         for task in tasks:
             try:
                 self._add_job_from_task(task)
+                task.next_run_at = self._get_job_next_run(str(task.id))
                 synced += 1
             except Exception as exc:
                 logger.error("同步任务 %s 失败: %s", task.task_key, exc)
 
+        await db.commit()
         logger.info("已同步 %d/%d 个定时任务", synced, len(tasks))
 
     async def add_task_job(self, task: SysScheduledTask):
@@ -87,6 +89,9 @@ class SchedulerManager:
         self._scheduler.remove_job(job_id)
         if task.status:
             self._add_job_from_task(task)
+            task.next_run_at = self._get_job_next_run(job_id)
+        else:
+            task.next_run_at = None
 
     def remove_task_job(self, task_id: int):
         """从调度器移除任务"""
@@ -155,10 +160,20 @@ class SchedulerManager:
             logger.error("构建触发器失败 %s: %s", task.task_key, exc)
         return None
 
+    def _get_job_next_run(self, job_id: str) -> datetime | None:
+        """获取 job 的下次执行时间"""
+        try:
+            job = self._scheduler.get_job(job_id)
+            if job and job.next_run_time:
+                return job.next_run_time
+        except Exception:
+            pass
+        return None
+
 
 async def _scheduled_job_wrapper(task_id: int):
     """APScheduler 调用的 job 入口"""
-    from database.db_manager import get_session
+    from database.manager.async_manager import get_session
 
     async for db in get_session():
         try:
@@ -178,6 +193,11 @@ async def _scheduled_job_wrapper(task_id: int):
                 return
 
             await _execute_task(task, func, db, triggered_by="scheduler")
+
+            # 执行完毕后更新下次执行时间
+            manager = SchedulerManager.get_instance()
+            task.next_run_at = manager._get_job_next_run(str(task_id))
+            await db.commit()
         except Exception as exc:
             logger.error("定时任务执行异常 task_id=%s: %s", task_id, exc)
             await db.rollback()
