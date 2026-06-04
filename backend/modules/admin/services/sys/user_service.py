@@ -14,6 +14,7 @@ from typing import List, Optional, Tuple
 from database.models.sys.user import SysUser
 from database.models.sys.role import SysRole
 from core.exception.errors import NotFoundError, ConflictError, ForbiddenError
+from core.utils.memory_cache import get_memory_cache, CacheNamespace
 from core.security.oauth.jwt import JWTAuthManager
 from core.security.password import PasswordHasher
 from modules.admin.schemas.sys.user import (
@@ -27,6 +28,10 @@ logger = logging.getLogger(__name__)
 
 # Super admin username that cannot be modified/deleted
 SUPER_ADMIN_USERNAME = "admin"
+
+
+def _invalidate_user_cache(user_id: int) -> None:
+    get_memory_cache().delete(CacheNamespace.USER, str(user_id))
 
 
 class UserService:
@@ -362,6 +367,10 @@ class UserService:
         await db.commit()
         await db.refresh(user)
 
+        _invalidate_user_cache(user_id)
+        if "role_ids" in user_update.model_dump(exclude_unset=True):
+            get_memory_cache().invalidate(CacheNamespace.PERMISSION)
+
         logger.info("更新用户信息成功，用户ID: %s", user_id)
         return user
 
@@ -398,6 +407,9 @@ class UserService:
 
         await db.commit()
         await db.refresh(user)
+
+        _invalidate_user_cache(user_id)
+        get_memory_cache().invalidate(CacheNamespace.PERMISSION)
 
         logger.info("为用户分配角色成功，用户ID: %s", user_id)
         return user
@@ -436,6 +448,7 @@ class UserService:
         await db.delete(user)
         await db.commit()
 
+        _invalidate_user_cache(user_id)
         logger.info("删除用户成功，用户ID: %s", user_id)
         return True
 
@@ -514,6 +527,7 @@ class UserService:
 
         await db.commit()
 
+        _invalidate_user_cache(user_id)
         logger.info("修改用户密码成功，用户ID: %s", user_id)
         return True
 
@@ -549,6 +563,9 @@ class UserService:
             update_count += 1
 
         await db.commit()
+
+        for user in users:
+            _invalidate_user_cache(user.id)
 
         logger.info("批量更新用户状态成功，共更新 %s 个用户", update_count)
         return update_count

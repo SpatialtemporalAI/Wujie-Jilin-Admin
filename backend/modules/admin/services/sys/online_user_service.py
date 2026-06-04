@@ -15,7 +15,7 @@ from sqlalchemy import select
 
 from core.config import settings
 from core.redis import get_redis_util
-from core.utils.session_cache import get_session_cache
+from core.utils.memory_cache import get_memory_cache, CacheNamespace
 from core.security.oauth.user_manager import build_session_key
 from database.models.sys.user import SysUser
 from app.models.common.page import ResponsePageDataModel
@@ -157,7 +157,7 @@ class OnlineUserService:
         """踢除指定会话"""
         redis_key = build_session_key(role, user_id, tenant_id=tenant_id)
         result = await get_redis_util().hdel(redis_key, session_id)
-        get_session_cache().invalidate(redis_key, session_id)
+        get_memory_cache().delete(CacheNamespace.SESSION, f"{redis_key}:{session_id}")
         return result > 0
 
     @staticmethod
@@ -167,7 +167,7 @@ class OnlineUserService:
         all_fields = await get_redis_util().hgetall(redis_key)
         count = len(all_fields) if all_fields else 0
         await get_redis_util().delete(redis_key)
-        get_session_cache().invalidate(redis_key)
+        get_memory_cache().delete_by_prefix(CacheNamespace.SESSION, f"{redis_key}:")
         return count
 
     @staticmethod
@@ -181,7 +181,7 @@ class OnlineUserService:
             all_fields = await redis_util.hgetall(key)
             count += len(all_fields) if all_fields else 0
             await redis_util.delete(key)
-            get_session_cache().invalidate(key)
+            get_memory_cache().delete_by_prefix(CacheNamespace.SESSION, f"{key}:")
         return count
 
     @staticmethod

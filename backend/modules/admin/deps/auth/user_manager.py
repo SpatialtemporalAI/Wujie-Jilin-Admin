@@ -18,7 +18,7 @@ from core.security.password import PasswordHasher
 from core.redis import get_redis_util
 from core.middleware.share_middleware import request_ctx
 from core.utils.ip_utils import get_real_client_ip
-from core.utils.session_cache import get_session_cache
+from core.utils.memory_cache import get_memory_cache, CacheNamespace
 from datetime import datetime, timedelta, timezone
 
 
@@ -167,10 +167,15 @@ class UserManager(BaseUserManager):
                 return cached
 
         user_id, _ = await self.verify_token_session(token)
-        user = await self.session.execute(select(SysUser).where(SysUser.id == user_id))
-        user = user.scalars().first()
+        _cache = get_memory_cache()
+        user = _cache.get(CacheNamespace.USER, str(user_id))
         if user is None:
-            raise TokenError()
+            user = await self.session.execute(select(SysUser).where(SysUser.id == user_id))
+            user = user.scalars().first()
+            if user is None:
+                raise TokenError()
+            self.session.expunge(user)
+            _cache.set(CacheNamespace.USER, str(user_id), user, ttl=30)
 
         if request is not None:
             request.state._cached_current_user = user
@@ -212,13 +217,15 @@ class UserManager(BaseUserManager):
         # 新格式 key
         cache_key = build_session_key(user_role, int(user_id), tenant_id=tenant_id)
         # 检查内存缓存
-        cached_valid = get_session_cache().get(cache_key, session_id)
+        _cache = get_memory_cache()
+        session_ck = f"{cache_key}:{session_id}"
+        cached_valid = _cache.get(CacheNamespace.SESSION, session_ck)
         if cached_valid is not None:
             return int(user_id), session_id
         # 从 Redis 验证（Hash 结构）
         local_session_meta = await get_redis_util().hget(cache_key, session_id)
         if local_session_meta is not None:
-            get_session_cache().set(cache_key, session_id)
+            _cache.set(CacheNamespace.SESSION, session_ck, True, ttl=5)
             return int(user_id), session_id
 
         # Fallback: 兼容旧格式 key（JWT_SESSION:admin123），过渡期使用
@@ -226,14 +233,14 @@ class UserManager(BaseUserManager):
         if legacy_key != cache_key:
             legacy_meta = await get_redis_util().hget(legacy_key, session_id)
             if legacy_meta is not None:
-                get_session_cache().set(legacy_key, session_id)
+                _cache.set(CacheNamespace.SESSION, f"{legacy_key}:{session_id}", True, ttl=5)
                 return int(user_id), session_id
             try:
                 legacy_sid = await get_redis_util().get(legacy_key)
             except Exception:
                 legacy_sid = None
             if legacy_sid is not None and legacy_sid == session_id:
-                get_session_cache().set(legacy_key, session_id)
+                _cache.set(CacheNamespace.SESSION, f"{legacy_key}:{session_id}", True, ttl=5)
                 return int(user_id), session_id
 
         raise TokenError()

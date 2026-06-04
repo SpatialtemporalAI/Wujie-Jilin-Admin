@@ -16,6 +16,7 @@ from database.models.sys.menu import SysMenu, MenuType
 from database.models.sys.user import SysUser
 from database.models.sys.role import SysRole
 from core.exception.errors import NotFoundError, ConflictError, ForbiddenError
+from core.utils.memory_cache import get_memory_cache, CacheNamespace
 from modules.admin.schemas.sys.menu import (
     SysMenuCreate,
     SysMenuUpdate,
@@ -324,6 +325,7 @@ class MenuService:
 
         db.add(menu)
         await db.commit()
+        get_memory_cache().invalidate(CacheNamespace.PERMISSION)
         await db.refresh(menu)
 
         logger.info("创建菜单成功，菜单ID: %s", menu.id)
@@ -417,6 +419,7 @@ class MenuService:
                 setattr(menu, key, value)
 
         await db.commit()
+        get_memory_cache().invalidate(CacheNamespace.PERMISSION)
         await db.refresh(menu)
 
         logger.info("更新菜单信息成功，菜单ID: %s", menu_id)
@@ -449,6 +452,7 @@ class MenuService:
 
         await db.delete(menu)
         await db.commit()
+        get_memory_cache().invalidate(CacheNamespace.PERMISSION)
 
         logger.info("删除菜单成功，菜单ID: %s", menu_id)
         return True
@@ -492,6 +496,7 @@ class MenuService:
                 logger.warning("不能修改系统内置菜单状态，菜单ID: %s", menu.id)
 
         await db.commit()
+        get_memory_cache().invalidate(CacheNamespace.PERMISSION)
 
         logger.info("批量更新菜单状态成功，共更新 %s 个菜单", update_count)
         return update_count

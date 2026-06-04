@@ -14,6 +14,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from database.models.sys.ip_blacklist import SysIpBlacklist
 from core.exception.errors import ConflictError, NotFoundError, RequestError
+from core.utils.memory_cache import get_memory_cache, CacheNamespace
 from core.security.rate_limit import (
     add_ip_to_redis_blacklist,
     remove_ip_from_redis_blacklist,
@@ -110,6 +111,7 @@ class IpBlacklistService:
         except Exception as exc:
             logger.error("写入 Redis 黑名单失败 ip=%s err=%s", ip, exc)
 
+        get_memory_cache().delete(CacheNamespace.IP_BLACKLIST, ip)
         return entry
 
     @staticmethod
@@ -137,6 +139,7 @@ class IpBlacklistService:
         for entry in entries:
             try:
                 await remove_ip_from_redis_blacklist(entry.ip)
+                get_memory_cache().delete(CacheNamespace.IP_BLACKLIST, entry.ip)
             except Exception as exc:
                 logger.error("移除 Redis 黑名单失败 ip=%s err=%s", entry.ip, exc)
         return len(entries)
@@ -227,4 +230,5 @@ class IpBlacklistService:
             await add_ip_to_redis_blacklist(ip, ttl_seconds=ttl_seconds, reason=reason)
         except Exception as exc:
             logger.error("auto_block 写入 Redis 失败 ip=%s err=%s", ip, exc)
+        get_memory_cache().delete(CacheNamespace.IP_BLACKLIST, ip)
         return entry

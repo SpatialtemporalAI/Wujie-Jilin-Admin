@@ -17,6 +17,7 @@ from core.config import settings
 from core.redis import RedisPool
 from core.security.rate_limit_config import RateLimitConfigProvider
 from core.utils.ip_utils import get_real_client_ip
+from core.utils.memory_cache import get_memory_cache, CacheNamespace
 
 logger = getLogger(__name__)
 
@@ -82,9 +83,15 @@ async def is_ip_blocked(ip: str) -> bool:
     """检查 IP 是否在 Redis 黑名单中。"""
     if not ip:
         return False
+    _cache = get_memory_cache()
+    cached = _cache.get(CacheNamespace.IP_BLACKLIST, ip)
+    if cached is not None:
+        return cached
     redis_client = RedisPool.get_client()
     exists = await redis_client.exists(_blacklist_key(ip))
-    return bool(exists)
+    result = bool(exists)
+    _cache.set(CacheNamespace.IP_BLACKLIST, ip, result, ttl=10)
+    return result
 
 
 async def add_ip_to_redis_blacklist(

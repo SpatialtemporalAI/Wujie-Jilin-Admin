@@ -67,10 +67,12 @@ async def notification_websocket(
 
             # 验证 session 有效性
             cache_key = settings.JWT.SESSION_PREFIX + user_role + str(_user_id)
-            from core.utils.session_cache import get_session_cache
+            from core.utils.memory_cache import get_memory_cache, CacheNamespace
             from core.redis import get_redis_util
 
-            cached_valid = get_session_cache().get(cache_key, session_id)
+            _cache = get_memory_cache()
+            session_ck = f"{cache_key}:{session_id}"
+            cached_valid = _cache.get(CacheNamespace.SESSION, session_ck)
             if cached_valid is None:
                 local_session_meta = await get_redis_util().hget(cache_key, session_id)
                 if local_session_meta is None:
@@ -81,9 +83,9 @@ async def notification_websocket(
                     if local_session_id is None or local_session_id != session_id:
                         await websocket.close(code=1008, reason="Session expired")
                         return
-                    get_session_cache().set(cache_key, session_id)
+                    _cache.set(CacheNamespace.SESSION, session_ck, True, ttl=5)
                 else:
-                    get_session_cache().set(cache_key, session_id)
+                    _cache.set(CacheNamespace.SESSION, session_ck, True, ttl=5)
 
             user_id = int(_user_id)
 

@@ -13,7 +13,7 @@ from core.response import CustomErrorCode
 from logging import getLogger
 from core.security.oauth.jwt import JWTAuthManager, Token, oauth2_scheme
 from core.redis import get_redis_util
-from core.utils.session_cache import get_session_cache
+from core.utils.memory_cache import get_memory_cache, CacheNamespace
 from fastapi.concurrency import run_in_threadpool
 from core.utils.session_utils import generate_session_id
 from core.security.oauth.user_manager import base_user_manager
@@ -279,13 +279,15 @@ class UserManager:
             raise TokenError()
         cache_key = settings.JWT.SESSION_PREFIX + user_role + str(user_id)
         # 检查内存缓存
-        cached_valid = get_session_cache().get(cache_key, session_id)
+        _cache = get_memory_cache()
+        session_ck = f"{cache_key}:{session_id}"
+        cached_valid = _cache.get(CacheNamespace.SESSION, session_ck)
         if cached_valid is not None:
             return int(user_id), session_id
         # 从 Redis 验证（Hash 结构）
         local_session_meta = await get_redis_util().hget(cache_key, session_id)
         if local_session_meta is not None:
-            get_session_cache().set(cache_key, session_id)
+            _cache.set(CacheNamespace.SESSION, session_ck, True, ttl=5)
             return int(user_id), session_id
         # Fallback: 兼容旧格式（纯字符串存储），过渡期使用
         try:
@@ -293,7 +295,7 @@ class UserManager:
         except Exception:
             local_session_id = None
         if local_session_id is not None and local_session_id == session_id:
-            get_session_cache().set(cache_key, session_id)
+            _cache.set(CacheNamespace.SESSION, session_ck, True, ttl=5)
             return int(user_id), session_id
         raise TokenError()
 
@@ -313,7 +315,7 @@ class UserManager:
         退出登录，删除指定会话
         """
         cache_key = settings.JWT.SESSION_PREFIX + "app" + str(user_id)
-        get_session_cache().invalidate(cache_key, session_id)
+        get_memory_cache().delete(CacheNamespace.SESSION, f"{cache_key}:{session_id}")
         await get_redis_util().hdel(cache_key, session_id)
 
     async def current_user(self, token: str) -> AppUser:

@@ -56,7 +56,6 @@ async def get_paginated_results(
     返回:
         分页查询结果对象
     """
-    import asyncio
     # 保留未分页的 query 用于 count
     base_query = query
     # 分页
@@ -64,11 +63,9 @@ async def get_paginated_results(
     data_query = query.offset(offset).limit(page_params.page_size)
     count_query = base_query.with_only_columns(func.count()).order_by(None)
 
-    # 并行执行数据查询和总数统计
-    data_result, count_result = await asyncio.gather(
-        db.execute(data_query),
-        db.execute(count_query),
-    )
+    # 顺序执行：AsyncSession 不支持同一连接上的并发操作
+    data_result = await db.execute(data_query)
+    count_result = await db.execute(count_query)
     items = data_result.unique().scalars().all()
     total = count_result.scalar() or 0
 

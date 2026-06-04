@@ -15,6 +15,7 @@ from database.models.sys.user import SysUser
 from database.models.sys.role import SysRole
 from database.models.sys.menu import SysMenu, MenuType
 from core.exception.errors import ForbiddenError
+from core.utils.memory_cache import get_memory_cache, CacheNamespace
 from modules.admin.deps.auth.user_manager import current_user
 
 
@@ -36,6 +37,14 @@ def require_permission(permission_code: str):
         if user.is_superuser:
             return user
 
+        _cache = get_memory_cache()
+        cache_key = f"{user.id}:{permission_code}"
+        cached_result = _cache.get(CacheNamespace.PERMISSION, cache_key)
+        if cached_result is not None:
+            if not cached_result:
+                raise ForbiddenError(msg=f"没有操作权限: {permission_code}")
+            return user
+
         # 查询用户角色关联的按钮权限中是否包含指定权限码
         stmt = (
             select(SysMenu.permission)
@@ -51,7 +60,9 @@ def require_permission(permission_code: str):
             .limit(1)
         )
         result = await db.execute(stmt)
-        if result.scalar_one_or_none() is None:
+        has_permission = result.scalar_one_or_none() is not None
+        _cache.set(CacheNamespace.PERMISSION, cache_key, has_permission, ttl=60)
+        if not has_permission:
             raise ForbiddenError(msg=f"没有操作权限: {permission_code}")
 
         return user

@@ -14,6 +14,7 @@ from typing import List, Optional, Tuple
 from database.models.sys.role import SysRole
 from database.models.sys.menu import SysMenu
 from core.exception.errors import NotFoundError, ConflictError, ForbiddenError
+from core.utils.memory_cache import get_memory_cache, CacheNamespace
 from modules.admin.schemas.sys.role import (
     SysRoleCreate,
     SysRoleUpdate,
@@ -21,6 +22,10 @@ from modules.admin.schemas.sys.role import (
 )
 
 logger = logging.getLogger(__name__)
+
+
+def _invalidate_permission_cache() -> None:
+    get_memory_cache().invalidate(CacheNamespace.PERMISSION)
 
 
 class RoleService:
@@ -173,9 +178,8 @@ class RoleService:
 
         db.add(role)
         await db.commit()
+        _invalidate_permission_cache()
         await db.refresh(role)
-
-        # 重新查询角色，预加载菜单关系，避免异步加载问题
         result = await db.execute(
             select(SysRole)
             .options(joinedload(SysRole.menus))
@@ -246,6 +250,7 @@ class RoleService:
                 setattr(role, key, value)
 
         await db.commit()
+        _invalidate_permission_cache()
 
         # 重新查询以预加载菜单关系
         result = await db.execute(
@@ -317,6 +322,7 @@ class RoleService:
             role.menus = []
 
         await db.commit()
+        _invalidate_permission_cache()
 
         # 重新查询以预加载菜单关系
         result = await db.execute(
@@ -363,6 +369,7 @@ class RoleService:
 
         await db.delete(role)
         await db.commit()
+        _invalidate_permission_cache()
 
         logger.info("删除角色成功，角色ID: %s", role_id)
         return True
@@ -432,6 +439,7 @@ class RoleService:
                 logger.warning("不能修改系统内置角色状态，角色ID: %s", role.id)
 
         await db.commit()
+        _invalidate_permission_cache()
 
         logger.info("批量更新角色状态成功，共 %s 个角色被更新", update_count)
         return update_count
