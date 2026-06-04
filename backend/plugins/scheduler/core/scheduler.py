@@ -117,11 +117,13 @@ class SchedulerManager:
             trigger = CronTrigger.from_crontab(cron_expression)
             now = datetime.now(timezone.utc)
             times = []
+            prev = None
             for _ in range(count):
-                next_time = trigger.get_next_fire_time(None, now)
+                next_time = trigger.get_next_fire_time(prev, now)
                 if next_time is None:
                     break
                 times.append(next_time.isoformat())
+                prev = next_time
                 now = next_time
             return times
         except Exception as exc:
