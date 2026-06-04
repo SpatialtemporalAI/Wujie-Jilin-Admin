@@ -191,7 +191,7 @@ const {
                 }}
               </NPopconfirm>
             )}
-            <NButton type="default" text size="small" onClick={() => handleViewLogs(row.id)}>
+            <NButton type="primary" text size="small" onClick={() => handleViewLogs(row.id)}>
               {$t('page.manage.scheduler.viewLogs')}
             </NButton>
             {hasAuth('sys:scheduler:delete') && row.is_system !== '1' && (
@@ -335,7 +335,7 @@ async function handleSyncRegistry() {
       v-model:visible="logDrawerVisible"
       :log-id="null"
     />
-    <NDrawer v-model:show="executionLogVisible" :width="900" display-directive="show">
+    <NDrawer v-model:show="executionLogVisible" :width="900">
       <NDrawerContent :title="$t('page.manage.schedulerLog.title')" :native-scrollbar="false" closable>
         <TaskExecutionLog :task-id="executionLogTaskId" />
         <template #footer>
