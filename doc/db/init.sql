@@ -2,12 +2,12 @@
 -- PostgreSQL database dump
 --
 
-\restrict 5TegBbo8IvQ9AfNR0V0g123o3jribUMmNzpKhRbR8mAiuTf7aQQhZjWJjWg9sgQ
+\restrict 2Ddq8fvoxTShBajd4MIEFIYgr9rLw30KseerRdIA4pLxurd9c5j7nqZfRcuqDZa
 
 -- Dumped from database version 17.6
 -- Dumped by pg_dump version 18.0
 
--- Started on 2026-06-04 20:43:59
+-- Started on 2026-06-04 21:26:33
 
 SET statement_timeout = 0;
 SET lock_timeout = 0;
@@ -3484,7 +3484,7 @@ ALTER TABLE ONLY public.sys_user ALTER COLUMN id SET DEFAULT nextval('public.sys
 --
 
 COPY public.alembic_version (version_num) FROM stdin;
-0003
+0002
 \.
 
 
@@ -4515,11 +4515,11 @@ ALTER TABLE ONLY public.sys_user_role
     ADD CONSTRAINT sys_user_role_user_id_fkey FOREIGN KEY (user_id) REFERENCES public.sys_user(id) ON DELETE CASCADE;
 
 
--- Completed on 2026-06-04 20:44:00
+-- Completed on 2026-06-04 21:26:33
 
 --
 -- PostgreSQL database dump complete
 --
 
-\unrestrict 5TegBbo8IvQ9AfNR0V0g123o3jribUMmNzpKhRbR8mAiuTf7aQQhZjWJjWg9sgQ
+\unrestrict 2Ddq8fvoxTShBajd4MIEFIYgr9rLw30KseerRdIA4pLxurd9c5j7nqZfRcuqDZa
 
