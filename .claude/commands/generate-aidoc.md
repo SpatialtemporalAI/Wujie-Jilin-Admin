@@ -10,21 +10,51 @@ description: 分析项目代码库并生成 AGENTS.MD + aiDoc/ 分层约束文�
 
 ---
 
+## 运行模式
+
+根据 `$ARGUMENTS` 解析运行模式：
+
+| 参数 | 行为 |
+|---|---|
+| （空） | 全量生成：探测项目并生成/覆盖所有 aiDoc 文件 |
+| `--incremental` | 增量更新：读取已有 aiDoc，对比代码变化，只更新过时的文件 |
+| `--scope backend` | 只重新生成 `modules/backend-layer-rules.md`、`examples/backend/` 等后端相关文件 |
+| `--scope frontend` | 只重新生成 `frontend-backend/frontend-rules.md`、`frontend-backend/frontend-utils.md`、`examples/frontend/` |
+| `--scope relations` | 只重新生成 `relations/` 下 3 个文件 |
+| `--scope memory` | 只重新生成 `memory/` 下文件 |
+| `--dry-run` | 只输出阶段 1 探测结果和生成计划，不写文件 |
+
+**增量更新规则**（`--incremental` 时适用）：
+- 每个文件头部维护 `<!-- last-updated: YYYY-MM-DD -->` 注释
+- 先读取已有 aiDoc 文件，再用 `git diff` 判断自上次更新以来哪些代码目录有变化
+- 只重新生成受影响范围内的文件
+- 用户手动调优过的内容（非 AI 生成标记）应尽量保留
+
+---
+
 ## 执行流程
 
 严格按照以下三个阶段执行。每个阶段完成后向用户简要报告进度。
 
 ### 阶段 1：项目探测
 
-使用 Explore agent 和 Glob/Grep 工具，收集以下信息：
+#### 1.1 优先使用 graphify
 
-#### 1.1 项目结构探测
+若 `graphify-out/graph.json` 存在：
+- 运行 `graphify query "project architecture and module structure"` 获取整体架构
+- 运行 `graphify query "frontend-backend module mapping"` 获取前后端模块映射
+- 运行 `graphify path "backend" "frontend"` 获取跨栈关系
+- 用 graphify 结果替代部分手工 Glob/Grep 探索，跳过 1.2–1.3 中已被 graphify 覆盖的探测项
+
+若 graphify 不存在，继续下面的手工探测。
+
+#### 1.2 项目结构探测
 
 - 列出根目录下的顶层目录和关键文件
 - 识别是否有前端/后端/全栈目录分离
 - 扫描每个顶层目录的子目录结构（深度 2-3 层即可）
 
-#### 1.2 技术栈识别
+#### 1.3 技术栈识别
 
 读取以下文件（如存在）提取技术栈信息：
 
@@ -36,7 +66,29 @@ description: 分析项目代码库并生成 AGENTS.MD + aiDoc/ 分层约束文�
 - `.nvmrc` / `.node-version` / `.python-version` → 运行时版本
 - `Dockerfile` / `docker-compose.yml` → 部署配置
 
-#### 1.3 代码模式探测
+**框架识别策略**：优先从依赖列表自动匹配，而非硬编码特征。扫描 `dependencies`/`devDependencies`/`install_requires` 中是否包含以下关键词：
+
+| 依赖关键词 | 框架/技术 |
+|---|---|
+| `fastapi`, `uvicorn` | FastAPI |
+| `django` | Django |
+| `flask` | Flask |
+| `hono` | Hono |
+| `fastify` | Fastify |
+| `express`, `koa`, `nestjs` | Node.js 后端 |
+| `gin`, `gorm`, `fiber` | Go (Gin/Fiber) |
+| `spring-boot` | Spring Boot |
+| `actix`, `axum` | Rust (Actix/Axum) |
+| `vue`, `vite` + `.vue` | Vue |
+| `react`, `.jsx`/`.tsx` | React |
+| `angular` | Angular |
+| `svelte`, `@sveltejs` | Svelte/SvelteKit |
+| `next` | Next.js |
+| `nuxt` | Nuxt |
+
+未覆盖的框架通过依赖名 + 目录结构综合判断。
+
+#### 1.4 代码模式探测
 
 - 后端：读取 2-3 个典型的 endpoint/controller、service、model 文件，识别分层模式
 - 前端：读取 2-3 个典型的页面组件、API 封装、状态管理文件，识别组件模式
@@ -44,31 +96,19 @@ description: 分析项目代码库并生成 AGENTS.MD + aiDoc/ 分层约束文�
 - 识别认证/鉴权机制
 - 识别数据库访问模式（ORM 原生/sqlalchemy/typeorm/gorm/prisma 等）
 
-#### 1.4 项目类型判定
+**示例模块选择策略**（优先级从高到低）：
+
+1. CRUD 完整的模块：同时拥有 model + schema + service + endpoint
+2. 最近修改的模块：更能反映当前代码风格（用 `git log --format="" --name-only` 辅助判断）
+3. 特性丰富的模块：包含分页、认证、关联关系等特性，覆盖面更广
+
+#### 1.5 项目类型判定
 
 根据探测结果，判定项目类型：
 
 - **fullstack**：同时有前后端代码
 - **backend-only**：仅有后端代码
 - **frontend-only**：仅有前端代码
-
-#### 1.5 框架识别
-
-根据文件特征识别具体框架：
-
-| 特征文件/依赖 | 框架 |
-|---|---|
-| `fastapi`, `uvicorn` | FastAPI |
-| `django`, `settings.py` | Django |
-| `flask` | Flask |
-| `gin`, `gorm` | Gin (Go) |
-| `spring-boot`, `@RestController` | Spring Boot |
-| `express`, `koa`, `nestjs` | Node.js 后端 |
-| `vue`, `@vue/cli`, `vite` + `.vue` 文件 | Vue |
-| `react`, `@react`, `.jsx`/`.tsx` | React |
-| `angular`, `@angular/core`, `.component.ts` | Angular |
-| `next`, `next.config` | Next.js |
-| `nuxt`, `nuxt.config` | Nuxt |
 
 ### 阶段 2：按模板生成文件
 
@@ -79,7 +119,23 @@ description: 分析项目代码库并生成 AGENTS.MD + aiDoc/ 分层约束文�
 - **frontend-only**：跳过 `modules/backend-layer-rules.md`、`examples/backend/`，`boundary.md` 改为 API 消费契约
 - **fullstack**：生成全部文件
 
-每生成一个文件后，向用户简要报告。
+**并行生成**：同一并行组内的文件可以同时生成，组间按顺序执行。
+
+| 顺序 | 并行组 | 文件 |
+|---|---|---|
+| 1 | — | `AGENTS.MD` |
+| 2 | — | `aiDoc/README.md` |
+| 3 | A | `aiDoc/relations/repo-profile.md`、`aiDoc/relations/development-workflow.md`、`aiDoc/relations/system-map.md` |
+| 4 | B | `aiDoc/modules/backend-layer-rules.md`、`aiDoc/modules/module-development.md` |
+| 5 | C | `aiDoc/frontend-backend/boundary.md`、`aiDoc/frontend-backend/frontend-rules.md`、`aiDoc/frontend-backend/frontend-utils.md` |
+| 6 | D | `aiDoc/examples/backend/*.md`（model、schema、service、endpoint、router） |
+| 7 | D | `aiDoc/examples/frontend/*.md`（api、view、utils-usage） |
+| 8 | E | `aiDoc/examples/README.md` |
+| 9 | F | `aiDoc/memory/` 全部文件 |
+
+`--scope` 模式下只生成对应范围的并行组。
+
+每生成一个并行组后，向用户简要报告进度。
 
 ---
 
@@ -90,6 +146,7 @@ description: 分析项目代码库并生成 AGENTS.MD + aiDoc/ 分层约束文�
 内容要求：
 
 ```markdown
+<!-- last-updated: YYYY-MM-DD -->
 # AGENTS.MD
 
 ## 目的
@@ -147,6 +204,7 @@ description: 分析项目代码库并生成 AGENTS.MD + aiDoc/ 分层约束文�
 内容要求：
 
 ```markdown
+<!-- last-updated: YYYY-MM-DD -->
 # aiDoc
 
 aiDoc/ 是本仓库的结构化 AI 文档层，用于把长期有效的项目上下文从工具目录中抽离出来，并按主题拆分成可维护的约束文档。
@@ -339,6 +397,7 @@ aiDoc/examples/ 是讲解型示例层，告诉 AI 每一层应该按什么标准
 每个示例文件格式：
 
 ```markdown
+<!-- last-updated: YYYY-MM-DD -->
 # [层名]示例
 
 ## 用途
@@ -472,18 +531,34 @@ aiDoc/memory/ 是 AI 的记忆层。
 
 ### 阶段 3：适配层处理
 
-检查以下目录是否存在规则文件：
+#### 3.1 扫描所有工具目录
 
+不仅检查已知目录，还要扫描根目录下所有以 `.` 开头且可能包含规则文件的目录：
+
+**已知工具目录**：
 - `.trae/rules/project_rules.md`
 - `.cursor/rules/`
 - `.claude/` 下的 CLAUDE.md 或规则文件
 - `.codex/` 下的规则文件
+- `.github/copilot-instructions.md`
+- `.windsurf/`
+- `.aider/`
 
-如果存在且内容较长（超过 50 行），将其改写为薄适配层：
+**自动扫描**：
+```bash
+# 列出所有 .开头的目录中可能包含规则/指令的文件
+ls -d .*/  # 检查是否有遗漏的 AI 工具目录
+```
+
+对于任何包含规则/instructions 类文件的 `.` 目录，都应处理为适配层。
+
+#### 3.2 改写为薄适配层
+
+如果规则文件内容较长（超过 50 行），将其改写为薄适配层：
 
 ```markdown
 ---
-tool: [trae/cursor/claude/codex]
+tool: [trae/cursor/claude/codex/copilot/windsurf/aider]
 role: compatibility-adapter
 canonical_source: /AGENTS.MD
 structured_context: /aiDoc
@@ -521,15 +596,34 @@ structured_context: /aiDoc
 5. **中文为主**：代码标识符和技术术语保持英文
 6. **内容来源真实**：所有技术细节必须来自实际代码探测，不可凭空编造
 
-## 生成完成后的自检
+## 生成完成后的验证
 
-生成全部文件后，执行以下检查：
+生成全部文件后，**实际执行**以下验证步骤：
 
-1. AGENTS.MD 中的 AI 文档索引是否覆盖所有已生成的 aiDoc/ 文件
-2. 所有文件中引用的路径是否与项目实际结构一致
-3. 示例文件中引用的"真实参考文件"是否存在
-4. 前后端契约（boundary.md）中的数据结构是否与实际代码一致
-5. 是否有遗漏的配置项或命令未记录
-6. 适配层文件是否已处理
+### 自动验证（必须执行）
 
-向用户输出检查结果和生成文件清单。
+1. **索引完整性**：读取生成的 AGENTS.MD，提取 AI 文档索引中列出的所有路径，用 Glob 逐一确认文件存在
+2. **路径真实性**：用 Grep 搜索所有生成文件中引用的代码路径（如 `app/models/xxx.py`），确认引用的文件存在
+3. **符号一致性**：用 Grep 搜索 boundary.md 中引用的类名/函数名（如 `PageRequest`、`ResponseModel`），确认在代码中确实存在
+4. **示例参考有效性**：提取所有示例文件的"真实参考文件"路径，用 Glob 确认存在
+
+### 报告输出
+
+向用户输出以下内容：
+
+```
+## 验证结果
+
+### 通过
+- [x] 索引完整性：N/N 文件已索引
+- [x] 路径真实性：N/N 路径有效
+- [x] 符号一致性：N/N 符号已验证
+- [x] 示例参考：N/N 参考文件存在
+
+### 失败（如有）
+- [ ] 路径不存在：xxx
+- [ ] 符号未找到：xxx
+
+## 生成文件清单
+[列出所有生成/更新的文件及大小]
+```
