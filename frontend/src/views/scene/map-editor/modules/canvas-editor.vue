@@ -34,8 +34,9 @@ let gridGroup: Group | null = null;
 let backgroundImgObj: FabricImage | null = null;
 let elementMap: Map<string, any> = new Map();
 let resizeObserver: ResizeObserver | null = null;
+let lastGridSpacingM = 0;
 
-const MIN_ZOOM = 0.1;
+const MIN_ZOOM = 1;
 const MAX_ZOOM = 5;
 let currentZoom = 1;
 let isPanning = false;
@@ -57,7 +58,7 @@ const canvasHeight = ref(600);
 const containerWidth = ref(0);
 const containerHeight = ref(0);
 
-const sliderZoomValue = ref(50);
+const sliderZoomValue = ref(0);
 
 const sliderThemeOverrides = {
   fillColor: '#3b82f6',
@@ -259,22 +260,47 @@ function updateSelection() {
   fabricCanvas.renderAll();
 }
 
+function formatDist(m: number): string {
+  if (m === 0) return '0';
+  if (Number.isInteger(m)) return `${m}`;
+  if (m >= 1) return m.toFixed(1);
+  if (m >= 0.1) return m.toFixed(1);
+  return m.toFixed(2);
+}
+
 function renderGrid() {
   if (!fabricCanvas) return;
-  if (gridGroup) fabricCanvas.remove(gridGroup);
 
-  const allObjects: any[] = [];
   const w = canvasWidth.value;
   const h = canvasHeight.value;
-  const spacingPx = props.gridSpacing / props.resolution;
+  const zoom = currentZoom;
+  const res = props.resolution;
+
+  // Adaptive grid: target ~80px visual spacing on screen
+  const targetVisualPx = 80;
+  const rawSpacingM = (targetVisualPx / zoom) * res;
+
+  // Pick the nearest "nice" real-world distance
+  const niceSteps = [0.05, 0.1, 0.2, 0.5, 1, 2, 5, 10, 20, 50, 100, 200, 500, 1000];
+  const spacingM = niceSteps.find(s => s >= rawSpacingM) || rawSpacingM;
+
+  // Skip re-render if spacing hasn't changed
+  if (Math.abs(spacingM - lastGridSpacingM) < 1e-6 && gridGroup) return;
+  lastGridSpacingM = spacingM;
+
+  if (gridGroup) fabricCanvas.remove(gridGroup);
+
+  const spacingPx = spacingM / res;
   if (spacingPx <= 0) return;
 
-  // Extend grid to cover the full visible area (beyond map content)
-  const extend = 5000;
-  const startX = Math.floor(-extend / spacingPx) * spacingPx;
-  const startY = Math.floor(-extend / spacingPx) * spacingPx;
-  const endX = w + extend;
-  const endY = h + extend;
+  const allObjects: any[] = [];
+
+  // Grid extends beyond image to fill visible area
+  const margin = Math.max(w, h, 1000);
+  const startX = Math.floor(-margin / spacingPx) * spacingPx;
+  const startY = Math.floor(-margin / spacingPx) * spacingPx;
+  const endX = Math.ceil((w + margin) / spacingPx) * spacingPx;
+  const endY = Math.ceil((h + margin) / spacingPx) * spacingPx;
 
   // Vertical lines
   for (let x = startX; x <= endX; x += spacingPx) {
@@ -297,45 +323,37 @@ function renderGrid() {
     }));
   }
 
-  // Distance labels: show every N-th grid line to avoid clutter
-  const labelInterval = Math.max(1, Math.ceil(80 / spacingPx));
+  // Labels: font size adjusts inversely with zoom so it stays readable on screen
+  const fontSize = Math.max(8, Math.min(14, 11 / zoom));
   const labelStyle = {
-    fontSize: 10,
-    fill: 'rgba(0,0,0,0.35)',
+    fontSize,
+    fill: 'rgba(0,0,0,0.4)',
     fontFamily: 'sans-serif',
     selectable: false,
     evented: false,
   };
 
   // X-axis labels along bottom edge (0 at left, increasing right)
-  for (let i = 0; i * spacingPx <= endX; i++) {
-    if (i % labelInterval !== 0) continue;
-    const x = i * spacingPx;
-    const meters = Math.round(x * props.resolution * 10) / 10;
-    if (x >= startX && x <= endX) {
-      allObjects.push(new Text(`${meters}`, {
-        ...labelStyle,
-        left: x,
-        top: h + 4,
-        originX: 'center',
-        originY: 'top',
-      }));
-    }
+  for (let x = 0; x <= endX; x += spacingPx) {
+    const meters = Math.round(x * res * 1000) / 1000;
+    allObjects.push(new Text(formatDist(meters), {
+      ...labelStyle,
+      left: x,
+      top: h + 4,
+      originX: 'center',
+      originY: 'top',
+    }));
   }
   // Y-axis labels along left edge (0 at bottom, increasing upward)
-  for (let i = 0; i * spacingPx <= endY; i++) {
-    if (i % labelInterval !== 0) continue;
-    const y = i * spacingPx;
-    const meters = Math.round((h - y) * props.resolution * 10) / 10;
-    if (y >= startY && y <= endY) {
-      allObjects.push(new Text(`${meters}`, {
-        ...labelStyle,
-        left: -4,
-        top: y,
-        originX: 'right',
-        originY: 'center',
-      }));
-    }
+  for (let y = 0; y <= endY; y += spacingPx) {
+    const meters = Math.round((h - y) * res * 1000) / 1000;
+    allObjects.push(new Text(formatDist(meters), {
+      ...labelStyle,
+      left: -4,
+      top: y,
+      originX: 'right',
+      originY: 'center',
+    }));
   }
 
   gridGroup = new Group(allObjects, { selectable: false, evented: false, objectCaching: false });
@@ -529,6 +547,7 @@ function handleMouseWheel(opt: any) {
   fabricCanvas.zoomToPoint(new Point(evt.clientX, evt.clientY), zoom);
   currentZoom = zoom;
   sliderZoomValue.value = sliderValueToZoom(zoom);
+  renderGrid();
   emit('zoom-change', zoom);
 }
 
@@ -657,6 +676,7 @@ function zoomIn() {
   fabricCanvas.zoomToPoint(center, newZoom);
   currentZoom = newZoom;
   sliderZoomValue.value = sliderValueToZoom(newZoom);
+  renderGrid();
   emit('zoom-change', newZoom);
 }
 
@@ -667,22 +687,17 @@ function zoomOut() {
   fabricCanvas.zoomToPoint(center, newZoom);
   currentZoom = newZoom;
   sliderZoomValue.value = sliderValueToZoom(newZoom);
+  renderGrid();
   emit('zoom-change', newZoom);
 }
 
 function zoomReset() {
   if (!fabricCanvas) return;
-  const cw = containerWidth.value;
-  const ch = containerHeight.value;
-  const scaleX = cw / canvasWidth.value;
-  const scaleY = ch / canvasHeight.value;
-  const fitZoom = Math.min(scaleX, scaleY, 1);
-  const offsetX = (cw - canvasWidth.value * fitZoom) / 2;
-  const offsetY = (ch - canvasHeight.value * fitZoom) / 2;
-  fabricCanvas.setViewportTransform([fitZoom, 0, 0, fitZoom, Math.max(0, offsetX), Math.max(0, offsetY)]);
-  currentZoom = fitZoom;
-  sliderZoomValue.value = sliderValueToZoom(fitZoom);
-  emit('zoom-change', fitZoom);
+  currentZoom = 1;
+  sliderZoomValue.value = sliderValueToZoom(1);
+  centerContent();
+  renderGrid();
+  emit('zoom-change', 1);
 }
 
 function handleSliderZoom(val: number) {
@@ -691,6 +706,7 @@ function handleSliderZoom(val: number) {
   const center = fabricCanvas.getCenterPoint();
   fabricCanvas.zoomToPoint(center, newZoom);
   currentZoom = newZoom;
+  renderGrid();
   emit('zoom-change', newZoom);
 }
 
