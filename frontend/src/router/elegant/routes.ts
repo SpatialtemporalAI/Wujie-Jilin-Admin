@@ -315,6 +315,15 @@ export const generatedRoutes: GeneratedRoute[] = [
           title: 'scene_map',
           i18nKey: 'route.scene_map'
         }
+      },
+      {
+        name: 'scene_map-editor',
+        path: '/scene/map-editor',
+        component: 'view.scene_map-editor',
+        meta: {
+          title: 'scene_map-editor',
+          i18nKey: 'route.scene_map-editor'
+        }
       }
     ]
   }

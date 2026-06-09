@@ -46,6 +46,7 @@ from database.models.business.scene_group import SceneGroup
 from database.models.business.scene_map import SceneMap
 from database.models.business.scene_map_annotation import SceneMapAnnotation
 from database.models.business.scene_map_object import SceneMapObject
+from database.models.business.scene_map_path import SceneMapPath
 from modules.scheduler.models.scheduled_task import SysScheduledTask
 from modules.scheduler.models.task_log import SysScheduledTaskLog
 

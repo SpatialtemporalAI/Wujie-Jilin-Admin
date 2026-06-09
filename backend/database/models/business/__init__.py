@@ -9,6 +9,7 @@ from .scene_group import SceneGroup
 from .scene_map import SceneMap
 from .scene_map_annotation import SceneMapAnnotation
 from .scene_map_object import SceneMapObject
+from .scene_map_path import SceneMapPath
 
 __all__ = [
     "AppUser",
@@ -20,4 +21,5 @@ __all__ = [
     "SceneMap",
     "SceneMapAnnotation",
     "SceneMapObject",
+    "SceneMapPath",
 ]

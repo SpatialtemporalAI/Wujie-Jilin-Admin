@@ -184,3 +184,59 @@ export function fetchDeleteMapObject(mapId: number, id: number) {
     method: 'delete'
   });
 }
+
+/** ==================== 场景地图路径 API ==================== */
+
+/** get map paths */
+export function fetchGetMapPaths(mapId: number, params?: Api.Scene.CommonSearchParams) {
+  return request<Api.Scene.SceneMapPath[]>({
+    url: `/scene/map/${mapId}/path/list`,
+    method: 'get',
+    params
+  });
+}
+
+/** create map path */
+export function fetchCreateMapPath(data: Api.Scene.SceneMapPathCreate) {
+  return request<Api.Scene.SceneMapPath>({
+    url: `/scene/map/${data.map_id}/path/add`,
+    method: 'post',
+    data
+  });
+}
+
+/** update map path */
+export function fetchUpdateMapPath(mapId: number, id: number, data: Api.Scene.SceneMapPathUpdate) {
+  return request<Api.Scene.SceneMapPath>({
+    url: `/scene/map/${mapId}/path/${id}`,
+    method: 'put',
+    data
+  });
+}
+
+/** delete map path */
+export function fetchDeleteMapPath(mapId: number, id: number) {
+  return request<void>({
+    url: `/scene/map/${mapId}/path/${id}`,
+    method: 'delete'
+  });
+}
+
+/** ==================== 地图编辑器 API ==================== */
+
+/** get editor full data */
+export function fetchGetEditorMapData(mapId: number) {
+  return request<Api.Scene.EditorMapData>({
+    url: `/scene/map/${mapId}/editor/data`,
+    method: 'get'
+  });
+}
+
+/** save editor data */
+export function fetchSaveEditorData(mapId: number, data: Api.Scene.EditorSaveRequest) {
+  return request<void>({
+    url: `/scene/map/${mapId}/editor/save`,
+    method: 'post',
+    data
+  });
+}

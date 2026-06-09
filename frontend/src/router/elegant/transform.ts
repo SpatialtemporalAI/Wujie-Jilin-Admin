@@ -193,7 +193,8 @@ const routeMap: RouteMap = {
   "robot_model": "/robot/model",
   "scene": "/scene",
   "scene_group": "/scene/group",
-  "scene_map": "/scene/map"
+  "scene_map": "/scene/map",
+  "scene_map-editor": "/scene/map-editor"
 };
 
 /**

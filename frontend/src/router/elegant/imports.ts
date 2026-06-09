@@ -40,5 +40,6 @@ export const views: Record<LastLevelRouteKey, RouteComponent | (() => Promise<Ro
   robot_manage: () => import("@/views/robot/manage/index.vue"),
   robot_model: () => import("@/views/robot/model/index.vue"),
   scene_group: () => import("@/views/scene/group/index.vue"),
+  "scene_map-editor": () => import("@/views/scene/map-editor/index.vue"),
   scene_map: () => import("@/views/scene/map/index.vue"),
 };

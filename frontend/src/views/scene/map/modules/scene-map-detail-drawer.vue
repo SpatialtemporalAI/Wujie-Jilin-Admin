@@ -8,6 +8,7 @@ import {
   fetchGetMapObjects,
   fetchDeleteMapObject
 } from '@/service/api';
+import { getFilePreviewUrl } from '@/service/api/file';
 import SceneMapAnnotationModal from './scene-map-annotation-modal.vue';
 import SceneMapObjectModal from './scene-map-object-modal.vue';
 
@@ -263,7 +264,7 @@ function closeDrawer() {
       <!-- 地图图片预览 -->
       <div v-if="mapData?.image_id" class="mb-16px">
         <NImage
-          :src="`/uploads/${mapData.image_id}`"
+          :src="getFilePreviewUrl(mapData.image_id)"
           :alt="mapData.name"
           object-fit="contain"
           class="max-h-400px"

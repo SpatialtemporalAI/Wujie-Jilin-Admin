@@ -262,7 +262,8 @@ const local: App.I18n.Schema = {
     robot_manage: '机器人管理',
     scene: '场景管理',
     scene_group: '场景分组',
-    scene_map: '场景地图'
+    scene_map: '场景地图',
+    'scene_map-editor': '地图编辑器'
   },
   page: {
     login: {

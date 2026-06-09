@@ -266,7 +266,8 @@ const local: App.I18n.Schema = {
     robot_manage: 'Robot Management',
     scene: 'Scene',
     scene_group: 'Scene Group',
-    scene_map: 'Scene Map'
+    scene_map: 'Scene Map',
+    'scene_map-editor': 'Map Editor'
   },
   page: {
     login: {

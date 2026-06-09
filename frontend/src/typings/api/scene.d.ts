@@ -54,6 +54,8 @@ declare namespace Api {
       width: number | null;
       /** map height */
       height: number | null;
+      /** resolution (meters/pixel) */
+      resolution: number;
     }>;
 
     /** scene map search params */
@@ -71,6 +73,7 @@ declare namespace Api {
       image_id?: number | null;
       width?: number | null;
       height?: number | null;
+      resolution?: number;
       status?: Common.EnableStatus;
     };
 
@@ -143,5 +146,82 @@ declare namespace Api {
 
     /** scene map object update */
     type SceneMapObjectUpdate = Partial<Omit<SceneMapObjectCreate, 'map_id'>>;
+
+    /** scene map path */
+    type SceneMapPath = Common.CommonRecord<{
+      /** map id */
+      map_id: number;
+      /** start annotation id */
+      start_annotation_id: number;
+      /** end annotation id */
+      end_annotation_id: number;
+      /** path name */
+      name: string | null;
+      /** intermediate points (JSON) */
+      points: string | null;
+    }>;
+
+    /** scene map path list */
+    type SceneMapPathList = Common.PaginatingQueryRecord<SceneMapPath>;
+
+    /** scene map path create */
+    type SceneMapPathCreate = {
+      map_id: number;
+      start_annotation_id: number;
+      end_annotation_id: number;
+      name?: string | null;
+      points?: string | null;
+    };
+
+    /** scene map path update */
+    type SceneMapPathUpdate = Partial<Omit<SceneMapPathCreate, 'map_id'>>;
+
+    /** editor annotation item */
+    type EditorAnnotationItem = {
+      id?: number | null;
+      x: number;
+      y: number;
+      name: string;
+      angle: number;
+      type: string;
+    };
+
+    /** editor path item */
+    type EditorPathItem = {
+      id?: number | null;
+      start_annotation_id: number;
+      end_annotation_id: number;
+      name?: string | null;
+      points?: string | null;
+    };
+
+    /** editor object item */
+    type EditorObjectItem = {
+      id?: number | null;
+      type: string;
+      x: number;
+      y: number;
+      width: number;
+      height: number;
+      points?: string | null;
+    };
+
+    /** editor save request */
+    type EditorSaveRequest = {
+      annotations: EditorAnnotationItem[];
+      paths: EditorPathItem[];
+      objects: EditorObjectItem[];
+      deleted_annotation_ids: number[];
+      deleted_path_ids: number[];
+      deleted_object_ids: number[];
+    };
+
+    /** editor map data */
+    type EditorMapData = {
+      map: SceneMap;
+      annotations: SceneMapAnnotation[];
+      paths: SceneMapPath[];
+      objects: SceneMapObject[];
+    };
   }
 }

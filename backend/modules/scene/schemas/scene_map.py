@@ -28,6 +28,7 @@ class SceneMapCreate(BaseReqEntity):
     image_id: int | None = Field(None, description="地图图片文件ID")
     width: int | None = Field(None, description="地图宽度(像素)")
     height: int | None = Field(None, description="地图高度(像素)")
+    resolution: float = Field(0.2, description="分辨率(米/像素)")
     status: bool = Field(True, description="状态：True-启用，False-禁用")
 
 
@@ -39,6 +40,7 @@ class SceneMapUpdate(BaseReqEntity):
     image_id: int | None = Field(None, description="地图图片文件ID")
     width: int | None = Field(None, description="地图宽度(像素)")
     height: int | None = Field(None, description="地图高度(像素)")
+    resolution: float | None = Field(None, description="分辨率(米/像素)")
     status: BoolField = Field(None, description="状态")
 
 
@@ -53,6 +55,7 @@ class SceneMapResponseData(BaseRespEntity):
     image_id: int | None
     width: int | None
     height: int | None
+    resolution: float
     status: bool
     group_name: str | None = Field(None, description="分组名称")
     created_at: datetime | None
