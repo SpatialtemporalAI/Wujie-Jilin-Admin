@@ -31,7 +31,9 @@ const canvasContainer = ref<HTMLDivElement>();
 const canvasEl = ref<HTMLCanvasElement>();
 let fabricCanvas: Canvas | null = null;
 let gridGroup: Group | null = null;
+let backgroundImgObj: FabricImage | null = null;
 let elementMap: Map<string, any> = new Map();
+let resizeObserver: ResizeObserver | null = null;
 
 const MIN_ZOOM = 0.1;
 const MAX_ZOOM = 5;
@@ -52,6 +54,31 @@ let drawingState: {
 
 const canvasWidth = ref(800);
 const canvasHeight = ref(600);
+const containerWidth = ref(0);
+const containerHeight = ref(0);
+
+const sliderZoomValue = ref(50);
+
+const sliderThemeOverrides = {
+  fillColor: '#3b82f6',
+  fillColorHover: '#2563eb',
+  dotColor: '#3b82f6',
+  dotBorder: '2px solid #fff',
+  dotBoxShadow: '0 1px 4px rgba(0,0,0,0.2)',
+};
+
+function zoomToSliderValue(sliderVal: number): number {
+  const minLog = Math.log(MIN_ZOOM);
+  const maxLog = Math.log(MAX_ZOOM);
+  const scale = (maxLog - minLog) / 100;
+  return Math.exp(minLog + scale * sliderVal);
+}
+
+function sliderValueToZoom(zoom: number): number {
+  const minLog = Math.log(MIN_ZOOM);
+  const maxLog = Math.log(MAX_ZOOM);
+  return Math.round(((Math.log(zoom) - minLog) / (maxLog - minLog)) * 100);
+}
 
 function setElementData(obj: any, data: { type: string; id: number }) {
   (obj as any)._elementData = data;
@@ -63,6 +90,23 @@ function getElementData(obj: any): { type: string; id: number } | null {
 
 function getElementKey(type: string, id: number) {
   return `${type}-${id}`;
+}
+
+function centerContent() {
+  if (!fabricCanvas) return;
+  const cw = containerWidth.value;
+  const ch = containerHeight.value;
+  if (cw === 0 || ch === 0) return;
+
+  const zoom = fabricCanvas.getZoom();
+  const offsetX = (cw - canvasWidth.value * zoom) / 2;
+  const offsetY = (ch - canvasHeight.value * zoom) / 2;
+
+  fabricCanvas.setViewportTransform([
+    zoom, 0, 0, zoom,
+    Math.max(0, offsetX),
+    Math.max(0, offsetY),
+  ]);
 }
 
 function renderElements() {
@@ -219,21 +263,84 @@ function renderGrid() {
   if (!fabricCanvas) return;
   if (gridGroup) fabricCanvas.remove(gridGroup);
 
-  const allLines: Line[] = [];
+  const allObjects: any[] = [];
   const w = canvasWidth.value;
   const h = canvasHeight.value;
   const spacingPx = props.gridSpacing / props.resolution;
   if (spacingPx <= 0) return;
 
-  for (let x = spacingPx; x < w; x += spacingPx) {
-    allLines.push(new Line([x, 0, x, h], { stroke: 'rgba(0,0,0,0.08)', strokeWidth: 1, selectable: false, evented: false }));
+  // Extend grid to cover the full visible area (beyond map content)
+  const extend = 5000;
+  const startX = Math.floor(-extend / spacingPx) * spacingPx;
+  const startY = Math.floor(-extend / spacingPx) * spacingPx;
+  const endX = w + extend;
+  const endY = h + extend;
+
+  // Vertical lines
+  for (let x = startX; x <= endX; x += spacingPx) {
+    const inBounds = x >= 0 && x <= w;
+    allObjects.push(new Line([x, startY, x, endY], {
+      stroke: inBounds ? 'rgba(0,0,0,0.08)' : 'rgba(0,0,0,0.03)',
+      strokeWidth: 1,
+      selectable: false,
+      evented: false,
+    }));
   }
-  for (let y = spacingPx; y < h; y += spacingPx) {
-    allLines.push(new Line([0, y, w, y], { stroke: 'rgba(0,0,0,0.08)', strokeWidth: 1, selectable: false, evented: false }));
+  // Horizontal lines
+  for (let y = startY; y <= endY; y += spacingPx) {
+    const inBounds = y >= 0 && y <= h;
+    allObjects.push(new Line([startX, y, endX, y], {
+      stroke: inBounds ? 'rgba(0,0,0,0.08)' : 'rgba(0,0,0,0.03)',
+      strokeWidth: 1,
+      selectable: false,
+      evented: false,
+    }));
   }
 
-  gridGroup = new Group(allLines, { selectable: false, evented: false, objectCaching: false });
+  // Distance labels: show every N-th grid line to avoid clutter
+  const labelInterval = Math.max(1, Math.ceil(80 / spacingPx));
+  const labelStyle = {
+    fontSize: 10,
+    fill: 'rgba(0,0,0,0.35)',
+    fontFamily: 'sans-serif',
+    selectable: false,
+    evented: false,
+  };
+
+  // X-axis labels along bottom edge (0 at left, increasing right)
+  for (let i = 0; i * spacingPx <= endX; i++) {
+    if (i % labelInterval !== 0) continue;
+    const x = i * spacingPx;
+    const meters = Math.round(x * props.resolution * 10) / 10;
+    if (x >= startX && x <= endX) {
+      allObjects.push(new Text(`${meters}`, {
+        ...labelStyle,
+        left: x,
+        top: h + 4,
+        originX: 'center',
+        originY: 'top',
+      }));
+    }
+  }
+  // Y-axis labels along left edge (0 at bottom, increasing upward)
+  for (let i = 0; i * spacingPx <= endY; i++) {
+    if (i % labelInterval !== 0) continue;
+    const y = i * spacingPx;
+    const meters = Math.round((h - y) * props.resolution * 10) / 10;
+    if (y >= startY && y <= endY) {
+      allObjects.push(new Text(`${meters}`, {
+        ...labelStyle,
+        left: -4,
+        top: y,
+        originX: 'right',
+        originY: 'center',
+      }));
+    }
+  }
+
+  gridGroup = new Group(allObjects, { selectable: false, evented: false, objectCaching: false });
   fabricCanvas.add(gridGroup);
+  // Grid at the very bottom; image and other elements render above it
   fabricCanvas.sendObjectToBack(gridGroup);
   fabricCanvas.renderAll();
 }
@@ -245,10 +352,28 @@ async function loadBackgroundImage(imageId: number) {
     const img = await FabricImage.fromURL(url, { crossOrigin: 'anonymous' });
     canvasWidth.value = img.width || 800;
     canvasHeight.value = img.height || 600;
-    fabricCanvas.setDimensions({ width: canvasWidth.value, height: canvasHeight.value });
-    fabricCanvas.backgroundImage = img;
+
+    // Remove previous background image object
+    if (backgroundImgObj) {
+      fabricCanvas.remove(backgroundImgObj);
+      backgroundImgObj = null;
+    }
+
+    // Add image as a regular object at (0,0) so it follows viewport transform
+    img.set({ left: 0, top: 0, originX: 'left', originY: 'top', selectable: false, evented: false });
+    backgroundImgObj = img;
+    fabricCanvas.add(img);
+
+    fabricCanvas.setDimensions({
+      width: containerWidth.value || canvasContainer.value!.clientWidth,
+      height: containerHeight.value || canvasContainer.value!.clientHeight,
+    });
+    centerContent();
     fabricCanvas.renderAll();
     renderGrid();
+    currentZoom = 1;
+    sliderZoomValue.value = sliderValueToZoom(1);
+    emit('zoom-change', 1);
   } catch (e) {
     console.error('Failed to load background image:', e);
   }
@@ -311,7 +436,7 @@ function handleMouseMove(opt: any) {
   if (!fabricCanvas) return;
   const evt = opt.e as MouseEvent;
   const pointer = fabricCanvas.getViewportPoint(evt);
-  emit('cursor-position', pointer.x * props.resolution, pointer.y * props.resolution);
+  emit('cursor-position', pointer.x * props.resolution, (canvasHeight.value - pointer.y) * props.resolution);
 
   if (isPanning) {
     const dx = evt.clientX - lastPanPoint.x;
@@ -403,6 +528,7 @@ function handleMouseWheel(opt: any) {
   zoom = Math.min(Math.max(zoom, MIN_ZOOM), MAX_ZOOM);
   fabricCanvas.zoomToPoint(new Point(evt.clientX, evt.clientY), zoom);
   currentZoom = zoom;
+  sliderZoomValue.value = sliderValueToZoom(zoom);
   emit('zoom-change', zoom);
 }
 
@@ -424,12 +550,17 @@ function handleKeyUp(evt: KeyboardEvent) {
 }
 
 function setupCanvas() {
-  if (!canvasEl.value) return;
+  if (!canvasEl.value || !canvasContainer.value) return;
+  const cw = canvasContainer.value.clientWidth;
+  const ch = canvasContainer.value.clientHeight;
+  containerWidth.value = cw;
+  containerHeight.value = ch;
+
   fabricCanvas = new Canvas(canvasEl.value, {
     selection: true,
     preserveObjectStacking: true,
-    width: canvasWidth.value,
-    height: canvasHeight.value,
+    width: cw,
+    height: ch,
   });
   fabricCanvas.on('mouse:down', handleMouseDown);
   fabricCanvas.on('mouse:move', handleMouseMove);
@@ -440,12 +571,27 @@ function setupCanvas() {
   fabricCanvas.on('selection:created', handleObjectSelected);
   fabricCanvas.on('selection:updated', handleObjectSelected);
   fabricCanvas.on('selection:cleared', handleSelectionCleared);
+
+  resizeObserver = new ResizeObserver((entries) => {
+    for (const entry of entries) {
+      containerWidth.value = entry.contentRect.width;
+      containerHeight.value = entry.contentRect.height;
+    }
+  });
+  resizeObserver.observe(canvasContainer.value);
 }
 
 function disposeCanvas() {
+  if (resizeObserver) { resizeObserver.disconnect(); resizeObserver = null; }
   if (fabricCanvas) { fabricCanvas.dispose(); fabricCanvas = null; }
   elementMap.clear();
 }
+
+watch([containerWidth, containerHeight], () => {
+  if (!fabricCanvas) return;
+  fabricCanvas.setDimensions({ width: containerWidth.value, height: containerHeight.value });
+  centerContent();
+});
 
 watch(() => props.editorData, (newData) => {
   if (!newData) return;
@@ -454,7 +600,13 @@ watch(() => props.editorData, (newData) => {
   } else {
     canvasWidth.value = newData.map.width || 800;
     canvasHeight.value = newData.map.height || 600;
-    if (fabricCanvas) fabricCanvas.setDimensions({ width: canvasWidth.value, height: canvasHeight.value });
+    if (fabricCanvas) {
+      fabricCanvas.setDimensions({
+        width: containerWidth.value || canvasContainer.value!.clientWidth,
+        height: containerHeight.value || canvasContainer.value!.clientHeight,
+      });
+      centerContent();
+    }
   }
   nextTick(() => renderElements());
 }, { deep: false });
@@ -500,25 +652,46 @@ function exportCanvas(format: 'png' | 'jpeg' | 'webp') {
 
 function zoomIn() {
   if (!fabricCanvas) return;
-  let zoom = Math.min(fabricCanvas.getZoom() * 1.2, MAX_ZOOM);
-  fabricCanvas.zoomToPoint(fabricCanvas.getCenterPoint(), zoom);
-  currentZoom = zoom;
-  emit('zoom-change', zoom);
+  const newZoom = Math.min(currentZoom * 1.2, MAX_ZOOM);
+  const center = fabricCanvas.getCenterPoint();
+  fabricCanvas.zoomToPoint(center, newZoom);
+  currentZoom = newZoom;
+  sliderZoomValue.value = sliderValueToZoom(newZoom);
+  emit('zoom-change', newZoom);
 }
 
 function zoomOut() {
   if (!fabricCanvas) return;
-  let zoom = Math.max(fabricCanvas.getZoom() / 1.2, MIN_ZOOM);
-  fabricCanvas.zoomToPoint(fabricCanvas.getCenterPoint(), zoom);
-  currentZoom = zoom;
-  emit('zoom-change', zoom);
+  const newZoom = Math.max(currentZoom / 1.2, MIN_ZOOM);
+  const center = fabricCanvas.getCenterPoint();
+  fabricCanvas.zoomToPoint(center, newZoom);
+  currentZoom = newZoom;
+  sliderZoomValue.value = sliderValueToZoom(newZoom);
+  emit('zoom-change', newZoom);
 }
 
 function zoomReset() {
   if (!fabricCanvas) return;
-  fabricCanvas.setViewportTransform([1, 0, 0, 1, 0, 0]);
-  currentZoom = 1;
-  emit('zoom-change', 1);
+  const cw = containerWidth.value;
+  const ch = containerHeight.value;
+  const scaleX = cw / canvasWidth.value;
+  const scaleY = ch / canvasHeight.value;
+  const fitZoom = Math.min(scaleX, scaleY, 1);
+  const offsetX = (cw - canvasWidth.value * fitZoom) / 2;
+  const offsetY = (ch - canvasHeight.value * fitZoom) / 2;
+  fabricCanvas.setViewportTransform([fitZoom, 0, 0, fitZoom, Math.max(0, offsetX), Math.max(0, offsetY)]);
+  currentZoom = fitZoom;
+  sliderZoomValue.value = sliderValueToZoom(fitZoom);
+  emit('zoom-change', fitZoom);
+}
+
+function handleSliderZoom(val: number) {
+  if (!fabricCanvas) return;
+  const newZoom = zoomToSliderValue(val);
+  const center = fabricCanvas.getCenterPoint();
+  fabricCanvas.zoomToPoint(center, newZoom);
+  currentZoom = newZoom;
+  emit('zoom-change', newZoom);
 }
 
 defineExpose({ exportCanvas, zoomIn, zoomOut, zoomReset });
@@ -528,10 +701,38 @@ defineExpose({ exportCanvas, zoomIn, zoomOut, zoomReset });
   <div ref="canvasContainer" class="relative h-full w-full overflow-hidden bg-gray-100">
     <canvas ref="canvasEl" />
     <div v-if="!editorData" class="absolute inset-0 flex items-center justify-center">
-      <NEmpty description="请从左侧选择一个场景" />
+      <NEmpty description="请选择一个场景" />
     </div>
     <div v-if="loading" class="absolute inset-0 flex items-center justify-center bg-white/60">
       <NSpin size="large" />
+    </div>
+
+    <!-- Zoom slider control -->
+    <div v-if="editorData" class="absolute bottom-12px right-12px z-10 flex flex-col items-center gap-4px rounded-lg bg-white/90 px-6px py-8px shadow-md">
+      <button
+        class="flex h-24px w-24px items-center justify-center rounded-full text-sm font-bold text-blue-500 transition-colors hover:bg-blue-50"
+        @click="zoomIn"
+      >
+        +
+      </button>
+      <NSlider
+        v-model:value="sliderZoomValue"
+        vertical
+        :min="0"
+        :max="100"
+        :step="1"
+        :tooltip="false"
+        :theme-overrides="sliderThemeOverrides"
+        class="!h-160px"
+        @update:value="handleSliderZoom"
+      />
+      <button
+        class="flex h-24px w-24px items-center justify-center rounded-full text-sm font-bold text-blue-500 transition-colors hover:bg-blue-50"
+        @click="zoomOut"
+      >
+        -
+      </button>
+      <div class="text-xs text-gray-500">{{ Math.round(currentZoom * 100) }}%</div>
     </div>
   </div>
 </template>

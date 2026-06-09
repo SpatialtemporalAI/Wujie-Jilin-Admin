@@ -21,7 +21,6 @@ const emit = defineEmits<{
   (e: 'zoom-in'): void;
   (e: 'zoom-out'): void;
   (e: 'zoom-reset'): void;
-  (e: 'back'): void;
 }>();
 
 const drawingModes: { key: DrawingMode; label: string; icon: string }[] = [
@@ -36,13 +35,6 @@ const drawingModes: { key: DrawingMode; label: string; icon: string }[] = [
 
 <template>
   <div class="flex items-center gap-8px border-b border-gray-200 bg-white px-12px py-8px">
-    <NButton quaternary size="small" @click="emit('back')">
-      <template #icon><icon-ic-round-arrow-back /></template>
-      返回
-    </NButton>
-
-    <NDivider vertical />
-
     <NButtonGroup size="small">
       <NButton
         v-for="mode in drawingModes"

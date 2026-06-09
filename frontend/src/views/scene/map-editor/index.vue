@@ -1,16 +1,13 @@
 <script setup lang="ts">
 import { onMounted, ref } from 'vue';
-import { useRouterPush } from '@/hooks/common/router';
 import { useMapEditor, type DrawingMode } from './composables/useMapEditor';
 import EditorToolbar from './modules/editor-toolbar.vue';
-import SceneListPanel from './modules/scene-list-panel.vue';
 import CanvasEditor from './modules/canvas-editor.vue';
 import PropertyPanel from './modules/property-panel.vue';
 import { fetchCreateSceneMap } from '@/service/api/scene';
 
 defineOptions({ name: 'SceneMapEditor' });
 
-const { routerBack } = useRouterPush();
 const editor = useMapEditor();
 const canvasRef = ref<InstanceType<typeof CanvasEditor>>();
 
@@ -24,6 +21,9 @@ const newMapGroupId = ref<number | null>(null);
 
 onMounted(async () => {
   await editor.loadSceneList();
+  if (editor.sceneList.value.length > 0) {
+    await editor.loadMap(editor.sceneList.value[0].id);
+  }
 });
 
 async function handleSelectMap(mapId: number) {
@@ -120,19 +120,9 @@ function handleCursorPosition(x: number, y: number) {
       @zoom-in="canvasRef?.zoomIn()"
       @zoom-out="canvasRef?.zoomOut()"
       @zoom-reset="canvasRef?.zoomReset()"
-      @back="routerBack"
     />
 
     <div class="flex flex-1 overflow-hidden">
-      <SceneListPanel
-        class="w-280px flex-shrink-0"
-        :scene-list="editor.sceneList.value"
-        :selected-map-id="editor.selectedMapId.value"
-        @select="handleSelectMap"
-        @add="handleAddScene"
-        @delete="handleDeleteScene"
-      />
-
       <div class="relative flex-1">
         <CanvasEditor
           ref="canvasRef"
@@ -151,7 +141,6 @@ function handleCursorPosition(x: number, y: number) {
           @cursor-position="handleCursorPosition"
         />
         <div class="absolute bottom-8px left-8px rounded bg-black/50 px-8px py-4px text-xs text-white">
-          缩放: {{ Math.round(zoomLevel * 100) }}% |
           坐标: {{ cursorX.toFixed(2) }}m, {{ cursorY.toFixed(2) }}m
         </div>
       </div>
@@ -161,8 +150,13 @@ function handleCursorPosition(x: number, y: number) {
         :editor-data="editor.editorData.value"
         :selected-element="editor.selectedElement.value"
         :resolution="editor.resolution.value"
+        :scene-list="editor.sceneList.value"
+        :selected-map-id="editor.selectedMapId.value"
         @update-element="handleUpdateElement"
         @remove-element="editor.removeElement"
+        @select-scene="handleSelectMap"
+        @add-scene="handleAddScene"
+        @delete-scene="handleDeleteScene"
       />
     </div>
 
