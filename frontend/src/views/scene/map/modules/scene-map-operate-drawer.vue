@@ -67,7 +67,10 @@ function createDefaultModel(): MapModel {
 }
 
 const rules = {
-  name: { required: true, message: '请输入地图名称', trigger: 'blur' }
+  name: { required: true, message: '请输入地图名称', trigger: 'blur' },
+  group_id: { required: true, type: 'number', message: '请选择所属分组', trigger: 'change' },
+  image_id: { required: true, type: 'number', message: '请上传地图图片', trigger: 'change' },
+  status: { required: true, message: '请选择状态', trigger: 'change' }
 };
 
 /** 分组选项 */
@@ -202,7 +205,7 @@ onMounted(() => {
         <NFormItem label="地图名称" path="name">
           <NInput v-model:value="model.name" placeholder="请输入地图名称" maxlength="200" show-count />
         </NFormItem>
-        <NFormItem label="所属分组">
+        <NFormItem label="所属分组" path="group_id">
           <NSelect
             :value="groupValue"
             :options="groupOptions"
@@ -213,7 +216,7 @@ onMounted(() => {
             @update:value="handleGroupChange"
           />
         </NFormItem>
-        <NFormItem label="地图图片">
+        <NFormItem label="地图图片" path="image_id">
           <div class="w-full">
             <NUpload
               :max="1"
@@ -236,7 +239,7 @@ onMounted(() => {
             </div>
           </div>
         </NFormItem>
-        <NFormItem label="宽度" path="width">
+        <NFormItem v-show="false" label="宽度" path="width">
           <NInputNumber
             v-model:value="model.width"
             placeholder="请输入地图宽度"
@@ -244,7 +247,7 @@ onMounted(() => {
             class="w-full"
           />
         </NFormItem>
-        <NFormItem label="高度" path="height">
+        <NFormItem v-show="false" label="高度" path="height">
           <NInputNumber
             v-model:value="model.height"
             placeholder="请输入地图高度"
