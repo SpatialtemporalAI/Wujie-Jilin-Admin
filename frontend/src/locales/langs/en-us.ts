@@ -267,7 +267,8 @@ const local: App.I18n.Schema = {
     scene: 'Scene',
     scene_group: 'Scene Group',
     scene_map: 'Scene Map',
-    'scene_map-editor': 'Map Editor'
+    'scene_map-editor': 'Map Editor',
+    task: 'Task Management'
   },
   page: {
     login: {

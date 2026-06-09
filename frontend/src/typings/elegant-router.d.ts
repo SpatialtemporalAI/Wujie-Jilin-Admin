@@ -49,6 +49,7 @@ declare module "@elegant-router/types" {
     "scene_group": "/scene/group";
     "scene_map": "/scene/map";
     "scene_map-editor": "/scene/map-editor";
+    "task": "/task";
   };
 
   /**
@@ -92,6 +93,7 @@ declare module "@elegant-router/types" {
     | "monitor"
     | "robot"
     | "scene"
+    | "task"
   >;
 
   /**
@@ -135,6 +137,7 @@ declare module "@elegant-router/types" {
     | "scene_group"
     | "scene_map-editor"
     | "scene_map"
+    | "task"
   >;
 
   /**

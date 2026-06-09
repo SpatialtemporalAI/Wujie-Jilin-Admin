@@ -263,7 +263,8 @@ const local: App.I18n.Schema = {
     scene: '场景管理',
     scene_group: '场景分组',
     scene_map: '场景地图',
-    'scene_map-editor': '地图编辑器'
+    'scene_map-editor': '地图编辑器',
+    task: '任务管理'
   },
   page: {
     login: {

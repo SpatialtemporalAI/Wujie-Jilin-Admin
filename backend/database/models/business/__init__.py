@@ -10,6 +10,9 @@ from .scene_map import SceneMap
 from .scene_map_annotation import SceneMapAnnotation
 from .scene_map_object import SceneMapObject
 from .scene_map_path import SceneMapPath
+from .task import Task, task_robot_association
+from .task_point import TaskPoint
+from .task_execution import TaskExecution
 
 __all__ = [
     "AppUser",
@@ -22,4 +25,8 @@ __all__ = [
     "SceneMapAnnotation",
     "SceneMapObject",
     "SceneMapPath",
+    "Task",
+    "TaskPoint",
+    "TaskExecution",
+    "task_robot_association",
 ]

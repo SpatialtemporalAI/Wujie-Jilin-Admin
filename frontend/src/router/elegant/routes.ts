@@ -326,5 +326,14 @@ export const generatedRoutes: GeneratedRoute[] = [
         }
       }
     ]
+  },
+  {
+    name: 'task',
+    path: '/task',
+    component: 'layout.base$view.task',
+    meta: {
+      title: 'task',
+      i18nKey: 'route.task'
+    }
   }
 ];

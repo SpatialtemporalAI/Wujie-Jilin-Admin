@@ -55,7 +55,7 @@ class SceneMapResponseData(BaseRespEntity):
     image_id: int | None
     width: int | None
     height: int | None
-    resolution: float
+    resolution: float | None = Field(None, description="分辨率(米/像素)")
     status: bool
     group_name: str | None = Field(None, description="分组名称")
     created_at: datetime | None

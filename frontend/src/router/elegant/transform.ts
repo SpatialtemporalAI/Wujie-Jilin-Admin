@@ -194,7 +194,8 @@ const routeMap: RouteMap = {
   "scene": "/scene",
   "scene_group": "/scene/group",
   "scene_map": "/scene/map",
-  "scene_map-editor": "/scene/map-editor"
+  "scene_map-editor": "/scene/map-editor",
+  "task": "/task"
 };
 
 /**
