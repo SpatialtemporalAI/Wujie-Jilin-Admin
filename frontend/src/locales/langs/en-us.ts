@@ -260,7 +260,13 @@ const local: App.I18n.Schema = {
     demo_dict: 'Dict Component Demo',
     manage_file: 'File Management',
     manage_scheduler: 'Task Management',
-    'manage_scheduler-log': 'Execution Log'
+    'manage_scheduler-log': 'Execution Log',
+    robot: 'Robot',
+    robot_model: 'Robot Model',
+    robot_manage: 'Robot Management',
+    scene: 'Scene',
+    scene_group: 'Scene Group',
+    scene_map: 'Scene Map'
   },
   page: {
     login: {

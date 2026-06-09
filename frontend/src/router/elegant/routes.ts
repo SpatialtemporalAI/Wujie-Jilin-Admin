@@ -259,5 +259,63 @@ export const generatedRoutes: GeneratedRoute[] = [
       icon: 'mdi:chart-areaspline-variant',
       order: 4
     }
+  },
+  {
+    name: 'robot',
+    path: '/robot',
+    component: 'layout.base',
+    meta: {
+      title: 'robot',
+      i18nKey: 'route.robot'
+    },
+    children: [
+      {
+        name: 'robot_manage',
+        path: '/robot/manage',
+        component: 'view.robot_manage',
+        meta: {
+          title: 'robot_manage',
+          i18nKey: 'route.robot_manage'
+        }
+      },
+      {
+        name: 'robot_model',
+        path: '/robot/model',
+        component: 'view.robot_model',
+        meta: {
+          title: 'robot_model',
+          i18nKey: 'route.robot_model'
+        }
+      }
+    ]
+  },
+  {
+    name: 'scene',
+    path: '/scene',
+    component: 'layout.base',
+    meta: {
+      title: 'scene',
+      i18nKey: 'route.scene'
+    },
+    children: [
+      {
+        name: 'scene_group',
+        path: '/scene/group',
+        component: 'view.scene_group',
+        meta: {
+          title: 'scene_group',
+          i18nKey: 'route.scene_group'
+        }
+      },
+      {
+        name: 'scene_map',
+        path: '/scene/map',
+        component: 'view.scene_map',
+        meta: {
+          title: 'scene_map',
+          i18nKey: 'route.scene_map'
+        }
+      }
+    ]
   }
 ];

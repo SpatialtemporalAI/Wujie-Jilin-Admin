@@ -187,7 +187,13 @@ const routeMap: RouteMap = {
   "manage_scheduler": "/manage/scheduler",
   "manage_scheduler-log": "/manage/scheduler-log",
   "manage_user": "/manage/user",
-  "monitor": "/monitor"
+  "monitor": "/monitor",
+  "robot": "/robot",
+  "robot_manage": "/robot/manage",
+  "robot_model": "/robot/model",
+  "scene": "/scene",
+  "scene_group": "/scene/group",
+  "scene_map": "/scene/map"
 };
 
 /**

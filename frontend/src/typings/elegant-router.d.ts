@@ -42,6 +42,12 @@ declare module "@elegant-router/types" {
     "manage_scheduler-log": "/manage/scheduler-log";
     "manage_user": "/manage/user";
     "monitor": "/monitor";
+    "robot": "/robot";
+    "robot_manage": "/robot/manage";
+    "robot_model": "/robot/model";
+    "scene": "/scene";
+    "scene_group": "/scene/group";
+    "scene_map": "/scene/map";
   };
 
   /**
@@ -83,6 +89,8 @@ declare module "@elegant-router/types" {
     | "login"
     | "manage"
     | "monitor"
+    | "robot"
+    | "scene"
   >;
 
   /**
@@ -121,6 +129,10 @@ declare module "@elegant-router/types" {
     | "manage_scheduler"
     | "manage_user"
     | "monitor"
+    | "robot_manage"
+    | "robot_model"
+    | "scene_group"
+    | "scene_map"
   >;
 
   /**

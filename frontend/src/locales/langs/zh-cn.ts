@@ -256,7 +256,13 @@ const local: App.I18n.Schema = {
     demo_dict: '字典组件演示',
     manage_file: '文件管理',
     manage_scheduler: '任务管理',
-    'manage_scheduler-log': '执行日志'
+    'manage_scheduler-log': '执行日志',
+    robot: '机器人',
+    robot_model: '型号管理',
+    robot_manage: '机器人管理',
+    scene: '场景管理',
+    scene_group: '场景分组',
+    scene_map: '场景地图'
   },
   page: {
     login: {
