@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, onMounted, onBeforeUnmount, watch, nextTick } from 'vue';
+import { ref, computed, onMounted, onBeforeUnmount, watch, nextTick } from 'vue';
 import { Canvas, Circle, Rect, Polygon, Line, Group, Text, FabricImage, Triangle, Point } from 'fabric';
 import { getFilePreviewUrl } from '@/service/api/file';
 import type { SelectedElement, DrawingMode } from '../composables/useMapEditor';
@@ -29,12 +29,102 @@ const emit = defineEmits<{
 
 const canvasContainer = ref<HTMLDivElement>();
 const canvasEl = ref<HTMLCanvasElement>();
+const minimapEl = ref<HTMLDivElement>();
 let fabricCanvas: Canvas | null = null;
 let gridGroup: Group | null = null;
 let backgroundImgObj: FabricImage | null = null;
 let elementMap: Map<string, any> = new Map();
 let resizeObserver: ResizeObserver | null = null;
 let lastGridSpacingM = 0;
+
+const minimapImageUrl = ref('');
+const minimapRect = ref({ x: 0, y: 0, w: 0, h: 0 });
+const MINIMAP_SIZE = 180;
+
+const minimapScale = computed(() => {
+  const mw = canvasWidth.value;
+  const mh = canvasHeight.value;
+  if (mw === 0 || mh === 0) return { s: 1, w: 0, h: 0, ox: 0, oy: 0 };
+  const s = Math.min(MINIMAP_SIZE / mw, MINIMAP_SIZE / mh);
+  const w = mw * s;
+  const h = mh * s;
+  const ox = (MINIMAP_SIZE - w) / 2;
+  const oy = (MINIMAP_SIZE - h) / 2;
+  return { s, w, h, ox, oy };
+});
+
+function updateMinimap() {
+  if (!fabricCanvas) return;
+  const vpt = fabricCanvas.viewportTransform;
+  if (!vpt) return;
+  const zoom = vpt[0];
+  const { s, ox, oy, w: imgW, h: imgH } = minimapScale.value;
+
+  // Visible area in content coordinates
+  const viewLeft = -vpt[4] / zoom;
+  const viewTop = -vpt[5] / zoom;
+  const viewW = containerWidth.value / zoom;
+  const viewH = containerHeight.value / zoom;
+
+  // Raw rect in minimap coords
+  let rx = ox + viewLeft * s;
+  let ry = oy + viewTop * s;
+  let rw = viewW * s;
+  let rh = viewH * s;
+
+  // Clamp to image bounds
+  const right = ox + imgW;
+  const bottom = oy + imgH;
+  rx = Math.max(ox, Math.min(rx, right - rw));
+  ry = Math.max(oy, Math.min(ry, bottom - rh));
+  rw = Math.min(rw, imgW);
+  rh = Math.min(rh, imgH);
+
+  minimapRect.value = { x: rx, y: ry, w: rw, h: rh };
+}
+
+// --- Minimap drag-to-navigate ---
+let minimapDragging = false;
+
+function minimapClientToContent(clientX: number, clientY: number) {
+  if (!minimapEl.value) return null;
+  const rect = minimapEl.value.getBoundingClientRect();
+  const mx = clientX - rect.left;
+  const my = clientY - rect.top;
+  const { s, ox, oy } = minimapScale.value;
+  // Minimap pixel → content coordinate
+  const contentX = (mx - ox) / s;
+  const contentY = (my - oy) / s;
+  return { x: contentX, y: contentY };
+}
+
+function navigateToMinimapPoint(clientX: number, clientY: number) {
+  if (!fabricCanvas) return;
+  const pt = minimapClientToContent(clientX, clientY);
+  if (!pt) return;
+  const zoom = fabricCanvas.getZoom();
+  // Center the viewport so (pt.x, pt.y) is at the center of the visible area
+  const offsetX = containerWidth.value / 2 - pt.x * zoom;
+  const offsetY = containerHeight.value / 2 - pt.y * zoom;
+  fabricCanvas.setViewportTransform([zoom, 0, 0, zoom, offsetX, offsetY]);
+  fabricCanvas.renderAll();
+  updateMinimap();
+}
+
+function handleMinimapDown(e: MouseEvent) {
+  e.preventDefault();
+  minimapDragging = true;
+  navigateToMinimapPoint(e.clientX, e.clientY);
+}
+
+function handleMinimapMove(e: MouseEvent) {
+  if (!minimapDragging) return;
+  navigateToMinimapPoint(e.clientX, e.clientY);
+}
+
+function handleMinimapUp() {
+  minimapDragging = false;
+}
 
 const MIN_ZOOM = 1;
 const MAX_ZOOM = 5;
@@ -108,6 +198,7 @@ function centerContent() {
     Math.max(0, offsetX),
     Math.max(0, offsetY),
   ]);
+  updateMinimap();
 }
 
 function renderElements() {
@@ -361,6 +452,7 @@ function renderGrid() {
   // Grid at the very bottom; image and other elements render above it
   fabricCanvas.sendObjectToBack(gridGroup);
   fabricCanvas.renderAll();
+  updateMinimap();
 }
 
 async function loadBackgroundImage(imageId: number) {
@@ -391,6 +483,8 @@ async function loadBackgroundImage(imageId: number) {
     renderGrid();
     currentZoom = 1;
     sliderZoomValue.value = sliderValueToZoom(1);
+    minimapImageUrl.value = url;
+    updateMinimap();
     emit('zoom-change', 1);
   } catch (e) {
     console.error('Failed to load background image:', e);
@@ -461,6 +555,7 @@ function handleMouseMove(opt: any) {
     const dy = evt.clientY - lastPanPoint.y;
     fabricCanvas.relativePan(new Point(dx, dy));
     lastPanPoint = { x: evt.clientX, y: evt.clientY };
+    updateMinimap();
     return;
   }
 
@@ -749,6 +844,45 @@ defineExpose({ exportCanvas, zoomIn, zoomOut, zoomReset });
         -
       </button>
       <div class="text-xs text-gray-500">{{ Math.round(currentZoom * 100) }}%</div>
+    </div>
+
+    <!-- Minimap navigator -->
+    <div
+      v-if="editorData && minimapImageUrl"
+      ref="minimapEl"
+      class="absolute bottom-12px left-12px z-10 cursor-pointer overflow-hidden rounded-lg border border-gray-300 bg-white shadow-md"
+      :style="{ width: `${MINIMAP_SIZE}px`, height: `${MINIMAP_SIZE}px` }"
+      @mousedown="handleMinimapDown"
+      @mousemove="handleMinimapMove"
+      @mouseup="handleMinimapUp"
+      @mouseleave="handleMinimapUp"
+    >
+      <img
+        :src="minimapImageUrl"
+        :style="{
+          position: 'absolute',
+          left: `${minimapScale.ox}px`,
+          top: `${minimapScale.oy}px`,
+          width: `${minimapScale.w}px`,
+          height: `${minimapScale.h}px`,
+          objectFit: 'fill',
+          pointerEvents: 'none',
+        }"
+      />
+      <!-- Viewport rect: blue border + massive box-shadow as outer mask -->
+      <div
+        :style="{
+          position: 'absolute',
+          left: `${minimapRect.x}px`,
+          top: `${minimapRect.y}px`,
+          width: `${minimapRect.w}px`,
+          height: `${minimapRect.h}px`,
+          border: '2px solid #3b82f6',
+          backgroundColor: 'transparent',
+          boxShadow: '0 0 0 9999px rgba(0, 0, 0, 0.45)',
+          pointerEvents: 'none',
+        }"
+      />
     </div>
   </div>
 </template>
