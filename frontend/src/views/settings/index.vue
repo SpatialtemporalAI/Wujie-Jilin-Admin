@@ -5,7 +5,7 @@ import FaceRecognitionTab from './modules/face-recognition-tab.vue';
 import WalkingSpeedTab from './modules/walking-speed-tab.vue';
 import BatteryThresholdTab from './modules/battery-threshold-tab.vue';
 
-defineOptions({ name: 'RobotConfigPage' });
+defineOptions({ name: 'SettingsPage' });
 
 const activeTab = ref('voice');
 </script>

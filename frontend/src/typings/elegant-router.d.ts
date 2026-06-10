@@ -43,13 +43,13 @@ declare module "@elegant-router/types" {
     "manage_user": "/manage/user";
     "monitor": "/monitor";
     "robot": "/robot";
-    "robot_config": "/robot/config";
     "robot_manage": "/robot/manage";
     "robot_model": "/robot/model";
     "scene": "/scene";
     "scene_group": "/scene/group";
     "scene_map": "/scene/map";
     "scene_map-editor": "/scene/map-editor";
+    "settings": "/settings";
     "task": "/task";
   };
 
@@ -94,6 +94,7 @@ declare module "@elegant-router/types" {
     | "monitor"
     | "robot"
     | "scene"
+    | "settings"
     | "task"
   >;
 
@@ -133,12 +134,12 @@ declare module "@elegant-router/types" {
     | "manage_scheduler"
     | "manage_user"
     | "monitor"
-    | "robot_config"
     | "robot_manage"
     | "robot_model"
     | "scene_group"
     | "scene_map-editor"
     | "scene_map"
+    | "settings"
     | "task"
   >;
 

@@ -189,13 +189,13 @@ const routeMap: RouteMap = {
   "manage_user": "/manage/user",
   "monitor": "/monitor",
   "robot": "/robot",
-  "robot_config": "/robot/config",
   "robot_manage": "/robot/manage",
   "robot_model": "/robot/model",
   "scene": "/scene",
   "scene_group": "/scene/group",
   "scene_map": "/scene/map",
   "scene_map-editor": "/scene/map-editor",
+  "settings": "/settings",
   "task": "/task"
 };
 

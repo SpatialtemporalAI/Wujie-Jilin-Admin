@@ -28,12 +28,12 @@ class RobotVoiceConfigResponse(BaseRespEntity):
 
     model_config = ConfigDict(from_attributes=True)
 
-    id: int = Field(..., description="配置ID")
+    id: Optional[int] = Field(None, description="配置ID")
     wake_word: Optional[str] = Field(None, description="唤醒词")
     tts_voice: Optional[str] = Field(None, description="音色")
     tts_speed: Optional[int] = Field(None, description="语速")
     tts_volume: Optional[int] = Field(None, description="音量")
-    created_at: datetime = Field(..., description="创建时间")
+    created_at: Optional[datetime] = Field(None, description="创建时间")
     updated_at: Optional[datetime] = Field(None, description="更新时间")
 
 

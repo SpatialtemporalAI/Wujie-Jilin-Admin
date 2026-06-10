@@ -270,15 +270,6 @@ export const generatedRoutes: GeneratedRoute[] = [
     },
     children: [
       {
-        name: 'robot_config',
-        path: '/robot/config',
-        component: 'view.robot_config',
-        meta: {
-          title: 'robot_config',
-          i18nKey: 'route.robot_config'
-        }
-      },
-      {
         name: 'robot_manage',
         path: '/robot/manage',
         component: 'view.robot_manage',
@@ -335,6 +326,16 @@ export const generatedRoutes: GeneratedRoute[] = [
         }
       }
     ]
+  },
+  {
+    name: 'settings',
+    path: '/settings',
+    component: 'layout.base$view.settings',
+    meta: {
+      title: 'settings',
+      i18nKey: 'route.settings',
+      icon: 'mdi:cog'
+    }
   },
   {
     name: 'task',

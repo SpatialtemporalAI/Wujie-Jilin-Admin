@@ -19,16 +19,14 @@ depends_on: Union[str, Sequence[str], None] = None
 
 NOW = datetime(2026, 6, 10, 12, 0, 0, tzinfo=timezone.utc)
 
-ROBOT_CATALOG_ID = 3000000000000001
-
 MENU_DATA = [
-    # robot_config menu
+    # settings menu
     {
         "id": 3000000000000034,
-        "parent_id": ROBOT_CATALOG_ID,
-        "name": "robot_config",
-        "path": "/robot/config",
-        "component": "view.robot_config",
+        "parent_id": None,
+        "name": "settings",
+        "path": "/settings",
+        "component": "view.settings",
         "redirect": None,
         "permission": "robot:config:list",
         "meta_icon": None,
@@ -45,11 +43,11 @@ MENU_DATA = [
         "created_at": NOW,
         "updated_at": NOW,
     },
-    # robot_config buttons
+    # settings buttons
     {
         "id": 3000000000000035,
         "parent_id": 3000000000000034,
-        "name": "robot_config_list",
+        "name": "settings_list",
         "path": None,
         "component": None,
         "redirect": None,
@@ -71,7 +69,7 @@ MENU_DATA = [
     {
         "id": 3000000000000036,
         "parent_id": 3000000000000034,
-        "name": "robot_config_edit",
+        "name": "settings_edit",
         "path": None,
         "component": None,
         "redirect": None,
