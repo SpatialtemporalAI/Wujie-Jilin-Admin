@@ -142,7 +142,7 @@ async def stop_execution(
 @task_execution_router.get(
     "/active",
     response_model=ResponsePageModel[TaskExecutionResponseData],
-    dependencies=[Depends(require_permission("task:manage:list"))],
+    dependencies=[Depends(require_permission("task:list"))],
 )
 async def get_active_executions(
     page_params: PageRequest = Depends(get_page_params),
@@ -177,7 +177,7 @@ async def get_active_executions(
 @task_execution_router.get(
     "/history",
     response_model=ResponsePageModel[TaskExecutionResponseData],
-    dependencies=[Depends(require_permission("task:manage:list"))],
+    dependencies=[Depends(require_permission("task:list"))],
 )
 async def get_execution_history(
     query_params: TaskExecutionQueryParams = Depends(),

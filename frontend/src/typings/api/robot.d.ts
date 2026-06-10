@@ -35,7 +35,7 @@ declare namespace Api {
     type RobotStatusEnum = 'online' | 'offline' | 'inactive';
 
     /** robot */
-    type Robot = Common.CommonRecord<{
+    type Robot = Omit<Common.CommonRecord<object>, 'status'> & {
       /** robot name */
       name: string;
       /** model id */
@@ -46,7 +46,7 @@ declare namespace Api {
       serial_number: string;
       /** status */
       status: RobotStatusEnum;
-    }>;
+    };
 
     /** robot search params */
     type RobotSearchParams = CommonType.RecordNullable<

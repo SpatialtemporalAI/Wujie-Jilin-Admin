@@ -31,7 +31,7 @@ declare namespace Api {
     };
 
     /** task */
-    type Task = Common.CommonRecord<{
+    type Task = Omit<Common.CommonRecord<object>, 'status'> & {
       name: string;
       task_type: TaskType;
       enabled: boolean;
@@ -45,7 +45,7 @@ declare namespace Api {
       point_count: number;
       points: TaskPoint[] | null;
       robots: TaskRobot[] | null;
-    }>;
+    };
 
     /** task search params */
     type TaskSearchParams = CommonType.RecordNullable<
@@ -78,7 +78,7 @@ declare namespace Api {
     type TaskUpdate = Partial<TaskCreate>;
 
     /** task execution */
-    type TaskExecution = Common.CommonRecord<{
+    type TaskExecution = Omit<Common.CommonRecord<object>, 'status'> & {
       task_id: number;
       task_name: string;
       task_type: TaskType;
@@ -91,7 +91,7 @@ declare namespace Api {
       robot_id: number | null;
       robot_name: string | null;
       triggered_by: string;
-    }>;
+    };
 
     /** task execution search params */
     type TaskExecutionSearchParams = CommonType.RecordNullable<

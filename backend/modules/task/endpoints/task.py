@@ -83,7 +83,7 @@ async def _build_task_response(task_obj: Task, db: AsyncSession, include_details
 @task_router.get(
     "/list",
     response_model=ResponsePageModel[TaskResponseData],
-    dependencies=[Depends(require_permission("task:manage:list"))],
+    dependencies=[Depends(require_permission("task:list"))],
 )
 async def get_task_list(
     query_params: TaskQueryParams = Depends(),
@@ -152,7 +152,7 @@ async def get_task(
 @task_router.post(
     "/add",
     response_model=ResponseModel[TaskResponseData],
-    dependencies=[Depends(require_permission("task:manage:add"))],
+    dependencies=[Depends(require_permission("task:add"))],
 )
 @log_operation(module="task", action="create", description="创建任务")
 async def create_task(
@@ -175,7 +175,7 @@ async def create_task(
 @task_router.put(
     "/{task_id}",
     response_model=ResponseModel[TaskResponseData],
-    dependencies=[Depends(require_permission("task:manage:edit"))],
+    dependencies=[Depends(require_permission("task:edit"))],
 )
 @log_operation(module="task", action="update", description="更新任务")
 async def update_task(
@@ -199,7 +199,7 @@ async def update_task(
 @task_router.delete(
     "/{task_id}",
     response_model=ResponseModel,
-    dependencies=[Depends(require_permission("task:manage:delete"))],
+    dependencies=[Depends(require_permission("task:delete"))],
 )
 @log_operation(module="task", action="delete", description="删除任务")
 async def delete_task(
@@ -221,7 +221,7 @@ async def delete_task(
 @task_router.put(
     "/{task_id}/toggle",
     response_model=ResponseModel[TaskResponseData],
-    dependencies=[Depends(require_permission("task:manage:edit"))],
+    dependencies=[Depends(require_permission("task:edit"))],
 )
 async def toggle_task_enabled(
     task_id: int,

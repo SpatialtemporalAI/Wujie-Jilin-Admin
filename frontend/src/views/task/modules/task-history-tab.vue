@@ -140,6 +140,8 @@ const {
       <TableHeaderOperation
         v-model:columns="columnChecks"
         :loading="loading"
+        :show-add="false"
+        :show-delete="false"
         @refresh="getData"
       />
     </div>

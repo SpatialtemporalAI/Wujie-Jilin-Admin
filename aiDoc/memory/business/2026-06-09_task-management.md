@@ -30,3 +30,17 @@
 - 后端：`backend/modules/task/` 新模块，4张表(task, task_point, task_robot, task_execution)
 - 前端：`frontend/src/views/task/` 独立一级菜单，3个Tab（任务列表/执行列表/历史任务）
 - 路由：`/task`，独立一级菜单
+
+## 变更记录
+
+### 2026-06-10 `/task` 新增任务按钮修复
+
+- 修复 `/task` 任务管理中“创建任务”按钮点击无反应的问题
+- 前端按钮权限码与菜单种子统一为 `task:add/edit/delete/list`
+- 后端任务接口权限码同步统一，避免前端按钮可见但接口权限不匹配
+- 新增入口改为使用 `TableHeaderOperation` 的标准 `@add` 事件
+
+### 2026-06-10 历史任务操作入口调整
+
+- `/task` 历史任务 Tab 不展示新增和删除按钮
+- 历史任务页保留刷新、列设置和行内“查看详情”操作

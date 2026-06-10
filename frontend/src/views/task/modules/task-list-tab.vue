@@ -130,17 +130,17 @@ const {
               启动
             </NButton>
           )}
-          {hasAuth('task:manage:edit') && (
+          {hasAuth('task:edit') && (
             <NButton type="primary" ghost size="small" onClick={() => handleEdit(row.id)}>
               {$t('common.edit')}
             </NButton>
           )}
-          {hasAuth('task:manage:edit') && (
+          {hasAuth('task:edit') && (
             <NButton size="small" ghost onClick={() => handleToggleEnabled(row)}>
               {row.enabled ? '禁用' : '启用'}
             </NButton>
           )}
-          {hasAuth('task:manage:delete') && (
+          {hasAuth('task:delete') && (
             <NPopconfirm onPositiveClick={() => handleDelete(row.id)}>
               {{
                 default: () => $t('common.confirmDelete'),
@@ -203,23 +203,11 @@ async function handleStart(row: Api.Task.Task) {
         v-model:columns="columnChecks"
         :disabled-delete="checkedRowKeys.length === 0"
         :loading="loading"
+        add-auth="task:add"
+        :show-delete="false"
+        @add="handleAdd"
         @refresh="getData"
-      >
-        <template #default>
-          <NButton
-            v-if="hasAuth('task:manage:add')"
-            size="small"
-            ghost
-            type="primary"
-            @click="handleAdd"
-          >
-            <template #icon>
-              <icon-ic-round-plus class="text-icon" />
-            </template>
-            创建任务
-          </NButton>
-        </template>
-      </TableHeaderOperation>
+      />
     </div>
     <NDataTable
       v-model:checked-row-keys="checkedRowKeys"
