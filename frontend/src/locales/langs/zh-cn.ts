@@ -260,6 +260,7 @@ const local: App.I18n.Schema = {
     robot: '机器人',
     robot_model: '型号管理',
     robot_manage: '机器人管理',
+    robot_config: '参数配置',
     scene: '场景管理',
     scene_group: '场景分组',
     scene_map: '场景地图',

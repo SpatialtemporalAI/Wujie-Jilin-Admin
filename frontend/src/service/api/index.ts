@@ -9,3 +9,4 @@ export * from './scheduler';
 export * from './robot';
 export * from './scene';
 export * from './task';
+export * from './robot-config';

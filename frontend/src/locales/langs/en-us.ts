@@ -264,6 +264,7 @@ const local: App.I18n.Schema = {
     robot: 'Robot',
     robot_model: 'Robot Model',
     robot_manage: 'Robot Management',
+    robot_config: 'Parameter Config',
     scene: 'Scene',
     scene_group: 'Scene Group',
     scene_map: 'Scene Map',

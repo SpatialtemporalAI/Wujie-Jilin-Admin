@@ -44,6 +44,8 @@ class RobotUpdate(BaseReqEntity):
     model_id: Optional[int] = Field(None, description="型号ID")
     serial_number: Optional[str] = Field(None, description="序列号", max_length=100)
     status: Optional[str] = Field(None, description="状态：online/offline/inactive")
+    speed_level: Optional[str] = Field(None, description="速度等级：normal/slow/low")
+    battery_threshold: Optional[int] = Field(None, description="电量报警阈值(%)")
 
 
 class RobotResponseData(BaseRespEntity):
@@ -59,6 +61,8 @@ class RobotResponseData(BaseRespEntity):
     model_id: int = Field(..., description="型号ID")
     serial_number: str = Field(..., description="序列号")
     status: str = Field(..., description="状态")
+    speed_level: Optional[str] = Field(None, description="速度等级")
+    battery_threshold: Optional[int] = Field(None, description="电量报警阈值(%)")
     model_name: Optional[str] = Field(None, description="型号名称（关联查询）")
     created_at: datetime = Field(..., description="创建时间")
     updated_at: Optional[datetime] = Field(None, description="更新时间")

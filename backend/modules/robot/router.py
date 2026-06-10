@@ -3,10 +3,11 @@
 
 from fastapi import APIRouter
 
-from .endpoints import robot_model_router, robot_router, robot_status_record_router
+from .endpoints import robot_model_router, robot_router, robot_status_record_router, robot_config_router
 
 router = APIRouter(prefix="/robot")
 
 router.include_router(robot_model_router)
 router.include_router(robot_router)
 router.include_router(robot_status_record_router)
+router.include_router(robot_config_router)

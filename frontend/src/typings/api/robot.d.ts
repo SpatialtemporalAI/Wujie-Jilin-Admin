@@ -46,6 +46,10 @@ declare namespace Api {
       serial_number: string;
       /** status */
       status: RobotStatusEnum;
+      /** speed level */
+      speed_level?: string | null;
+      /** battery threshold */
+      battery_threshold?: number | null;
     };
 
     /** robot search params */
@@ -65,7 +69,10 @@ declare namespace Api {
     };
 
     /** robot update */
-    type RobotUpdate = Partial<RobotCreate>;
+    type RobotUpdate = Partial<RobotCreate> & {
+      speed_level?: string | null;
+      battery_threshold?: number | null;
+    };
 
     /** robot status record */
     type RobotStatusRecord = Common.CommonRecord<{

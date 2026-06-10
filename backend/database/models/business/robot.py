@@ -3,7 +3,7 @@
 
 from database.models.base import Base
 from sqlalchemy.orm import mapped_column, Mapped, relationship
-from sqlalchemy import String, Enum as SaEnum, ForeignKey
+from sqlalchemy import String, Integer, Enum as SaEnum, ForeignKey
 from typing import TYPE_CHECKING, List
 import enum
 
@@ -38,6 +38,12 @@ class Robot(Base):
         SaEnum(RobotStatus, values_callable=lambda e: [x.value for x in e]),
         default=RobotStatus.INACTIVE,
         comment="状态：online-在线，offline-离线，inactive-未激活",
+    )
+    speed_level: Mapped[str | None] = mapped_column(
+        String(20), nullable=True, default=None, comment="速度等级：normal-正常速度,slow-慢速,low-低速"
+    )
+    battery_threshold: Mapped[int | None] = mapped_column(
+        Integer, nullable=True, default=None, comment="电量报警阈值(%)"
     )
 
     robot_model: Mapped["RobotModel"] = relationship(

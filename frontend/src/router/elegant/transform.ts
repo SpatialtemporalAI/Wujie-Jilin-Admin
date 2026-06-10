@@ -189,6 +189,7 @@ const routeMap: RouteMap = {
   "manage_user": "/manage/user",
   "monitor": "/monitor",
   "robot": "/robot",
+  "robot_config": "/robot/config",
   "robot_manage": "/robot/manage",
   "robot_model": "/robot/model",
   "scene": "/scene",
