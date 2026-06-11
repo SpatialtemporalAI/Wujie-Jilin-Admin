@@ -49,6 +49,8 @@ interface MapModel {
   image_id: number | null;
   width: number | null;
   height: number | null;
+  start_point_x: number;
+  start_point_y: number;
   status: Api.Common.EnableStatus;
 }
 
@@ -62,6 +64,8 @@ function createDefaultModel(): MapModel {
     image_id: null,
     width: null,
     height: null,
+    start_point_x: 0,
+    start_point_y: 0,
     status: '1'
   };
 }
@@ -143,6 +147,8 @@ function handleInitModel() {
     model.value.image_id = clonedData.image_id ?? null;
     model.value.width = clonedData.width ?? null;
     model.value.height = clonedData.height ?? null;
+    model.value.start_point_x = clonedData.start_point_x ?? 0;
+    model.value.start_point_y = clonedData.start_point_y ?? 0;
     model.value.status = clonedData.status ?? '1';
     groupValue.value = clonedData.group_id ?? null;
     if (clonedData.image_id) {
@@ -165,6 +171,8 @@ async function handleSubmit() {
     image_id: model.value.image_id,
     width: model.value.width,
     height: model.value.height,
+    start_point_x: model.value.start_point_x,
+    start_point_y: model.value.start_point_y,
     status: model.value.status
   };
 
@@ -252,6 +260,22 @@ onMounted(() => {
             v-model:value="model.height"
             placeholder="请输入地图高度"
             :min="0"
+            class="w-full"
+          />
+        </NFormItem>
+        <NFormItem label="起始点位X" path="start_point_x">
+          <NInputNumber
+            v-model:value="model.start_point_x"
+            placeholder="请输入起始点位X坐标"
+            clearable
+            class="w-full"
+          />
+        </NFormItem>
+        <NFormItem label="起始点位Y" path="start_point_y">
+          <NInputNumber
+            v-model:value="model.start_point_y"
+            placeholder="请输入起始点位Y坐标"
+            clearable
             class="w-full"
           />
         </NFormItem>

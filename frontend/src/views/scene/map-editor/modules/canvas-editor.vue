@@ -207,6 +207,46 @@ function renderElements() {
 
   const existingKeys = new Set<string>();
 
+  // Render start point marker
+  const spKey = '__start_point__';
+  const sp = props.editorData.map;
+  if (sp.start_point_x || sp.start_point_y) {
+    existingKeys.add(spKey);
+    if (elementMap.has(spKey)) {
+      const group = elementMap.get(spKey);
+      group.set({ left: sp.start_point_x, top: sp.start_point_y });
+    } else {
+      const spCircle = new Circle({
+        radius: 10,
+        fill: '#ef4444',
+        stroke: '#fff',
+        strokeWidth: 2,
+        originX: 'center',
+        originY: 'center',
+      });
+      const spText = new Text('起始点', {
+        fontSize: 10,
+        fill: '#ef4444',
+        originX: 'center',
+        originY: 'center',
+        top: 20,
+        fontFamily: 'sans-serif',
+        fontWeight: 'bold',
+      });
+      const spGroup = new Group([spCircle, spText], {
+        left: sp.start_point_x,
+        top: sp.start_point_y,
+        originX: 'center',
+        originY: 'center',
+        hasControls: false,
+        selectable: false,
+        evented: false,
+      });
+      fabricCanvas.add(spGroup);
+      elementMap.set(spKey, spGroup);
+    }
+  }
+
   for (const ann of props.editorData.annotations) {
     const key = getElementKey('annotation', ann.id);
     existingKeys.add(key);

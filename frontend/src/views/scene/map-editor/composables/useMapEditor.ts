@@ -150,7 +150,7 @@ export function useMapEditor() {
     return errors;
   }
 
-  async function saveMap(): Promise<boolean> {
+  async function saveMap(options?: { silent?: boolean }): Promise<boolean> {
     if (!editorData.value || !selectedMapId.value) return false;
     const errors = validateBeforeSave();
     if (errors.length > 0) {
@@ -167,7 +167,7 @@ export function useMapEditor() {
 
       await fetchSaveEditorData(selectedMapId.value, {
         annotations: editorData.value.annotations.map(a => ({
-          id: a.id,
+          id: a.id > 0 ? a.id : null,
           x: a.x,
           y: a.y,
           name: a.name,
@@ -175,14 +175,14 @@ export function useMapEditor() {
           type: a.type,
         })),
         paths: editorData.value.paths.map(p => ({
-          id: p.id,
+          id: p.id > 0 ? p.id : null,
           start_annotation_id: p.start_annotation_id,
           end_annotation_id: p.end_annotation_id,
           name: p.name,
           points: p.points,
         })),
         objects: editorData.value.objects.map(o => ({
-          id: o.id,
+          id: o.id > 0 ? o.id : null,
           type: o.type,
           x: o.x,
           y: o.y,
@@ -196,7 +196,9 @@ export function useMapEditor() {
       });
 
       isDirty.value = false;
-      window.$message?.success('保存成功');
+      if (!options?.silent) {
+        window.$message?.success('保存成功');
+      }
       return true;
     } catch (e: any) {
       window.$message?.error(e?.message || '保存失败');

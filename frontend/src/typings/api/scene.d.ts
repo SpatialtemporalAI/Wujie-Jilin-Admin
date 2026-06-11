@@ -56,6 +56,10 @@ declare namespace Api {
       height: number | null;
       /** resolution (meters/pixel) */
       resolution: number;
+      /** start point x */
+      start_point_x: number;
+      /** start point y */
+      start_point_y: number;
     }>;
 
     /** scene map search params */
@@ -74,6 +78,8 @@ declare namespace Api {
       width?: number | null;
       height?: number | null;
       resolution?: number;
+      start_point_x?: number;
+      start_point_y?: number;
       status?: Common.EnableStatus;
     };
 

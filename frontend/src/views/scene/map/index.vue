@@ -101,6 +101,18 @@ const {
       render: row => <span>{row.height ?? '-'}</span>
     },
     {
+      key: 'start_point',
+      title: '起始点位',
+      align: 'center',
+      width: 140,
+      render: row => {
+        if (row.start_point_x || row.start_point_y) {
+          return <span>({row.start_point_x}, {row.start_point_y})</span>;
+        }
+        return <span>-</span>;
+      }
+    },
+    {
       key: 'status',
       title: '状态',
       align: 'center',

@@ -27,3 +27,4 @@
 - [2026-06-11 地图编辑器机器人定位与绑定场景](./2026-06-11_map-editor-robot-location-binding.md) — 机器人总览列表支持定位与切换绑定场景
 - [2026-06-11 场景地图 JSON 点位导入](./2026-06-11_scene-map-json-import.md) — 地图编辑器支持将 label/position JSON 导入为标注点
 - [2026-06-11 机器人场景绑定可空与存量库缺列修复](./2026-06-11_robot-map-binding-nullable-fix.md) — robot.map_id 缺列自动补齐，未绑定场景不支持定位
+- [2026-06-11 地图编辑器新增场景图片与起始点位](./2026-06-11_map-editor-create-scene-image-start-point.md) — 新增场景上传图片并按原图/网页显示尺寸缩放保存起始点位

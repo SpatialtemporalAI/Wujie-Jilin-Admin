@@ -41,6 +41,12 @@ class SceneMap(Base):
     resolution: Mapped[float] = mapped_column(
         Float, default=0.2, comment="分辨率(米/像素)，如0.2表示1像素=20厘米"
     )
+    start_point_x: Mapped[float] = mapped_column(
+        Float, default=0, comment="起始点位X坐标"
+    )
+    start_point_y: Mapped[float] = mapped_column(
+        Float, default=0, comment="起始点位Y坐标"
+    )
     status: Mapped[bool] = mapped_column(
         Boolean, default=True, comment="状态：True-启用，False-禁用"
     )

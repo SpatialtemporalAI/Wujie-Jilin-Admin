@@ -5,6 +5,7 @@ import EditorToolbar from './modules/editor-toolbar.vue';
 import CanvasEditor from './modules/canvas-editor.vue';
 import PropertyPanel from './modules/property-panel.vue';
 import { fetchCreateSceneMap } from '@/service/api/scene';
+import { fetchUploadFile, getFilePreviewUrl } from '@/service/api/file';
 
 defineOptions({ name: 'SceneMapEditor' });
 
@@ -18,6 +19,15 @@ const cursorY = ref(0);
 const addDialogVisible = ref(false);
 const newMapName = ref('');
 const newMapGroupId = ref<number | null>(null);
+const newMapImageId = ref<number | null>(null);
+const newMapImageUrl = ref('');
+const newMapOriginalWidth = ref<number | null>(null);
+const newMapOriginalHeight = ref<number | null>(null);
+const newMapImageRef = ref<HTMLImageElement>();
+const newMapPointX = ref<number | null>(null);
+const newMapPointY = ref<number | null>(null);
+const newMapPointAngle = ref(0);
+const addSceneUploading = ref(false);
 
 const importDialogVisible = ref(false);
 const importJsonText = ref('');
@@ -27,6 +37,28 @@ interface ImportMapPoint {
   position: [number, number, number];
   node?: string;
   description?: string;
+}
+
+function getScaledStartPoint() {
+  const imageRect = newMapImageRef.value?.getBoundingClientRect();
+  if (
+    !imageRect ||
+    !newMapOriginalWidth.value ||
+    !newMapOriginalHeight.value ||
+    imageRect.width <= 0 ||
+    imageRect.height <= 0 ||
+    newMapPointX.value === null ||
+    newMapPointY.value === null
+  ) {
+    return null;
+  }
+  const scaleX = newMapOriginalWidth.value / imageRect.width;
+  const scaleY = newMapOriginalHeight.value / imageRect.height;
+  return {
+    x: newMapPointX.value * scaleX,
+    y: newMapPointY.value * scaleY,
+    angle: newMapPointAngle.value,
+  };
 }
 
 onMounted(async () => {
@@ -43,28 +75,86 @@ async function handleSelectMap(mapId: number) {
 async function handleAddScene() {
   newMapName.value = '';
   newMapGroupId.value = null;
+  newMapImageId.value = null;
+  newMapImageUrl.value = '';
+  newMapOriginalWidth.value = null;
+  newMapOriginalHeight.value = null;
+  newMapPointX.value = null;
+  newMapPointY.value = null;
+  newMapPointAngle.value = 0;
   addDialogVisible.value = true;
+}
+
+async function handleAddSceneUpload({ file }: { file: { file: File | null } }) {
+  if (!file.file) return;
+  addSceneUploading.value = true;
+  try {
+    const { data, error } = await fetchUploadFile(file.file, { includeImageInfo: true });
+    if (!error && data) {
+      newMapImageId.value = data.id;
+      newMapImageUrl.value = getFilePreviewUrl(data.id);
+      newMapOriginalWidth.value = data.image_width ?? null;
+      newMapOriginalHeight.value = data.image_height ?? null;
+      window.$message?.success('图片上传成功');
+    }
+  } finally {
+    addSceneUploading.value = false;
+  }
+}
+
+function handleRemoveAddSceneImage() {
+  newMapImageId.value = null;
+  newMapImageUrl.value = '';
+  newMapOriginalWidth.value = null;
+  newMapOriginalHeight.value = null;
 }
 
 async function confirmAddScene() {
   if (!newMapName.value.trim()) {
     window.$message?.warning('请输入场景名称');
-    return;
+    return false;
+  }
+  if (!newMapImageId.value) {
+    window.$message?.warning('请上传场景图片');
+    return false;
+  }
+  if (!newMapOriginalWidth.value || !newMapOriginalHeight.value) {
+    window.$message?.warning('请确认图片原图尺寸');
+    return false;
+  }
+  const startPoint = getScaledStartPoint();
+  if (!startPoint) {
+    window.$message?.warning('请输入起始点位 X、Y 和角度');
+    return false;
   }
   try {
     const { data } = await fetchCreateSceneMap({
       name: newMapName.value.trim(),
       group_id: newMapGroupId.value,
+      image_id: newMapImageId.value,
+      width: newMapOriginalWidth.value,
+      height: newMapOriginalHeight.value,
     });
     if (data) {
-      window.$message?.success('创建成功');
       addDialogVisible.value = false;
       await editor.loadSceneList();
       await editor.loadMap((data as any).id);
+
+      editor.addAnnotation({
+        x: startPoint.x,
+        y: startPoint.y,
+        name: '起始点位',
+        angle: startPoint.angle,
+        type: 'navigation',
+      });
+      await editor.saveMap({ silent: true });
+
+      window.$message?.success('创建成功');
     }
   } catch (e: any) {
     window.$message?.error(e?.message || '创建失败');
   }
+  return false;
 }
 
 async function handleDeleteScene(mapId: number) {
@@ -235,10 +325,37 @@ function handleCursorPosition(x: number, y: number) {
 
     <!-- Add scene dialog -->
     <NModal v-model:show="addDialogVisible" preset="dialog" title="新增场景" positive-text="确定" negative-text="取消" @positive-click="confirmAddScene">
-      <NForm label-placement="left" label-width="80">
+      <NForm label-placement="left" label-width="92">
         <NFormItem label="场景名称">
           <NInput v-model:value="newMapName" placeholder="请输入场景名称" />
         </NFormItem>
+        <NFormItem label="场景图片">
+          <div class="w-full">
+            <NUpload :max="1" accept="image/*" :custom-request="handleAddSceneUpload" :show-file-list="false">
+              <NButton :loading="addSceneUploading" ghost>
+                <template #icon><icon-ic-round-upload /></template>
+                {{ addSceneUploading ? '上传中...' : '选择图片' }}
+              </NButton>
+            </NUpload>
+            <div v-if="newMapImageUrl" class="mt-8px flex items-center gap-8px">
+              <img ref="newMapImageRef" :src="newMapImageUrl" class="max-h-160px max-w-260px object-contain" />
+              <div class="text-xs text-gray-500">
+                原图：{{ newMapOriginalWidth ?? '-' }} × {{ newMapOriginalHeight ?? '-' }} px
+              </div>
+              <NButton text type="error" @click="handleRemoveAddSceneImage">移除</NButton>
+            </div>
+          </div>
+        </NFormItem>
+        <NFormItem label="起始点位">
+          <div class="grid w-full grid-cols-3 gap-8px">
+            <NInputNumber v-model:value="newMapPointX" placeholder="原始X" class="w-full" />
+            <NInputNumber v-model:value="newMapPointY" placeholder="原始Y" class="w-full" />
+            <NInputNumber v-model:value="newMapPointAngle" placeholder="角度" class="w-full" />
+          </div>
+        </NFormItem>
+        <div class="text-xs text-gray-500">
+          起始点位按上方图片当前网页显示尺寸录入，保存时会按 原图尺寸 / 网页显示尺寸 缩放到地图原图坐标。
+        </div>
       </NForm>
     </NModal>
 

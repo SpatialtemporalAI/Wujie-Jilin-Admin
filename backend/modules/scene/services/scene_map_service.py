@@ -83,6 +83,9 @@ class SceneMapService:
                 "image_id": m.image_id,
                 "width": m.width,
                 "height": m.height,
+                "resolution": m.resolution,
+                "start_point_x": m.start_point_x,
+                "start_point_y": m.start_point_y,
                 "status": m.status,
                 "group_name": group_map.get(m.group_id) if m.group_id else None,
                 "created_at": m.created_at,
@@ -146,6 +149,9 @@ class SceneMapService:
             image_id=map_create.image_id,
             width=map_create.width,
             height=map_create.height,
+            resolution=map_create.resolution,
+            start_point_x=map_create.start_point_x,
+            start_point_y=map_create.start_point_y,
             status=map_create.status,
         )
         db.add(map_obj)
