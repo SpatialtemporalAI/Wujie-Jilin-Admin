@@ -104,7 +104,7 @@ function handleCursorPosition(x: number, y: number) {
 </script>
 
 <template>
-  <div class="flex h-full flex-col">
+  <div class="flex h-full min-h-0 flex-col">
     <EditorToolbar
       :drawing-mode="editor.drawingMode.value"
       :can-undo="editor.canUndo.value"
@@ -122,8 +122,8 @@ function handleCursorPosition(x: number, y: number) {
       @zoom-reset="canvasRef?.zoomReset()"
     />
 
-    <div class="flex flex-1 overflow-hidden">
-      <div class="relative flex-1">
+    <div class="flex min-h-0 flex-1 overflow-hidden">
+      <div class="relative min-w-0 flex-1">
         <CanvasEditor
           ref="canvasRef"
           :editor-data="editor.editorData.value"
@@ -146,7 +146,7 @@ function handleCursorPosition(x: number, y: number) {
       </div>
 
       <PropertyPanel
-        class="w-320px flex-shrink-0"
+        class="w-380px flex-shrink-0"
         :editor-data="editor.editorData.value"
         :selected-element="editor.selectedElement.value"
         :resolution="editor.resolution.value"

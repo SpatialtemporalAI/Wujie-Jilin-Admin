@@ -1,6 +1,8 @@
 <script setup lang="ts">
-import { ref, computed } from 'vue';
+import { ref, computed, onMounted } from 'vue';
+import { NProgress, NTag } from 'naive-ui';
 import type { SelectedElement } from '../composables/useMapEditor';
+import { fetchGetRobotList } from '@/service/api';
 
 interface Props {
   editorData: Api.Scene.EditorMapData | null;
@@ -20,8 +22,31 @@ const emit = defineEmits<{
   (e: 'delete-scene', mapId: number): void;
 }>();
 
-const activeTab = ref('properties');
+const activeTab = ref('overview');
 const searchText = ref('');
+const robotList = ref<Api.Robot.Robot[]>([]);
+const robotLoading = ref(false);
+
+const statusColorMap: Record<Api.Robot.RobotStatusEnum, 'success' | 'warning' | 'default'> = {
+  online: 'success',
+  offline: 'warning',
+  inactive: 'default'
+};
+
+const statusLabelMap: Record<Api.Robot.RobotStatusEnum, string> = {
+  online: '在线',
+  offline: '离线',
+  inactive: '未激活'
+};
+
+const robotOverview = computed(() => {
+  const total = robotList.value.length;
+  const online = robotList.value.filter(robot => robot.status === 'online').length;
+  const offline = robotList.value.filter(robot => robot.status === 'offline').length;
+  const inactive = robotList.value.filter(robot => robot.status === 'inactive').length;
+
+  return { total, online, offline, inactive };
+});
 
 const filteredList = computed(() => {
   if (!searchText.value) return props.sceneList;
@@ -68,11 +93,100 @@ function updateAnnotation(field: string, value: any) {
 function pixelToMeter(px: number): number {
   return Math.round(px * props.resolution * 100) / 100;
 }
+
+function getBatteryColor(threshold?: number | null): string {
+  if (threshold === null || threshold === undefined) return '#909399';
+  if (threshold <= 10) return '#18a058';
+  if (threshold <= 30) return '#f0a020';
+  return '#d03050';
+}
+
+async function loadRobotList() {
+  robotLoading.value = true;
+  try {
+    const { data, error } = await fetchGetRobotList({ page: 1, page_size: 200, name: null, serial_number: null, status: null, model_id: undefined });
+    if (!error && data) {
+      robotList.value = data.records;
+    } else {
+      robotList.value = [];
+    }
+  } catch {
+    robotList.value = [];
+  } finally {
+    robotLoading.value = false;
+  }
+}
+
+onMounted(() => {
+  loadRobotList();
+});
 </script>
 
 <template>
-  <div class="flex h-full flex-col border-l border-gray-200 bg-white">
-    <NTabs v-model:value="activeTab" type="line" size="small" class="h-full flex flex-col" pane-wrapper-class="flex-1 overflow-auto">
+  <div class="flex h-full min-h-0 flex-col border-l border-gray-200 bg-white">
+    <NTabs
+      v-model:value="activeTab"
+      type="line"
+      size="small"
+      class="h-full min-h-0 flex flex-col"
+      pane-wrapper-class="min-h-0 flex-1 overflow-auto"
+      pane-class="h-full"
+    >
+      <NTabPane name="overview" tab="机器人总览">
+        <div class="h-full overflow-auto p-12px">
+          <NSpin :show="robotLoading">
+            <div class="grid grid-cols-2 gap-8px">
+              <NCard size="small" embedded>
+                <NStatistic label="机器人总数" :value="robotOverview.total" />
+              </NCard>
+              <NCard size="small" embedded>
+                <NStatistic label="在线" :value="robotOverview.online" />
+              </NCard>
+              <NCard size="small" embedded>
+                <NStatistic label="离线" :value="robotOverview.offline" />
+              </NCard>
+              <NCard size="small" embedded>
+                <NStatistic label="未激活" :value="robotOverview.inactive" />
+              </NCard>
+            </div>
+
+            <div class="mt-12px flex items-center justify-between">
+              <span class="text-sm font-medium">机器人列表</span>
+              <NButton size="tiny" quaternary :loading="robotLoading" @click="loadRobotList">
+                <template #icon><icon-ic-round-refresh /></template>
+                刷新
+              </NButton>
+            </div>
+
+            <div class="mt-8px space-y-8px">
+              <NCard v-for="robot in robotList" :key="robot.id" size="small" embedded>
+                <div class="flex items-start justify-between gap-8px">
+                  <div class="min-w-0 flex-1">
+                    <div class="truncate text-sm font-medium">{{ robot.name }}</div>
+                    <div class="mt-4px truncate text-xs text-gray-400">{{ robot.model_name || '-' }} / {{ robot.serial_number }}</div>
+                  </div>
+                  <NTag :type="statusColorMap[robot.status]" size="small">
+                    {{ statusLabelMap[robot.status] }}
+                  </NTag>
+                </div>
+                <div class="mt-10px grid grid-cols-2 gap-8px text-xs text-gray-500">
+                  <div>速度档位：{{ robot.speed_level || '-' }}</div>
+                  <div>报警阈值：{{ robot.battery_threshold ?? '-' }}%</div>
+                </div>
+                <NProgress
+                  class="mt-8px"
+                  type="line"
+                  :percentage="robot.battery_threshold ?? 0"
+                  :color="getBatteryColor(robot.battery_threshold)"
+                  indicator-placement="inside"
+                />
+              </NCard>
+              <NEmpty v-if="!robotLoading && robotList.length === 0" description="暂无机器人" class="mt-20px" />
+            </div>
+          </NSpin>
+        </div>
+      </NTabPane>
+
       <NTabPane name="scenes" tab="场景列表">
         <div class="flex h-full flex-col">
           <div class="border-b border-gray-200 p-12px">
