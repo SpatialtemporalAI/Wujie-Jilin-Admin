@@ -31,22 +31,23 @@ class RobotConfigService:
     # ==================== 语音配置 ====================
 
     @staticmethod
-    async def get_voice_config(db: AsyncSession) -> RobotVoiceConfig:
+    async def get_voice_config(db: AsyncSession, robot_id: int) -> RobotVoiceConfig:
         """
-        获取语音配置（单例），不存在则返回默认空对象
+        获取指定机器人的语音配置，不存在则返回默认空对象
         """
         try:
             result = await db.execute(
                 select(RobotVoiceConfig)
+                .where(RobotVoiceConfig.robot_id == robot_id)
                 .where(RobotVoiceConfig.deleted_at.is_(None))
-                .order_by(RobotVoiceConfig.id.asc())
             )
             config = result.scalar_one_or_none()
             if not config:
-                logger.info("语音配置不存在，返回默认空对象")
+                logger.info("机器人 %d 语音配置不存在，返回默认空对象", robot_id)
                 return RobotVoiceConfig(
+                    robot_id=robot_id,
                     wake_word="",
-                    tts_voice="xiaoyan",
+                    tts_voice="female",
                     tts_speed=50,
                     tts_volume=80,
                 )
@@ -60,15 +61,15 @@ class RobotConfigService:
         db: AsyncSession, schema: RobotVoiceConfigSchema
     ) -> RobotVoiceConfig:
         """
-        保存语音配置（upsert）
+        保存语音配置（按 robot_id upsert）
         """
         try:
             logger.info("保存语音配置，请求数据: %s", schema.model_dump(exclude_none=True))
 
             result = await db.execute(
                 select(RobotVoiceConfig)
+                .where(RobotVoiceConfig.robot_id == schema.robot_id)
                 .where(RobotVoiceConfig.deleted_at.is_(None))
-                .order_by(RobotVoiceConfig.id.asc())
             )
             existing = result.scalar_one_or_none()
 
@@ -83,6 +84,7 @@ class RobotConfigService:
                 return existing
             else:
                 config = RobotVoiceConfig(
+                    robot_id=schema.robot_id,
                     wake_word=schema.wake_word,
                     tts_voice=schema.tts_voice,
                     tts_speed=schema.tts_speed,

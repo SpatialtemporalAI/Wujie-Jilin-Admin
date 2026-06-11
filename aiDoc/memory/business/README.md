@@ -18,3 +18,4 @@
 - [2026-06-03 数据库模块迁移](./2026-06-03_database_migration.md) — ORM 模型、连接管理、工具函数统一迁移到 database/ 包
 - [2026-06-03 字典通用组件](./2026-06-03_dict_components.md) — useDict composable + DictSelect/DictTag/DictText 通用组件 + gender 种子数据
 - [2026-06-09 任务管理](./2026-06-09_task-management.md) — 机器人巡逻/播报任务管理，含任务配置、执行控制、历史记录
+- [2026-06-11 机器人配置迁移修复](./2026-06-11_robot-config-migration-fix.md) — 修复 robot_voice_config 存量表缺少 robot_id 导致语音配置接口 500

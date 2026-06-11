@@ -8,7 +8,7 @@
 
 ## 业务需求记忆
 
-暂无。
+- [2026-06-11 机器人配置迁移修复](./business/2026-06-11_robot-config-migration-fix.md) — 修复 robot_voice_config 存量表缺少 robot_id 导致语音配置接口 500
 
 ## 维护说明
 

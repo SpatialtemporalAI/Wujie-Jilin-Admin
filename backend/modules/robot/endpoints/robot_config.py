@@ -45,13 +45,16 @@ robot_config_router = APIRouter(
     "/voice",
     response_model=ResponseModel[RobotVoiceConfigResponse],
 )
-async def get_voice_config(db: AsyncSession = Depends(get_session)):
+async def get_voice_config(
+    robot_id: int,
+    db: AsyncSession = Depends(get_session),
+):
     """
     获取语音合成配置
     """
     try:
-        logger.info("获取语音合成配置接口被调用")
-        config = await RobotConfigService.get_voice_config(db)
+        logger.info("获取语音合成配置接口被调用，robot_id: %d", robot_id)
+        config = await RobotConfigService.get_voice_config(db, robot_id)
         response_data = RobotVoiceConfigResponse.model_validate(config)
         logger.info("获取语音合成配置接口成功")
         return response_base.success(data=response_data)

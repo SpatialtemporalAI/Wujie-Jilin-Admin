@@ -3,10 +3,11 @@ import { request } from '../request';
 /** ==================== 机器人参数配置 API ==================== */
 
 /** 获取语音合成配置 */
-export function fetchGetVoiceConfig() {
+export function fetchGetVoiceConfig(robotId: number) {
   return request<Api.RobotConfig.VoiceConfig>({
     url: '/robot/config/voice',
-    method: 'get'
+    method: 'get',
+    params: { robot_id: robotId }
   });
 }
 

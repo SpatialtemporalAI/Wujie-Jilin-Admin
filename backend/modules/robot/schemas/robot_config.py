@@ -15,6 +15,7 @@ class RobotVoiceConfigSchema(BaseReqEntity):
     机器人语音合成配置请求模型
     """
 
+    robot_id: int = Field(..., description="机器人ID")
     wake_word: str = Field(..., description="唤醒词", min_length=4, max_length=6)
     tts_voice: str = Field(..., description="音色", max_length=50)
     tts_speed: int = Field(..., description="语速")
@@ -29,6 +30,7 @@ class RobotVoiceConfigResponse(BaseRespEntity):
     model_config = ConfigDict(from_attributes=True)
 
     id: Optional[int] = Field(None, description="配置ID")
+    robot_id: Optional[int] = Field(None, description="机器人ID")
     wake_word: Optional[str] = Field(None, description="唤醒词")
     tts_voice: Optional[str] = Field(None, description="音色")
     tts_speed: Optional[int] = Field(None, description="语速")

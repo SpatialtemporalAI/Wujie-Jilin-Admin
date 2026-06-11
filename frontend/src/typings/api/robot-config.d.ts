@@ -3,6 +3,7 @@ declare namespace Api.RobotConfig {
 
   interface VoiceConfig {
     id?: number;
+    robot_id: number;
     wake_word: string;
     tts_voice: string;
     tts_speed: number;

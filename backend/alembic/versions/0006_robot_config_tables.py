@@ -141,6 +141,12 @@ def upgrade() -> None:
     op.create_table(
         "robot_voice_config",
         sa.Column("id", sa.BigInteger(), autoincrement=True, nullable=False),
+        sa.Column(
+            "robot_id",
+            sa.BigInteger(),
+            nullable=False,
+            comment="机器人ID",
+        ),
         sa.Column("wake_word", sa.String(20), nullable=True, comment="唤醒词"),
         sa.Column("tts_voice", sa.String(50), nullable=True, comment="音色"),
         sa.Column("tts_speed", sa.Integer(), nullable=True, comment="语速"),
@@ -166,6 +172,8 @@ def upgrade() -> None:
         ),
         sa.PrimaryKeyConstraint("id"),
         sa.UniqueConstraint("id"),
+        sa.UniqueConstraint("robot_id"),
+        sa.ForeignKeyConstraint(["robot_id"], ["robot.id"]),
         comment="机器人语音配置表",
     )
 
