@@ -66,21 +66,22 @@ function updateMinimap() {
   const viewW = containerWidth.value / zoom;
   const viewH = containerHeight.value / zoom;
 
-  // Raw rect in minimap coords
-  let rx = ox + viewLeft * s;
-  let ry = oy + viewTop * s;
-  let rw = viewW * s;
-  let rh = viewH * s;
+  const visibleLeft = Math.max(0, viewLeft);
+  const visibleTop = Math.max(0, viewTop);
+  const visibleRight = Math.min(canvasWidth.value, viewLeft + viewW);
+  const visibleBottom = Math.min(canvasHeight.value, viewTop + viewH);
 
-  // Clamp to image bounds
-  const right = ox + imgW;
-  const bottom = oy + imgH;
-  rx = Math.max(ox, Math.min(rx, right - rw));
-  ry = Math.max(oy, Math.min(ry, bottom - rh));
-  rw = Math.min(rw, imgW);
-  rh = Math.min(rh, imgH);
+  if (visibleRight <= visibleLeft || visibleBottom <= visibleTop) {
+    minimapRect.value = { x: ox, y: oy, w: 0, h: 0 };
+    return;
+  }
 
-  minimapRect.value = { x: rx, y: ry, w: rw, h: rh };
+  minimapRect.value = {
+    x: ox + visibleLeft * s,
+    y: oy + visibleTop * s,
+    w: (visibleRight - visibleLeft) * s,
+    h: (visibleBottom - visibleTop) * s,
+  };
 }
 
 // --- Minimap drag-to-navigate ---
@@ -574,7 +575,10 @@ function handleMouseMove(opt: any) {
 function handleMouseUp(opt: any) {
   if (isPanning) {
     isPanning = false;
-    if (fabricCanvas) fabricCanvas.selection = true;
+    if (fabricCanvas) {
+      fabricCanvas.selection = true;
+      updateMinimap();
+    }
     return;
   }
   if (drawingState?.type === 'rect' && fabricCanvas) {
@@ -643,6 +647,7 @@ function handleMouseWheel(opt: any) {
   currentZoom = zoom;
   sliderZoomValue.value = sliderValueToZoom(zoom);
   renderGrid();
+  updateMinimap();
   emit('zoom-change', zoom);
 }
 
