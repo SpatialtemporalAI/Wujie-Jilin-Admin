@@ -5,7 +5,7 @@
 机器人参数配置相关接口
 """
 import logging
-from fastapi import APIRouter, Depends, Request
+from fastapi import APIRouter, Depends, Request, UploadFile, File
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from database.db_manager import get_session
@@ -19,6 +19,8 @@ from core.decorators.operation_log import log_operation
 from modules.admin.deps.auth.user_manager import current_user
 from modules.admin.deps.auth.permission import require_permission
 from database.models.sys.user import SysUser
+from modules.admin.services.sys.file_service import FileService
+from modules.admin.schemas.sys.file import SysFileUploadResponse
 
 from modules.robot.services.robot_config_service import RobotConfigService
 from modules.robot.schemas.robot_config import (
@@ -122,6 +124,34 @@ async def test_tts(
 
 
 # ==================== 人脸识别TTS配置 ====================
+
+
+@robot_config_router.post(
+    "/face/upload",
+    response_model=ResponseModel[SysFileUploadResponse],
+    dependencies=[Depends(require_permission("robot:config:edit"))],
+)
+async def upload_face_photo(
+    file: UploadFile = File(...),
+    db: AsyncSession = Depends(get_session),
+    user: SysUser = Depends(current_user),
+):
+    """
+    上传人脸识别人像
+    """
+    file_data = await file.read()
+    sys_file = await FileService.upload_file(
+        db=db,
+        file_data=file_data,
+        original_name=file.filename or "unknown",
+        mime_type=file.content_type or "application/octet-stream",
+        created_by=user.id,
+    )
+    await db.commit()
+    return response_base.success(
+        data=SysFileUploadResponse.model_validate(sys_file),
+        msg="上传成功",
+    )
 
 
 @robot_config_router.get(

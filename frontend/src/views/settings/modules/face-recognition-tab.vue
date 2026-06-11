@@ -6,7 +6,7 @@ import {
   fetchCreateFaceRecognition,
   fetchUpdateFaceRecognition,
   fetchDeleteFaceRecognition,
-  fetchUploadFile,
+  fetchUploadFacePhoto,
   getPersistentFilePreviewPath,
   resolveFilePreviewUrl
 } from '@/service/api';
@@ -56,7 +56,7 @@ async function loadData() {
 async function handleUpload({ file }: { file: UploadFileInfo }) {
   if (!file.file) return;
   try {
-    const { data, error } = await fetchUploadFile(file.file);
+    const { data, error } = await fetchUploadFacePhoto(file.file);
     if (!error && data) {
       model.photo_url = getPersistentFilePreviewPath(data.id);
       message.success('上传成功');

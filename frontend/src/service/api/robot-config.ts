@@ -38,6 +38,18 @@ export function fetchTestTTS(data: Api.RobotConfig.TestTTSRequest) {
   });
 }
 
+/** 上传人脸识别人像 */
+export function fetchUploadFacePhoto(file: File) {
+  const formData = new FormData();
+  formData.append('file', file);
+  return request<Api.FileManage.FileInfo>({
+    url: '/robot/config/face/upload',
+    method: 'post',
+    data: formData,
+    headers: { 'Content-Type': 'multipart/form-data' }
+  });
+}
+
 /** 获取人脸识别TTS配置列表 */
 export function fetchGetFaceRecognitionList(params?: Api.RobotConfig.CommonSearchParams) {
   return request<Api.RobotConfig.FaceRecognitionList>({
