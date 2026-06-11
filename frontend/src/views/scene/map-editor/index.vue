@@ -19,6 +19,16 @@ const addDialogVisible = ref(false);
 const newMapName = ref('');
 const newMapGroupId = ref<number | null>(null);
 
+const importDialogVisible = ref(false);
+const importJsonText = ref('');
+
+interface ImportMapPoint {
+  label: string;
+  position: [number, number, number];
+  node?: string;
+  description?: string;
+}
+
 onMounted(async () => {
   await editor.loadSceneList();
   if (editor.sceneList.value.length > 0) {
@@ -89,6 +99,63 @@ function handleUpdateElement(data: { type: string; id: number; updates: Record<s
   editor.updateElement(data.type as any, data.id, data.updates);
 }
 
+function handleImportJson() {
+  importJsonText.value = '';
+  importDialogVisible.value = true;
+}
+
+function confirmImportJson() {
+  if (!editor.editorData.value) {
+    window.$message?.warning('请先选择场景地图');
+    return false;
+  }
+
+  let points: ImportMapPoint[];
+  try {
+    const parsed = JSON.parse(importJsonText.value);
+    if (!Array.isArray(parsed)) {
+      window.$message?.error('JSON 必须是数组');
+      return false;
+    }
+    points = parsed;
+  } catch {
+    window.$message?.error('JSON 格式错误');
+    return false;
+  }
+
+  try {
+    const existingNames = new Set(editor.editorData.value.annotations.map(item => item.name));
+    const importNames = new Set<string>();
+    const annotations = points.map((point, index) => {
+      const [x, y, angle] = point.position || [];
+      if (!point.label || !Number.isFinite(x) || !Number.isFinite(y) || !Number.isFinite(angle)) {
+        throw new Error(`第 ${index + 1} 条数据缺少 label 或有效 position`);
+      }
+
+      const baseName = point.label.trim();
+      let name = baseName;
+      if (existingNames.has(name) || importNames.has(name)) {
+        name = point.description?.trim() || `${baseName}${index + 1}`;
+      }
+      if (existingNames.has(name) || importNames.has(name)) {
+        name = `${name}${index + 1}`;
+      }
+      existingNames.add(name);
+      importNames.add(name);
+
+      return { x, y, angle, name, type: 'reception' };
+    });
+
+    editor.addAnnotations(annotations);
+    window.$message?.success(`已导入 ${annotations.length} 个点位，请保存地图`);
+    importDialogVisible.value = false;
+    return true;
+  } catch (e: any) {
+    window.$message?.error(e?.message || '导入失败');
+    return false;
+  }
+}
+
 function handleExport(format: 'png' | 'jpeg' | 'webp') {
   canvasRef.value?.exportCanvas(format);
 }
@@ -123,6 +190,7 @@ function handleCursorPosition(x: number, y: number) {
       @undo="editor.undo()"
       @redo="editor.redo()"
       @save="editor.saveMap()"
+      @import-json="handleImportJson"
       @export="handleExport"
     />
 
@@ -172,6 +240,16 @@ function handleCursorPosition(x: number, y: number) {
           <NInput v-model:value="newMapName" placeholder="请输入场景名称" />
         </NFormItem>
       </NForm>
+    </NModal>
+
+    <NModal v-model:show="importDialogVisible" preset="dialog" title="导入JSON点位" positive-text="导入" negative-text="取消" @positive-click="confirmImportJson">
+      <NInput
+        v-model:value="importJsonText"
+        type="textarea"
+        :autosize="{ minRows: 12, maxRows: 18 }"
+        placeholder="请粘贴包含 label、position、node、description 的 JSON 数组"
+      />
+      <div class="mt-8px text-xs text-gray-500">position 将按 [x, y, angle] 导入为接待点标注，导入后需点击保存。</div>
     </NModal>
   </div>
 </template>

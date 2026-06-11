@@ -217,12 +217,9 @@ export function useMapEditor() {
     window.$message?.success('删除成功');
   }
 
-  function addAnnotation(annotation: { x: number; y: number; name: string; angle: number; type: string }) {
-    if (!editorData.value) return;
-    pushUndoSnapshot();
-    const newId = -(Date.now());
-    const newItem = {
-      id: newId,
+  function createAnnotation(annotation: { x: number; y: number; name: string; angle: number; type: string }, id: number) {
+    return {
+      id,
       map_id: selectedMapId.value!,
       x: annotation.x,
       y: annotation.y,
@@ -235,8 +232,21 @@ export function useMapEditor() {
       created_at: null,
       updated_at: null,
     } as unknown as Api.Scene.SceneMapAnnotation;
-    editorData.value.annotations.push(newItem);
+  }
+
+  function addAnnotation(annotation: { x: number; y: number; name: string; angle: number; type: string }) {
+    if (!editorData.value) return;
+    pushUndoSnapshot();
+    const newId = -(Date.now());
+    editorData.value.annotations.push(createAnnotation(annotation, newId));
     return newId;
+  }
+
+  function addAnnotations(annotations: { x: number; y: number; name: string; angle: number; type: string }[]) {
+    if (!editorData.value || annotations.length === 0) return;
+    pushUndoSnapshot();
+    const baseId = Date.now();
+    editorData.value.annotations.push(...annotations.map((annotation, index) => createAnnotation(annotation, -(baseId + index))));
   }
 
   function addPath(path: { start_annotation_id: number; end_annotation_id: number; name?: string; points?: string | null }) {
@@ -340,6 +350,7 @@ export function useMapEditor() {
     saveMap,
     deleteScene,
     addAnnotation,
+    addAnnotations,
     addPath,
     addObject,
     removeElement,
