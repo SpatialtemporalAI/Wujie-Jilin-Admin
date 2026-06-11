@@ -119,15 +119,11 @@ function handleCursorPosition(x: number, y: number) {
       :can-redo="editor.canRedo.value"
       :is-dirty="editor.isDirty.value"
       :saving="editor.saving.value"
-      :zoom-level="zoomLevel"
       @update:drawing-mode="(m: DrawingMode) => (editor.drawingMode.value = m)"
       @undo="editor.undo()"
       @redo="editor.redo()"
       @save="editor.saveMap()"
       @export="handleExport"
-      @zoom-in="canvasRef?.zoomIn()"
-      @zoom-out="canvasRef?.zoomOut()"
-      @zoom-reset="canvasRef?.zoomReset()"
     />
 
     <div class="flex min-h-0 flex-1 overflow-hidden">

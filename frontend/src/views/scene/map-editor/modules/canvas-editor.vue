@@ -831,7 +831,7 @@ defineExpose({ exportCanvas, zoomIn, zoomOut, zoomReset, locateMeterPoint });
     </div>
 
     <!-- Zoom slider control -->
-    <div v-if="editorData" class="absolute bottom-12px right-12px z-10 flex flex-col items-center gap-4px rounded-lg bg-white/90 px-6px py-8px shadow-md">
+    <div v-if="editorData" class="absolute right-12px top-12px z-10 flex flex-col items-center gap-4px rounded-lg bg-white/90 px-6px py-8px shadow-md">
       <button
         class="flex h-24px w-24px items-center justify-center rounded-full text-sm font-bold text-blue-500 transition-colors hover:bg-blue-50"
         @click="zoomIn"

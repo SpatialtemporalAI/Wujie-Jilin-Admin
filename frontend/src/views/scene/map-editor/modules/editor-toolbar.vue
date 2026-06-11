@@ -7,7 +7,6 @@ interface Props {
   canRedo: boolean;
   isDirty: boolean;
   saving: boolean;
-  zoomLevel: number;
 }
 
 defineProps<Props>();
@@ -18,9 +17,6 @@ const emit = defineEmits<{
   (e: 'redo'): void;
   (e: 'save'): void;
   (e: 'export', format: 'png' | 'jpeg' | 'webp'): void;
-  (e: 'zoom-in'): void;
-  (e: 'zoom-out'): void;
-  (e: 'zoom-reset'): void;
 }>();
 
 const drawingModes: { key: DrawingMode; label: string; icon: string }[] = [
@@ -59,20 +55,6 @@ const drawingModes: { key: DrawingMode; label: string; icon: string }[] = [
       <NButton :disabled="!canRedo" @click="emit('redo')">
         <template #icon><icon-ic-round-redo /></template>
         重做
-      </NButton>
-    </NButtonGroup>
-
-    <NDivider vertical />
-
-    <NButtonGroup size="small">
-      <NButton @click="emit('zoom-out')">
-        <template #icon><icon-ic-round-remove /></template>
-      </NButton>
-      <NButton @click="emit('zoom-reset')">
-        {{ Math.round(zoomLevel * 100) }}%
-      </NButton>
-      <NButton @click="emit('zoom-in')">
-        <template #icon><icon-ic-round-add /></template>
       </NButton>
     </NButtonGroup>
 
