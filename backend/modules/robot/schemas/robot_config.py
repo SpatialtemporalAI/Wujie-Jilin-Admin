@@ -2,12 +2,20 @@
 # -*- coding: utf-8 -*-
 
 from typing import Optional
-from pydantic import Field, ConfigDict
+from pydantic import Field, ConfigDict, field_validator
 from datetime import datetime
+from urllib.parse import urlsplit
 
 from pydantic import BaseModel
 
 from app.models.common.base import BaseRespEntity, BaseReqEntity
+
+
+def normalize_file_preview_path(value: str | None) -> str | None:
+    if not value:
+        return value
+    parsed = urlsplit(value)
+    return parsed.path if parsed.path.endswith("/preview") else value
 
 
 class RobotVoiceConfigSchema(BaseReqEntity):
@@ -48,6 +56,11 @@ class RobotFaceRecognitionCreate(BaseReqEntity):
     photo_url: str = Field(..., description="人像图片URL", max_length=255)
     broadcast_text: str = Field(..., description="语音播报内容")
 
+    @field_validator("photo_url", mode="before")
+    @classmethod
+    def normalize_photo_url(cls, value: str | None) -> str | None:
+        return normalize_file_preview_path(value)
+
 
 class RobotFaceRecognitionUpdate(BaseReqEntity):
     """
@@ -57,6 +70,11 @@ class RobotFaceRecognitionUpdate(BaseReqEntity):
     person_name: Optional[str] = Field(None, description="人员名称", max_length=100)
     photo_url: Optional[str] = Field(None, description="人像图片URL", max_length=255)
     broadcast_text: Optional[str] = Field(None, description="语音播报内容")
+
+    @field_validator("photo_url", mode="before")
+    @classmethod
+    def normalize_photo_url(cls, value: str | None) -> str | None:
+        return normalize_file_preview_path(value)
 
 
 class RobotFaceRecognitionResponse(BaseRespEntity):

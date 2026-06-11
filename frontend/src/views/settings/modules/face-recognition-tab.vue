@@ -7,7 +7,8 @@ import {
   fetchUpdateFaceRecognition,
   fetchDeleteFaceRecognition,
   fetchUploadFile,
-  getFilePreviewUrl
+  getPersistentFilePreviewPath,
+  resolveFilePreviewUrl
 } from '@/service/api';
 import { useAppStore } from '@/store/modules/app';
 import { useNaiveForm } from '@/hooks/common/form';
@@ -57,13 +58,18 @@ async function handleUpload({ file }: { file: UploadFileInfo }) {
   try {
     const { data, error } = await fetchUploadFile(file.file);
     if (!error && data) {
-      model.photo_url = getFilePreviewUrl(data.id);
+      model.photo_url = getPersistentFilePreviewPath(data.id);
       message.success('上传成功');
     }
   } catch (err) {
     message.error('上传失败');
     console.error('上传人像失败:', err);
   }
+}
+
+function handleRemovePhoto() {
+  model.photo_url = '';
+  return true;
 }
 
 async function handleSave() {
@@ -130,7 +136,7 @@ const columns = [
     align: 'center' as const,
     width: 100,
     render: (row: Api.RobotConfig.FaceRecognition) => (
-      <img src={row.photo_url} class="h-48px w-48px rounded object-cover" alt="人像" />
+      <img src={resolveFilePreviewUrl(row.photo_url)} class="h-48px w-48px rounded object-cover" alt="人像" />
     )
   },
   { key: 'broadcast_text', title: '播报内容', align: 'center' as const, minWidth: 200, ellipsis: { tooltip: true } },
@@ -175,6 +181,7 @@ onMounted(() => {
               :max="1"
               accept="image/*"
               :custom-request="handleUpload"
+              :on-remove="handleRemovePhoto"
               list-type="image-card"
             />
             <span v-if="model.photo_url && !fileList.length" class="text-12px text-gray">已上传: {{ model.photo_url }}</span>

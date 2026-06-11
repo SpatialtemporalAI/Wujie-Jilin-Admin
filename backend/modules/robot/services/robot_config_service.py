@@ -218,7 +218,8 @@ class RobotConfigService:
         try:
             logger.info("删除人脸识别TTS配置，ID: %d", face_id)
             face = await RobotConfigService.get_face(db, face_id)
-            await face.soft_delete(db)
+            face.soft_delete()
+            await db.commit()
             logger.info("删除人脸识别TTS配置成功，ID: %d", face_id)
             return True
         except NotFoundError:
