@@ -128,8 +128,7 @@ onMounted(() => {
       v-model:value="activeTab"
       type="line"
       size="small"
-      class="h-full min-h-0 flex flex-col"
-      tabs-padding="0 12px"
+      class="property-panel-tabs h-full min-h-0 flex flex-col"
       pane-wrapper-class="min-h-0 flex-1 overflow-auto"
       pane-class="h-full"
     >
@@ -312,3 +311,9 @@ onMounted(() => {
     </NTabs>
   </div>
 </template>
+
+<style scoped>
+.property-panel-tabs :deep(.n-tabs-nav) {
+  padding: 0 12px;
+}
+</style>
