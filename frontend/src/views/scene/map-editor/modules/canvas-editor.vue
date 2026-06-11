@@ -795,6 +795,18 @@ function zoomReset() {
   emit('zoom-change', 1);
 }
 
+function locateMeterPoint(x: number, y: number) {
+  if (!fabricCanvas) return;
+  const zoom = Math.max(currentZoom, MIN_ZOOM);
+  const pointX = x / props.resolution;
+  const pointY = y / props.resolution;
+  const offsetX = containerWidth.value / 2 - pointX * zoom;
+  const offsetY = containerHeight.value / 2 - pointY * zoom;
+  fabricCanvas.setViewportTransform([zoom, 0, 0, zoom, offsetX, offsetY]);
+  fabricCanvas.renderAll();
+  updateMinimap();
+}
+
 function handleSliderZoom(val: number) {
   if (!fabricCanvas) return;
   const newZoom = zoomToSliderValue(val);
@@ -805,7 +817,7 @@ function handleSliderZoom(val: number) {
   emit('zoom-change', newZoom);
 }
 
-defineExpose({ exportCanvas, zoomIn, zoomOut, zoomReset });
+defineExpose({ exportCanvas, zoomIn, zoomOut, zoomReset, locateMeterPoint });
 </script>
 
 <template>

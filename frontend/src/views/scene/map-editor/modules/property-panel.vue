@@ -1,8 +1,9 @@
 <script setup lang="ts">
 import { ref, computed, onMounted } from 'vue';
 import { NProgress, NTag } from 'naive-ui';
+import type { SelectOption } from 'naive-ui';
 import type { SelectedElement } from '../composables/useMapEditor';
-import { fetchGetRobotList } from '@/service/api';
+import { fetchGetLatestRobotStatus, fetchGetRobotList, fetchUpdateRobot } from '@/service/api';
 
 interface Props {
   editorData: Api.Scene.EditorMapData | null;
@@ -20,12 +21,22 @@ const emit = defineEmits<{
   (e: 'select-scene', mapId: number): void;
   (e: 'add-scene'): void;
   (e: 'delete-scene', mapId: number): void;
+  (e: 'locate-robot', data: { mapId: number; x: number; y: number }): void;
 }>();
 
 const activeTab = ref('overview');
 const searchText = ref('');
 const robotList = ref<Api.Robot.Robot[]>([]);
 const robotLoading = ref(false);
+const locatingRobotId = ref<number | null>(null);
+const bindingRobotId = ref<number | null>(null);
+
+const sceneOptions = computed<SelectOption[]>(() =>
+  props.sceneList.map(scene => ({
+    label: scene.name,
+    value: scene.id
+  }))
+);
 
 const statusColorMap: Record<Api.Robot.RobotStatusEnum, 'success' | 'warning' | 'default'> = {
   online: 'success',
@@ -38,15 +49,6 @@ const statusLabelMap: Record<Api.Robot.RobotStatusEnum, string> = {
   offline: '离线',
   inactive: '未激活'
 };
-
-const robotOverview = computed(() => {
-  const total = robotList.value.length;
-  const online = robotList.value.filter(robot => robot.status === 'online').length;
-  const offline = robotList.value.filter(robot => robot.status === 'offline').length;
-  const inactive = robotList.value.filter(robot => robot.status === 'inactive').length;
-
-  return { total, online, offline, inactive };
-});
 
 const filteredList = computed(() => {
   if (!searchText.value) return props.sceneList;
@@ -104,7 +106,7 @@ function getBatteryColor(threshold?: number | null): string {
 async function loadRobotList() {
   robotLoading.value = true;
   try {
-    const { data, error } = await fetchGetRobotList({ page: 1, page_size: 200, name: null, serial_number: null, status: null, model_id: undefined });
+    const { data, error } = await fetchGetRobotList({ page: 1, page_size: 200, name: null, serial_number: null, status: null, model_id: undefined, map_id: undefined });
     if (!error && data) {
       robotList.value = data.records;
     } else {
@@ -114,6 +116,62 @@ async function loadRobotList() {
     robotList.value = [];
   } finally {
     robotLoading.value = false;
+  }
+}
+
+function parseRobotLocation(location: string | null): { x: number; y: number } | null {
+  if (!location) return null;
+  try {
+    const parsed = JSON.parse(location) as { x?: unknown; y?: unknown };
+    if (typeof parsed.x === 'number' && typeof parsed.y === 'number') {
+      return { x: parsed.x, y: parsed.y };
+    }
+  } catch {
+    const match = location.match(/-?\d+(?:\.\d+)?/g);
+    if (match && match.length >= 2) {
+      return { x: Number(match[0]), y: Number(match[1]) };
+    }
+  }
+  return null;
+}
+
+async function locateRobot(robot: Api.Robot.Robot) {
+  if (!robot.map_id) {
+    window.$message?.warning('请先绑定场景');
+    return;
+  }
+  locatingRobotId.value = robot.id;
+  try {
+    const { data, error } = await fetchGetLatestRobotStatus(robot.id);
+    if (error || !data) {
+      window.$message?.warning('暂无机器人位置');
+      return;
+    }
+    const location = parseRobotLocation(data.location);
+    if (!location) {
+      window.$message?.warning('机器人位置格式无效');
+      return;
+    }
+    emit('locate-robot', { mapId: robot.map_id, x: location.x, y: location.y });
+  } finally {
+    locatingRobotId.value = null;
+  }
+}
+
+async function updateRobotMap(robot: Api.Robot.Robot, mapId: number | null) {
+  bindingRobotId.value = robot.id;
+  try {
+    const { data, error } = await fetchUpdateRobot(robot.id, { map_id: mapId });
+    if (!error && data) {
+      const target = robotList.value.find(item => item.id === robot.id);
+      if (target) {
+        target.map_id = data.map_id;
+        target.map_name = data.map_name;
+      }
+      window.$message?.success('绑定场景已更新');
+    }
+  } finally {
+    bindingRobotId.value = null;
   }
 }
 
@@ -135,22 +193,7 @@ onMounted(() => {
       <NTabPane name="overview" tab="机器人总览">
         <div class="h-full overflow-auto p-12px">
           <NSpin :show="robotLoading">
-            <div class="grid grid-cols-2 gap-8px">
-              <NCard size="small" embedded>
-                <NStatistic label="机器人总数" :value="robotOverview.total" />
-              </NCard>
-              <NCard size="small" embedded>
-                <NStatistic label="在线" :value="robotOverview.online" />
-              </NCard>
-              <NCard size="small" embedded>
-                <NStatistic label="离线" :value="robotOverview.offline" />
-              </NCard>
-              <NCard size="small" embedded>
-                <NStatistic label="未激活" :value="robotOverview.inactive" />
-              </NCard>
-            </div>
-
-            <div class="mt-12px flex items-center justify-between">
+            <div class="flex items-center justify-between">
               <span class="text-sm font-medium">机器人列表</span>
               <NButton size="tiny" quaternary :loading="robotLoading" @click="loadRobotList">
                 <template #icon><icon-ic-round-refresh /></template>
@@ -172,6 +215,21 @@ onMounted(() => {
                 <div class="mt-10px grid grid-cols-2 gap-8px text-xs text-gray-500">
                   <div>速度档位：{{ robot.speed_level || '-' }}</div>
                   <div>报警阈值：{{ robot.battery_threshold ?? '-' }}%</div>
+                </div>
+                <div class="mt-8px flex items-center gap-8px">
+                  <NSelect
+                    :value="robot.map_id ?? null"
+                    :options="sceneOptions"
+                    size="tiny"
+                    clearable
+                    placeholder="绑定场景"
+                    class="min-w-0 flex-1"
+                    :loading="bindingRobotId === robot.id"
+                    @update:value="value => updateRobotMap(robot, value as number | null)"
+                  />
+                  <NButton size="tiny" type="primary" ghost :loading="locatingRobotId === robot.id" @click="locateRobot(robot)">
+                    定位
+                  </NButton>
                 </div>
                 <NProgress
                   class="mt-8px"

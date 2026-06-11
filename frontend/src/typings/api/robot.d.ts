@@ -44,6 +44,10 @@ declare namespace Api {
       model_name?: string;
       /** serial number */
       serial_number: string;
+      /** bound scene map id */
+      map_id?: number | null;
+      /** bound scene map name */
+      map_name?: string | null;
       /** status */
       status: RobotStatusEnum;
       /** speed level */
@@ -54,7 +58,7 @@ declare namespace Api {
 
     /** robot search params */
     type RobotSearchParams = CommonType.RecordNullable<
-      Pick<Robot, 'name' | 'serial_number' | 'status'> & { model_id?: number } & CommonSearchParams
+      Pick<Robot, 'name' | 'serial_number' | 'status'> & { model_id?: number; map_id?: number } & CommonSearchParams
     >;
 
     /** robot list */
@@ -65,6 +69,7 @@ declare namespace Api {
       name: string;
       model_id: number;
       serial_number: string;
+      map_id?: number | null;
       status?: RobotStatusEnum;
     };
 

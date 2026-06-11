@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { onMounted, ref } from 'vue';
+import { nextTick, onMounted, ref } from 'vue';
 import { useMapEditor, type DrawingMode } from './composables/useMapEditor';
 import EditorToolbar from './modules/editor-toolbar.vue';
 import CanvasEditor from './modules/canvas-editor.vue';
@@ -97,6 +97,14 @@ function handleZoomChange(zoom: number) {
   zoomLevel.value = zoom;
 }
 
+async function handleLocateRobot(data: { mapId: number; x: number; y: number }) {
+  if (editor.selectedMapId.value !== data.mapId) {
+    await editor.loadMap(data.mapId);
+  }
+  await nextTick();
+  canvasRef.value?.locateMeterPoint(data.x, data.y);
+}
+
 function handleCursorPosition(x: number, y: number) {
   cursorX.value = x;
   cursorY.value = y;
@@ -157,6 +165,7 @@ function handleCursorPosition(x: number, y: number) {
         @select-scene="handleSelectMap"
         @add-scene="handleAddScene"
         @delete-scene="handleDeleteScene"
+        @locate-robot="handleLocateRobot"
       />
     </div>
 

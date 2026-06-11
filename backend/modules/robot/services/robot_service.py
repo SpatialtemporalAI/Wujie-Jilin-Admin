@@ -13,6 +13,7 @@ from typing import List, Tuple
 
 from database.models.business.robot import Robot, RobotStatus
 from database.models.business.robot_model import RobotModel
+from database.models.business.scene_map import SceneMap
 from core.exception.errors import NotFoundError, ConflictError
 from modules.robot.schemas.robot import (
     RobotCreate,
@@ -53,6 +54,8 @@ class RobotService:
             conditions.append(Robot.status == RobotStatus(query_params.status))
         if query_params.model_id:
             conditions.append(Robot.model_id == query_params.model_id)
+        if query_params.map_id:
+            conditions.append(Robot.map_id == query_params.map_id)
 
         if conditions:
             base_query = base_query.where(and_(*conditions))
@@ -173,6 +176,15 @@ class RobotService:
                 logger.warning("关联型号不存在，型号ID: %d", robot_in.model_id)
                 raise NotFoundError(msg=f"机器人型号 {robot_in.model_id} 不存在")
 
+            if robot_in.map_id is not None:
+                map_result = await db.execute(
+                    select(SceneMap)
+                    .where(SceneMap.id == robot_in.map_id)
+                    .where(SceneMap.deleted_at.is_(None))
+                )
+                if not map_result.scalar_one_or_none():
+                    raise NotFoundError(msg=f"场景地图 {robot_in.map_id} 不存在")
+
             # 检查序列号是否已存在
             sn_result = await db.execute(
                 select(Robot)
@@ -187,6 +199,7 @@ class RobotService:
                 name=robot_in.name,
                 model_id=robot_in.model_id,
                 serial_number=robot_in.serial_number,
+                map_id=robot_in.map_id,
                 status=RobotStatus(robot_in.status),
             )
 
@@ -269,6 +282,17 @@ class RobotService:
                 if not model_result.scalar_one_or_none():
                     raise NotFoundError(
                         msg=f"机器人型号 {update_data['model_id']} 不存在"
+                    )
+
+            if "map_id" in update_data and update_data["map_id"] is not None:
+                map_result = await db.execute(
+                    select(SceneMap)
+                    .where(SceneMap.id == update_data["map_id"])
+                    .where(SceneMap.deleted_at.is_(None))
+                )
+                if not map_result.scalar_one_or_none():
+                    raise NotFoundError(
+                        msg=f"场景地图 {update_data['map_id']} 不存在"
                     )
 
             # 如果更新状态，转换枚举

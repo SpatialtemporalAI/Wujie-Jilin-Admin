@@ -23,6 +23,7 @@ from modules.admin.deps.auth.permission import require_permission
 from database.models.sys.user import SysUser
 from database.models.business.robot import Robot
 from database.models.business.robot_model import RobotModel
+from database.models.business.scene_map import SceneMap
 
 from modules.robot.services.robot_service import RobotService
 from modules.robot.schemas.robot import (
@@ -39,14 +40,24 @@ robot_router = APIRouter(
 )
 
 
-def _build_robot_response(robot_obj: Robot, db: AsyncSession = None, model_name: str = None) -> RobotResponseData:
-    """
-    构建机器人响应数据，附带 model_name
-    """
-    data = RobotResponseData.model_validate(robot_obj)
-    if model_name:
-        data.model_name = model_name
-    return data
+async def _fill_robot_names(db: AsyncSession, records: list[RobotResponseData]) -> None:
+    if not records:
+        return
+
+    model_ids = {record.model_id for record in records}
+    model_result = await db.execute(select(RobotModel).where(RobotModel.id.in_(model_ids)))
+    model_map = {model.id: model.name for model in model_result.scalars().all()}
+
+    map_ids = {record.map_id for record in records if record.map_id is not None}
+    map_map = {}
+    if map_ids:
+        map_result = await db.execute(select(SceneMap).where(SceneMap.id.in_(map_ids)))
+        map_map = {scene_map.id: scene_map.name for scene_map in map_result.scalars().all()}
+
+    for record in records:
+        record.model_name = model_map.get(record.model_id)
+        if record.map_id is not None:
+            record.map_name = map_map.get(record.map_id)
 
 
 @robot_router.get(
@@ -74,15 +85,7 @@ async def get_robot_list(
             schema=RobotResponseData,
         )
 
-        # 批量获取 model_name
-        if page_data.records:
-            model_ids = list(set(r.model_id for r in page_data.records))
-            model_result = await db.execute(
-                select(RobotModel).where(RobotModel.id.in_(model_ids))
-            )
-            model_map = {m.id: m.name for m in model_result.scalars().all()}
-            for record in page_data.records:
-                record.model_name = model_map.get(record.model_id)
+        await _fill_robot_names(db, page_data.records)
 
         logger.info("获取机器人列表接口成功，共 %d 条记录", page_data.total)
         return response_base.page(data=page_data)
@@ -108,13 +111,7 @@ async def get_robot(
 
         robot_obj = await RobotService.get(db, robot_id)
         response_data = RobotResponseData.model_validate(robot_obj)
-
-        # 获取 model_name
-        model_result = await db.execute(
-            select(RobotModel.name).where(RobotModel.id == robot_obj.model_id)
-        )
-        model_name = model_result.scalar_one_or_none()
-        response_data.model_name = model_name
+        await _fill_robot_names(db, [response_data])
 
         logger.info("获取机器人详情接口成功，机器人ID: %d", robot_id)
         return response_base.success(data=response_data)
@@ -144,12 +141,7 @@ async def create_robot(
 
         robot_obj = await RobotService.create(db, robot_in)
         response_data = RobotResponseData.model_validate(robot_obj)
-
-        # 获取 model_name
-        model_result = await db.execute(
-            select(RobotModel.name).where(RobotModel.id == robot_obj.model_id)
-        )
-        response_data.model_name = model_result.scalar_one_or_none()
+        await _fill_robot_names(db, [response_data])
 
         logger.info("创建机器人接口成功，机器人ID: %d", robot_obj.id)
         return response_base.success(data=response_data, msg="创建成功")
@@ -180,12 +172,7 @@ async def update_robot(
 
         robot_obj = await RobotService.update(db, robot_id, robot_in)
         response_data = RobotResponseData.model_validate(robot_obj)
-
-        # 获取 model_name
-        model_result = await db.execute(
-            select(RobotModel.name).where(RobotModel.id == robot_obj.model_id)
-        )
-        response_data.model_name = model_result.scalar_one_or_none()
+        await _fill_robot_names(db, [response_data])
 
         logger.info("更新机器人接口成功，机器人ID: %d", robot_id)
         return response_base.success(data=response_data, msg="更新成功")

@@ -10,6 +10,7 @@ import enum
 if TYPE_CHECKING:
     from .robot_model import RobotModel
     from .robot_status_record import RobotStatusRecord
+    from .scene_map import SceneMap
 
 
 class RobotStatus(str, enum.Enum):
@@ -34,6 +35,12 @@ class Robot(Base):
     serial_number: Mapped[str] = mapped_column(
         String(100), unique=True, nullable=False, comment="序列号"
     )
+    map_id: Mapped[int | None] = mapped_column(
+        ForeignKey("scene_map.id"),
+        nullable=True,
+        default=None,
+        comment="绑定场景地图ID",
+    )
     status: Mapped[RobotStatus] = mapped_column(
         SaEnum(RobotStatus, values_callable=lambda e: [x.value for x in e]),
         default=RobotStatus.INACTIVE,
@@ -48,6 +55,10 @@ class Robot(Base):
 
     robot_model: Mapped["RobotModel"] = relationship(
         back_populates="robots",
+        lazy="noload",
+        init=False,
+    )
+    map: Mapped["SceneMap"] = relationship(
         lazy="noload",
         init=False,
     )
