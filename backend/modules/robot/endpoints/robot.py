@@ -26,6 +26,7 @@ from database.models.business.robot_model import RobotModel
 from database.models.business.scene_map import SceneMap
 
 from modules.robot.services.robot_service import RobotService
+from modules.robot.services.robot_schema_service import RobotSchemaService
 from modules.robot.schemas.robot import (
     RobotCreate,
     RobotUpdate,
@@ -76,6 +77,7 @@ async def get_robot_list(
     try:
         logger.info("获取机器人列表接口被调用")
 
+        await RobotSchemaService.ensure_robot_map_binding(db)
         query = RobotService.build_query(query_params)
 
         page_data = await get_paginated_results(
@@ -109,6 +111,7 @@ async def get_robot(
     try:
         logger.info("获取机器人详情接口被调用，机器人ID: %d", robot_id)
 
+        await RobotSchemaService.ensure_robot_map_binding(db)
         robot_obj = await RobotService.get(db, robot_id)
         response_data = RobotResponseData.model_validate(robot_obj)
         await _fill_robot_names(db, [response_data])
@@ -139,6 +142,7 @@ async def create_robot(
     try:
         logger.info("创建机器人接口被调用")
 
+        await RobotSchemaService.ensure_robot_map_binding(db)
         robot_obj = await RobotService.create(db, robot_in)
         response_data = RobotResponseData.model_validate(robot_obj)
         await _fill_robot_names(db, [response_data])
@@ -170,6 +174,7 @@ async def update_robot(
     try:
         logger.info("更新机器人接口被调用，机器人ID: %d", robot_id)
 
+        await RobotSchemaService.ensure_robot_map_binding(db)
         robot_obj = await RobotService.update(db, robot_id, robot_in)
         response_data = RobotResponseData.model_validate(robot_obj)
         await _fill_robot_names(db, [response_data])

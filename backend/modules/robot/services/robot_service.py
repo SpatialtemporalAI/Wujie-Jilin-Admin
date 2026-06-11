@@ -20,6 +20,7 @@ from modules.robot.schemas.robot import (
     RobotUpdate,
     RobotQueryParams,
 )
+from modules.robot.services.robot_schema_service import RobotSchemaService
 
 logger = logging.getLogger(__name__)
 
@@ -79,6 +80,7 @@ class RobotService:
             (机器人列表, 总数)
         """
         try:
+            await RobotSchemaService.ensure_robot_map_binding(db)
             logger.debug(
                 "获取机器人列表，查询参数: %s",
                 query_params.model_dump(exclude_none=True),

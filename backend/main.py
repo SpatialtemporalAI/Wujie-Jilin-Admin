@@ -48,6 +48,13 @@ async def lifespan(app: FastAPI):
         logger.info("IP 黑名单预热数量: %s", count)
     except Exception as exc:
         logger.error("IP 黑名单预热异常: %s", exc)
+    try:
+        from modules.robot.services.robot_schema_service import RobotSchemaService
+        async for db_schema in get_session():
+            await RobotSchemaService.ensure_robot_map_binding(db_schema)
+        logger.info("机器人场景绑定字段检查完成")
+    except Exception as exc:
+        logger.error("机器人场景绑定字段检查异常: %s", exc)
     # 启动定时任务调度器
     try:
         from modules.scheduler.core.scheduler import SchedulerManager
