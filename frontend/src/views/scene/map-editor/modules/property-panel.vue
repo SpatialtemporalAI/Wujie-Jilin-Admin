@@ -129,6 +129,7 @@ onMounted(() => {
       type="line"
       size="small"
       class="h-full min-h-0 flex flex-col"
+      tabs-padding="0 12px"
       pane-wrapper-class="min-h-0 flex-1 overflow-auto"
       pane-class="h-full"
     >
