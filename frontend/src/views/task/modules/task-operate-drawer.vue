@@ -1,6 +1,7 @@
 <script setup lang="ts">
-import { computed, onMounted, ref, watch } from 'vue';
+import { computed, h, onMounted, ref, watch } from 'vue';
 import { jsonClone } from '@sa/utils';
+import { NText, NTooltip } from 'naive-ui';
 import { useNaiveForm } from '@/hooks/common/form';
 import { $t } from '@/locales';
 import { fetchCreateTask, fetchUpdateTask, fetchGetTask, fetchGetRobotList } from '@/service/api';
@@ -49,12 +50,15 @@ const broadcastCountOptions = [
   { label: '循环播报', value: 'loop' }
 ];
 
-/** 重复周期选项 */
-const repeatCycleOptions = [
-  { label: '不重复', value: 'none' },
-  { label: '每天', value: 'daily' },
-  { label: '每周', value: 'weekly' },
-  { label: '每月', value: 'monthly' }
+/** 重复周期选项（星期复选框） */
+const weekdayOptions = [
+  { label: '周一', value: 'mon' },
+  { label: '周二', value: 'tue' },
+  { label: '周三', value: 'wed' },
+  { label: '周四', value: 'thu' },
+  { label: '周五', value: 'fri' },
+  { label: '周六', value: 'sat' },
+  { label: '周日', value: 'sun' }
 ];
 
 /** 机器人选项 */
@@ -62,6 +66,9 @@ interface RobotOption {
   label: string;
   value: number;
   status: string;
+  map_id: number | null;
+  map_name: string | null;
+  disabled?: boolean;
 }
 const robotOptions = ref<RobotOption[]>([]);
 
@@ -71,9 +78,50 @@ async function loadRobotOptions() {
     robotOptions.value = (data.records || []).map(r => ({
       label: r.name + (r.status === 'online' ? ' (在线)' : r.status === 'offline' ? ' (离线)' : ' (未激活)'),
       value: r.id,
-      status: r.status || 'inactive'
+      status: r.status || 'inactive',
+      map_id: r.map_id ?? null,
+      map_name: r.map_name ?? null
     }));
   }
+}
+
+/** 巡逻任务机器人约束 */
+const isPatrol = computed(() => model.value.task_type === 'patrol');
+
+const selectedMapId = computed<number | null>(() => {
+  if (model.value.robot_ids.length === 0) return null;
+  const firstRobot = robotOptions.value.find(r => r.value === model.value.robot_ids[0]);
+  return firstRobot?.map_id ?? null;
+});
+
+const filteredRobotOptions = computed(() => {
+  if (!isPatrol.value) {
+    return robotOptions.value;
+  }
+  return robotOptions.value.map(opt => {
+    const noScenario = opt.map_id === null;
+    const differentScenario = selectedMapId.value !== null && opt.map_id !== selectedMapId.value;
+    return {
+      ...opt,
+      disabled: noScenario || differentScenario
+    };
+  });
+});
+
+function renderRobotLabel(option: RobotOption) {
+  if (option.disabled && isPatrol.value) {
+    const tip = option.map_id === null ? '需要分配场景' : '该机器人与已选机器人不在同一场景';
+    return h(
+      NTooltip,
+      { placement: 'right' },
+      {
+        trigger: () =>
+          h(NText, { depth: 3, style: 'text-decoration: line-through' }, { default: () => option.label }),
+        default: () => tip
+      }
+    );
+  }
+  return option.label;
 }
 
 /** 表单模型 */
@@ -94,7 +142,7 @@ interface FormModel {
   schedule_enabled: boolean;
   schedule_date: number | null;
   schedule_start_time: number | null;
-  schedule_repeat_cycle: string | null;
+  schedule_repeat_cycles: string[];
 }
 
 function createDefaultModel(): FormModel {
@@ -108,7 +156,7 @@ function createDefaultModel(): FormModel {
     schedule_enabled: false,
     schedule_date: null,
     schedule_start_time: null,
-    schedule_repeat_cycle: 'none'
+    schedule_repeat_cycles: []
   };
 }
 
@@ -160,7 +208,9 @@ function handleInitModel() {
     model.value.broadcast_text = cloned.broadcast_text || null;
     model.value.broadcast_count = cloned.broadcast_count || '1';
     model.value.schedule_enabled = cloned.schedule_enabled || false;
-    model.value.schedule_repeat_cycle = cloned.schedule_repeat_cycle || 'none';
+    model.value.schedule_repeat_cycles = cloned.schedule_repeat_cycle
+      ? cloned.schedule_repeat_cycle.split(',').filter(v => v && v !== 'none')
+      : [];
     model.value.robot_ids = cloned.robots?.map(r => r.id) || [];
 
     if (cloned.points && cloned.points.length > 0) {
@@ -207,13 +257,28 @@ async function handleSubmit() {
     window.$message?.warning('请填写播报文本');
     return;
   }
+  if (model.value.task_type === 'patrol') {
+    const selectedRobots = robotOptions.value.filter(r => model.value.robot_ids.includes(r.value));
+    const nullMap = selectedRobots.some(r => r.map_id === null);
+    if (nullMap) {
+      window.$message?.warning('巡逻任务的机器人必须已分配场景');
+      return;
+    }
+    const mapIds = [...new Set(selectedRobots.map(r => r.map_id))];
+    if (mapIds.length > 1) {
+      window.$message?.warning('巡逻任务不能选择不同场景的机器人');
+      return;
+    }
+  }
 
   const submitData: Api.Task.TaskCreate = {
     name: model.value.name,
     task_type: model.value.task_type,
     robot_ids: model.value.robot_ids,
     schedule_enabled: model.value.schedule_enabled,
-    schedule_repeat_cycle: model.value.schedule_repeat_cycle,
+    schedule_repeat_cycle: model.value.schedule_repeat_cycles.length > 0
+      ? model.value.schedule_repeat_cycles.join(',')
+      : null,
     points: model.value.task_type === 'patrol' ? model.value.points : undefined,
     broadcast_text: model.value.task_type === 'broadcast' ? model.value.broadcast_text : undefined,
     broadcast_count: model.value.task_type === 'broadcast' ? model.value.broadcast_count : undefined
@@ -241,6 +306,27 @@ watch(visible, () => {
     restoreValidation();
   }
 });
+
+watch(
+  () => model.value.task_type,
+  () => {
+    if (model.value.task_type === 'patrol' && model.value.robot_ids.length > 0) {
+      const validIds = model.value.robot_ids.filter(id => {
+        const robot = robotOptions.value.find(r => r.value === id);
+        return robot && robot.map_id !== null;
+      });
+      if (validIds.length > 0) {
+        const firstMapId = robotOptions.value.find(r => r.value === validIds[0])?.map_id;
+        model.value.robot_ids = validIds.filter(id => {
+          const robot = robotOptions.value.find(r => r.value === id);
+          return robot?.map_id === firstMapId;
+        });
+      } else {
+        model.value.robot_ids = [];
+      }
+    }
+  }
+);
 
 onMounted(() => {
   loadRobotOptions();
@@ -311,10 +397,11 @@ onMounted(() => {
         <NFormItem label="绑定机器人" path="robot_ids">
           <NSelect
             v-model:value="model.robot_ids"
-            :options="robotOptions"
+            :options="filteredRobotOptions"
             placeholder="至少选择一台机器人"
             multiple
             filterable
+            :render-label="renderRobotLabel"
           />
         </NFormItem>
 
@@ -332,8 +419,12 @@ onMounted(() => {
               <NTimePicker v-model:value="model.schedule_start_time" format="HH:mm" class="w-full" />
             </NFormItemGi>
           </NGrid>
-          <NFormItem label="重复周期">
-            <NSelect v-model:value="model.schedule_repeat_cycle" :options="repeatCycleOptions" />
+          <NFormItem label="重复周期（未选择则不重复）">
+            <NCheckboxGroup v-model:value="model.schedule_repeat_cycles">
+              <NSpace>
+                <NCheckbox v-for="opt in weekdayOptions" :key="opt.value" :value="opt.value" :label="opt.label" />
+              </NSpace>
+            </NCheckboxGroup>
           </NFormItem>
         </template>
       </NForm>

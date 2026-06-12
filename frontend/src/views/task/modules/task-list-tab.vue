@@ -28,9 +28,13 @@ const taskTypeLabel: Record<string, string> = {
 
 const scheduleCycleLabel: Record<string, string> = {
   none: '不重复',
-  daily: '每天',
-  weekly: '每周',
-  monthly: '每月'
+  mon: '周一',
+  tue: '周二',
+  wed: '周三',
+  thu: '周四',
+  fri: '周五',
+  sat: '周六',
+  sun: '周日'
 };
 
 function formatSchedule(row: Api.Task.Task): string {
@@ -38,8 +42,12 @@ function formatSchedule(row: Api.Task.Task): string {
   const parts: string[] = [];
   if (row.schedule_date) parts.push(row.schedule_date);
   if (row.schedule_start_time) parts.push(row.schedule_start_time);
-  if (row.schedule_repeat_cycle && row.schedule_repeat_cycle !== 'none') {
-    parts.push(scheduleCycleLabel[row.schedule_repeat_cycle] || row.schedule_repeat_cycle);
+  if (row.schedule_repeat_cycle) {
+    const labels = row.schedule_repeat_cycle
+      .split(',')
+      .filter(v => v && v !== 'none')
+      .map(v => scheduleCycleLabel[v] || v);
+    if (labels.length > 0) parts.push(labels.join('、'));
   }
   return parts.length > 0 ? parts.join(' ') : '已启用';
 }

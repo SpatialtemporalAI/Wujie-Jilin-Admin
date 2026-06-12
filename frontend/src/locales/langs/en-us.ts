@@ -270,7 +270,8 @@ const local: App.I18n.Schema = {
     scene_group: 'Scene Group',
     scene_map: 'Scene Map',
     'scene_map-editor': 'Map Editor',
-    task: 'Task Management'
+    task: 'Task Management',
+    'operation-monitor': 'Operation Monitor'
   },
   page: {
     login: {

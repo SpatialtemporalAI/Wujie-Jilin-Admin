@@ -43,6 +43,7 @@ declare module "@elegant-router/types" {
     "manage_scheduler-log": "/manage/scheduler-log";
     "manage_user": "/manage/user";
     "monitor": "/monitor";
+    "operation-monitor": "/operation-monitor";
     "robot": "/robot";
     "robot_manage": "/robot/manage";
     "robot_model": "/robot/model";
@@ -93,6 +94,7 @@ declare module "@elegant-router/types" {
     | "login"
     | "manage"
     | "monitor"
+    | "operation-monitor"
     | "robot"
     | "scene"
     | "settings"
@@ -136,6 +138,7 @@ declare module "@elegant-router/types" {
     | "manage_scheduler"
     | "manage_user"
     | "monitor"
+    | "operation-monitor"
     | "robot_manage"
     | "robot_model"
     | "scene_group"

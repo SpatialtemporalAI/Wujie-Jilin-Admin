@@ -45,7 +45,7 @@ class Task(Base):
         Time, nullable=True, default=None, comment="调度开始时间"
     )
     schedule_repeat_cycle: Mapped[str | None] = mapped_column(
-        String(20), nullable=True, default=None, comment="重复周期: none/daily/weekly/monthly"
+        String(100), nullable=True, default=None, comment="重复周期: 逗号分隔的星期值 mon,tue,wed,thu,fri,sat,sun"
     )
     enabled: Mapped[bool] = mapped_column(
         Boolean, default=True, comment="启用状态: True-启用, False-禁用"

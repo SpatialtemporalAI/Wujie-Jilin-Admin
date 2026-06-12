@@ -38,6 +38,7 @@ export const views: Record<LastLevelRouteKey, RouteComponent | (() => Promise<Ro
   manage_scheduler: () => import("@/views/manage/scheduler/index.vue"),
   manage_user: () => import("@/views/manage/user/index.vue"),
   monitor: () => import("@/views/monitor/index.vue"),
+  "operation-monitor": () => import("@/views/operation-monitor/index.vue"),
   robot_manage: () => import("@/views/robot/manage/index.vue"),
   robot_model: () => import("@/views/robot/model/index.vue"),
   scene_group: () => import("@/views/scene/group/index.vue"),

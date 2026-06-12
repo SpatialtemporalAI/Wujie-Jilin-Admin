@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 
 from typing import Optional, List, Annotated
-from pydantic import Field, ConfigDict, BeforeValidator
+from pydantic import Field, ConfigDict, BeforeValidator, field_validator
 from datetime import datetime, date, time
 
 from app.models.common.base import BaseEntity, BaseRespEntity, BaseReqEntity, BoolField
@@ -15,6 +15,19 @@ def _bool_to_enable_str(v):
     return v
 
 EnableStatusField = Annotated[str, BeforeValidator(_bool_to_enable_str)]
+
+VALID_REPEAT_CYCLES = {'none', 'mon', 'tue', 'wed', 'thu', 'fri', 'sat', 'sun'}
+
+
+def _validate_repeat_cycle(v: Optional[str]) -> Optional[str]:
+    """校验逗号分隔的重复周期值"""
+    if v is None or v == '':
+        return None
+    for part in v.split(','):
+        part = part.strip()
+        if part not in VALID_REPEAT_CYCLES:
+            raise ValueError(f"无效的重复周期值: {part}")
+    return v
 
 
 # ==================== 点位 Schema ====================
@@ -70,7 +83,12 @@ class TaskCreate(BaseReqEntity):
     schedule_enabled: bool = Field(False, description="是否启用定时调度")
     schedule_date: Optional[date] = Field(None, description="调度日期")
     schedule_start_time: Optional[time] = Field(None, description="调度开始时间")
-    schedule_repeat_cycle: Optional[str] = Field(None, description="重复周期: none/daily/weekly/monthly")
+    schedule_repeat_cycle: Optional[str] = Field(None, description="重复周期: 逗号分隔 mon,tue,wed,thu,fri,sat,sun")
+
+    @field_validator('schedule_repeat_cycle')
+    @classmethod
+    def validate_repeat_cycle(cls, v):
+        return _validate_repeat_cycle(v)
 
 
 class TaskUpdate(BaseReqEntity):
@@ -84,7 +102,12 @@ class TaskUpdate(BaseReqEntity):
     schedule_enabled: Optional[bool] = Field(None, description="是否启用定时调度")
     schedule_date: Optional[date] = Field(None, description="调度日期")
     schedule_start_time: Optional[time] = Field(None, description="调度开始时间")
-    schedule_repeat_cycle: Optional[str] = Field(None, description="重复周期")
+    schedule_repeat_cycle: Optional[str] = Field(None, description="重复周期: 逗号分隔 mon,tue,wed,thu,fri,sat,sun")
+
+    @field_validator('schedule_repeat_cycle')
+    @classmethod
+    def validate_repeat_cycle(cls, v):
+        return _validate_repeat_cycle(v)
 
 
 class TaskResponseData(BaseEntity):

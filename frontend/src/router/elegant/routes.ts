@@ -270,6 +270,15 @@ export const generatedRoutes: GeneratedRoute[] = [
     }
   },
   {
+    name: 'operation-monitor',
+    path: '/operation-monitor',
+    component: 'layout.base$view.operation-monitor',
+    meta: {
+      title: 'operation-monitor',
+      i18nKey: 'route.operation-monitor'
+    }
+  },
+  {
     name: 'robot',
     path: '/robot',
     component: 'layout.base',

@@ -266,7 +266,8 @@ const local: App.I18n.Schema = {
     scene_group: '场景分组',
     scene_map: '场景地图',
     'scene_map-editor': '地图编辑器',
-    task: '任务管理'
+    task: '任务管理',
+    'operation-monitor': '运行监控'
   },
   page: {
     login: {

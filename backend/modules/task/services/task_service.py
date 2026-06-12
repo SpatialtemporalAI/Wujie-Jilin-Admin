@@ -95,6 +95,14 @@ class TaskService:
             if len(robots) != len(task_in.robot_ids):
                 raise NotFoundError(msg="部分机器人不存在")
 
+            # 巡逻任务校验机器人场景约束
+            if task_in.task_type == 'patrol':
+                robot_map_ids = set(r.map_id for r in robots)
+                if None in robot_map_ids:
+                    raise NotFoundError(msg="巡逻任务的机器人必须已分配场景")
+                if len(robot_map_ids) > 1:
+                    raise NotFoundError(msg="巡逻任务不能选择不同场景的机器人")
+
             # 创建任务主记录
             task_obj = Task(
                 name=task_in.name,
@@ -179,6 +187,15 @@ class TaskService:
                 robots = robot_result.scalars().all()
                 if len(robots) != len(task_in.robot_ids):
                     raise NotFoundError(msg="部分机器人不存在")
+
+                # 巡逻任务校验机器人场景约束
+                effective_type = task_in.task_type or task_obj.task_type
+                if effective_type == 'patrol':
+                    robot_map_ids = set(r.map_id for r in robots)
+                    if None in robot_map_ids:
+                        raise NotFoundError(msg="巡逻任务的机器人必须已分配场景")
+                    if len(robot_map_ids) > 1:
+                        raise NotFoundError(msg="巡逻任务不能选择不同场景的机器人")
 
                 await db.execute(
                     task_robot_association.delete().where(
