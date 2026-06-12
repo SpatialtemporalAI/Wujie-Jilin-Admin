@@ -136,8 +136,8 @@ async function confirmAddScene() {
       await editor.loadMap((data as any).id);
 
       editor.addAnnotation({
-        x: startPoint.x,
-        y: startPoint.y,
+        x: 0,
+        y: 0,
         name: '起始点位',
         angle: startPoint.angle,
         type: 'navigation',

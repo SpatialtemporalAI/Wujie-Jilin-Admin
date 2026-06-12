@@ -1,16 +1,16 @@
-/** 画布像素坐标 → ROS 世界坐标（米） */
+/** 画布像素坐标 → 世界坐标（米） */
 export function pixelToWorld(pixelX: number, pixelY: number, originX: number, originY: number, resolution: number) {
   return {
     x: (pixelX - originX) * resolution,
-    y: (originY - pixelY) * resolution,
+    y: (pixelY - originY) * resolution,
   };
 }
 
-/** ROS 世界坐标（米）→ 画布像素坐标 */
+/** 世界坐标（米）→ 画布像素坐标 */
 export function worldToPixel(worldX: number, worldY: number, originX: number, originY: number, resolution: number) {
   return {
     x: originX + worldX / resolution,
-    y: originY - worldY / resolution,
+    y: originY + worldY / resolution,
   };
 }
 
