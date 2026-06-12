@@ -1,0 +1,25 @@
+/** 画布像素坐标 → ROS 世界坐标（米） */
+export function pixelToWorld(pixelX: number, pixelY: number, originX: number, originY: number, resolution: number) {
+  return {
+    x: (pixelX - originX) * resolution,
+    y: (originY - pixelY) * resolution,
+  };
+}
+
+/** ROS 世界坐标（米）→ 画布像素坐标 */
+export function worldToPixel(worldX: number, worldY: number, originX: number, originY: number, resolution: number) {
+  return {
+    x: originX + worldX / resolution,
+    y: originY - worldY / resolution,
+  };
+}
+
+/** 像素差值 → 米（用于距离计算，不需要原点偏移） */
+export function pixelsDeltaToMeters(deltaPx: number, resolution: number): number {
+  return deltaPx * resolution;
+}
+
+/** 米 → 像素差值 */
+export function metersDeltaToPixels(deltaM: number, resolution: number): number {
+  return deltaM / resolution;
+}

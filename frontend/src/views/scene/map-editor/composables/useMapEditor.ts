@@ -1,5 +1,6 @@
 import { reactive, ref, computed } from 'vue';
 import { fetchGetEditorMapData, fetchSaveEditorData, fetchGetSceneMapList, fetchDeleteSceneMap } from '@/service/api/scene';
+import { pixelToWorld, worldToPixel, pixelsDeltaToMeters, metersDeltaToPixels } from '@/utils/coordinate';
 
 export type DrawingMode = 'select' | 'point-nav' | 'point-recv' | 'path' | 'rect-obstacle' | 'polygon-restricted';
 
@@ -30,12 +31,22 @@ export function useMapEditor() {
 
   const resolution = computed(() => editorData.value?.map.resolution ?? 0.2);
 
-  function pixelToMeter(px: number): number {
-    return px * resolution.value;
+  function pixelToMeterDelta(px: number): number {
+    return pixelsDeltaToMeters(px, resolution.value);
   }
 
-  function meterToPixel(m: number): number {
-    return m / resolution.value;
+  function meterToPixelDelta(m: number): number {
+    return metersDeltaToPixels(m, resolution.value);
+  }
+
+  function pixelToWorldCoords(px: number, py: number) {
+    const map = editorData.value?.map;
+    return pixelToWorld(px, py, map?.start_point_x ?? 0, map?.start_point_y ?? 0, resolution.value);
+  }
+
+  function worldToPixelCoords(wx: number, wy: number) {
+    const map = editorData.value?.map;
+    return worldToPixel(wx, wy, map?.start_point_x ?? 0, map?.start_point_y ?? 0, resolution.value);
   }
 
   async function loadSceneList() {
@@ -140,8 +151,8 @@ export function useMapEditor() {
     const minDist = 0.5;
     for (let i = 0; i < annotations.length; i++) {
       for (let j = i + 1; j < annotations.length; j++) {
-        const dx = pixelToMeter(Math.abs(annotations[i].x - annotations[j].x));
-        const dy = pixelToMeter(Math.abs(annotations[i].y - annotations[j].y));
+        const dx = Math.abs(annotations[i].x - annotations[j].x);
+        const dy = Math.abs(annotations[i].y - annotations[j].y);
         const dist = Math.sqrt(dx * dx + dy * dy);
         if (dist < minDist) {
           errors.push(`标注 "${annotations[i].name}" 和 "${annotations[j].name}" 间距小于 ${minDist}m`);
@@ -357,8 +368,10 @@ export function useMapEditor() {
     resolution,
     canUndo,
     canRedo,
-    pixelToMeter,
-    meterToPixel,
+    pixelToMeterDelta,
+    meterToPixelDelta,
+    pixelToWorldCoords,
+    worldToPixelCoords,
     loadSceneList,
     loadMap,
     undo,

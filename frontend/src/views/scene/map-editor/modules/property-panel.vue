@@ -109,6 +109,14 @@ function pixelToMeter(px: number): number {
   return Math.round(px * props.resolution * 100) / 100;
 }
 
+function toWorldX(worldX: number): number {
+  return Math.round(worldX * 100) / 100;
+}
+
+function toWorldY(worldY: number): number {
+  return Math.round(worldY * 100) / 100;
+}
+
 function getBatteryColor(threshold?: number | null): string {
   if (threshold === null || threshold === undefined) return '#909399';
   if (threshold <= 10) return '#18a058';
@@ -332,10 +340,10 @@ onMounted(() => {
                 <NSelect :value="selectedAnnotation.type" :options="pointTypeOptions" @update:value="v => updateAnnotation('type', v)" />
               </NFormItem>
               <NFormItem label="X (m)">
-                <NInputNumber :value="pixelToMeter(selectedAnnotation.x)" :step="0.1" disabled size="small" class="w-full" />
+                <NInputNumber :value="toWorldX(selectedAnnotation.x)" :step="0.1" disabled size="small" class="w-full" />
               </NFormItem>
               <NFormItem label="Y (m)">
-                <NInputNumber :value="pixelToMeter(selectedAnnotation.y)" :step="0.1" disabled size="small" class="w-full" />
+                <NInputNumber :value="toWorldY(selectedAnnotation.y)" :step="0.1" disabled size="small" class="w-full" />
               </NFormItem>
               <NFormItem label="角度">
                 <NSlider :value="selectedAnnotation.angle" :min="0" :max="360" :step="1" @update:value="v => updateAnnotation('angle', v)" />
@@ -361,10 +369,10 @@ onMounted(() => {
                 <NInput :value="selectedObject.type" disabled />
               </NFormItem>
               <NFormItem label="X (m)">
-                <NInputNumber :value="pixelToMeter(selectedObject.x)" disabled size="small" class="w-full" />
+                <NInputNumber :value="toWorldX(selectedObject.x)" disabled size="small" class="w-full" />
               </NFormItem>
               <NFormItem label="Y (m)">
-                <NInputNumber :value="pixelToMeter(selectedObject.y)" disabled size="small" class="w-full" />
+                <NInputNumber :value="toWorldY(selectedObject.y)" disabled size="small" class="w-full" />
               </NFormItem>
               <NFormItem v-if="!selectedObject.points" label="宽度">
                 <NInputNumber :value="selectedObject.width" disabled size="small" class="w-full" />
@@ -407,7 +415,7 @@ onMounted(() => {
                   </NTag>
                 </div>
                 <div class="mt-2px text-xs text-gray-400">
-                  X: {{ pixelToMeter(ann.x) }}m, Y: {{ pixelToMeter(ann.y) }}m
+                  X: {{ toWorldX(ann.x) }}m, Y: {{ toWorldY(ann.y) }}m
                 </div>
               </div>
               <NPopconfirm @positive-click.stop="emit('remove-element', 'annotation', ann.id)">
