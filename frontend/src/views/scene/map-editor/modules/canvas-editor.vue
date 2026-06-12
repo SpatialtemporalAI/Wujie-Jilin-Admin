@@ -212,9 +212,11 @@ function renderElements() {
   const sp = props.editorData.map;
   if (sp.start_point_x || sp.start_point_y) {
     existingKeys.add(spKey);
+    const spPixelX = sp.start_point_x;
+    const spPixelY = sp.start_point_y;
     if (elementMap.has(spKey)) {
       const group = elementMap.get(spKey);
-      group.set({ left: sp.start_point_x, top: sp.start_point_y });
+      group.set({ left: spPixelX, top: spPixelY });
     } else {
       const spCircle = new Circle({
         radius: 10,
@@ -234,8 +236,8 @@ function renderElements() {
         fontWeight: 'bold',
       });
       const spGroup = new Group([spCircle, spText], {
-        left: sp.start_point_x,
-        top: sp.start_point_y,
+        left: spPixelX,
+        top: spPixelY,
         originX: 'center',
         originY: 'center',
         hasControls: false,
@@ -255,18 +257,13 @@ function renderElements() {
       const group = elementMap.get(key);
       group.set({ left: ann.x, top: ann.y });
       const circle = group.getObjects()[0] as Circle;
-      circle.set('fill', ann.type === 'navigation' || ann.type === '导航点' ? '#3b82f6' : '#22c55e');
+      circle.set('fill', '#ef4444');
       const text = group.getObjects()[2] as Text;
       text.set('text', ann.name);
-      const angleIndicator = group.getObjects()[1] as Triangle;
-      angleIndicator.set('angle', ann.angle);
     } else {
-      const isNav = ann.type === 'navigation' || ann.type === '导航点';
-      const color = isNav ? '#3b82f6' : '#22c55e';
-
       const circle = new Circle({
         radius: 8,
-        fill: color,
+        fill: '#ef4444',
         stroke: '#fff',
         strokeWidth: 2,
         originX: 'center',
@@ -276,20 +273,22 @@ function renderElements() {
       const angleIndicator = new Triangle({
         width: 8,
         height: 12,
-        fill: color,
+        fill: '#ef4444',
         originX: 'center',
         originY: 'center',
         top: -16,
         angle: ann.angle || 0,
+        visible: false,
       });
 
       const text = new Text(ann.name, {
         fontSize: 10,
-        fill: '#333',
+        fill: '#ef4444',
         originX: 'center',
         originY: 'center',
         top: 18,
         fontFamily: 'sans-serif',
+        fontWeight: 'bold',
       });
 
       const group = new Group([circle, angleIndicator, text], {
@@ -589,7 +588,10 @@ function handleMouseMove(opt: any) {
   if (!fabricCanvas) return;
   const evt = opt.e as MouseEvent;
   const pointer = fabricCanvas.getViewportPoint(evt);
-  emit('cursor-position', pointer.x * props.resolution, (canvasHeight.value - pointer.y) * props.resolution);
+  const map = props.editorData?.map;
+  const originX = map?.start_point_x ?? 0;
+  const originY = map?.start_point_y ?? 0;
+  emit('cursor-position', (pointer.x - originX) * props.resolution, (originY - pointer.y) * props.resolution);
 
   if (isPanning) {
     const dx = evt.clientX - lastPanPoint.x;
@@ -842,9 +844,12 @@ function zoomReset() {
 
 function locateMeterPoint(x: number, y: number) {
   if (!fabricCanvas) return;
+  const map = props.editorData?.map;
+  const originX = map?.start_point_x ?? 0;
+  const originY = map?.start_point_y ?? 0;
   const zoom = Math.max(currentZoom, MIN_ZOOM);
-  const pointX = x / props.resolution;
-  const pointY = y / props.resolution;
+  const pointX = originX + x / props.resolution;
+  const pointY = originY - y / props.resolution;
   const offsetX = containerWidth.value / 2 - pointX * zoom;
   const offsetY = containerHeight.value / 2 - pointY * zoom;
   fabricCanvas.setViewportTransform([zoom, 0, 0, zoom, offsetX, offsetY]);

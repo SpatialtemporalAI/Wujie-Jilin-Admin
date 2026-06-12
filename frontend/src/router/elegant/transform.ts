@@ -175,6 +175,7 @@ const routeMap: RouteMap = {
   "log_login-log": "/log/login-log",
   "log_online-user": "/log/online-user",
   "log_operation-log": "/log/operation-log",
+  "log_robot-log": "/log/robot-log",
   "login": "/login/:module(pwd-login|code-login|register|reset-pwd|bind-wechat)?",
   "manage": "/manage",
   "manage_announcement": "/manage/announcement",

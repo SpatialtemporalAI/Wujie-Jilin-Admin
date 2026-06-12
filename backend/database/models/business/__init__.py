@@ -5,6 +5,7 @@ from .user import AppUser
 from .robot_model import RobotModel
 from .robot import Robot, RobotStatus
 from .robot_status_record import RobotStatusRecord
+from .robot_event_log import RobotEventLog
 from .scene_group import SceneGroup
 from .scene_map import SceneMap
 from .scene_map_annotation import SceneMapAnnotation
@@ -20,6 +21,7 @@ __all__ = [
     "Robot",
     "RobotStatus",
     "RobotStatusRecord",
+    "RobotEventLog",
     "SceneGroup",
     "SceneMap",
     "SceneMapAnnotation",

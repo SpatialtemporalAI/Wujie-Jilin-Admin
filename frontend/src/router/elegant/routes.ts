@@ -133,6 +133,15 @@ export const generatedRoutes: GeneratedRoute[] = [
           title: 'log_operation-log',
           i18nKey: 'route.log_operation-log'
         }
+      },
+      {
+        name: 'log_robot-log',
+        path: '/log/robot-log',
+        component: 'view.log_robot-log',
+        meta: {
+          title: 'log_robot-log',
+          i18nKey: 'route.log_robot-log'
+        }
       }
     ]
   },

@@ -17,6 +17,11 @@ from .robot_status_record import (
     RobotStatusRecordQueryParams,
     RobotStatusRecordResponseData,
 )
+from .robot_event_log import (
+    RobotEventLogQueryParams,
+    RobotEventLogResponse,
+    RobotEventLogDetailResponse,
+)
 
 __all__ = [
     # 机器人型号相关
@@ -32,4 +37,8 @@ __all__ = [
     # 机器人状态记录相关
     "RobotStatusRecordQueryParams",
     "RobotStatusRecordResponseData",
+    # 机器人事件日志相关
+    "RobotEventLogQueryParams",
+    "RobotEventLogResponse",
+    "RobotEventLogDetailResponse",
 ]

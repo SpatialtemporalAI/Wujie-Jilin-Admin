@@ -10,6 +10,7 @@ import enum
 if TYPE_CHECKING:
     from .robot_model import RobotModel
     from .robot_status_record import RobotStatusRecord
+    from .robot_event_log import RobotEventLog
     from .scene_map import SceneMap
 
 
@@ -63,6 +64,11 @@ class Robot(Base):
         init=False,
     )
     status_records: Mapped[List["RobotStatusRecord"]] = relationship(
+        back_populates="robot",
+        lazy="noload",
+        init=False,
+    )
+    event_logs: Mapped[List["RobotEventLog"]] = relationship(
         back_populates="robot",
         lazy="noload",
         init=False,

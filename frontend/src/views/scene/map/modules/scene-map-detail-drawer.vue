@@ -1,13 +1,14 @@
 <script setup lang="tsx">
 import { ref, watch } from 'vue';
 import { NButton, NDataTable, NPopconfirm, NSpace, NTab, NTabs } from 'naive-ui';
-import { defaultTransform, useNaivePaginatedTable } from '@/hooks/common/table';
+import { useNaivePaginatedTable } from '@/hooks/common/table';
 import {
   fetchGetMapAnnotations,
   fetchDeleteMapAnnotation,
   fetchGetMapObjects,
   fetchDeleteMapObject
 } from '@/service/api';
+import { fetchSaveEditorData } from '@/service/api/scene';
 import { getFilePreviewUrl } from '@/service/api/file';
 import SceneMapAnnotationModal from './scene-map-annotation-modal.vue';
 import SceneMapObjectModal from './scene-map-object-modal.vue';
@@ -44,7 +45,14 @@ const {
   mobilePagination: annotationPagination
 } = useNaivePaginatedTable({
   api: () => fetchGetMapAnnotations(props.mapData?.id ?? 0, annotationSearchParams.value),
-  transform: response => defaultTransform(response),
+  transform: response => {
+    const { data, error } = response;
+    if (error) {
+      return { data: [], pageNum: 1, pageSize: 10, total: 0, totalPages: 1 };
+    }
+    const list = Array.isArray(data) ? data : data?.records ?? [];
+    return { data: list, pageNum: 1, pageSize: list.length || 10, total: list.length, totalPages: 1 };
+  },
   onPaginationParamsChange: params => {
     annotationSearchParams.value.page = params.page;
     annotationSearchParams.value.page_size = params.pageSize;
@@ -151,7 +159,14 @@ const {
   mobilePagination: objectPagination
 } = useNaivePaginatedTable({
   api: () => fetchGetMapObjects(props.mapData?.id ?? 0, objectSearchParams.value),
-  transform: response => defaultTransform(response),
+  transform: response => {
+    const { data, error } = response;
+    if (error) {
+      return { data: [], pageNum: 1, pageSize: 10, total: 0, totalPages: 1 };
+    }
+    const list = Array.isArray(data) ? data : data?.records ?? [];
+    return { data: list, pageNum: 1, pageSize: list.length || 10, total: list.length, totalPages: 1 };
+  },
   onPaginationParamsChange: params => {
     objectSearchParams.value.page = params.page;
     objectSearchParams.value.page_size = params.pageSize;
@@ -242,6 +257,85 @@ async function handleDeleteObject(id: number) {
   }
 }
 
+/** ========== 导入JSON点位 ========== */
+const importDialogVisible = ref(false);
+const importJsonText = ref('');
+
+interface ImportMapPoint {
+  label: string;
+  position: [number, number, number];
+  description?: string;
+}
+
+function handleImportJson() {
+  importJsonText.value = '';
+  importDialogVisible.value = true;
+}
+
+async function confirmImportJson() {
+  if (!props.mapData?.id) {
+    window.$message?.warning('请先选择场景地图');
+    return false;
+  }
+
+  let points: ImportMapPoint[];
+  try {
+    const parsed = JSON.parse(importJsonText.value);
+    if (!Array.isArray(parsed)) {
+      window.$message?.error('JSON 必须是数组');
+      return false;
+    }
+    points = parsed;
+  } catch {
+    window.$message?.error('JSON 格式错误');
+    return false;
+  }
+
+  try {
+    const originX = props.mapData.start_point_x ?? 0;
+    const originY = props.mapData.start_point_y ?? 0;
+    const res = props.mapData.resolution || 0.05;
+
+    const annotations = points.map((point, index) => {
+      const [rwX, rwY, angle] = point.position || [];
+      if (!point.label || !Number.isFinite(rwX) || !Number.isFinite(rwY) || !Number.isFinite(angle)) {
+        throw new Error(`第 ${index + 1} 条数据缺少 label 或有效 position`);
+      }
+      return {
+        id: null,
+        x: originX + rwX / res,
+        y: originY - rwY / res,
+        angle,
+        name: point.label.trim(),
+        type: index === 0 ? 'navigation' : 'reception',
+      };
+    });
+
+    const { error } = await fetchSaveEditorData(props.mapData.id, {
+      annotations,
+      paths: [],
+      objects: [],
+      deleted_annotation_ids: [],
+      deleted_path_ids: [],
+      deleted_object_ids: [],
+    });
+
+    if (error) {
+      const msg = (error.response?.data as any)?.msg || error.message || '导入失败';
+      window.$message?.error(msg);
+      return false;
+    }
+
+    window.$message?.success(`已导入 ${annotations.length} 个点位`);
+    importDialogVisible.value = false;
+    getAnnotationDataByPage();
+    return true;
+  } catch (e: any) {
+    window.$message?.error(e?.message || '导入失败');
+    return false;
+  }
+}
+
 /** 抽屉打开时加载数据 */
 watch(visible, () => {
   if (visible.value && props.mapData?.id) {
@@ -290,12 +384,18 @@ function closeDrawer() {
 
       <!-- 标注列表 -->
       <div v-show="activeTab === 'annotation'" class="mt-12px">
-        <div class="mb-12px">
+        <div class="mb-12px flex gap-8px">
           <NButton type="primary" size="small" @click="handleAddAnnotation">
             <template #icon>
               <icon-ic-round-plus class="text-icon" />
             </template>
             新增标注
+          </NButton>
+          <NButton size="small" @click="handleImportJson">
+            <template #icon>
+              <icon-ic-round-upload-file class="text-icon" />
+            </template>
+            导入JSON
           </NButton>
         </div>
         <NDataTable
@@ -353,6 +453,17 @@ function closeDrawer() {
     :edit-data="editingObject"
     @submitted="getObjectDataByPage"
   />
+
+  <!-- 导入JSON点位弹窗 -->
+  <NModal v-model:show="importDialogVisible" preset="dialog" title="导入JSON点位" positive-text="导入" negative-text="取消" @positive-click="confirmImportJson">
+    <NInput
+      v-model:value="importJsonText"
+      type="textarea"
+      :autosize="{ minRows: 12, maxRows: 18 }"
+      placeholder="请粘贴包含 label、position 的 JSON 数组，例: [{&quot;label&quot;: &quot;点1&quot;, &quot;position&quot;: [1.0, 2.0, 90]}]"
+    />
+    <div class="mt-8px text-xs text-gray-500">position 按 [x, y, angle] 导入，坐标使用 ROS 世界坐标系，将按地图分辨率和起始点位自动转换。</div>
+  </NModal>
 </template>
 
 <style scoped></style>

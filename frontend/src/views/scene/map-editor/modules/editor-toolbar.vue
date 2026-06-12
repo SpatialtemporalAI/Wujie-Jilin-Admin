@@ -16,7 +16,6 @@ const emit = defineEmits<{
   (e: 'undo'): void;
   (e: 'redo'): void;
   (e: 'save'): void;
-  (e: 'import-json'): void;
   (e: 'export', format: 'png' | 'jpeg' | 'webp'): void;
 }>();
 
@@ -64,11 +63,6 @@ const drawingModes: { key: DrawingMode; label: string; icon: string }[] = [
     <NButton type="primary" size="small" :loading="saving" @click="emit('save')">
       <template #icon><icon-ic-round-save /></template>
       保存
-    </NButton>
-
-    <NButton size="small" @click="emit('import-json')">
-      <template #icon><icon-ic-round-upload-file /></template>
-      导入JSON
     </NButton>
 
     <NDropdown

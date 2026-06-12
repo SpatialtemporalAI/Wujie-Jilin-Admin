@@ -18,6 +18,7 @@ const props = defineProps<Props>();
 const emit = defineEmits<{
   (e: 'update-element', data: { type: string; id: number; updates: Record<string, any> }): void;
   (e: 'remove-element', type: 'annotation' | 'path' | 'object', id: number): void;
+  (e: 'select-element', el: SelectedElement | null): void;
   (e: 'select-scene', mapId: number): void;
   (e: 'add-scene'): void;
   (e: 'delete-scene', mapId: number): void;
@@ -26,6 +27,7 @@ const emit = defineEmits<{
 
 const activeTab = ref('overview');
 const searchText = ref('');
+const pointSearchText = ref('');
 const robotList = ref<Api.Robot.Robot[]>([]);
 const robotLoading = ref(false);
 const locatingRobotId = ref<number | null>(null);
@@ -68,6 +70,17 @@ const selectedPath = computed(() => {
 const selectedObject = computed(() => {
   if (!props.editorData || !props.selectedElement || props.selectedElement.type !== 'object') return null;
   return props.editorData.objects.find(o => o.id === props.selectedElement!.id) || null;
+});
+
+const filteredAnnotations = computed(() => {
+  if (!props.editorData) return [];
+  const list = props.editorData.annotations;
+  if (!pointSearchText.value) return list;
+  const keyword = pointSearchText.value.toLowerCase();
+  return list.filter(a => {
+    const typeName = a.type === 'navigation' || a.type === '导航点' ? '导航点' : '接待点';
+    return a.name.toLowerCase().includes(keyword) || typeName.includes(keyword);
+  });
 });
 
 const annotationStartName = computed(() => {
@@ -364,6 +377,56 @@ onMounted(() => {
           </template>
 
           <NEmpty v-if="!editorData" description="请先选择一个场景" class="mt-20px" />
+        </div>
+      </NTabPane>
+
+      <NTabPane name="points" tab="点位列表">
+        <div class="flex h-full flex-col">
+          <div class="border-b border-gray-200 p-12px">
+            <NInput v-model:value="pointSearchText" placeholder="搜索点位名称或类型" size="small" clearable>
+              <template #prefix><icon-ic-round-search /></template>
+            </NInput>
+            <div class="mt-8px text-xs text-gray-400">
+              共 {{ filteredAnnotations.length }} 个点位
+            </div>
+          </div>
+
+          <div class="flex-1 overflow-auto p-8px">
+            <div
+              v-for="ann in filteredAnnotations"
+              :key="ann.id"
+              class="group flex cursor-pointer items-center justify-between rounded-md px-8px py-6px text-sm transition-colors"
+              :class="selectedElement?.type === 'annotation' && selectedElement?.id === ann.id ? 'bg-red-50 text-red-600' : 'hover:bg-gray-50'"
+              @click="emit('select-element', { type: 'annotation', id: ann.id })"
+            >
+              <div class="min-w-0 flex-1">
+                <div class="flex items-center gap-6px">
+                  <span class="truncate font-medium">{{ ann.name }}</span>
+                  <NTag size="small" :type="ann.type === 'navigation' || ann.type === '导航点' ? 'info' : 'success'">
+                    {{ ann.type === 'navigation' || ann.type === '导航点' ? '导航点' : '接待点' }}
+                  </NTag>
+                </div>
+                <div class="mt-2px text-xs text-gray-400">
+                  X: {{ pixelToMeter(ann.x) }}m, Y: {{ pixelToMeter(ann.y) }}m
+                </div>
+              </div>
+              <NPopconfirm @positive-click.stop="emit('remove-element', 'annotation', ann.id)">
+                <template #trigger>
+                  <NButton
+                    quaternary
+                    size="tiny"
+                    type="error"
+                    class="opacity-0 group-hover:opacity-100"
+                    @click.stop
+                  >
+                    <template #icon><icon-ic-round-delete-outline /></template>
+                  </NButton>
+                </template>
+                确认删除此点位？关联路径也将一并删除。
+              </NPopconfirm>
+            </div>
+            <NEmpty v-if="filteredAnnotations.length === 0" description="暂无点位" class="mt-20px" />
+          </div>
         </div>
       </NTabPane>
     </NTabs>

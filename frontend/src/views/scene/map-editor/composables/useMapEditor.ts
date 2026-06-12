@@ -24,6 +24,10 @@ export function useMapEditor() {
   const undoStack: string[] = [];
   const redoStack: string[] = [];
 
+  const deletedAnnotationIds: Set<number> = new Set();
+  const deletedPathIds: Set<number> = new Set();
+  const deletedObjectIds: Set<number> = new Set();
+
   const resolution = computed(() => editorData.value?.map.resolution ?? 0.2);
 
   function pixelToMeter(px: number): number {
@@ -56,6 +60,9 @@ export function useMapEditor() {
         isDirty.value = false;
         undoStack.length = 0;
         redoStack.length = 0;
+        deletedAnnotationIds.clear();
+        deletedPathIds.clear();
+        deletedObjectIds.clear();
       }
     } finally {
       loading.value = false;
@@ -130,10 +137,6 @@ export function useMapEditor() {
     if (!hasNav) {
       errors.push('地图至少需要包含1个导航点');
     }
-    const names = annotations.map(a => a.name).filter(Boolean);
-    if (new Set(names).size !== names.length) {
-      errors.push('标注名称不可重复');
-    }
     const minDist = 0.5;
     for (let i = 0; i < annotations.length; i++) {
       for (let j = i + 1; j < annotations.length; j++) {
@@ -190,10 +193,14 @@ export function useMapEditor() {
           height: o.height,
           points: o.points,
         })),
-        deleted_annotation_ids: [],
-        deleted_path_ids: [],
-        deleted_object_ids: [],
+        deleted_annotation_ids: [...deletedAnnotationIds],
+        deleted_path_ids: [...deletedPathIds],
+        deleted_object_ids: [...deletedObjectIds],
       });
+
+      deletedAnnotationIds.clear();
+      deletedPathIds.clear();
+      deletedObjectIds.clear();
 
       isDirty.value = false;
       if (!options?.silent) {
@@ -299,13 +306,20 @@ export function useMapEditor() {
     if (!editorData.value) return;
     pushUndoSnapshot();
     if (type === 'annotation') {
+      if (id > 0) deletedAnnotationIds.add(id);
+      const removedPaths = editorData.value.paths.filter(
+        p => p.start_annotation_id === id || p.end_annotation_id === id
+      );
+      removedPaths.forEach(p => { if (p.id > 0) deletedPathIds.add(p.id); });
       editorData.value.annotations = editorData.value.annotations.filter(a => a.id !== id);
       editorData.value.paths = editorData.value.paths.filter(
         p => p.start_annotation_id !== id && p.end_annotation_id !== id
       );
     } else if (type === 'path') {
+      if (id > 0) deletedPathIds.add(id);
       editorData.value.paths = editorData.value.paths.filter(p => p.id !== id);
     } else if (type === 'object') {
+      if (id > 0) deletedObjectIds.add(id);
       editorData.value.objects = editorData.value.objects.filter(o => o.id !== id);
     }
     if (selectedElement.value?.id === id) {

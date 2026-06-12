@@ -59,11 +59,6 @@ class SceneMapEditorService:
         if not has_nav and save_request.annotations:
             raise ValidationError(msg="地图至少需要包含1个导航点")
 
-        # 校验标注名称唯一
-        names = [a.name for a in save_request.annotations if a.name]
-        if len(names) != len(set(names)):
-            raise ValidationError(msg="标注名称不可重复")
-
         # 删除已删除的标注
         if save_request.deleted_annotation_ids:
             stmt = select(SceneMapAnnotation).where(
