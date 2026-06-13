@@ -189,20 +189,13 @@ function getElementKey(type: string, id: number) {
 function getEffectiveOrigin() {
   if (!props.editorData) return { x: 0, y: 0 };
   const map = props.editorData.map;
-  return {
-    x: map.start_point_x ?? 0,
-    y: map.start_point_y ?? 0,
-  };
-}
-
-function getCanvasScale() {
-  if (!props.editorData) return { sx: 1, sy: 1 };
-  const map = props.editorData.map;
   const storedW = map.width || canvasWidth.value;
   const storedH = map.height || canvasHeight.value;
+  const sx = canvasWidth.value / storedW;
+  const sy = canvasHeight.value / storedH;
   return {
-    sx: canvasWidth.value / storedW,
-    sy: canvasHeight.value / storedH,
+    x: (map.start_point_x ?? 0) * sx,
+    y: (map.start_point_y ?? 0) * sy,
   };
 }
 
@@ -229,7 +222,6 @@ function renderElements() {
 
   const map = props.editorData.map;
   const { x: originX, y: originY } = getEffectiveOrigin();
-  const { sx, sy } = getCanvasScale();
   const res = props.resolution;
 
   const existingKeys = new Set<string>();
@@ -237,8 +229,7 @@ function renderElements() {
     const key = getElementKey('annotation', ann.id);
     existingKeys.add(key);
 
-    const raw = worldToPixel(ann.x, ann.y, originX, originY, res);
-    const px = { x: raw.x * sx, y: raw.y * sy };
+    const px = worldToPixel(ann.x, ann.y, originX, originY, res);
     const isSelected = props.selectedElement?.type === 'annotation' && props.selectedElement?.id === ann.id;
     const annColor = isSelected ? '#3b82f6' : '#ef4444';
 
@@ -304,10 +295,8 @@ function renderElements() {
     const endAnn = props.editorData.annotations.find(a => a.id === path.end_annotation_id);
     if (!startAnn || !endAnn) continue;
 
-    const startRaw = worldToPixel(startAnn.x, startAnn.y, originX, originY, res);
-    const endRaw = worldToPixel(endAnn.x, endAnn.y, originX, originY, res);
-    const startPx = { x: startRaw.x * sx, y: startRaw.y * sy };
-    const endPx = { x: endRaw.x * sx, y: endRaw.y * sy };
+    const startPx = worldToPixel(startAnn.x, startAnn.y, originX, originY, res);
+    const endPx = worldToPixel(endAnn.x, endAnn.y, originX, originY, res);
 
     if (elementMap.has(key)) {
       const line = elementMap.get(key);
@@ -392,19 +381,16 @@ function renderOriginMarker() {
   }
 
   const { x: ox, y: oy } = getEffectiveOrigin();
-  const { sx, sy } = getCanvasScale();
-  const cx = ox * sx;
-  const cy = oy * sy;
   const s = 12;
-  const hLine = new Line([cx - s, cy, cx + s, cy], {
+  const hLine = new Line([ox - s, oy, ox + s, oy], {
     stroke: '#2563eb', strokeWidth: 2, selectable: false, evented: false,
   });
-  const vLine = new Line([cx, cy - s, cx, cy + s], {
+  const vLine = new Line([ox, oy - s, ox, oy + s], {
     stroke: '#2563eb', strokeWidth: 2, selectable: false, evented: false,
   });
   const label = new Text('O', {
     fontSize: 10, fill: '#2563eb', fontFamily: 'sans-serif', fontWeight: 'bold',
-    left: cx + 6, top: cy - 14, selectable: false, evented: false,
+    left: ox + 6, top: oy - 14, selectable: false, evented: false,
   });
   originMarker = new Group([hLine, vLine, label], { selectable: false, evented: false });
   fabricCanvas.add(originMarker);
@@ -437,14 +423,10 @@ function renderGrid() {
   const zoom = currentZoom;
   const res = props.resolution;
   const { x: originPx, y: originPy } = getEffectiveOrigin();
-  const { sx, sy } = getCanvasScale();
-  const canvasOriginX = originPx * sx;
-  const canvasOriginY = originPy * sy;
 
   // Adaptive grid: target ~80px visual spacing on screen
   const targetVisualPx = 80;
-  const avgScale = (sx + sy) / 2;
-  const rawSpacingM = (targetVisualPx / zoom) * res / avgScale;
+  const rawSpacingM = (targetVisualPx / zoom) * res;
 
   // Pick the nearest "nice" real-world distance
   const niceSteps = [0.05, 0.1, 0.2, 0.5, 1, 2, 5, 10, 20, 50, 100, 200, 500, 1000];
@@ -457,21 +439,19 @@ function renderGrid() {
   if (gridGroup) fabricCanvas.remove(gridGroup);
 
   const spacingPx = spacingM / res;
-  const canvasSpacingX = spacingPx * sx;
-  const canvasSpacingY = spacingPx * sy;
-  if (canvasSpacingX <= 0 || canvasSpacingY <= 0) return;
+  if (spacingPx <= 0) return;
 
   const allObjects: any[] = [];
 
   // Grid extends beyond image to fill visible area
   const margin = Math.max(w, h, 1000);
-  const startX = Math.floor(-margin / canvasSpacingX) * canvasSpacingX;
-  const startY = Math.floor(-margin / canvasSpacingY) * canvasSpacingY;
-  const endX = Math.ceil((w + margin) / canvasSpacingX) * canvasSpacingX;
-  const endY = Math.ceil((h + margin) / canvasSpacingY) * canvasSpacingY;
+  const startX = Math.floor(-margin / spacingPx) * spacingPx;
+  const startY = Math.floor(-margin / spacingPx) * spacingPx;
+  const endX = Math.ceil((w + margin) / spacingPx) * spacingPx;
+  const endY = Math.ceil((h + margin) / spacingPx) * spacingPx;
 
   // Vertical lines
-  for (let x = startX; x <= endX; x += canvasSpacingX) {
+  for (let x = startX; x <= endX; x += spacingPx) {
     const inBounds = x >= 0 && x <= w;
     allObjects.push(new Line([x, startY, x, endY], {
       stroke: inBounds ? 'rgba(0,0,0,0.08)' : 'rgba(0,0,0,0.03)',
@@ -481,7 +461,7 @@ function renderGrid() {
     }));
   }
   // Horizontal lines
-  for (let y = startY; y <= endY; y += canvasSpacingY) {
+  for (let y = startY; y <= endY; y += spacingPx) {
     const inBounds = y >= 0 && y <= h;
     allObjects.push(new Line([startX, y, endX, y], {
       stroke: inBounds ? 'rgba(0,0,0,0.08)' : 'rgba(0,0,0,0.03)',
@@ -492,11 +472,11 @@ function renderGrid() {
   }
 
   // Zero-axis lines through origin (world X=0, Y=0)
-  allObjects.push(new Line([canvasOriginX, startY, canvasOriginX, endY], {
+  allObjects.push(new Line([originPx, startY, originPx, endY], {
     stroke: 'rgba(37, 99, 235, 0.25)', strokeWidth: 2,
     strokeDashArray: [8, 4], selectable: false, evented: false,
   }));
-  allObjects.push(new Line([startX, canvasOriginY, endX, canvasOriginY], {
+  allObjects.push(new Line([startX, originPy, endX, originPy], {
     stroke: 'rgba(37, 99, 235, 0.25)', strokeWidth: 2,
     strokeDashArray: [8, 4], selectable: false, evented: false,
   }));
@@ -512,9 +492,8 @@ function renderGrid() {
   };
 
   // X-axis labels along bottom edge (world X coordinate at each vertical grid line)
-  for (let x = 0; x <= endX; x += canvasSpacingX) {
-    const storedX = x / sx;
-    const world = pixelToWorld(storedX, 0, originPx, originPy, res);
+  for (let x = 0; x <= endX; x += spacingPx) {
+    const world = pixelToWorld(x, 0, originPx, originPy, res);
     const meters = Math.round(world.x * 1000) / 1000;
     allObjects.push(new Text(formatDist(meters), {
       ...labelStyle,
@@ -525,9 +504,8 @@ function renderGrid() {
     }));
   }
   // Y-axis labels along left edge (world Y coordinate at each horizontal grid line)
-  for (let y = 0; y <= endY; y += canvasSpacingY) {
-    const storedY = y / sy;
-    const world = pixelToWorld(0, storedY, originPx, originPy, res);
+  for (let y = 0; y <= endY; y += spacingPx) {
+    const world = pixelToWorld(0, y, originPx, originPy, res);
     const meters = Math.round(world.y * 1000) / 1000;
     allObjects.push(new Text(formatDist(meters), {
       ...labelStyle,
@@ -601,15 +579,13 @@ function handleMouseDown(opt: any) {
 
   if (props.drawingMode === 'point-nav') {
     const { x: originX, y: originY } = getEffectiveOrigin();
-    const { sx, sy } = getCanvasScale();
-    const world = pixelToWorld(x / sx, y / sy, originX, originY, props.resolution);
+    const world = pixelToWorld(x, y, originX, originY, props.resolution);
     emit('add-annotation', { x: world.x, y: world.y, type: 'navigation' });
     return;
   }
   if (props.drawingMode === 'point-recv') {
     const { x: originX, y: originY } = getEffectiveOrigin();
-    const { sx, sy } = getCanvasScale();
-    const world = pixelToWorld(x / sx, y / sy, originX, originY, props.resolution);
+    const world = pixelToWorld(x, y, originX, originY, props.resolution);
     emit('add-annotation', { x: world.x, y: world.y, type: 'reception' });
     return;
   }
@@ -646,8 +622,7 @@ function handleMouseMove(opt: any) {
   const evt = opt.e as MouseEvent;
   const pointer = fabricCanvas.getViewportPoint(evt);
   const { x: originX, y: originY } = getEffectiveOrigin();
-  const { sx, sy } = getCanvasScale();
-  const world = pixelToWorld(pointer.x / sx, pointer.y / sy, originX, originY, props.resolution);
+  const world = pixelToWorld(pointer.x, pointer.y, originX, originY, props.resolution);
   emit('cursor-position', world.x, world.y);
 
   if (isPanning) {
@@ -715,8 +690,7 @@ function handleObjectMoved(opt: any) {
   const updates: Record<string, any> = {};
   if (data.type === 'annotation') {
     const { x: originX, y: originY } = getEffectiveOrigin();
-    const { sx, sy } = getCanvasScale();
-    const world = pixelToWorld(obj.left! / sx, obj.top! / sy, originX, originY, props.resolution);
+    const world = pixelToWorld(obj.left!, obj.top!, originX, originY, props.resolution);
     updates.x = world.x;
     updates.y = world.y;
   } else {
@@ -763,11 +737,9 @@ function handleMouseWheel(opt: any) {
 function findAnnotationAtPoint(x: number, y: number): Api.Scene.SceneMapAnnotation | null {
   if (!props.editorData) return null;
   const { x: originX, y: originY } = getEffectiveOrigin();
-  const { sx, sy } = getCanvasScale();
   const threshold = 15;
   for (const ann of props.editorData.annotations) {
-    const raw = worldToPixel(ann.x, ann.y, originX, originY, props.resolution);
-    const pos = { x: raw.x * sx, y: raw.y * sy };
+    const pos = worldToPixel(ann.x, ann.y, originX, originY, props.resolution);
     if (Math.abs(pos.x - x) < threshold && Math.abs(pos.y - y) < threshold) return ann;
   }
   return null;
@@ -934,9 +906,7 @@ function zoomReset() {
 function locateMeterPoint(x: number, y: number) {
   if (!fabricCanvas) return;
   const { x: originX, y: originY } = getEffectiveOrigin();
-  const { sx, sy } = getCanvasScale();
-  const raw = worldToPixel(x, y, originX, originY, props.resolution);
-  const pixel = { x: raw.x * sx, y: raw.y * sy };
+  const pixel = worldToPixel(x, y, originX, originY, props.resolution);
   const zoom = Math.max(currentZoom, MIN_ZOOM);
   const offsetX = containerWidth.value / 2 - pixel.x * zoom;
   const offsetY = containerHeight.value / 2 - pixel.y * zoom;
