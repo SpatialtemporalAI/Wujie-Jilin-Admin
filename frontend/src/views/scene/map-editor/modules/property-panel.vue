@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, computed, onMounted, watch } from 'vue';
+import { ref, computed, onMounted } from 'vue';
 import { NProgress, NTag } from 'naive-ui';
 import type { SelectOption } from 'naive-ui';
 import type { SelectedElement } from '../composables/useMapEditor';
@@ -135,8 +135,7 @@ async function loadRobotList() {
       name: null,
       serial_number: null,
       status: null,
-      model_id: undefined,
-      map_id: props.mapId ?? undefined
+      model_id: undefined
     });
     if (!error && data) {
       robotList.value = data.records;
@@ -192,10 +191,6 @@ async function updateRobotMap(robot: Api.Robot.Robot, mapId: number | null) {
 }
 
 onMounted(() => {
-  loadRobotList();
-});
-
-watch(() => props.mapId, () => {
   loadRobotList();
 });
 </script>
