@@ -157,7 +157,7 @@ onUnmounted(() => {
 </script>
 
 <template>
-  <div>
+  <div class="h-full flex-col-stretch gap-12px">
     <NDataTable
       :columns="columns"
       :data="data"

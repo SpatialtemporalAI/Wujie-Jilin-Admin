@@ -204,7 +204,7 @@ async function handleStart(row: Api.Task.Task) {
 </script>
 
 <template>
-  <div class="flex-col-stretch gap-12px">
+  <div class="h-full flex-col-stretch gap-12px">
     <TaskSearch v-model:model="searchParams" @search="getDataByPage" @reset="getDataByPage" />
     <div>
       <TableHeaderOperation
