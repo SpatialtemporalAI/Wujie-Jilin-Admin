@@ -33,5 +33,6 @@ class RobotStatusRecordResponseData(BaseRespEntity):
     signal: int = Field(..., description="信号强度")
     speed: float = Field(..., description="速度(m/s)")
     location: Optional[str] = Field(None, description="位置信息(JSON)")
+    location_info: Optional[dict] = Field(None, description="位置信息：{x, y, angle, update_at}")
     created_at: datetime = Field(..., description="创建时间")
     updated_at: Optional[datetime] = Field(None, description="更新时间")

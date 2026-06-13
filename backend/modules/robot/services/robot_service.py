@@ -43,7 +43,7 @@ class RobotService:
         """
         base_query = (
             select(Robot)
-            .options(noload(Robot.status_records))
+            .options(noload(Robot.status_record))
         )
 
         conditions = [Robot.deleted_at.is_(None)]
@@ -127,7 +127,7 @@ class RobotService:
 
             result = await db.execute(
                 select(Robot)
-                .options(noload(Robot.status_records))
+                .options(noload(Robot.status_record))
                 .where(Robot.id == robot_id)
                 .where(Robot.deleted_at.is_(None))
             )
@@ -248,7 +248,7 @@ class RobotService:
 
             result = await db.execute(
                 select(Robot)
-                .options(noload(Robot.status_records))
+                .options(noload(Robot.status_record))
                 .where(Robot.id == robot_id)
                 .where(Robot.deleted_at.is_(None))
             )
@@ -338,7 +338,7 @@ class RobotService:
 
             result = await db.execute(
                 select(Robot)
-                .options(noload(Robot.status_records))
+                .options(noload(Robot.status_record))
                 .where(Robot.id == robot_id)
                 .where(Robot.deleted_at.is_(None))
             )

@@ -63,9 +63,10 @@ class Robot(Base):
         lazy="noload",
         init=False,
     )
-    status_records: Mapped[List["RobotStatusRecord"]] = relationship(
+    status_record: Mapped["RobotStatusRecord"] = relationship(
         back_populates="robot",
         lazy="noload",
+        uselist=False,
         init=False,
     )
     event_logs: Mapped[List["RobotEventLog"]] = relationship(
