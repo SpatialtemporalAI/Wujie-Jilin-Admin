@@ -59,13 +59,13 @@ declare namespace Api {
     /** location info */
     type LocationInfo = {
       /** x coordinate */
-      x: number;
+      x?: number;
       /** y coordinate */
-      y: number;
+      y?: number;
       /** angle */
-      angle: number;
+      angle?: number;
       /** update time */
-      update_at: string | null;
+      update_at?: string | null;
     };
 
     /** robot search params */

@@ -239,18 +239,22 @@ function renderElements() {
 
     const raw = worldToPixel(ann.x, ann.y, originX, originY, res);
     const px = { x: raw.x * sx, y: raw.y * sy };
+    const isSelected = props.selectedElement?.type === 'annotation' && props.selectedElement?.id === ann.id;
+    const annColor = isSelected ? '#3b82f6' : '#ef4444';
 
     if (elementMap.has(key)) {
       const group = elementMap.get(key);
       group.set({ left: px.x, top: px.y });
       const circle = group.getObjects()[0] as Circle;
-      circle.set('fill', '#ef4444');
+      circle.set('fill', annColor);
+      circle.set('radius', isSelected ? 10 : 8);
       const text = group.getObjects()[2] as Text;
       text.set('text', ann.name);
+      text.set('fill', annColor);
     } else {
       const circle = new Circle({
-        radius: 8,
-        fill: '#ef4444',
+        radius: isSelected ? 10 : 8,
+        fill: annColor,
         stroke: '#fff',
         strokeWidth: 2,
         originX: 'center',
@@ -260,7 +264,7 @@ function renderElements() {
       const angleIndicator = new Triangle({
         width: 8,
         height: 12,
-        fill: '#ef4444',
+        fill: annColor,
         originX: 'center',
         originY: 'center',
         top: -16,
@@ -270,7 +274,7 @@ function renderElements() {
 
       const text = new Text(ann.name, {
         fontSize: 10,
-        fill: '#ef4444',
+        fill: annColor,
         originX: 'center',
         originY: 'center',
         top: 18,
@@ -860,7 +864,7 @@ watch(() => props.editorData, async (newData) => {
 watch(() => props.editorData?.annotations, () => renderElements(), { deep: true });
 watch(() => props.editorData?.paths, () => renderElements(), { deep: true });
 watch(() => props.editorData?.objects, () => renderElements(), { deep: true });
-watch(() => props.selectedElement, () => updateSelection());
+watch(() => props.selectedElement, () => { renderElements(); updateSelection(); });
 watch(() => props.gridSpacing, () => renderGrid());
 watch(() => props.drawingMode, (mode) => {
   pathStartAnnotationId = null;

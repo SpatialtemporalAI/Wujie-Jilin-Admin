@@ -24,7 +24,7 @@ def upgrade() -> None:
             "location_info",
             sa.JSON(),
             nullable=True,
-            server_default='{"x": 0.0, "y": 0.0, "angle": 0.0, "update_at": null}',
+            server_default='{}',
             comment="位置信息",
         ),
     )

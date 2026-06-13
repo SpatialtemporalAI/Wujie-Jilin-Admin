@@ -45,12 +45,7 @@ class LocationInfo:
 
     @classmethod
     def default_dict(cls):
-        return {
-            "x": 0.0,
-            "y": 0.0,
-            "angle": 0.0,
-            "update_at": None,
-        }
+        return {}
 
 
 class RobotStatusRecord(Base):
