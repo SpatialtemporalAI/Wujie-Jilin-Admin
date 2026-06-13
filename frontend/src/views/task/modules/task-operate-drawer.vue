@@ -349,6 +349,19 @@ onMounted(() => {
           </NFormItemGi>
         </NGrid>
 
+        <!-- 机器人绑定 -->
+        <NDivider title-placement="left">执行机器人</NDivider>
+        <NFormItem label="绑定机器人" path="robot_ids">
+          <NSelect
+            v-model:value="model.robot_ids"
+            :options="filteredRobotOptions"
+            placeholder="至少选择一台机器人"
+            multiple
+            filterable
+            :render-label="renderRobotLabel"
+          />
+        </NFormItem>
+
         <!-- 巡逻点位配置 -->
         <template v-if="model.task_type === 'patrol'">
           <NDivider title-placement="left">巡逻点位配置</NDivider>
@@ -391,19 +404,6 @@ onMounted(() => {
             <NSelect v-model:value="model.broadcast_count" :options="broadcastCountOptions" placeholder="选择播报次数" />
           </NFormItem>
         </template>
-
-        <!-- 机器人绑定 -->
-        <NDivider title-placement="left">执行机器人</NDivider>
-        <NFormItem label="绑定机器人" path="robot_ids">
-          <NSelect
-            v-model:value="model.robot_ids"
-            :options="filteredRobotOptions"
-            placeholder="至少选择一台机器人"
-            multiple
-            filterable
-            :render-label="renderRobotLabel"
-          />
-        </NFormItem>
 
         <!-- 定时配置 -->
         <NDivider title-placement="left">定时配置（可选）</NDivider>
