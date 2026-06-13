@@ -186,6 +186,19 @@ function getElementKey(type: string, id: number) {
   return `${type}-${id}`;
 }
 
+function getEffectiveOrigin() {
+  if (!props.editorData) return { x: 0, y: 0 };
+  const map = props.editorData.map;
+  const storedW = map.width || canvasWidth.value;
+  const storedH = map.height || canvasHeight.value;
+  const sx = canvasWidth.value / storedW;
+  const sy = canvasHeight.value / storedH;
+  return {
+    x: (map.start_point_x ?? 0) * sx,
+    y: (map.start_point_y ?? 0) * sy,
+  };
+}
+
 function centerContent() {
   if (!fabricCanvas) return;
   const cw = containerWidth.value;
@@ -208,8 +221,7 @@ function renderElements() {
   if (!fabricCanvas || !props.editorData) return;
 
   const map = props.editorData.map;
-  const originX = map.start_point_x ?? 0;
-  const originY = map.start_point_y ?? 0;
+  const { x: originX, y: originY } = getEffectiveOrigin();
   const res = props.resolution;
 
   const existingKeys = new Set<string>();
@@ -364,8 +376,7 @@ function renderOriginMarker() {
     originMarker = null;
   }
 
-  const ox = props.editorData.map.start_point_x ?? 0;
-  const oy = props.editorData.map.start_point_y ?? 0;
+  const { x: ox, y: oy } = getEffectiveOrigin();
   const s = 12;
   const hLine = new Line([ox - s, oy, ox + s, oy], {
     stroke: '#2563eb', strokeWidth: 2, selectable: false, evented: false,
@@ -407,8 +418,7 @@ function renderGrid() {
   const h = canvasHeight.value;
   const zoom = currentZoom;
   const res = props.resolution;
-  const originPx = props.editorData?.map.start_point_x ?? 0;
-  const originPy = props.editorData?.map.start_point_y ?? 0;
+  const { x: originPx, y: originPy } = getEffectiveOrigin();
 
   // Adaptive grid: target ~80px visual spacing on screen
   const targetVisualPx = 80;
@@ -564,17 +574,13 @@ function handleMouseDown(opt: any) {
   const y = pointer.y;
 
   if (props.drawingMode === 'point-nav') {
-    const map = props.editorData?.map;
-    const originX = map?.start_point_x ?? 0;
-    const originY = map?.start_point_y ?? 0;
+    const { x: originX, y: originY } = getEffectiveOrigin();
     const world = pixelToWorld(x, y, originX, originY, props.resolution);
     emit('add-annotation', { x: world.x, y: world.y, type: 'navigation' });
     return;
   }
   if (props.drawingMode === 'point-recv') {
-    const map = props.editorData?.map;
-    const originX = map?.start_point_x ?? 0;
-    const originY = map?.start_point_y ?? 0;
+    const { x: originX, y: originY } = getEffectiveOrigin();
     const world = pixelToWorld(x, y, originX, originY, props.resolution);
     emit('add-annotation', { x: world.x, y: world.y, type: 'reception' });
     return;
@@ -611,9 +617,7 @@ function handleMouseMove(opt: any) {
   if (!fabricCanvas) return;
   const evt = opt.e as MouseEvent;
   const pointer = fabricCanvas.getViewportPoint(evt);
-  const map = props.editorData?.map;
-  const originX = map?.start_point_x ?? 0;
-  const originY = map?.start_point_y ?? 0;
+  const { x: originX, y: originY } = getEffectiveOrigin();
   const world = pixelToWorld(pointer.x, pointer.y, originX, originY, props.resolution);
   emit('cursor-position', world.x, world.y);
 
@@ -681,9 +685,7 @@ function handleObjectMoved(opt: any) {
   if (!data) return;
   const updates: Record<string, any> = {};
   if (data.type === 'annotation') {
-    const map = props.editorData?.map;
-    const originX = map?.start_point_x ?? 0;
-    const originY = map?.start_point_y ?? 0;
+    const { x: originX, y: originY } = getEffectiveOrigin();
     const world = pixelToWorld(obj.left!, obj.top!, originX, originY, props.resolution);
     updates.x = world.x;
     updates.y = world.y;
@@ -730,9 +732,7 @@ function handleMouseWheel(opt: any) {
 
 function findAnnotationAtPoint(x: number, y: number): Api.Scene.SceneMapAnnotation | null {
   if (!props.editorData) return null;
-  const map = props.editorData.map;
-  const originX = map.start_point_x ?? 0;
-  const originY = map.start_point_y ?? 0;
+  const { x: originX, y: originY } = getEffectiveOrigin();
   const threshold = 15;
   for (const ann of props.editorData.annotations) {
     const pos = worldToPixel(ann.x, ann.y, originX, originY, props.resolution);
@@ -901,9 +901,7 @@ function zoomReset() {
 
 function locateMeterPoint(x: number, y: number) {
   if (!fabricCanvas) return;
-  const map = props.editorData?.map;
-  const originX = map?.start_point_x ?? 0;
-  const originY = map?.start_point_y ?? 0;
+  const { x: originX, y: originY } = getEffectiveOrigin();
   const pixel = worldToPixel(x, y, originX, originY, props.resolution);
   const zoom = Math.max(currentZoom, MIN_ZOOM);
   const offsetX = containerWidth.value / 2 - pixel.x * zoom;

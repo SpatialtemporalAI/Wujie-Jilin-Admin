@@ -44,12 +44,24 @@ function centerContent() {
   fabricCanvas.setViewportTransform([zoom, 0, 0, zoom, Math.max(0, offsetX), Math.max(0, offsetY)]);
 }
 
+function getEffectiveOrigin() {
+  if (!mapData.value) return { x: 0, y: 0 };
+  const mMap = mapData.value.map;
+  const storedW = mMap.width || canvasWidth.value;
+  const storedH = mMap.height || canvasHeight.value;
+  const sx = canvasWidth.value / storedW;
+  const sy = canvasHeight.value / storedH;
+  return {
+    x: (mMap.start_point_x ?? 0) * sx,
+    y: (mMap.start_point_y ?? 0) * sy,
+  };
+}
+
 function renderElements() {
   if (!fabricCanvas || !mapData.value) return;
   const existingKeys = new Set<string>();
   const mMap = mapData.value.map;
-  const originX = mMap.start_point_x ?? 0;
-  const originY = mMap.start_point_y ?? 0;
+  const { x: originX, y: originY } = getEffectiveOrigin();
   const res = mMap.resolution || 0.2;
 
   // Render annotations (stored in world coordinates)
@@ -179,8 +191,9 @@ function renderRobotMarker() {
 
   if (!props.location) return;
 
-  const mMap = mapData.value?.map;
-  const robotPx = worldToPixel(props.location.x, props.location.y, mMap?.start_point_x ?? 0, mMap?.start_point_y ?? 0, mMap?.resolution || 0.2);
+  const { x: originX, y: originY } = getEffectiveOrigin();
+  const res = mapData.value?.map.resolution || 0.2;
+  const robotPx = worldToPixel(props.location.x, props.location.y, originX, originY, res);
 
   const body = new Circle({
     radius: 12,
