@@ -12,6 +12,7 @@ from sqlalchemy.orm import noload
 from typing import List, Tuple
 
 from database.models.business.robot import Robot, RobotStatus
+from database.models.business.robot_status_record import RobotStatusRecord
 from database.models.business.robot_model import RobotModel
 from database.models.business.scene_map import SceneMap
 from core.exception.errors import NotFoundError, ConflictError
@@ -206,6 +207,11 @@ class RobotService:
             )
 
             db.add(robot_obj)
+            await db.flush()
+
+            status_record = RobotStatusRecord(robot_id=robot_obj.id)
+            db.add(status_record)
+
             await db.commit()
             await db.refresh(robot_obj)
 
