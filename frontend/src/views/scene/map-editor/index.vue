@@ -245,6 +245,8 @@ function handleFocusAnnotation(id: number) {
           @update-element="handleUpdateElement"
           @zoom-change="handleZoomChange"
           @cursor-position="handleCursorPosition"
+          @undo="editor.undo()"
+          @redo="editor.redo()"
         />
         <div class="absolute bottom-8px left-8px rounded bg-black/50 px-8px py-4px text-xs text-white">
           坐标: {{ cursorX.toFixed(2) }}m, {{ cursorY.toFixed(2) }}m

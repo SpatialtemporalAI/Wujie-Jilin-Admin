@@ -26,6 +26,8 @@ const emit = defineEmits<{
   (e: 'update-element', data: { type: string; id: number; updates: Record<string, any> }): void;
   (e: 'zoom-change', zoom: number): void;
   (e: 'cursor-position', x: number, y: number): void;
+  (e: 'undo'): void;
+  (e: 'redo'): void;
 }>();
 
 const canvasContainer = ref<HTMLDivElement>();
@@ -148,6 +150,7 @@ let lastPanPoint = { x: 0, y: 0 };
 let spacePressed = false;
 
 let isDraggingObject = false;
+let isLocalUpdate = false;
 let cursorEmitRafId: number | null = null;
 let lastCursorWorld = { x: 0, y: 0 };
 let minimapRafId: number | null = null;
@@ -245,152 +248,125 @@ function centerContent() {
   updateMinimap();
 }
 
-function renderElements() {
+// 同步结构：仅在 annotations/paths/objects 的 id 集合变化时新增/删除 fabric 对象
+function syncStructure() {
   if (!fabricCanvas || !props.editorData) return;
-  if (isDraggingObject) return;
+  const existingKeys = new Set<string>();
 
-
-  console.log('canvasHeight:', canvasHeight.value, 'backgroundImgObj:', backgroundImgObj ? '已加载' : '未加载'); const existingKeys = new Set<string>();
-  for (const ann of props.editorData.annotations) {
-    const key = getElementKey('annotation', ann.id);
-    existingKeys.add(key);
-
-    const px = worldToCanvasPoint(ann.x, ann.y);
-    const isSelected = props.selectedElement?.type === 'annotation' && props.selectedElement?.id === ann.id;
-    const annColor = isSelected ? '#3b82f6' : '#ef4444';
-
-    if (elementMap.has(key)) {
-      const group = elementMap.get(key);
-      group.set({ left: px.x, top: px.y });
-      group.setCoords();
-      const circle = group.getObjects()[0] as Circle;
-      circle.set('fill', annColor);
-      circle.set('radius', isSelected ? 10 : 8);
-      circle.setCoords();
-      const text = group.getObjects()[2] as Text;
-      text.set('text', ann.name);
-      text.set('fill', annColor);
-      text.setCoords();
-    } else {
-      const circle = new Circle({
-        radius: isSelected ? 10 : 8,
-        fill: annColor,
-        stroke: '#fff',
-        strokeWidth: 2,
-        originX: 'center',
-        originY: 'center',
-      });
-
-      const angleIndicator = new Triangle({
-        width: 8,
-        height: 12,
-        fill: annColor,
-        originX: 'center',
-        originY: 'center',
-        top: -16,
-        angle: ann.angle || 0,
-        visible: false,
-        evented: false,
-        selectable: false,
-        hasControls: false,
-      });
-
-      const text = new Text(ann.name, {
-        fontSize: 10,
-        fill: annColor,
-        originX: 'center',
-        originY: 'center',
-        top: 18,
-        fontFamily: 'sans-serif',
-        fontWeight: 'bold',
-        evented: false,
-        selectable: false,
-        hasControls: false,
-      });
-
-      const group = new Group([circle, angleIndicator, text], {
-        left: px.x,
-        top: px.y,
-        originX: 'center',
-        originY: 'center',
-        hasControls: false,
-        subTargetCheck: false,
-      });
-      setElementData(group, { type: 'annotation', id: ann.id });
-
-      fabricCanvas.add(group);
-      elementMap.set(key, group);
-    }
-  }
-
+  // paths 最底层
   for (const path of props.editorData.paths) {
     const key = getElementKey('path', path.id);
     existingKeys.add(key);
-
+    if (elementMap.has(key)) continue;
     const startAnn = props.editorData.annotations.find(a => a.id === path.start_annotation_id);
     const endAnn = props.editorData.annotations.find(a => a.id === path.end_annotation_id);
     if (!startAnn || !endAnn) continue;
-
     const startPx = worldToCanvasPoint(startAnn.x, startAnn.y);
     const endPx = worldToCanvasPoint(endAnn.x, endAnn.y);
-
-    if (elementMap.has(key)) {
-      const line = elementMap.get(key);
-      line.set({ x1: startPx.x, y1: startPx.y, x2: endPx.x, y2: endPx.y });
-      line.setCoords();
-    } else {
-      const line = new Line([startPx.x, startPx.y, endPx.x, endPx.y], {
-        stroke: '#f97316',
-        strokeWidth: 3,
-        selectable: false,
-        evented: false,
-      });
-      setElementData(line, { type: 'path', id: path.id });
-      fabricCanvas.add(line);
-      fabricCanvas.sendObjectToBack(line);
-      elementMap.set(key, line);
-    }
+    const line = new Line([startPx.x, startPx.y, endPx.x, endPx.y], {
+      stroke: '#f97316',
+      strokeWidth: 3,
+      selectable: false,
+      evented: false,
+    });
+    setElementData(line, { type: 'path', id: path.id });
+    fabricCanvas.add(line);
+    fabricCanvas.sendObjectToBack(line);
+    elementMap.set(key, line);
   }
 
+  // objects 中间层
   for (const obj of props.editorData.objects) {
     const key = getElementKey('object', obj.id);
     existingKeys.add(key);
+    if (elementMap.has(key)) continue;
 
     const isRestricted = obj.type === 'restricted' || obj.type === '禁区';
     const fillColor = isRestricted ? 'rgba(234, 179, 8, 0.3)' : 'rgba(239, 68, 68, 0.3)';
     const strokeColor = isRestricted ? '#eab308' : '#ef4444';
 
-    if (elementMap.has(key)) {
-      const fabricObj = elementMap.get(key);
-      fabricObj.set({ left: obj.x, top: obj.y });
-      if (fabricObj instanceof Rect) {
-        fabricObj.set({ width: obj.width, height: obj.height });
-      }
-    } else {
-      if (obj.points) {
-        try {
-          const pts = JSON.parse(obj.points);
-          const polygon = new Polygon(pts, {
-            left: obj.x, top: obj.y,
-            fill: fillColor, stroke: strokeColor, strokeWidth: 2,
-          });
-          setElementData(polygon, { type: 'object', id: obj.id });
-          fabricCanvas.add(polygon);
-          elementMap.set(key, polygon);
-        } catch { /* skip invalid polygon */ }
-      } else {
-        const rect = new Rect({
+    if (obj.points) {
+      try {
+        const pts = JSON.parse(obj.points);
+        const polygon = new Polygon(pts, {
           left: obj.x, top: obj.y,
-          width: obj.width || 40, height: obj.height || 40,
           fill: fillColor, stroke: strokeColor, strokeWidth: 2,
         });
-        setElementData(rect, { type: 'object', id: obj.id });
-        fabricCanvas.add(rect);
-        elementMap.set(key, rect);
-      }
+        setElementData(polygon, { type: 'object', id: obj.id });
+        fabricCanvas.add(polygon);
+        elementMap.set(key, polygon);
+      } catch { /* skip invalid polygon */ }
+    } else {
+      const rect = new Rect({
+        left: obj.x, top: obj.y,
+        width: obj.width || 40, height: obj.height || 40,
+        fill: fillColor, stroke: strokeColor, strokeWidth: 2,
+      });
+      setElementData(rect, { type: 'object', id: obj.id });
+      fabricCanvas.add(rect);
+      elementMap.set(key, rect);
     }
   }
 
+  // annotations 最顶层
+  for (const ann of props.editorData.annotations) {
+    const key = getElementKey('annotation', ann.id);
+    existingKeys.add(key);
+    if (elementMap.has(key)) continue;
+
+    const isSelected = props.selectedElement?.type === 'annotation' && props.selectedElement?.id === ann.id;
+    const annColor = isSelected ? '#3b82f6' : '#ef4444';
+
+    const circle = new Circle({
+      radius: isSelected ? 10 : 8,
+      fill: annColor,
+      stroke: '#fff',
+      strokeWidth: 2,
+      originX: 'center',
+      originY: 'center',
+    });
+
+    const angleIndicator = new Triangle({
+      width: 8,
+      height: 12,
+      fill: annColor,
+      originX: 'center',
+      originY: 'center',
+      top: -16,
+      angle: ann.angle || 0,
+      visible: false,
+      evented: false,
+      selectable: false,
+      hasControls: false,
+    });
+
+    const text = new Text(ann.name, {
+      fontSize: 10,
+      fill: annColor,
+      originX: 'center',
+      originY: 'center',
+      top: 18,
+      fontFamily: 'sans-serif',
+      fontWeight: 'bold',
+      evented: false,
+      selectable: false,
+      hasControls: false,
+    });
+
+    const group = new Group([circle, angleIndicator, text], {
+      left: 0,
+      top: 0,
+      originX: 'center',
+      originY: 'center',
+      hasControls: false,
+      subTargetCheck: false,
+    });
+    setElementData(group, { type: 'annotation', id: ann.id });
+    fabricCanvas.add(group);
+    elementMap.set(key, group);
+  }
+
+  // 移除不再存在的元素
   for (const [key, obj] of elementMap) {
     if (!existingKeys.has(key)) {
       fabricCanvas.remove(obj);
@@ -398,14 +374,74 @@ function renderElements() {
     }
   }
 
-  // Bring annotations to front for higher z-order
+  renderOriginMarker();
+}
+
+// 仅更新位置和尺寸（拖动结束、undo/redo、loadMap）
+function updatePositions() {
+  if (!fabricCanvas || !props.editorData) return;
+
   for (const ann of props.editorData.annotations) {
     const key = getElementKey('annotation', ann.id);
-    const obj = elementMap.get(key);
-    if (obj) fabricCanvas.bringObjectToFront(obj);
+    const group = elementMap.get(key);
+    if (!group) continue;
+    const px = worldToCanvasPoint(ann.x, ann.y);
+    group.set({ left: px.x, top: px.y });
+    group.setCoords();
   }
 
-  renderOriginMarker();
+  for (const path of props.editorData.paths) {
+    const key = getElementKey('path', path.id);
+    const line = elementMap.get(key);
+    if (!line) continue;
+    const startAnn = props.editorData.annotations.find(a => a.id === path.start_annotation_id);
+    const endAnn = props.editorData.annotations.find(a => a.id === path.end_annotation_id);
+    if (!startAnn || !endAnn) continue;
+    const startPx = worldToCanvasPoint(startAnn.x, startAnn.y);
+    const endPx = worldToCanvasPoint(endAnn.x, endAnn.y);
+    line.set({ x1: startPx.x, y1: startPx.y, x2: endPx.x, y2: endPx.y });
+    line.setCoords();
+  }
+
+  for (const obj of props.editorData.objects) {
+    const key = getElementKey('object', obj.id);
+    const fabricObj = elementMap.get(key);
+    if (!fabricObj) continue;
+    fabricObj.set({ left: obj.x, top: obj.y });
+    if (fabricObj instanceof Rect) {
+      fabricObj.set({ width: obj.width, height: obj.height });
+    }
+    fabricObj.setCoords();
+  }
+}
+
+// 仅更新选中样式与文本（轻量路径，不重渲染结构）
+function updateSelectionStyle() {
+  if (!fabricCanvas || !props.editorData) return;
+  const sel = props.selectedElement;
+
+  for (const ann of props.editorData.annotations) {
+    const key = getElementKey('annotation', ann.id);
+    const group = elementMap.get(key);
+    if (!group) continue;
+    const isSelected = sel?.type === 'annotation' && sel?.id === ann.id;
+    const annColor = isSelected ? '#3b82f6' : '#ef4444';
+    const circle = group.getObjects()[0] as Circle;
+    const text = group.getObjects()[2] as Text;
+    circle.set('fill', annColor);
+    circle.set('radius', isSelected ? 10 : 8);
+    text.set('text', ann.name);
+    text.set('fill', annColor);
+  }
+}
+
+// 完整渲染：结构 + 位置 + 选中样式 + renderAll
+function renderElements() {
+  if (!fabricCanvas || !props.editorData) return;
+  if (isDraggingObject) return;
+  syncStructure();
+  updatePositions();
+  updateSelectionStyle();
   updateSelection();
   fabricCanvas.renderAll();
 }
@@ -747,6 +783,9 @@ function handleObjectModifiedied(opt: any) {
   const data = getElementData(obj);
   if (!data) return;
 
+  isDraggingObject = false;
+  obj.setCoords();
+
   const updates: Record<string, any> = {};
   if (data.type === 'annotation') {
     const world = canvasPointToWorld(obj.left!, obj.top!);
@@ -761,10 +800,10 @@ function handleObjectModifiedied(opt: any) {
     updates.height = obj.height * obj.scaleY;
     obj.set({ scaleX: 1, scaleY: 1 });
   }
-  emit('update-element', { type: data.type, id: data.id, updates });
 
-  isDraggingObject = false;
-  obj.setCoords();
+  isLocalUpdate = true;
+  emit('update-element', { type: data.type, id: data.id, updates });
+  nextTick(() => { isLocalUpdate = false; });
 }
 
 function handleObjectSelected(opt: any) {
@@ -810,7 +849,22 @@ function findAnnotationAtPoint(x: number, y: number): Api.Scene.SceneMapAnnotati
 }
 
 function handleKeyDown(evt: KeyboardEvent) {
-  if (evt.code === 'Space') { spacePressed = true; evt.preventDefault(); }
+  if (evt.code === 'Space') {
+    spacePressed = true;
+    evt.preventDefault();
+    return;
+  }
+  const target = evt.target as HTMLElement | null;
+  if (target && /^(INPUT|TEXTAREA|SELECT)$/.test(target.tagName)) return;
+  if (evt.ctrlKey || evt.metaKey) {
+    if (evt.code === 'KeyZ' && !evt.shiftKey) {
+      evt.preventDefault();
+      emit('undo');
+    } else if ((evt.code === 'KeyZ' && evt.shiftKey) || evt.code === 'KeyY') {
+      evt.preventDefault();
+      emit('redo');
+    }
+  }
 }
 
 function handleKeyUp(evt: KeyboardEvent) {
@@ -911,10 +965,33 @@ watch(() => props.editorData, async (newData) => {
   // renderElements();
 }, { deep: false });
 
-watch(() => props.editorData?.annotations, () => renderElements(), { deep: true });
-watch(() => props.editorData?.paths, () => renderElements(), { deep: true });
-watch(() => props.editorData?.objects, () => renderElements(), { deep: true });
-watch(() => props.selectedElement, () => { renderElements(); updateSelection(); });
+watch(() => props.editorData?.annotations, () => {
+  if (isLocalUpdate || isDraggingObject || !fabricCanvas) return;
+  syncStructure();
+  updatePositions();
+  updateSelectionStyle();
+  fabricCanvas.renderAll();
+}, { deep: true });
+watch(() => props.editorData?.paths, () => {
+  if (isLocalUpdate || isDraggingObject || !fabricCanvas) return;
+  syncStructure();
+  updatePositions();
+  updateSelectionStyle();
+  fabricCanvas.renderAll();
+}, { deep: true });
+watch(() => props.editorData?.objects, () => {
+  if (isLocalUpdate || isDraggingObject || !fabricCanvas) return;
+  syncStructure();
+  updatePositions();
+  updateSelectionStyle();
+  fabricCanvas.renderAll();
+}, { deep: true });
+watch(() => props.selectedElement, () => {
+  if (!fabricCanvas) return;
+  updateSelectionStyle();
+  updateSelection();
+  fabricCanvas.renderAll();
+});
 watch(() => props.gridSpacing, () => renderGrid());
 watch(() => props.drawingMode, (mode) => {
   pathStartAnnotationId = null;
