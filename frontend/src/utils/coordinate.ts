@@ -9,8 +9,8 @@ export function pixelToWorld(pixelX: number, pixelY: number, originX: number, or
 /** 世界坐标（米）→ 画布像素坐标 */
 export function worldToPixel(worldX: number, worldY: number, originX: number, originY: number, resolution: number) {
   return {
-    x: (originX - worldX) / resolution,
-    y: (originY - worldY)  / resolution,
+    x: (worldX - originX) / resolution,
+    y: (worldY - originY)  / resolution,
   };
 }
 
