@@ -3,6 +3,7 @@ import { ref, onMounted, onBeforeUnmount, watch, nextTick } from 'vue';
 import { Canvas, Circle, Rect, Polygon, Line, Group, Text, FabricImage, Triangle, Point } from 'fabric';
 import { fetchGetEditorMapData } from '@/service/api/scene';
 import { getFilePreviewUrl } from '@/service/api/file';
+import { worldToPixel } from '@/utils/coordinate';
 import type { ParsedLocation } from '../composables/useRobotMonitor';
 
 interface Props {
@@ -43,17 +44,34 @@ function centerContent() {
   fabricCanvas.setViewportTransform([zoom, 0, 0, zoom, Math.max(0, offsetX), Math.max(0, offsetY)]);
 }
 
+function getEffectiveOrigin() {
+  if (!mapData.value) return { x: 0, y: 0 };
+  const mMap = mapData.value.map;
+  const storedW = mMap.width || canvasWidth.value;
+  const storedH = mMap.height || canvasHeight.value;
+  const sx = canvasWidth.value / storedW;
+  const sy = canvasHeight.value / storedH;
+  return {
+    x: (mMap.start_point_x ?? 0) * sx,
+    y: (mMap.start_point_y ?? 0) * sy,
+  };
+}
+
 function renderElements() {
   if (!fabricCanvas || !mapData.value) return;
   const existingKeys = new Set<string>();
+  const mMap = mapData.value.map;
+  const { x: originX, y: originY } = getEffectiveOrigin();
+  const res = mMap.resolution || 0.2;
 
-  // Render annotations
+  // Render annotations (stored in world coordinates)
   for (const ann of mapData.value.annotations) {
     const key = `ann-${ann.id}`;
     existingKeys.add(key);
+    const px = worldToPixel(ann.x, ann.y, originX, originY, res);
     if (elementMap.has(key)) {
       const group = elementMap.get(key);
-      group.set({ left: ann.x, top: ann.y });
+      group.set({ left: px.x, top: px.y });
       const text = group.getObjects()[1] as Text;
       text.set('text', ann.name);
     } else {
@@ -74,8 +92,8 @@ function renderElements() {
         fontFamily: 'sans-serif'
       });
       const group = new Group([circle, text], {
-        left: ann.x,
-        top: ann.y,
+        left: px.x,
+        top: px.y,
         originX: 'center',
         originY: 'center',
         hasControls: false,
@@ -94,11 +112,13 @@ function renderElements() {
     const startAnn = mapData.value.annotations.find(a => a.id === path.start_annotation_id);
     const endAnn = mapData.value.annotations.find(a => a.id === path.end_annotation_id);
     if (!startAnn || !endAnn) continue;
+    const startPx = worldToPixel(startAnn.x, startAnn.y, originX, originY, res);
+    const endPx = worldToPixel(endAnn.x, endAnn.y, originX, originY, res);
     if (elementMap.has(key)) {
       const line = elementMap.get(key);
-      line.set({ x1: startAnn.x, y1: startAnn.y, x2: endAnn.x, y2: endAnn.y });
+      line.set({ x1: startPx.x, y1: startPx.y, x2: endPx.x, y2: endPx.y });
     } else {
-      const line = new Line([startAnn.x, startAnn.y, endAnn.x, endAnn.y], {
+      const line = new Line([startPx.x, startPx.y, endPx.x, endPx.y], {
         stroke: '#f97316',
         strokeWidth: 2,
         selectable: false,
@@ -171,6 +191,10 @@ function renderRobotMarker() {
 
   if (!props.location) return;
 
+  const { x: originX, y: originY } = getEffectiveOrigin();
+  const res = mapData.value?.map.resolution || 0.2;
+  const robotPx = worldToPixel(props.location.x, props.location.y, originX, originY, res);
+
   const body = new Circle({
     radius: 12,
     fill: '#2080f0',
@@ -201,8 +225,8 @@ function renderRobotMarker() {
   });
 
   robotMarker = new Group([body, arrow, label], {
-    left: props.location.x,
-    top: props.location.y,
+    left: robotPx.x,
+    top: robotPx.y,
     originX: 'center',
     originY: 'center',
     angle: props.location.angle || 0,

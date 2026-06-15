@@ -11,6 +11,7 @@ interface Props {
   resolution: number;
   sceneList: Api.Scene.SceneMap[];
   selectedMapId: number | null;
+  mapId: number | null;
 }
 
 const props = defineProps<Props>();
@@ -23,6 +24,7 @@ const emit = defineEmits<{
   (e: 'add-scene'): void;
   (e: 'delete-scene', mapId: number): void;
   (e: 'locate-robot', data: { mapId: number; x: number; y: number }): void;
+  (e: 'focus-annotation', id: number): void;
 }>();
 
 const activeTab = ref('overview');
@@ -109,6 +111,14 @@ function pixelToMeter(px: number): number {
   return Math.round(px * props.resolution * 100) / 100;
 }
 
+function toWorldX(worldX: number): number {
+  return Math.round(worldX * 100) / 100;
+}
+
+function toWorldY(worldY: number): number {
+  return Math.round(worldY * 100) / 100;
+}
+
 function getBatteryColor(threshold?: number | null): string {
   if (threshold === null || threshold === undefined) return '#909399';
   if (threshold <= 10) return '#18a058';
@@ -119,7 +129,14 @@ function getBatteryColor(threshold?: number | null): string {
 async function loadRobotList() {
   robotLoading.value = true;
   try {
-    const { data, error } = await fetchGetRobotList({ page: 1, page_size: 200, name: null, serial_number: null, status: null, model_id: undefined, map_id: undefined });
+    const { data, error } = await fetchGetRobotList({
+      page: 1,
+      page_size: 200,
+      name: null,
+      serial_number: null,
+      status: null,
+      model_id: undefined
+    });
     if (!error && data) {
       robotList.value = data.records;
     } else {
@@ -132,22 +149,6 @@ async function loadRobotList() {
   }
 }
 
-function parseRobotLocation(location: string | null): { x: number; y: number } | null {
-  if (!location) return null;
-  try {
-    const parsed = JSON.parse(location) as { x?: unknown; y?: unknown };
-    if (typeof parsed.x === 'number' && typeof parsed.y === 'number') {
-      return { x: parsed.x, y: parsed.y };
-    }
-  } catch {
-    const match = location.match(/-?\d+(?:\.\d+)?/g);
-    if (match && match.length >= 2) {
-      return { x: Number(match[0]), y: Number(match[1]) };
-    }
-  }
-  return null;
-}
-
 async function locateRobot(robot: Api.Robot.Robot) {
   if (!robot.map_id) {
     window.$message?.warning('请先绑定场景');
@@ -157,15 +158,16 @@ async function locateRobot(robot: Api.Robot.Robot) {
   try {
     const { data, error } = await fetchGetLatestRobotStatus(robot.id);
     if (error || !data) {
-      window.$message?.warning('暂无机器人位置');
+      window.$message?.warning('暂无机器人状态');
       return;
     }
-    const location = parseRobotLocation(data.location);
-    if (!location) {
-      window.$message?.warning('机器人位置格式无效');
+
+    const info = data.location_info;
+    if (!info || typeof info.x !== 'number' || typeof info.y !== 'number') {
+      window.$message?.warning('机器人暂无定位信息');
       return;
     }
-    emit('locate-robot', { mapId: robot.map_id, x: location.x, y: location.y });
+    emit('locate-robot', { mapId: robot.map_id, x: info.x, y: info.y });
   } finally {
     locatingRobotId.value = null;
   }
@@ -332,10 +334,10 @@ onMounted(() => {
                 <NSelect :value="selectedAnnotation.type" :options="pointTypeOptions" @update:value="v => updateAnnotation('type', v)" />
               </NFormItem>
               <NFormItem label="X (m)">
-                <NInputNumber :value="pixelToMeter(selectedAnnotation.x)" :step="0.1" disabled size="small" class="w-full" />
+                <NInputNumber :value="toWorldX(selectedAnnotation.x)" :step="0.1" disabled size="small" class="w-full" />
               </NFormItem>
               <NFormItem label="Y (m)">
-                <NInputNumber :value="pixelToMeter(selectedAnnotation.y)" :step="0.1" disabled size="small" class="w-full" />
+                <NInputNumber :value="toWorldY(selectedAnnotation.y)" :step="0.1" disabled size="small" class="w-full" />
               </NFormItem>
               <NFormItem label="角度">
                 <NSlider :value="selectedAnnotation.angle" :min="0" :max="360" :step="1" @update:value="v => updateAnnotation('angle', v)" />
@@ -361,10 +363,10 @@ onMounted(() => {
                 <NInput :value="selectedObject.type" disabled />
               </NFormItem>
               <NFormItem label="X (m)">
-                <NInputNumber :value="pixelToMeter(selectedObject.x)" disabled size="small" class="w-full" />
+                <NInputNumber :value="toWorldX(selectedObject.x)" disabled size="small" class="w-full" />
               </NFormItem>
               <NFormItem label="Y (m)">
-                <NInputNumber :value="pixelToMeter(selectedObject.y)" disabled size="small" class="w-full" />
+                <NInputNumber :value="toWorldY(selectedObject.y)" disabled size="small" class="w-full" />
               </NFormItem>
               <NFormItem v-if="!selectedObject.points" label="宽度">
                 <NInputNumber :value="selectedObject.width" disabled size="small" class="w-full" />
@@ -397,7 +399,7 @@ onMounted(() => {
               :key="ann.id"
               class="group flex cursor-pointer items-center justify-between rounded-md px-8px py-6px text-sm transition-colors"
               :class="selectedElement?.type === 'annotation' && selectedElement?.id === ann.id ? 'bg-red-50 text-red-600' : 'hover:bg-gray-50'"
-              @click="emit('select-element', { type: 'annotation', id: ann.id })"
+              @click="emit('select-element', { type: 'annotation', id: ann.id }); emit('focus-annotation', ann.id)"
             >
               <div class="min-w-0 flex-1">
                 <div class="flex items-center gap-6px">
@@ -407,7 +409,7 @@ onMounted(() => {
                   </NTag>
                 </div>
                 <div class="mt-2px text-xs text-gray-400">
-                  X: {{ pixelToMeter(ann.x) }}m, Y: {{ pixelToMeter(ann.y) }}m
+                  X: {{ toWorldX(ann.x) }}m, Y: {{ toWorldY(ann.y) }}m
                 </div>
               </div>
               <NPopconfirm @positive-click.stop="emit('remove-element', 'annotation', ann.id)">

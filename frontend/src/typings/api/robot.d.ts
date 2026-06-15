@@ -56,6 +56,18 @@ declare namespace Api {
       battery_threshold?: number | null;
     };
 
+    /** location info */
+    type LocationInfo = {
+      /** x coordinate */
+      x?: number;
+      /** y coordinate */
+      y?: number;
+      /** angle */
+      angle?: number;
+      /** update time */
+      update_at?: string | null;
+    };
+
     /** robot search params */
     type RobotSearchParams = CommonType.RecordNullable<
       Pick<Robot, 'name' | 'serial_number' | 'status'> & { model_id?: number; map_id?: number } & CommonSearchParams
@@ -91,6 +103,8 @@ declare namespace Api {
       speed: number;
       /** location info (JSON) */
       location: string | null;
+      /** location info */
+      location_info: LocationInfo | null;
     }>;
 
     /** robot status record list */

@@ -3,7 +3,7 @@
 
 from database.models.base import Base
 from sqlalchemy.orm import mapped_column, Mapped, relationship
-from sqlalchemy import String, Text, Integer, ForeignKey
+from sqlalchemy import String, Text, Integer, BigInteger, ForeignKey
 from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
@@ -28,6 +28,13 @@ class TaskPoint(Base):
     )
     point_name: Mapped[str | None] = mapped_column(
         String(100), nullable=True, default=None, comment="点位名称"
+    )
+    annotation_id: Mapped[int | None] = mapped_column(
+        BigInteger,
+        ForeignKey("scene_map_annotation.id", ondelete="SET NULL"),
+        nullable=True,
+        default=None,
+        comment="关联场景标注ID",
     )
     voice_text: Mapped[str | None] = mapped_column(
         Text, nullable=True, default=None, comment="语音播报文本"

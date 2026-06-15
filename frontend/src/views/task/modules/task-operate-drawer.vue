@@ -4,7 +4,7 @@ import { jsonClone } from '@sa/utils';
 import { NText, NTooltip } from 'naive-ui';
 import { useNaiveForm } from '@/hooks/common/form';
 import { $t } from '@/locales';
-import { fetchCreateTask, fetchUpdateTask, fetchGetTask, fetchGetRobotList } from '@/service/api';
+import { fetchCreateTask, fetchUpdateTask, fetchGetTask, fetchGetRobotList, fetchGetMapAnnotations } from '@/service/api';
 
 defineOptions({ name: 'TaskOperateDrawer' });
 
@@ -85,6 +85,34 @@ async function loadRobotOptions() {
   }
 }
 
+/** 场景点位（annotation）选项 */
+interface AnnotationOption {
+  label: string;
+  value: number;
+}
+const annotationOptions = ref<AnnotationOption[]>([]);
+const annotationMap = ref<Map<number, Api.Scene.SceneMapAnnotation>>(new Map());
+
+async function loadAnnotations(mapId: number | null) {
+  if (mapId === null) {
+    annotationOptions.value = [];
+    annotationMap.value = new Map();
+    return;
+  }
+  const { data, error } = await fetchGetMapAnnotations(mapId);
+  if (!error && data) {
+    const list: Api.Scene.SceneMapAnnotation[] = Array.isArray(data) ? data : (data?.records ?? []);
+    annotationMap.value = new Map(list.map(a => [a.id, a]));
+    annotationOptions.value = list.map(a => ({
+      label: `${a.name} (${a.x}, ${a.y})`,
+      value: a.id
+    }));
+  } else {
+    annotationOptions.value = [];
+    annotationMap.value = new Map();
+  }
+}
+
 /** 巡逻任务机器人约束 */
 const isPatrol = computed(() => model.value.task_type === 'patrol');
 
@@ -128,6 +156,7 @@ function renderRobotLabel(option: RobotOption) {
 interface PointItem {
   sort_order: number;
   point_name: string | null;
+  annotation_id: number | null;
   action: Api.Task.TaskAction;
   voice_text: string | null;
 }
@@ -167,6 +196,7 @@ function addPoint() {
   model.value.points.push({
     sort_order: model.value.points.length,
     point_name: null,
+    annotation_id: null,
     action: 'wave',
     voice_text: null
   });
@@ -198,8 +228,10 @@ const rules = computed(() => ({
 const taskId = computed(() => props.rowData?.id || -1);
 const isEdit = computed(() => props.operateType === 'edit');
 
-function handleInitModel() {
+async function handleInitModel() {
   model.value = createDefaultModel();
+  annotationOptions.value = [];
+  annotationMap.value = new Map();
 
   if (props.operateType === 'edit' && props.rowData) {
     const cloned = jsonClone(props.rowData) as Api.Task.Task;
@@ -213,32 +245,44 @@ function handleInitModel() {
       : [];
     model.value.robot_ids = cloned.robots?.map(r => r.id) || [];
 
+    if (selectedMapId.value !== null) {
+      await loadAnnotations(selectedMapId.value);
+    }
+
     if (cloned.points && cloned.points.length > 0) {
       model.value.points = cloned.points.map((p, i) => ({
         sort_order: i,
         point_name: p.point_name || null,
+        annotation_id: p.annotation_id ?? null,
         action: p.action || 'wave',
         voice_text: p.voice_text || null
       }));
     }
 
-    // Load full task detail for edit
     if (cloned.id) {
-      fetchGetTask(cloned.id).then(({ data: detail }) => {
-        if (detail) {
-          model.value.robot_ids = detail.robots?.map(r => r.id) || [];
-          if (detail.points && detail.points.length > 0) {
-            model.value.points = detail.points.map((p, i) => ({
-              sort_order: i,
-              point_name: p.point_name || null,
-              action: p.action || 'wave',
-              voice_text: p.voice_text || null
-            }));
-          }
+      const { data: detail } = await fetchGetTask(cloned.id);
+      if (detail) {
+        model.value.robot_ids = detail.robots?.map(r => r.id) || [];
+        if (selectedMapId.value !== null) {
+          await loadAnnotations(selectedMapId.value);
         }
-      });
+        if (detail.points && detail.points.length > 0) {
+          model.value.points = detail.points.map((p, i) => ({
+            sort_order: i,
+            point_name: p.point_name || null,
+            annotation_id: p.annotation_id ?? null,
+            action: p.action || 'wave',
+            voice_text: p.voice_text || null
+          }));
+        }
+      }
     }
   }
+}
+
+/** 用户主动切换机器人选择：清空已填点位（依赖 watch selectedMapId 重新加载点位选项） */
+function handleRobotIdsChange() {
+  model.value.points = [];
 }
 
 function closeDrawer() {
@@ -307,6 +351,10 @@ watch(visible, () => {
   }
 });
 
+watch(selectedMapId, newMapId => {
+  loadAnnotations(newMapId);
+});
+
 watch(
   () => model.value.task_type,
   () => {
@@ -349,9 +397,26 @@ onMounted(() => {
           </NFormItemGi>
         </NGrid>
 
+        <!-- 机器人绑定 -->
+        <NDivider title-placement="left">执行机器人</NDivider>
+        <NFormItem label="绑定机器人" path="robot_ids">
+          <NSelect
+            v-model:value="model.robot_ids"
+            :options="filteredRobotOptions"
+            placeholder="至少选择一台机器人"
+            multiple
+            filterable
+            :render-label="renderRobotLabel"
+            @update:value="handleRobotIdsChange"
+          />
+        </NFormItem>
+
         <!-- 巡逻点位配置 -->
         <template v-if="model.task_type === 'patrol'">
           <NDivider title-placement="left">巡逻点位配置</NDivider>
+          <div v-if="selectedMapId === null" class="mb-12px text-13px" style="color: var(--n-text-color-3, #999);">
+            请先选择已绑定场景的机器人，才能选择巡逻点位
+          </div>
           <div v-for="(point, index) in model.points" :key="index" class="mb-12px">
             <NCard size="small" embedded>
               <template #header>
@@ -361,8 +426,18 @@ onMounted(() => {
                 </NSpace>
               </template>
               <NGrid :cols="3" :x-gap="12">
-                <NFormItemGi label="点位名称">
-                  <NInput v-model:value="point.point_name" placeholder="请输入点位名称" />
+                <NFormItemGi label="巡逻点位">
+                  <NSelect
+                    v-model:value="point.annotation_id"
+                    :options="annotationOptions"
+                    :placeholder="selectedMapId === null ? '请先选择机器人' : '请选择场景点位'"
+                    :disabled="selectedMapId === null"
+                    filterable
+                    @update:value="(val: number | null) => {
+                      const ann = val === null ? undefined : annotationMap.get(val);
+                      point.point_name = ann?.name ?? null;
+                    }"
+                  />
                 </NFormItemGi>
                 <NFormItemGi label="运控动作">
                   <NSelect v-model:value="point.action" :options="actionOptions" placeholder="选择动作" />
@@ -373,7 +448,7 @@ onMounted(() => {
               </NGrid>
             </NCard>
           </div>
-          <NButton dashed block @click="addPoint">
+          <NButton dashed block :disabled="selectedMapId === null" @click="addPoint">
             <template #icon>
               <icon-ic-round-plus class="text-icon" />
             </template>
@@ -391,19 +466,6 @@ onMounted(() => {
             <NSelect v-model:value="model.broadcast_count" :options="broadcastCountOptions" placeholder="选择播报次数" />
           </NFormItem>
         </template>
-
-        <!-- 机器人绑定 -->
-        <NDivider title-placement="left">执行机器人</NDivider>
-        <NFormItem label="绑定机器人" path="robot_ids">
-          <NSelect
-            v-model:value="model.robot_ids"
-            :options="filteredRobotOptions"
-            placeholder="至少选择一台机器人"
-            multiple
-            filterable
-            :render-label="renderRobotLabel"
-          />
-        </NFormItem>
 
         <!-- 定时配置 -->
         <NDivider title-placement="left">定时配置（可选）</NDivider>

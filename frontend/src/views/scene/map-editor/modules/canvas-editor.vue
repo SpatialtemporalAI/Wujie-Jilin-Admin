@@ -2,6 +2,7 @@
 import { ref, computed, onMounted, onBeforeUnmount, watch, nextTick } from 'vue';
 import { Canvas, Circle, Rect, Polygon, Line, Group, Text, FabricImage, Triangle, Point } from 'fabric';
 import { getFilePreviewUrl } from '@/service/api/file';
+import { pixelToWorld, worldToPixel } from '@/utils/coordinate';
 import type { SelectedElement, DrawingMode } from '../composables/useMapEditor';
 import { fetchGetSceneMapList } from '@/service/api';
 interface Props {
@@ -36,6 +37,7 @@ let backgroundImgObj: FabricImage | null = null;
 let elementMap: Map<string, any> = new Map();
 let resizeObserver: ResizeObserver | null = null;
 let lastGridSpacingM = 0;
+let originMarker: Group | null = null;
 
 const minimapImageUrl = ref('');
 const minimapRect = ref({ x: 0, y: 0, w: 0, h: 0 });
@@ -195,6 +197,19 @@ function getElementKey(type: string, id: number) {
   return `${type}-${id}`;
 }
 
+function getEffectiveOrigin() {
+  if (!props.editorData) return { x: 0, y: 0 };
+  const map = props.editorData.map;
+  const storedW = map.width || canvasWidth.value;
+  const storedH = map.height || canvasHeight.value;
+  const sx = canvasWidth.value / storedW;
+  const sy = canvasHeight.value / storedH;
+  return {
+    x: (map.start_point_x ?? 0),
+    y: (map.start_point_y ?? 0),
+  };
+}
+
 function centerContent() {
   if (!fabricCanvas) return;
   const cw = containerWidth.value;
@@ -216,89 +231,34 @@ function centerContent() {
 function renderElements() {
   if (!fabricCanvas || !props.editorData) return;
 
-  // 如果有图片ID但图片还没加载完成，等待图片加载后再渲染
-  // 图片加载完成后会在 loadBackgroundImage 中调用 renderElements
-  if (props.editorData.map.image_id && !backgroundImgObj) {
-    console.log('等待图片加载完成后再渲染元素...');
-    return;
-  }
+  const map = props.editorData.map;
+  const { x: originX, y: originY } = getEffectiveOrigin();
+  const res = props.resolution;
 
-  console.log('canvasHeight:', canvasHeight.value, 'backgroundImgObj:', backgroundImgObj ? '已加载' : '未加载');
 
-  const existingKeys = new Set<string>();
-
-  // Render start point marker
-  const spKey = '__start_point__';
-  const sp = props.editorData.map;
-  if (sp.start_point_x || sp.start_point_y) {
-    existingKeys.add(spKey);
-    const spPixelX = sp.start_point_x;
-    const spPixelY = sp.start_point_y;
-    if (elementMap.has(spKey)) {
-      const group = elementMap.get(spKey);
-      group.set({ left: spPixelX, top: spPixelY });
-    } else {
-      const spCircle = new Circle({
-        radius: 10,
-        fill: '#ef4444',
-        stroke: '#fff',
-        strokeWidth: 2,
-        originX: 'center',
-        originY: 'center',
-      });
-      const spText = new Text('起始点', {
-        fontSize: 10,
-        fill: '#ef4444',
-        originX: 'center',
-        originY: 'center',
-        top: 20,
-        fontFamily: 'sans-serif',
-        fontWeight: 'bold',
-      });
-      const spGroup = new Group([spCircle, spText], {
-        left: spPixelX,
-        top: spPixelY,
-        originX: 'center',
-        originY: 'center',
-        hasControls: false,
-        selectable: false,
-        evented: false,
-      });
-      fabricCanvas.add(spGroup);
-      elementMap.set(spKey, spGroup);
-    }
-  }
-
+  console.log('canvasHeight:', canvasHeight.value, 'backgroundImgObj:', backgroundImgObj ? '已加载' : '未加载'); const existingKeys = new Set<string>();
   for (const ann of props.editorData.annotations) {
-    console.log('ann', ann)
     const key = getElementKey('annotation', ann.id);
     existingKeys.add(key);
 
-    // 调试信息
-    console.log('坐标计算:', {
-      ann_x: ann.x,
-      ann_y: ann.y,
-      start_point_x,
-      start_point_y,
-      canvasHeight: canvasHeight.value,
-      left: (ann.x - start_point_x) * 20,
-      top: canvasHeight.value - (ann.y - start_point_y) * 20,
-    });
+    const px = worldToPixel(ann.x, ann.y, originX, originY, res);
+    px.y = canvasHeight.value - px.y;
+    const isSelected = props.selectedElement?.type === 'annotation' && props.selectedElement?.id === ann.id;
+    const annColor = isSelected ? '#3b82f6' : '#ef4444';
 
     if (elementMap.has(key)) {
       const group = elementMap.get(key);
-      group.set({
-        left: (ann.x - start_point_x) * 20,
-        top: canvasHeight.value - (ann.y - start_point_y) * 20,
-      });
+      group.set({ left: px.x, top: px.y });
       const circle = group.getObjects()[0] as Circle;
-      circle.set('fill', '#ef4444');
+      circle.set('fill', annColor);
+      circle.set('radius', isSelected ? 10 : 8);
       const text = group.getObjects()[2] as Text;
       text.set('text', ann.name);
+      text.set('fill', annColor);
     } else {
       const circle = new Circle({
-        radius: 8,
-        fill: '#ef4444',
+        radius: isSelected ? 10 : 8,
+        fill: annColor,
         stroke: '#fff',
         strokeWidth: 2,
         originX: 'center',
@@ -308,7 +268,7 @@ function renderElements() {
       const angleIndicator = new Triangle({
         width: 8,
         height: 12,
-        fill: '#ef4444',
+        fill: annColor,
         originX: 'center',
         originY: 'center',
         top: -16,
@@ -318,7 +278,7 @@ function renderElements() {
 
       const text = new Text(ann.name, {
         fontSize: 10,
-        fill: '#ef4444',
+        fill: annColor,
         originX: 'center',
         originY: 'center',
         top: 18,
@@ -327,8 +287,8 @@ function renderElements() {
       });
 
       const group = new Group([circle, angleIndicator, text], {
-        left: (ann.x - start_point_x) * 20,
-        top: canvasHeight.value - (ann.y - start_point_y) * 20,
+        left: px.x,
+        top: px.y,
         originX: 'center',
         originY: 'center',
         hasControls: false,
@@ -348,11 +308,14 @@ function renderElements() {
     const endAnn = props.editorData.annotations.find(a => a.id === path.end_annotation_id);
     if (!startAnn || !endAnn) continue;
 
+    const startPx = worldToPixel(startAnn.x, startAnn.y, originX, originY, res);
+    const endPx = worldToPixel(endAnn.x, endAnn.y, originX, originY, res);
+
     if (elementMap.has(key)) {
       const line = elementMap.get(key);
-      line.set({ x1: startAnn.x, y1: startAnn.y, x2: endAnn.x, y2: endAnn.y });
+      line.set({ x1: startPx.x, y1: startPx.y, x2: endPx.x, y2: endPx.y });
     } else {
-      const line = new Line([startAnn.x, startAnn.y, endAnn.x, endAnn.y], {
+      const line = new Line([startPx.x, startPx.y, endPx.x, endPx.y], {
         stroke: '#f97316',
         strokeWidth: 3,
         selectable: false,
@@ -411,8 +374,41 @@ function renderElements() {
     }
   }
 
+  // Bring annotations to front for higher z-order
+  for (const ann of props.editorData.annotations) {
+    const key = getElementKey('annotation', ann.id);
+    const obj = elementMap.get(key);
+    if (obj) fabricCanvas.bringObjectToFront(obj);
+  }
+
+  renderOriginMarker();
   updateSelection();
   fabricCanvas.renderAll();
+}
+
+function renderOriginMarker() {
+  if (!fabricCanvas || !props.editorData) return;
+  if (originMarker) {
+    fabricCanvas.remove(originMarker);
+    originMarker = null;
+  }
+
+  // const { x: ox, y: oy } = getEffectiveOrigin();
+  const ox = 0
+  const oy = 0
+  const s = 12;
+  const hLine = new Line([ox - s, oy, ox + s, oy], {
+    stroke: '#2563eb', strokeWidth: 2, selectable: false, evented: false,
+  });
+  const vLine = new Line([ox, oy - s, ox, oy + s], {
+    stroke: '#2563eb', strokeWidth: 2, selectable: false, evented: false,
+  });
+  const label = new Text('O', {
+    fontSize: 10, fill: '#2563eb', fontFamily: 'sans-serif', fontWeight: 'bold',
+    left: ox + 6, top: oy - 14, selectable: false, evented: false,
+  });
+  originMarker = new Group([hLine, vLine, label], { selectable: false, evented: false });
+  fabricCanvas.add(originMarker);
 }
 
 function updateSelection() {
@@ -441,6 +437,7 @@ function renderGrid() {
   const h = canvasHeight.value;
   const zoom = currentZoom;
   const res = props.resolution;
+  const { x: originPx, y: originPy } = getEffectiveOrigin();
 
   // Adaptive grid: target ~80px visual spacing on screen
   const targetVisualPx = 80;
@@ -489,6 +486,16 @@ function renderGrid() {
     }));
   }
 
+  // // Zero-axis lines through origin (world X=0, Y=0)
+  // allObjects.push(new Line([originPx, startY, originPx, endY], {
+  //   stroke: 'rgba(37, 99, 235, 0.25)', strokeWidth: 2,
+  //   strokeDashArray: [8, 4], selectable: false, evented: false,
+  // }));
+  // allObjects.push(new Line([startX, originPy, endX, originPy], {
+  //   stroke: 'rgba(37, 99, 235, 0.25)', strokeWidth: 2,
+  //   strokeDashArray: [8, 4], selectable: false, evented: false,
+  // }));
+
   // Labels: font size adjusts inversely with zoom so it stays readable on screen
   const fontSize = Math.max(8, Math.min(14, 11 / zoom));
   const labelStyle = {
@@ -499,9 +506,10 @@ function renderGrid() {
     evented: false,
   };
 
-  // X-axis labels along bottom edge (0 at left, increasing right)
+  // X-axis labels along bottom edge (world X coordinate at each vertical grid line)
   for (let x = 0; x <= endX; x += spacingPx) {
-    const meters = Math.round(x * res * 1000) / 1000;
+    const world = pixelToWorld(x, 0, originPx, originPy, res);
+    const meters = Math.round(world.x * 1000) / 1000;
     allObjects.push(new Text(formatDist(meters), {
       ...labelStyle,
       left: x,
@@ -510,9 +518,10 @@ function renderGrid() {
       originY: 'top',
     }));
   }
-  // Y-axis labels along left edge (0 at bottom, increasing upward)
+  // Y-axis labels along left edge (world Y coordinate at each horizontal grid line)
   for (let y = 0; y <= endY; y += spacingPx) {
-    const meters = Math.round((h - y) * res * 1000) / 1000;
+    const world = pixelToWorld(0, y, originPx, originPy, res);
+    const meters = Math.round(world.y * 1000) / 1000;
     allObjects.push(new Text(formatDist(meters), {
       ...labelStyle,
       left: -4,
@@ -586,11 +595,15 @@ function handleMouseDown(opt: any) {
   const y = pointer.y;
 
   if (props.drawingMode === 'point-nav') {
-    emit('add-annotation', { x, y, type: 'navigation' });
+    const { x: originX, y: originY } = getEffectiveOrigin();
+    const world = pixelToWorld(x, y, originX, originY, props.resolution);
+    emit('add-annotation', { x: world.x, y: world.y, type: 'navigation' });
     return;
   }
   if (props.drawingMode === 'point-recv') {
-    emit('add-annotation', { x, y, type: 'reception' });
+    const { x: originX, y: originY } = getEffectiveOrigin();
+    const world = pixelToWorld(x, y, originX, originY, props.resolution);
+    emit('add-annotation', { x: world.x, y: world.y, type: 'reception' });
     return;
   }
   if (props.drawingMode === 'path') {
@@ -625,10 +638,9 @@ function handleMouseMove(opt: any) {
   if (!fabricCanvas) return;
   const evt = opt.e as MouseEvent;
   const pointer = fabricCanvas.getViewportPoint(evt);
-  const map = props.editorData?.map;
-  const originX = map?.start_point_x ?? 0;
-  const originY = map?.start_point_y ?? 0;
-  emit('cursor-position', (pointer.x - originX) * props.resolution, (originY - pointer.y) * props.resolution);
+  const { x: originX, y: originY } = getEffectiveOrigin();
+  const world = pixelToWorld(pointer.x, pointer.y, originX, originY, props.resolution);
+  emit('cursor-position', world.x, world.y);
 
   if (isPanning) {
     const dx = evt.clientX - lastPanPoint.x;
@@ -692,7 +704,16 @@ function handleObjectMoved(opt: any) {
   if (!obj) return;
   const data = getElementData(obj);
   if (!data) return;
-  const updates: Record<string, any> = { x: obj.left, y: obj.top };
+  const updates: Record<string, any> = {};
+  if (data.type === 'annotation') {
+    const { x: originX, y: originY } = getEffectiveOrigin();
+    const world = pixelToWorld(obj.left!, obj.top!, originX, originY, props.resolution);
+    updates.x = world.x;
+    updates.y = world.y;
+  } else {
+    updates.x = obj.left;
+    updates.y = obj.top;
+  }
   if (data.type === 'object' && obj instanceof Rect) {
     updates.width = obj.width * obj.scaleX;
     updates.height = obj.height * obj.scaleY;
@@ -732,9 +753,11 @@ function handleMouseWheel(opt: any) {
 
 function findAnnotationAtPoint(x: number, y: number): Api.Scene.SceneMapAnnotation | null {
   if (!props.editorData) return null;
+  const { x: originX, y: originY } = getEffectiveOrigin();
   const threshold = 15;
   for (const ann of props.editorData.annotations) {
-    if (Math.abs(ann.x - x) < threshold && Math.abs(ann.y - y) < threshold) return ann;
+    const pos = worldToPixel(ann.x, ann.y, originX, originY, props.resolution);
+    if (Math.abs(pos.x - x) < threshold && Math.abs(pos.y - y) < threshold) return ann;
   }
   return null;
 }
@@ -783,6 +806,8 @@ function disposeCanvas() {
   if (resizeObserver) { resizeObserver.disconnect(); resizeObserver = null; }
   if (fabricCanvas) { fabricCanvas.dispose(); fabricCanvas = null; }
   elementMap.clear();
+  originMarker = null;
+  lastGridSpacingM = 0;
 }
 
 watch([containerWidth, containerHeight], () => {
@@ -791,10 +816,24 @@ watch([containerWidth, containerHeight], () => {
   centerContent();
 });
 
-watch(() => props.editorData, (newData) => {
+let loadSeq = 0;
+
+watch(() => props.editorData, async (newData) => {
   if (!newData) return;
+  const seq = ++loadSeq;
+
+  for (const [, obj] of elementMap) {
+    fabricCanvas?.remove(obj);
+  }
+  elementMap.clear();
+  if (originMarker) {
+    fabricCanvas?.remove(originMarker);
+    originMarker = null;
+  }
+  lastGridSpacingM = 0;
+
   if (newData.map.image_id) {
-    loadBackgroundImage(newData.map.image_id);
+    await loadBackgroundImage(newData.map.image_id);
     // renderElements 会在 loadBackgroundImage 完成后调用
   } else {
     canvasWidth.value = newData.map.width || 800;
@@ -808,12 +847,15 @@ watch(() => props.editorData, (newData) => {
     }
     nextTick(() => renderElements());
   }
+
+  // if (seq !== loadSeq) return;
+  // renderElements();
 }, { deep: false });
 
 watch(() => props.editorData?.annotations, () => renderElements(), { deep: true });
 watch(() => props.editorData?.paths, () => renderElements(), { deep: true });
 watch(() => props.editorData?.objects, () => renderElements(), { deep: true });
-watch(() => props.selectedElement, () => updateSelection());
+watch(() => props.selectedElement, () => { renderElements(); updateSelection(); });
 watch(() => props.gridSpacing, () => renderGrid());
 watch(() => props.drawingMode, (mode) => {
   pathStartAnnotationId = null;
@@ -883,14 +925,11 @@ function zoomReset() {
 
 function locateMeterPoint(x: number, y: number) {
   if (!fabricCanvas) return;
-  const map = props.editorData?.map;
-  const originX = map?.start_point_x ?? 0;
-  const originY = map?.start_point_y ?? 0;
+  const { x: originX, y: originY } = getEffectiveOrigin();
+  const pixel = worldToPixel(x, y, originX, originY, props.resolution);
   const zoom = Math.max(currentZoom, MIN_ZOOM);
-  const pointX = originX + x / props.resolution;
-  const pointY = originY - y / props.resolution;
-  const offsetX = containerWidth.value / 2 - pointX * zoom;
-  const offsetY = containerHeight.value / 2 - pointY * zoom;
+  const offsetX = containerWidth.value / 2 - pixel.x * zoom;
+  const offsetY = containerHeight.value / 2 - pixel.y * zoom;
   fabricCanvas.setViewportTransform([zoom, 0, 0, zoom, offsetX, offsetY]);
   fabricCanvas.renderAll();
   updateMinimap();
@@ -966,3 +1005,5 @@ defineExpose({ exportCanvas, zoomIn, zoomOut, zoomReset, locateMeterPoint });
     </div>
   </div>
 </template>
+
+

@@ -136,8 +136,8 @@ async function confirmAddScene() {
       await editor.loadMap((data as any).id);
 
       editor.addAnnotation({
-        x: startPoint.x,
-        y: startPoint.y,
+        x: 0,
+        y: 0,
         name: '起始点位',
         angle: startPoint.angle,
         type: 'navigation',
@@ -204,6 +204,13 @@ function handleCursorPosition(x: number, y: number) {
   cursorX.value = x;
   cursorY.value = y;
 }
+
+function handleFocusAnnotation(id: number) {
+  if (!editor.editorData.value) return;
+  const ann = editor.editorData.value.annotations.find(a => a.id === id);
+  if (!ann) return;
+  canvasRef.value?.locateMeterPoint(ann.x, ann.y);
+}
 </script>
 
 <template>
@@ -251,12 +258,14 @@ function handleCursorPosition(x: number, y: number) {
         :resolution="editor.resolution.value"
         :scene-list="editor.sceneList.value"
         :selected-map-id="editor.selectedMapId.value"
+        :map-id="editor.selectedMapId.value"
         @update-element="handleUpdateElement"
         @remove-element="editor.removeElement"
         @select-scene="handleSelectMap"
         @add-scene="handleAddScene"
         @delete-scene="handleDeleteScene"
         @locate-robot="handleLocateRobot"
+        @focus-annotation="handleFocusAnnotation"
         @select-element="el => (editor.selectedElement.value = el)"
       />
     </div>

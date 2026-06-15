@@ -292,10 +292,6 @@ async function confirmImportJson() {
   }
 
   try {
-    const originX = props.mapData.start_point_x ?? 0;
-    const originY = props.mapData.start_point_y ?? 0;
-    const res = props.mapData.resolution || 0.05;
-
     const annotations = points.map((point, index) => {
       const [rwX, rwY, angle] = point.position || [];
       if (!point.label || !Number.isFinite(rwX) || !Number.isFinite(rwY) || !Number.isFinite(angle)) {
@@ -303,8 +299,8 @@ async function confirmImportJson() {
       }
       return {
         id: null,
-        x: originX + rwX / res,
-        y: originY - rwY / res,
+        x: rwX,
+        y: rwY,
         angle,
         name: point.label.trim(),
         type: index === 0 ? 'navigation' : 'reception',

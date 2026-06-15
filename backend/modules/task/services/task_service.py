@@ -124,6 +124,7 @@ class TaskService:
                         task_id=task_obj.id,
                         sort_order=pt.sort_order,
                         point_name=pt.point_name,
+                        annotation_id=pt.annotation_id,
                         action=pt.action,
                         voice_text=pt.voice_text,
                     )
@@ -170,6 +171,7 @@ class TaskService:
                         task_id=task_id,
                         sort_order=pt.sort_order,
                         point_name=pt.point_name,
+                        annotation_id=pt.annotation_id,
                         action=pt.action,
                         voice_text=pt.voice_text,
                     )

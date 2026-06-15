@@ -134,7 +134,7 @@ const {
 </script>
 
 <template>
-  <div class="flex-col-stretch gap-12px">
+  <div class="h-full flex-col-stretch gap-12px">
     <TaskHistorySearch v-model:model="searchParams" @search="getDataByPage" @reset="getDataByPage" />
     <div>
       <TableHeaderOperation
