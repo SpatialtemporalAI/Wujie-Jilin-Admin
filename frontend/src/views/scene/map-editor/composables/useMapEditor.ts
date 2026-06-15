@@ -143,12 +143,43 @@ export function useMapEditor() {
 
   function jumpToHistoryStep(type: 'undo' | 'redo', index: number) {
     if (!editorData.value) return;
+    const now = Date.now();
+    type SnapshotEntry = { snapshot: string; description: string; timestamp: number };
+
     if (type === 'undo') {
       if (index < 0 || index >= undoStack.value.length) return;
-      while (undoStack.value.length > index) undo();
+      const oldUndo = undoStack.value;
+      const target = oldUndo[index];
+      const newRedoTop: SnapshotEntry[] = [];
+      let currentSnap = snapshotCurrent();
+      for (let i = oldUndo.length - 1; i >= index; i--) {
+        newRedoTop.push({
+          snapshot: currentSnap,
+          description: oldUndo[i].description,
+          timestamp: now,
+        });
+        currentSnap = oldUndo[i].snapshot;
+      }
+      undoStack.value = oldUndo.slice(0, index);
+      redoStack.value = [...newRedoTop, ...redoStack.value];
+      applySnapshot(target);
     } else {
       if (index < 0 || index >= redoStack.value.length) return;
-      for (let i = 0; i <= index && redoStack.value.length > 0; i++) redo();
+      const oldRedo = redoStack.value;
+      const target = oldRedo[index];
+      const newUndoTop: SnapshotEntry[] = [];
+      let currentSnap = snapshotCurrent();
+      for (let i = oldRedo.length - 1; i >= index; i--) {
+        newUndoTop.push({
+          snapshot: currentSnap,
+          description: oldRedo[i].description,
+          timestamp: now,
+        });
+        currentSnap = oldRedo[i].snapshot;
+      }
+      undoStack.value = [...undoStack.value, ...newUndoTop];
+      redoStack.value = oldRedo.slice(0, index);
+      applySnapshot(target);
     }
   }
 
