@@ -20,8 +20,8 @@ from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from modules.scheduler.core.registry import get_task_definition
-from modules.scheduler.models.scheduled_task import SysScheduledTask
-from modules.scheduler.models.task_log import SysScheduledTaskLog
+from database.models.sys.scheduled_task import SysScheduledTask
+from database.models.sys.task_log import SysScheduledTaskLog
 
 logger = logging.getLogger(__name__)
 
@@ -103,7 +103,9 @@ class SchedulerManager:
         except Exception:
             pass
 
-    async def run_task_now(self, task: SysScheduledTask, db: AsyncSession, triggered_by: str = "manual"):
+    async def run_task_now(
+        self, task: SysScheduledTask, db: AsyncSession, triggered_by: str = "manual"
+    ):
         """手动触发任务执行"""
         definition = get_task_definition(task.task_key)
         func = definition.function if definition else _load_function(task.function_path)
@@ -192,7 +194,11 @@ async def _scheduled_job_wrapper(task_id: int):
                 return
 
             definition = get_task_definition(task.task_key)
-            func = definition.function if definition else _load_function(task.function_path)
+            func = (
+                definition.function
+                if definition
+                else _load_function(task.function_path)
+            )
             if func is None:
                 logger.error("任务 %s 的函数无法加载", task.task_key)
                 return

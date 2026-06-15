@@ -7,7 +7,7 @@ from sqlalchemy import select, and_, delete
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from core.exception.errors import NotFoundError
-from modules.scheduler.models.task_log import SysScheduledTaskLog
+from database.models.sys.task_log import SysScheduledTaskLog
 from modules.scheduler.schemas.task_log import TaskLogQueryParams
 
 
@@ -19,17 +19,23 @@ class TaskLogService:
         """构建日志查询"""
         conditions = []
         if query_params.task_name:
-            conditions.append(SysScheduledTaskLog.task_name.like(f"%{query_params.task_name}%"))
+            conditions.append(
+                SysScheduledTaskLog.task_name.like(f"%{query_params.task_name}%")
+            )
         if query_params.task_id:
             conditions.append(SysScheduledTaskLog.task_id == query_params.task_id)
         if query_params.task_key:
-            conditions.append(SysScheduledTaskLog.task_key.like(f"%{query_params.task_key}%"))
+            conditions.append(
+                SysScheduledTaskLog.task_key.like(f"%{query_params.task_key}%")
+            )
         if query_params.status:
             conditions.append(SysScheduledTaskLog.status == query_params.status)
         if query_params.start_time:
             try:
                 dt = datetime.fromisoformat(query_params.start_time)
-                start = dt.astimezone(tz.utc) if dt.tzinfo else dt.replace(tzinfo=tz.utc)
+                start = (
+                    dt.astimezone(tz.utc) if dt.tzinfo else dt.replace(tzinfo=tz.utc)
+                )
                 conditions.append(SysScheduledTaskLog.start_time >= start)
             except ValueError:
                 pass
@@ -41,7 +47,9 @@ class TaskLogService:
             except ValueError:
                 pass
 
-        stmt = select(SysScheduledTaskLog).where(SysScheduledTaskLog.deleted_at.is_(None))
+        stmt = select(SysScheduledTaskLog).where(
+            SysScheduledTaskLog.deleted_at.is_(None)
+        )
         if conditions:
             stmt = stmt.where(and_(*conditions))
         stmt = stmt.order_by(SysScheduledTaskLog.created_at.desc())
@@ -72,7 +80,9 @@ class TaskLogService:
     async def clear_logs(db: AsyncSession, days: int = 30) -> int:
         """清理指定天数前的日志"""
         cutoff = datetime.now(tz.utc) - timedelta(days=days)
-        stmt = delete(SysScheduledTaskLog).where(SysScheduledTaskLog.created_at < cutoff)
+        stmt = delete(SysScheduledTaskLog).where(
+            SysScheduledTaskLog.created_at < cutoff
+        )
         result = await db.execute(stmt)
         await db.commit()
         return result.rowcount
