@@ -37,6 +37,7 @@ let fabricCanvas: Canvas | null = null;
 let gridGroup: Group | null = null;
 let backgroundImgObj: FabricImage | null = null;
 let elementMap: Map<string, any> = new Map();
+let annotationDecorations: Map<number, { text: Text; angleIndicator: Triangle }> = new Map();
 let resizeObserver: ResizeObserver | null = null;
 let lastGridSpacingM = 0;
 let originMarker: Group | null = null;
@@ -317,6 +318,7 @@ function syncStructure() {
     const isSelected = props.selectedElement?.type === 'annotation' && props.selectedElement?.id === ann.id;
     const annColor = isSelected ? '#3b82f6' : '#ef4444';
 
+    // 可交互的 circle（拖动入口）
     const circle = new Circle({
       radius: isSelected ? 10 : 8,
       fill: annColor,
@@ -324,21 +326,27 @@ function syncStructure() {
       strokeWidth: 2,
       originX: 'center',
       originY: 'center',
+      hasControls: false,
     });
+    setElementData(circle, { type: 'annotation', id: ann.id });
+    fabricCanvas.add(circle);
+    elementMap.set(key, circle);
 
+    // 装饰：角度指示器与文字（不可交互，纯渲染）
     const angleIndicator = new Triangle({
       width: 8,
       height: 12,
       fill: annColor,
       originX: 'center',
       originY: 'center',
-      top: -16,
       angle: ann.angle || 0,
       visible: false,
       evented: false,
       selectable: false,
       hasControls: false,
+      hoverCursor: 'default',
     });
+    fabricCanvas.add(angleIndicator);
 
     const text = new Text(ann.name, {
       fontSize: 10,
@@ -351,19 +359,11 @@ function syncStructure() {
       evented: false,
       selectable: false,
       hasControls: false,
+      hoverCursor: 'default',
     });
+    fabricCanvas.add(text);
 
-    const group = new Group([circle, angleIndicator, text], {
-      left: 0,
-      top: 0,
-      originX: 'center',
-      originY: 'center',
-      hasControls: false,
-      subTargetCheck: false,
-    });
-    setElementData(group, { type: 'annotation', id: ann.id });
-    fabricCanvas.add(group);
-    elementMap.set(key, group);
+    annotationDecorations.set(ann.id, { text, angleIndicator });
   }
 
   // 移除不再存在的元素
@@ -371,6 +371,16 @@ function syncStructure() {
     if (!existingKeys.has(key)) {
       fabricCanvas.remove(obj);
       elementMap.delete(key);
+      const [type, idStr] = key.split('-');
+      if (type === 'annotation') {
+        const annId = Number(idStr);
+        const deco = annotationDecorations.get(annId);
+        if (deco) {
+          fabricCanvas.remove(deco.text);
+          fabricCanvas.remove(deco.angleIndicator);
+          annotationDecorations.delete(annId);
+        }
+      }
     }
   }
 
@@ -383,11 +393,18 @@ function updatePositions() {
 
   for (const ann of props.editorData.annotations) {
     const key = getElementKey('annotation', ann.id);
-    const group = elementMap.get(key);
-    if (!group) continue;
+    const circle = elementMap.get(key);
+    if (!circle) continue;
     const px = worldToCanvasPoint(ann.x, ann.y);
-    group.set({ left: px.x, top: px.y });
-    group.setCoords();
+    circle.set({ left: px.x, top: px.y });
+    circle.setCoords();
+    const deco = annotationDecorations.get(ann.id);
+    if (deco) {
+      deco.text.set({ left: px.x, top: px.y });
+      deco.text.setCoords();
+      deco.angleIndicator.set({ left: px.x, top: px.y });
+      deco.angleIndicator.setCoords();
+    }
   }
 
   for (const path of props.editorData.paths) {
@@ -422,16 +439,18 @@ function updateSelectionStyle() {
 
   for (const ann of props.editorData.annotations) {
     const key = getElementKey('annotation', ann.id);
-    const group = elementMap.get(key);
-    if (!group) continue;
+    const circle = elementMap.get(key) as Circle | undefined;
+    if (!circle) continue;
     const isSelected = sel?.type === 'annotation' && sel?.id === ann.id;
     const annColor = isSelected ? '#3b82f6' : '#ef4444';
-    const circle = group.getObjects()[0] as Circle;
-    const text = group.getObjects()[2] as Text;
     circle.set('fill', annColor);
     circle.set('radius', isSelected ? 10 : 8);
-    text.set('text', ann.name);
-    text.set('fill', annColor);
+    circle.setCoords();
+    const deco = annotationDecorations.get(ann.id);
+    if (deco) {
+      deco.text.set('text', ann.name);
+      deco.text.set('fill', annColor);
+    }
   }
 }
 
@@ -780,6 +799,13 @@ function handleObjectMoved(opt: any) {
   const data = getElementData(obj);
   if (!data) return;
   isDraggingObject = true;
+  if (data.type === 'annotation') {
+    const deco = annotationDecorations.get(data.id);
+    if (deco) {
+      deco.text.set({ left: obj.left, top: obj.top });
+      deco.angleIndicator.set({ left: obj.left, top: obj.top });
+    }
+  }
 }
 
 function handleObjectModifiedied(opt: any) {
@@ -923,6 +949,7 @@ function disposeCanvas() {
   if (resizeObserver) { resizeObserver.disconnect(); resizeObserver = null; }
   if (fabricCanvas) { fabricCanvas.dispose(); fabricCanvas = null; }
   elementMap.clear();
+  annotationDecorations.clear();
   originMarker = null;
   lastGridSpacingM = 0;
   isDraggingObject = false;
@@ -944,6 +971,11 @@ watch(() => props.editorData, async (newData) => {
     fabricCanvas?.remove(obj);
   }
   elementMap.clear();
+  for (const { text, angleIndicator } of annotationDecorations.values()) {
+    fabricCanvas?.remove(text);
+    fabricCanvas?.remove(angleIndicator);
+  }
+  annotationDecorations.clear();
   if (originMarker) {
     fabricCanvas?.remove(originMarker);
     originMarker = null;
