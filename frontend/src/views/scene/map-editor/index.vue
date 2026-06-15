@@ -221,6 +221,7 @@ function handleFocusAnnotation(id: number) {
       :can-redo="editor.canRedo.value"
       :is-dirty="editor.isDirty.value"
       :saving="editor.saving.value"
+      :has-history="editor.hasHistory.value"
       :history-list="editor.historyList.value"
       @update:drawing-mode="(m: DrawingMode) => (editor.drawingMode.value = m)"
       @undo="editor.undo()"

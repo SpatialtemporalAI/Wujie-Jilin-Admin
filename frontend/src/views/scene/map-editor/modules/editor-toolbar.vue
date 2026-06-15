@@ -7,6 +7,7 @@ interface Props {
   canRedo: boolean;
   isDirty: boolean;
   saving: boolean;
+  hasHistory: boolean;
   historyList: HistoryEntry[];
 }
 
@@ -74,9 +75,9 @@ function handleJump(entry: HistoryEntry) {
       </NButton>
     </NButtonGroup>
 
-    <NPopover trigger="click" placement="bottom-start" :width="320">
+    <NPopover trigger="click" placement="bottom-start" :width="320" :disabled="!hasHistory">
       <template #trigger>
-        <NButton size="small" title="操作历史">
+        <NButton size="small" :disabled="!hasHistory" title="操作历史">
           <template #icon><icon-ic-round-history /></template>
           历史
         </NButton>
@@ -94,9 +95,6 @@ function handleJump(entry: HistoryEntry) {
           <span v-else class="text-gray-400">○</span>
           <span class="flex-1">{{ entry.description }}</span>
           <span v-if="entry.timestamp" class="text-xs text-gray-400">{{ formatTime(entry.timestamp) }}</span>
-        </div>
-        <div v-if="historyList.length <= 1" class="px-8px py-12px text-center text-xs text-gray-400">
-          暂无操作历史
         </div>
       </div>
     </NPopover>

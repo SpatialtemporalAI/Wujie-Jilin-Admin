@@ -121,23 +121,23 @@ export function useMapEditor() {
 
   function undo() {
     if (!editorData.value || undoStack.value.length === 0) return;
+    const entry = undoStack.value.pop()!;
     redoStack.value.push({
       snapshot: snapshotCurrent(),
-      description: '当前状态',
+      description: entry.description,
       timestamp: Date.now(),
     });
-    const entry = undoStack.value.pop()!;
     applySnapshot(entry);
   }
 
   function redo() {
     if (!editorData.value || redoStack.value.length === 0) return;
+    const entry = redoStack.value.pop()!;
     undoStack.value.push({
       snapshot: snapshotCurrent(),
-      description: '当前状态',
+      description: entry.description,
       timestamp: Date.now(),
     });
-    const entry = redoStack.value.pop()!;
     applySnapshot(entry);
   }
 
@@ -154,6 +154,7 @@ export function useMapEditor() {
 
   const canUndo = computed(() => undoStack.value.length > 0);
   const canRedo = computed(() => redoStack.value.length > 0);
+  const hasHistory = computed(() => undoStack.value.length > 0 || redoStack.value.length > 0);
 
   const historyList = computed(() => {
     const currentEntry = {
@@ -433,6 +434,7 @@ export function useMapEditor() {
     resolution,
     canUndo,
     canRedo,
+    hasHistory,
     historyList,
     pixelToMeterDelta,
     meterToPixelDelta,
