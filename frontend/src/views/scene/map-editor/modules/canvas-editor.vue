@@ -474,11 +474,16 @@ function renderOriginMarker() {
 function updateSelection() {
   if (!fabricCanvas) return;
   if (isDraggingObject) return;
-  fabricCanvas.discardActiveObject();
-  if (props.selectedElement) {
-    const key = getElementKey(props.selectedElement.type, props.selectedElement.id);
-    const obj = elementMap.get(key);
-    if (obj) fabricCanvas.setActiveObject(obj);
+  const sel = props.selectedElement;
+  const currentActive = fabricCanvas.getActiveObject();
+  if (sel) {
+    const key = getElementKey(sel.type, sel.id);
+    const targetObj = elementMap.get(key);
+    if (currentActive === targetObj) return; // 已选中，不打断 fabric
+    fabricCanvas.discardActiveObject();
+    if (targetObj) fabricCanvas.setActiveObject(targetObj);
+  } else if (currentActive) {
+    fabricCanvas.discardActiveObject();
   }
   fabricCanvas.renderAll();
 }
