@@ -19,6 +19,7 @@ declare namespace Api {
       task_id: number;
       sort_order: number;
       point_name: string | null;
+      annotation_id: number | null;
       action: TaskAction;
       voice_text: string | null;
     }>;
@@ -62,6 +63,7 @@ declare namespace Api {
       points?: {
         sort_order: number;
         point_name?: string | null;
+        annotation_id?: number | null;
         action: TaskAction;
         voice_text?: string | null;
       }[];
