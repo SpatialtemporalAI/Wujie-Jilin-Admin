@@ -400,9 +400,9 @@ function updatePositions() {
     circle.setCoords();
     const deco = annotationDecorations.get(ann.id);
     if (deco) {
-      deco.text.set({ left: px.x, top: px.y });
+      deco.text.set({ left: px.x, top: px.y + 18 });
       deco.text.setCoords();
-      deco.angleIndicator.set({ left: px.x, top: px.y });
+      deco.angleIndicator.set({ left: px.x, top: px.y - 16 });
       deco.angleIndicator.setCoords();
     }
   }
@@ -802,8 +802,8 @@ function handleObjectMoved(opt: any) {
   if (data.type === 'annotation') {
     const deco = annotationDecorations.get(data.id);
     if (deco) {
-      deco.text.set({ left: obj.left, top: obj.top });
-      deco.angleIndicator.set({ left: obj.left, top: obj.top });
+      deco.text.set({ left: obj.left, top: (obj.top ?? 0) + 18 });
+      deco.angleIndicator.set({ left: obj.left, top: (obj.top ?? 0) - 16 });
     }
   }
 }
