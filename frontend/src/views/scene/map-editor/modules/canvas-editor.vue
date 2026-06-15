@@ -194,8 +194,8 @@ function getEffectiveOrigin() {
   const sx = canvasWidth.value / storedW;
   const sy = canvasHeight.value / storedH;
   return {
-    x: (map.start_point_x ?? 0) * sx,
-    y: (map.start_point_y ?? 0) * sy,
+    x: (map.start_point_x ?? 0),
+    y: (map.start_point_y ?? 0),
   };
 }
 
@@ -222,6 +222,7 @@ function renderElements() {
 
   const map = props.editorData.map;
   const { x: originX, y: originY } = getEffectiveOrigin();
+  debugger
   const res = props.resolution;
 
   const existingKeys = new Set<string>();
@@ -380,7 +381,9 @@ function renderOriginMarker() {
     originMarker = null;
   }
 
-  const { x: ox, y: oy } = getEffectiveOrigin();
+  // const { x: ox, y: oy } = getEffectiveOrigin();
+  const ox = 0
+  const oy = 0
   const s = 12;
   const hLine = new Line([ox - s, oy, ox + s, oy], {
     stroke: '#2563eb', strokeWidth: 2, selectable: false, evented: false,
@@ -471,15 +474,15 @@ function renderGrid() {
     }));
   }
 
-  // Zero-axis lines through origin (world X=0, Y=0)
-  allObjects.push(new Line([originPx, startY, originPx, endY], {
-    stroke: 'rgba(37, 99, 235, 0.25)', strokeWidth: 2,
-    strokeDashArray: [8, 4], selectable: false, evented: false,
-  }));
-  allObjects.push(new Line([startX, originPy, endX, originPy], {
-    stroke: 'rgba(37, 99, 235, 0.25)', strokeWidth: 2,
-    strokeDashArray: [8, 4], selectable: false, evented: false,
-  }));
+  // // Zero-axis lines through origin (world X=0, Y=0)
+  // allObjects.push(new Line([originPx, startY, originPx, endY], {
+  //   stroke: 'rgba(37, 99, 235, 0.25)', strokeWidth: 2,
+  //   strokeDashArray: [8, 4], selectable: false, evented: false,
+  // }));
+  // allObjects.push(new Line([startX, originPy, endX, originPy], {
+  //   stroke: 'rgba(37, 99, 235, 0.25)', strokeWidth: 2,
+  //   strokeDashArray: [8, 4], selectable: false, evented: false,
+  // }));
 
   // Labels: font size adjusts inversely with zoom so it stays readable on screen
   const fontSize = Math.max(8, Math.min(14, 11 / zoom));
