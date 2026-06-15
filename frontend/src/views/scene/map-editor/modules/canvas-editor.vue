@@ -3,7 +3,7 @@ import { ref, computed, onMounted, onBeforeUnmount, watch, nextTick } from 'vue'
 import { Canvas, Circle, Rect, Polygon, Line, Group, Text, FabricImage, Triangle, Point } from 'fabric';
 import { getFilePreviewUrl } from '@/service/api/file';
 import type { SelectedElement, DrawingMode } from '../composables/useMapEditor';
-
+import { fetchGetSceneMapList } from '@/service/api';
 interface Props {
   editorData: Api.Scene.EditorMapData | null;
   selectedElement: SelectedElement | null;
@@ -52,7 +52,18 @@ const minimapScale = computed(() => {
   const oy = (MINIMAP_SIZE - h) / 2;
   return { s, w, h, ox, oy };
 });
-
+let start_point_x = 0
+let start_point_y = 0
+async function loadSceneList() {
+  try {
+    const { data } = await fetchGetSceneMapList({ page: 1, page_size: 999, status: null, name: null, group_id: undefined });
+    if (data?.records) {
+      start_point_x = data?.records[0]?.start_point_x
+      start_point_y = data?.records[0]?.start_point_y
+    }
+  } catch {
+  }
+}
 function updateMinimap() {
   if (!fabricCanvas) return;
   const vpt = fabricCanvas.viewportTransform;
@@ -205,6 +216,15 @@ function centerContent() {
 function renderElements() {
   if (!fabricCanvas || !props.editorData) return;
 
+  // 如果有图片ID但图片还没加载完成，等待图片加载后再渲染
+  // 图片加载完成后会在 loadBackgroundImage 中调用 renderElements
+  if (props.editorData.map.image_id && !backgroundImgObj) {
+    console.log('等待图片加载完成后再渲染元素...');
+    return;
+  }
+
+  console.log('canvasHeight:', canvasHeight.value, 'backgroundImgObj:', backgroundImgObj ? '已加载' : '未加载');
+
   const existingKeys = new Set<string>();
 
   // Render start point marker
@@ -250,12 +270,27 @@ function renderElements() {
   }
 
   for (const ann of props.editorData.annotations) {
+    console.log('ann', ann)
     const key = getElementKey('annotation', ann.id);
     existingKeys.add(key);
 
+    // 调试信息
+    console.log('坐标计算:', {
+      ann_x: ann.x,
+      ann_y: ann.y,
+      start_point_x,
+      start_point_y,
+      canvasHeight: canvasHeight.value,
+      left: (ann.x - start_point_x) * 20,
+      top: canvasHeight.value - (ann.y - start_point_y) * 20,
+    });
+
     if (elementMap.has(key)) {
       const group = elementMap.get(key);
-      group.set({ left: ann.x, top: ann.y });
+      group.set({
+        left: (ann.x - start_point_x) * 20,
+        top: canvasHeight.value - (ann.y - start_point_y) * 20,
+      });
       const circle = group.getObjects()[0] as Circle;
       circle.set('fill', '#ef4444');
       const text = group.getObjects()[2] as Text;
@@ -292,8 +327,8 @@ function renderElements() {
       });
 
       const group = new Group([circle, angleIndicator, text], {
-        left: ann.x,
-        top: ann.y,
+        left: (ann.x - start_point_x) * 20,
+        top: canvasHeight.value - (ann.y - start_point_y) * 20,
         originX: 'center',
         originY: 'center',
         hasControls: false,
@@ -513,6 +548,7 @@ async function loadBackgroundImage(imageId: number) {
     img.set({ left: 0, top: 0, originX: 'left', originY: 'top', selectable: false, evented: false });
     backgroundImgObj = img;
     fabricCanvas.add(img);
+    fabricCanvas.sendObjectToBack(img); // 确保背景图片在最底层
 
     fabricCanvas.setDimensions({
       width: containerWidth.value || canvasContainer.value!.clientWidth,
@@ -521,6 +557,7 @@ async function loadBackgroundImage(imageId: number) {
     centerContent();
     fabricCanvas.renderAll();
     renderGrid();
+    renderElements(); // 图片加载完成后渲染元素
     currentZoom = 1;
     sliderZoomValue.value = sliderValueToZoom(1);
     minimapImageUrl.value = url;
@@ -758,6 +795,7 @@ watch(() => props.editorData, (newData) => {
   if (!newData) return;
   if (newData.map.image_id) {
     loadBackgroundImage(newData.map.image_id);
+    // renderElements 会在 loadBackgroundImage 完成后调用
   } else {
     canvasWidth.value = newData.map.width || 800;
     canvasHeight.value = newData.map.height || 600;
@@ -768,8 +806,8 @@ watch(() => props.editorData, (newData) => {
       });
       centerContent();
     }
+    nextTick(() => renderElements());
   }
-  nextTick(() => renderElements());
 }, { deep: false });
 
 watch(() => props.editorData?.annotations, () => renderElements(), { deep: true });
@@ -786,7 +824,8 @@ watch(() => props.drawingMode, (mode) => {
   }
 });
 
-onMounted(() => {
+onMounted(async () => {
+  await loadSceneList();
   setupCanvas();
   window.addEventListener('keydown', handleKeyDown);
   window.addEventListener('keyup', handleKeyUp);
@@ -881,70 +920,49 @@ defineExpose({ exportCanvas, zoomIn, zoomOut, zoomReset, locateMeterPoint });
     </div>
 
     <!-- Zoom slider control -->
-    <div v-if="editorData" class="absolute right-12px top-12px z-10 flex flex-col items-center gap-4px rounded-lg bg-white/90 px-6px py-8px shadow-md">
+    <div v-if="editorData"
+      class="absolute right-12px top-12px z-10 flex flex-col items-center gap-4px rounded-lg bg-white/90 px-6px py-8px shadow-md">
       <button
         class="flex h-24px w-24px items-center justify-center rounded-full text-sm font-bold text-blue-500 transition-colors hover:bg-blue-50"
-        @click="zoomIn"
-      >
+        @click="zoomIn">
         +
       </button>
-      <NSlider
-        v-model:value="sliderZoomValue"
-        vertical
-        :min="0"
-        :max="100"
-        :step="1"
-        :tooltip="false"
-        :theme-overrides="sliderThemeOverrides"
-        class="!h-160px"
-        @update:value="handleSliderZoom"
-      />
+      <NSlider v-model:value="sliderZoomValue" vertical :min="0" :max="100" :step="1" :tooltip="false"
+        :theme-overrides="sliderThemeOverrides" class="!h-160px" @update:value="handleSliderZoom" />
       <button
         class="flex h-24px w-24px items-center justify-center rounded-full text-sm font-bold text-blue-500 transition-colors hover:bg-blue-50"
-        @click="zoomOut"
-      >
+        @click="zoomOut">
         -
       </button>
       <div class="text-xs text-gray-500">{{ Math.round(currentZoom * 100) }}%</div>
     </div>
 
     <!-- Minimap navigator -->
-    <div
-      v-if="editorData && minimapImageUrl"
-      ref="minimapEl"
+    <div v-if="editorData && minimapImageUrl" ref="minimapEl"
       class="absolute bottom-12px left-12px z-10 cursor-pointer overflow-hidden rounded-lg border border-gray-300 bg-white shadow-md"
-      :style="{ width: `${MINIMAP_SIZE}px`, height: `${MINIMAP_SIZE}px` }"
-      @mousedown="handleMinimapDown"
-      @mousemove="handleMinimapMove"
-      @mouseup="handleMinimapUp"
-      @mouseleave="handleMinimapUp"
-    >
-      <img
-        :src="minimapImageUrl"
-        :style="{
-          position: 'absolute',
-          left: `${minimapScale.ox}px`,
-          top: `${minimapScale.oy}px`,
-          width: `${minimapScale.w}px`,
-          height: `${minimapScale.h}px`,
-          objectFit: 'fill',
-          pointerEvents: 'none',
-        }"
-      />
+      :style="{ width: `${MINIMAP_SIZE}px`, height: `${MINIMAP_SIZE}px` }" @mousedown="handleMinimapDown"
+      @mousemove="handleMinimapMove" @mouseup="handleMinimapUp" @mouseleave="handleMinimapUp">
+      <img :src="minimapImageUrl" :style="{
+        position: 'absolute',
+        left: `${minimapScale.ox}px`,
+        top: `${minimapScale.oy}px`,
+        width: `${minimapScale.w}px`,
+        height: `${minimapScale.h}px`,
+        objectFit: 'fill',
+        pointerEvents: 'none',
+      }" />
       <!-- Viewport rect: blue border + massive box-shadow as outer mask -->
-      <div
-        :style="{
-          position: 'absolute',
-          left: `${minimapRect.x}px`,
-          top: `${minimapRect.y}px`,
-          width: `${minimapRect.w}px`,
-          height: `${minimapRect.h}px`,
-          border: '2px solid #3b82f6',
-          backgroundColor: 'transparent',
-          boxShadow: '0 0 0 9999px rgba(0, 0, 0, 0.45)',
-          pointerEvents: 'none',
-        }"
-      />
+      <div :style="{
+        position: 'absolute',
+        left: `${minimapRect.x}px`,
+        top: `${minimapRect.y}px`,
+        width: `${minimapRect.w}px`,
+        height: `${minimapRect.h}px`,
+        border: '2px solid #3b82f6',
+        backgroundColor: 'transparent',
+        boxShadow: '0 0 0 9999px rgba(0, 0, 0, 0.45)',
+        pointerEvents: 'none',
+      }" />
     </div>
   </div>
 </template>
