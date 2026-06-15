@@ -4,7 +4,7 @@ import { Canvas, Circle, Rect, Polygon, Line, Group, Text, FabricImage, Triangle
 import { getFilePreviewUrl } from '@/service/api/file';
 import { pixelToWorld, worldToPixel } from '@/utils/coordinate';
 import type { SelectedElement, DrawingMode } from '../composables/useMapEditor';
-
+import { fetchGetSceneMapList } from '@/service/api';
 interface Props {
   editorData: Api.Scene.EditorMapData | null;
   selectedElement: SelectedElement | null;
@@ -54,7 +54,18 @@ const minimapScale = computed(() => {
   const oy = (MINIMAP_SIZE - h) / 2;
   return { s, w, h, ox, oy };
 });
-
+let start_point_x = 0
+let start_point_y = 0
+async function loadSceneList() {
+  try {
+    const { data } = await fetchGetSceneMapList({ page: 1, page_size: 999, status: null, name: null, group_id: undefined });
+    if (data?.records) {
+      start_point_x = data?.records[0]?.start_point_x
+      start_point_y = data?.records[0]?.start_point_y
+    }
+  } catch {
+  }
+}
 function updateMinimap() {
   if (!fabricCanvas) return;
   const vpt = fabricCanvas.viewportTransform;
@@ -222,10 +233,10 @@ function renderElements() {
 
   const map = props.editorData.map;
   const { x: originX, y: originY } = getEffectiveOrigin();
-  debugger
   const res = props.resolution;
 
-  const existingKeys = new Set<string>();
+
+  console.log('canvasHeight:', canvasHeight.value, 'backgroundImgObj:', backgroundImgObj ? '已加载' : '未加载'); const existingKeys = new Set<string>();
   for (const ann of props.editorData.annotations) {
     const key = getElementKey('annotation', ann.id);
     existingKeys.add(key);
@@ -546,6 +557,7 @@ async function loadBackgroundImage(imageId: number) {
     img.set({ left: 0, top: 0, originX: 'left', originY: 'top', selectable: false, evented: false });
     backgroundImgObj = img;
     fabricCanvas.add(img);
+    fabricCanvas.sendObjectToBack(img); // 确保背景图片在最底层
 
     fabricCanvas.setDimensions({
       width: containerWidth.value || canvasContainer.value!.clientWidth,
@@ -554,6 +566,7 @@ async function loadBackgroundImage(imageId: number) {
     centerContent();
     fabricCanvas.renderAll();
     renderGrid();
+    renderElements(); // 图片加载完成后渲染元素
     currentZoom = 1;
     sliderZoomValue.value = sliderValueToZoom(1);
     minimapImageUrl.value = url;
@@ -821,6 +834,7 @@ watch(() => props.editorData, async (newData) => {
 
   if (newData.map.image_id) {
     await loadBackgroundImage(newData.map.image_id);
+    // renderElements 会在 loadBackgroundImage 完成后调用
   } else {
     canvasWidth.value = newData.map.width || 800;
     canvasHeight.value = newData.map.height || 600;
@@ -831,10 +845,11 @@ watch(() => props.editorData, async (newData) => {
       });
       centerContent();
     }
+    nextTick(() => renderElements());
   }
 
-  if (seq !== loadSeq) return;
-  renderElements();
+  // if (seq !== loadSeq) return;
+  // renderElements();
 }, { deep: false });
 
 watch(() => props.editorData?.annotations, () => renderElements(), { deep: true });
@@ -851,7 +866,8 @@ watch(() => props.drawingMode, (mode) => {
   }
 });
 
-onMounted(() => {
+onMounted(async () => {
+  await loadSceneList();
   setupCanvas();
   window.addEventListener('keydown', handleKeyDown);
   window.addEventListener('keyup', handleKeyUp);
@@ -989,3 +1005,5 @@ defineExpose({ exportCanvas, zoomIn, zoomOut, zoomReset, locateMeterPoint });
     </div>
   </div>
 </template>
+
+
