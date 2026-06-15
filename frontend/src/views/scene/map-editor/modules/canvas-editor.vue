@@ -231,6 +231,7 @@ function renderElements() {
     existingKeys.add(key);
 
     const px = worldToPixel(ann.x, ann.y, originX, originY, res);
+    px.y = canvasHeight.value - px.y;
     const isSelected = props.selectedElement?.type === 'annotation' && props.selectedElement?.id === ann.id;
     const annColor = isSelected ? '#3b82f6' : '#ef4444';
 
