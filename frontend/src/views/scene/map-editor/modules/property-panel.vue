@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { ref, computed, onMounted } from 'vue';
-import { NProgress, NTag } from 'naive-ui';
+import { NTag } from 'naive-ui';
 import type { SelectOption } from 'naive-ui';
 import type { SelectedElement } from '../composables/useMapEditor';
 import { fetchGetLatestRobotStatus, fetchGetRobotList, fetchUpdateRobot } from '@/service/api';
@@ -28,6 +28,8 @@ const emit = defineEmits<{
 }>();
 
 const activeTab = ref('overview');
+// 属性面板 tab 暂时不显示，恢复时改为 true
+const showPropertiesTab = ref(false);
 const searchText = ref('');
 const pointSearchText = ref('');
 const robotList = ref<Api.Robot.Robot[]>([]);
@@ -117,13 +119,6 @@ function toWorldX(worldX: number): number {
 
 function toWorldY(worldY: number): number {
   return Math.round(worldY * 100) / 100;
-}
-
-function getBatteryColor(threshold?: number | null): string {
-  if (threshold === null || threshold === undefined) return '#909399';
-  if (threshold <= 10) return '#18a058';
-  if (threshold <= 30) return '#f0a020';
-  return '#d03050';
 }
 
 async function loadRobotList() {
@@ -246,13 +241,6 @@ onMounted(() => {
                     定位
                   </NButton>
                 </div>
-                <NProgress
-                  class="mt-8px"
-                  type="line"
-                  :percentage="robot.battery_threshold ?? 0"
-                  :color="getBatteryColor(robot.battery_threshold)"
-                  indicator-placement="inside"
-                />
               </NCard>
               <NEmpty v-if="!robotLoading && robotList.length === 0" description="暂无机器人" class="mt-20px" />
             </div>
@@ -308,7 +296,7 @@ onMounted(() => {
         </div>
       </NTabPane>
 
-      <NTabPane name="properties" tab="属性面板">
+      <NTabPane v-if="showPropertiesTab" name="properties" tab="属性面板">
         <div class="p-12px">
           <!-- No selection: map info -->
           <template v-if="!selectedElement && editorData">
