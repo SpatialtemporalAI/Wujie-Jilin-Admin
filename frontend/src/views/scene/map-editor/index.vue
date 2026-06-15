@@ -215,68 +215,39 @@ function handleFocusAnnotation(id: number) {
 
 <template>
   <div class="flex h-full min-h-0 flex-col">
-    <EditorToolbar
-      :drawing-mode="editor.drawingMode.value"
-      :can-undo="editor.canUndo.value"
-      :can-redo="editor.canRedo.value"
-      :is-dirty="editor.isDirty.value"
-      :saving="editor.saving.value"
-      :has-history="editor.hasHistory.value"
-      :history-list="editor.historyList.value"
-      @update:drawing-mode="(m: DrawingMode) => (editor.drawingMode.value = m)"
-      @undo="editor.undo()"
-      @redo="editor.redo()"
-      @jump-to-history="(type: 'undo' | 'redo', index: number) => editor.jumpToHistoryStep(type, index)"
-      @save="editor.saveMap()"
-      @export="handleExport"
-    />
+    <EditorToolbar :drawing-mode="editor.drawingMode.value" :can-undo="editor.canUndo.value"
+      :can-redo="editor.canRedo.value" :is-dirty="editor.isDirty.value" :saving="editor.saving.value"
+      :has-history="editor.hasHistory.value" :history-list="editor.historyList.value"
+      @update:drawing-mode="(m: DrawingMode) => (editor.drawingMode.value = m)" @undo="editor.undo()"
+      @redo="editor.redo()" @jump-to-step="(step: number) => editor.jumpToStep(step)" @save="editor.saveMap()"
+      @export="handleExport" />
 
     <div class="flex min-h-0 flex-1 overflow-hidden">
       <div class="relative min-w-0 flex-1">
-        <CanvasEditor
-          ref="canvasRef"
-          :editor-data="editor.editorData.value"
-          :selected-element="editor.selectedElement.value"
-          :drawing-mode="editor.drawingMode.value"
-          :grid-spacing="editor.gridSpacing.value"
-          :resolution="editor.resolution.value"
-          :loading="editor.loading.value"
-          @select-element="el => (editor.selectedElement.value = el)"
-          @add-annotation="handleAddAnnotation"
-          @add-path="handleAddPath"
-          @add-object="handleAddObject"
-          @update-element="handleUpdateElement"
-          @zoom-change="handleZoomChange"
-          @cursor-position="handleCursorPosition"
-          @undo="editor.undo()"
-          @redo="editor.redo()"
-        />
+        <CanvasEditor ref="canvasRef" :editor-data="editor.editorData.value"
+          :selected-element="editor.selectedElement.value" :drawing-mode="editor.drawingMode.value"
+          :grid-spacing="editor.gridSpacing.value" :resolution="editor.resolution.value" :loading="editor.loading.value"
+          @select-element="el => (editor.selectedElement.value = el)" @add-annotation="handleAddAnnotation"
+          @add-path="handleAddPath" @add-object="handleAddObject" @update-element="handleUpdateElement"
+          @zoom-change="handleZoomChange" @cursor-position="handleCursorPosition" @undo="editor.undo()"
+          @redo="editor.redo()" />
         <div class="absolute bottom-8px left-8px rounded bg-black/50 px-8px py-4px text-xs text-white">
           坐标: {{ cursorX.toFixed(2) }}m, {{ cursorY.toFixed(2) }}m
         </div>
       </div>
 
-      <PropertyPanel
-        class="w-380px flex-shrink-0"
-        :editor-data="editor.editorData.value"
-        :selected-element="editor.selectedElement.value"
-        :resolution="editor.resolution.value"
-        :scene-list="editor.sceneList.value"
-        :selected-map-id="editor.selectedMapId.value"
-        :map-id="editor.selectedMapId.value"
-        @update-element="handleUpdateElement"
-        @remove-element="editor.removeElement"
-        @select-scene="handleSelectMap"
-        @add-scene="handleAddScene"
-        @delete-scene="handleDeleteScene"
-        @locate-robot="handleLocateRobot"
-        @focus-annotation="handleFocusAnnotation"
-        @select-element="el => (editor.selectedElement.value = el)"
-      />
+      <PropertyPanel class="w-380px flex-shrink-0" :editor-data="editor.editorData.value"
+        :selected-element="editor.selectedElement.value" :resolution="editor.resolution.value"
+        :scene-list="editor.sceneList.value" :selected-map-id="editor.selectedMapId.value"
+        :map-id="editor.selectedMapId.value" @update-element="handleUpdateElement"
+        @remove-element="editor.removeElement" @select-scene="handleSelectMap" @add-scene="handleAddScene"
+        @delete-scene="handleDeleteScene" @locate-robot="handleLocateRobot" @focus-annotation="handleFocusAnnotation"
+        @select-element="el => (editor.selectedElement.value = el)" />
     </div>
 
     <!-- Add scene dialog -->
-    <NModal v-model:show="addDialogVisible" preset="dialog" title="新增场景" positive-text="确定" negative-text="取消" @positive-click="confirmAddScene">
+    <NModal v-model:show="addDialogVisible" preset="dialog" title="新增场景" positive-text="确定" negative-text="取消"
+      @positive-click="confirmAddScene">
       <NForm label-placement="left" label-width="92">
         <NFormItem label="场景名称">
           <NInput v-model:value="newMapName" placeholder="请输入场景名称" />

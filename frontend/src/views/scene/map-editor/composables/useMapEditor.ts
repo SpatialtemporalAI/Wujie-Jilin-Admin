@@ -11,13 +11,20 @@ export interface SelectedElement {
 
 export interface HistoryEntry {
   key: string;
-  type: 'undo' | 'redo' | 'current';
   index: number;
+  description: string;
+  timestamp: number;
+  isCurrent: boolean;
+  isFuture: boolean;
+}
+
+interface HistorySnapshot {
+  snapshot: string;
   description: string;
   timestamp: number;
 }
 
-const MAX_UNDO_LEVELS = 50;
+const MAX_HISTORY_LEVELS = 50;
 
 export function useMapEditor() {
   const editorData = ref<Api.Scene.EditorMapData | null>(null);
@@ -30,8 +37,8 @@ export function useMapEditor() {
   const saving = ref(false);
   const sceneList = ref<Api.Scene.SceneMap[]>([]);
 
-  const undoStack = ref<Array<{ snapshot: string; description: string; timestamp: number }>>([]);
-  const redoStack = ref<Array<{ snapshot: string; description: string; timestamp: number }>>([]);
+  const historyTimeline = ref<HistorySnapshot[]>([]);
+  const currentStep = ref(-1);
 
   const deletedAnnotationIds: Set<number> = new Set();
   const deletedPathIds: Set<number> = new Set();
@@ -77,8 +84,12 @@ export function useMapEditor() {
         selectedMapId.value = mapId;
         selectedElement.value = null;
         isDirty.value = false;
-        undoStack.value = [];
-        redoStack.value = [];
+        historyTimeline.value = [{
+          snapshot: snapshotCurrent(),
+          description: '初始状态',
+          timestamp: Date.now(),
+        }];
+        currentStep.value = 0;
         deletedAnnotationIds.clear();
         deletedPathIds.clear();
         deletedObjectIds.clear();
@@ -96,124 +107,75 @@ export function useMapEditor() {
     });
   }
 
-  function pushUndoSnapshot(description = '编辑操作') {
+  function applySnapshot(entry: HistorySnapshot) {
     if (!editorData.value) return;
-    undoStack.value.push({
+    const parsed = JSON.parse(entry.snapshot);
+    editorData.value.annotations = parsed.annotations;
+    editorData.value.paths = parsed.paths;
+    editorData.value.objects = parsed.objects;
+    const sel = selectedElement.value;
+    if (sel) {
+      const list = sel.type === 'annotation' ? editorData.value.annotations
+        : sel.type === 'path' ? editorData.value.paths
+        : editorData.value.objects;
+      if (!list.some((i: any) => i.id === sel.id)) {
+        selectedElement.value = null;
+      }
+    }
+    isDirty.value = true;
+  }
+
+  function recordHistory(description: string) {
+    if (!editorData.value) return;
+    if (currentStep.value < historyTimeline.value.length - 1) {
+      historyTimeline.value = historyTimeline.value.slice(0, currentStep.value + 1);
+    }
+    historyTimeline.value.push({
       snapshot: snapshotCurrent(),
       description,
       timestamp: Date.now(),
     });
-    if (undoStack.value.length > MAX_UNDO_LEVELS) {
-      undoStack.value.shift();
+    currentStep.value = historyTimeline.value.length - 1;
+    while (historyTimeline.value.length > MAX_HISTORY_LEVELS + 1) {
+      historyTimeline.value.shift();
+      currentStep.value--;
     }
-    redoStack.value = [];
-    isDirty.value = true;
-  }
-
-  function applySnapshot(entry: { snapshot: string; description: string; timestamp: number }) {
-    const parsed = JSON.parse(entry.snapshot);
-    editorData.value!.annotations = parsed.annotations;
-    editorData.value!.paths = parsed.paths;
-    editorData.value!.objects = parsed.objects;
-    selectedElement.value = null;
     isDirty.value = true;
   }
 
   function undo() {
-    if (!editorData.value || undoStack.value.length === 0) return;
-    const entry = undoStack.value.pop()!;
-    redoStack.value.push({
-      snapshot: snapshotCurrent(),
-      description: entry.description,
-      timestamp: Date.now(),
-    });
-    applySnapshot(entry);
+    if (currentStep.value <= 0) return;
+    currentStep.value--;
+    applySnapshot(historyTimeline.value[currentStep.value]);
   }
 
   function redo() {
-    if (!editorData.value || redoStack.value.length === 0) return;
-    const entry = redoStack.value.pop()!;
-    undoStack.value.push({
-      snapshot: snapshotCurrent(),
-      description: entry.description,
-      timestamp: Date.now(),
-    });
-    applySnapshot(entry);
+    if (currentStep.value >= historyTimeline.value.length - 1) return;
+    currentStep.value++;
+    applySnapshot(historyTimeline.value[currentStep.value]);
   }
 
-  function jumpToHistoryStep(type: 'undo' | 'redo', index: number) {
-    if (!editorData.value) return;
-    const now = Date.now();
-    type SnapshotEntry = { snapshot: string; description: string; timestamp: number };
-
-    if (type === 'undo') {
-      if (index < 0 || index >= undoStack.value.length) return;
-      const oldUndo = undoStack.value;
-      const target = oldUndo[index];
-      const newRedoTop: SnapshotEntry[] = [];
-      let currentSnap = snapshotCurrent();
-      for (let i = oldUndo.length - 1; i >= index; i--) {
-        newRedoTop.push({
-          snapshot: currentSnap,
-          description: oldUndo[i].description,
-          timestamp: now,
-        });
-        currentSnap = oldUndo[i].snapshot;
-      }
-      undoStack.value = oldUndo.slice(0, index);
-      redoStack.value = [...newRedoTop, ...redoStack.value];
-      applySnapshot(target);
-    } else {
-      if (index < 0 || index >= redoStack.value.length) return;
-      const oldRedo = redoStack.value;
-      const target = oldRedo[index];
-      const newUndoTop: SnapshotEntry[] = [];
-      let currentSnap = snapshotCurrent();
-      for (let i = oldRedo.length - 1; i >= index; i--) {
-        newUndoTop.push({
-          snapshot: currentSnap,
-          description: oldRedo[i].description,
-          timestamp: now,
-        });
-        currentSnap = oldRedo[i].snapshot;
-      }
-      undoStack.value = [...undoStack.value, ...newUndoTop];
-      redoStack.value = oldRedo.slice(0, index);
-      applySnapshot(target);
-    }
+  function jumpToStep(step: number) {
+    if (step < 0 || step >= historyTimeline.value.length) return;
+    if (step === currentStep.value) return;
+    currentStep.value = step;
+    applySnapshot(historyTimeline.value[step]);
   }
 
-  const canUndo = computed(() => undoStack.value.length > 0);
-  const canRedo = computed(() => redoStack.value.length > 0);
-  const hasHistory = computed(() => undoStack.value.length > 0 || redoStack.value.length > 0);
+  const canUndo = computed(() => currentStep.value > 0);
+  const canRedo = computed(() => currentStep.value < historyTimeline.value.length - 1);
+  const hasHistory = computed(() => historyTimeline.value.length > 1);
 
-  const historyList = computed(() => {
-    const currentEntry = {
-      key: 'current',
-      type: 'current' as const,
-      index: -1,
-      description: '当前状态',
-      timestamp: 0,
-    };
-    const undoItems = [...undoStack.value].reverse().map((entry, idx) => {
-      const index = undoStack.value.length - 1 - idx;
-      return {
-        key: `undo-${index}`,
-        type: 'undo' as const,
-        index,
-        description: entry.description,
-        timestamp: entry.timestamp,
-      };
-    });
-    const redoItems = redoStack.value.map((entry, index) => ({
-      key: `redo-${index}`,
-      type: 'redo' as const,
+  const historyList = computed(() =>
+    historyTimeline.value.map((entry, index) => ({
+      key: `step-${index}`,
       index,
       description: entry.description,
       timestamp: entry.timestamp,
-    }));
-    return [...undoItems, currentEntry, ...redoItems];
-  });
+      isCurrent: index === currentStep.value,
+      isFuture: index > currentStep.value,
+    }))
+  );
 
   function validateBeforeSave(): string[] {
     const errors: string[] = [];
@@ -337,23 +299,22 @@ export function useMapEditor() {
 
   function addAnnotation(annotation: { x: number; y: number; name: string; angle: number; type: string }) {
     if (!editorData.value) return;
-    const label = annotation.type === 'navigation' ? '导航点' : '接待点';
-    pushUndoSnapshot(`添加${label}「${annotation.name}」`);
     const newId = -(Date.now());
     editorData.value.annotations.push(createAnnotation(annotation, newId));
+    const label = annotation.type === 'navigation' ? '导航点' : '接待点';
+    recordHistory(`添加${label}「${annotation.name}」`);
     return newId;
   }
 
   function addAnnotations(annotations: { x: number; y: number; name: string; angle: number; type: string }[]) {
     if (!editorData.value || annotations.length === 0) return;
-    pushUndoSnapshot(`批量添加${annotations.length}个点位`);
     const baseId = Date.now();
     editorData.value.annotations.push(...annotations.map((annotation, index) => createAnnotation(annotation, -(baseId + index))));
+    recordHistory(`批量添加${annotations.length}个点位`);
   }
 
   function addPath(path: { start_annotation_id: number; end_annotation_id: number; name?: string; points?: string | null }) {
     if (!editorData.value) return;
-    pushUndoSnapshot('添加路径');
     const newId = -(Date.now());
     const newItem = {
       id: newId,
@@ -369,13 +330,12 @@ export function useMapEditor() {
       updated_at: null,
     } as unknown as Api.Scene.SceneMapPath;
     editorData.value.paths.push(newItem);
+    recordHistory('添加路径');
     return newId;
   }
 
   function addObject(obj: { type: string; x: number; y: number; width: number; height: number; points: string | null }) {
     if (!editorData.value) return;
-    const label = obj.type === 'restricted' ? '禁区' : '障碍物';
-    pushUndoSnapshot(`添加${label}`);
     const newId = -(Date.now());
     const newItem = {
       id: newId,
@@ -393,13 +353,14 @@ export function useMapEditor() {
       updated_at: null,
     } as unknown as Api.Scene.SceneMapObject;
     editorData.value.objects.push(newItem);
+    const label = obj.type === 'restricted' ? '禁区' : '障碍物';
+    recordHistory(`添加${label}`);
     return newId;
   }
 
   function removeElement(type: 'annotation' | 'path' | 'object', id: number) {
     if (!editorData.value) return;
     const typeLabel = type === 'annotation' ? '点位' : type === 'path' ? '路径' : '物体';
-    pushUndoSnapshot(`删除${typeLabel}`);
     if (type === 'annotation') {
       if (id > 0) deletedAnnotationIds.add(id);
       const removedPaths = editorData.value.paths.filter(
@@ -420,6 +381,7 @@ export function useMapEditor() {
     if (selectedElement.value?.id === id) {
       selectedElement.value = null;
     }
+    recordHistory(`删除${typeLabel}`);
   }
 
   function updateElement(type: 'annotation' | 'path' | 'object', id: number, data: Record<string, any>) {
@@ -435,8 +397,8 @@ export function useMapEditor() {
     const item = list.find((i: any) => i.id === id);
     if (!item) return;
 
-    // 仅名称修改不单独记录历史（避免每次按键都产生一条）
     const isNameOnlyEdit = Object.keys(data).length === 1 && 'name' in data;
+    Object.assign(item, data);
     if (!isNameOnlyEdit) {
       const typeLabel = type === 'annotation' ? '点位' : type === 'path' ? '路径' : '物体';
       const name = (item as any).name;
@@ -447,9 +409,8 @@ export function useMapEditor() {
       if (moved) action = '移动';
       else if (resized) action = '调整尺寸';
       else if ('type' in data && type === 'annotation') action = '修改类型';
-      pushUndoSnapshot(`${action}${typeLabel}${suffix}`);
+      recordHistory(`${action}${typeLabel}${suffix}`);
     }
-    Object.assign(item, data);
   }
 
   return {
@@ -475,7 +436,7 @@ export function useMapEditor() {
     loadMap,
     undo,
     redo,
-    jumpToHistoryStep,
+    jumpToStep,
     saveMap,
     deleteScene,
     addAnnotation,
@@ -484,7 +445,7 @@ export function useMapEditor() {
     addObject,
     removeElement,
     updateElement,
-    pushUndoSnapshot,
+    recordHistory,
     validateBeforeSave,
   };
 }

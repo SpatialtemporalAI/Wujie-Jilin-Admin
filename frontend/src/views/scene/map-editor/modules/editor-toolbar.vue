@@ -19,7 +19,7 @@ const emit = defineEmits<{
   (e: 'redo'): void;
   (e: 'save'): void;
   (e: 'export', format: 'png' | 'jpeg' | 'webp'): void;
-  (e: 'jump-to-history', type: 'undo' | 'redo', index: number): void;
+  (e: 'jump-to-step', step: number): void;
 }>();
 
 const drawingModes: { key: DrawingMode; label: string; icon: string }[] = [
@@ -41,8 +41,8 @@ function formatTime(ts: number): string {
 }
 
 function handleJump(entry: HistoryEntry) {
-  if (entry.type === 'current') return;
-  emit('jump-to-history', entry.type, entry.index);
+  if (entry.isCurrent) return;
+  emit('jump-to-step', entry.index);
 }
 </script>
 
@@ -87,11 +87,11 @@ function handleJump(entry: HistoryEntry) {
           v-for="entry in historyList"
           :key="entry.key"
           class="flex cursor-pointer items-center gap-8px rounded px-8px py-6px text-sm hover:bg-gray-100"
-          :class="entry.type === 'current' ? 'bg-blue-50 font-medium text-blue-600' : entry.type === 'redo' ? 'text-gray-400' : ''"
+          :class="entry.isCurrent ? 'bg-blue-50 font-medium text-blue-600' : entry.isFuture ? 'text-gray-400' : ''"
           @click="handleJump(entry)"
         >
-          <span v-if="entry.type === 'current'" class="text-blue-500">●</span>
-          <span v-else-if="entry.type === 'redo'" class="text-gray-300">○</span>
+          <span v-if="entry.isCurrent" class="text-blue-500">●</span>
+          <span v-else-if="entry.isFuture" class="text-gray-300">○</span>
           <span v-else class="text-gray-400">○</span>
           <span class="flex-1">{{ entry.description }}</span>
           <span v-if="entry.timestamp" class="text-xs text-gray-400">{{ formatTime(entry.timestamp) }}</span>
