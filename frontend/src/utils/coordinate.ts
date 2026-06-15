@@ -1,8 +1,8 @@
 /** 画布像素坐标 → 世界坐标（米） */
 export function pixelToWorld(pixelX: number, pixelY: number, originX: number, originY: number, resolution: number) {
   return {
-    x: (pixelX - originX) * resolution,
-    y: (pixelY - originY) * resolution,
+    x: pixelX * resolution + originX,
+    y: pixelY * resolution + originY,
   };
 }
 
@@ -10,7 +10,7 @@ export function pixelToWorld(pixelX: number, pixelY: number, originX: number, or
 export function worldToPixel(worldX: number, worldY: number, originX: number, originY: number, resolution: number) {
   return {
     x: (worldX - originX) / resolution,
-    y: (worldY - originY)  / resolution,
+    y: (worldY - originY) / resolution,
   };
 }
 
