@@ -22,8 +22,8 @@ export function useMapEditor() {
   const saving = ref(false);
   const sceneList = ref<Api.Scene.SceneMap[]>([]);
 
-  const undoStack: string[] = [];
-  const redoStack: string[] = [];
+  const undoStack = ref<string[]>([]);
+  const redoStack = ref<string[]>([]);
 
   const deletedAnnotationIds: Set<number> = new Set();
   const deletedPathIds: Set<number> = new Set();
@@ -69,8 +69,8 @@ export function useMapEditor() {
         selectedMapId.value = mapId;
         selectedElement.value = null;
         isDirty.value = false;
-        undoStack.length = 0;
-        redoStack.length = 0;
+        undoStack.value = [];
+        redoStack.value = [];
         deletedAnnotationIds.clear();
         deletedPathIds.clear();
         deletedObjectIds.clear();
@@ -87,24 +87,24 @@ export function useMapEditor() {
       paths: editorData.value.paths,
       objects: editorData.value.objects,
     });
-    undoStack.push(snapshot);
-    if (undoStack.length > MAX_UNDO_LEVELS) {
-      undoStack.shift();
+    undoStack.value.push(snapshot);
+    if (undoStack.value.length > MAX_UNDO_LEVELS) {
+      undoStack.value.shift();
     }
-    redoStack.length = 0;
+    redoStack.value = [];
     isDirty.value = true;
   }
 
   function undo() {
-    if (!editorData.value || undoStack.length === 0) return;
+    if (!editorData.value || undoStack.value.length === 0) return;
     const current = JSON.stringify({
       annotations: editorData.value.annotations,
       paths: editorData.value.paths,
       objects: editorData.value.objects,
     });
-    redoStack.push(current);
+    redoStack.value.push(current);
 
-    const snapshot = undoStack.pop()!;
+    const snapshot = undoStack.value.pop()!;
     const parsed = JSON.parse(snapshot);
     editorData.value.annotations = parsed.annotations;
     editorData.value.paths = parsed.paths;
@@ -114,15 +114,15 @@ export function useMapEditor() {
   }
 
   function redo() {
-    if (!editorData.value || redoStack.length === 0) return;
+    if (!editorData.value || redoStack.value.length === 0) return;
     const current = JSON.stringify({
       annotations: editorData.value.annotations,
       paths: editorData.value.paths,
       objects: editorData.value.objects,
     });
-    undoStack.push(current);
+    undoStack.value.push(current);
 
-    const snapshot = redoStack.pop()!;
+    const snapshot = redoStack.value.pop()!;
     const parsed = JSON.parse(snapshot);
     editorData.value.annotations = parsed.annotations;
     editorData.value.paths = parsed.paths;
@@ -131,8 +131,8 @@ export function useMapEditor() {
     isDirty.value = true;
   }
 
-  const canUndo = computed(() => undoStack.length > 0);
-  const canRedo = computed(() => redoStack.length > 0);
+  const canUndo = computed(() => undoStack.value.length > 0);
+  const canRedo = computed(() => redoStack.value.length > 0);
 
   function validateBeforeSave(): string[] {
     const errors: string[] = [];
