@@ -221,9 +221,11 @@ function handleFocusAnnotation(id: number) {
       :can-redo="editor.canRedo.value"
       :is-dirty="editor.isDirty.value"
       :saving="editor.saving.value"
+      :history-list="editor.historyList.value"
       @update:drawing-mode="(m: DrawingMode) => (editor.drawingMode.value = m)"
       @undo="editor.undo()"
       @redo="editor.redo()"
+      @jump-to-history="(type: 'undo' | 'redo', index: number) => editor.jumpToHistoryStep(type, index)"
       @save="editor.saveMap()"
       @export="handleExport"
     />

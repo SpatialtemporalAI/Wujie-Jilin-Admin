@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import type { DrawingMode } from '../composables/useMapEditor';
+import type { DrawingMode, HistoryEntry } from '../composables/useMapEditor';
 
 interface Props {
   drawingMode: DrawingMode;
@@ -7,6 +7,7 @@ interface Props {
   canRedo: boolean;
   isDirty: boolean;
   saving: boolean;
+  historyList: HistoryEntry[];
 }
 
 defineProps<Props>();
@@ -17,6 +18,7 @@ const emit = defineEmits<{
   (e: 'redo'): void;
   (e: 'save'): void;
   (e: 'export', format: 'png' | 'jpeg' | 'webp'): void;
+  (e: 'jump-to-history', type: 'undo' | 'redo', index: number): void;
 }>();
 
 const drawingModes: { key: DrawingMode; label: string; icon: string }[] = [
@@ -27,6 +29,20 @@ const drawingModes: { key: DrawingMode; label: string; icon: string }[] = [
   { key: 'rect-obstacle', label: '障碍物', icon: 'ic:round-crop-square' },
   { key: 'polygon-restricted', label: '禁区', icon: 'ic:round-pentagon' },
 ];
+
+function formatTime(ts: number): string {
+  if (!ts) return '';
+  const d = new Date(ts);
+  const hh = String(d.getHours()).padStart(2, '0');
+  const mm = String(d.getMinutes()).padStart(2, '0');
+  const ss = String(d.getSeconds()).padStart(2, '0');
+  return `${hh}:${mm}:${ss}`;
+}
+
+function handleJump(entry: HistoryEntry) {
+  if (entry.type === 'current') return;
+  emit('jump-to-history', entry.type, entry.index);
+}
 </script>
 
 <template>
@@ -57,6 +73,33 @@ const drawingModes: { key: DrawingMode; label: string; icon: string }[] = [
         重做
       </NButton>
     </NButtonGroup>
+
+    <NPopover trigger="click" placement="bottom-start" :width="320">
+      <template #trigger>
+        <NButton size="small" title="操作历史">
+          <template #icon><icon-ic-round-history /></template>
+          历史
+        </NButton>
+      </template>
+      <div class="flex flex-col gap-2px" style="max-height: 360px; overflow-y: auto;">
+        <div
+          v-for="entry in historyList"
+          :key="entry.key"
+          class="flex cursor-pointer items-center gap-8px rounded px-8px py-6px text-sm hover:bg-gray-100"
+          :class="entry.type === 'current' ? 'bg-blue-50 font-medium text-blue-600' : entry.type === 'redo' ? 'text-gray-400' : ''"
+          @click="handleJump(entry)"
+        >
+          <span v-if="entry.type === 'current'" class="text-blue-500">●</span>
+          <span v-else-if="entry.type === 'redo'" class="text-gray-300">○</span>
+          <span v-else class="text-gray-400">○</span>
+          <span class="flex-1">{{ entry.description }}</span>
+          <span v-if="entry.timestamp" class="text-xs text-gray-400">{{ formatTime(entry.timestamp) }}</span>
+        </div>
+        <div v-if="historyList.length <= 1" class="px-8px py-12px text-center text-xs text-gray-400">
+          暂无操作历史
+        </div>
+      </div>
+    </NPopover>
 
     <NDivider vertical />
 
