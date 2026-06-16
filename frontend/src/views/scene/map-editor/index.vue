@@ -223,10 +223,10 @@ function handleContextMenuSelect(key: string) {
     editor.addObject({
       type,
       name: `障碍物${count}`,
-      x: x - 2.5,
-      y: y - 2.5,
-      width: 5,
-      height: 5,
+      x: x - 5,
+      y: y - 5,
+      width: 10,
+      height: 10,
       points: null,
     });
     return;
@@ -237,10 +237,10 @@ function handleContextMenuSelect(key: string) {
     editor.addObject({
       type: 'restricted',
       name: `禁区${count}`,
-      x: x - 2.5,
-      y: y - 2.5,
-      width: 5,
-      height: 5,
+      x: x - 5,
+      y: y - 5,
+      width: 10,
+      height: 10,
       points: null,
     });
     return;
