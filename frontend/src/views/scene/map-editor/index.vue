@@ -41,6 +41,13 @@ const renameDialogVisible = ref(false);
 const renameValue = ref('');
 const renameTarget = ref<{ type: 'annotation' | 'object'; id: number } | null>(null);
 
+// 点位类型切换 tooltip 状态
+const typeSwitchShow = ref(false);
+const typeSwitchX = ref(0);
+const typeSwitchY = ref(0);
+const typeSwitchTargetId = ref<number | null>(null);
+const typeSwitchCurrentType = ref<'navigation' | 'reception'>('reception');
+
 const addDialogVisible = ref(false);
 const newMapName = ref('');
 const newMapGroupId = ref<number | null>(null);
@@ -241,12 +248,22 @@ function handleContextMenuSelect(key: string) {
   }
 }
 
-function handleToggleAnnotationType(id: number) {
+function handleRequestTypeSwitch(data: { id: number; clientX: number; clientY: number }) {
   if (!editor.editorData.value) return;
-  const ann = editor.editorData.value.annotations.find(a => a.id === id);
+  const ann = editor.editorData.value.annotations.find(a => a.id === data.id);
   if (!ann) return;
-  const newType = ann.type === 'navigation' ? 'reception' : 'navigation';
-  editor.updateElement('annotation', id, { type: newType });
+  typeSwitchTargetId.value = data.id;
+  typeSwitchCurrentType.value = (ann.type === 'navigation' ? 'navigation' : 'reception');
+  typeSwitchX.value = data.clientX;
+  typeSwitchY.value = data.clientY;
+  typeSwitchShow.value = true;
+}
+
+function switchAnnotationType(type: 'navigation' | 'reception') {
+  if (typeSwitchTargetId.value === null) return;
+  editor.updateElement('annotation', typeSwitchTargetId.value, { type });
+  typeSwitchShow.value = false;
+  typeSwitchTargetId.value = null;
 }
 
 function handleRequestRename(data: { type: 'annotation' | 'object'; id: number }) {
@@ -322,7 +339,7 @@ function handleFocusAnnotation(id: number) {
           @select-element="el => (editor.selectedElement.value = el)" @update-element="handleUpdateElement"
           @zoom-change="handleZoomChange" @cursor-position="handleCursorPosition" @undo="editor.undo()"
           @redo="editor.redo()" @context-menu="handleContextMenu"
-          @toggle-annotation-type="handleToggleAnnotationType" @rename-element="handleRequestRename" />
+          @request-type-switch="handleRequestTypeSwitch" @rename-element="handleRequestRename" />
         <div class="absolute bottom-8px left-8px rounded bg-black/50 px-8px py-4px text-xs text-white">
           坐标: {{ cursorX.toFixed(2) }}m, {{ cursorY.toFixed(2) }}m
         </div>
@@ -341,6 +358,21 @@ function handleFocusAnnotation(id: number) {
     <NDropdown placement="bottom-start" trigger="manual" :x="contextMenuX" :y="contextMenuY"
       :show="contextMenuShow" :options="contextMenuOptions" @select="handleContextMenuSelect"
       @clickoutside="() => (contextMenuShow = false)" />
+
+    <!-- 点位类型切换 tooltip -->
+    <NPopover v-model:show="typeSwitchShow" trigger="manual" placement="top" :x="typeSwitchX" :y="typeSwitchY"
+      :show-arrow="true">
+      <div class="flex gap-6px py-2px">
+        <NButton size="tiny" :type="typeSwitchCurrentType === 'navigation' ? 'primary' : 'default'"
+          @click="switchAnnotationType('navigation')">
+          返回点
+        </NButton>
+        <NButton size="tiny" :type="typeSwitchCurrentType === 'reception' ? 'primary' : 'default'"
+          @click="switchAnnotationType('reception')">
+          接待点
+        </NButton>
+      </div>
+    </NPopover>
 
     <!-- 重命名弹窗 -->
     <NModal v-model:show="renameDialogVisible" preset="dialog" title="重命名" positive-text="确定" negative-text="取消"

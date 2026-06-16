@@ -25,7 +25,7 @@ const emit = defineEmits<{
   (e: 'undo'): void;
   (e: 'redo'): void;
   (e: 'context-menu', data: { x: number; y: number; clientX: number; clientY: number }): void;
-  (e: 'toggle-annotation-type', id: number): void;
+  (e: 'request-type-switch', data: { id: number; clientX: number; clientY: number }): void;
   (e: 'rename-element', data: { type: 'annotation' | 'object'; id: number }): void;
 }>();
 
@@ -154,12 +154,15 @@ let isDraggingObject = false;
 let justDragged = false;
 let clickTimer: number | null = null;
 let lastDblClickTime = 0;
+let mouseDownClientPos: { x: number; y: number } | null = null;
+let mouseDownTarget: any = null;
 let isLocalUpdate = false;
 let cursorEmitRafId: number | null = null;
 let lastCursorWorld = { x: 0, y: 0 };
 let minimapRafId: number | null = null;
 
 const MIN_OBJECT_SIZE = 1;
+const CLICK_MOVE_THRESHOLD = 5;
 
 const canvasWidth = ref(800);
 const canvasHeight = ref(600);
@@ -723,6 +726,10 @@ function handleMouseDown(opt: any) {
 
   // 右键由原生 contextmenu 事件处理
   if (evt.button === 2) return;
+
+  // 记录按下位置和目标，用于 click vs drag 判定
+  mouseDownClientPos = { x: evt.clientX, y: evt.clientY };
+  mouseDownTarget = opt.target ?? null;
 }
 
 function handleMouseMove(opt: any) {
@@ -764,26 +771,37 @@ function handleMouseUp(opt: any) {
     return;
   }
 
-  // 点位单击切换类型（与双击通过 250ms 定时器 + 双击时间戳区分）
-  if (Date.now() - lastDblClickTime < 350) {
-    justDragged = false;
-    return;
-  }
-  const target = opt.target;
-  if (target && !justDragged) {
-    const data = getElementData(target);
-    if (data?.type === 'annotation') {
-      if (clickTimer !== null) {
-        window.clearTimeout(clickTimer);
-        clickTimer = null;
+  // 点位单击切换类型：用按下/抬起的屏幕距离判定是否为"点击"
+  // （fabric 的 object:moving 在 1-2px 抖动时也会触发，单靠 justDragged 不可靠）
+  const evt = opt.e as MouseEvent;
+  if (
+    mouseDownClientPos &&
+    evt &&
+    Date.now() - lastDblClickTime > 350
+  ) {
+    const dx = evt.clientX - mouseDownClientPos.x;
+    const dy = evt.clientY - mouseDownClientPos.y;
+    const isClick = Math.sqrt(dx * dx + dy * dy) < CLICK_MOVE_THRESHOLD;
+    if (isClick && mouseDownTarget) {
+      const data = getElementData(mouseDownTarget);
+      if (data?.type === 'annotation') {
+        if (clickTimer !== null) {
+          window.clearTimeout(clickTimer);
+          clickTimer = null;
+        }
+        const annId = data.id;
+        const clientX = evt.clientX;
+        const clientY = evt.clientY;
+        clickTimer = window.setTimeout(() => {
+          clickTimer = null;
+          emit('request-type-switch', { id: annId, clientX, clientY });
+        }, 250);
       }
-      const annId = data.id;
-      clickTimer = window.setTimeout(() => {
-        clickTimer = null;
-        emit('toggle-annotation-type', annId);
-      }, 250);
     }
   }
+
+  mouseDownClientPos = null;
+  mouseDownTarget = null;
   justDragged = false;
 }
 
