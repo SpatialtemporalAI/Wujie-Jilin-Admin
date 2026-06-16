@@ -6,7 +6,7 @@ import CanvasEditor from './modules/canvas-editor.vue';
 import PropertyPanel from './modules/property-panel.vue';
 import { fetchCreateSceneMap } from '@/service/api/scene';
 import { fetchUploadFile, getFilePreviewUrl } from '@/service/api/file';
-import { degToRad, radToDeg } from '@/utils/coordinate';
+import { degToRad } from '@/utils/coordinate';
 
 defineOptions({ name: 'SceneMapEditor' });
 

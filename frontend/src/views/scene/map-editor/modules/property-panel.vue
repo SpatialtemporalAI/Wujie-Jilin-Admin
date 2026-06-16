@@ -4,6 +4,7 @@ import { NTag } from 'naive-ui';
 import type { SelectOption } from 'naive-ui';
 import type { SelectedElement } from '../composables/useMapEditor';
 import { fetchGetLatestRobotStatus, fetchGetRobotList, fetchUpdateRobot } from '@/service/api';
+import { radToDeg, degToRad } from '@/utils/coordinate';
 
 interface Props {
   editorData: Api.Scene.EditorMapData | null;
@@ -90,6 +91,19 @@ const pointTypeOptions = [
 function updateAnnotation(field: string, value: any) {
   if (!selectedAnnotation.value) return;
   emit('update-element', { type: 'annotation', id: selectedAnnotation.value.id, updates: { [field]: value } });
+}
+
+// angle 在数据层是弧度，UI 用度数（0-359）
+const annotationAngleDeg = computed(() => {
+  if (!selectedAnnotation.value) return 0;
+  let deg = Math.round(radToDeg(selectedAnnotation.value.angle || 0));
+  // 规范化到 0~359
+  deg = ((deg % 360) + 360) % 360;
+  return deg;
+});
+
+function updateAnnotationAngleFromDeg(deg: number) {
+  updateAnnotation('angle', degToRad(deg));
 }
 
 function pixelToMeter(px: number): number {
@@ -310,7 +324,8 @@ onMounted(() => {
                 <NInputNumber :value="toWorldY(selectedAnnotation.y)" :step="0.1" disabled size="small" class="w-full" />
               </NFormItem>
               <NFormItem label="角度">
-                <NSlider :value="selectedAnnotation.angle" :min="0" :max="360" :step="1" @update:value="v => updateAnnotation('angle', v)" />
+                <NSlider :value="annotationAngleDeg" :min="0" :max="359" :step="1" :format-tooltip="(v: number) => `${v}°`"
+                  @update:value="updateAnnotationAngleFromDeg" />
               </NFormItem>
             </NForm>
             <NButton type="error" size="small" block @click="emit('remove-element', 'annotation', selectedAnnotation.id)">删除此点位</NButton>
