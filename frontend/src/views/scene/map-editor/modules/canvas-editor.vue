@@ -948,23 +948,27 @@ function findAnnotationAtPoint(x: number, y: number): Api.Scene.SceneMapAnnotati
   return null;
 }
 
+function findElementAtScenePoint(x: number, y: number): { type: 'annotation' | 'object'; id: number } | null {
+  if (!fabricCanvas) return null;
+  const point = new Point(x, y);
+  // annotation 在视觉顶层，优先匹配；其次 object
+  for (const layer of ['annotation', 'object'] as const) {
+    for (const [key, obj] of elementMap) {
+      if (!key.startsWith(layer + '-')) continue;
+      if (typeof obj.containsPoint === 'function' && obj.containsPoint(point)) {
+        const data = getElementData(obj);
+        if (data) return { type: layer, id: data.id };
+      }
+    }
+  }
+  return null;
+}
+
 function handleContextMenu(evt: MouseEvent) {
   if (!fabricCanvas) return;
   evt.preventDefault();
   const pointer = fabricCanvas.getScenePoint(evt);
-  // 优先用 fabric 命中检测，没有再按坐标查 annotation
-  let target: { type: 'annotation' | 'object'; id: number } | null = null;
-  const active = fabricCanvas.findTarget(evt) as any;
-  if (active) {
-    const data = getElementData(active);
-    if (data && (data.type === 'annotation' || data.type === 'object')) {
-      target = { type: data.type, id: data.id };
-    }
-  }
-  if (!target) {
-    const ann = findAnnotationAtPoint(pointer.x, pointer.y);
-    if (ann) target = { type: 'annotation', id: ann.id };
-  }
+  const target = findElementAtScenePoint(pointer.x, pointer.y);
   emit('context-menu', {
     x: pointer.x,
     y: pointer.y,
