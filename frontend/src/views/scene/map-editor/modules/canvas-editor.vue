@@ -321,8 +321,8 @@ function syncStructure() {
       fabricCanvas.add(fabricObj);
       elementMap.set(key, fabricObj);
 
-      // 类型标签（"障碍物" / "禁区"），不可交互，跟随图形位置
-      const labelText = new Text(isRestricted ? '禁区' : '障碍物', {
+      // 名称标签（不可交互，跟随图形位置）
+      const labelText = new Text(obj.name || '', {
         fontSize: 10,
         fill: strokeColor,
         originX: 'center',
@@ -493,6 +493,14 @@ function updateSelectionStyle() {
     if (deco) {
       deco.text.set('text', ann.name);
       deco.text.set('fill', annColor);
+    }
+  }
+
+  // 同步 object 的 name 文本（改名后立即刷新）
+  for (const obj of props.editorData.objects) {
+    const label = objectLabels.get(obj.id);
+    if (label) {
+      label.set('text', obj.name || '');
     }
   }
 }

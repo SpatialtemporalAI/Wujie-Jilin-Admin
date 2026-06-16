@@ -219,11 +219,10 @@ function handleContextMenuSelect(key: string) {
 
   if (key === 'add-obstacle-circle' || key === 'add-obstacle-triangle' || key === 'add-obstacle-square') {
     const type = key.replace('add-', '');
-    const shapeName = type.replace('obstacle-', '');
     const count = (editor.editorData.value?.objects.filter(o => o.type.startsWith('obstacle-')).length || 0) + 1;
     editor.addObject({
       type,
-      name: `障碍物${count}(${shapeName})`,
+      name: `障碍物${count}`,
       x: x - 2.5,
       y: y - 2.5,
       width: 5,
