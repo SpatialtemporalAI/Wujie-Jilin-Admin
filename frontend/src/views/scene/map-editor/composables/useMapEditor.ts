@@ -257,6 +257,7 @@ export function useMapEditor() {
           width: o.width,
           height: o.height,
           points: o.points,
+          angle: o.angle ?? 0,
         })),
         deleted_annotation_ids: [...deletedAnnotationIds],
         deleted_path_ids: [...deletedPathIds],
@@ -324,7 +325,7 @@ export function useMapEditor() {
     recordHistory(`批量添加${annotations.length}个点位`);
   }
 
-  function addObject(obj: { type: string; name?: string | null; x: number; y: number; width: number; height: number; points: string | null }) {
+  function addObject(obj: { type: string; name?: string | null; x: number; y: number; width: number; height: number; points: string | null; angle?: number }) {
     if (!editorData.value) return;
     const newId = -(Date.now());
     const newItem = {
@@ -337,6 +338,7 @@ export function useMapEditor() {
       width: obj.width,
       height: obj.height,
       points: obj.points,
+      angle: obj.angle ?? 0,
       created_by: '',
       updated_by: '',
       status: null,

@@ -156,6 +156,7 @@ class SceneMapEditorService:
                     obj.width = item.width
                     obj.height = item.height
                     obj.points = item.points
+                    obj.angle = item.angle
             else:
                 obj = SceneMapObject(
                     map_id=map_id,
@@ -166,6 +167,7 @@ class SceneMapEditorService:
                     width=item.width,
                     height=item.height,
                     points=item.points,
+                    angle=item.angle,
                 )
                 db.add(obj)
 

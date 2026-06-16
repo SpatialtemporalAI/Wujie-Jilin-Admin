@@ -323,6 +323,7 @@ function syncStructure() {
     const commonOpts = {
       left: obj.x, top: obj.y,
       originX: 'left' as const, originY: 'top' as const,
+      angle: obj.angle ?? 0,
       fill: fillColor, stroke: strokeColor, strokeWidth: 2,
       hasControls: true,
     };
@@ -500,7 +501,7 @@ function updatePositions() {
     const key = getElementKey('object', obj.id);
     const fabricObj = elementMap.get(key);
     if (!fabricObj) continue;
-    fabricObj.set({ left: obj.x, top: obj.y });
+    fabricObj.set({ left: obj.x, top: obj.y, angle: obj.angle ?? 0 });
     if (fabricObj instanceof Ellipse) {
       fabricObj.set({ rx: (obj.width || 10) / 2, ry: (obj.height || 10) / 2 });
     } else if (fabricObj instanceof Rect || fabricObj instanceof Triangle) {
@@ -509,9 +510,8 @@ function updatePositions() {
     fabricObj.setCoords();
     const label = objectLabels.get(obj.id);
     if (label) {
-      const w = obj.width || 5;
-      const h = obj.height || w;
-      label.set({ left: obj.x + w / 2, top: obj.y + h + 12 });
+      const bounds = fabricObj.getBoundingRect();
+      label.set({ left: bounds.left + bounds.width / 2, top: bounds.top + bounds.height + 12 });
       label.setCoords();
     }
   }
@@ -935,6 +935,8 @@ function handleObjectModifiedied(opt: any) {
   updates.y = obj.top;
 
   if (data.type === 'object') {
+    // 旋转角度始终保存
+    updates.angle = obj.angle ?? 0;
     // 应用 scale 到 width/height，并对最小尺寸做 clamp（最小 1×1 px）
     if (obj instanceof Ellipse) {
       const newRx = Math.max(MIN_OBJECT_SIZE / 2, (obj.rx ?? 1) * (obj.scaleX ?? 1));

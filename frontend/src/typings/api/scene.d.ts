@@ -136,6 +136,8 @@ declare namespace Api {
       height: number;
       /** polygon points (JSON) */
       points: string | null;
+      /** rotation angle (degrees) */
+      angle: number;
     }>;
 
     /** scene map object list */
@@ -151,6 +153,7 @@ declare namespace Api {
       width?: number;
       height?: number;
       points?: string | null;
+      angle?: number;
     };
 
     /** scene map object update */
@@ -214,6 +217,7 @@ declare namespace Api {
       width: number;
       height: number;
       points?: string | null;
+      angle?: number;
     };
 
     /** editor save request */

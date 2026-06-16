@@ -62,6 +62,7 @@ class SceneMapObjectService:
             width=object_create.width,
             height=object_create.height,
             points=object_create.points,
+            angle=object_create.angle,
         )
         db.add(obj)
         await db.flush()

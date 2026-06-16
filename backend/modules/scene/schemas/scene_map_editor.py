@@ -41,6 +41,7 @@ class EditorObjectItem(BaseModel):
     width: float = Field(0, description="宽度")
     height: float = Field(0, description="高度")
     points: str | None = Field(None, description="多边形顶点(JSON数组)")
+    angle: float = Field(0, description="旋转角度(度)")
 
 
 class EditorSaveRequest(BaseModel):
@@ -95,6 +96,7 @@ class EditorMapObjectResponse(BaseRespEntity):
     width: float
     height: float
     points: str | None
+    angle: float
 
 
 class EditorMapDataResponse(BaseModel):
