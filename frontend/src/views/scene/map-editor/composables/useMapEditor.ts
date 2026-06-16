@@ -185,15 +185,16 @@ export function useMapEditor() {
     }))
   );
 
-  function validateBeforeSave(): string[] {
+  function validateBeforeSave(): { errors: string[]; warnings: string[] } {
     const errors: string[] = [];
+    const warnings: string[] = [];
     if (!editorData.value) {
       errors.push('未加载地图数据');
-      return errors;
+      return { errors, warnings };
     }
     const annotations = editorData.value.annotations;
     if (annotations.length === 0) {
-      return errors;
+      return { errors, warnings };
     }
     const hasNav = annotations.some(a => a.type === 'navigation' || a.type === '返回点');
     if (!hasNav) {
@@ -206,21 +207,25 @@ export function useMapEditor() {
         const dyPx = Math.abs(annotations[i].y - annotations[j].y);
         const distM = Math.sqrt(dxPx * dxPx + dyPx * dyPx) * resolution.value;
         if (distM < minDist) {
-          errors.push(`标注 "${annotations[i].name}" 和 "${annotations[j].name}" 间距小于 ${minDist}m`);
+          warnings.push(`标注 "${annotations[i].name}" 和 "${annotations[j].name}" 间距小于 ${minDist}m`);
           break;
         }
       }
-      if (errors.length > 5) break;
+      if (warnings.length > 5) break;
     }
-    return errors;
+    return { errors, warnings };
   }
 
   async function saveMap(options?: { silent?: boolean }): Promise<boolean> {
     if (!editorData.value || !selectedMapId.value) return false;
-    const errors = validateBeforeSave();
+    const { errors, warnings } = validateBeforeSave();
     if (errors.length > 0) {
       window.$message?.error(errors[0]);
       return false;
+    }
+    // 间距不足仅警告，不阻断保存
+    if (!options?.silent) {
+      warnings.forEach(w => window.$message?.warning(w));
     }
     saving.value = true;
     try {
