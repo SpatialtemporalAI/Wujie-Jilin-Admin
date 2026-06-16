@@ -262,9 +262,7 @@ function syncStructure() {
     const startAnn = props.editorData.annotations.find(a => a.id === path.start_annotation_id);
     const endAnn = props.editorData.annotations.find(a => a.id === path.end_annotation_id);
     if (!startAnn || !endAnn) continue;
-    const startPx = worldToCanvasPoint(startAnn.x, startAnn.y);
-    const endPx = worldToCanvasPoint(endAnn.x, endAnn.y);
-    const line = new Line([startPx.x, startPx.y, endPx.x, endPx.y], {
+    const line = new Line([startAnn.x, startAnn.y, endAnn.x, endAnn.y], {
       stroke: '#f97316',
       strokeWidth: 3,
       selectable: false,
@@ -395,14 +393,13 @@ function updatePositions() {
     const key = getElementKey('annotation', ann.id);
     const circle = elementMap.get(key);
     if (!circle) continue;
-    const px = worldToCanvasPoint(ann.x, ann.y);
-    circle.set({ left: px.x, top: px.y });
+    circle.set({ left: ann.x, top: ann.y });
     circle.setCoords();
     const deco = annotationDecorations.get(ann.id);
     if (deco) {
-      deco.text.set({ left: px.x, top: px.y + 18 });
+      deco.text.set({ left: ann.x, top: ann.y + 18 });
       deco.text.setCoords();
-      deco.angleIndicator.set({ left: px.x, top: px.y - 16 });
+      deco.angleIndicator.set({ left: ann.x, top: ann.y - 16 });
       deco.angleIndicator.setCoords();
     }
   }
@@ -414,9 +411,7 @@ function updatePositions() {
     const startAnn = props.editorData.annotations.find(a => a.id === path.start_annotation_id);
     const endAnn = props.editorData.annotations.find(a => a.id === path.end_annotation_id);
     if (!startAnn || !endAnn) continue;
-    const startPx = worldToCanvasPoint(startAnn.x, startAnn.y);
-    const endPx = worldToCanvasPoint(endAnn.x, endAnn.y);
-    line.set({ x1: startPx.x, y1: startPx.y, x2: endPx.x, y2: endPx.y });
+    line.set({ x1: startAnn.x, y1: startAnn.y, x2: endAnn.x, y2: endAnn.y });
     line.setCoords();
   }
 
@@ -675,18 +670,16 @@ function handleMouseDown(opt: any) {
 
   if (props.drawingMode === 'select') return;
 
-  const pointer = fabricCanvas.getViewportPoint(evt);
+  const pointer = fabricCanvas.getScenePoint(evt);
   const x = pointer.x;
   const y = pointer.y;
 
   if (props.drawingMode === 'point-nav') {
-    const world = canvasPointToWorld(x, y);
-    emit('add-annotation', { x: world.x, y: world.y, type: 'navigation' });
+    emit('add-annotation', { x, y, type: 'navigation' });
     return;
   }
   if (props.drawingMode === 'point-recv') {
-    const world = canvasPointToWorld(x, y);
-    emit('add-annotation', { x: world.x, y: world.y, type: 'reception' });
+    emit('add-annotation', { x, y, type: 'reception' });
     return;
   }
   if (props.drawingMode === 'path') {
@@ -720,7 +713,7 @@ function handleMouseDown(opt: any) {
 function handleMouseMove(opt: any) {
   if (!fabricCanvas) return;
   const evt = opt.e as MouseEvent;
-  const pointer = fabricCanvas.getViewportPoint(evt);
+  const pointer = fabricCanvas.getScenePoint(evt);
 
   if (isPanning) {
     const dx = evt.clientX - lastPanPoint.x;
@@ -767,7 +760,7 @@ function handleMouseUp(opt: any) {
     return;
   }
   if (drawingState?.type === 'rect' && fabricCanvas) {
-    const pointer = fabricCanvas.getViewportPoint(opt.e);
+    const pointer = fabricCanvas.getScenePoint(opt.e);
     const x = Math.min(drawingState.startX, pointer.x);
     const y = Math.min(drawingState.startY, pointer.y);
     const w = Math.abs(pointer.x - drawingState.startX);
@@ -818,14 +811,8 @@ function handleObjectModifiedied(opt: any) {
   obj.setCoords();
 
   const updates: Record<string, any> = {};
-  if (data.type === 'annotation') {
-    const world = canvasPointToWorld(obj.left!, obj.top!);
-    updates.x = world.x;
-    updates.y = world.y;
-  } else {
-    updates.x = obj.left;
-    updates.y = obj.top;
-  }
+  updates.x = obj.left;
+  updates.y = obj.top;
   if (data.type === 'object' && obj instanceof Rect) {
     updates.width = obj.width * obj.scaleX;
     updates.height = obj.height * obj.scaleY;
@@ -873,8 +860,7 @@ function findAnnotationAtPoint(x: number, y: number): Api.Scene.SceneMapAnnotati
   if (!props.editorData) return null;
   const threshold = 15;
   for (const ann of props.editorData.annotations) {
-    const pos = worldToCanvasPoint(ann.x, ann.y);
-    if (Math.abs(pos.x - x) < threshold && Math.abs(pos.y - y) < threshold) return ann;
+    if (Math.abs(ann.x - x) < threshold && Math.abs(ann.y - y) < threshold) return ann;
   }
   return null;
 }
@@ -1096,12 +1082,11 @@ function zoomReset() {
   emit('zoom-change', 1);
 }
 
-function locateMeterPoint(x: number, y: number) {
+function locatePixelPoint(x: number, y: number) {
   if (!fabricCanvas) return;
-  const pixel = worldToCanvasPoint(x, y);
   const zoom = Math.max(currentZoom, MIN_ZOOM);
-  const offsetX = containerWidth.value / 2 - pixel.x * zoom;
-  const offsetY = containerHeight.value / 2 - pixel.y * zoom;
+  const offsetX = containerWidth.value / 2 - x * zoom;
+  const offsetY = containerHeight.value / 2 - y * zoom;
   fabricCanvas.setViewportTransform([zoom, 0, 0, zoom, offsetX, offsetY]);
   fabricCanvas.renderAll();
   updateMinimap();
@@ -1117,7 +1102,7 @@ function handleSliderZoom(val: number) {
   emit('zoom-change', newZoom);
 }
 
-defineExpose({ exportCanvas, zoomIn, zoomOut, zoomReset, locateMeterPoint });
+defineExpose({ exportCanvas, zoomIn, zoomOut, zoomReset, locatePixelPoint });
 </script>
 
 <template>

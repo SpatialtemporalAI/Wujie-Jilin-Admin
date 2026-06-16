@@ -197,7 +197,8 @@ async function handleLocateRobot(data: { mapId: number; x: number; y: number }) 
     await editor.loadMap(data.mapId);
   }
   await nextTick();
-  canvasRef.value?.locateMeterPoint(data.x, data.y);
+  const px = editor.worldToPixelCoords(data.x, data.y);
+  canvasRef.value?.locatePixelPoint(px.x, px.y);
 }
 
 function handleCursorPosition(x: number, y: number) {
@@ -209,7 +210,7 @@ function handleFocusAnnotation(id: number) {
   if (!editor.editorData.value) return;
   const ann = editor.editorData.value.annotations.find(a => a.id === id);
   if (!ann) return;
-  canvasRef.value?.locateMeterPoint(ann.x, ann.y);
+  canvasRef.value?.locatePixelPoint(ann.x, ann.y);
 }
 </script>
 

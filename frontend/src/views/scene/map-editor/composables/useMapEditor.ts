@@ -56,12 +56,15 @@ export function useMapEditor() {
 
   function pixelToWorldCoords(px: number, py: number) {
     const map = editorData.value?.map;
-    return pixelToWorld(px, py, map?.start_point_x ?? 0, map?.start_point_y ?? 0, resolution.value);
+    const h = map?.height ?? 0;
+    return pixelToWorld(px, h - py, map?.start_point_x ?? 0, map?.start_point_y ?? 0, resolution.value);
   }
 
   function worldToPixelCoords(wx: number, wy: number) {
     const map = editorData.value?.map;
-    return worldToPixel(wx, wy, map?.start_point_x ?? 0, map?.start_point_y ?? 0, resolution.value);
+    const h = map?.height ?? 0;
+    const px = worldToPixel(wx, wy, map?.start_point_x ?? 0, map?.start_point_y ?? 0, resolution.value);
+    return { x: px.x, y: h - px.y };
   }
 
   async function loadSceneList() {
@@ -81,6 +84,11 @@ export function useMapEditor() {
       const { data } = await fetchGetEditorMapData(mapId);
       if (data) {
         editorData.value = data;
+        for (const ann of data.annotations) {
+          const p = worldToPixelCoords(ann.x, ann.y);
+          ann.x = p.x;
+          ann.y = p.y;
+        }
         selectedMapId.value = mapId;
         selectedElement.value = null;
         isDirty.value = false;
@@ -194,10 +202,10 @@ export function useMapEditor() {
     const minDist = 0.5;
     for (let i = 0; i < annotations.length; i++) {
       for (let j = i + 1; j < annotations.length; j++) {
-        const dx = Math.abs(annotations[i].x - annotations[j].x);
-        const dy = Math.abs(annotations[i].y - annotations[j].y);
-        const dist = Math.sqrt(dx * dx + dy * dy);
-        if (dist < minDist) {
+        const dxPx = Math.abs(annotations[i].x - annotations[j].x);
+        const dyPx = Math.abs(annotations[i].y - annotations[j].y);
+        const distM = Math.sqrt(dxPx * dxPx + dyPx * dyPx) * resolution.value;
+        if (distM < minDist) {
           errors.push(`标注 "${annotations[i].name}" 和 "${annotations[j].name}" 间距小于 ${minDist}m`);
           break;
         }
@@ -223,14 +231,17 @@ export function useMapEditor() {
       ]);
 
       await fetchSaveEditorData(selectedMapId.value, {
-        annotations: editorData.value.annotations.map(a => ({
-          id: a.id > 0 ? a.id : null,
-          x: a.x,
-          y: a.y,
-          name: a.name,
-          angle: a.angle,
-          type: a.type,
-        })),
+        annotations: editorData.value.annotations.map(a => {
+          const w = pixelToWorldCoords(a.x, a.y);
+          return {
+            id: a.id > 0 ? a.id : null,
+            x: w.x,
+            y: w.y,
+            name: a.name,
+            angle: a.angle,
+            type: a.type,
+          };
+        }),
         paths: editorData.value.paths.map(p => ({
           id: p.id > 0 ? p.id : null,
           start_annotation_id: p.start_annotation_id,
