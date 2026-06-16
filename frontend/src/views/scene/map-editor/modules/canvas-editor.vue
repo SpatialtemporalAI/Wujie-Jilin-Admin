@@ -441,21 +441,23 @@ function syncStructure() {
     if (!existingKeys.has(key)) {
       fabricCanvas.remove(obj);
       elementMap.delete(key);
-      const [type, idStr] = key.split('-');
+      // key 形如 'object--1699876543210'（id 为负数），不能用 split('-')
+      const dashIdx = key.indexOf('-');
+      const type = key.substring(0, dashIdx);
+      const idStr = key.substring(dashIdx + 1);
+      const elemId = Number(idStr);
       if (type === 'annotation') {
-        const annId = Number(idStr);
-        const deco = annotationDecorations.get(annId);
+        const deco = annotationDecorations.get(elemId);
         if (deco) {
           fabricCanvas.remove(deco.text);
           fabricCanvas.remove(deco.angleIndicator);
-          annotationDecorations.delete(annId);
+          annotationDecorations.delete(elemId);
         }
       } else if (type === 'object') {
-        const objId = Number(idStr);
-        const label = objectLabels.get(objId);
+        const label = objectLabels.get(elemId);
         if (label) {
           fabricCanvas.remove(label);
-          objectLabels.delete(objId);
+          objectLabels.delete(elemId);
         }
       }
     }
