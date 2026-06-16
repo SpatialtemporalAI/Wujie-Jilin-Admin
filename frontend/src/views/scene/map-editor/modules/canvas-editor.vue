@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { ref, computed, onMounted, onBeforeUnmount, watch, nextTick } from 'vue';
-import { Canvas, Circle, Rect, Polygon, Line, Group, Text, FabricImage, Triangle, Ellipse, Point } from 'fabric';
+import { Canvas, Circle, Rect, Polygon, Line, Group, Text, FabricImage, Triangle, Ellipse, Pattern, Point } from 'fabric';
 import { getFilePreviewUrl } from '@/service/api/file';
 import { pixelToWorld, worldToPixel } from '@/utils/coordinate';
 import type { SelectedElement } from '../composables/useMapEditor';
@@ -27,6 +27,7 @@ const emit = defineEmits<{
   (e: 'context-menu', data: { x: number; y: number; clientX: number; clientY: number; target: { type: 'annotation' | 'object'; id: number } | null }): void;
   (e: 'request-type-switch', data: { id: number; clientX: number; clientY: number }): void;
   (e: 'rename-element', data: { type: 'annotation' | 'object'; id: number }): void;
+  (e: 'blank-click'): void;
 }>();
 
 const canvasContainer = ref<HTMLDivElement>();
@@ -45,6 +46,10 @@ let originMarker: Group | null = null;
 const minimapImageUrl = ref('');
 const minimapRect = ref({ x: 0, y: 0, w: 0, h: 0 });
 const MINIMAP_SIZE = 180;
+
+// 鼠标世界坐标（显示在 minimap 上方）
+const cursorWorldX = ref(0);
+const cursorWorldY = ref(0);
 
 const minimapScale = computed(() => {
   const mw = canvasWidth.value;
@@ -164,6 +169,40 @@ let minimapRafId: number | null = null;
 const MIN_OBJECT_SIZE = 1;
 const CLICK_MOVE_THRESHOLD = 5;
 
+// 障碍物 / 禁区 / 点位 颜色
+const OBSTACLE_FILL = 'rgba(59, 130, 246, 0.3)';
+const OBSTACLE_STROKE = '#3b82f6';
+const RESTRICTED_STROKE = '#6b7280';
+
+function createRestrictedPattern(): Pattern {
+  const size = 8;
+  const canvas = document.createElement('canvas');
+  canvas.width = size;
+  canvas.height = size;
+  const ctx = canvas.getContext('2d')!;
+  // 浅灰底
+  ctx.fillStyle = 'rgba(107, 114, 128, 0.12)';
+  ctx.fillRect(0, 0, size, size);
+  // 灰色斜线
+  ctx.strokeStyle = 'rgba(107, 114, 128, 0.6)';
+  ctx.lineWidth = 1;
+  ctx.beginPath();
+  ctx.moveTo(0, size);
+  ctx.lineTo(size, 0);
+  ctx.stroke();
+  ctx.beginPath();
+  ctx.moveTo(-size, size);
+  ctx.lineTo(size, -size);
+  ctx.stroke();
+  return new Pattern({ source: canvas, repeat: 'repeat' });
+}
+
+let restrictedPattern: Pattern | null = null;
+function getRestrictedPattern(): Pattern {
+  if (!restrictedPattern) restrictedPattern = createRestrictedPattern();
+  return restrictedPattern;
+}
+
 const canvasWidth = ref(800);
 const canvasHeight = ref(600);
 const containerWidth = ref(0);
@@ -279,8 +318,8 @@ function syncStructure() {
     if (elementMap.has(key)) continue;
 
     const isRestricted = obj.type === 'restricted' || obj.type === '禁区';
-    const fillColor = isRestricted ? 'rgba(234, 179, 8, 0.3)' : 'rgba(239, 68, 68, 0.3)';
-    const strokeColor = isRestricted ? '#eab308' : '#ef4444';
+    const fillColor: any = isRestricted ? getRestrictedPattern() : OBSTACLE_FILL;
+    const strokeColor = isRestricted ? RESTRICTED_STROKE : OBSTACLE_STROKE;
     const commonOpts = {
       left: obj.x, top: obj.y,
       originX: 'left' as const, originY: 'top' as const,
@@ -347,7 +386,7 @@ function syncStructure() {
     if (elementMap.has(key)) continue;
 
     const isSelected = props.selectedElement?.type === 'annotation' && props.selectedElement?.id === ann.id;
-    const annColor = isSelected ? '#3b82f6' : '#ef4444';
+    const annColor = isSelected ? '#16a34a' : '#22c55e';
 
     // 可交互的 circle（拖动入口）
     const circle = new Circle({
@@ -486,7 +525,7 @@ function updateSelectionStyle() {
     const circle = elementMap.get(key) as Circle | undefined;
     if (!circle) continue;
     const isSelected = sel?.type === 'annotation' && sel?.id === ann.id;
-    const annColor = isSelected ? '#3b82f6' : '#ef4444';
+    const annColor = isSelected ? '#16a34a' : '#22c55e';
     circle.set('fill', annColor);
     circle.set('radius', isSelected ? 10 : 8);
     circle.setCoords();
@@ -731,6 +770,10 @@ function handleMouseDown(opt: any) {
   // 记录按下位置和目标，用于 click vs drag 判定
   mouseDownClientPos = { x: evt.clientX, y: evt.clientY };
   mouseDownTarget = opt.target ?? null;
+  // 点击空白（无目标）时通知外部关闭浮层
+  if (!opt.target) {
+    emit('blank-click');
+  }
 }
 
 function handleMouseMove(opt: any) {
@@ -757,6 +800,8 @@ function handleMouseMove(opt: any) {
   if (cursorEmitRafId === null) {
     cursorEmitRafId = requestAnimationFrame(() => {
       cursorEmitRafId = null;
+      cursorWorldX.value = lastCursorWorld.x;
+      cursorWorldY.value = lastCursorWorld.y;
       emit('cursor-position', lastCursorWorld.x, lastCursorWorld.y);
     });
   }
@@ -1258,6 +1303,13 @@ defineExpose({ exportCanvas, zoomIn, zoomOut, zoomReset, locatePixelPoint });
         -
       </button>
       <div class="text-xs text-gray-500">{{ Math.round(currentZoom * 100) }}%</div>
+    </div>
+
+    <!-- Cursor coordinates (placed above minimap) -->
+    <div v-if="editorData"
+      class="absolute left-12px z-10 rounded bg-black/50 px-8px py-4px text-xs text-white"
+      :style="{ bottom: minimapImageUrl ? `${MINIMAP_SIZE + 24}px` : '12px' }">
+      坐标: {{ cursorWorldX.toFixed(2) }}m, {{ cursorWorldY.toFixed(2) }}m
     </div>
 
     <!-- Minimap navigator -->

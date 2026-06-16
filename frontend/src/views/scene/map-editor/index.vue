@@ -365,10 +365,8 @@ function handleFocusAnnotation(id: number) {
           @select-element="el => (editor.selectedElement.value = el)" @update-element="handleUpdateElement"
           @zoom-change="handleZoomChange" @cursor-position="handleCursorPosition" @undo="editor.undo()"
           @redo="editor.redo()" @context-menu="handleContextMenu"
-          @request-type-switch="handleRequestTypeSwitch" @rename-element="handleRequestRename" />
-        <div class="absolute bottom-8px left-8px rounded bg-black/50 px-8px py-4px text-xs text-white">
-          坐标: {{ cursorX.toFixed(2) }}m, {{ cursorY.toFixed(2) }}m
-        </div>
+          @request-type-switch="handleRequestTypeSwitch" @rename-element="handleRequestRename"
+          @blank-click="typeSwitchShow = false" />
       </div>
 
       <PropertyPanel class="w-380px flex-shrink-0" :editor-data="editor.editorData.value"
@@ -387,7 +385,7 @@ function handleFocusAnnotation(id: number) {
 
     <!-- 点位类型切换 tooltip -->
     <NPopover v-model:show="typeSwitchShow" trigger="manual" placement="top" :x="typeSwitchX" :y="typeSwitchY"
-      :show-arrow="true">
+      :show-arrow="true" @clickoutside="() => (typeSwitchShow = false)">
       <div class="flex gap-6px py-2px">
         <NButton size="tiny" :type="typeSwitchCurrentType === 'navigation' ? 'primary' : 'default'"
           @click="switchAnnotationType('navigation')">
