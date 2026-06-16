@@ -283,6 +283,7 @@ function syncStructure() {
     const strokeColor = isRestricted ? '#eab308' : '#ef4444';
     const commonOpts = {
       left: obj.x, top: obj.y,
+      originX: 'left' as const, originY: 'top' as const,
       fill: fillColor, stroke: strokeColor, strokeWidth: 2,
       hasControls: true,
     };
@@ -299,7 +300,6 @@ function syncStructure() {
       fabricObj = new Circle({
         ...commonOpts,
         radius: w / 2,
-        originX: 'left', originY: 'top',
         startAngle: 0, endAngle: Math.PI * 2,
       });
     } else if (obj.type === 'obstacle-triangle') {
@@ -821,6 +821,15 @@ function handleDoubleClick(opt: any) {
   }
 }
 
+function updateObjectTextPosition(obj: any, id: number) {
+  const text = objectDecorations.get(id);
+  if (!text) return;
+  const w = (obj.width ?? 0) * (obj.scaleX ?? 1);
+  const h = (obj.height ?? 0) * (obj.scaleY ?? 1);
+  text.set({ left: (obj.left ?? 0) + w / 2, top: (obj.top ?? 0) + h + 12 });
+  text.setCoords();
+}
+
 function handleObjectMoved(opt: any) {
   const obj = opt.target;
   if (!obj) return;
@@ -835,12 +844,18 @@ function handleObjectMoved(opt: any) {
       deco.angleIndicator.set({ left: obj.left, top: (obj.top ?? 0) - 16 });
     }
   } else if (data.type === 'object') {
-    const text = objectDecorations.get(data.id);
-    if (text) {
-      const w = (obj.width ?? 0) * (obj.scaleX ?? 1);
-      const h = (obj.height ?? 0) * (obj.scaleY ?? 1);
-      text.set({ left: (obj.left ?? 0) + w / 2, top: (obj.top ?? 0) + h + 12 });
-    }
+    updateObjectTextPosition(obj, data.id);
+  }
+}
+
+function handleObjectScaling(opt: any) {
+  const obj = opt.target;
+  if (!obj) return;
+  const data = getElementData(obj);
+  if (!data) return;
+  if (data.type === 'object') {
+    updateObjectTextPosition(obj, data.id);
+    if (fabricCanvas) fabricCanvas.renderAll();
   }
 }
 
@@ -883,6 +898,11 @@ function handleObjectModifiedied(opt: any) {
 
   isLocalUpdate = true;
   emit('update-element', { type: data.type, id: data.id, updates });
+  // 缩放/拖动结束后立即同步文字位置（watch 被 isLocalUpdate 短路，不会自动刷新）
+  if (data.type === 'object') {
+    updateObjectTextPosition(obj, data.id);
+    if (fabricCanvas) fabricCanvas.renderAll();
+  }
   nextTick(() => { isLocalUpdate = false; });
 }
 
@@ -974,6 +994,7 @@ function setupCanvas() {
   fabricCanvas.on('mouse:dblclick', handleDoubleClick);
   fabricCanvas.on('mouse:wheel', handleMouseWheel);
   fabricCanvas.on('object:moving', handleObjectMoved);
+  fabricCanvas.on('object:scaling', handleObjectScaling);
   fabricCanvas.on('object:modified', handleObjectModifiedied);
   fabricCanvas.on('selection:created', handleObjectSelected);
   fabricCanvas.on('selection:updated', handleObjectSelected);
