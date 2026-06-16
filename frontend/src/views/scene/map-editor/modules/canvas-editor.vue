@@ -24,7 +24,7 @@ const emit = defineEmits<{
   (e: 'cursor-position', x: number, y: number): void;
   (e: 'undo'): void;
   (e: 'redo'): void;
-  (e: 'context-menu', data: { x: number; y: number; clientX: number; clientY: number }): void;
+  (e: 'context-menu', data: { x: number; y: number; clientX: number; clientY: number; target: { type: 'annotation' | 'object'; id: number } | null }): void;
   (e: 'request-type-switch', data: { id: number; clientX: number; clientY: number }): void;
   (e: 'rename-element', data: { type: 'annotation' | 'object'; id: number }): void;
 }>();
@@ -939,15 +939,38 @@ function handleMouseWheel(opt: any) {
   emit('zoom-change', zoom);
 }
 
+function findAnnotationAtPoint(x: number, y: number): Api.Scene.SceneMapAnnotation | null {
+  if (!props.editorData) return null;
+  const threshold = 15;
+  for (const ann of props.editorData.annotations) {
+    if (Math.abs(ann.x - x) < threshold && Math.abs(ann.y - y) < threshold) return ann;
+  }
+  return null;
+}
+
 function handleContextMenu(evt: MouseEvent) {
   if (!fabricCanvas) return;
   evt.preventDefault();
   const pointer = fabricCanvas.getScenePoint(evt);
+  // 优先用 fabric 命中检测，没有再按坐标查 annotation
+  let target: { type: 'annotation' | 'object'; id: number } | null = null;
+  const active = fabricCanvas.findTarget(evt) as any;
+  if (active) {
+    const data = getElementData(active);
+    if (data && (data.type === 'annotation' || data.type === 'object')) {
+      target = { type: data.type, id: data.id };
+    }
+  }
+  if (!target) {
+    const ann = findAnnotationAtPoint(pointer.x, pointer.y);
+    if (ann) target = { type: 'annotation', id: ann.id };
+  }
   emit('context-menu', {
     x: pointer.x,
     y: pointer.y,
     clientX: evt.clientX,
     clientY: evt.clientY,
+    target,
   });
 }
 

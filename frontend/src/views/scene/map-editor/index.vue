@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { nextTick, onMounted, ref } from 'vue';
+import { computed, nextTick, onMounted, ref } from 'vue';
 import { useMapEditor } from './composables/useMapEditor';
 import EditorToolbar from './modules/editor-toolbar.vue';
 import CanvasEditor from './modules/canvas-editor.vue';
@@ -21,8 +21,9 @@ const contextMenuShow = ref(false);
 const contextMenuX = ref(0);
 const contextMenuY = ref(0);
 const contextMenuScenePoint = ref({ x: 0, y: 0 });
+const contextMenuTarget = ref<{ type: 'annotation' | 'object'; id: number } | null>(null);
 
-const contextMenuOptions = [
+const baseContextMenuOptions = [
   { label: '添加点位', key: 'add-point' },
   {
     label: '新增障碍物',
@@ -35,6 +36,20 @@ const contextMenuOptions = [
   },
   { label: '禁行区域', key: 'add-restricted' },
 ];
+
+const contextMenuOptions = computed(() => {
+  if (!contextMenuTarget.value) return baseContextMenuOptions;
+  const target = contextMenuTarget.value;
+  const item = target.type === 'annotation'
+    ? editor.editorData.value?.annotations.find(a => a.id === target.id)
+    : editor.editorData.value?.objects.find(o => o.id === target.id);
+  const name = (item as any)?.name || (target.type === 'annotation' ? '点位' : '对象');
+  return [
+    ...baseContextMenuOptions,
+    { type: 'divider', key: 'divider' },
+    { label: `删除「${name}」`, key: 'delete-target', props: { style: 'color: #ef4444' } },
+  ];
+});
 
 // 改名弹窗状态
 const renameDialogVisible = ref(false);
@@ -192,16 +207,26 @@ async function handleDeleteScene(mapId: number) {
   }
 }
 
-function handleContextMenu(data: { x: number; y: number; clientX: number; clientY: number }) {
+function handleContextMenu(data: { x: number; y: number; clientX: number; clientY: number; target: { type: 'annotation' | 'object'; id: number } | null }) {
   contextMenuScenePoint.value = { x: data.x, y: data.y };
   contextMenuX.value = data.clientX;
   contextMenuY.value = data.clientY;
+  contextMenuTarget.value = data.target;
   contextMenuShow.value = true;
 }
 
 function handleContextMenuSelect(key: string) {
   contextMenuShow.value = false;
   const { x, y } = contextMenuScenePoint.value;
+
+  if (key === 'delete-target') {
+    const target = contextMenuTarget.value;
+    contextMenuTarget.value = null;
+    if (target) {
+      editor.removeElement(target.type, target.id);
+    }
+    return;
+  }
 
   if (key === 'add-point') {
     const count = (editor.editorData.value?.annotations.length || 0) + 1;
@@ -245,6 +270,8 @@ function handleContextMenuSelect(key: string) {
     });
     return;
   }
+
+  contextMenuTarget.value = null;
 }
 
 function handleRequestTypeSwitch(data: { id: number; clientX: number; clientY: number }) {
