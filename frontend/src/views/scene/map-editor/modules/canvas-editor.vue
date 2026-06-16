@@ -872,9 +872,12 @@ function handleDoubleClick(opt: any) {
 function updateObjectLabelPosition(obj: any, id: number) {
   const label = objectLabels.get(id);
   if (!label) return;
-  const w = (obj.width ?? 0) * (obj.scaleX ?? 1);
-  const h = (obj.height ?? 0) * (obj.scaleY ?? 1);
-  label.set({ left: (obj.left ?? 0) + w / 2, top: (obj.top ?? 0) + h + 12 });
+  // 用 getBoundingRect 拿到旋转/缩放后的真实边界，label 跟随 bbox 底部中点
+  const bounds = obj.getBoundingRect();
+  label.set({
+    left: bounds.left + bounds.width / 2,
+    top: bounds.top + bounds.height + 12,
+  });
   label.setCoords();
 }
 
@@ -897,6 +900,17 @@ function handleObjectMoved(opt: any) {
 }
 
 function handleObjectScaling(opt: any) {
+  const obj = opt.target;
+  if (!obj) return;
+  const data = getElementData(obj);
+  if (!data) return;
+  if (data.type === 'object') {
+    updateObjectLabelPosition(obj, data.id);
+    if (fabricCanvas) fabricCanvas.renderAll();
+  }
+}
+
+function handleObjectRotating(opt: any) {
   const obj = opt.target;
   if (!obj) return;
   const data = getElementData(obj);
@@ -1070,6 +1084,7 @@ function setupCanvas() {
   fabricCanvas.on('mouse:wheel', handleMouseWheel);
   fabricCanvas.on('object:moving', handleObjectMoved);
   fabricCanvas.on('object:scaling', handleObjectScaling);
+  fabricCanvas.on('object:rotating', handleObjectRotating);
   fabricCanvas.on('object:modified', handleObjectModifiedied);
   fabricCanvas.on('selection:created', handleObjectSelected);
   fabricCanvas.on('selection:updated', handleObjectSelected);
