@@ -37,7 +37,7 @@ let gridGroup: Group | null = null;
 let backgroundImgObj: FabricImage | null = null;
 let elementMap: Map<string, any> = new Map();
 let annotationDecorations: Map<number, { text: Text; angleIndicator: Triangle }> = new Map();
-let objectDecorations: Map<number, Text> = new Map();
+let objectLabels: Map<number, Text> = new Map();
 let resizeObserver: ResizeObserver | null = null;
 let lastGridSpacingM = 0;
 let originMarker: Group | null = null;
@@ -321,13 +321,12 @@ function syncStructure() {
       fabricCanvas.add(fabricObj);
       elementMap.set(key, fabricObj);
 
-      // 装饰：物体名称（不可交互，纯渲染）
-      const objText = new Text(obj.name || '', {
+      // 类型标签（"障碍物" / "禁区"），不可交互，跟随图形位置
+      const labelText = new Text(isRestricted ? '禁区' : '障碍物', {
         fontSize: 10,
         fill: strokeColor,
         originX: 'center',
         originY: 'center',
-        top: 18,
         fontFamily: 'sans-serif',
         fontWeight: 'bold',
         evented: false,
@@ -335,8 +334,8 @@ function syncStructure() {
         hasControls: false,
         hoverCursor: 'default',
       });
-      fabricCanvas.add(objText);
-      objectDecorations.set(obj.id, objText);
+      fabricCanvas.add(labelText);
+      objectLabels.set(obj.id, labelText);
     }
   }
 
@@ -413,10 +412,10 @@ function syncStructure() {
         }
       } else if (type === 'object') {
         const objId = Number(idStr);
-        const text = objectDecorations.get(objId);
-        if (text) {
-          fabricCanvas.remove(text);
-          objectDecorations.delete(objId);
+        const label = objectLabels.get(objId);
+        if (label) {
+          fabricCanvas.remove(label);
+          objectLabels.delete(objId);
         }
       }
     }
@@ -466,11 +465,12 @@ function updatePositions() {
       fabricObj.set({ width: obj.width, height: obj.height });
     }
     fabricObj.setCoords();
-    const objText = objectDecorations.get(obj.id);
-    if (objText) {
+    const label = objectLabels.get(obj.id);
+    if (label) {
       const w = obj.width || 5;
-      objText.set({ left: obj.x + w / 2, top: obj.y + (obj.height || w) + 12 });
-      objText.setCoords();
+      const h = obj.height || w;
+      label.set({ left: obj.x + w / 2, top: obj.y + h + 12 });
+      label.setCoords();
     }
   }
 }
@@ -493,14 +493,6 @@ function updateSelectionStyle() {
     if (deco) {
       deco.text.set('text', ann.name);
       deco.text.set('fill', annColor);
-    }
-  }
-
-  // 同步 object 的 name 文本（改名后立即刷新）
-  for (const obj of props.editorData.objects) {
-    const text = objectDecorations.get(obj.id);
-    if (text) {
-      text.set('text', obj.name || '');
     }
   }
 }
@@ -821,13 +813,13 @@ function handleDoubleClick(opt: any) {
   }
 }
 
-function updateObjectTextPosition(obj: any, id: number) {
-  const text = objectDecorations.get(id);
-  if (!text) return;
+function updateObjectLabelPosition(obj: any, id: number) {
+  const label = objectLabels.get(id);
+  if (!label) return;
   const w = (obj.width ?? 0) * (obj.scaleX ?? 1);
   const h = (obj.height ?? 0) * (obj.scaleY ?? 1);
-  text.set({ left: (obj.left ?? 0) + w / 2, top: (obj.top ?? 0) + h + 12 });
-  text.setCoords();
+  label.set({ left: (obj.left ?? 0) + w / 2, top: (obj.top ?? 0) + h + 12 });
+  label.setCoords();
 }
 
 function handleObjectMoved(opt: any) {
@@ -844,7 +836,7 @@ function handleObjectMoved(opt: any) {
       deco.angleIndicator.set({ left: obj.left, top: (obj.top ?? 0) - 16 });
     }
   } else if (data.type === 'object') {
-    updateObjectTextPosition(obj, data.id);
+    updateObjectLabelPosition(obj, data.id);
   }
 }
 
@@ -854,7 +846,7 @@ function handleObjectScaling(opt: any) {
   const data = getElementData(obj);
   if (!data) return;
   if (data.type === 'object') {
-    updateObjectTextPosition(obj, data.id);
+    updateObjectLabelPosition(obj, data.id);
     if (fabricCanvas) fabricCanvas.renderAll();
   }
 }
@@ -898,9 +890,9 @@ function handleObjectModifiedied(opt: any) {
 
   isLocalUpdate = true;
   emit('update-element', { type: data.type, id: data.id, updates });
-  // 缩放/拖动结束后立即同步文字位置（watch 被 isLocalUpdate 短路，不会自动刷新）
+  // 拖动/缩放结束后立即同步标签位置（watch 被 isLocalUpdate 短路，不会自动刷新）
   if (data.type === 'object') {
-    updateObjectTextPosition(obj, data.id);
+    updateObjectLabelPosition(obj, data.id);
     if (fabricCanvas) fabricCanvas.renderAll();
   }
   nextTick(() => { isLocalUpdate = false; });
@@ -1037,7 +1029,7 @@ function disposeCanvas() {
   }
   elementMap.clear();
   annotationDecorations.clear();
-  objectDecorations.clear();
+  objectLabels.clear();
   originMarker = null;
   lastGridSpacingM = 0;
   isDraggingObject = false;
@@ -1065,10 +1057,10 @@ watch(() => props.editorData, async (newData) => {
     fabricCanvas?.remove(angleIndicator);
   }
   annotationDecorations.clear();
-  for (const text of objectDecorations.values()) {
-    fabricCanvas?.remove(text);
+  for (const label of objectLabels.values()) {
+    fabricCanvas?.remove(label);
   }
-  objectDecorations.clear();
+  objectLabels.clear();
   if (originMarker) {
     fabricCanvas?.remove(originMarker);
     originMarker = null;
