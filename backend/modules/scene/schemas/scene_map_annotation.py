@@ -16,7 +16,7 @@ class SceneMapAnnotationCreate(BaseReqEntity):
     x: float = Field(..., description="X坐标")
     y: float = Field(..., description="Y坐标")
     name: str = Field(..., description="标注名称")
-    angle: float = Field(0, description="角度(度)")
+    angle: float = Field(0, description="角度(弧度)")
     type: str = Field(..., description="标注类型(字典值)")
 
 
@@ -26,7 +26,7 @@ class SceneMapAnnotationUpdate(BaseReqEntity):
     x: float | None = Field(None, description="X坐标")
     y: float | None = Field(None, description="Y坐标")
     name: str | None = Field(None, description="标注名称")
-    angle: float | None = Field(None, description="角度(度)")
+    angle: float | None = Field(None, description="角度(弧度)")
     type: str | None = Field(None, description="标注类型(字典值)")
 
 

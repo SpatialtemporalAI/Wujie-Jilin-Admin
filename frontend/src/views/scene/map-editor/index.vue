@@ -6,6 +6,7 @@ import CanvasEditor from './modules/canvas-editor.vue';
 import PropertyPanel from './modules/property-panel.vue';
 import { fetchCreateSceneMap } from '@/service/api/scene';
 import { fetchUploadFile, getFilePreviewUrl } from '@/service/api/file';
+import { degToRad, radToDeg } from '@/utils/coordinate';
 
 defineOptions({ name: 'SceneMapEditor' });
 
@@ -186,7 +187,7 @@ async function confirmAddScene() {
         x: 0,
         y: 0,
         name: '起始点位',
-        angle: startPoint.angle,
+        angle: degToRad(startPoint.angle || 0),
         type: 'navigation',
       });
       await editor.saveMap({ silent: true });

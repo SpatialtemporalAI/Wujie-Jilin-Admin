@@ -2,7 +2,7 @@
 import { ref, computed, onMounted, onBeforeUnmount, watch, nextTick } from 'vue';
 import { Canvas, Circle, Rect, Polygon, Line, Group, Text, FabricImage, Triangle, Ellipse, Pattern, Point } from 'fabric';
 import { getFilePreviewUrl } from '@/service/api/file';
-import { pixelToWorld, worldToPixel } from '@/utils/coordinate';
+import { pixelToWorld, worldToPixel, radToDeg, degToRad } from '@/utils/coordinate';
 import type { SelectedElement } from '../composables/useMapEditor';
 import { fetchGetSceneMapList } from '@/service/api';
 interface Props {
@@ -172,20 +172,26 @@ const ARROW_WIDTH = 6;
 const ARROW_HEIGHT = 8;
 
 /**
- * 计算点位方向箭头的位置和旋转角度（ROS 度数 → Fabric）
- * - ROS 角度：0° 朝东（右），90° 朝北（上），180° 朝西（左），逆时针为正
+ * 计算点位方向箭头的位置和旋转角度（ROS 弧度 → Fabric）
+ * - ROS 弧度：0 朝东（右），π/2 朝北（上），π 朝西（左），逆时针为正
  * - Fabric Triangle 默认顶点朝上、顺时针为正
  * - 箭头底部贴合圆形边缘、顶点指向角度方向
  */
-function getAnnotationArrowTransform(annX: number, annY: number, rosDeg: number, radius: number) {
-  const rad = rosDeg * Math.PI / 180;
-  // 让箭头底部刚好贴圆形边缘外侧
+function getAnnotationArrowTransform(annX: number, annY: number, rosRad: number, radius: number) {
   const dist = radius + ARROW_HEIGHT / 2;
   return {
-    x: annX + dist * Math.cos(rad),
-    y: annY - dist * Math.sin(rad),
-    angle: 90 - rosDeg,
+    x: annX + dist * Math.cos(rosRad),
+    y: annY - dist * Math.sin(rosRad),
+    angle: -radToDeg(rosRad) + 90,
   };
+}
+
+/**
+ * Fabric 圆形旋转角度（度） → ROS 弧度
+ * 反推公式：rosRad = (90 - fabricAngle) * π / 180
+ */
+function fabricAngleToAnnotationRad(fabricAngle: number): number {
+  return degToRad(90 - fabricAngle);
 }
 
 // 障碍物 / 禁区 / 点位 颜色
@@ -408,7 +414,7 @@ function syncStructure() {
     const isSelected = props.selectedElement?.type === 'annotation' && props.selectedElement?.id === ann.id;
     const annColor = isSelected ? '#16a34a' : '#22c55e';
 
-    // 可交互的 circle（拖动入口）
+    // 可交互的 circle（拖动 + 旋转入口）
     const circle = new Circle({
       radius: isSelected ? 10 : 8,
       fill: annColor,
@@ -416,7 +422,17 @@ function syncStructure() {
       strokeWidth: 2,
       originX: 'center',
       originY: 'center',
-      hasControls: false,
+      hasControls: true,
+      hasRotatingPoint: true,
+      lockScalingX: true,
+      lockScalingY: true,
+      lockUniScaling: true,
+    });
+    // 只保留旋转控制点，禁用所有缩放控制点
+    circle.setControlsVisibility({
+      ml: false, mr: false, mt: false, mb: false,
+      tl: false, tr: false, bl: false, br: false,
+      mtr: true,
     });
     setElementData(circle, { type: 'annotation', id: ann.id });
     fabricCanvas.add(circle);
@@ -958,8 +974,26 @@ function handleObjectRotating(opt: any) {
   if (!data) return;
   if (data.type === 'object') {
     updateObjectLabelPosition(obj, data.id);
-    if (fabricCanvas) fabricCanvas.renderAll();
+  } else if (data.type === 'annotation') {
+    // 点位旋转时实时同步箭头位置和角度
+    const deco = annotationDecorations.get(data.id);
+    if (deco) {
+      const rad = fabricAngleToAnnotationRad(obj.angle ?? 0);
+      const isSelected = props.selectedElement?.type === 'annotation' && props.selectedElement?.id === data.id;
+      const transform = getAnnotationArrowTransform(
+        obj.left ?? 0,
+        obj.top ?? 0,
+        rad,
+        isSelected ? 10 : 8,
+      );
+      deco.angleIndicator.set({
+        left: transform.x,
+        top: transform.y,
+        angle: transform.angle,
+      });
+    }
   }
+  if (fabricCanvas) fabricCanvas.renderAll();
 }
 
 function handleObjectModifiedied(opt: any) {
@@ -974,6 +1008,17 @@ function handleObjectModifiedied(opt: any) {
   const updates: Record<string, any> = {};
   updates.x = obj.left;
   updates.y = obj.top;
+
+  if (data.type === 'annotation') {
+    // 点位旋转：把 Fabric 角度（度）转回 ROS 弧度；只在确有旋转时更新
+    if (Math.abs((obj.angle ?? 0)) > 0.01) {
+      const rad = fabricAngleToAnnotationRad(obj.angle ?? 0);
+      updates.angle = rad;
+      // 重置 circle 的 fabric angle 为 0，避免下次旋转累积（点位圆旋转对称，重置无视觉影响）
+      obj.set({ angle: 0 });
+      obj.setCoords();
+    }
+  }
 
   if (data.type === 'object') {
     // 旋转角度始终保存
