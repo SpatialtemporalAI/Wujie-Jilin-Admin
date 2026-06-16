@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { ref, computed, onMounted, onBeforeUnmount, watch, nextTick } from 'vue';
-import { Canvas, Circle, Rect, Polygon, Line, Group, Text, FabricImage, Triangle, Point } from 'fabric';
+import { Canvas, Circle, Rect, Polygon, Line, Group, Text, FabricImage, Triangle, Ellipse, Point } from 'fabric';
 import { getFilePreviewUrl } from '@/service/api/file';
 import { pixelToWorld, worldToPixel } from '@/utils/coordinate';
 import type { SelectedElement } from '../composables/useMapEditor';
@@ -296,11 +296,12 @@ function syncStructure() {
         fabricObj = new Polygon(pts, commonOpts);
       } catch { /* skip invalid polygon */ }
     } else if (obj.type === 'obstacle-circle') {
-      const w = obj.width || 5;
-      fabricObj = new Circle({
+      const w = obj.width || 10;
+      const h = obj.height || 10;
+      fabricObj = new Ellipse({
         ...commonOpts,
-        radius: w / 2,
-        startAngle: 0, endAngle: Math.PI * 2,
+        rx: w / 2,
+        ry: h / 2,
       });
     } else if (obj.type === 'obstacle-triangle') {
       fabricObj = new Triangle({
@@ -459,8 +460,8 @@ function updatePositions() {
     const fabricObj = elementMap.get(key);
     if (!fabricObj) continue;
     fabricObj.set({ left: obj.x, top: obj.y });
-    if (fabricObj instanceof Circle) {
-      fabricObj.set({ radius: (obj.width || 5) / 2 });
+    if (fabricObj instanceof Ellipse) {
+      fabricObj.set({ rx: (obj.width || 10) / 2, ry: (obj.height || 10) / 2 });
     } else if (fabricObj instanceof Rect || fabricObj instanceof Triangle) {
       fabricObj.set({ width: obj.width, height: obj.height });
     }
@@ -874,12 +875,12 @@ function handleObjectModifiedied(opt: any) {
 
   if (data.type === 'object') {
     // 应用 scale 到 width/height，并对最小尺寸做 clamp（最小 1×1 px）
-    if (obj instanceof Circle) {
-      const newRadius = Math.max(MIN_OBJECT_SIZE / 2, (obj.radius ?? 1) * (obj.scaleX ?? 1));
-      obj.set({ radius: newRadius, scaleX: 1, scaleY: 1 });
-      const d = newRadius * 2;
-      updates.width = d;
-      updates.height = d;
+    if (obj instanceof Ellipse) {
+      const newRx = Math.max(MIN_OBJECT_SIZE / 2, (obj.rx ?? 1) * (obj.scaleX ?? 1));
+      const newRy = Math.max(MIN_OBJECT_SIZE / 2, (obj.ry ?? 1) * (obj.scaleY ?? 1));
+      obj.set({ rx: newRx, ry: newRy, scaleX: 1, scaleY: 1 });
+      updates.width = newRx * 2;
+      updates.height = newRy * 2;
     } else if (obj instanceof Polygon) {
       // 多边形禁区：clamp scale，不修改 points
       const sx = Math.max(MIN_OBJECT_SIZE / (obj.width || 1), obj.scaleX ?? 1);
