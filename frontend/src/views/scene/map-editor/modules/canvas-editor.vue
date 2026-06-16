@@ -1280,6 +1280,33 @@ defineExpose({ exportCanvas, zoomIn, zoomOut, zoomReset, locatePixelPoint });
 <template>
   <div ref="canvasContainer" class="relative h-full w-full overflow-hidden bg-gray-100">
     <canvas ref="canvasEl" />
+
+    <!-- Legend -->
+    <div v-if="editorData"
+      class="absolute left-12px top-12px z-10 flex flex-col gap-6px rounded-lg bg-white/90 px-12px py-8px text-xs shadow-md">
+      <div class="flex items-center gap-6px">
+        <span class="inline-block h-10px w-10px" style="background-color: #ffffff; border: 1px solid #d1d5db"></span>
+        <span>可行区域</span>
+      </div>
+      <div class="flex items-center gap-6px">
+        <span class="inline-block h-10px w-10px" style="background-color: #000000"></span>
+        <span>不可行区域</span>
+      </div>
+      <div class="my-2px h-1px bg-gray-200"></div>
+      <div class="flex items-center gap-6px">
+        <span class="inline-block h-10px w-10px rounded-full" style="background-color: #22c55e"></span>
+        <span>点位</span>
+      </div>
+      <div class="flex items-center gap-6px">
+        <span class="inline-block h-10px w-10px" style="background-color: rgba(59, 130, 246, 0.3); border: 1px solid #3b82f6"></span>
+        <span>障碍物</span>
+      </div>
+      <div class="flex items-center gap-6px">
+        <span class="inline-block h-10px w-10px"
+          style="background-image: linear-gradient(135deg, transparent 45%, #6b7280 45%, #6b7280 55%, transparent 55%); background-color: rgba(107, 114, 128, 0.12); border: 1px solid #6b7280"></span>
+        <span>禁行区域</span>
+      </div>
+    </div>
     <div v-if="!editorData" class="absolute inset-0 flex items-center justify-center">
       <NEmpty description="请选择一个场景" />
     </div>
