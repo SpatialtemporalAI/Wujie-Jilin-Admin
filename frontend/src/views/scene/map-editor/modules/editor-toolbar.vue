@@ -72,7 +72,9 @@ function handleJump(entry: HistoryEntry) {
       </div>
     </NPopover>
 
-    <NDivider vertical />
+    <div class="flex-1" />
+
+    <div v-if="isDirty" class="text-xs text-orange-500">有未保存的更改</div>
 
     <NButton type="primary" size="small" :loading="saving" @click="emit('save')">
       <template #icon><icon-ic-round-save /></template>
@@ -92,8 +94,5 @@ function handleJump(entry: HistoryEntry) {
         导出
       </NButton>
     </NDropdown>
-
-    <div class="flex-1" />
-    <div v-if="isDirty" class="text-xs text-orange-500">有未保存的更改</div>
   </div>
 </template>
