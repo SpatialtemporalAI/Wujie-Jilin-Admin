@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { nextTick, onMounted, ref } from 'vue';
-import { useMapEditor, type DrawingMode } from './composables/useMapEditor';
+import { useMapEditor } from './composables/useMapEditor';
 import EditorToolbar from './modules/editor-toolbar.vue';
 import CanvasEditor from './modules/canvas-editor.vue';
 import PropertyPanel from './modules/property-panel.vue';
@@ -15,6 +15,31 @@ const canvasRef = ref<InstanceType<typeof CanvasEditor>>();
 const zoomLevel = ref(1);
 const cursorX = ref(0);
 const cursorY = ref(0);
+
+// 右键菜单状态
+const contextMenuShow = ref(false);
+const contextMenuX = ref(0);
+const contextMenuY = ref(0);
+const contextMenuScenePoint = ref({ x: 0, y: 0 });
+
+const contextMenuOptions = [
+  { label: '添加点位', key: 'add-point' },
+  {
+    label: '新增障碍物',
+    key: 'add-obstacle',
+    children: [
+      { label: '圆形', key: 'add-obstacle-circle' },
+      { label: '三角形', key: 'add-obstacle-triangle' },
+      { label: '正方形', key: 'add-obstacle-square' },
+    ],
+  },
+  { label: '禁行区域', key: 'add-restricted' },
+];
+
+// 改名弹窗状态
+const renameDialogVisible = ref(false);
+const renameValue = ref('');
+const renameTarget = ref<{ type: 'annotation' | 'object'; id: number } | null>(null);
 
 const addDialogVisible = ref(false);
 const newMapName = ref('');
@@ -160,24 +185,91 @@ async function handleDeleteScene(mapId: number) {
   }
 }
 
-function handleAddAnnotation(data: { x: number; y: number; type: string }) {
-  const name = data.type === 'navigation' ? `导航点${(editor.editorData.value?.annotations.length || 0) + 1}` : `接待点${(editor.editorData.value?.annotations.length || 0) + 1}`;
-  editor.addAnnotation({ x: data.x, y: data.y, name, angle: 0, type: data.type });
+function handleContextMenu(data: { x: number; y: number; clientX: number; clientY: number }) {
+  contextMenuScenePoint.value = { x: data.x, y: data.y };
+  contextMenuX.value = data.clientX;
+  contextMenuY.value = data.clientY;
+  contextMenuShow.value = true;
 }
 
-function handleAddPath(data: { startId: number; endId: number }) {
-  editor.addPath({ start_annotation_id: data.startId, end_annotation_id: data.endId });
+function handleContextMenuSelect(key: string) {
+  contextMenuShow.value = false;
+  const { x, y } = contextMenuScenePoint.value;
+
+  if (key === 'add-point') {
+    const count = (editor.editorData.value?.annotations.length || 0) + 1;
+    editor.addAnnotation({
+      x,
+      y,
+      name: `接待点${count}`,
+      angle: 0,
+      type: 'reception',
+    });
+    // 保持无选中状态
+    editor.selectedElement.value = null;
+    return;
+  }
+
+  if (key === 'add-obstacle-circle' || key === 'add-obstacle-triangle' || key === 'add-obstacle-square') {
+    const type = key.replace('add-', '');
+    const shapeName = type.replace('obstacle-', '');
+    const count = (editor.editorData.value?.objects.filter(o => o.type.startsWith('obstacle-')).length || 0) + 1;
+    editor.addObject({
+      type,
+      name: `障碍物${count}(${shapeName})`,
+      x: x - 2.5,
+      y: y - 2.5,
+      width: 5,
+      height: 5,
+      points: null,
+    });
+    return;
+  }
+
+  if (key === 'add-restricted') {
+    const count = (editor.editorData.value?.objects.filter(o => o.type === 'restricted').length || 0) + 1;
+    editor.addObject({
+      type: 'restricted',
+      name: `禁区${count}`,
+      x: x - 2.5,
+      y: y - 2.5,
+      width: 5,
+      height: 5,
+      points: null,
+    });
+    return;
+  }
 }
 
-function handleAddObject(data: { type: string; x: number; y: number; width: number; height: number; points?: string }) {
-  editor.addObject({
-    type: data.type,
-    x: data.x,
-    y: data.y,
-    width: data.width,
-    height: data.height,
-    points: data.points || null,
-  });
+function handleToggleAnnotationType(id: number) {
+  if (!editor.editorData.value) return;
+  const ann = editor.editorData.value.annotations.find(a => a.id === id);
+  if (!ann) return;
+  const newType = ann.type === 'navigation' ? 'reception' : 'navigation';
+  editor.updateElement('annotation', id, { type: newType });
+}
+
+function handleRequestRename(data: { type: 'annotation' | 'object'; id: number }) {
+  if (!editor.editorData.value) return;
+  const list = data.type === 'annotation' ? editor.editorData.value.annotations : editor.editorData.value.objects;
+  const item = list.find((i: any) => i.id === data.id);
+  if (!item) return;
+  renameTarget.value = { type: data.type, id: data.id };
+  renameValue.value = (item as any).name || '';
+  renameDialogVisible.value = true;
+}
+
+function confirmRename() {
+  if (!renameTarget.value) return;
+  const value = renameValue.value.trim();
+  if (!value) {
+    window.$message?.warning('请输入名称');
+    return false;
+  }
+  editor.updateElement(renameTarget.value.type, renameTarget.value.id, { name: value });
+  renameTarget.value = null;
+  renameValue.value = '';
+  return true;
 }
 
 function handleUpdateElement(data: { type: string; id: number; updates: Record<string, any> }) {
@@ -216,22 +308,21 @@ function handleFocusAnnotation(id: number) {
 
 <template>
   <div class="flex h-full min-h-0 flex-col">
-    <EditorToolbar :drawing-mode="editor.drawingMode.value" :can-undo="editor.canUndo.value"
+    <EditorToolbar :can-undo="editor.canUndo.value"
       :can-redo="editor.canRedo.value" :is-dirty="editor.isDirty.value" :saving="editor.saving.value"
       :has-history="editor.hasHistory.value" :history-list="editor.historyList.value"
-      @update:drawing-mode="(m: DrawingMode) => (editor.drawingMode.value = m)" @undo="editor.undo()"
-      @redo="editor.redo()" @jump-to-step="(step: number) => editor.jumpToStep(step)" @save="editor.saveMap()"
-      @export="handleExport" />
+      @undo="editor.undo()" @redo="editor.redo()"
+      @jump-to-step="(step: number) => editor.jumpToStep(step)" @save="editor.saveMap()" @export="handleExport" />
 
     <div class="flex min-h-0 flex-1 overflow-hidden">
       <div class="relative min-w-0 flex-1">
         <CanvasEditor ref="canvasRef" :editor-data="editor.editorData.value"
-          :selected-element="editor.selectedElement.value" :drawing-mode="editor.drawingMode.value"
+          :selected-element="editor.selectedElement.value"
           :grid-spacing="editor.gridSpacing.value" :resolution="editor.resolution.value" :loading="editor.loading.value"
-          @select-element="el => (editor.selectedElement.value = el)" @add-annotation="handleAddAnnotation"
-          @add-path="handleAddPath" @add-object="handleAddObject" @update-element="handleUpdateElement"
+          @select-element="el => (editor.selectedElement.value = el)" @update-element="handleUpdateElement"
           @zoom-change="handleZoomChange" @cursor-position="handleCursorPosition" @undo="editor.undo()"
-          @redo="editor.redo()" />
+          @redo="editor.redo()" @context-menu="handleContextMenu"
+          @toggle-annotation-type="handleToggleAnnotationType" @rename-element="handleRequestRename" />
         <div class="absolute bottom-8px left-8px rounded bg-black/50 px-8px py-4px text-xs text-white">
           坐标: {{ cursorX.toFixed(2) }}m, {{ cursorY.toFixed(2) }}m
         </div>
@@ -245,6 +336,17 @@ function handleFocusAnnotation(id: number) {
         @delete-scene="handleDeleteScene" @locate-robot="handleLocateRobot" @focus-annotation="handleFocusAnnotation"
         @select-element="el => (editor.selectedElement.value = el)" />
     </div>
+
+    <!-- 右键上下文菜单 -->
+    <NDropdown placement="bottom-start" trigger="manual" :x="contextMenuX" :y="contextMenuY"
+      :show="contextMenuShow" :options="contextMenuOptions" @select="handleContextMenuSelect"
+      @clickoutside="() => (contextMenuShow = false)" />
+
+    <!-- 重命名弹窗 -->
+    <NModal v-model:show="renameDialogVisible" preset="dialog" title="重命名" positive-text="确定" negative-text="取消"
+      @positive-click="confirmRename">
+      <NInput v-model:value="renameValue" placeholder="请输入名称" @keydown.enter="confirmRename" />
+    </NModal>
 
     <!-- Add scene dialog -->
     <NModal v-model:show="addDialogVisible" preset="dialog" title="新增场景" positive-text="确定" negative-text="取消"

@@ -2,7 +2,7 @@ import { reactive, ref, computed } from 'vue';
 import { fetchGetEditorMapData, fetchSaveEditorData, fetchGetSceneMapList, fetchDeleteSceneMap } from '@/service/api/scene';
 import { pixelToWorld, worldToPixel, pixelsDeltaToMeters, metersDeltaToPixels } from '@/utils/coordinate';
 
-export type DrawingMode = 'select' | 'point-nav' | 'point-recv' | 'path' | 'rect-obstacle' | 'polygon-restricted';
+export type DrawingMode = 'select';
 
 export interface SelectedElement {
   type: 'annotation' | 'path' | 'object';
@@ -195,9 +195,9 @@ export function useMapEditor() {
     if (annotations.length === 0) {
       return errors;
     }
-    const hasNav = annotations.some(a => a.type === 'navigation' || a.type === '导航点');
+    const hasNav = annotations.some(a => a.type === 'navigation' || a.type === '返回点');
     if (!hasNav) {
-      errors.push('地图至少需要包含1个导航点');
+      errors.push('地图至少需要包含1个返回点');
     }
     const minDist = 0.5;
     for (let i = 0; i < annotations.length; i++) {
@@ -242,16 +242,11 @@ export function useMapEditor() {
             type: a.type,
           };
         }),
-        paths: editorData.value.paths.map(p => ({
-          id: p.id > 0 ? p.id : null,
-          start_annotation_id: p.start_annotation_id,
-          end_annotation_id: p.end_annotation_id,
-          name: p.name,
-          points: p.points,
-        })),
+        paths: [],
         objects: editorData.value.objects.map(o => ({
           id: o.id > 0 ? o.id : null,
           type: o.type,
+          name: o.name,
           x: o.x,
           y: o.y,
           width: o.width,
@@ -324,34 +319,14 @@ export function useMapEditor() {
     recordHistory(`批量添加${annotations.length}个点位`);
   }
 
-  function addPath(path: { start_annotation_id: number; end_annotation_id: number; name?: string; points?: string | null }) {
-    if (!editorData.value) return;
-    const newId = -(Date.now());
-    const newItem = {
-      id: newId,
-      map_id: selectedMapId.value!,
-      start_annotation_id: path.start_annotation_id,
-      end_annotation_id: path.end_annotation_id,
-      name: path.name ?? null,
-      points: path.points ?? null,
-      created_by: '',
-      updated_by: '',
-      status: null,
-      created_at: null,
-      updated_at: null,
-    } as unknown as Api.Scene.SceneMapPath;
-    editorData.value.paths.push(newItem);
-    recordHistory('添加路径');
-    return newId;
-  }
-
-  function addObject(obj: { type: string; x: number; y: number; width: number; height: number; points: string | null }) {
+  function addObject(obj: { type: string; name?: string | null; x: number; y: number; width: number; height: number; points: string | null }) {
     if (!editorData.value) return;
     const newId = -(Date.now());
     const newItem = {
       id: newId,
       map_id: selectedMapId.value!,
       type: obj.type,
+      name: obj.name ?? null,
       x: obj.x,
       y: obj.y,
       width: obj.width,
@@ -452,7 +427,6 @@ export function useMapEditor() {
     deleteScene,
     addAnnotation,
     addAnnotations,
-    addPath,
     addObject,
     removeElement,
     updateElement,

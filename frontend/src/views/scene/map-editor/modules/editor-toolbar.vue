@@ -1,8 +1,7 @@
 <script setup lang="ts">
-import type { DrawingMode, HistoryEntry } from '../composables/useMapEditor';
+import type { HistoryEntry } from '../composables/useMapEditor';
 
 interface Props {
-  drawingMode: DrawingMode;
   canUndo: boolean;
   canRedo: boolean;
   isDirty: boolean;
@@ -14,22 +13,12 @@ interface Props {
 defineProps<Props>();
 
 const emit = defineEmits<{
-  (e: 'update:drawingMode', mode: DrawingMode): void;
   (e: 'undo'): void;
   (e: 'redo'): void;
   (e: 'save'): void;
   (e: 'export', format: 'png' | 'jpeg' | 'webp'): void;
   (e: 'jump-to-step', step: number): void;
 }>();
-
-const drawingModes: { key: DrawingMode; label: string; icon: string }[] = [
-  { key: 'select', label: '选择', icon: 'ic:round-near-me' },
-  { key: 'point-nav', label: '导航点', icon: 'ic:round-location-on' },
-  { key: 'point-recv', label: '接待点', icon: 'ic:round-place' },
-  { key: 'path', label: '路径', icon: 'ic:round-trending-flat' },
-  { key: 'rect-obstacle', label: '障碍物', icon: 'ic:round-crop-square' },
-  { key: 'polygon-restricted', label: '禁区', icon: 'ic:round-pentagon' },
-];
 
 function formatTime(ts: number): string {
   if (!ts) return '';
@@ -48,22 +37,6 @@ function handleJump(entry: HistoryEntry) {
 
 <template>
   <div class="flex items-center gap-8px border-b border-gray-200 bg-white px-12px py-8px">
-    <NButtonGroup size="small">
-      <NButton
-        v-for="mode in drawingModes"
-        :key="mode.key"
-        :type="drawingMode === mode.key ? 'primary' : 'default'"
-        @click="emit('update:drawingMode', mode.key)"
-      >
-        <template #icon>
-          <component :is="`icon-${mode.icon}`" />
-        </template>
-        {{ mode.label }}
-      </NButton>
-    </NButtonGroup>
-
-    <NDivider vertical />
-
     <NButtonGroup size="small">
       <NButton :disabled="!canUndo" @click="emit('undo')">
         <template #icon><icon-ic-round-undo /></template>

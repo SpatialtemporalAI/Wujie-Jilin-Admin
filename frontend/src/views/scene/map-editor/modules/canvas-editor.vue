@@ -3,12 +3,11 @@ import { ref, computed, onMounted, onBeforeUnmount, watch, nextTick } from 'vue'
 import { Canvas, Circle, Rect, Polygon, Line, Group, Text, FabricImage, Triangle, Point } from 'fabric';
 import { getFilePreviewUrl } from '@/service/api/file';
 import { pixelToWorld, worldToPixel } from '@/utils/coordinate';
-import type { SelectedElement, DrawingMode } from '../composables/useMapEditor';
+import type { SelectedElement } from '../composables/useMapEditor';
 import { fetchGetSceneMapList } from '@/service/api';
 interface Props {
   editorData: Api.Scene.EditorMapData | null;
   selectedElement: SelectedElement | null;
-  drawingMode: DrawingMode;
   gridSpacing: number;
   resolution: number;
   loading?: boolean;
@@ -20,14 +19,14 @@ const props = withDefaults(defineProps<Props>(), {
 
 const emit = defineEmits<{
   (e: 'select-element', el: SelectedElement | null): void;
-  (e: 'add-annotation', data: { x: number; y: number; type: string }): void;
-  (e: 'add-path', data: { startId: number; endId: number }): void;
-  (e: 'add-object', data: { type: string; x: number; y: number; width: number; height: number; points?: string }): void;
   (e: 'update-element', data: { type: string; id: number; updates: Record<string, any> }): void;
   (e: 'zoom-change', zoom: number): void;
   (e: 'cursor-position', x: number, y: number): void;
   (e: 'undo'): void;
   (e: 'redo'): void;
+  (e: 'context-menu', data: { x: number; y: number; clientX: number; clientY: number }): void;
+  (e: 'toggle-annotation-type', id: number): void;
+  (e: 'rename-element', data: { type: 'annotation' | 'object'; id: number }): void;
 }>();
 
 const canvasContainer = ref<HTMLDivElement>();
@@ -38,6 +37,7 @@ let gridGroup: Group | null = null;
 let backgroundImgObj: FabricImage | null = null;
 let elementMap: Map<string, any> = new Map();
 let annotationDecorations: Map<number, { text: Text; angleIndicator: Triangle }> = new Map();
+let objectDecorations: Map<number, Text> = new Map();
 let resizeObserver: ResizeObserver | null = null;
 let lastGridSpacingM = 0;
 let originMarker: Group | null = null;
@@ -151,20 +151,15 @@ let lastPanPoint = { x: 0, y: 0 };
 let spacePressed = false;
 
 let isDraggingObject = false;
+let justDragged = false;
+let clickTimer: number | null = null;
+let lastDblClickTime = 0;
 let isLocalUpdate = false;
 let cursorEmitRafId: number | null = null;
 let lastCursorWorld = { x: 0, y: 0 };
 let minimapRafId: number | null = null;
 
-let pathStartAnnotationId: number | null = null;
-
-let drawingState: {
-  type: 'rect' | 'polygon' | null;
-  startX: number;
-  startY: number;
-  tempObj: any;
-  polygonPoints: { x: number; y: number }[];
-} | null = null;
+const MIN_OBJECT_SIZE = 1;
 
 const canvasWidth = ref(800);
 const canvasHeight = ref(600);
@@ -283,27 +278,62 @@ function syncStructure() {
     const isRestricted = obj.type === 'restricted' || obj.type === '禁区';
     const fillColor = isRestricted ? 'rgba(234, 179, 8, 0.3)' : 'rgba(239, 68, 68, 0.3)';
     const strokeColor = isRestricted ? '#eab308' : '#ef4444';
+    const commonOpts = {
+      left: obj.x, top: obj.y,
+      fill: fillColor, stroke: strokeColor, strokeWidth: 2,
+      hasControls: true,
+    };
+
+    let fabricObj: any = null;
 
     if (obj.points) {
       try {
         const pts = JSON.parse(obj.points);
-        const polygon = new Polygon(pts, {
-          left: obj.x, top: obj.y,
-          fill: fillColor, stroke: strokeColor, strokeWidth: 2,
-        });
-        setElementData(polygon, { type: 'object', id: obj.id });
-        fabricCanvas.add(polygon);
-        elementMap.set(key, polygon);
+        fabricObj = new Polygon(pts, commonOpts);
       } catch { /* skip invalid polygon */ }
-    } else {
-      const rect = new Rect({
-        left: obj.x, top: obj.y,
-        width: obj.width || 40, height: obj.height || 40,
-        fill: fillColor, stroke: strokeColor, strokeWidth: 2,
+    } else if (obj.type === 'obstacle-circle') {
+      const w = obj.width || 5;
+      fabricObj = new Circle({
+        ...commonOpts,
+        radius: w / 2,
+        originX: 'left', originY: 'top',
+        startAngle: 0, endAngle: Math.PI * 2,
       });
-      setElementData(rect, { type: 'object', id: obj.id });
-      fabricCanvas.add(rect);
-      elementMap.set(key, rect);
+    } else if (obj.type === 'obstacle-triangle') {
+      fabricObj = new Triangle({
+        ...commonOpts,
+        width: obj.width || 5, height: obj.height || 5,
+      });
+    } else {
+      const isSquare = obj.type === 'obstacle-square';
+      fabricObj = new Rect({
+        ...commonOpts,
+        width: obj.width || 5,
+        height: isSquare ? (obj.width || 5) : (obj.height || 5),
+      });
+    }
+
+    if (fabricObj) {
+      setElementData(fabricObj, { type: 'object', id: obj.id });
+      fabricCanvas.add(fabricObj);
+      elementMap.set(key, fabricObj);
+
+      // 装饰：物体名称（不可交互，纯渲染）
+      const objText = new Text(obj.name || '', {
+        fontSize: 10,
+        fill: strokeColor,
+        originX: 'center',
+        originY: 'center',
+        top: 18,
+        fontFamily: 'sans-serif',
+        fontWeight: 'bold',
+        evented: false,
+        selectable: false,
+        hasControls: false,
+        hoverCursor: 'default',
+      });
+      fabricCanvas.add(objText);
+      objectDecorations.set(obj.id, objText);
     }
   }
 
@@ -378,6 +408,13 @@ function syncStructure() {
           fabricCanvas.remove(deco.angleIndicator);
           annotationDecorations.delete(annId);
         }
+      } else if (type === 'object') {
+        const objId = Number(idStr);
+        const text = objectDecorations.get(objId);
+        if (text) {
+          fabricCanvas.remove(text);
+          objectDecorations.delete(objId);
+        }
       }
     }
   }
@@ -420,10 +457,18 @@ function updatePositions() {
     const fabricObj = elementMap.get(key);
     if (!fabricObj) continue;
     fabricObj.set({ left: obj.x, top: obj.y });
-    if (fabricObj instanceof Rect) {
+    if (fabricObj instanceof Circle) {
+      fabricObj.set({ radius: (obj.width || 5) / 2 });
+    } else if (fabricObj instanceof Rect || fabricObj instanceof Triangle) {
       fabricObj.set({ width: obj.width, height: obj.height });
     }
     fabricObj.setCoords();
+    const objText = objectDecorations.get(obj.id);
+    if (objText) {
+      const w = obj.width || 5;
+      objText.set({ left: obj.x + w / 2, top: obj.y + (obj.height || w) + 12 });
+      objText.setCoords();
+    }
   }
 }
 
@@ -445,6 +490,14 @@ function updateSelectionStyle() {
     if (deco) {
       deco.text.set('text', ann.name);
       deco.text.set('fill', annColor);
+    }
+  }
+
+  // 同步 object 的 name 文本（改名后立即刷新）
+  for (const obj of props.editorData.objects) {
+    const text = objectDecorations.get(obj.id);
+    if (text) {
+      text.set('text', obj.name || '');
     }
   }
 }
@@ -668,46 +721,8 @@ function handleMouseDown(opt: any) {
     return;
   }
 
-  if (props.drawingMode === 'select') return;
-
-  const pointer = fabricCanvas.getScenePoint(evt);
-  const x = pointer.x;
-  const y = pointer.y;
-
-  if (props.drawingMode === 'point-nav') {
-    emit('add-annotation', { x, y, type: 'navigation' });
-    return;
-  }
-  if (props.drawingMode === 'point-recv') {
-    emit('add-annotation', { x, y, type: 'reception' });
-    return;
-  }
-  if (props.drawingMode === 'path') {
-    const clickedAnnotation = findAnnotationAtPoint(x, y);
-    if (clickedAnnotation) {
-      if (pathStartAnnotationId === null) {
-        pathStartAnnotationId = clickedAnnotation.id;
-        window.$message?.info('已选择起始点位，请点击终点');
-      } else if (clickedAnnotation.id !== pathStartAnnotationId) {
-        emit('add-path', { startId: pathStartAnnotationId, endId: clickedAnnotation.id });
-        pathStartAnnotationId = null;
-      }
-    }
-    return;
-  }
-  if (props.drawingMode === 'rect-obstacle') {
-    drawingState = { type: 'rect', startX: x, startY: y, tempObj: null, polygonPoints: [] };
-    return;
-  }
-  if (props.drawingMode === 'polygon-restricted') {
-    if (!drawingState || drawingState.type !== 'polygon') {
-      drawingState = { type: 'polygon', startX: 0, startY: 0, tempObj: null, polygonPoints: [{ x, y }] };
-      window.$message?.info('单击添加顶点，双击闭合多边形');
-    } else {
-      drawingState.polygonPoints.push({ x, y });
-    }
-    return;
-  }
+  // 右键由原生 contextmenu 事件处理
+  if (evt.button === 2) return;
 }
 
 function handleMouseMove(opt: any) {
@@ -737,17 +752,6 @@ function handleMouseMove(opt: any) {
       emit('cursor-position', lastCursorWorld.x, lastCursorWorld.y);
     });
   }
-
-  if (drawingState?.type === 'rect' && drawingState.tempObj) {
-    const w = pointer.x - drawingState.startX;
-    const h = pointer.y - drawingState.startY;
-    drawingState.tempObj.set({
-      width: Math.abs(w), height: Math.abs(h),
-      left: Math.min(drawingState.startX, pointer.x),
-      top: Math.min(drawingState.startY, pointer.y),
-    });
-    fabricCanvas.renderAll();
-  }
 }
 
 function handleMouseUp(opt: any) {
@@ -759,30 +763,43 @@ function handleMouseUp(opt: any) {
     }
     return;
   }
-  if (drawingState?.type === 'rect' && fabricCanvas) {
-    const pointer = fabricCanvas.getScenePoint(opt.e);
-    const x = Math.min(drawingState.startX, pointer.x);
-    const y = Math.min(drawingState.startY, pointer.y);
-    const w = Math.abs(pointer.x - drawingState.startX);
-    const h = Math.abs(pointer.y - drawingState.startY);
-    if (drawingState.tempObj) fabricCanvas.remove(drawingState.tempObj);
-    if (w > 5 && h > 5) {
-      emit('add-object', { type: 'obstacle', x, y, width: w, height: h });
-    }
-    drawingState = null;
+
+  // 点位单击切换类型（与双击通过 250ms 定时器 + 双击时间戳区分）
+  if (Date.now() - lastDblClickTime < 350) {
+    justDragged = false;
+    return;
   }
+  const target = opt.target;
+  if (target && !justDragged) {
+    const data = getElementData(target);
+    if (data?.type === 'annotation') {
+      if (clickTimer !== null) {
+        window.clearTimeout(clickTimer);
+        clickTimer = null;
+      }
+      const annId = data.id;
+      clickTimer = window.setTimeout(() => {
+        clickTimer = null;
+        emit('toggle-annotation-type', annId);
+      }, 250);
+    }
+  }
+  justDragged = false;
 }
 
-function handleDoubleClick() {
-  if (drawingState?.type === 'polygon' && fabricCanvas) {
-    const pts = drawingState.polygonPoints;
-    if (pts.length >= 3) {
-      if (drawingState.tempObj) fabricCanvas.remove(drawingState.tempObj);
-      const minX = Math.min(...pts.map(p => p.x));
-      const minY = Math.min(...pts.map(p => p.y));
-      emit('add-object', { type: 'restricted', x: minX, y: minY, width: 0, height: 0, points: JSON.stringify(pts) });
-    }
-    drawingState = null;
+function handleDoubleClick(opt: any) {
+  // 取消点位单击切换类型的定时器
+  if (clickTimer !== null) {
+    window.clearTimeout(clickTimer);
+    clickTimer = null;
+  }
+  lastDblClickTime = Date.now();
+  const target = opt.target;
+  if (!target) return;
+  const data = getElementData(target);
+  if (!data) return;
+  if (data.type === 'annotation' || data.type === 'object') {
+    emit('rename-element', { type: data.type, id: data.id });
   }
 }
 
@@ -792,11 +809,19 @@ function handleObjectMoved(opt: any) {
   const data = getElementData(obj);
   if (!data) return;
   isDraggingObject = true;
+  justDragged = true;
   if (data.type === 'annotation') {
     const deco = annotationDecorations.get(data.id);
     if (deco) {
       deco.text.set({ left: obj.left, top: (obj.top ?? 0) + 18 });
       deco.angleIndicator.set({ left: obj.left, top: (obj.top ?? 0) - 16 });
+    }
+  } else if (data.type === 'object') {
+    const text = objectDecorations.get(data.id);
+    if (text) {
+      const w = (obj.width ?? 0) * (obj.scaleX ?? 1);
+      const h = (obj.height ?? 0) * (obj.scaleY ?? 1);
+      text.set({ left: (obj.left ?? 0) + w / 2, top: (obj.top ?? 0) + h + 12 });
     }
   }
 }
@@ -813,10 +838,29 @@ function handleObjectModifiedied(opt: any) {
   const updates: Record<string, any> = {};
   updates.x = obj.left;
   updates.y = obj.top;
-  if (data.type === 'object' && obj instanceof Rect) {
-    updates.width = obj.width * obj.scaleX;
-    updates.height = obj.height * obj.scaleY;
-    obj.set({ scaleX: 1, scaleY: 1 });
+
+  if (data.type === 'object') {
+    // 应用 scale 到 width/height，并对最小尺寸做 clamp（最小 1×1 px）
+    if (obj instanceof Circle) {
+      const newRadius = Math.max(MIN_OBJECT_SIZE / 2, (obj.radius ?? 1) * (obj.scaleX ?? 1));
+      obj.set({ radius: newRadius, scaleX: 1, scaleY: 1 });
+      const d = newRadius * 2;
+      updates.width = d;
+      updates.height = d;
+    } else if (obj instanceof Polygon) {
+      // 多边形禁区：clamp scale，不修改 points
+      const sx = Math.max(MIN_OBJECT_SIZE / (obj.width || 1), obj.scaleX ?? 1);
+      const sy = Math.max(MIN_OBJECT_SIZE / (obj.height || 1), obj.scaleY ?? 1);
+      obj.set({ scaleX: sx, scaleY: sy });
+      // scale 保留在 fabric 对象上，不归一化（points 不动）
+    } else {
+      // Rect / Triangle：归一化 scale 到 width/height
+      const newW = Math.max(MIN_OBJECT_SIZE, (obj.width ?? 1) * (obj.scaleX ?? 1));
+      const newH = Math.max(MIN_OBJECT_SIZE, (obj.height ?? 1) * (obj.scaleY ?? 1));
+      obj.set({ width: newW, height: newH, scaleX: 1, scaleY: 1 });
+      updates.width = newW;
+      updates.height = newH;
+    }
   }
 
   isLocalUpdate = true;
@@ -856,13 +900,16 @@ function handleMouseWheel(opt: any) {
   emit('zoom-change', zoom);
 }
 
-function findAnnotationAtPoint(x: number, y: number): Api.Scene.SceneMapAnnotation | null {
-  if (!props.editorData) return null;
-  const threshold = 15;
-  for (const ann of props.editorData.annotations) {
-    if (Math.abs(ann.x - x) < threshold && Math.abs(ann.y - y) < threshold) return ann;
-  }
-  return null;
+function handleContextMenu(evt: MouseEvent) {
+  if (!fabricCanvas) return;
+  evt.preventDefault();
+  const pointer = fabricCanvas.getScenePoint(evt);
+  emit('context-menu', {
+    x: pointer.x,
+    y: pointer.y,
+    clientX: evt.clientX,
+    clientY: evt.clientY,
+  });
 }
 
 function handleKeyDown(evt: KeyboardEvent) {
@@ -914,6 +961,11 @@ function setupCanvas() {
   fabricCanvas.on('selection:updated', handleObjectSelected);
   fabricCanvas.on('selection:cleared', handleSelectionCleared);
 
+  const upperCanvas = (fabricCanvas as any).upperCanvasEl as HTMLCanvasElement | undefined;
+  if (upperCanvas) {
+    upperCanvas.addEventListener('contextmenu', handleContextMenu as EventListener);
+  }
+
   resizeObserver = new ResizeObserver((entries) => {
     for (const entry of entries) {
       containerWidth.value = entry.contentRect.width;
@@ -932,13 +984,25 @@ function disposeCanvas() {
     cancelAnimationFrame(minimapRafId);
     minimapRafId = null;
   }
-  if (resizeObserver) { resizeObserver.disconnect(); resizeObserver = null; }
-  if (fabricCanvas) { fabricCanvas.dispose(); fabricCanvas = null; }
+  if (clickTimer !== null) {
+    window.clearTimeout(clickTimer);
+    clickTimer = null;
+  }
+  if (fabricCanvas) {
+    const upperCanvas = (fabricCanvas as any).upperCanvasEl as HTMLCanvasElement | undefined;
+    if (upperCanvas) {
+      upperCanvas.removeEventListener('contextmenu', handleContextMenu as EventListener);
+    }
+    fabricCanvas.dispose();
+    fabricCanvas = null;
+  }
   elementMap.clear();
   annotationDecorations.clear();
+  objectDecorations.clear();
   originMarker = null;
   lastGridSpacingM = 0;
   isDraggingObject = false;
+  justDragged = false;
 }
 
 watch([containerWidth, containerHeight], () => {
@@ -962,6 +1026,10 @@ watch(() => props.editorData, async (newData) => {
     fabricCanvas?.remove(angleIndicator);
   }
   annotationDecorations.clear();
+  for (const text of objectDecorations.values()) {
+    fabricCanvas?.remove(text);
+  }
+  objectDecorations.clear();
   if (originMarker) {
     fabricCanvas?.remove(originMarker);
     originMarker = null;
@@ -1016,14 +1084,6 @@ watch(() => props.selectedElement, () => {
   fabricCanvas.renderAll();
 });
 watch(() => props.gridSpacing, () => renderGrid());
-watch(() => props.drawingMode, (mode) => {
-  pathStartAnnotationId = null;
-  drawingState = null;
-  if (fabricCanvas) {
-    fabricCanvas.selection = mode === 'select';
-    fabricCanvas.defaultCursor = mode === 'select' ? 'default' : 'crosshair';
-  }
-});
 
 onMounted(async () => {
   await loadSceneList();

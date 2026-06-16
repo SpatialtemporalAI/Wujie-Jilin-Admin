@@ -14,6 +14,7 @@ class SceneMapObjectCreate(BaseReqEntity):
 
     map_id: int = Field(..., description="地图ID")
     type: str = Field(..., description="物体类型(字典值)")
+    name: str | None = Field(None, description="物体名称")
     x: float = Field(..., description="X坐标")
     y: float = Field(..., description="Y坐标")
     width: float = Field(0, description="宽度")
@@ -25,6 +26,7 @@ class SceneMapObjectUpdate(BaseReqEntity):
     """更新场景地图物体"""
 
     type: str | None = Field(None, description="物体类型(字典值)")
+    name: str | None = Field(None, description="物体名称")
     x: float | None = Field(None, description="X坐标")
     y: float | None = Field(None, description="Y坐标")
     width: float | None = Field(None, description="宽度")
@@ -40,6 +42,7 @@ class SceneMapObjectResponseData(BaseRespEntity):
     id: int
     map_id: int
     type: str
+    name: str | None
     x: float
     y: float
     width: float

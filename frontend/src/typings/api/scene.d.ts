@@ -124,6 +124,8 @@ declare namespace Api {
       map_id: number;
       /** object type (dict value) */
       type: string;
+      /** object name */
+      name: string | null;
       /** x coordinate */
       x: number;
       /** y coordinate */
@@ -143,6 +145,7 @@ declare namespace Api {
     type SceneMapObjectCreate = {
       map_id: number;
       type: string;
+      name?: string | null;
       x: number;
       y: number;
       width?: number;
@@ -205,6 +208,7 @@ declare namespace Api {
     type EditorObjectItem = {
       id?: number | null;
       type: string;
+      name?: string | null;
       x: number;
       y: number;
       width: number;

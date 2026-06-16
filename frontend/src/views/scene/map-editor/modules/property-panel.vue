@@ -66,11 +66,6 @@ const selectedAnnotation = computed(() => {
   return props.editorData.annotations.find(a => a.id === props.selectedElement!.id) || null;
 });
 
-const selectedPath = computed(() => {
-  if (!props.editorData || !props.selectedElement || props.selectedElement.type !== 'path') return null;
-  return props.editorData.paths.find(p => p.id === props.selectedElement!.id) || null;
-});
-
 const selectedObject = computed(() => {
   if (!props.editorData || !props.selectedElement || props.selectedElement.type !== 'object') return null;
   return props.editorData.objects.find(o => o.id === props.selectedElement!.id) || null;
@@ -82,25 +77,13 @@ const filteredAnnotations = computed(() => {
   if (!pointSearchText.value) return list;
   const keyword = pointSearchText.value.toLowerCase();
   return list.filter(a => {
-    const typeName = a.type === 'navigation' || a.type === '导航点' ? '导航点' : '接待点';
+    const typeName = a.type === 'navigation' || a.type === '返回点' ? '返回点' : '接待点';
     return a.name.toLowerCase().includes(keyword) || typeName.includes(keyword);
   });
 });
 
-const annotationStartName = computed(() => {
-  if (!selectedPath.value || !props.editorData) return '';
-  const ann = props.editorData.annotations.find(a => a.id === selectedPath.value!.start_annotation_id);
-  return ann?.name || '';
-});
-
-const annotationEndName = computed(() => {
-  if (!selectedPath.value || !props.editorData) return '';
-  const ann = props.editorData.annotations.find(a => a.id === selectedPath.value!.end_annotation_id);
-  return ann?.name || '';
-});
-
 const pointTypeOptions = [
-  { label: '导航点', value: 'navigation' },
+  { label: '返回点', value: 'navigation' },
   { label: '接待点', value: 'reception' },
 ];
 
@@ -307,7 +290,6 @@ onMounted(() => {
                 {{ editorData.map.width && editorData.map.height ? `${editorData.map.width} × ${editorData.map.height} px` : '-' }}
               </NDescriptionsItem>
               <NDescriptionsItem label="点位数">{{ editorData.annotations.length }}</NDescriptionsItem>
-              <NDescriptionsItem label="路径数">{{ editorData.paths.length }}</NDescriptionsItem>
               <NDescriptionsItem label="物体数">{{ editorData.objects.length }}</NDescriptionsItem>
             </NDescriptions>
           </template>
@@ -332,16 +314,6 @@ onMounted(() => {
               </NFormItem>
             </NForm>
             <NButton type="error" size="small" block @click="emit('remove-element', 'annotation', selectedAnnotation.id)">删除此点位</NButton>
-          </template>
-
-          <!-- Path selected -->
-          <template v-if="selectedPath">
-            <NDescriptions label-placement="left" bordered size="small" :column="1">
-              <NDescriptionsItem label="名称">{{ selectedPath.name || '-' }}</NDescriptionsItem>
-              <NDescriptionsItem label="起点">{{ annotationStartName }}</NDescriptionsItem>
-              <NDescriptionsItem label="终点">{{ annotationEndName }}</NDescriptionsItem>
-            </NDescriptions>
-            <NButton type="error" size="small" block class="mt-12px" @click="emit('remove-element', 'path', selectedPath.id)">删除此路径</NButton>
           </template>
 
           <!-- Object selected -->
@@ -392,8 +364,8 @@ onMounted(() => {
               <div class="min-w-0 flex-1">
                 <div class="flex items-center gap-6px">
                   <span class="truncate font-medium">{{ ann.name }}</span>
-                  <NTag size="small" :type="ann.type === 'navigation' || ann.type === '导航点' ? 'info' : 'success'">
-                    {{ ann.type === 'navigation' || ann.type === '导航点' ? '导航点' : '接待点' }}
+                  <NTag size="small" :type="ann.type === 'navigation' || ann.type === '返回点' ? 'info' : 'success'">
+                    {{ ann.type === 'navigation' || ann.type === '返回点' ? '返回点' : '接待点' }}
                   </NTag>
                 </div>
                 <div class="mt-2px text-xs text-gray-400">

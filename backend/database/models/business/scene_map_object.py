@@ -28,6 +28,7 @@ class SceneMapObject(Base):
     points: Mapped[str | None] = mapped_column(
         Text, nullable=True, default=None, comment="多边形顶点(JSON数组)"
     )
+    name: Mapped[str | None] = mapped_column(String(100), nullable=True, default=None, comment="物体名称")
 
     map: Mapped["SceneMap"] = relationship(
         back_populates="objects",
