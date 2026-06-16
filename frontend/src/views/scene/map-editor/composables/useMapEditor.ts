@@ -388,20 +388,20 @@ export function useMapEditor() {
     const item = list.find((i: any) => i.id === id);
     if (!item) return;
 
-    const isNameOnlyEdit = Object.keys(data).length === 1 && 'name' in data;
     Object.assign(item, data);
-    if (!isNameOnlyEdit) {
-      const typeLabel = type === 'annotation' ? '点位' : type === 'path' ? '路径' : '物体';
-      const name = (item as any).name;
-      const suffix = name ? `「${name}」` : '';
-      const moved = 'x' in data && 'y' in data;
-      const resized = type === 'object' && ('width' in data || 'height' in data);
-      let action = '修改属性';
-      if (moved) action = '移动';
-      else if (resized) action = '调整尺寸';
-      else if ('type' in data && type === 'annotation') action = '修改类型';
-      recordHistory(`${action}${typeLabel}${suffix}`);
-    }
+
+    const typeLabel = type === 'annotation' ? '点位' : type === 'path' ? '路径' : '物体';
+    const name = (item as any).name;
+    const suffix = name ? `「${name}」` : '';
+    const moved = 'x' in data && 'y' in data;
+    const resized = type === 'object' && ('width' in data || 'height' in data);
+    const renamed = Object.keys(data).length === 1 && 'name' in data;
+    let action = '修改属性';
+    if (renamed) action = '重命名';
+    else if (moved) action = '移动';
+    else if (resized) action = '调整尺寸';
+    else if ('type' in data && type === 'annotation') action = '修改类型';
+    recordHistory(`${action}${typeLabel}${suffix}`);
   }
 
   return {
