@@ -168,6 +168,25 @@ let minimapRafId: number | null = null;
 
 const MIN_OBJECT_SIZE = 1;
 const CLICK_MOVE_THRESHOLD = 5;
+const ARROW_WIDTH = 6;
+const ARROW_HEIGHT = 8;
+
+/**
+ * 计算点位方向箭头的位置和旋转角度（ROS 度数 → Fabric）
+ * - ROS 角度：0° 朝东（右），90° 朝北（上），180° 朝西（左），逆时针为正
+ * - Fabric Triangle 默认顶点朝上、顺时针为正
+ * - 箭头底部贴合圆形边缘、顶点指向角度方向
+ */
+function getAnnotationArrowTransform(annX: number, annY: number, rosDeg: number, radius: number) {
+  const rad = rosDeg * Math.PI / 180;
+  // 让箭头底部刚好贴圆形边缘外侧
+  const dist = radius + ARROW_HEIGHT / 2;
+  return {
+    x: annX + dist * Math.cos(rad),
+    y: annY - dist * Math.sin(rad),
+    angle: 90 - rosDeg,
+  };
+}
 
 // 障碍物 / 禁区 / 点位 颜色
 const OBSTACLE_FILL = 'rgba(59, 130, 246, 0.3)';
@@ -404,14 +423,18 @@ function syncStructure() {
     elementMap.set(key, circle);
 
     // 装饰：角度指示器与文字（不可交互，纯渲染）
+    const arrowRadius = isSelected ? 10 : 8;
+    const arrowTransform = getAnnotationArrowTransform(ann.x, ann.y, ann.angle || 0, arrowRadius);
     const angleIndicator = new Triangle({
-      width: 8,
-      height: 12,
+      width: ARROW_WIDTH,
+      height: ARROW_HEIGHT,
       fill: annColor,
       originX: 'center',
       originY: 'center',
-      angle: ann.angle || 0,
-      visible: false,
+      left: arrowTransform.x,
+      top: arrowTransform.y,
+      angle: arrowTransform.angle,
+      visible: true,
       evented: false,
       selectable: false,
       hasControls: false,
@@ -481,7 +504,13 @@ function updatePositions() {
     if (deco) {
       deco.text.set({ left: ann.x, top: ann.y + 18 });
       deco.text.setCoords();
-      deco.angleIndicator.set({ left: ann.x, top: ann.y - 16 });
+      const isSelected = props.selectedElement?.type === 'annotation' && props.selectedElement?.id === ann.id;
+      const arrowTransform = getAnnotationArrowTransform(ann.x, ann.y, ann.angle || 0, isSelected ? 10 : 8);
+      deco.angleIndicator.set({
+        left: arrowTransform.x,
+        top: arrowTransform.y,
+        angle: arrowTransform.angle,
+      });
       deco.angleIndicator.setCoords();
     }
   }
@@ -892,7 +921,19 @@ function handleObjectMoved(opt: any) {
     const deco = annotationDecorations.get(data.id);
     if (deco) {
       deco.text.set({ left: obj.left, top: (obj.top ?? 0) + 18 });
-      deco.angleIndicator.set({ left: obj.left, top: (obj.top ?? 0) - 16 });
+      const ann = props.editorData?.annotations.find(a => a.id === data.id);
+      const isSelected = props.selectedElement?.type === 'annotation' && props.selectedElement?.id === data.id;
+      const arrowTransform = getAnnotationArrowTransform(
+        obj.left ?? 0,
+        obj.top ?? 0,
+        ann?.angle ?? 0,
+        isSelected ? 10 : 8,
+      );
+      deco.angleIndicator.set({
+        left: arrowTransform.x,
+        top: arrowTransform.y,
+        angle: arrowTransform.angle,
+      });
     }
   } else if (data.type === 'object') {
     updateObjectLabelPosition(obj, data.id);
