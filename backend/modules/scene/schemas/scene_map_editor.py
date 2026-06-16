@@ -35,6 +35,7 @@ class EditorObjectItem(BaseModel):
 
     id: int | None = Field(None, description="物体ID，为空时新建")
     type: str = Field(..., description="物体类型(字典值)")
+    name: str | None = Field(None, description="物体名称")
     x: float = Field(..., description="X坐标")
     y: float = Field(..., description="Y坐标")
     width: float = Field(0, description="宽度")
@@ -88,6 +89,7 @@ class EditorMapObjectResponse(BaseRespEntity):
     id: int
     map_id: int
     type: str
+    name: str | None
     x: float
     y: float
     width: float

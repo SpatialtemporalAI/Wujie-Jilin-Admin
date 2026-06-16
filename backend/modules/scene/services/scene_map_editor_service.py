@@ -150,6 +150,7 @@ class SceneMapEditorService:
                 obj = result.scalar_one_or_none()
                 if obj:
                     obj.type = item.type
+                    obj.name = item.name
                     obj.x = item.x
                     obj.y = item.y
                     obj.width = item.width
@@ -159,6 +160,7 @@ class SceneMapEditorService:
                 obj = SceneMapObject(
                     map_id=map_id,
                     type=item.type,
+                    name=item.name,
                     x=item.x,
                     y=item.y,
                     width=item.width,
