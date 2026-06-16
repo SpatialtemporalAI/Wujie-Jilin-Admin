@@ -64,6 +64,63 @@ const typeSwitchY = ref(0);
 const typeSwitchTargetId = ref<number | null>(null);
 const typeSwitchCurrentType = ref<'navigation' | 'reception'>('reception');
 
+// 元素信息悬浮 tooltip
+const hoverInfoShow = ref(false);
+const hoverInfoX = ref(0);
+const hoverInfoY = ref(0);
+const hoverInfoTarget = ref<{ type: 'annotation' | 'object'; id: number } | null>(null);
+
+const hoverInfo = computed(() => {
+  const t = hoverInfoTarget.value;
+  if (!t || !editor.editorData.value) return null;
+  if (t.type === 'annotation') {
+    const ann = editor.editorData.value.annotations.find(a => a.id === t.id);
+    if (!ann) return null;
+    const typeName = ann.type === 'navigation' || ann.type === '返回点' ? '返回点' : '接待点';
+    const angleDeg = Math.round(((ann.angle || 0) * 180 / Math.PI + 360) % 360);
+    return {
+      kind: '点位',
+      name: ann.name || '-',
+      type: typeName,
+      x: (ann.x * editor.resolution.value).toFixed(2),
+      y: (ann.y * editor.resolution.value).toFixed(2),
+      size: null as string | null,
+      angle: `${angleDeg}°`,
+    };
+  }
+  const obj = editor.editorData.value.objects.find(o => o.id === t.id);
+  if (!obj) return null;
+  const isRestricted = obj.type === 'restricted' || obj.type === '禁区';
+  const shapeMap: Record<string, string> = {
+    'obstacle-circle': '圆形',
+    'obstacle-triangle': '三角形',
+    'obstacle-square': '正方形',
+  };
+  const kind = isRestricted ? '禁行区域' : '障碍物';
+  const typeName = isRestricted ? '禁区' : (shapeMap[obj.type] || '障碍物');
+  return {
+    kind,
+    name: obj.name || '-',
+    type: typeName,
+    x: (obj.x * editor.resolution.value).toFixed(2),
+    y: (obj.y * editor.resolution.value).toFixed(2),
+    size: `${(obj.width * editor.resolution.value).toFixed(2)} × ${(obj.height * editor.resolution.value).toFixed(2)} m`,
+    angle: `${Math.round(obj.angle || 0)}°`,
+  };
+});
+
+function handleHoverElement(data: { type: 'annotation' | 'object'; id: number; clientX: number; clientY: number } | null) {
+  if (!data) {
+    hoverInfoShow.value = false;
+    hoverInfoTarget.value = null;
+    return;
+  }
+  hoverInfoTarget.value = { type: data.type, id: data.id };
+  hoverInfoX.value = data.clientX + 16;
+  hoverInfoY.value = data.clientY + 16;
+  hoverInfoShow.value = true;
+}
+
 const addDialogVisible = ref(false);
 const newMapName = ref('');
 const newMapGroupId = ref<number | null>(null);
@@ -367,7 +424,8 @@ function handleFocusAnnotation(id: number) {
           @zoom-change="handleZoomChange" @cursor-position="handleCursorPosition" @undo="editor.undo()"
           @redo="editor.redo()" @context-menu="handleContextMenu"
           @request-type-switch="handleRequestTypeSwitch" @rename-element="handleRequestRename"
-          @blank-click="typeSwitchShow = false" />
+          @blank-click="typeSwitchShow = false"
+          @hover-element="handleHoverElement" />
       </div>
 
       <PropertyPanel class="w-380px flex-shrink-0" :editor-data="editor.editorData.value"
@@ -383,6 +441,21 @@ function handleFocusAnnotation(id: number) {
     <NDropdown placement="bottom-start" trigger="manual" :x="contextMenuX" :y="contextMenuY"
       :show="contextMenuShow" :options="contextMenuOptions" @select="handleContextMenuSelect"
       @clickoutside="() => (contextMenuShow = false)" />
+
+    <!-- 元素信息浮窗（hover） -->
+    <div v-if="hoverInfoShow && hoverInfo" class="pointer-events-none fixed z-50 rounded-md bg-black/80 px-10px py-8px text-xs text-white shadow-lg"
+      :style="{ left: hoverInfoX + 'px', top: hoverInfoY + 'px' }">
+      <div class="mb-4px font-medium">{{ hoverInfo.kind }}</div>
+      <div class="grid grid-cols-[auto_1fr] gap-x-8px gap-y-2px">
+        <span class="text-white/60">名称</span><span>{{ hoverInfo.name }}</span>
+        <span class="text-white/60">类型</span><span>{{ hoverInfo.type }}</span>
+        <span class="text-white/60">坐标</span><span>{{ hoverInfo.x }}, {{ hoverInfo.y }} m</span>
+        <template v-if="hoverInfo.size">
+          <span class="text-white/60">大小</span><span>{{ hoverInfo.size }}</span>
+        </template>
+        <span class="text-white/60">角度</span><span>{{ hoverInfo.angle }}</span>
+      </div>
+    </div>
 
     <!-- 点位类型切换 tooltip -->
     <NPopover v-model:show="typeSwitchShow" trigger="manual" placement="top" :x="typeSwitchX" :y="typeSwitchY"

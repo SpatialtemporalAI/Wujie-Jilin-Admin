@@ -28,6 +28,7 @@ const emit = defineEmits<{
   (e: 'request-type-switch', data: { id: number; clientX: number; clientY: number }): void;
   (e: 'rename-element', data: { type: 'annotation' | 'object'; id: number }): void;
   (e: 'blank-click'): void;
+  (e: 'hover-element', data: { type: 'annotation' | 'object'; id: number; clientX: number; clientY: number } | null): void;
 }>();
 
 const canvasContainer = ref<HTMLDivElement>();
@@ -282,9 +283,8 @@ function getEffectiveOrigin() {
 }
 
 function canvasPointToWorld(px: number, py: number) {
-  const flippedY = canvasHeight.value - py;
-  const { x: originX, y: originY } = getEffectiveOrigin();
-  return pixelToWorld(px, flippedY, originX, originY, props.resolution);
+  // 网格按"左上角 (0,0)，向右向下递增"显示，鼠标坐标也按此口径
+  return { x: px * props.resolution, y: py * props.resolution };
 }
 
 function worldToCanvasPoint(wx: number, wy: number) {
@@ -729,22 +729,20 @@ function renderGrid() {
     evented: false,
   };
 
-  // X-axis labels along bottom edge (world X coordinate at each vertical grid line)
+  // X-axis labels along top edge (米 = pixel × resolution，从左上角 0 递增)
   for (let x = 0; x <= endX; x += spacingPx) {
-    const world = pixelToWorld(x, 0, originPx, originPy, res);
-    const meters = Math.round(world.x * 1000) / 1000;
+    const meters = Math.round(x * res * 1000) / 1000;
     allObjects.push(new Text(formatDist(meters), {
       ...labelStyle,
       left: x,
-      top: h + 4,
+      top: -4,
       originX: 'center',
-      originY: 'top',
+      originY: 'bottom',
     }));
   }
-  // Y-axis labels along left edge (world Y coordinate at each horizontal grid line)
+  // Y-axis labels along left edge (米 = pixel × resolution，从左上角 0 向下递增)
   for (let y = 0; y <= endY; y += spacingPx) {
-    const world = pixelToWorld(0, y, originPx, originPy, res);
-    const meters = Math.round(world.y * 1000) / 1000;
+    const meters = Math.round(y * res * 1000) / 1000;
     allObjects.push(new Text(formatDist(meters), {
       ...labelStyle,
       left: -4,
@@ -851,6 +849,16 @@ function handleMouseMove(opt: any) {
       cursorWorldY.value = lastCursorWorld.y;
       emit('cursor-position', lastCursorWorld.x, lastCursorWorld.y);
     });
+  }
+
+  // hover tooltip：拖动时不弹出
+  if (!isDraggingObject) {
+    const hovered = findElementAtScenePoint(pointer.x, pointer.y);
+    if (hovered) {
+      emit('hover-element', { ...hovered, clientX: evt.clientX, clientY: evt.clientY });
+    } else {
+      emit('hover-element', null);
+    }
   }
 }
 
@@ -1170,6 +1178,7 @@ function setupCanvas() {
   fabricCanvas.on('mouse:up', handleMouseUp);
   fabricCanvas.on('mouse:dblclick', handleDoubleClick);
   fabricCanvas.on('mouse:wheel', handleMouseWheel);
+  fabricCanvas.on('mouse:out', () => emit('hover-element', null));
   fabricCanvas.on('object:moving', handleObjectMoved);
   fabricCanvas.on('object:scaling', handleObjectScaling);
   fabricCanvas.on('object:rotating', handleObjectRotating);
