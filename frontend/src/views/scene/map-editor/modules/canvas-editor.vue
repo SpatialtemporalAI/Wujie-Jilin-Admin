@@ -1193,6 +1193,20 @@ watch(() => props.selectedElement, () => {
   if (!fabricCanvas) return;
   updateSelectionStyle();
   updateSelection();
+
+  // 选中点位时把它拉到顶层，避免被其他点位遮盖
+  const sel = props.selectedElement;
+  if (sel?.type === 'annotation') {
+    const key = getElementKey('annotation', sel.id);
+    const circle = elementMap.get(key);
+    const deco = annotationDecorations.get(sel.id);
+    if (circle) fabricCanvas.bringObjectToFront(circle);
+    if (deco) {
+      fabricCanvas.bringObjectToFront(deco.angleIndicator);
+      fabricCanvas.bringObjectToFront(deco.text);
+    }
+  }
+
   fabricCanvas.renderAll();
 });
 watch(() => props.gridSpacing, () => renderGrid());
