@@ -25,6 +25,7 @@
 - [2026-06-17 地图编辑器、机器人新增与任务管理修复](./business/2026-06-17_editor-robot-task-fixes.md) — 调整地图编辑器交互/默认值、机器人新增默认配置并修复任务页空白
 - [2026-06-17 场景地图、任务列表与运行监控 UI 修复](./business/2026-06-17_scene-task-monitor-ui-fixes.md) — 修复图片预览、任务表格/禁用操作和运行监控地图布局
 - [2026-06-17 任务新增编辑必填校验](./business/2026-06-17_task-form-required-validation.md) — 巡逻点位/动作和定时日期/开始时间提交前必填校验
+- [2026-06-17 任务启用禁用按钮修复](./business/2026-06-17_task-toggle-enabled-fix.md) — 统一任务列表 enabled 状态转换，修复切换按钮无反应
 
 ## 维护说明
 

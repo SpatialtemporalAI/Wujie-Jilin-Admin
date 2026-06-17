@@ -6350,8 +6350,8 @@
     "semantic_hash": ""
   },
   "D:\\project\\SpatialtemporalAi\\Wujie-Jilin-Admin\\frontend\\src\\views\\scene\\map-editor\\modules\\canvas-editor.vue": {
-    "mtime": 1781684002.621092,
-    "ast_hash": "c0615ba14e77307ec57185df7f1f7b61",
+    "mtime": 1781687145.9427476,
+    "ast_hash": "f17732538ac50111f1c85b10713cc795",
     "semantic_hash": ""
   },
   "D:\\project\\SpatialtemporalAi\\Wujie-Jilin-Admin\\frontend\\src\\views\\scene\\map-editor\\modules\\editor-toolbar.vue": {
@@ -6415,8 +6415,8 @@
     "semantic_hash": ""
   },
   "D:\\project\\SpatialtemporalAi\\Wujie-Jilin-Admin\\frontend\\src\\views\\task\\modules\\task-list-tab.vue": {
-    "mtime": 1781685158.8545394,
-    "ast_hash": "933b1a62a1af4b7b9671295705fad652",
+    "mtime": 1781687132.5600605,
+    "ast_hash": "88cd97ffa002bc3cb5c21cfe52f98b3f",
     "semantic_hash": ""
   },
   "D:\\project\\SpatialtemporalAi\\Wujie-Jilin-Admin\\frontend\\src\\views\\task\\modules\\task-operate-drawer.vue": {
@@ -6750,8 +6750,8 @@
     "semantic_hash": ""
   },
   "D:\\project\\SpatialtemporalAi\\Wujie-Jilin-Admin\\aiDoc\\memory\\project-memory.md": {
-    "mtime": 1781685998.424913,
-    "ast_hash": "7b5e015dc4161a97ffad327a7caf90a6",
+    "mtime": 1781687105.501795,
+    "ast_hash": "3de27465b13f8b40a9c1192f180b1849",
     "semantic_hash": ""
   },
   "D:\\project\\SpatialtemporalAi\\Wujie-Jilin-Admin\\aiDoc\\memory\\README.md": {
@@ -7312,6 +7312,11 @@
   "D:\\project\\SpatialtemporalAi\\Wujie-Jilin-Admin\\aiDoc\\memory\\business\\2026-06-17_task-form-required-validation.md": {
     "mtime": 1781686051.1994133,
     "ast_hash": "730c62df077036f4d3cc7c2310605040",
+    "semantic_hash": ""
+  },
+  "D:\\project\\SpatialtemporalAi\\Wujie-Jilin-Admin\\aiDoc\\memory\\business\\2026-06-17_task-toggle-enabled-fix.md": {
+    "mtime": 1781687139.020589,
+    "ast_hash": "19cfe7dcfaca5240d90f77cb80d20a84",
     "semantic_hash": ""
   }
 }

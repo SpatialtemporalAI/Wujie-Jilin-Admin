@@ -6,6 +6,7 @@ import { useAppStore } from '@/store/modules/app';
 import { defaultTransform, useNaivePaginatedTable, useTableOperate } from '@/hooks/common/table';
 import { useAuth } from '@/hooks/business/auth';
 import { $t } from '@/locales';
+import { enableStatusToBoolean } from '@/utils/status';
 import TaskSearch from './task-search.vue';
 import TaskOperateDrawer from './task-operate-drawer.vue';
 
@@ -62,7 +63,14 @@ const {
   mobilePagination
 } = useNaivePaginatedTable({
   api: () => fetchGetTaskList(searchParams),
-  transform: response => defaultTransform(response),
+  transform: response => {
+    const result = defaultTransform(response);
+    result.data = result.data.map((task: Api.Task.Task & { enabled: boolean | string }) => ({
+      ...task,
+      enabled: enableStatusToBoolean(task.enabled)
+    }));
+    return result;
+  },
   onPaginationParamsChange: params => {
     searchParams.page = params.page;
     searchParams.page_size = params.pageSize;

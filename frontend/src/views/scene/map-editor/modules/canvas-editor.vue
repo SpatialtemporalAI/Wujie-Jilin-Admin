@@ -1459,14 +1459,15 @@ defineExpose({ exportCanvas, zoomIn, zoomOut, zoomReset, locatePixelPoint });
       <div class="my-2px h-1px bg-gray-200"></div>
       <div class="flex items-center gap-6px">
         <span class="inline-block h-10px w-10px rounded-full" style="background-color: #22c55e"></span>
-        <span>点位</span>
+        <span>接待点</span>
       </div>
       <div class="flex items-center gap-6px">
         <span class="inline-block h-10px w-10px rounded-full" style="background-color: #047857"></span>
         <span>返回点</span>
       </div>
       <div class="flex items-center gap-6px">
-        <span class="inline-block h-10px w-10px" style="background-color: rgba(59, 130, 246, 0.3); border: 1px solid #3b82f6"></span>
+        <span class="inline-block h-10px w-10px"
+          style="background-color: rgba(59, 130, 246, 0.3); border: 1px solid #3b82f6"></span>
         <span>障碍物</span>
       </div>
       <div class="flex items-center gap-6px">
@@ -1501,8 +1502,7 @@ defineExpose({ exportCanvas, zoomIn, zoomOut, zoomReset, locatePixelPoint });
     </div>
 
     <!-- Cursor coordinates (placed above minimap) -->
-    <div v-if="editorData"
-      class="absolute left-12px z-10 rounded bg-black/50 px-8px py-4px text-xs text-white"
+    <div v-if="editorData" class="absolute left-12px z-10 rounded bg-black/50 px-8px py-4px text-xs text-white"
       :style="{ bottom: minimapImageUrl ? `${MINIMAP_SIZE + 24}px` : '12px' }">
       坐标: {{ cursorWorldX.toFixed(2) }}m, {{ cursorWorldY.toFixed(2) }}m
     </div>
@@ -1536,5 +1536,3 @@ defineExpose({ exportCanvas, zoomIn, zoomOut, zoomReset, locatePixelPoint });
     </div>
   </div>
 </template>
-
-
