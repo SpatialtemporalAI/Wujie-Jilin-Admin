@@ -2,6 +2,7 @@
 import { reactive, ref, shallowRef } from 'vue';
 import { NButton, NCard, NDataTable, NPopconfirm, NTag } from 'naive-ui';
 import { fetchGetSceneMapList, fetchDeleteSceneMap } from '@/service/api';
+import { getFilePreviewUrl } from '@/service/api/file';
 import { useAppStore } from '@/store/modules/app';
 import { defaultTransform, useNaivePaginatedTable, useTableOperate } from '@/hooks/common/table';
 import { useAuth } from '@/hooks/business/auth';
@@ -12,6 +13,8 @@ import SceneMapDetailDrawer from './modules/scene-map-detail-drawer.vue';
 
 const appStore = useAppStore();
 const { hasAuth } = useAuth();
+const previewImageVisible = ref(false);
+const previewImageUrl = ref('');
 
 /** 场景地图搜索参数 */
 const searchParams: Api.Scene.SceneMapSearchParams = reactive({
@@ -81,7 +84,7 @@ const {
       width: 100,
       render: row => {
         if (row.image_id) {
-          return <NButton text type="primary" size="small">查看图片</NButton>;
+          return <NButton text type="primary" size="small" onClick={() => handlePreviewImage(row.image_id!)}>查看图片</NButton>;
         }
         return <span>-</span>;
       }
@@ -178,6 +181,11 @@ function handleEditMap(id: number) {
   handleEditMapRaw(id);
 }
 
+function handlePreviewImage(imageId: number) {
+  previewImageUrl.value = getFilePreviewUrl(imageId);
+  previewImageVisible.value = true;
+}
+
 async function handleDelete(id: number) {
   try {
     await fetchDeleteSceneMap(id);
@@ -247,6 +255,9 @@ function handleViewDetail(row: Api.Scene.SceneMap) {
         v-model:visible="detailDrawerVisible"
         :map-data="detailMapData"
       />
+      <NModal v-model:show="previewImageVisible" preset="card" title="地图图片" class="max-w-900px">
+        <img :src="previewImageUrl" class="max-h-70vh w-full object-contain" />
+      </NModal>
     </NCard>
   </div>
 </template>

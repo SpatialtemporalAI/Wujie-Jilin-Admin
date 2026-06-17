@@ -143,11 +143,9 @@ const {
               {$t('common.edit')}
             </NButton>
           )}
-          {hasAuth('task:edit') && (
-            <NButton size="small" ghost onClick={() => handleToggleEnabled(row)}>
-              {row.enabled ? '禁用' : '启用'}
-            </NButton>
-          )}
+          <NButton size="small" ghost onClick={() => handleToggleEnabled(row)}>
+            {row.enabled ? '禁用' : '启用'}
+          </NButton>
           {hasAuth('task:delete') && (
             <NPopconfirm onPositiveClick={() => handleDelete(row.id)}>
               {{
@@ -182,12 +180,12 @@ async function handleDelete(id: number) {
 }
 
 async function handleToggleEnabled(row: Api.Task.Task) {
-  try {
-    await fetchToggleTaskEnabled(row.id, !row.enabled);
-    message.success(row.enabled ? '已禁用' : '已启用');
-    getData();
-  } catch (error) {
-    console.error('切换启用状态失败:', error);
+  const enabled = !row.enabled;
+  const { error } = await fetchToggleTaskEnabled(row.id, enabled);
+  if (!error) {
+    row.enabled = enabled;
+    message.success(enabled ? '已启用' : '已禁用');
+    await getDataByPage();
   }
 }
 

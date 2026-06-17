@@ -122,7 +122,7 @@ onBeforeUnmount(() => {
 </script>
 
 <template>
-  <NCard :bordered="true" size="small">
+  <NCard :bordered="true" size="small" class="h-full" content-class="h-full min-h-0">
     <template #header>
       <NSpace align="center" :size="8">
         <span>实时告警</span>
@@ -132,14 +132,14 @@ onBeforeUnmount(() => {
       </NSpace>
     </template>
 
-    <NSpin :show="loading">
+    <NSpin :show="loading" class="h-full">
       <div v-if="!robotId" class="py-32px">
         <NEmpty description="请先选择机器人" />
       </div>
       <div v-else-if="alerts.length === 0" class="py-32px">
         <NEmpty description="暂无告警" />
       </div>
-      <NSpace v-else vertical :size="8" class="max-h-400px overflow-y-auto">
+      <NSpace v-else vertical :size="8" class="h-full overflow-y-auto">
         <div
           v-for="alert in alerts"
           :key="alert.id"
