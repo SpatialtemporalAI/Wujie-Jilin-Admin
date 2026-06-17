@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { computed, onMounted, ref, watch } from 'vue';
+import type { FormRules } from 'naive-ui';
 import { jsonClone } from '@sa/utils';
 import { useNaiveForm } from '@/hooks/common/form';
 import { $t } from '@/locales';
@@ -63,11 +64,13 @@ function createDefaultModel(): Api.Robot.RobotCreate {
     name: '',
     model_id: undefined as unknown as number,
     serial_number: '',
-    status: 'inactive'
+    status: 'inactive',
+    speed_level: 'normal',
+    battery_threshold: 40
   };
 }
 
-const rules = {
+const rules: FormRules = {
   name: { required: true, message: '请输入机器人名称', trigger: 'blur' },
   model_id: { required: true, message: '请选择机器人型号', trigger: 'change', type: 'number' },
   serial_number: { required: true, message: '请输入序列号', trigger: 'blur' }

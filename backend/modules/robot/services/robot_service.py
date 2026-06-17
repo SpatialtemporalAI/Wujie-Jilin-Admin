@@ -204,6 +204,8 @@ class RobotService:
                 serial_number=robot_in.serial_number,
                 map_id=robot_in.map_id,
                 status=RobotStatus(robot_in.status),
+                speed_level=robot_in.speed_level,
+                battery_threshold=robot_in.battery_threshold,
             )
 
             db.add(robot_obj)

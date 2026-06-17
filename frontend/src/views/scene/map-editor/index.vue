@@ -291,7 +291,7 @@ function handleContextMenuSelect(key: string) {
     editor.addAnnotation({
       x,
       y,
-      name: `接待点${count}`,
+      name: `点位${count}`,
       angle: 0,
       type: 'reception',
     });
@@ -370,6 +370,7 @@ function confirmRename() {
   editor.updateElement(renameTarget.value.type, renameTarget.value.id, { name: value });
   renameTarget.value = null;
   renameValue.value = '';
+  renameDialogVisible.value = false;
   return true;
 }
 

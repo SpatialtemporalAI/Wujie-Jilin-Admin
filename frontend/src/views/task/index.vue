@@ -12,14 +12,14 @@ const activeTab = ref('list');
 <template>
   <div class="min-h-500px flex-col-stretch gap-16px overflow-hidden lt-sm:overflow-auto">
     <NCard :bordered="false" size="small" class="card-wrapper flex-1-hidden">
-      <NTabs v-model:value="activeTab" type="line" animated class="flex-1-hidden">
-        <NTabPane name="list" tab="任务列表" class="flex-1-hidden">
+      <NTabs v-model:value="activeTab" type="line" animated>
+        <NTabPane name="list" tab="任务列表">
           <TaskListTab />
         </NTabPane>
-        <NTabPane name="execution" tab="执行列表" class="flex-1-hidden">
+        <NTabPane name="execution" tab="执行列表">
           <TaskExecutionTab />
         </NTabPane>
-        <NTabPane name="history" tab="历史任务" class="flex-1-hidden">
+        <NTabPane name="history" tab="历史任务">
           <TaskHistoryTab />
         </NTabPane>
       </NTabs>
@@ -27,22 +27,4 @@ const activeTab = ref('list');
   </div>
 </template>
 
-<style scoped>
-:deep(.n-tabs) {
-  display: flex;
-  flex-direction: column;
-}
-
-:deep(.n-tabs > .n-tab-pane) {
-  height: 100%;
-}
-
-:deep(.n-tabs-pane-wrapper) {
-  flex: 1 1 0;
-  min-height: 0;
-}
-
-:deep(.n-tab-pane) {
-  height: 100%;
-}
-</style>
+<style scoped></style>

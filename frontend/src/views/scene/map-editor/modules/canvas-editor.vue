@@ -199,6 +199,10 @@ function fabricAngleToAnnotationRad(fabricAngle: number): number {
 const OBSTACLE_FILL = 'rgba(59, 130, 246, 0.3)';
 const OBSTACLE_STROKE = '#3b82f6';
 const RESTRICTED_STROKE = '#6b7280';
+const POINT_FILL = '#22c55e';
+const POINT_SELECTED_FILL = '#16a34a';
+const RETURN_POINT_FILL = '#047857';
+const RETURN_POINT_SELECTED_FILL = '#065f46';
 
 function createRestrictedPattern(): Pattern {
   const size = 8;
@@ -412,7 +416,10 @@ function syncStructure() {
     if (elementMap.has(key)) continue;
 
     const isSelected = props.selectedElement?.type === 'annotation' && props.selectedElement?.id === ann.id;
-    const annColor = isSelected ? '#16a34a' : '#22c55e';
+    const isReturnPoint = ann.type === 'navigation' || ann.type === '返回点';
+    const annColor = isReturnPoint
+      ? (isSelected ? RETURN_POINT_SELECTED_FILL : RETURN_POINT_FILL)
+      : (isSelected ? POINT_SELECTED_FILL : POINT_FILL);
 
     // 可交互的 circle（拖动 + 旋转入口）
     const circle = new Circle({
@@ -572,7 +579,10 @@ function updateSelectionStyle() {
     const circle = elementMap.get(key) as Circle | undefined;
     if (!circle) continue;
     const isSelected = sel?.type === 'annotation' && sel?.id === ann.id;
-    const annColor = isSelected ? '#16a34a' : '#22c55e';
+    const isReturnPoint = ann.type === 'navigation' || ann.type === '返回点';
+    const annColor = isReturnPoint
+      ? (isSelected ? RETURN_POINT_SELECTED_FILL : RETURN_POINT_FILL)
+      : (isSelected ? POINT_SELECTED_FILL : POINT_FILL);
     circle.set('fill', annColor);
     circle.set('radius', isSelected ? 10 : 8);
     circle.setCoords();
@@ -1450,6 +1460,10 @@ defineExpose({ exportCanvas, zoomIn, zoomOut, zoomReset, locatePixelPoint });
       <div class="flex items-center gap-6px">
         <span class="inline-block h-10px w-10px rounded-full" style="background-color: #22c55e"></span>
         <span>点位</span>
+      </div>
+      <div class="flex items-center gap-6px">
+        <span class="inline-block h-10px w-10px rounded-full" style="background-color: #047857"></span>
+        <span>返回点</span>
       </div>
       <div class="flex items-center gap-6px">
         <span class="inline-block h-10px w-10px" style="background-color: rgba(59, 130, 246, 0.3); border: 1px solid #3b82f6"></span>

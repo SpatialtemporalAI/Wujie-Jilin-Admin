@@ -22,6 +22,7 @@
 - [2026-06-17 机器人管理移除列表状态列](./business/2026-06-17_robot-manage-remove-status-column.md) — 去掉机器人管理表格中的状态显示列
 - [2026-06-17 场景地图新增映射比例输入](./business/2026-06-17_scene-map-resolution-input.md) — 新增/编辑场景地图时填写 resolution，默认 1
 - [2026-06-17 任务管理页面白色卡片背景调整](./business/2026-06-17_task-page-card-background.md) — 任务管理页增加白色卡片容器以修正 UI 样式偏差
+- [2026-06-17 地图编辑器、机器人新增与任务管理修复](./business/2026-06-17_editor-robot-task-fixes.md) — 调整地图编辑器交互/默认值、机器人新增默认配置并修复任务页空白
 
 ## 维护说明
 

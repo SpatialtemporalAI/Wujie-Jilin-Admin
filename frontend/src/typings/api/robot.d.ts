@@ -83,6 +83,8 @@ declare namespace Api {
       serial_number: string;
       map_id?: number | null;
       status?: RobotStatusEnum;
+      speed_level?: string | null;
+      battery_threshold?: number | null;
     };
 
     /** robot update */
