@@ -22,7 +22,7 @@ export function useRobotMonitor() {
   );
 
   const parsedLocation = computed<ParsedLocation | null>(() => {
-    const loc = latestStatus.value?.location;
+    const loc = latestStatus.value?.location_info ?? latestStatus.value?.location;
     if (!loc) return null;
     try {
       const obj = typeof loc === 'string' ? JSON.parse(loc) : loc;
