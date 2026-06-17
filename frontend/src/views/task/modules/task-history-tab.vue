@@ -134,7 +134,7 @@ const {
 </script>
 
 <template>
-  <div class="h-full flex-col-stretch gap-12px">
+  <div class="min-h-500px flex-col-stretch gap-12px overflow-hidden lt-sm:overflow-auto">
     <TaskHistorySearch v-model:model="searchParams" @search="getDataByPage" @reset="getDataByPage" />
     <div>
       <TableHeaderOperation
@@ -155,7 +155,7 @@ const {
       remote
       :row-key="(row: Api.Task.TaskExecution) => row.id"
       :pagination="mobilePagination"
-      class="sm:h-full"
+      class="sm:flex-1-hidden"
     />
     <TaskDetailDrawer
       v-model:visible="detailDrawerVisible"

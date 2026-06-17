@@ -2185,7 +2185,7 @@
       "source_file": "D:/project/SmileX/SmileX-Fastapi-Cloud/backend/core/exception/errors.py",
       "source_location": "L64",
       "id": "exception_errors_forbiddenerror",
-      "community": 868,
+      "community": 9,
       "norm_label": "forbiddenerror"
     },
     {
@@ -6226,7 +6226,7 @@
       "source_file": "backend/core/utils/memory_cache.py",
       "source_location": "L125",
       "id": "utils_memory_cache_get_memory_cache",
-      "community": 9,
+      "community": 11,
       "norm_label": "get_memory_cache()"
     },
     {
@@ -7036,7 +7036,7 @@
       "source_file": "backend/database/manager/async_manager.py",
       "source_location": "L77",
       "id": "manager_async_manager_asyncdatabasemanager",
-      "community": 90,
+      "community": 25,
       "norm_label": "asyncdatabasemanager"
     },
     {
@@ -7090,7 +7090,7 @@
       "source_file": "backend/database/manager/async_manager.py",
       "source_location": "L195",
       "id": "manager_async_manager_asyncdatabasemanager_close_pool",
-      "community": 90,
+      "community": 25,
       "norm_label": ".close_pool()"
     },
     {
@@ -7117,7 +7117,7 @@
       "source_file": "backend/database/manager/async_manager.py",
       "source_location": "L246",
       "id": "manager_async_manager_get_session",
-      "community": 25,
+      "community": 90,
       "norm_label": "get_session()"
     },
     {
@@ -7225,7 +7225,7 @@
       "source_file": "backend/database/manager/async_manager.py",
       "source_location": "L382",
       "id": "manager_async_manager_asyncdatabasemanager_del",
-      "community": 90,
+      "community": 25,
       "norm_label": ".__del__()"
     },
     {
@@ -7270,7 +7270,7 @@
       "source_file": "backend/database/manager/async_manager.py",
       "source_location": "L78",
       "id": "manager_async_manager_rationale_78",
-      "community": 90,
+      "community": 25,
       "norm_label": "\u5f02\u6b65\u6570\u636e\u5e93\u8fde\u63a5\u7ba1\u7406\u5668      \u7279\u6027:     - \u652f\u6301mysql\u548cpostgresql\u5f02\u6b65\u8fde\u63a5     - \u5b8c\u6574\u7684\u8fde\u63a5\u6c60\u914d\u7f6e     - \u652f\u6301\u4e8b\u52a1\u548c"
     },
     {
@@ -7297,7 +7297,7 @@
       "source_file": "backend/database/manager/async_manager.py",
       "source_location": "L196",
       "id": "manager_async_manager_rationale_196",
-      "community": 90,
+      "community": 25,
       "norm_label": "\u5173\u95ed\u5f02\u6b65\u6570\u636e\u5e93\u8fde\u63a5\u6c60          \u91ca\u653e\u6240\u6709\u8fde\u63a5\u5e76\u6e05\u7406\u8d44\u6e90"
     },
     {
@@ -7378,7 +7378,7 @@
       "source_file": "backend/database/manager/async_manager.py",
       "source_location": "L430",
       "id": "manager_async_manager_rationale_430",
-      "community": 25,
+      "community": 90,
       "norm_label": "\u83b7\u53d6\u5f02\u6b65\u6570\u636e\u5e93\u4f1a\u8bdd\u7684\u751f\u6210\u5668\u51fd\u6570      \u517c\u5bb9\u65e7\u63a5\u53e3      yields:         sqlalchemy asyncsession\u5b9e\u4f8b"
     },
     {
@@ -9421,7 +9421,7 @@
       "source_file": "backend/modules/admin/deps/auth/permission.py",
       "source_location": "L22",
       "id": "backend_modules_admin_deps_auth_permission_py_str",
-      "community": 868,
+      "community": 113,
       "norm_label": "str"
     },
     {
@@ -17332,7 +17332,7 @@
       "source_file": "backend/modules/admin/services/sys/role_service.py",
       "source_location": "L37",
       "id": "backend_modules_admin_services_sys_role_service_py_sysrolequeryparams",
-      "community": 868,
+      "community": 51,
       "norm_label": "sysrolequeryparams"
     },
     {
@@ -17341,7 +17341,7 @@
       "source_file": "backend/modules/admin/services/sys/role_service.py",
       "source_location": "L37",
       "id": "backend_modules_admin_services_sys_role_service_py_select",
-      "community": 868,
+      "community": 51,
       "norm_label": "select"
     },
     {
@@ -17404,7 +17404,7 @@
       "source_file": "backend/modules/admin/services/sys/role_service.py",
       "source_location": "L137",
       "id": "backend_modules_admin_services_sys_role_service_py_sysrolecreate",
-      "community": 868,
+      "community": 17,
       "norm_label": "sysrolecreate"
     },
     {
@@ -17431,7 +17431,7 @@
       "source_file": "backend/modules/admin/services/sys/role_service.py",
       "source_location": "L194",
       "id": "backend_modules_admin_services_sys_role_service_py_sysroleupdate",
-      "community": 868,
+      "community": 17,
       "norm_label": "sysroleupdate"
     },
     {
@@ -35887,7 +35887,7 @@
       "source_file": "frontend/src/service/api/scene.ts",
       "source_location": "L83",
       "id": "api_scene_fetchcreatescenemap",
-      "community": 491,
+      "community": 111,
       "norm_label": "fetchcreatescenemap()"
     },
     {
@@ -35896,7 +35896,7 @@
       "source_file": "frontend/src/service/api/scene.ts",
       "source_location": "L95",
       "id": "api_scene_fetchupdatescenemap",
-      "community": 111,
+      "community": 491,
       "norm_label": "fetchupdatescenemap()"
     },
     {
@@ -52211,7 +52211,7 @@
       "label": "\u7ea6\u675f\u4e0e\u5907\u6ce8",
       "file_type": "document",
       "source_file": "aiDoc/memory/business/2026-06-17_editor-robot-task-fixes.md",
-      "source_location": "L25",
+      "source_location": "L26",
       "id": "business_2026_06_17_editor_robot_task_fixes_\u7ea6\u675f\u4e0e\u5907\u6ce8",
       "community": 496,
       "norm_label": "\u7ea6\u675f\u4e0e\u5907\u6ce8"
@@ -52220,7 +52220,7 @@
       "label": "\u76f8\u5173\u6587\u4ef6",
       "file_type": "document",
       "source_file": "aiDoc/memory/business/2026-06-17_editor-robot-task-fixes.md",
-      "source_location": "L30",
+      "source_location": "L31",
       "id": "business_2026_06_17_editor_robot_task_fixes_\u76f8\u5173\u6587\u4ef6",
       "community": 496,
       "norm_label": "\u76f8\u5173\u6587\u4ef6"
@@ -52229,7 +52229,7 @@
       "label": "\u8bb0\u5f55\u65e5\u671f",
       "file_type": "document",
       "source_file": "aiDoc/memory/business/2026-06-17_editor-robot-task-fixes.md",
-      "source_location": "L36",
+      "source_location": "L37",
       "id": "business_2026_06_17_editor_robot_task_fixes_\u8bb0\u5f55\u65e5\u671f",
       "community": 496,
       "norm_label": "\u8bb0\u5f55\u65e5\u671f"
@@ -157842,9 +157842,9 @@
       "source_file": "backend/modules/robot/schemas/robot.py",
       "source_location": "L42",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "schemas_robot_rationale_42",
-      "target": "schemas_robot_robotupdate",
-      "confidence_score": 1.0
+      "target": "schemas_robot_robotupdate"
     },
     {
       "relation": "imports",
@@ -157873,9 +157873,9 @@
       "source_file": "backend/modules/robot/schemas/robot.py",
       "source_location": "L57",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "schemas_robot_rationale_57",
-      "target": "schemas_robot_robotresponsedata",
-      "confidence_score": 1.0
+      "target": "schemas_robot_robotresponsedata"
     },
     {
       "relation": "imports",
@@ -211073,9 +211073,9 @@
       "source_file": "aiDoc/memory/business/2026-06-17_editor-robot-task-fixes.md",
       "source_location": "L1",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "aidoc_memory_business_2026_06_17_editor_robot_task_fixes_md",
-      "target": "business_2026_06_17_editor_robot_task_fixes_\u5730\u56fe\u7f16\u8f91\u5668_\u673a\u5668\u4eba\u65b0\u589e\u4e0e\u4efb\u52a1\u7ba1\u7406\u4fee\u590d",
-      "confidence_score": 1.0
+      "target": "business_2026_06_17_editor_robot_task_fixes_\u5730\u56fe\u7f16\u8f91\u5668_\u673a\u5668\u4eba\u65b0\u589e\u4e0e\u4efb\u52a1\u7ba1\u7406\u4fee\u590d"
     },
     {
       "relation": "contains",
@@ -211083,9 +211083,9 @@
       "source_file": "aiDoc/memory/business/2026-06-17_editor-robot-task-fixes.md",
       "source_location": "L3",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "business_2026_06_17_editor_robot_task_fixes_\u5730\u56fe\u7f16\u8f91\u5668_\u673a\u5668\u4eba\u65b0\u589e\u4e0e\u4efb\u52a1\u7ba1\u7406\u4fee\u590d",
-      "target": "business_2026_06_17_editor_robot_task_fixes_\u9700\u6c42\u63cf\u8ff0",
-      "confidence_score": 1.0
+      "target": "business_2026_06_17_editor_robot_task_fixes_\u9700\u6c42\u63cf\u8ff0"
     },
     {
       "relation": "contains",
@@ -211093,9 +211093,9 @@
       "source_file": "aiDoc/memory/business/2026-06-17_editor-robot-task-fixes.md",
       "source_location": "L7",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "business_2026_06_17_editor_robot_task_fixes_\u5730\u56fe\u7f16\u8f91\u5668_\u673a\u5668\u4eba\u65b0\u589e\u4e0e\u4efb\u52a1\u7ba1\u7406\u4fee\u590d",
-      "target": "business_2026_06_17_editor_robot_task_fixes_\u72b6\u6001",
-      "confidence_score": 1.0
+      "target": "business_2026_06_17_editor_robot_task_fixes_\u72b6\u6001"
     },
     {
       "relation": "contains",
@@ -211103,9 +211103,9 @@
       "source_file": "aiDoc/memory/business/2026-06-17_editor-robot-task-fixes.md",
       "source_location": "L11",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "business_2026_06_17_editor_robot_task_fixes_\u5730\u56fe\u7f16\u8f91\u5668_\u673a\u5668\u4eba\u65b0\u589e\u4e0e\u4efb\u52a1\u7ba1\u7406\u4fee\u590d",
-      "target": "business_2026_06_17_editor_robot_task_fixes_\u6d89\u53ca\u8303\u56f4",
-      "confidence_score": 1.0
+      "target": "business_2026_06_17_editor_robot_task_fixes_\u6d89\u53ca\u8303\u56f4"
     },
     {
       "relation": "contains",
@@ -211113,9 +211113,9 @@
       "source_file": "aiDoc/memory/business/2026-06-17_editor-robot-task-fixes.md",
       "source_location": "L25",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "business_2026_06_17_editor_robot_task_fixes_\u5730\u56fe\u7f16\u8f91\u5668_\u673a\u5668\u4eba\u65b0\u589e\u4e0e\u4efb\u52a1\u7ba1\u7406\u4fee\u590d",
-      "target": "business_2026_06_17_editor_robot_task_fixes_\u7ea6\u675f\u4e0e\u5907\u6ce8",
-      "confidence_score": 1.0
+      "target": "business_2026_06_17_editor_robot_task_fixes_\u7ea6\u675f\u4e0e\u5907\u6ce8"
     },
     {
       "relation": "contains",
@@ -211123,9 +211123,9 @@
       "source_file": "aiDoc/memory/business/2026-06-17_editor-robot-task-fixes.md",
       "source_location": "L30",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "business_2026_06_17_editor_robot_task_fixes_\u5730\u56fe\u7f16\u8f91\u5668_\u673a\u5668\u4eba\u65b0\u589e\u4e0e\u4efb\u52a1\u7ba1\u7406\u4fee\u590d",
-      "target": "business_2026_06_17_editor_robot_task_fixes_\u76f8\u5173\u6587\u4ef6",
-      "confidence_score": 1.0
+      "target": "business_2026_06_17_editor_robot_task_fixes_\u76f8\u5173\u6587\u4ef6"
     },
     {
       "relation": "contains",
@@ -211133,9 +211133,9 @@
       "source_file": "aiDoc/memory/business/2026-06-17_editor-robot-task-fixes.md",
       "source_location": "L36",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "business_2026_06_17_editor_robot_task_fixes_\u5730\u56fe\u7f16\u8f91\u5668_\u673a\u5668\u4eba\u65b0\u589e\u4e0e\u4efb\u52a1\u7ba1\u7406\u4fee\u590d",
-      "target": "business_2026_06_17_editor_robot_task_fixes_\u8bb0\u5f55\u65e5\u671f",
-      "confidence_score": 1.0
+      "target": "business_2026_06_17_editor_robot_task_fixes_\u8bb0\u5f55\u65e5\u671f"
     },
     {
       "relation": "contains",
@@ -211143,9 +211143,9 @@
       "source_file": "aiDoc/memory/business/2026-06-17_editor-robot-task-fixes.md",
       "source_location": "L13",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "business_2026_06_17_editor_robot_task_fixes_\u6d89\u53ca\u8303\u56f4",
-      "target": "business_2026_06_17_editor_robot_task_fixes_\u540e\u7aef",
-      "confidence_score": 1.0
+      "target": "business_2026_06_17_editor_robot_task_fixes_\u540e\u7aef"
     },
     {
       "relation": "contains",
@@ -211153,9 +211153,9 @@
       "source_file": "aiDoc/memory/business/2026-06-17_editor-robot-task-fixes.md",
       "source_location": "L17",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "business_2026_06_17_editor_robot_task_fixes_\u6d89\u53ca\u8303\u56f4",
-      "target": "business_2026_06_17_editor_robot_task_fixes_\u524d\u7aef",
-      "confidence_score": 1.0
+      "target": "business_2026_06_17_editor_robot_task_fixes_\u524d\u7aef"
     },
     {
       "relation": "contains",

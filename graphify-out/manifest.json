@@ -6265,8 +6265,8 @@
     "semantic_hash": ""
   },
   "D:\\project\\SpatialtemporalAi\\Wujie-Jilin-Admin\\frontend\\src\\views\\robot\\manage\\modules\\robot-operate-drawer.vue": {
-    "mtime": 1781684037.925045,
-    "ast_hash": "52b0508dca2e65b50734738ab042b014",
+    "mtime": 1781684465.0286605,
+    "ast_hash": "02dc0a9309b2ef85f56a1aa5b30f5916",
     "semantic_hash": ""
   },
   "D:\\project\\SpatialtemporalAi\\Wujie-Jilin-Admin\\frontend\\src\\views\\robot\\manage\\modules\\robot-search.vue": {
@@ -6400,8 +6400,8 @@
     "semantic_hash": ""
   },
   "D:\\project\\SpatialtemporalAi\\Wujie-Jilin-Admin\\frontend\\src\\views\\task\\modules\\task-execution-tab.vue": {
-    "mtime": 1781353589.2159467,
-    "ast_hash": "785ef00dc4b4e92555f006446602369b",
+    "mtime": 1781684833.203278,
+    "ast_hash": "8009f4aa577311a90dcdd71b67b4dfec",
     "semantic_hash": ""
   },
   "D:\\project\\SpatialtemporalAi\\Wujie-Jilin-Admin\\frontend\\src\\views\\task\\modules\\task-history-search.vue": {
@@ -6410,13 +6410,13 @@
     "semantic_hash": ""
   },
   "D:\\project\\SpatialtemporalAi\\Wujie-Jilin-Admin\\frontend\\src\\views\\task\\modules\\task-history-tab.vue": {
-    "mtime": 1781353590.5764978,
-    "ast_hash": "8de54511f56ba7478df9c2860473b662",
+    "mtime": 1781684834.6470723,
+    "ast_hash": "56c006b4b563d5a6d026b92bdbba2016",
     "semantic_hash": ""
   },
   "D:\\project\\SpatialtemporalAi\\Wujie-Jilin-Admin\\frontend\\src\\views\\task\\modules\\task-list-tab.vue": {
-    "mtime": 1781667048.8557973,
-    "ast_hash": "a06b632cadab96950236cc04695462f8",
+    "mtime": 1781684832.1362114,
+    "ast_hash": "29915c037b2e20beb5d5554a8475b9a2",
     "semantic_hash": ""
   },
   "D:\\project\\SpatialtemporalAi\\Wujie-Jilin-Admin\\frontend\\src\\views\\task\\modules\\task-operate-drawer.vue": {
@@ -7300,8 +7300,8 @@
     "semantic_hash": ""
   },
   "D:\\project\\SpatialtemporalAi\\Wujie-Jilin-Admin\\aiDoc\\memory\\business\\2026-06-17_editor-robot-task-fixes.md": {
-    "mtime": 1781683953.8973112,
-    "ast_hash": "aa53bf6e6aece8b565a2e02ab08898f5",
+    "mtime": 1781684815.2454562,
+    "ast_hash": "ccbd104989493653a5c8dd0c9cdeeee5",
     "semantic_hash": ""
   }
 }

@@ -1,7 +1,7 @@
 # Graph Report - Wujie-Jilin-Admin  (2026-06-17)
 
 ## Corpus Check
-- 787 files · ~297,434 words
+- 787 files · ~297,450 words
 - Verdict: corpus is large enough that graph structure adds value.
 
 ## Summary
@@ -747,7 +747,7 @@ Cohesion: 0.06
 Nodes (38): genChangelog(), cleanup(), gitCommit(), gitCommitVerify(), PromptObject, release(), generateRoute(), PromptObject (+30 more)
 
 ### Community 9 - "Community 9"
-Cohesion: 0.16
+Cohesion: 0.17
 Nodes (41): AsyncSession, bool, int, Select, str, SysMenu, SysMenuCreate, SysMenuQueryParams (+33 more)
 
 ### Community 10 - "Community 10"
@@ -755,8 +755,8 @@ Cohesion: 0.17
 Nodes (29): AutoMcpToolCreate, McpToolTestRequest, SysUser, AutoMcpToolCreate, McpToolTestRequest, str, McpServerStatusResponse, McpToolInfo (+21 more)
 
 ### Community 11 - "Community 11"
-Cohesion: 0.16
-Nodes (36): AsyncSession, int, IpBlacklistCreateRequest, IpBlacklistQueryParams, PageRequest, SysUser, str, AsyncSession (+28 more)
+Cohesion: 0.15
+Nodes (37): AsyncSession, int, IpBlacklistCreateRequest, IpBlacklistQueryParams, PageRequest, SysUser, str, AsyncSession (+29 more)
 
 ### Community 13 - "Community 13"
 Cohesion: 0.09
@@ -775,8 +775,8 @@ Cohesion: 0.05
 Nodes (41): debug.console.fontSize, debug.console.lineHeight, editor.defaultFormatter, editor.detectIndentation, editor.insertSpaces, editor.tabSize, eslint.enable, eslint.workingDirectories (+33 more)
 
 ### Community 17 - "Community 17"
-Cohesion: 0.11
-Nodes (28): 系统用户表     存储系统管理用户的基本信息和认证凭证, 系统用户表     存储系统管理用户的基本信息和认证凭证, AsyncSession, str, SysUser, AsyncSession, bool, str (+20 more)
+Cohesion: 0.10
+Nodes (30): 系统用户表     存储系统管理用户的基本信息和认证凭证, 系统用户表     存储系统管理用户的基本信息和认证凭证, AsyncSession, str, SysUser, SysRoleCreate, SysRoleUpdate, AsyncSession (+22 more)
 
 ### Community 18 - "Community 18"
 Cohesion: 0.11
@@ -808,7 +808,7 @@ Nodes (36): _is_multi_tenant_enabled(), 获取当前认证的用户（同一请�
 
 ### Community 25 - "Community 25"
 Cohesion: 0.09
-Nodes (25): async_sessionmaker, AsyncEngine, Any, AsyncSession, bool, DatabaseModel, str, check_db_connection() (+17 more)
+Nodes (26): async_sessionmaker, AsyncEngine, Any, AsyncSession, bool, DatabaseModel, str, AsyncDatabaseManager (+18 more)
 
 ### Community 26 - "Community 26"
 Cohesion: 0.10
@@ -911,8 +911,8 @@ Cohesion: 0.20
 Nodes (18): bool, bool, async_driver(), Config, ConnectionMode, DatabaseDriver, DatabaseModel, DatabaseType (+10 more)
 
 ### Community 51 - "Community 51"
-Cohesion: 0.37
-Nodes (17): AsyncSession, bool, int, str, assign_menu_to_role(), batch_delete_roles(), batch_update_roles_status(), build_role_query() (+9 more)
+Cohesion: 0.31
+Nodes (19): AsyncSession, bool, int, Select, str, SysRoleQueryParams, assign_menu_to_role(), batch_delete_roles() (+11 more)
 
 ### Community 52 - "Community 52"
 Cohesion: 0.13
@@ -1063,8 +1063,8 @@ Cohesion: 0.08
 Nodes (21): useAppStore, useCaptcha(), getColumnChecks(), PaginationParams, useNaivePaginatedTable(), UseNaivePaginatedTableOptions, useNaiveTable(), UseNaiveTableOptions (+13 more)
 
 ### Community 90 - "Community 90"
-Cohesion: 0.15
-Nodes (14): close_pool(), init_pool(), 通用数据库接口模块 支持SQLAlchemy2.0,同步/异步连接,连接池,Alembic迁移  特性: - SQLAlchemy 2.0 完整支持, AsyncDatabaseManager, close_pool(), init_pool(), 关闭异步数据库连接池          释放所有连接并清理资源, 初始化异步数据库连接池      兼容旧接口      Args:         settings: 数据库配置实例 (+6 more)
+Cohesion: 0.18
+Nodes (13): close_pool(), init_pool(), 通用数据库接口模块 支持SQLAlchemy2.0,同步/异步连接,连接池,Alembic迁移  特性: - SQLAlchemy 2.0 完整支持, close_pool(), get_session(), init_pool(), 初始化异步数据库连接池      兼容旧接口      Args:         settings: 数据库配置实例, 获取异步数据库会话的生成器函数      兼容旧接口      Yields:         SQLAlchemy AsyncSession实例 (+5 more)
 
 ### Community 91 - "Community 91"
 Cohesion: 0.28
@@ -1148,15 +1148,15 @@ Nodes (10): *, dependencies, @sa/utils, simplebar-vue, devDependencies, typed-cs
 
 ### Community 111 - "Community 111"
 Cohesion: 0.14
-Nodes (14): fetchCreateSceneGroup(), fetchUpdateSceneGroup(), fetchUpdateSceneMap(), fetchCreateDict(), fetchCreateDictItem(), fetchCreateMenu(), fetchCreateRole(), fetchCreateUser() (+6 more)
+Nodes (14): fetchCreateSceneGroup(), fetchCreateSceneMap(), fetchUpdateSceneGroup(), fetchCreateDict(), fetchCreateDictItem(), fetchCreateMenu(), fetchCreateRole(), fetchCreateUser() (+6 more)
 
 ### Community 112 - "Community 112"
 Cohesion: 0.18
 Nodes (3): [], opt, result
 
 ### Community 113 - "Community 113"
-Cohesion: 0.50
-Nodes (3): 创建一个权限校验依赖项      Args:         permission_code: 权限标识码，如 "sys:menu:add"      Retu, 创建一个权限校验依赖项      Args:         permission_code: 权限标识码，如 "sys:menu:add", require_permission()
+Cohesion: 0.40
+Nodes (4): 创建一个权限校验依赖项      Args:         permission_code: 权限标识码，如 "sys:menu:add"      Retu, 创建一个权限校验依赖项      Args:         permission_code: 权限标识码，如 "sys:menu:add", require_permission(), str
 
 ### Community 114 - "Community 114"
 Cohesion: 0.15
@@ -2275,8 +2275,8 @@ Cohesion: 0.20
 Nodes (9): 前端, 后端, 场景地图新增导航地图图片, 涉及范围, 状态, 相关文件, 约束与备注, 记录日期 (+1 more)
 
 ### Community 868 - "Community 868"
-Cohesion: 0.20
-Nodes (34): str, Select, SysRoleCreate, SysRoleQueryParams, SysRoleUpdate, AsyncSession, bool, int (+26 more)
+Cohesion: 0.23
+Nodes (28): AsyncSession, bool, int, Select, str, SysUser, SysUserCreate, SysUserPasswordUpdate (+20 more)
 
 ### Community 881 - "Community 881"
 Cohesion: 0.67
@@ -2290,7 +2290,7 @@ Nodes (3): engines, node, pnpm
 ## Suggested Questions
 _Questions this graph is uniquely positioned to answer:_
 
-- **Why does `NotFoundError` connect `Community 182` to `Community 0`, `Community 1`, `Community 3`, `Community 517`, `Community 6`, `Community 136`, `Community 9`, `Community 11`, `Community 13`, `Community 18`, `Community 147`, `Community 23`, `Community 536`, `Community 537`, `Community 29`, `Community 30`, `Community 544`, `Community 545`, `Community 546`, `Community 40`, `Community 41`, `Community 177`, `Community 51`, `Community 53`, `Community 572`, `Community 588`, `Community 856`, `Community 868`, `Community 104`, `Community 489`, `Community 490`, `Community 117`, `Community 503`, `Community 509`?**
+- **Why does `NotFoundError` connect `Community 182` to `Community 0`, `Community 1`, `Community 3`, `Community 517`, `Community 6`, `Community 136`, `Community 9`, `Community 11`, `Community 13`, `Community 17`, `Community 18`, `Community 147`, `Community 23`, `Community 536`, `Community 537`, `Community 29`, `Community 30`, `Community 544`, `Community 545`, `Community 546`, `Community 40`, `Community 41`, `Community 177`, `Community 51`, `Community 53`, `Community 572`, `Community 588`, `Community 856`, `Community 868`, `Community 104`, `Community 489`, `Community 490`, `Community 117`, `Community 503`, `Community 509`?**
   _High betweenness centrality (0.030) - this node is a cross-community bridge._
 - **Why does `PageRequest` connect `Community 177` to `Community 0`, `Community 3`, `Community 6`, `Community 9`, `Community 11`, `Community 13`, `Community 528`, `Community 18`, `Community 19`, `Community 147`, `Community 23`, `Community 30`, `Community 38`, `Community 40`, `Community 73`, `Community 856`, `Community 488`, `Community 492`, `Community 117`, `Community 509`?**
   _High betweenness centrality (0.017) - this node is a cross-community bridge._

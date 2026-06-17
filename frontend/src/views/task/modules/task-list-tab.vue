@@ -203,7 +203,7 @@ async function handleStart(row: Api.Task.Task) {
 </script>
 
 <template>
-  <div class="h-full flex-col-stretch gap-12px">
+  <div class="min-h-500px flex-col-stretch gap-12px overflow-hidden lt-sm:overflow-auto">
     <TaskSearch v-model:model="searchParams" @search="getDataByPage" @reset="getDataByPage" />
     <div>
       <TableHeaderOperation
@@ -227,7 +227,7 @@ async function handleStart(row: Api.Task.Task) {
       remote
       :row-key="(row: Api.Task.Task) => row.id"
       :pagination="mobilePagination"
-      class="sm:h-full"
+      class="sm:flex-1-hidden"
     />
     <TaskOperateDrawer
       v-model:visible="drawerVisible"

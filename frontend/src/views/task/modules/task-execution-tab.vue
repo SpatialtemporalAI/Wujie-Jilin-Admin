@@ -157,7 +157,7 @@ onUnmounted(() => {
 </script>
 
 <template>
-  <div class="h-full flex-col-stretch gap-12px">
+  <div class="min-h-500px flex-col-stretch gap-12px overflow-hidden lt-sm:overflow-auto">
     <NDataTable
       :columns="columns"
       :data="data"
@@ -176,7 +176,7 @@ onUnmounted(() => {
         onChange: handlePageChange,
         onUpdatePageSize: handlePageSizeChange
       }"
-      class="sm:h-full"
+      class="sm:flex-1-hidden"
     />
   </div>
 </template>
