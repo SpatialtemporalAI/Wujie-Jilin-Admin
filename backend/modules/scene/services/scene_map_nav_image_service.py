@@ -162,20 +162,19 @@ class SceneMapNavImageService:
             if angle_deg == 0:
                 draw.ellipse([x, y, x + w, y + h], fill="black")
             else:
-                # 旋转的椭圆：用 polygon 多边形近似
                 points = SceneMapNavImageService._ellipse_points(x, y, w, h, angle_deg)
                 draw.polygon(points, fill="black")
             return
 
         if obj.type == "obstacle-square":
             corners = [(x, y), (x + w, y), (x + w, y + h), (x, y + h)]
-            rotated = SceneMapNavImageService._rotate_points(corners, angle_deg, x + w / 2, y + h / 2)
+            rotated = SceneMapNavImageService._rotate_points(corners, angle_deg, x, y)
             draw.polygon(rotated, fill="black")
             return
 
         if obj.type == "obstacle-triangle":
             tri = [(x + w / 2, y), (x, y + h), (x + w, y + h)]
-            rotated = SceneMapNavImageService._rotate_points(tri, angle_deg, x + w / 2, y + h / 2)
+            rotated = SceneMapNavImageService._rotate_points(tri, angle_deg, x, y)
             draw.polygon(rotated, fill="black")
             return
 
@@ -183,10 +182,12 @@ class SceneMapNavImageService:
             if obj.points:
                 points = SceneMapNavImageService._parse_points(obj.points)
                 if points:
-                    draw.polygon(points, fill="black")
+                    points = [(x + px, y + py) for px, py in points]
+                    rotated = SceneMapNavImageService._rotate_points(points, angle_deg, x, y)
+                    draw.polygon(rotated, fill="black")
                     return
             corners = [(x, y), (x + w, y), (x + w, y + h), (x, y + h)]
-            rotated = SceneMapNavImageService._rotate_points(corners, angle_deg, x + w / 2, y + h / 2)
+            rotated = SceneMapNavImageService._rotate_points(corners, angle_deg, x, y)
             draw.polygon(rotated, fill="black")
 
     @staticmethod
@@ -209,17 +210,11 @@ class SceneMapNavImageService:
         cy = y + h / 2
         rx = w / 2
         ry = h / 2
-        rad_step = 2 * math.pi / segments
-        rad_rot = math.radians(angle_deg)
-        cos_a = math.cos(rad_rot)
-        sin_a = math.sin(rad_rot)
         points = []
         for i in range(segments):
-            theta = i * rad_step
-            ex = rx * math.cos(theta)
-            ey = ry * math.sin(theta)
-            points.append((cx + ex * cos_a - ey * sin_a, cy + ex * sin_a + ey * cos_a))
-        return points
+            theta = i * 2 * math.pi / segments
+            points.append((cx + rx * math.cos(theta), cy + ry * math.sin(theta)))
+        return SceneMapNavImageService._rotate_points(points, angle_deg, x, y)
 
     @staticmethod
     def _parse_points(raw: str):
