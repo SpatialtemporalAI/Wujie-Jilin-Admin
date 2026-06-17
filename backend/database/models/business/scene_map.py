@@ -32,6 +32,12 @@ class SceneMap(Base):
         default=None,
         comment="地图图片文件ID",
     )
+    nav_image_id: Mapped[int | None] = mapped_column(
+        ForeignKey("sys_file.id"),
+        nullable=True,
+        default=None,
+        comment="导航地图图片文件ID",
+    )
     width: Mapped[int | None] = mapped_column(
         Integer, nullable=True, default=None, comment="地图宽度(像素)"
     )
@@ -57,6 +63,12 @@ class SceneMap(Base):
         init=False,
     )
     image: Mapped["SysFile"] = relationship(
+        foreign_keys=[image_id],
+        lazy="noload",
+        init=False,
+    )
+    nav_image: Mapped["SysFile"] = relationship(
+        foreign_keys=[nav_image_id],
         lazy="noload",
         init=False,
     )

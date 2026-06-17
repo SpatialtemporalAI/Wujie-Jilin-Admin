@@ -50,6 +50,8 @@ declare namespace Api {
       group_name?: string;
       /** image file id */
       image_id: number | null;
+      /** navigation image file id (image with obstacles drawn for navigation) */
+      nav_image_id: number | null;
       /** map width */
       width: number | null;
       /** map height */
@@ -75,6 +77,7 @@ declare namespace Api {
       group_id?: number | null;
       group_name?: string | null;
       image_id?: number | null;
+      nav_image_id?: number | null;
       width?: number | null;
       height?: number | null;
       resolution?: number;

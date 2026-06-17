@@ -26,6 +26,7 @@ class SceneMapCreate(BaseReqEntity):
     group_id: int | None = Field(None, description="分组ID（与group_name二选一）")
     group_name: str | None = Field(None, description="分组名称（不存在时自动创建）")
     image_id: int | None = Field(None, description="地图图片文件ID")
+    nav_image_id: int | None = Field(None, description="导航地图图片文件ID（为空时默认与image_id一致）")
     width: int | None = Field(None, description="地图宽度(像素)")
     height: int | None = Field(None, description="地图高度(像素)")
     resolution: float = Field(0.2, description="分辨率(米/像素)")
@@ -40,6 +41,7 @@ class SceneMapUpdate(BaseReqEntity):
     name: str | None = Field(None, description="地图名称")
     group_id: int | None = Field(None, description="分组ID")
     image_id: int | None = Field(None, description="地图图片文件ID")
+    nav_image_id: int | None = Field(None, description="导航地图图片文件ID")
     width: int | None = Field(None, description="地图宽度(像素)")
     height: int | None = Field(None, description="地图高度(像素)")
     resolution: float | None = Field(None, description="分辨率(米/像素)")
@@ -57,6 +59,7 @@ class SceneMapResponseData(BaseRespEntity):
     name: str
     group_id: int | None
     image_id: int | None
+    nav_image_id: int | None
     width: int | None
     height: int | None
     resolution: float | None = Field(None, description="分辨率(米/像素)")

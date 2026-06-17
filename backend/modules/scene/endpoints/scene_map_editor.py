@@ -10,6 +10,7 @@ from modules.admin.deps.auth.user_manager import current_user
 from modules.admin.deps.auth.permission import require_permission
 from database.models.sys.user import SysUser
 from modules.scene.services.scene_map_editor_service import SceneMapEditorService
+from modules.scene.services.scene_map_nav_image_service import SceneMapNavImageService
 from modules.scene.schemas.scene_map_editor import (
     EditorSaveRequest,
     EditorMapDataResponse,
@@ -73,4 +74,5 @@ async def save_editor_data(
     """批量保存编辑器数据（标注、路径、物体的增删改）"""
     await SceneMapEditorService.save_editor_data(db, map_id, save_request)
     await db.commit()
+    SceneMapNavImageService.schedule_regenerate(map_id, user.id)
     return response_base.success(msg="保存成功")

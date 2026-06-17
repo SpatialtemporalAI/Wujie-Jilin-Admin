@@ -11,6 +11,7 @@ from modules.admin.deps.auth.user_manager import current_user
 from modules.admin.deps.auth.permission import require_permission
 from database.models.sys.user import SysUser
 from modules.scene.services.scene_map_service import SceneMapService
+from modules.scene.services.scene_map_nav_image_service import SceneMapNavImageService
 from modules.scene.schemas.scene_map import (
     SceneMapCreate,
     SceneMapUpdate,
@@ -98,9 +99,11 @@ async def update_map(
     db: AsyncSession = Depends(get_session),
 ):
     """更新场景地图"""
-    map_obj = await SceneMapService.update(db, map_id, map_update)
+    map_obj, image_id_changed = await SceneMapService.update(db, map_id, map_update)
     await db.commit()
     await db.refresh(map_obj)
+    if image_id_changed:
+        SceneMapNavImageService.schedule_regenerate(map_id, user.id)
     return response_base.success(data=SceneMapResponseData.model_validate(map_obj), msg="更新成功")
 
 
