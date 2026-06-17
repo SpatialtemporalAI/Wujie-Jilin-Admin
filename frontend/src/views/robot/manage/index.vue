@@ -1,6 +1,6 @@
 <script setup lang="tsx">
 import { reactive, ref } from 'vue';
-import { NButton, NCard, NDataTable, NPopconfirm, NTag, useMessage } from 'naive-ui';
+import { NButton, NCard, NDataTable, NPopconfirm, useMessage } from 'naive-ui';
 import { fetchGetRobotList, fetchDeleteRobot } from '@/service/api';
 import { useAppStore } from '@/store/modules/app';
 import { defaultTransform, useNaivePaginatedTable, useTableOperate } from '@/hooks/common/table';
@@ -23,20 +23,6 @@ const searchParams: Api.Robot.RobotSearchParams = reactive({
   status: null,
   model_id: undefined
 });
-
-/** 机器人状态颜色映射 */
-const statusColorMap: Record<string, NaiveUI.ThemeColor> = {
-  online: 'success',
-  offline: 'warning',
-  inactive: 'default'
-};
-
-/** 机器人状态标签映射 */
-const statusLabelMap: Record<string, string> = {
-  online: '在线',
-  offline: '离线',
-  inactive: '未激活'
-};
 
 /** 状态抽屉 */
 const statusDrawerVisible = ref(false);
@@ -101,17 +87,6 @@ const {
       width: 160,
       ellipsis: {
         tooltip: true
-      }
-    },
-    {
-      key: 'status',
-      title: $t('common.status'),
-      align: 'center',
-      width: 100,
-      render: row => {
-        const tagType = statusColorMap[row.status] || 'default';
-        const label = statusLabelMap[row.status] || row.status;
-        return <NTag type={tagType} size="small">{label}</NTag>;
       }
     },
     {
