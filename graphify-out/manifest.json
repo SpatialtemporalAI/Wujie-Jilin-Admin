@@ -6390,8 +6390,8 @@
     "semantic_hash": ""
   },
   "D:\\project\\SpatialtemporalAi\\Wujie-Jilin-Admin\\frontend\\src\\views\\task\\index.vue": {
-    "mtime": 1781353952.4476018,
-    "ast_hash": "b9daaeabcf0dfefa942b8e010639fd39",
+    "mtime": 1781683336.2057095,
+    "ast_hash": "b1fddda9719e2f6849528004fb26a60b",
     "semantic_hash": ""
   },
   "D:\\project\\SpatialtemporalAi\\Wujie-Jilin-Admin\\frontend\\src\\views\\task\\modules\\task-detail-drawer.vue": {
@@ -6750,8 +6750,8 @@
     "semantic_hash": ""
   },
   "D:\\project\\SpatialtemporalAi\\Wujie-Jilin-Admin\\aiDoc\\memory\\project-memory.md": {
-    "mtime": 1781682386.5938141,
-    "ast_hash": "4dfdb59b3413c4f20c28c00b871395b0",
+    "mtime": 1781683352.4453404,
+    "ast_hash": "973c3121ad63c1c13d95e6a5c6faf070",
     "semantic_hash": ""
   },
   "D:\\project\\SpatialtemporalAi\\Wujie-Jilin-Admin\\aiDoc\\memory\\README.md": {
@@ -7292,6 +7292,11 @@
   "D:\\project\\SpatialtemporalAi\\Wujie-Jilin-Admin\\aiDoc\\memory\\business\\2026-06-17_scene-map-resolution-input.md": {
     "mtime": 1781682382.4219341,
     "ast_hash": "142a192c2a3cbe59fa5dca6917284cd8",
+    "semantic_hash": ""
+  },
+  "D:\\project\\SpatialtemporalAi\\Wujie-Jilin-Admin\\aiDoc\\memory\\business\\2026-06-17_task-page-card-background.md": {
+    "mtime": 1781683347.1633413,
+    "ast_hash": "11950f5b441cd7801bd7693a0940c9d9",
     "semantic_hash": ""
   }
 }

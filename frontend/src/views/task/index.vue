@@ -11,17 +11,19 @@ const activeTab = ref('list');
 
 <template>
   <div class="min-h-500px flex-col-stretch gap-16px overflow-hidden lt-sm:overflow-auto">
-    <NTabs v-model:value="activeTab" type="line" animated class="flex-1-hidden">
-      <NTabPane name="list" tab="任务列表" class="flex-1-hidden">
-        <TaskListTab />
-      </NTabPane>
-      <NTabPane name="execution" tab="执行列表" class="flex-1-hidden">
-        <TaskExecutionTab />
-      </NTabPane>
-      <NTabPane name="history" tab="历史任务" class="flex-1-hidden">
-        <TaskHistoryTab />
-      </NTabPane>
-    </NTabs>
+    <NCard :bordered="false" size="small" class="card-wrapper flex-1-hidden">
+      <NTabs v-model:value="activeTab" type="line" animated class="flex-1-hidden">
+        <NTabPane name="list" tab="任务列表" class="flex-1-hidden">
+          <TaskListTab />
+        </NTabPane>
+        <NTabPane name="execution" tab="执行列表" class="flex-1-hidden">
+          <TaskExecutionTab />
+        </NTabPane>
+        <NTabPane name="history" tab="历史任务" class="flex-1-hidden">
+          <TaskHistoryTab />
+        </NTabPane>
+      </NTabs>
+    </NCard>
   </div>
 </template>
 
