@@ -19,7 +19,9 @@ const searchParams: Api.Task.TaskSearchParams = reactive({
   page_size: 10,
   name: null,
   task_type: null,
-  enabled: null
+  enabled: null,
+  robot_id: null,
+  map_id: null
 });
 
 const taskTypeLabel: Record<string, string> = {

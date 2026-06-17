@@ -13,6 +13,7 @@ from modules.scene.schemas.scene_map_annotation import (
     SceneMapAnnotationCreate,
     SceneMapAnnotationUpdate,
 )
+from modules.task.services.task_service import TaskService
 
 
 class SceneMapAnnotationService:
@@ -83,5 +84,6 @@ class SceneMapAnnotationService:
     async def delete(db: AsyncSession, annotation_id: int) -> None:
         """删除地图标注"""
         annotation = await SceneMapAnnotationService.get(db, annotation_id)
+        await TaskService.delete_points_by_annotation_ids(db, [annotation_id])
         await db.delete(annotation)
         await db.flush()

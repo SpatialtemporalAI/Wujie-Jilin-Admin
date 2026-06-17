@@ -4,7 +4,7 @@ import { jsonClone } from '@sa/utils';
 import { NText, NTooltip } from 'naive-ui';
 import { useNaiveForm } from '@/hooks/common/form';
 import { $t } from '@/locales';
-import { fetchCreateTask, fetchUpdateTask, fetchGetTask, fetchGetRobotList, fetchGetMapAnnotations } from '@/service/api';
+import { fetchCreateTask, fetchUpdateTask, fetchGetTask, fetchGetRobotList, fetchGetMapAnnotations, fetchGetSceneMapList } from '@/service/api';
 
 defineOptions({ name: 'TaskOperateDrawer' });
 
@@ -61,6 +61,15 @@ const weekdayOptions = [
   { label: '周日', value: 'sun' }
 ];
 
+const mapOptions = ref<{ label: string; value: number }[]>([]);
+
+async function loadMapOptions() {
+  const { data, error } = await fetchGetSceneMapList({ page: 1, page_size: 999, name: null, group_id: undefined, status: null });
+  if (!error && data) {
+    mapOptions.value = (data.records || []).map(map => ({ label: map.name, value: map.id }));
+  }
+}
+
 /** 机器人选项 */
 interface RobotOption {
   label: string;
@@ -116,24 +125,11 @@ async function loadAnnotations(mapId: number | null) {
 /** 巡逻任务机器人约束 */
 const isPatrol = computed(() => model.value.task_type === 'patrol');
 
-const selectedMapId = computed<number | null>(() => {
-  if (model.value.robot_ids.length === 0) return null;
-  const firstRobot = robotOptions.value.find(r => r.value === model.value.robot_ids[0]);
-  return firstRobot?.map_id ?? null;
-});
+const selectedMapId = computed<number | null>(() => model.value.map_id);
 
 const filteredRobotOptions = computed(() => {
-  if (!isPatrol.value) {
-    return robotOptions.value;
-  }
-  return robotOptions.value.map(opt => {
-    const noScenario = opt.map_id === null;
-    const differentScenario = selectedMapId.value !== null && opt.map_id !== selectedMapId.value;
-    return {
-      ...opt,
-      disabled: noScenario || differentScenario
-    };
-  });
+  if (model.value.map_id === null) return [];
+  return robotOptions.value.filter(opt => opt.map_id === model.value.map_id);
 });
 
 function renderRobotLabel(option: RobotOption) {
@@ -164,6 +160,7 @@ interface PointItem {
 interface FormModel {
   name: string;
   task_type: Api.Task.TaskType;
+  map_id: number | null;
   points: PointItem[];
   broadcast_text: string | null;
   broadcast_count: string | null;
@@ -178,6 +175,7 @@ function createDefaultModel(): FormModel {
   return {
     name: '',
     task_type: 'patrol',
+    map_id: null,
     points: [],
     broadcast_text: null,
     broadcast_count: '1',
@@ -216,6 +214,7 @@ const rules = computed(() => ({
     { min: 2, max: 20, message: '任务名称为 2-20 字', trigger: 'blur' }
   ],
   task_type: { required: true, message: '请选择任务类型', trigger: 'change' },
+  map_id: { required: true, type: 'number' as const, message: '请选择场景地图', trigger: 'change' },
   robot_ids: {
     required: true,
     type: 'array' as const,
@@ -243,10 +242,11 @@ async function handleInitModel() {
     model.value.schedule_repeat_cycles = cloned.schedule_repeat_cycle
       ? cloned.schedule_repeat_cycle.split(',').filter(v => v && v !== 'none')
       : [];
+    model.value.map_id = cloned.robots?.find(r => r.map_id)?.map_id ?? null;
     model.value.robot_ids = cloned.robots?.map(r => r.id) || [];
 
-    if (selectedMapId.value !== null) {
-      await loadAnnotations(selectedMapId.value);
+    if (model.value.map_id !== null) {
+      await loadAnnotations(model.value.map_id);
     }
 
     if (cloned.points && cloned.points.length > 0) {
@@ -262,9 +262,10 @@ async function handleInitModel() {
     if (cloned.id) {
       const { data: detail } = await fetchGetTask(cloned.id);
       if (detail) {
+        model.value.map_id = detail.robots?.find(r => r.map_id)?.map_id ?? model.value.map_id;
         model.value.robot_ids = detail.robots?.map(r => r.id) || [];
-        if (selectedMapId.value !== null) {
-          await loadAnnotations(selectedMapId.value);
+        if (model.value.map_id !== null) {
+          await loadAnnotations(model.value.map_id);
         }
         if (detail.points && detail.points.length > 0) {
           model.value.points = detail.points.map((p, i) => ({
@@ -280,8 +281,9 @@ async function handleInitModel() {
   }
 }
 
-/** 用户主动切换机器人选择：清空已填点位（依赖 watch selectedMapId 重新加载点位选项） */
-function handleRobotIdsChange() {
+function handleMapChange(mapId: number | null) {
+  model.value.map_id = mapId;
+  model.value.robot_ids = [];
   model.value.points = [];
 }
 
@@ -293,6 +295,10 @@ async function handleSubmit() {
   await validate();
 
   // Custom validations
+  if (model.value.map_id === null) {
+    window.$message?.warning('请选择场景地图');
+    return;
+  }
   if (model.value.task_type === 'patrol' && model.value.points.length === 0) {
     window.$message?.warning('巡逻任务至少添加一个巡逻点位');
     return;
@@ -380,25 +386,17 @@ watch(selectedMapId, newMapId => {
 watch(
   () => model.value.task_type,
   () => {
-    if (model.value.task_type === 'patrol' && model.value.robot_ids.length > 0) {
-      const validIds = model.value.robot_ids.filter(id => {
+    if (model.value.robot_ids.length > 0) {
+      model.value.robot_ids = model.value.robot_ids.filter(id => {
         const robot = robotOptions.value.find(r => r.value === id);
-        return robot && robot.map_id !== null;
+        return robot?.map_id === model.value.map_id;
       });
-      if (validIds.length > 0) {
-        const firstMapId = robotOptions.value.find(r => r.value === validIds[0])?.map_id;
-        model.value.robot_ids = validIds.filter(id => {
-          const robot = robotOptions.value.find(r => r.value === id);
-          return robot?.map_id === firstMapId;
-        });
-      } else {
-        model.value.robot_ids = [];
-      }
     }
   }
 );
 
 onMounted(() => {
+  loadMapOptions();
   loadRobotOptions();
 });
 </script>
@@ -419,17 +417,29 @@ onMounted(() => {
           </NFormItemGi>
         </NGrid>
 
+        <NDivider title-placement="left">场景地图</NDivider>
+        <NFormItem label="场景地图" path="map_id">
+          <NSelect
+            :value="model.map_id"
+            :options="mapOptions"
+            placeholder="请先选择场景地图"
+            filterable
+            clearable
+            @update:value="handleMapChange"
+          />
+        </NFormItem>
+
         <!-- 机器人绑定 -->
         <NDivider title-placement="left">执行机器人</NDivider>
         <NFormItem label="绑定机器人" path="robot_ids">
           <NSelect
             v-model:value="model.robot_ids"
             :options="filteredRobotOptions"
-            placeholder="至少选择一台机器人"
+            :placeholder="model.map_id === null ? '请先选择场景地图' : '至少选择一台机器人'"
             multiple
             filterable
+            :disabled="model.map_id === null"
             :render-label="renderRobotLabel"
-            @update:value="handleRobotIdsChange"
           />
         </NFormItem>
 
@@ -437,7 +447,7 @@ onMounted(() => {
         <template v-if="model.task_type === 'patrol'">
           <NDivider title-placement="left">巡逻点位配置</NDivider>
           <div v-if="selectedMapId === null" class="mb-12px text-13px" style="color: var(--n-text-color-3, #999);">
-            请先选择已绑定场景的机器人，才能选择巡逻点位
+            请先选择场景地图，才能选择巡逻点位
           </div>
           <div v-for="(point, index) in model.points" :key="index" class="mb-12px">
             <NCard size="small" embedded>
@@ -452,7 +462,7 @@ onMounted(() => {
                   <NSelect
                     v-model:value="point.annotation_id"
                     :options="annotationOptions"
-                    :placeholder="selectedMapId === null ? '请先选择机器人' : '请选择场景点位'"
+                    :placeholder="selectedMapId === null ? '请先选择场景地图' : '请选择场景点位'"
                     :disabled="selectedMapId === null"
                     filterable
                     @update:value="(val: number | null) => {

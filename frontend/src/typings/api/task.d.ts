@@ -29,6 +29,8 @@ declare namespace Api {
       id: number;
       name: string;
       status: string | null;
+      map_id?: number | null;
+      map_name?: string | null;
     };
 
     /** task */
@@ -50,7 +52,7 @@ declare namespace Api {
 
     /** task search params */
     type TaskSearchParams = CommonType.RecordNullable<
-      Pick<Task, 'name' | 'task_type'> & { enabled: string | null } & CommonSearchParams
+      Pick<Task, 'name' | 'task_type'> & { enabled: string | null; robot_id?: number; map_id?: number } & CommonSearchParams
     >;
 
     /** task list */

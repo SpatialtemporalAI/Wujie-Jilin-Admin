@@ -63,6 +63,8 @@ class TaskRobotBrief(BaseRespEntity):
     id: int = Field(..., description="机器人ID")
     name: str = Field(..., description="机器人名称")
     status: Optional[str] = Field(None, description="机器人状态")
+    map_id: Optional[int] = Field(None, description="绑定场景地图ID")
+    map_name: Optional[str] = Field(None, description="绑定场景地图名称")
 
 
 # ==================== 任务 CRUD Schema ====================
@@ -72,6 +74,8 @@ class TaskQueryParams(BaseReqEntity):
     name: Optional[str] = Field(None, description="任务名称，支持模糊查询")
     task_type: Optional[str] = Field(None, description="任务类型: patrol/broadcast")
     enabled: BoolField = Field(None, description="启用状态")
+    robot_id: Optional[int] = Field(None, description="关联机器人ID")
+    map_id: Optional[int] = Field(None, description="关联场景地图ID")
 
 
 class TaskCreate(BaseReqEntity):
