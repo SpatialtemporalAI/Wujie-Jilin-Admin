@@ -660,15 +660,9 @@ function renderGrid() {
   const h = canvasHeight.value;
   const zoom = currentZoom;
   const res = props.resolution;
-  const { x: originPx, y: originPy } = getEffectiveOrigin();
 
-  // Adaptive grid: target ~80px visual spacing on screen
-  const targetVisualPx = 80;
-  const rawSpacingM = (targetVisualPx / zoom) * res;
-
-  // Pick the nearest "nice" real-world distance
-  const niceSteps = [0.05, 0.1, 0.2, 0.5, 1, 2, 5, 10, 20, 50, 100, 200, 500, 1000];
-  const spacingM = niceSteps.find(s => s >= rawSpacingM) || rawSpacingM;
+  // 固定 1 米一格
+  const spacingM = 1;
 
   // Skip re-render if spacing hasn't changed
   if (Math.abs(spacingM - lastGridSpacingM) < 1e-6 && gridGroup) return;
