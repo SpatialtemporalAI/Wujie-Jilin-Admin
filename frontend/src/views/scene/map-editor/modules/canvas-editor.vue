@@ -661,8 +661,19 @@ function renderGrid() {
   const zoom = currentZoom;
   const res = props.resolution;
 
-  // 固定 1 米一格
-  const spacingM = 1;
+  // 自动缩放：目标屏幕距离 ~60px，吸附到 nice step
+  const TARGET_SCREEN_PX = 60;
+  const niceSteps = [0.1, 0.2, 0.5, 1, 2, 5, 10, 20];
+  const rawSpacingM = (TARGET_SCREEN_PX / zoom) * res;
+  const candidate = niceSteps.find(s => s >= rawSpacingM) ?? niceSteps[niceSteps.length - 1];
+
+  // 15% 缓冲防抖：相邻档位且 raw 在缓冲区内则保持不变
+  const last = lastGridSpacingM;
+  const lastIdx = niceSteps.indexOf(last);
+  const candIdx = niceSteps.indexOf(candidate);
+  const isAdjacent = lastIdx >= 0 && candIdx >= 0 && Math.abs(lastIdx - candIdx) === 1;
+  const inBuffer = isAdjacent && rawSpacingM > last * 0.85 && rawSpacingM < last * 1.15;
+  const spacingM = inBuffer ? last : candidate;
 
   // Skip re-render if spacing hasn't changed
   if (Math.abs(spacingM - lastGridSpacingM) < 1e-6 && gridGroup) return;
@@ -673,7 +684,15 @@ function renderGrid() {
   const spacingPx = spacingM / res;
   if (spacingPx <= 0) return;
 
+  // 屏幕距离用于决定是否显示次网格
+  const majorScreenPx = spacingPx * zoom;
+  const showMinor = majorScreenPx > 100;
+  const minorSpacingPx = spacingPx / 5;
+
   const allObjects: any[] = [];
+  const GRID_MAJOR_COLOR = 'rgba(0,0,0,0.08)';
+  const GRID_MAJOR_OUT_COLOR = 'rgba(0,0,0,0.03)';
+  const GRID_MINOR_COLOR = 'rgba(0,0,0,0.04)';
 
   // Grid extends beyond image to fill visible area
   const margin = Math.max(w, h, 1000);
@@ -682,36 +701,49 @@ function renderGrid() {
   const endX = Math.ceil((w + margin) / spacingPx) * spacingPx;
   const endY = Math.ceil((h + margin) / spacingPx) * spacingPx;
 
-  // Vertical lines
+  // 次网格（更浅，无标签）
+  if (showMinor) {
+    for (let x = startX; x <= endX; x += minorSpacingPx) {
+      // 主网格位置跳过
+      if (Math.abs(x / spacingPx - Math.round(x / spacingPx)) < 1e-6) continue;
+      allObjects.push(new Line([x, startY, x, endY], {
+        stroke: GRID_MINOR_COLOR,
+        strokeWidth: 1,
+        selectable: false,
+        evented: false,
+      }));
+    }
+    for (let y = startY; y <= endY; y += minorSpacingPx) {
+      if (Math.abs(y / spacingPx - Math.round(y / spacingPx)) < 1e-6) continue;
+      allObjects.push(new Line([startX, y, endX, y], {
+        stroke: GRID_MINOR_COLOR,
+        strokeWidth: 1,
+        selectable: false,
+        evented: false,
+      }));
+    }
+  }
+
+  // Vertical lines（主网格）
   for (let x = startX; x <= endX; x += spacingPx) {
     const inBounds = x >= 0 && x <= w;
     allObjects.push(new Line([x, startY, x, endY], {
-      stroke: inBounds ? 'rgba(0,0,0,0.08)' : 'rgba(0,0,0,0.03)',
+      stroke: inBounds ? GRID_MAJOR_COLOR : GRID_MAJOR_OUT_COLOR,
       strokeWidth: 1,
       selectable: false,
       evented: false,
     }));
   }
-  // Horizontal lines
+  // Horizontal lines（主网格）
   for (let y = startY; y <= endY; y += spacingPx) {
     const inBounds = y >= 0 && y <= h;
     allObjects.push(new Line([startX, y, endX, y], {
-      stroke: inBounds ? 'rgba(0,0,0,0.08)' : 'rgba(0,0,0,0.03)',
+      stroke: inBounds ? GRID_MAJOR_COLOR : GRID_MAJOR_OUT_COLOR,
       strokeWidth: 1,
       selectable: false,
       evented: false,
     }));
   }
-
-  // // Zero-axis lines through origin (world X=0, Y=0)
-  // allObjects.push(new Line([originPx, startY, originPx, endY], {
-  //   stroke: 'rgba(37, 99, 235, 0.25)', strokeWidth: 2,
-  //   strokeDashArray: [8, 4], selectable: false, evented: false,
-  // }));
-  // allObjects.push(new Line([startX, originPy, endX, originPy], {
-  //   stroke: 'rgba(37, 99, 235, 0.25)', strokeWidth: 2,
-  //   strokeDashArray: [8, 4], selectable: false, evented: false,
-  // }));
 
   // Labels: font size adjusts inversely with zoom so it stays readable on screen
   const fontSize = Math.max(8, Math.min(14, 11 / zoom));
