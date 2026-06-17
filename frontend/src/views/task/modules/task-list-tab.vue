@@ -175,7 +175,6 @@ const {
 async function handleDelete(id: number) {
   try {
     await fetchDeleteTask(id);
-    message.success($t('common.deleteSuccess'));
     onDeleted();
   } catch (error) {
     console.error('删除任务失败:', error);

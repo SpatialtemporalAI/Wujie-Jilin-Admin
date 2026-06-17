@@ -181,7 +181,6 @@ function handleEditMap(id: number) {
 async function handleDelete(id: number) {
   try {
     await fetchDeleteSceneMap(id);
-    window.$message?.success('删除成功');
     onMapDeleted();
   } catch (error) {
     console.error('删除场景地图失败:', error);

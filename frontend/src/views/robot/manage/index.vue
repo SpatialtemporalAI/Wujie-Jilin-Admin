@@ -168,7 +168,6 @@ const {
 async function handleDelete(id: number) {
   try {
     await fetchDeleteRobot(id);
-    message.success($t('common.deleteSuccess'));
     onRobotDeleted();
   } catch (error) {
     console.error('删除机器人失败:', error);
@@ -185,7 +184,6 @@ async function handleBatchDelete() {
     for (const key of checkedRobotRowKeys.value) {
       await fetchDeleteRobot(Number(key));
     }
-    message.success($t('common.deleteSuccess'));
     onRobotBatchDeleted();
   } catch (error) {
     console.error('批量删除机器人失败:', error);
