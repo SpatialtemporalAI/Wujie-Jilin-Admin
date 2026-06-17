@@ -56,7 +56,7 @@ declare namespace Api {
       width: number | null;
       /** map height */
       height: number | null;
-      /** resolution (meters/pixel) */
+      /** mapping resolution */
       resolution: number;
       /** start point x */
       start_point_x: number;

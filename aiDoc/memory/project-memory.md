@@ -20,6 +20,7 @@
 - [2026-06-11 地图编辑器新增场景图片与起始点位](./business/2026-06-11_map-editor-create-scene-image-start-point.md) — 新增场景上传图片并按原图/网页显示尺寸缩放保存起始点位
 - [2026-06-17 场景地图新增导航地图图片](./business/2026-06-17_scene-map-nav-image.md) — 异步将障碍物/禁区绘制到原图副本生成 nav_image_id
 - [2026-06-17 机器人管理移除列表状态列](./business/2026-06-17_robot-manage-remove-status-column.md) — 去掉机器人管理表格中的状态显示列
+- [2026-06-17 场景地图新增映射比例输入](./business/2026-06-17_scene-map-resolution-input.md) — 新增/编辑场景地图时填写 resolution，默认 1
 
 ## 维护说明
 

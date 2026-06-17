@@ -45,7 +45,7 @@ class SceneMap(Base):
         Integer, nullable=True, default=None, comment="地图高度(像素)"
     )
     resolution: Mapped[float] = mapped_column(
-        Float, default=0.2, comment="分辨率(米/像素)，如0.2表示1像素=20厘米"
+        Float, default=1, comment="映射比例"
     )
     start_point_x: Mapped[float] = mapped_column(
         Float, default=0, comment="起始点位X坐标"
