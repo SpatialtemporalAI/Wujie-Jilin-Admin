@@ -1448,6 +1448,8 @@ defineExpose({ exportCanvas, zoomIn, zoomOut, zoomReset, locatePixelPoint });
     <!-- Legend -->
     <div v-if="editorData"
       class="absolute left-12px top-12px z-10 flex flex-col gap-6px rounded-lg bg-white/90 px-12px py-8px text-xs shadow-md">
+      <div class="max-w-180px truncate text-sm font-medium text-gray-700">{{ editorData.map.name }}</div>
+      <div class="my-2px h-1px bg-gray-200"></div>
       <div class="flex items-center gap-6px">
         <span class="inline-block h-10px w-10px" style="background-color: #ffffff; border: 1px solid #d1d5db"></span>
         <span>可行区域</span>

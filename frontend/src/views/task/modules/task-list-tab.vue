@@ -126,6 +126,16 @@ const {
       render: row => <NTag size="small" type={row.enabled ? 'success' : 'default'}>{row.enabled ? '启用' : '禁用'}</NTag>
     },
     {
+      key: 'scene',
+      title: '场景地图',
+      align: 'center',
+      width: 140,
+      render: row => {
+        const mapNames = [...new Set((row.robots || []).map((r: Api.Task.TaskRobot) => r.map_name).filter(Boolean))];
+        return <span>{mapNames.length > 0 ? mapNames.join(', ') : '-'}</span>;
+      }
+    },
+    {
       key: 'robots',
       title: '绑定机器人',
       align: 'center',

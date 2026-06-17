@@ -16,7 +16,9 @@ const searchParams: Api.Task.TaskExecutionSearchParams = reactive({
   page: 1,
   page_size: 10,
   task_name: null,
-  status: null
+  status: null,
+  robot_id: null,
+  map_id: null
 });
 
 const statusColorMap: Record<string, NaiveUI.ThemeColor> = {
@@ -95,6 +97,13 @@ const {
       align: 'center',
       width: 120,
       render: row => <span>{row.robot_name || '-'}</span>
+    },
+    {
+      key: 'map_name',
+      title: '场景地图',
+      align: 'center',
+      width: 140,
+      render: row => <span>{row.map_name || '-'}</span>
     },
     {
       key: 'started_at',

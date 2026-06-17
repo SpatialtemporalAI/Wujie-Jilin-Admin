@@ -127,10 +127,7 @@ const isPatrol = computed(() => model.value.task_type === 'patrol');
 
 const selectedMapId = computed<number | null>(() => model.value.map_id);
 
-const filteredRobotOptions = computed(() => {
-  if (model.value.map_id === null) return [];
-  return robotOptions.value.filter(opt => opt.map_id === model.value.map_id);
-});
+const filteredRobotOptions = computed(() => robotOptions.value);
 
 function renderRobotLabel(option: RobotOption) {
   if (option.disabled && isPatrol.value) {
@@ -329,20 +326,6 @@ async function handleSubmit() {
       return;
     }
   }
-  if (model.value.task_type === 'patrol') {
-    const selectedRobots = robotOptions.value.filter(r => model.value.robot_ids.includes(r.value));
-    const nullMap = selectedRobots.some(r => r.map_id === null);
-    if (nullMap) {
-      window.$message?.warning('巡逻任务的机器人必须已分配场景');
-      return;
-    }
-    const mapIds = [...new Set(selectedRobots.map(r => r.map_id))];
-    if (mapIds.length > 1) {
-      window.$message?.warning('巡逻任务不能选择不同场景的机器人');
-      return;
-    }
-  }
-
   const submitData: Api.Task.TaskCreate = {
     name: model.value.name,
     task_type: model.value.task_type,
@@ -382,18 +365,6 @@ watch(visible, () => {
 watch(selectedMapId, newMapId => {
   loadAnnotations(newMapId);
 });
-
-watch(
-  () => model.value.task_type,
-  () => {
-    if (model.value.robot_ids.length > 0) {
-      model.value.robot_ids = model.value.robot_ids.filter(id => {
-        const robot = robotOptions.value.find(r => r.value === id);
-        return robot?.map_id === model.value.map_id;
-      });
-    }
-  }
-);
 
 onMounted(() => {
   loadMapOptions();

@@ -94,7 +94,7 @@ export function fetchStopExecution(execId: number) {
 }
 
 /** get active executions */
-export function fetchGetActiveExecutions(params?: Api.Task.CommonSearchParams) {
+export function fetchGetActiveExecutions(params?: Api.Task.TaskExecutionSearchParams) {
   return request<Api.Task.TaskExecutionList>({
     url: '/task/execution/active',
     method: 'get',

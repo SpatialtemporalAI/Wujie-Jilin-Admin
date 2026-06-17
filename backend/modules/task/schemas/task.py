@@ -5,7 +5,7 @@ from typing import Optional, List, Annotated
 from pydantic import Field, ConfigDict, BeforeValidator, field_validator
 from datetime import datetime, date, time
 
-from app.models.common.base import BaseEntity, BaseRespEntity, BaseReqEntity, BoolField
+from app.models.common.base import BaseEntity, BaseRespEntity, BaseReqEntity, BoolField, OptionalIntField
 
 
 def _bool_to_enable_str(v):
@@ -74,8 +74,8 @@ class TaskQueryParams(BaseReqEntity):
     name: Optional[str] = Field(None, description="任务名称，支持模糊查询")
     task_type: Optional[str] = Field(None, description="任务类型: patrol/broadcast")
     enabled: BoolField = Field(None, description="启用状态")
-    robot_id: Optional[int] = Field(None, description="关联机器人ID")
-    map_id: Optional[int] = Field(None, description="关联场景地图ID")
+    robot_id: OptionalIntField = Field(None, description="关联机器人ID")
+    map_id: OptionalIntField = Field(None, description="关联场景地图ID")
 
 
 class TaskCreate(BaseReqEntity):
@@ -149,6 +149,8 @@ class TaskExecutionQueryParams(BaseReqEntity):
     """执行记录查询参数"""
     task_name: Optional[str] = Field(None, description="任务名称")
     status: Optional[str] = Field(None, description="执行状态: completed/failed/cancelled")
+    robot_id: OptionalIntField = Field(None, description="执行机器人ID")
+    map_id: OptionalIntField = Field(None, description="关联场景地图ID")
     start_time: Optional[str] = Field(None, description="开始时间(起)")
     end_time: Optional[str] = Field(None, description="结束时间(止)")
 
@@ -169,6 +171,8 @@ class TaskExecutionResponseData(BaseEntity):
     error_message: Optional[str] = Field(None, description="错误信息")
     robot_id: Optional[int] = Field(None, description="机器人ID")
     robot_name: Optional[str] = Field(None, description="机器人名称")
+    map_id: Optional[int] = Field(None, description="场景地图ID")
+    map_name: Optional[str] = Field(None, description="场景地图名称")
     triggered_by: str = Field(..., description="触发方式")
     created_at: datetime = Field(..., description="创建时间")
 

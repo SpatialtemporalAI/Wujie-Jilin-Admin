@@ -1,9 +1,10 @@
 <script setup lang="tsx">
-import { onMounted, onUnmounted, ref } from 'vue';
+import { reactive, onMounted, onUnmounted, ref } from 'vue';
 import { NButton, NDataTable, NProgress, NTag, useMessage } from 'naive-ui';
 import { fetchGetActiveExecutions, fetchPauseExecution, fetchResumeExecution, fetchStopExecution } from '@/service/api';
 import { useAppStore } from '@/store/modules/app';
 import { $t } from '@/locales';
+import TaskHistorySearch from './task-history-search.vue';
 
 defineOptions({ name: 'TaskExecutionTab' });
 
@@ -12,6 +13,14 @@ const message = useMessage();
 
 const loading = ref(false);
 const data = ref<Api.Task.TaskExecution[]>([]);
+const searchParams: Api.Task.TaskExecutionSearchParams = reactive({
+  page: 1,
+  page_size: 10,
+  task_name: null,
+  status: null,
+  robot_id: null,
+  map_id: null
+});
 const page = ref(1);
 const pageSize = ref(10);
 const total = ref(0);
@@ -49,6 +58,13 @@ const columns = [
     align: 'center' as const,
     width: 120,
     render: (row: Api.Task.TaskExecution) => <span>{row.robot_name || '-'}</span>
+  },
+  {
+    key: 'map_name',
+    title: '场景地图',
+    align: 'center' as const,
+    width: 140,
+    render: (row: Api.Task.TaskExecution) => <span>{row.map_name || '-'}</span>
   },
   {
     key: 'progress',
@@ -98,7 +114,11 @@ let pollTimer: ReturnType<typeof setInterval> | null = null;
 async function getData() {
   loading.value = true;
   try {
-    const { data: result, error } = await fetchGetActiveExecutions({ page: page.value, page_size: pageSize.value });
+    const { data: result, error } = await fetchGetActiveExecutions({
+      ...searchParams,
+      page: page.value,
+      page_size: pageSize.value
+    });
     if (!error && result) {
       data.value = result.records || [];
       total.value = result.total || 0;
@@ -143,6 +163,11 @@ function handlePageSizeChange(ps: number) {
   getData();
 }
 
+function handleSearch() {
+  page.value = 1;
+  getData();
+}
+
 onMounted(() => {
   getData();
   pollTimer = setInterval(getData, 5000);
@@ -158,12 +183,13 @@ onUnmounted(() => {
 
 <template>
   <div class="min-h-500px flex-col-stretch gap-12px overflow-hidden lt-sm:overflow-auto">
+    <TaskHistorySearch v-model:model="searchParams" @search="handleSearch" @reset="handleSearch" />
     <NDataTable
       :columns="columns"
       :data="data"
       size="small"
       :flex-height="!appStore.isMobile"
-      :scroll-x="970"
+      :scroll-x="1110"
       :loading="loading"
       remote
       :row-key="(row: Api.Task.TaskExecution) => row.id"
