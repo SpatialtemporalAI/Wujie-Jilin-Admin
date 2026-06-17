@@ -297,9 +297,31 @@ async function handleSubmit() {
     window.$message?.warning('巡逻任务至少添加一个巡逻点位');
     return;
   }
+  if (model.value.task_type === 'patrol') {
+    const invalidPointIndex = model.value.points.findIndex(point => point.annotation_id === null);
+    if (invalidPointIndex !== -1) {
+      window.$message?.warning(`请选择点位 ${invalidPointIndex + 1} 的巡逻点位`);
+      return;
+    }
+    const invalidActionIndex = model.value.points.findIndex(point => !point.action);
+    if (invalidActionIndex !== -1) {
+      window.$message?.warning(`请选择点位 ${invalidActionIndex + 1} 的运控动作`);
+      return;
+    }
+  }
   if (model.value.task_type === 'broadcast' && !model.value.broadcast_text) {
     window.$message?.warning('请填写播报文本');
     return;
+  }
+  if (model.value.schedule_enabled) {
+    if (model.value.schedule_date === null) {
+      window.$message?.warning('请选择调度日期');
+      return;
+    }
+    if (model.value.schedule_start_time === null) {
+      window.$message?.warning('请选择开始时间');
+      return;
+    }
   }
   if (model.value.task_type === 'patrol') {
     const selectedRobots = robotOptions.value.filter(r => model.value.robot_ids.includes(r.value));
@@ -426,7 +448,7 @@ onMounted(() => {
                 </NSpace>
               </template>
               <NGrid :cols="3" :x-gap="12">
-                <NFormItemGi label="巡逻点位">
+                <NFormItemGi label="巡逻点位" required>
                   <NSelect
                     v-model:value="point.annotation_id"
                     :options="annotationOptions"
@@ -439,7 +461,7 @@ onMounted(() => {
                     }"
                   />
                 </NFormItemGi>
-                <NFormItemGi label="运控动作">
+                <NFormItemGi label="运控动作" required>
                   <NSelect v-model:value="point.action" :options="actionOptions" placeholder="选择动作" />
                 </NFormItemGi>
                 <NFormItemGi label="语音文本">
@@ -474,10 +496,10 @@ onMounted(() => {
         </NFormItem>
         <template v-if="model.schedule_enabled">
           <NGrid :cols="2" :x-gap="16">
-            <NFormItemGi label="调度日期">
+            <NFormItemGi label="调度日期" required>
               <NDatePicker v-model:value="model.schedule_date" type="date" class="w-full" />
             </NFormItemGi>
-            <NFormItemGi label="开始时间">
+            <NFormItemGi label="开始时间" required>
               <NTimePicker v-model:value="model.schedule_start_time" format="HH:mm" class="w-full" />
             </NFormItemGi>
           </NGrid>

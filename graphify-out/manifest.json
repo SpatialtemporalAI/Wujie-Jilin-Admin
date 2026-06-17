@@ -6420,8 +6420,8 @@
     "semantic_hash": ""
   },
   "D:\\project\\SpatialtemporalAi\\Wujie-Jilin-Admin\\frontend\\src\\views\\task\\modules\\task-operate-drawer.vue": {
-    "mtime": 1781355450.5138228,
-    "ast_hash": "6eafa33ef562535333ed06d59acb8bab",
+    "mtime": 1781686042.5648355,
+    "ast_hash": "05b721c41f787b5df511354effa9e4b0",
     "semantic_hash": ""
   },
   "D:\\project\\SpatialtemporalAi\\Wujie-Jilin-Admin\\frontend\\src\\views\\task\\modules\\task-search.vue": {
@@ -6750,8 +6750,8 @@
     "semantic_hash": ""
   },
   "D:\\project\\SpatialtemporalAi\\Wujie-Jilin-Admin\\aiDoc\\memory\\project-memory.md": {
-    "mtime": 1781685056.6658826,
-    "ast_hash": "95c3d4a2e672dd1e800221959c369e4c",
+    "mtime": 1781685998.424913,
+    "ast_hash": "7b5e015dc4161a97ffad327a7caf90a6",
     "semantic_hash": ""
   },
   "D:\\project\\SpatialtemporalAi\\Wujie-Jilin-Admin\\aiDoc\\memory\\README.md": {
@@ -7307,6 +7307,11 @@
   "D:\\project\\SpatialtemporalAi\\Wujie-Jilin-Admin\\aiDoc\\memory\\business\\2026-06-17_scene-task-monitor-ui-fixes.md": {
     "mtime": 1781685444.8979428,
     "ast_hash": "bd63c481fb74fd5a75b61be7752068a9",
+    "semantic_hash": ""
+  },
+  "D:\\project\\SpatialtemporalAi\\Wujie-Jilin-Admin\\aiDoc\\memory\\business\\2026-06-17_task-form-required-validation.md": {
+    "mtime": 1781686051.1994133,
+    "ast_hash": "730c62df077036f4d3cc7c2310605040",
     "semantic_hash": ""
   }
 }
