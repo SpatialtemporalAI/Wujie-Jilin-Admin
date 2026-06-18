@@ -1039,7 +1039,7 @@ Nodes (20): editor.codeActionsOnSave, source.fixAll.eslint, editor.formatOnSave,
 
 ### Community 78 - "Community 78"
 Cohesion: 0.17
-Nodes (16): SmileX Project README, Time Field Bridge (datetime serialization), Error Code Range Allocation, MCP Embedded vs Standalone Deployment Modes, MCP Tool Platform, RBAC Permission Model, Timezone Handling (Asia/Shanghai display, UTC storage), Error Codes Registry (+8 more)
+Nodes (16): Wujie-Jilin-Admin Project README, Time Field Bridge (datetime serialization), Error Code Range Allocation, MCP Embedded vs Standalone Deployment Modes, MCP Tool Platform, RBAC Permission Model, Timezone Handling (Asia/Shanghai display, UTC storage), Error Codes Registry (+8 more)
 
 ### Community 79 - "Community 79"
 Cohesion: 0.17
@@ -1655,7 +1655,7 @@ Nodes (10): bool, float, int, str, get_session_cache(), 会话内存缓存 短 T
 
 ### Community 532 - "Community 532"
 Cohesion: 0.15
-Nodes (12): 📚 API 文档, code:block7 (├── app/                  # 应用相关模型), SmileX_Cloud, 🌟 功能特点, 🛠️ 技术栈, 技术特性, 提交 Pull Request 前请确保：, 核心功能 (+4 more)
+Nodes (12): 📚 API 文档, code:block7 (├── app/                  # 应用相关模型), Wujie-Jilin-Admin_Cloud, 🌟 功能特点, 🛠️ 技术栈, 技术特性, 提交 Pull Request 前请确保：, 核心功能 (+4 more)
 
 ### Community 533 - "Community 533"
 Cohesion: 0.15
