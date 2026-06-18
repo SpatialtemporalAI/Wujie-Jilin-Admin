@@ -1,0 +1,3 @@
+[submodule "backend/grpc"]
+	path = backend/grpc
+	url = git@github.com:SpatialtemporalAI/Wujie-Jilin-Grpc.git
