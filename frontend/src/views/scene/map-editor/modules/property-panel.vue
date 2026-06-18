@@ -23,6 +23,7 @@ const emit = defineEmits<{
   (e: 'select-element', el: SelectedElement | null): void;
   (e: 'select-scene', mapId: number): void;
   (e: 'add-scene'): void;
+  (e: 'edit-scene', mapId: number): void;
   (e: 'delete-scene', mapId: number): void;
   (e: 'locate-robot', data: { mapId: number; x: number; y: number }): void;
   (e: 'focus-annotation', id: number): void;
@@ -260,14 +261,20 @@ onMounted(() => {
                   {{ map.width && map.height ? `${map.width}×${map.height}` : '未设置尺寸' }}
                 </div>
               </div>
-              <NPopconfirm @positive-click.stop="emit('delete-scene', map.id)">
-                <template #trigger>
-                  <NButton quaternary size="tiny" type="error" class="opacity-0 group-hover:opacity-100" @click.stop>
-                    <template #icon><icon-ic-round-delete-outline /></template>
-                  </NButton>
-                </template>
-                确认删除此场景？所有点位、路径、障碍物数据将一并删除。
-              </NPopconfirm>
+              <div class="flex items-center gap-2px">
+                <NButton quaternary size="tiny" type="primary" class="opacity-0 group-hover:opacity-100"
+                  @click.stop="emit('edit-scene', map.id)">
+                  <template #icon><icon-ic-round-edit /></template>
+                </NButton>
+                <NPopconfirm @positive-click.stop="emit('delete-scene', map.id)">
+                  <template #trigger>
+                    <NButton quaternary size="tiny" type="error" class="opacity-0 group-hover:opacity-100" @click.stop>
+                      <template #icon><icon-ic-round-delete-outline /></template>
+                    </NButton>
+                  </template>
+                  确认删除此场景？所有点位、路径、障碍物数据将一并删除。
+                </NPopconfirm>
+              </div>
             </div>
             <NEmpty v-if="filteredList.length === 0" description="暂无场景" class="mt-20px" />
           </div>
