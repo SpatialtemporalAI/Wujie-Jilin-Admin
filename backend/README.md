@@ -221,12 +221,24 @@ uvicorn main:app --reload --host 0.0.0.0 --port 8000
 
 ### 生产环境
 
-1. **使用 Gunicorn + Uvicorn**
+1. **使用项目内置脚本（推荐）**
+
+`backend/start_prod.sh` 已封装好 gunicorn + uvicorn worker 启动逻辑，自动 `export ENVIR=prod` 加载 `.env.prod`：
 ```bash
-gunicorn main:app -w 4 -k uvicorn.workers.UvicornWorker --bind 0.0.0.0:8000
+cd backend && ./start_prod.sh
+# 自定义参数（可选）
+HOST=0.0.0.0 PORT=8000 WORKERS=4 ./start_prod.sh
+```
+默认参数 `-w 4 --timeout 120 --max-requests 5000 --max-requests-jitter 500`，与 `deploy/smilex-cloud.service` 对齐；支持 `HOST/PORT/WORKERS/TIMEOUT/MAX_REQUESTS/MAX_REQUESTS_JITTER/LOG_LEVEL` 环境变量覆盖。
+
+> 仅支持 Linux/WSL（gunicorn 不支持 Windows）。正式生产长期运行推荐 systemd，参考 `deploy/smilex-cloud.service` + `deploy/deploy.sh`。
+
+2. **直接使用 Gunicorn + Uvicorn（手动拼参数）**
+```bash
+ENVIR=prod gunicorn main:app -w 4 -k uvicorn.workers.UvicornWorker --bind 0.0.0.0:8000
 ```
 
-2. **Docker 部署**
+3. **Docker 部署**
 ```dockerfile
 # 示例 Dockerfile
 FROM python:3.11-slim
@@ -238,6 +250,7 @@ RUN pip install --no-cache-dir -r requirements.txt
 
 COPY . .
 
+ENV ENVIR=prod
 CMD ["gunicorn", "main:app", "-w", "4", "-k", "uvicorn.workers.UvicornWorker", "--bind", "0.0.0.0:8000"]
 ```
 
