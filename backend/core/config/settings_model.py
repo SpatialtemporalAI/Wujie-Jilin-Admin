@@ -18,6 +18,9 @@ class ServiceModel(BaseModel):
     VERSION: str = Field("1.0.0", description="服务版本")
     PREFIX: str = Field("/st", description="服务前缀")
     OPENAPI_ENABLE_IN_PROD: bool = Field(False, description="生产环境是否启用OpenAPI文档")
+    BASE_URL: str = Field("", description="对外可访问的基础 URL（含协议+host+port），用于拼接文件可访问 URL；为空则只返回相对路径")
+    INTERNAL_TOKEN: str = Field("", description="服务间内部共享密钥；非空时启用签名 URL 模式（HMAC），同时允许通过 X-Internal-Token header 免 JWT 访问 preview 端点")
+    FILE_PREVIEW_TTL_SECONDS: int = Field(600, description="签名 URL 默认有效期（秒）；过期后导览服务需重新触发推送")
 
 
 class JWTModel(BaseModel):

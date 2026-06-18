@@ -8,10 +8,12 @@ import logging
 from typing import List
 from urllib.parse import quote
 
-from fastapi import APIRouter, Depends, UploadFile, File, Query, Request
-from fastapi.responses import StreamingResponse, FileResponse, Response
+from fastapi import APIRouter, Depends, UploadFile, File, Header, HTTPException, Query, Request
+from fastapi.responses import StreamingResponse, FileResponse
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from core.config import settings
+from core.security.file_signature import is_enabled as _sig_enabled, verify as _sig_verify
 from database.db_manager import get_session
 from core.response.response_schema import ResponseModel, ResponsePageModel
 from app.models.common.page import PageRequest, get_page_params, get_paginated_results
@@ -35,7 +37,11 @@ file_router = APIRouter(
 
 # 预览路由独立，不走 router 级别的 current_user 依赖
 # 浏览器通过 <img>/<video> src 直接访问，不会携带 Authorization header
-preview_router = APIRouter(prefix="/file", tags=["系统管理/文件管理"])
+# 鉴权下沉到 preview_file 函数体（需要 file_id 才能验签）
+preview_router = APIRouter(
+    prefix="/file",
+    tags=["系统管理/文件管理"],
+)
 
 
 @file_router.post(
@@ -176,16 +182,34 @@ async def download_file(
 )
 async def preview_file(
     file_id: int,
-    token: str = Query(..., description="访问令牌"),
     request: Request = None,
+    expires: int = Query(default=0, description="签名 URL 过期时间（Unix 秒）"),
+    sig: str = Query(default="", description="签名 URL 的 HMAC 签名"),
+    x_internal_token: str = Header(default="", alias="X-Internal-Token"),
+    token: str = Query(default="", description="JWT 访问令牌（浏览器/前端用）"),
     db: AsyncSession = Depends(get_session),
 ):
-    """在线预览文件（图片/视频），通过 query 参数 token 鉴权，支持 Range 请求"""
-    raw_token = token.removeprefix("Bearer ")
-    try:
-        JWTAuthManager.decode_token(raw_token)
-    except Exception:
-        return Response(status_code=401, content="Unauthorized")
+    """在线预览文件（图片/视频），支持 Range 请求
+
+    鉴权（任意一种通过即可）：
+    1. 签名 URL：?expires=<unix>&sig=<hmac>（推荐；SERVICE.INTERNAL_TOKEN 作 HMAC 密钥，URL 不暴露密钥且有时效）
+    2. 内部 header：X-Internal-Token: <SERVICE.INTERNAL_TOKEN>（适合可加 header 的 HTTP 客户端）
+    3. JWT：?token=<JWT>（浏览器/前端原行为）
+    """
+    internal = settings.SERVICE.INTERNAL_TOKEN
+    authorized = False
+    if _sig_enabled() and _sig_verify(file_id, expires, sig):
+        authorized = True
+    elif internal and x_internal_token and x_internal_token == internal:
+        authorized = True
+    elif token:
+        try:
+            JWTAuthManager.decode_token(token.removeprefix("Bearer "))
+            authorized = True
+        except Exception:
+            pass
+    if not authorized:
+        raise HTTPException(status_code=401, detail="unauthorized")
 
     sys_file = await FileService.get_file(db, file_id)
     storage = get_storage_backend()

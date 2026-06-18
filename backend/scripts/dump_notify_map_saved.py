@@ -7,8 +7,9 @@
 
 字段映射规则与 backend/modules/grpc/converter.py 保持一致：
 - id / version / labels[].id 均为 str
-- image_url: nav_image_id 优先，fallback image_id；都没有则空串
-  URL 格式与 FileService.get_file_url 一致：{SERVICE.PREFIX}/admin/sys/file/{file_id}/preview
+- image_url: 完整可访问 URL（HMAC 签名 + 时效），启用签名模式后形如：
+  {SERVICE.BASE_URL}/admin/sys/file/{file_id}/preview?expires=<unix>&sig=<hex>
+  nav_image_id 优先，fallback image_id；都没有则空串
 - origin_x/y = SceneMap.start_point_x/y
 - resolution = SceneMap.resolution
 - labels 由 scene_map_annotation 映射
@@ -59,11 +60,15 @@ def build_sync_db_url() -> str:
 
 
 def build_image_url(file_id: int | None) -> str:
-    """与 FileService.get_file_url 等价的相对 URL（host 由导览服务侧拼接）"""
+    """与 FileService.get_file_url 等价：返回签名 URL（启用签名模式时）"""
     if not file_id:
         return ""
-    prefix = settings.SERVICE.PREFIX or ""
-    return f"{prefix}/admin/sys/file/{file_id}/preview"
+    from core.security.file_signature import build_signed_url, is_enabled
+
+    if is_enabled():
+        return build_signed_url(file_id)
+    base_url = (settings.SERVICE.BASE_URL or "").rstrip("/")
+    return f"{base_url}/admin/sys/file/{file_id}/preview"
 
 
 def load_map_payload(engine, map_id: int) -> dict[str, Any]:

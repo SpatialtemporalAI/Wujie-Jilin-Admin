@@ -29,3 +29,4 @@
 - [2026-06-11 机器人场景绑定可空与存量库缺列修复](./2026-06-11_robot-map-binding-nullable-fix.md) — robot.map_id 缺列自动补齐，未绑定场景不支持定位
 - [2026-06-11 地图编辑器新增场景图片与起始点位](./2026-06-11_map-editor-create-scene-image-start-point.md) — 新增场景上传图片并按原图/网页显示尺寸缩放保存起始点位
 - [2026-06-17 场景地图新增导航地图图片](./2026-06-17_scene-map-nav-image.md) — 异步将障碍物/禁区绘制到原图副本生成 nav_image_id
+- [2026-06-18 NotifyMapSaved image_url HMAC 签名 URL](./2026-06-18_notify-map-saved-image-url-internal-token.md) — preview 端点改为 HMAC 签名 URL（?expires=&sig=），密钥不出后端，有时效

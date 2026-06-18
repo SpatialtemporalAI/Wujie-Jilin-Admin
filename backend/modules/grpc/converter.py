@@ -2,7 +2,9 @@
 SceneMap -> proto MapInfo 转换器
 
 字段映射约定（已与用户确认）：
-- image_url: nav_image_id 优先（含障碍物），fallback image_id；都没有则空串
+- image_url: 由调用方拼接后传入，已是完整可访问 URL（HMAC 签名 + 时效）
+  （{SERVICE.BASE_URL}/admin/sys/file/{file_id}/preview?expires=<unix>&sig=<hex>）
+  调用方直接 GET 即可，URL 不暴露密钥且有时效；nav_image_id 优先，fallback image_id；都没有则空串
 - origin_x/y: 直接等同 SceneMap.start_point_x/y
 - version: int -> str（与 proto string 对齐）
 - labels: 由 SceneMap.annotations 映射而来
