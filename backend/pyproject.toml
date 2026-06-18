@@ -1,5 +1,5 @@
 [project]
-name = "smilex-fastapi-cloud"
+name = "Wujie-jilin-admin"
 version = "0.1.0"
 description = "Add your description here"
 readme = "README.md"
@@ -37,5 +37,5 @@ dependencies = [
 
 [tool.uv.workspace]
 members = [
-    "SmileX-Fastapi-Cloud",
+    "Wujie-jilin-admin",
 ]

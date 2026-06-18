@@ -1,13 +1,13 @@
-# SmileX 项目
+# Wujie-Jilin-Admin 项目
 
-SmileX 是一个基于 FastAPI 和 Vue 的全栈云服务平台，提供完整的前后端解决方案，支持用户认证、权限管理、系统配置等核心功能。
+Wujie-Jilin-Admin 是一个基于 FastAPI 和 Vue 的全栈云服务平台，提供完整的前后端解决方案，支持用户认证、权限管理、系统配置等核心功能。
 
 ## 项目结构
 
 本项目采用前后端分离架构，后端代码位于 `backend` 目录，前端代码位于 `frontend` 目录。
 
 ```
-SmileX-Fastapi-Cloud/
+Wujie-jilin-Admin/
 ├── backend/            # 后端代码
 │   ├── app/            # 应用核心模块
 │   ├── config/         # 配置文件
@@ -107,7 +107,7 @@ SmileX-Fastapi-Cloud/
    # MCP 服务随主应用自动启动，无需手动操作
    # 默认配置如下（可在 .env 中覆盖）：
    # MCP__ENABLED=true
-   # MCP__NAME=SmileX MCP Server
+   # MCP__NAME=Wujie-Jilin-Admin MCP Server
    # MCP__HOST=127.0.0.1
    # MCP__PORT=9000
 
@@ -334,9 +334,9 @@ SmileX-Fastapi-Cloud/
 
 ## 联系方式
 
-- 项目地址: [https://github.com/SmileX/SmileX-Fastapi-Cloud](https://github.com/SmileX/SmileX-Fastapi-Cloud)
-- 问题反馈: [https://github.com/SmileX/SmileX-Fastapi-Cloud/issues](https://github.com/SmileX/SmileX-Fastapi-Cloud/issues)
+- 项目地址: [https://github.com/SpatialtemporalAI/Wujie-jilin-admin](https://github.com/SpatialtemporalAI/Wujie-jilin-admin)
+- 问题反馈: [https://github.com/SpatialtemporalAI/Wujie-jilin-admin/issues](https://github.com/SpatialtemporalAI/Wujie-jilin-admin/issues)
 
 ---
 
-**SmileX** - 让云服务更简单，让开发更高效！
+**Wujie-Jilin-Admin** - 让云服务更简单，让开发更高效！

@@ -1941,7 +1941,7 @@ wheels = [
 ]
 
 [[package]]
-name = "smilex-fastapi-cloud"
+name = "Wujie-Jilin-Admin"
 version = "0.1.0"
 source = { virtual = "." }
 dependencies = [

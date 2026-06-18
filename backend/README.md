@@ -1,4 +1,4 @@
-# SmileX_Cloud
+# Wujie-Jilin-Admin_Cloud
 
 一个基于 FastAPI 构建的现代化云服务平台后端系统，提供完整的用户认证、权限管理、数据处理和API服务能力。
 
@@ -49,7 +49,7 @@
 1. **克隆项目**
 ```bash
 git clone <repository-url>
-cd SmileX-Fastapi-Cloud
+cd Wujie-jilin-admin
 ```
 
 2. **安装依赖**
@@ -183,7 +183,7 @@ MCP 环境变量配置（在 `.env` 中设置，使用 `MCP__` 前缀）：
 
 ```bash
 MCP__ENABLED=true                # 是否启用 MCP
-MCP__NAME=SmileX MCP Server      # 服务器名称
+MCP__NAME=Wujie-Jilin-Admin MCP Server      # 服务器名称
 MCP__HOST=127.0.0.1              # 独立服务地址
 MCP__PORT=9000                   # 独立服务端口
 MCP__UPSTREAM_BASE_URL=http://127.0.0.1:8000  # 上游应用 URL
@@ -344,8 +344,8 @@ mypy .
 
 如有任何问题或建议，欢迎通过以下方式联系我们：
 
-- GitHub Issues：[https://github.com/smileluck/SmileX-Fastapi-Cloud]
+- GitHub Issues：[https://github.com/SpatialtemporalAI/Wujie-jilin-admin]
 
 ---
 
-感谢您使用 SmileX_Cloud！ 🎉
+感谢您使用 Wujie-Jilin-Admin_Cloud！ 🎉

@@ -1,5 +1,5 @@
 [Unit]
-Description=SmileX Cloud Backend (FastAPI + Gunicorn)
+Description=Wujie-Jilin-Admin Cloud Backend (FastAPI + Gunicorn)
 After=network.target postgresql.service redis.service
 Wants=postgresql.service redis.service
 

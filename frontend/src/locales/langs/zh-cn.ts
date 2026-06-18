@@ -1,6 +1,6 @@
 const local: App.I18n.Schema = {
   system: {
-    title: "SmileX管理系统",
+    title: "吉大二院管理系统",
     updateTitle: '系统版本更新通知',
     updateContent: '检测到系统有新版本发布，是否立即刷新页面？',
     updateConfirm: '立即刷新',
@@ -107,7 +107,7 @@ const local: App.I18n.Schema = {
         applySuccess: '预设应用成功',
         default: {
           name: '默认预设',
-          desc: 'SmileX 默认主题预设'
+          desc: '吉大二院 默认主题预设'
         },
         dark: {
           name: '暗色预设',
@@ -337,11 +337,11 @@ const local: App.I18n.Schema = {
       projectNews: {
         title: '项目动态',
         moreNews: '更多动态',
-        desc1: 'SmileX 在2021年5月28日创建了开源项目 soybean-admin!',
+        desc1: '吉大二院 在2021年5月28日创建了开源项目 soybean-admin!',
         desc2: 'Yanbowe 向 soybean-admin 提交了一个bug，多标签栏不会自适应。',
-        desc3: 'SmileX 准备为 soybean-admin 的发布做充分的准备工作!',
-        desc4: 'SmileX 正在忙于为soybean-admin写项目说明文档！',
-        desc5: 'SmileX 刚才把工作台页面随便写了一些，凑合能看了！'
+        desc3: '吉大二院 准备为 soybean-admin 的发布做充分的准备工作!',
+        desc4: '吉大二院 正在忙于为soybean-admin写项目说明文档！',
+        desc5: '吉大二院 刚才把工作台页面随便写了一些，凑合能看了！'
       },
       creativity: '创意'
     },

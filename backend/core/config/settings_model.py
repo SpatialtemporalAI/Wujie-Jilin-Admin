@@ -14,13 +14,23 @@ from typing import List
 class ServiceModel(BaseModel):
     """服务配置模型"""
 
-    NAME: str = Field("SmileX Cloud", description="服务名称")
+    NAME: str = Field("Wujie-Jilin-Admin Cloud", description="服务名称")
     VERSION: str = Field("1.0.0", description="服务版本")
     PREFIX: str = Field("/st", description="服务前缀")
-    OPENAPI_ENABLE_IN_PROD: bool = Field(False, description="生产环境是否启用OpenAPI文档")
-    BASE_URL: str = Field("", description="对外可访问的基础 URL（含协议+host+port），用于拼接文件可访问 URL；为空则只返回相对路径")
-    INTERNAL_TOKEN: str = Field("", description="服务间内部共享密钥；非空时启用签名 URL 模式（HMAC），同时允许通过 X-Internal-Token header 免 JWT 访问 preview 端点")
-    FILE_PREVIEW_TTL_SECONDS: int = Field(600, description="签名 URL 默认有效期（秒）；过期后导览服务需重新触发推送")
+    OPENAPI_ENABLE_IN_PROD: bool = Field(
+        False, description="生产环境是否启用OpenAPI文档"
+    )
+    BASE_URL: str = Field(
+        "",
+        description="对外可访问的基础 URL（含协议+host+port），用于拼接文件可访问 URL；为空则只返回相对路径",
+    )
+    INTERNAL_TOKEN: str = Field(
+        "",
+        description="服务间内部共享密钥；非空时启用签名 URL 模式（HMAC），同时允许通过 X-Internal-Token header 免 JWT 访问 preview 端点",
+    )
+    FILE_PREVIEW_TTL_SECONDS: int = Field(
+        600, description="签名 URL 默认有效期（秒）；过期后导览服务需重新触发推送"
+    )
 
 
 class JWTModel(BaseModel):
@@ -113,7 +123,7 @@ class MCPModel(BaseModel):
     """MCP 配置模型"""
 
     ENABLED: bool = Field(True, description="是否启用 MCP 模块")
-    NAME: str = Field("SmileX MCP Server", description="MCP 服务器名称")
+    NAME: str = Field("Wujie-Jilin-Admin MCP Server", description="MCP 服务器名称")
     VERSION: str = Field("1.0.0", description="MCP 版本")
     HOST: str = Field("127.0.0.1", description="独立服务地址")
     PORT: int = Field(9000, description="独立服务端口")
@@ -145,7 +155,9 @@ class RateLimitModel(BaseModel):
     CAPTCHA_TOLERANCE: int = Field(5, description="滑块验证位置容差(像素)")
     CAPTCHA_TOKEN_TTL: int = Field(300, description="验证码令牌有效期(秒)")
     CAPTCHA_MAX_VERIFY_ATTEMPTS: int = Field(5, description="单次验证码最大验证次数")
-    BLACKLIST_REDIS_TTL: int = Field(86400, description="Redis 黑名单兜底 TTL(秒)，到期重新从 DB 同步")
+    BLACKLIST_REDIS_TTL: int = Field(
+        86400, description="Redis 黑名单兜底 TTL(秒)，到期重新从 DB 同步"
+    )
     WHITELIST_PATH_PREFIXES: Tuple[str, ...] = Field(
         (
             "/docs",
@@ -192,6 +204,10 @@ class RedisPoolModel(BaseModel):
 class GrpcModel(BaseModel):
     """gRPC 客户端配置"""
 
-    ENABLED: bool = Field(False, description="是否启用 gRPC（关闭时所有推送/拉取静默跳过）")
-    MAP_SERVICE_ADDR: str = Field("127.0.0.1:50051", description="MapService 地址 host:port")
+    ENABLED: bool = Field(
+        False, description="是否启用 gRPC（关闭时所有推送/拉取静默跳过）"
+    )
+    MAP_SERVICE_ADDR: str = Field(
+        "127.0.0.1:50051", description="MapService 地址 host:port"
+    )
     TIMEOUT_SECONDS: float = Field(10.0, description="单次 RPC 超时(秒)")

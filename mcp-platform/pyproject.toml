@@ -1,7 +1,7 @@
 [project]
 name = "smilex-mcp-server"
 version = "1.0.0"
-description = "SmileX MCP Server - 独立 MCP 工具服务"
+description = "Wujie-Jilin-Admin MCP Server - 独立 MCP 工具服务"
 readme = "README.md"
 requires-python = ">=3.11"
 dependencies = [

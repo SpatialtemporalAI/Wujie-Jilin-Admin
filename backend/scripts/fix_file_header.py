@@ -14,7 +14,7 @@ def main():
     主函数，遍历所有Python文件并添加标准文件头
     """
     # 定义项目根目录
-    project_root = "d:/project/SmileX/SmileX-Fastapi-Cloud"
+    project_root = "d:/project/SpatialtemporalAi/Wujie-Jilin-Admin"
 
     # 排除的目录
     excluded_dirs = [".venv", "alembic"]
