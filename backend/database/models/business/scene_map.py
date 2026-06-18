@@ -56,6 +56,19 @@ class SceneMap(Base):
     status: Mapped[bool] = mapped_column(
         Boolean, default=True, comment="状态：True-启用，False-禁用"
     )
+    version: Mapped[int] = mapped_column(
+        Integer,
+        nullable=False,
+        default=0,
+        server_default="0",
+        comment="地图内容版本号，编辑器保存 +1",
+    )
+    target_version: Mapped[int | None] = mapped_column(
+        Integer,
+        nullable=True,
+        default=None,
+        comment="导览服务已同步版本号（定时任务回填）",
+    )
 
     group: Mapped["SceneGroup"] = relationship(
         back_populates="maps",

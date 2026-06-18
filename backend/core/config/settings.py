@@ -23,6 +23,7 @@ from .settings_model import (
     MCPModel,
     RateLimitModel,
     PluginModel,
+    GrpcModel,
 )
 
 
@@ -64,3 +65,5 @@ class GlobalSetting(BaseSettings):
     RATE_LIMIT: RateLimitModel = RateLimitModel()
     # 插件配置
     PLUGINS: PluginModel = PluginModel()
+    # gRPC 客户端配置
+    GRPC: GrpcModel = GrpcModel()

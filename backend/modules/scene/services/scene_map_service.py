@@ -88,6 +88,8 @@ class SceneMapService:
                 "start_point_x": m.start_point_x,
                 "start_point_y": m.start_point_y,
                 "status": m.status,
+                "version": m.version,
+                "target_version": m.target_version,
                 "group_name": group_map.get(m.group_id) if m.group_id else None,
                 "created_at": m.created_at,
                 "updated_at": m.updated_at,

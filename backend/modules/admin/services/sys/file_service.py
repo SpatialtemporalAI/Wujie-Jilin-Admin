@@ -130,6 +130,20 @@ class FileService:
         return sys_file
 
     @staticmethod
+    async def get_file_url(db: AsyncSession, file_id: int) -> str | None:
+        """构造文件 preview 相对 URL：{SERVICE.PREFIX}/admin/sys/file/{file_id}/preview
+
+        用于跨服务（如导览服务）引用文件；返回 None 表示文件不存在。
+        导览服务侧按自身部署地址拼接 host 使用。
+        """
+        try:
+            await FileService.get_file(db, file_id)
+        except NotFoundError:
+            return None
+        prefix = settings.SERVICE.PREFIX or ""
+        return f"{prefix}/admin/sys/file/{file_id}/preview"
+
+    @staticmethod
     async def get_file_content(db: AsyncSession, file_id: int) -> tuple[SysFile, bytes]:
         """获取文件元数据和二进制内容"""
         sys_file = await FileService.get_file(db, file_id)

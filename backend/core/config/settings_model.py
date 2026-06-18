@@ -184,3 +184,11 @@ class RedisPoolModel(BaseModel):
     SOCKET_KEEPALIVE: bool = Field(True, description="是否保持连接")
     SOCKET_KEEPALIVE_OPTIONS: dict = Field(None, description="保持连接选项")
     RETRY_ON_TIMEOUT: bool = Field(False, description="超时是否重试")
+
+
+class GrpcModel(BaseModel):
+    """gRPC 客户端配置"""
+
+    ENABLED: bool = Field(False, description="是否启用 gRPC（关闭时所有推送/拉取静默跳过）")
+    MAP_SERVICE_ADDR: str = Field("127.0.0.1:50051", description="MapService 地址 host:port")
+    TIMEOUT_SECONDS: float = Field(10.0, description="单次 RPC 超时(秒)")

@@ -63,38 +63,98 @@ class SceneMapNavImageService:
                     if map_obj.nav_image_id != map_obj.image_id:
                         map_obj.nav_image_id = map_obj.image_id
                         await db.commit()
-                    return
+                else:
+                    source_file, image_bytes = await FileService.get_file_content(db, map_obj.image_id)
 
-                source_file, image_bytes = await FileService.get_file_content(db, map_obj.image_id)
+                    rendered_bytes, ext, mime = SceneMapNavImageService._render(
+                        image_bytes, source_file.extension, source_file.mime_type, drawable
+                    )
 
-                rendered_bytes, ext, mime = SceneMapNavImageService._render(
-                    image_bytes, source_file.extension, source_file.mime_type, drawable
-                )
+                    base_name = os.path.splitext(source_file.original_name or "map")[0]
+                    new_name = f"{base_name}_nav.{ext}"
 
-                base_name = os.path.splitext(source_file.original_name or "map")[0]
-                new_name = f"{base_name}_nav.{ext}"
+                    new_file = await FileService.upload_file(
+                        db=db,
+                        file_data=rendered_bytes,
+                        original_name=new_name,
+                        mime_type=mime,
+                        created_by=user_id,
+                    )
 
-                new_file = await FileService.upload_file(
-                    db=db,
-                    file_data=rendered_bytes,
-                    original_name=new_name,
-                    mime_type=mime,
-                    created_by=user_id,
-                )
+                    map_obj.nav_image_id = new_file.id
+                    await db.commit()
+                    logger.info(
+                        "nav_image regenerated for map %s: nav_image_id=%s",
+                        map_id,
+                        new_file.id,
+                    )
 
-                map_obj.nav_image_id = new_file.id
-                await db.commit()
-                logger.info(
-                    "nav_image regenerated for map %s: nav_image_id=%s",
-                    map_id,
-                    new_file.id,
-                )
+                # nav_image_id 已就绪后，推送 NotifyMapSaved 给导览服务
+                try:
+                    await SceneMapNavImageService._notify_map_saved(db, map_obj)
+                except Exception as notify_exc:
+                    logger.warning(
+                        "notify_map_saved failed for map %s: %s",
+                        map_id,
+                        notify_exc,
+                    )
         except Exception as exc:
             logger.error(
                 "nav_image regenerate failed for map %s: %s",
                 map_id,
                 exc,
                 exc_info=True,
+            )
+
+    @staticmethod
+    async def _notify_map_saved(db: AsyncSession, map_obj: SceneMap) -> None:
+        """推送 MapInfo 给导览服务（NotifyMapSaved）
+
+        在 _regenerate 内部 nav_image_id 已 commit 后调用，确保推送时图片已就绪。
+        失败仅记日志，不抛出。
+        """
+        import grpc
+        from sqlalchemy.orm import selectinload
+
+        from modules.grpc.client import MapServiceClient
+        from modules.grpc.converter import scene_map_to_map_info
+        from modules.admin.services.sys.file_service import FileService
+
+        # 重新加载带 annotations 的 map_obj（_regenerate 中只加载了 objects）
+        stmt = (
+            select(SceneMap)
+            .where(
+                SceneMap.id == map_obj.id,
+                SceneMap.deleted_at.is_(None),
+            )
+            .options(selectinload(SceneMap.annotations))
+        )
+        fresh = (await db.execute(stmt)).unique().scalar_one_or_none()
+        if fresh is None:
+            logger.warning("notify_map_saved skipped: map %s not found", map_obj.id)
+            return
+
+        file_id = fresh.nav_image_id or fresh.image_id
+        image_url = ""
+        if file_id:
+            image_url = await FileService.get_file_url(db, file_id) or ""
+
+        map_info = scene_map_to_map_info(fresh, image_url)
+        try:
+            resp = await MapServiceClient.notify_map_saved(map_info)
+            logger.info(
+                "notify_map_saved ok map=%s version=%s status=%s msg=%s",
+                fresh.id,
+                fresh.version,
+                resp.status,
+                resp.message,
+            )
+        except grpc.aio.AioRpcError as exc:
+            logger.warning(
+                "notify_map_saved rpc failed map=%s code=%s details=%s",
+                fresh.id,
+                exc.code(),
+                exc.details(),
             )
 
     @staticmethod

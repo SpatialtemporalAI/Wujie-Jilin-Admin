@@ -60,6 +60,7 @@ async def lifespan(app: FastAPI):
         from modules.scheduler.core.scheduler import SchedulerManager
         import modules.scheduler.tasks.builtin  # noqa: F401
         import modules.scheduler.tasks.rate_limit_config  # noqa: F401
+        import modules.scene.tasks.sync_map_version  # noqa: F401
 
         manager = SchedulerManager.get_instance()
         manager.start()
@@ -83,6 +84,12 @@ async def lifespan(app: FastAPI):
         SchedulerManager.get_instance().stop()
     except Exception as exc:
         logger.error("定时任务调度器停止异常: %s", exc)
+    # 关闭 gRPC channel
+    try:
+        from modules.grpc.channel import close_channel
+        await close_channel()
+    except Exception as exc:
+        logger.error("gRPC channel 关闭异常: %s", exc)
     # 关闭 Redis 连接池
     logger.info("关闭 Redis 连接池")
     await RedisPool.close_pool()

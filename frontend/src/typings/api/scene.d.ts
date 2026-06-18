@@ -62,6 +62,10 @@ declare namespace Api {
       start_point_x: number;
       /** start point y */
       start_point_y: number;
+      /** map content version, +1 per editor save */
+      version: number;
+      /** version synced in navigation service, backfilled by scheduler */
+      target_version?: number | null;
     }>;
 
     /** scene map search params */

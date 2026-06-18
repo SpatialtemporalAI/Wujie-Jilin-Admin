@@ -66,6 +66,8 @@ class SceneMapResponseData(BaseRespEntity):
     start_point_x: float = Field(0, description="起始点位X坐标")
     start_point_y: float = Field(0, description="起始点位Y坐标")
     status: bool
+    version: int = Field(0, description="地图内容版本号，编辑器保存 +1")
+    target_version: int | None = Field(None, description="导览服务已同步版本号（定时任务回填）")
     group_name: str | None = Field(None, description="分组名称")
     created_at: datetime | None
     updated_at: datetime | None

@@ -116,6 +116,26 @@ const {
       }
     },
     {
+      key: 'version',
+      title: '版本',
+      align: 'center',
+      width: 90,
+      render: row => <span>{row.version ?? 0}</span>
+    },
+    {
+      key: 'sync_state',
+      title: '同步状态',
+      align: 'center',
+      width: 110,
+      render: row => {
+        const target = row.target_version;
+        const synced = target != null && target === row.version;
+        const type: NaiveUI.ThemeColor = target == null ? 'default' : synced ? 'success' : 'warning';
+        const text = target == null ? '未推送' : synced ? '已同步' : '待同步';
+        return <NTag type={type} size="small">{text}</NTag>;
+      }
+    },
+    {
       key: 'status',
       title: '状态',
       align: 'center',
@@ -238,7 +258,7 @@ function handleViewDetail(row: Api.Scene.SceneMap) {
         :data="mapData"
         size="small"
         :flex-height="!appStore.isMobile"
-        :scroll-x="1100"
+        :scroll-x="1300"
         :loading="mapLoading"
         remote
         :row-key="row => row.id"

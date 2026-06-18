@@ -173,4 +173,7 @@ class SceneMapEditorService:
                 )
                 db.add(obj)
 
+        # 编辑器保存触发版本号自增（用于与导览服务的版本对齐）
+        map_obj.version = (map_obj.version or 0) + 1
+
         await db.flush()
