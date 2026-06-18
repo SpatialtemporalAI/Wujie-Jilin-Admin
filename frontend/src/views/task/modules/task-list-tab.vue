@@ -130,10 +130,7 @@ const {
       title: '场景地图',
       align: 'center',
       width: 140,
-      render: row => {
-        const mapNames = [...new Set((row.robots || []).map((r: Api.Task.TaskRobot) => r.map_name).filter(Boolean))];
-        return <span>{mapNames.length > 0 ? mapNames.join(', ') : '-'}</span>;
-      }
+      render: row => <span>{row.map_name || '-'}</span>
     },
     {
       key: 'robots',

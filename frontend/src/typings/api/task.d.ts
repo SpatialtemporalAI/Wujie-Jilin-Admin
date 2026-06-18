@@ -36,6 +36,8 @@ declare namespace Api {
     /** task */
     type Task = Omit<Common.CommonRecord<object>, 'status'> & {
       name: string;
+      map_id: number | null;
+      map_name: string | null;
       task_type: TaskType;
       enabled: boolean;
       status: TaskStatus;
@@ -61,6 +63,7 @@ declare namespace Api {
     /** task create */
     type TaskCreate = {
       name: string;
+      map_id?: number | null;
       task_type: TaskType;
       points?: {
         sort_order: number;

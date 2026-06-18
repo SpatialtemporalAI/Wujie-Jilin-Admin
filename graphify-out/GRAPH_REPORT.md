@@ -1,16 +1,16 @@
-# Graph Report - Wujie-Jilin-Admin  (2026-06-17)
+# Graph Report - Wujie-Jilin-Admin  (2026-06-18)
 
 ## Corpus Check
-- 792 files · ~298,827 words
+- 799 files · ~300,408 words
 - Verdict: corpus is large enough that graph structure adds value.
 
 ## Summary
-- 7426 nodes · 15506 edges · 892 communities (628 shown, 264 thin omitted)
-- Extraction: 65% EXTRACTED · 35% INFERRED · 0% AMBIGUOUS · INFERRED: 5498 edges (avg confidence: 0.52)
+- 7519 nodes · 15604 edges · 904 communities (638 shown, 266 thin omitted)
+- Extraction: 65% EXTRACTED · 35% INFERRED · 0% AMBIGUOUS · INFERRED: 5504 edges (avg confidence: 0.52)
 - Token cost: 0 input · 0 output
 
 ## Graph Freshness
-- Built from commit: `bb1597e1`
+- Built from commit: `b02a7dd4`
 - Run `git rev-parse HEAD` and compare to check if the graph is stale.
 - Run `graphify update .` after code changes (no API cost).
 
@@ -27,6 +27,7 @@
 - [[_COMMUNITY_Community 9|Community 9]]
 - [[_COMMUNITY_Community 10|Community 10]]
 - [[_COMMUNITY_Community 11|Community 11]]
+- [[_COMMUNITY_Community 12|Community 12]]
 - [[_COMMUNITY_Community 13|Community 13]]
 - [[_COMMUNITY_Community 14|Community 14]]
 - [[_COMMUNITY_Community 15|Community 15]]
@@ -199,7 +200,6 @@
 - [[_COMMUNITY_Community 183|Community 183]]
 - [[_COMMUNITY_Community 184|Community 184]]
 - [[_COMMUNITY_Community 201|Community 201]]
-- [[_COMMUNITY_Community 202|Community 202]]
 - [[_COMMUNITY_Community 203|Community 203]]
 - [[_COMMUNITY_Community 204|Community 204]]
 - [[_COMMUNITY_Community 205|Community 205]]
@@ -445,6 +445,7 @@
 - [[_COMMUNITY_Community 569|Community 569]]
 - [[_COMMUNITY_Community 570|Community 570]]
 - [[_COMMUNITY_Community 571|Community 571]]
+- [[_COMMUNITY_Community 572|Community 572]]
 - [[_COMMUNITY_Community 573|Community 573]]
 - [[_COMMUNITY_Community 574|Community 574]]
 - [[_COMMUNITY_Community 575|Community 575]]
@@ -460,6 +461,7 @@
 - [[_COMMUNITY_Community 585|Community 585]]
 - [[_COMMUNITY_Community 586|Community 586]]
 - [[_COMMUNITY_Community 587|Community 587]]
+- [[_COMMUNITY_Community 588|Community 588]]
 - [[_COMMUNITY_Community 589|Community 589]]
 - [[_COMMUNITY_Community 590|Community 590]]
 - [[_COMMUNITY_Community 591|Community 591]]
@@ -480,7 +482,6 @@
 - [[_COMMUNITY_Community 606|Community 606]]
 - [[_COMMUNITY_Community 607|Community 607]]
 - [[_COMMUNITY_Community 608|Community 608]]
-- [[_COMMUNITY_Community 609|Community 609]]
 - [[_COMMUNITY_Community 610|Community 610]]
 - [[_COMMUNITY_Community 611|Community 611]]
 - [[_COMMUNITY_Community 612|Community 612]]
@@ -547,7 +548,6 @@
 - [[_COMMUNITY_Community 673|Community 673]]
 - [[_COMMUNITY_Community 674|Community 674]]
 - [[_COMMUNITY_Community 675|Community 675]]
-- [[_COMMUNITY_Community 676|Community 676]]
 - [[_COMMUNITY_Community 677|Community 677]]
 - [[_COMMUNITY_Community 678|Community 678]]
 - [[_COMMUNITY_Community 679|Community 679]]
@@ -660,12 +660,19 @@
 - [[_COMMUNITY_Community 861|Community 861]]
 - [[_COMMUNITY_Community 862|Community 862]]
 - [[_COMMUNITY_Community 863|Community 863]]
+- [[_COMMUNITY_Community 864|Community 864]]
+- [[_COMMUNITY_Community 865|Community 865]]
 - [[_COMMUNITY_Community 866|Community 866]]
+- [[_COMMUNITY_Community 867|Community 867]]
+- [[_COMMUNITY_Community 868|Community 868]]
 - [[_COMMUNITY_Community 869|Community 869]]
 - [[_COMMUNITY_Community 880|Community 880]]
 - [[_COMMUNITY_Community 881|Community 881]]
 - [[_COMMUNITY_Community 883|Community 883]]
 - [[_COMMUNITY_Community 884|Community 884]]
+- [[_COMMUNITY_Community 885|Community 885]]
+- [[_COMMUNITY_Community 886|Community 886]]
+- [[_COMMUNITY_Community 887|Community 887]]
 - [[_COMMUNITY_Community 888|Community 888]]
 - [[_COMMUNITY_Community 893|Community 893]]
 - [[_COMMUNITY_Community 894|Community 894]]
@@ -676,6 +683,7 @@
 - [[_COMMUNITY_Community 899|Community 899]]
 - [[_COMMUNITY_Community 900|Community 900]]
 - [[_COMMUNITY_Community 901|Community 901]]
+- [[_COMMUNITY_Community 902|Community 902]]
 
 ## God Nodes (most connected - your core abstractions)
 1. `NotFoundError` - 275 edges
@@ -715,31 +723,31 @@
 - **App Branding and Identity Assets** — favicon_app_brand_icon, logo_sidebar_brand, banner_dashboard_hero, soybean_mascot [INFERRED 0.80]
 - **Feather-style Action Icons** — activity_heartbeat_icon, copy_clipboard_icon, cast_screencast_icon, heart_favorite_icon, wind_airflow_icon, at_sign_email_icon [INFERRED 0.85]
 
-## Communities (892 total, 264 thin omitted)
+## Communities (904 total, 266 thin omitted)
 
 ### Community 0 - "Community 0"
-Cohesion: 0.18
-Nodes (44): AsyncSession, bool, int, Select, str, SysDictBatchUpdateStatus, SysDictCreate, SysDictItemBatchUpdateStatus (+36 more)
+Cohesion: 0.23
+Nodes (26): AsyncSession, bool, int, str, 系统字典数据表     存储字典的具体数据项, batch_update_dict_item_status(), batch_update_dict_status(), build_dict_item_query() (+18 more)
 
 ### Community 1 - "Community 1"
-Cohesion: 0.19
-Nodes (30): ORJSONResponse, Request, Request, str, Exception, FastAPI, ORJSONResponse, Request (+22 more)
+Cohesion: 0.07
+Nodes (94): AuthorizationError, Exception, FastAPI, HTTPException, ORJSONResponse, Request, Any, CustomErrorCode (+86 more)
 
 ### Community 2 - "Community 2"
 Cohesion: 0.07
 Nodes (57): Redis, Any, bool, float, int, Redis, str, Redis (+49 more)
 
 ### Community 3 - "Community 3"
-Cohesion: 0.15
-Nodes (67): ConfigType, int, PageRequest, SysConfigBatchUpdate, SysConfigCreate, SysConfigQueryParams, SysConfigReset, SysConfigUpdate (+59 more)
+Cohesion: 0.10
+Nodes (92): Any, ConfigType, str, AsyncSession, int, PageRequest, Request, str (+84 more)
 
 ### Community 4 - "Community 4"
-Cohesion: 0.17
-Nodes (54): AsyncSession, int, PageRequest, Request, str, SysDictBatchUpdateStatus, SysDictCreate, SysDictItemBatchUpdateStatus (+46 more)
+Cohesion: 0.21
+Nodes (49): PageRequest, SysDictBatchUpdateStatus, SysDictCreate, SysDictItemBatchUpdateStatus, SysDictItemCreate, SysDictItemQueryParams, SysDictItemUpdate, SysDictQueryParams (+41 more)
 
 ### Community 5 - "Community 5"
-Cohesion: 0.21
-Nodes (20): AsyncSession, int, PageRequest, Request, SysUser, SysUserCreate, SysUserPasswordUpdate, SysUserQueryParams (+12 more)
+Cohesion: 0.08
+Nodes (29): Any, RobotEventLogDetailResponse, RobotEventLogQueryParams, RobotEventLogResponse, 机器人型号查询参数模型     用于型号列表分页查询时的筛选条件, 机器人型号创建请求模型     用于创建新型号时的请求数据, 机器人型号更新请求模型     用于更新型号信息时的请求数据, RobotModelCreate (+21 more)
 
 ### Community 6 - "Community 6"
 Cohesion: 0.18
@@ -754,27 +762,31 @@ Cohesion: 0.06
 Nodes (38): genChangelog(), cleanup(), gitCommit(), gitCommitVerify(), PromptObject, release(), generateRoute(), PromptObject (+30 more)
 
 ### Community 9 - "Community 9"
-Cohesion: 0.27
-Nodes (20): AsyncSession, bool, int, SysMenu, batch_delete_menus(), batch_update_menus_status(), build_menu_query(), build_menu_tree_list() (+12 more)
+Cohesion: 0.25
+Nodes (22): AsyncSession, bool, int, SysMenu, SysMenuQueryParams, SysUser, batch_delete_menus(), batch_update_menus_status() (+14 more)
 
 ### Community 10 - "Community 10"
 Cohesion: 0.17
 Nodes (29): AutoMcpToolCreate, McpToolTestRequest, SysUser, AutoMcpToolCreate, McpToolTestRequest, str, McpServerStatusResponse, McpToolInfo (+21 more)
 
 ### Community 11 - "Community 11"
-Cohesion: 0.16
-Nodes (36): AsyncSession, int, IpBlacklistCreateRequest, IpBlacklistQueryParams, PageRequest, SysUser, str, AsyncSession (+28 more)
+Cohesion: 0.13
+Nodes (41): AsyncSession, int, IpBlacklistCreateRequest, IpBlacklistQueryParams, PageRequest, SysUser, str, AsyncSession (+33 more)
+
+### Community 12 - "Community 12"
+Cohesion: 0.04
+Nodes (18): fetchCreateSceneGroup(), fetchUpdateSceneGroup(), fetchUpdateSceneMap(), fetchCreateDict(), fetchCreateDictItem(), fetchCreateMenu(), fetchCreateRole(), fetchCreateUser() (+10 more)
 
 ### Community 13 - "Community 13"
 Cohesion: 0.08
-Nodes (65): bool, login(), Request, str, SysUser, UserManager, AsyncSession, int (+57 more)
+Nodes (60): bool, login(), Request, str, SysUser, UserManager, AsyncSession, int (+52 more)
 
 ### Community 14 - "Community 14"
 Cohesion: 0.05
 Nodes (43): BaseToken, Breadcrumb, ColorPaletteNumber, DemoResponse, DropdownKey, FormMsg, FormRule, GetI18nKey (+35 more)
 
 ### Community 15 - "Community 15"
-Cohesion: 0.16
+Cohesion: 0.15
 Nodes (38): 获取用户信息         Args:             user_id: 用户ID         Returns:, 获取用户信息         Args:             user_id: 用户ID         Returns:, 更新用户信息（PostgreSQL + SQLAlchemy异步版）, 更新用户信息（PostgreSQL + SQLAlchemy异步版）, update_user_info(), AsyncSession, int, Request (+30 more)
 
 ### Community 16 - "Community 16"
@@ -782,64 +794,64 @@ Cohesion: 0.05
 Nodes (41): debug.console.fontSize, debug.console.lineHeight, editor.defaultFormatter, editor.detectIndentation, editor.insertSpaces, editor.tabSize, eslint.enable, eslint.workingDirectories (+33 more)
 
 ### Community 17 - "Community 17"
-Cohesion: 0.14
+Cohesion: 0.16
 Nodes (3): 系统用户表     存储系统管理用户的基本信息和认证凭证, 系统用户表     存储系统管理用户的基本信息和认证凭证, SysUser
 
 ### Community 18 - "Community 18"
-Cohesion: 0.05
-Nodes (92): str, int, str, WebSocket, Any, int, str, lifespan() (+84 more)
+Cohesion: 0.06
+Nodes (87): str, int, str, WebSocket, Any, int, str, AsyncSession (+79 more)
 
 ### Community 19 - "Community 19"
 Cohesion: 0.14
-Nodes (49): AsyncSession, int, PageRequest, Request, SysRoleCreate, SysRoleQueryParams, SysRoleUpdate, SysUser (+41 more)
+Nodes (46): AsyncSession, int, PageRequest, Request, SysRoleCreate, SysRoleQueryParams, SysRoleUpdate, SysUser (+38 more)
 
 ### Community 20 - "Community 20"
-Cohesion: 0.10
-Nodes (23): fetchGetCaptcha(), fetchGetUserInfo(), fetchLogin(), fetchRefreshToken(), fetchVerifyCaptcha(), useAuthStore, clearAuthStorage(), getToken() (+15 more)
+Cohesion: 0.11
+Nodes (17): fetchGetCaptcha(), fetchGetUserInfo(), fetchLogin(), fetchRefreshToken(), fetchVerifyCaptcha(), fetchGetApiStats(), fetchGetSystemMetrics(), fetchGetPermissions() (+9 more)
 
 ### Community 21 - "Community 21"
-Cohesion: 0.13
-Nodes (52): AsyncSession, int, PageRequest, Request, SysMenuCreate, SysMenuQueryParams, SysMenuUpdate, SysUser (+44 more)
+Cohesion: 0.14
+Nodes (46): AsyncSession, int, PageRequest, Request, SysMenuCreate, SysMenuQueryParams, SysMenuUpdate, SysUser (+38 more)
 
 ### Community 22 - "Community 22"
 Cohesion: 0.07
 Nodes (36): borderRadiusMedium, fontWeightStrong, paddingMedium, header, sider, tab, borderRadius, paddingMedium (+28 more)
 
 ### Community 23 - "Community 23"
-Cohesion: 0.06
-Nodes (93): bool, int, str, AsyncSession, bool, datetime, int, str (+85 more)
+Cohesion: 0.05
+Nodes (98): lifespan(), FastAPI, bool, int, str, AsyncSession, bool, datetime (+90 more)
 
 ### Community 24 - "Community 24"
-Cohesion: 0.10
-Nodes (23): _is_multi_tenant_enabled(), 获取当前认证的用户（同一请求内缓存，避免重复查询）, 自动选择租户：优先使用上次登录的租户，否则使用第一个租户。         Returns: (tenant_id, tenant_list, secret_, 验证token中的session_id是否有效         Args:             token: JWT令牌         Return, 获取当前认证的用户（同一请求内缓存，避免重复查询）, 获取用户信息，包含角色列表         Args:             user_id: 用户ID         Returns:, 验证token中的session_id是否有效, 获取用户管理器实例     Args:         user_db: 用户数据库实例     Yields:         UserManager (+15 more)
+Cohesion: 0.09
+Nodes (32): _is_multi_tenant_enabled(), 获取当前认证的用户（同一请求内缓存，避免重复查询）, 自动选择租户：优先使用上次登录的租户，否则使用第一个租户。         Returns: (tenant_id, tenant_list, secret_, 验证token中的session_id是否有效         Args:             token: JWT令牌         Return, 获取当前认证的用户（同一请求内缓存，避免重复查询）, 获取用户信息，包含角色列表         Args:             user_id: 用户ID         Returns:, 验证token中的session_id是否有效, 获取用户管理器实例     Args:         user_db: 用户数据库实例     Yields:         UserManager (+24 more)
 
 ### Community 25 - "Community 25"
 Cohesion: 0.09
 Nodes (26): async_sessionmaker, AsyncEngine, Any, AsyncSession, bool, DatabaseModel, str, AsyncDatabaseManager (+18 more)
 
 ### Community 26 - "Community 26"
-Cohesion: 0.08
-Nodes (30): ApiStatsQueryParams, AsyncSession, 系统用户查询参数模型     用于用户列表分页查询时的筛选条件, ApiStatsQueryParams, ApiStatsResponse, DiskInfo, get_api_stats(), MemoryInfo (+22 more)
+Cohesion: 0.09
+Nodes (18): 系统用户密码更新请求模型     用于重置或修改用户密码, 系统用户简单响应模型     用于只需要展示基本用户信息的场景, 系统用户列表响应模型     用于用户列表展示，不包含关联角色数据, 系统用户列表响应模型     用于用户列表展示，不包含关联角色数据, 系统用户详细响应模型     用于展示用户完整信息，包括关联的角色, 系统用户详细响应模型     用于展示用户完整信息，包括关联的角色, 系统用户批量更新状态请求模型     用于批量启用或禁用用户, 系统用户批量更新状态请求模型     用于批量启用或禁用用户 (+10 more)
 
 ### Community 27 - "Community 27"
 Cohesion: 0.09
 Nodes (24): AliyunSMS, 发送app通知         Args:             alert_data: 报警数据, 验证用户凭据         通过手机号查找用户并验证验证码         Args:             phone: 手机号, 刷新access token         Args:             refresh_token: 刷新令牌         Returns:, 验证token中的session_id是否有效         Args:             token: JWT令牌         Return, 用户注册后的回调         可以在这里实现用户注册后的额外逻辑，如发送欢迎邮件等         Args:             user: 注, 用户注册后的回调         可以在这里实现用户注册后的额外逻辑，如发送欢迎邮件等         Args:             user: 注, 获取当前认证的用户         这是一个直接可用的FastAPI依赖项，封装了JWTAuthManager.current_user方法， (+16 more)
 
 ### Community 28 - "Community 28"
-Cohesion: 0.06
-Nodes (22): HeaderPlugin, _headerPlugins, local, local, setDayjsLocale(), getLocale(), i18n, setupI18n() (+14 more)
+Cohesion: 0.10
+Nodes (17): useAuthStore, useAuth(), permission, setDayjsLocale(), getLocale(), setupI18n(), setupAppVersionNotification(), setupDayjs() (+9 more)
 
 ### Community 29 - "Community 29"
-Cohesion: 0.17
-Nodes (29): AsyncSession, int, Request, SysPermissionCreate, SysPermissionUpdate, SysUser, AsyncSession, bool (+21 more)
+Cohesion: 0.12
+Nodes (38): datetime, str, AsyncSession, int, Request, SysPermissionCreate, SysPermissionUpdate, SysUser (+30 more)
 
 ### Community 30 - "Community 30"
-Cohesion: 0.11
-Nodes (64): AsyncSession, SysUser, AsyncSession, bool, int, PageRequest, SysUser, TenantConfigUpdate (+56 more)
+Cohesion: 0.18
+Nodes (35): AsyncSession, SysUser, AsyncSession, bool, int, PageRequest, SysUser, TenantConfigUpdate (+27 more)
 
 ### Community 31 - "Community 31"
-Cohesion: 0.07
-Nodes (46): str, FastAPI, str, AsyncSession, bool, FastAPI, PluginBase, str (+38 more)
+Cohesion: 0.19
+Nodes (23): AsyncSession, bool, FastAPI, PluginBase, str, PluginBase, _ensure_registry_exists(), _get_env_files() (+15 more)
 
 ### Community 32 - "Community 32"
 Cohesion: 0.06
@@ -850,12 +862,12 @@ Cohesion: 0.08
 Nodes (31): ApiFox Mock Data, Project Changelog, Conventional Commits, Dynamic Backend Routing, Elegant Router, ESLint + Prettier Integration, FastSoyAdmin Ecosystem Project, GitHub Linter CI Workflow (+23 more)
 
 ### Community 34 - "Community 34"
-Cohesion: 0.11
-Nodes (22): createCssVars(), createTabCssVars(), addColorAlpha(), transformColorWithOpacity(), presetSoybeanAdmin(), overrideThemeSettings, themeSettings, addThemeVarsToGlobal() (+14 more)
+Cohesion: 0.10
+Nodes (23): createCssVars(), createTabCssVars(), addColorAlpha(), transformColorWithOpacity(), presetSoybeanAdmin(), overrideThemeSettings, themeSettings, addThemeVarsToGlobal() (+15 more)
 
 ### Community 35 - "Community 35"
-Cohesion: 0.08
-Nodes (26): loginModuleRecord, themeLayoutModeOptions, themeLayoutModeRecord, themePageAnimationModeOptions, themePageAnimationModeRecord, themeSchemaOptions, themeSchemaRecord, themeScrollModeOptions (+18 more)
+Cohesion: 0.07
+Nodes (30): loginModuleRecord, themeLayoutModeOptions, themeLayoutModeRecord, themePageAnimationModeOptions, themePageAnimationModeRecord, themeSchemaOptions, themeSchemaRecord, themeScrollModeOptions (+22 more)
 
 ### Community 36 - "Community 36"
 Cohesion: 0.07
@@ -866,28 +878,28 @@ Cohesion: 0.09
 Nodes (28): visible, desc, footer, visible, visible, header, breadcrumb, globalSearch (+20 more)
 
 ### Community 38 - "Community 38"
-Cohesion: 0.15
-Nodes (27): BaseModel, GlobalSetting, DatatimeModel, JWTModel, LocalUploadModel, LogModel, MCPModel, PluginModel (+19 more)
+Cohesion: 0.09
+Nodes (37): BaseSettings, str, BaseModel, get_current_env(), get_env_file_path(), import_config_class(), load_config(), 加载多环境配置的核心入口：     1. 获取当前环境标识     2. 动态导入对应的配置类     3. 配置 .env 文件路径（若存在） (+29 more)
 
 ### Community 39 - "Community 39"
-Cohesion: 0.16
-Nodes (26): BaseEntity, CronPreviewRequest, CronPreviewResponse, RegistryTaskResponse, ScheduledTaskCreate, ScheduledTaskQueryParams, ScheduledTaskResponse, ScheduledTaskUpdate (+18 more)
+Cohesion: 0.25
+Nodes (16): Per-tenant JWT configuration. All fields optional -- missing means 'use global'., Full JSON structure stored in tenant.config column., TenantConfigSchema, TenantJwtConfig, parse_config(), SelectTenantRequest, TenantAssignUser, TenantConfigResponse (+8 more)
 
 ### Community 40 - "Community 40"
-Cohesion: 0.15
-Nodes (46): AsyncSession, bool, int, PageRequest, Request, Robot, SysUser, Task (+38 more)
+Cohesion: 0.14
+Nodes (50): AsyncSession, bool, int, PageRequest, Request, Robot, SysUser, Task (+42 more)
 
 ### Community 41 - "Community 41"
-Cohesion: 0.14
-Nodes (28): Any, bytes, str, str, AsyncSession, ExportTaskSubmit, int, str (+20 more)
+Cohesion: 0.07
+Nodes (63): Any, bytes, str, AsyncSession, ExportTaskSubmit, int, SysUser, AsyncSession (+55 more)
 
 ### Community 42 - "Community 42"
-Cohesion: 0.10
-Nodes (31): ChartHooks, ECOption, useEcharts(), useRouterPush(), [provideMixMenuContext, useMixMenuContext], useMenu(), useMixMenu(), getRoutePath() (+23 more)
+Cohesion: 0.14
+Nodes (21): clearAuthStorage(), getToken(), ChartHooks, ECOption, useEcharts(), useRouterPush(), connected, lastMessage (+13 more)
 
 ### Community 43 - "Community 43"
-Cohesion: 0.18
-Nodes (30): str, WebSocket, AsyncSession, bool, int, Select, str, SysUser (+22 more)
+Cohesion: 0.15
+Nodes (43): str, str, WebSocket, Select, str, SysRoleCreate, SysRoleQueryParams, SysRoleUpdate (+35 more)
 
 ### Community 44 - "Community 44"
 Cohesion: 0.18
@@ -898,8 +910,8 @@ Cohesion: 0.17
 Nodes (25): bool, int, Request, str, add_ip_to_redis_blacklist(), _blacklist_key(), check_rate_limit(), clear_login_failure() (+17 more)
 
 ### Community 46 - "Community 46"
-Cohesion: 0.29
-Nodes (7): getRouteName(), createRouterGuard(), createProgressGuard(), createRouteGuard(), getRouteQueryOfLoginRoute(), initRoute(), createDocumentTitleGuard()
+Cohesion: 0.26
+Nodes (8): getRouteName(), createRouterGuard(), createProgressGuard(), createRouteGuard(), getRouteQueryOfLoginRoute(), initRoute(), createDocumentTitleGuard(), setupRouter()
 
 ### Community 47 - "Community 47"
 Cohesion: 0.17
@@ -918,24 +930,24 @@ Cohesion: 0.20
 Nodes (18): bool, bool, async_driver(), Config, ConnectionMode, DatabaseDriver, DatabaseModel, DatabaseType (+10 more)
 
 ### Community 51 - "Community 51"
-Cohesion: 0.36
-Nodes (16): AsyncSession, Request, str, SysUser, batch_delete_configs(), batch_update_configs(), create_config(), delete_config() (+8 more)
+Cohesion: 0.22
+Nodes (28): str, AsyncSession, bool, int, parse_tenant_config(), Parse tenant config JSON string into TenantConfigSchema., Serialize TenantConfigSchema to JSON string for storage., serialize_tenant_config() (+20 more)
 
 ### Community 52 - "Community 52"
-Cohesion: 0.13
-Nodes (20): FastMCP, str, str, create_manage_app(), get_all_tools(), get_tool(), register_tool(), tool_description() (+12 more)
+Cohesion: 0.20
+Nodes (13): FastMCP, str, create_manage_app(), _app_lifespan(), create_app(), create_mcp_server(), get_mcp_server(), _make_tool_handler() (+5 more)
 
 ### Community 53 - "Community 53"
-Cohesion: 0.15
-Nodes (12): fetchDeleteSceneMap(), fetchGetEditorMapData(), fetchGetSceneMapList(), fetchSaveEditorData(), DrawingMode, HistoryEntry, HistorySnapshot, SelectedElement (+4 more)
+Cohesion: 0.29
+Nodes (24): AsyncSession, int, Request, str, SysUser, batch_delete_dict_items(), batch_delete_dicts(), batch_update_dict_item_status() (+16 more)
 
 ### Community 54 - "Community 54"
-Cohesion: 0.18
-Nodes (24): int, str, Any, CustomErrorCode, str, CustomResponse, CustomResponseCode, Any (+16 more)
+Cohesion: 0.10
+Nodes (9): useFormRules(), HeaderPlugin, _headerPlugins, local, local, i18n, setLocale(), locales (+1 more)
 
 ### Community 55 - "Community 55"
-Cohesion: 0.16
-Nodes (22): int, str, AsyncSession, bool, int, str, build_session_key(), build_session_key_legacy() (+14 more)
+Cohesion: 0.30
+Nodes (14): AsyncSession, bool, int, str, get_redis_util(), 获取Redis工具实例     Returns:         RedisUtil: Redis工具实例, ResponsePageDataModel, _collect_online_sessions() (+6 more)
 
 ### Community 56 - "Community 56"
 Cohesion: 0.12
@@ -950,8 +962,8 @@ Cohesion: 0.14
 Nodes (6): Crypto, createLocalforage(), createStorage(), LocalForage, LocalforageDriver, StorageType
 
 ### Community 59 - "Community 59"
-Cohesion: 0.42
-Nodes (31): AuthorizationError, Exception, FastAPI, HTTPException, str, SysUserCreate, SysUserPasswordUpdate, SysUserUpdate (+23 more)
+Cohesion: 0.15
+Nodes (13): useSvgIcon(), filterAuthRoutesByRoles(), getBreadcrumbsByRoute(), getCacheRouteNames(), getGlobalMenuByBaseRoute(), getGlobalMenusByAuthRoutes(), getSelectedMenuKeyPathByKey(), isRouteExistByRouteName() (+5 more)
 
 ### Community 60 - "Community 60"
 Cohesion: 0.24
@@ -966,8 +978,8 @@ Cohesion: 0.12
 Nodes (17): compilerOptions, allowSyntheticDefaultImports, baseUrl, esModuleInterop, forceConsistentCasingInFileNames, jsx, lib, module (+9 more)
 
 ### Community 63 - "Community 63"
-Cohesion: 0.38
-Nodes (9): Any, str, _convert_value(), _ensure_cache(), _fallback_defaults(), force_refresh(), get(), get_all() (+1 more)
+Cohesion: 0.15
+Nodes (17): getRoutePath(), extractTabsByAllRoutes(), filterTabsByIds(), findTabByRouteName(), getAllTabs(), getDefaultHomeTab(), getFixedTabIds(), getFixedTabs() (+9 more)
 
 ### Community 64 - "Community 64"
 Cohesion: 0.12
@@ -998,8 +1010,8 @@ Cohesion: 0.12
 Nodes (17): compilerOptions, allowSyntheticDefaultImports, baseUrl, esModuleInterop, forceConsistentCasingInFileNames, jsx, lib, module (+9 more)
 
 ### Community 71 - "Community 71"
-Cohesion: 0.18
-Nodes (10): str, McpContext, str, TextContent, ToolParam, McpHttpClient, CreateMenu, tool_description() (+2 more)
+Cohesion: 0.24
+Nodes (8): McpContext, str, TextContent, ToolParam, CreateMenu, tool_description(), tool_name(), tool_params()
 
 ### Community 72 - "Community 72"
 Cohesion: 0.12
@@ -1018,8 +1030,8 @@ Cohesion: 0.17
 Nodes (16): bool, int, ORJSONResponse, Request, str, _build_429_response(), _build_blocked_response(), _extract_user_id() (+8 more)
 
 ### Community 76 - "Community 76"
-Cohesion: 0.21
-Nodes (15): JSONResponse, Request, str, create_tool(), health(), list_tools(), 触发优雅关闭，向当前进程发送 SIGTERM, shutdown() (+7 more)
+Cohesion: 0.14
+Nodes (22): JSONResponse, Request, str, str, create_tool(), health(), list_tools(), 触发优雅关闭，向当前进程发送 SIGTERM (+14 more)
 
 ### Community 77 - "Community 77"
 Cohesion: 0.13
@@ -1034,8 +1046,8 @@ Cohesion: 0.17
 Nodes (16): Backend Module Development Rules, Status Field Bridge (bool ↔ string), BoolField Frontend-to-Backend Deserialization, Conventional Commit Messages (type(scope): desc), EnableStatus TypeScript Type (1|2), Endpoint -> Service -> Model Layering, Git Branching Strategy (main/develop/feature/hotfix), i18n Localization (zh-cn + en-us) (+8 more)
 
 ### Community 80 - "Community 80"
-Cohesion: 0.15
-Nodes (25): AsyncSession, int, PageRequest, Request, RobotModelCreate, RobotModelQueryParams, RobotModelUpdate, SysUser (+17 more)
+Cohesion: 0.28
+Nodes (12): AsyncSession, int, Request, RobotModelCreate, RobotModelUpdate, SysUser, create_robot_model(), delete_robot_model() (+4 more)
 
 ### Community 81 - "Community 81"
 Cohesion: 0.05
@@ -1070,28 +1082,28 @@ Cohesion: 0.08
 Nodes (8): fetchGetMyTenants(), fetchSelectTenant(), HeaderPlugin, _headerPlugins, tenantOptions, tenantStore, TenantInfo, useTenantStore
 
 ### Community 89 - "Community 89"
-Cohesion: 0.08
-Nodes (22): useAppStore, useCaptcha(), useFormRules(), getColumnChecks(), PaginationParams, useNaivePaginatedTable(), UseNaivePaginatedTableOptions, useNaiveTable() (+14 more)
+Cohesion: 0.10
+Nodes (20): useAppStore, useCaptcha(), getColumnChecks(), PaginationParams, useNaivePaginatedTable(), UseNaivePaginatedTableOptions, useNaiveTable(), UseNaiveTableOptions (+12 more)
 
 ### Community 90 - "Community 90"
 Cohesion: 0.19
 Nodes (14): close_pool(), init_pool(), 通用数据库接口模块 支持SQLAlchemy2.0,同步/异步连接,连接池,Alembic迁移  特性: - SQLAlchemy 2.0 完整支持, close_pool(), get_session(), init_pool(), 初始化异步数据库连接池      兼容旧接口      Args:         settings: 数据库配置实例, 获取异步数据库会话的生成器函数      兼容旧接口      Yields:         SQLAlchemy AsyncSession实例 (+6 more)
 
 ### Community 91 - "Community 91"
-Cohesion: 0.23
-Nodes (23): AsyncSession, int, Request, SysUser, ExportTemplateCreate, ExportTemplateUpdate, create_template(), delete_template() (+15 more)
+Cohesion: 0.27
+Nodes (13): AsyncSession, int, PageRequest, SceneGroupCreate, SceneGroupQueryParams, SceneGroupUpdate, SysUser, create_group() (+5 more)
 
 ### Community 92 - "Community 92"
 Cohesion: 0.26
 Nodes (10): int, SnowflakeInfo, _current_millis(), generate_id(), parse_id(), Snowflake, SnowflakeConfig, SnowflakeInfo (+2 more)
 
 ### Community 93 - "Community 93"
-Cohesion: 0.20
-Nodes (9): bool, str, setup_logging(), 将当前请求的 request_id 注入到每条日志记录中。, 自动注入 request_id 的格式化器，防止 filter 未生效时崩溃。, RequestIdFilter, RequestIdFormatter, set_request_id() (+1 more)
+Cohesion: 0.13
+Nodes (14): bool, str, Request, str, setup_logging(), 将当前请求的 request_id 注入到每条日志记录中。, 自动注入 request_id 的格式化器，防止 filter 未生效时崩溃。, RequestIdFilter (+6 more)
 
 ### Community 94 - "Community 94"
-Cohesion: 0.23
-Nodes (24): AsyncSession, bool, int, PageRequest, Request, str, SysFileQueryParams, SysUser (+16 more)
+Cohesion: 0.13
+Nodes (46): AsyncSession, bool, int, PageRequest, Request, str, SysFileQueryParams, SysUser (+38 more)
 
 ### Community 95 - "Community 95"
 Cohesion: 0.18
@@ -1166,12 +1178,12 @@ Cohesion: 0.18
 Nodes (3): [], opt, result
 
 ### Community 113 - "Community 113"
-Cohesion: 0.40
-Nodes (4): 创建一个权限校验依赖项      Args:         permission_code: 权限标识码，如 "sys:menu:add"      Retu, 创建一个权限校验依赖项      Args:         permission_code: 权限标识码，如 "sys:menu:add", require_permission(), str
+Cohesion: 0.15
+Nodes (6): MapService, MapServiceServicer, MapServiceStub, Constructor.          Args:             channel: A grpc.Channel., 通知地图已保存：接收完整地图信息（map + labels），返回处理状态, 搜索所有地图：返回 id + version 列表
 
 ### Community 114 - "Community 114"
-Cohesion: 0.10
-Nodes (34): colorNameMap, colorNames, colorPalettes, darkColorMap, getAntDColorPalette(), getAntDPaletteColorByIndex(), getHue(), getSaturation() (+26 more)
+Cohesion: 0.11
+Nodes (31): colorNameMap, colorNames, colorPalettes, darkColorMap, getAntDColorPalette(), getAntDPaletteColorByIndex(), getHue(), getSaturation() (+23 more)
 
 ### Community 115 - "Community 115"
 Cohesion: 0.29
@@ -1183,11 +1195,11 @@ Nodes (10): Paginated Response Structure, Unified Response Structure, Audit Fiel
 
 ### Community 117 - "Community 117"
 Cohesion: 0.32
-Nodes (15): AsyncSession, int, PageRequest, Request, SysUser, TaskExecutionQueryParams, _build_execution_response(), get_active_executions() (+7 more)
+Nodes (16): AsyncSession, int, PageRequest, Request, SysUser, TaskExecutionQueryParams, _build_execution_response(), get_active_executions() (+8 more)
 
 ### Community 118 - "Community 118"
-Cohesion: 0.10
-Nodes (15): bool, FastAPI, int, str, is_tenant_model(), 注册模型为严格租户隔离（查询只返回当前租户数据）, 注册模型为可选租户隔离（查询返回当前租户 + 全局数据）, register_tenant_optional() (+7 more)
+Cohesion: 0.13
+Nodes (11): ASGIApp, FastAPI, int, str, 从 JWT Authorization header 中提取 tenant_id 并设置到 contextvars。     在 RequestContext, TenantContextMiddleware, _import_model(), MultiTenantPlugin (+3 more)
 
 ### Community 119 - "Community 119"
 Cohesion: 0.17
@@ -1198,8 +1210,8 @@ Cohesion: 0.24
 Nodes (8): McpContext, str, TextContent, ToolParam, CreatePermission, tool_description(), tool_name(), tool_params()
 
 ### Community 121 - "Community 121"
-Cohesion: 0.24
-Nodes (8): McpContext, str, TextContent, ToolParam, GenerateDictionary, tool_description(), tool_name(), tool_params()
+Cohesion: 0.18
+Nodes (10): str, McpContext, str, TextContent, ToolParam, McpHttpClient, GenerateDictionary, tool_description() (+2 more)
 
 ### Community 122 - "Community 122"
 Cohesion: 0.17
@@ -1215,7 +1227,7 @@ Nodes (9): AGENTS.md Agents Config, AGENT.MD Unified AI Rules, CLAUDE.md Claude 
 
 ### Community 125 - "Community 125"
 Cohesion: 0.11
-Nodes (21): int, SnowflakeInfo, _current_millis(), generate_id(), parse_id(), Snowflake, SnowflakeConfig, datetime (+13 more)
+Nodes (20): int, SnowflakeInfo, _current_millis(), generate_id(), parse_id(), Snowflake, SnowflakeConfig, datetime (+12 more)
 
 ### Community 126 - "Community 126"
 Cohesion: 0.33
@@ -1259,11 +1271,11 @@ Nodes (6): defaultFormValue, drawerTitle, formRef, formRules, message, visible
 
 ### Community 136 - "Community 136"
 Cohesion: 0.05
-Nodes (33): fixedHeaderAndTab, footerLeftGapClass, headerLeftGapClass, isContentScroll, isHorizontal, isVertical, isWrapperScroll, leftGapClass (+25 more)
+Nodes (31): fixedHeaderAndTab, footerLeftGapClass, headerLeftGapClass, isContentScroll, isHorizontal, isVertical, isWrapperScroll, leftGapClass (+23 more)
 
 ### Community 137 - "Community 137"
-Cohesion: 0.44
-Nodes (9): datetime, str, Config, DateTimeResponseMixin, serialize_created_at(), serialize_finish_at(), serialize_updated_at(), datetime (+1 more)
+Cohesion: 0.15
+Nodes (12): code:text (.), code:powershell (uv run python .\main.py), code:python (PROTO_BASE_DIR = Path("./protos").resolve()), code:text (protos/map/*.proto), code:text (generated/map/), code:toml (dependencies = [), code:powershell (# 1. 拉取主仓库和子模块), Wujie-Jilin-Grpc (+4 more)
 
 ### Community 138 - "Community 138"
 Cohesion: 0.29
@@ -1306,12 +1318,12 @@ Cohesion: 0.20
 Nodes (35): AsyncSession, int, PageRequest, Request, RobotCreate, RobotQueryParams, RobotUpdate, SysUser (+27 more)
 
 ### Community 148 - "Community 148"
-Cohesion: 0.47
-Nodes (5): Request, str, get_real_client_ip(), _normalize_ip(), 安全获取客户端真实IP，处理反向代理场景，防止IP伪造
+Cohesion: 0.15
+Nodes (13): 1. 必须使用 `uv run`, 2. 生成脚本使用当前解释器, 3. 生成文件通常不建议手动修改, 4. 修改 `.proto` 后需要重新生成, 6. 注意生成目录与业务包路径一致, 7. 清理旧文件, code:powershell (uv run python .\main.py), code:powershell (python .\main.py) (+5 more)
 
 ### Community 150 - "Community 150"
-Cohesion: 0.28
-Nodes (20): AsyncSession, bool, int, Select, SysRoleCreate, SysRoleQueryParams, SysRoleUpdate, assign_menu_to_role() (+12 more)
+Cohesion: 0.27
+Nodes (19): 创建一个权限校验依赖项      Args:         permission_code: 权限标识码，如 "sys:menu:add"      Retu, 创建一个权限校验依赖项      Args:         permission_code: 权限标识码，如 "sys:menu:add", require_permission(), AsyncSession, bool, int, assign_menu_to_role(), batch_delete_roles() (+11 more)
 
 ### Community 151 - "Community 151"
 Cohesion: 0.33
@@ -1405,10 +1417,6 @@ Nodes (4): downgrade(), Reassign all menu IDs exceeding 2^53 to safe values., Do
 Cohesion: 0.50
 Nodes (3): permissions, additionalDirectories, allow
 
-### Community 177 - "Community 177"
-Cohesion: 0.20
-Nodes (7): AsyncSession, int, Select, get_page_params(), get_paginated_results(), 获取分页查询结果     参数:         db: 数据库异步会话         page_params: 分页参数对象         que, ResponsePageModel
-
 ### Community 178 - "Community 178"
 Cohesion: 0.05
 Nodes (39): AsyncAttrs, Base, DataClassBase, DateTimeMixin, LogicMixin, MappedBase, __tablename__(), UserMixin (+31 more)
@@ -1422,16 +1430,12 @@ Cohesion: 0.50
 Nodes (3): link, string, url
 
 ### Community 182 - "Community 182"
-Cohesion: 0.16
-Nodes (29): AsyncSession, int, PageRequest, SceneGroupCreate, SceneGroupQueryParams, SceneGroupUpdate, SysUser, AsyncSession (+21 more)
+Cohesion: 0.20
+Nodes (30): AsyncSession, int, SceneGroupCreate, SceneGroupQueryParams, SceneGroupUpdate, AsyncSession, bool, int (+22 more)
 
 ### Community 184 - "Community 184"
 Cohesion: 0.67
 Nodes (3): At-Sign / Email Icon, User Avatar Placeholder, Chrome / Browser Icon
-
-### Community 202 - "Community 202"
-Cohesion: 0.14
-Nodes (14): fetchCreateSceneGroup(), fetchUpdateSceneGroup(), fetchUpdateSceneMap(), fetchCreateDict(), fetchCreateDictItem(), fetchCreateMenu(), fetchCreateRole(), fetchCreateUser() (+6 more)
 
 ### Community 204 - "Community 204"
 Cohesion: 0.33
@@ -1478,16 +1482,24 @@ Cohesion: 0.07
 Nodes (29): CommonSearchParams, EditorAnnotationItem, EditorMapData, EditorObjectItem, EditorPathItem, EditorSaveRequest, SceneGroup, SceneGroupCreate (+21 more)
 
 ### Community 488 - "Community 488"
-Cohesion: 0.05
-Nodes (78): str, str, Any, str, BaseReqEntity, BaseRespEntity, normalize_file_preview_path(), normalize_photo_url() (+70 more)
+Cohesion: 0.07
+Nodes (64): str, 系统用户查询参数模型     用于用户列表分页查询时的筛选条件, str, str, BaseEntity, BaseReqEntity, BaseRespEntity, normalize_file_preview_path() (+56 more)
 
 ### Community 489 - "Community 489"
-Cohesion: 0.32
-Nodes (13): AsyncSession, int, SceneGroupCreate, SceneGroupQueryParams, SceneGroupUpdate, SceneGroup, build_query(), create() (+5 more)
+Cohesion: 0.29
+Nodes (10): ApiStatsQueryParams, AsyncSession, ApiStatsQueryParams, ApiStatsResponse, DiskInfo, get_api_stats(), MemoryInfo, 从操作日志中按时间窗口聚合API响应时间和错误率 (+2 more)
 
 ### Community 490 - "Community 490"
-Cohesion: 0.37
-Nodes (7): Any, CustomErrorCode, int, str, Any, int, str
+Cohesion: 0.42
+Nodes (10): AsyncSession, int, SceneMapPathCreate, SceneMapPathUpdate, SysUser, create_path(), delete_path(), get_path_list() (+2 more)
+
+### Community 491 - "Community 491"
+Cohesion: 0.07
+Nodes (13): fetchCreateSceneMap(), fetchDeleteSceneMap(), fetchGetEditorMapData(), fetchGetSceneMapList(), fetchSaveEditorData(), DrawingMode, HistoryEntry, HistorySnapshot (+5 more)
+
+### Community 492 - "Community 492"
+Cohesion: 0.56
+Nodes (10): AsyncSession, int, str, _get_execution(), get_execution_detail(), pause_execution(), resume_execution(), start_execution() (+2 more)
 
 ### Community 493 - "Community 493"
 Cohesion: 0.08
@@ -1498,8 +1510,8 @@ Cohesion: 0.08
 Nodes (25): 10. 部署规范, 1. 目录结构, 2.1 Endpoints (控制器层), 2.2 Services (服务层), 2.3 Models (模型层), 2. 分层职责, 3.1 命名规范, 3.2 注释规范 (+17 more)
 
 ### Community 495 - "Community 495"
-Cohesion: 0.06
-Nodes (33): headerProps, isTopHybridHeaderFirst, isTopHybridSidebarFirst, isVerticalHybridHeaderFirst, isVerticalMix, layoutMode, siderCollapsedWidth, siderVisible (+25 more)
+Cohesion: 0.09
+Nodes (21): headerProps, isTopHybridHeaderFirst, isTopHybridSidebarFirst, isVerticalHybridHeaderFirst, isVerticalMix, layoutMode, siderCollapsedWidth, siderVisible (+13 more)
 
 ### Community 496 - "Community 496"
 Cohesion: 0.20
@@ -1554,8 +1566,8 @@ Cohesion: 0.05
 Nodes (23): [], candIdx, center, circle, data, deco, fontSize, hLine (+15 more)
 
 ### Community 509 - "Community 509"
-Cohesion: 0.50
-Nodes (11): AsyncSession, bool, int, Task, create(), delete(), delete_points_by_annotation_ids(), get() (+3 more)
+Cohesion: 0.29
+Nodes (10): str, Config, autogenerate_and_upgrade(), generate_removal_and_upgrade(), _get_alembic_config(), get_current_head(), 获取 alembic 配置，自动定位 alembic.ini, 获取当前 alembic head revision (+2 more)
 
 ### Community 510 - "Community 510"
 Cohesion: 0.12
@@ -1582,8 +1594,8 @@ Cohesion: 0.20
 Nodes (9): 前端, 后端, 场景地图新增映射比例输入, 涉及范围, 状态, 相关文件, 约束与备注, 记录日期 (+1 more)
 
 ### Community 517 - "Community 517"
-Cohesion: 0.18
-Nodes (17): AsyncSession, EditorSaveRequest, int, SceneMap, RobotEventLog, SceneMapAnnotation, SceneMapObject, SceneMapPath (+9 more)
+Cohesion: 0.14
+Nodes (18): AsyncSession, EditorSaveRequest, int, SceneMap, RobotEventLog, LocationInfo, SceneMapAnnotation, SceneMapObject (+10 more)
 
 ### Community 518 - "Community 518"
 Cohesion: 0.12
@@ -1626,12 +1638,12 @@ Cohesion: 0.24
 Nodes (8): McpContext, str, TextContent, ToolParam, ListAllMenus, tool_description(), tool_name(), tool_params()
 
 ### Community 528 - "Community 528"
-Cohesion: 0.18
-Nodes (24): AsyncSession, EditorSaveRequest, int, SysUser, AsyncSession, int, PageRequest, SceneMapCreate (+16 more)
+Cohesion: 0.16
+Nodes (25): AsyncSession, EditorSaveRequest, int, SysUser, AsyncSession, int, PageRequest, SceneMapCreate (+17 more)
 
 ### Community 529 - "Community 529"
-Cohesion: 0.14
-Nodes (15): ASGIApp, int, Token, int, get_current_tenant_id(), 设置当前请求的租户ID，返回 token 用于重置, reset_tenant_id(), set_current_tenant_id() (+7 more)
+Cohesion: 0.19
+Nodes (11): int, Token, int, get_current_tenant_id(), 设置当前请求的租户ID，返回 token 用于重置, reset_tenant_id(), set_current_tenant_id(), 从请求头中解析 JWT 获取 tenant_id (+3 more)
 
 ### Community 530 - "Community 530"
 Cohesion: 0.15
@@ -1654,8 +1666,8 @@ Cohesion: 0.33
 Nodes (8): AsyncSession, int, OperationLogQueryParams, batch_delete_logs(), build_operation_log_query(), clear_logs(), get_log(), SysOperationLog
 
 ### Community 536 - "Community 536"
-Cohesion: 0.19
-Nodes (21): AsyncSession, int, SceneMapPathCreate, SceneMapPathUpdate, SysUser, AsyncSession, int, SceneMapPathCreate (+13 more)
+Cohesion: 0.38
+Nodes (11): AsyncSession, int, SceneMapPathCreate, SceneMapPathUpdate, SceneMapPath, build_query(), create(), delete() (+3 more)
 
 ### Community 537 - "Community 537"
 Cohesion: 0.38
@@ -1666,8 +1678,8 @@ Cohesion: 0.20
 Nodes (9): dragStartSliderX, dragStartX, getMaxX(), handleRefresh(), isDragging, onDrag(), resetSlider(), sliderX (+1 more)
 
 ### Community 539 - "Community 539"
-Cohesion: 0.29
-Nodes (8): int, SnowflakeInfo, _current_millis(), generate_id(), parse_id(), 等待至下一毫秒          :param last_timestamp: 上次生成 ID 的时间戳         :return:, Snowflake, SnowflakeConfig
+Cohesion: 0.20
+Nodes (7): bool, is_tenant_model(), 注册模型为严格租户隔离（查询只返回当前租户数据）, 注册模型为可选租户隔离（查询返回当前租户 + 全局数据）, register_tenant_optional(), register_tenant_strict(), setup_tenant_filter_plug()
 
 ### Community 540 - "Community 540"
 Cohesion: 0.18
@@ -1797,6 +1809,10 @@ Nodes (10): &nbsp;&nbsp;&nbsp;🐞 Bug Fixes, &nbsp;&nbsp;&nbsp;📦 Build, &nbs
 Cohesion: 0.22
 Nodes (8): 2026-06-10 `/task` 新增任务按钮修复, 2026-06-10 历史任务操作入口调整, 3.2.4 F-04 任务管理, 关键业务规则, 变更记录, 实现范围, 用例清单, 需求概述
 
+### Community 572 - "Community 572"
+Cohesion: 0.18
+Nodes (11): 1. 添加子模块, 2. 克隆带子模块的仓库, 3. 更新子模块内容, 4. 子模块使用注意事项, code:powershell (git status), code:powershell (git submodule add <proto仓库地址> protos), code:powershell (git submodule add https://example.com/your-org/your-protos.g), code:powershell (git clone --recurse-submodules <本项目仓库地址>) (+3 more)
+
 ### Community 573 - "Community 573"
 Cohesion: 0.22
 Nodes (9): 1. 完善 API 端点, 2. 增强数据验证和错误处理, 3. 增加测试用例, 4. 完善文档, 5. 增强监控和日志, 6. 性能优化, 7. 扩展业务功能, 8. 完善部署流程 (+1 more)
@@ -1856,6 +1872,10 @@ Nodes (7): CommonSearchParams, FaceRecognition, FaceRecognitionCreate, FaceRecog
 ### Community 587 - "Community 587"
 Cohesion: 0.29
 Nodes (6): float, str, cached(), _default_key_builder(), 通用缓存装饰器  支持同步和异步函数，自动将结果存入 MemoryCache。 使用哨兵值区分"未命中"和"缓存了 None/空值"。, _WrapperValue
+
+### Community 588 - "Community 588"
+Cohesion: 0.20
+Nodes (9): 任务固化场景地图字段, 前端, 后端, 涉及范围, 状态, 相关文件, 约束与备注, 记录日期 (+1 more)
 
 ### Community 589 - "Community 589"
 Cohesion: 0.29
@@ -1936,10 +1956,6 @@ Nodes (7): Additional Plan? (Optional if not new feature), API Realization (Opti
 ### Community 608 - "Community 608"
 Cohesion: 0.29
 Nodes (6): 关键决策, 后端, 多租户 JWT 配置 + 登录自动选择租户, 涉及范围, 记录日期, 需求描述
-
-### Community 609 - "Community 609"
-Cohesion: 0.05
-Nodes (5): fetchGetApiStats(), fetchGetSystemMetrics(), fetchGetPermissions(), fetchIsRouteExist(), request
 
 ### Community 610 - "Community 610"
 Cohesion: 0.29
@@ -2030,7 +2046,7 @@ Cohesion: 0.60
 Nodes (5): AsyncSession, bool, _add_foreign_key(), ensure_robot_map_binding(), _has_robot_map_id()
 
 ### Community 632 - "Community 632"
-Cohesion: 0.14
+Cohesion: 0.12
 Nodes (23): float, int, str, bool, float, int, Request, str (+15 more)
 
 ### Community 633 - "Community 633"
@@ -2130,8 +2146,8 @@ Cohesion: 0.24
 Nodes (15): AsyncSession, bool, int, RobotModelCreate, RobotModelQueryParams, RobotModelUpdate, Select, RobotModel (+7 more)
 
 ### Community 657 - "Community 657"
-Cohesion: 0.17
-Nodes (12): BaseSettings, str, get_current_env(), get_env_file_path(), import_config_class(), load_config(), 加载多环境配置的核心入口：     1. 获取当前环境标识     2. 动态导入对应的配置类     3. 配置 .env 文件路径（若存在）, 从系统环境变量获取当前环境标识，优先顺序：     1. 系统环境变量 ENVIR / APP_ENV（优先级最高）     2. 默认环境 DEFAULT (+4 more)
+Cohesion: 0.36
+Nodes (8): str, batch_fix_imports(), batch_generate_grpc(), fix_imports(), 修复生成文件中的导入路径，精确匹配import和from...import语法, 批量生成指定目录下所有.proto文件的Python代码      :param proto_dir: 存放.proto文件的目录     :param, main(), Path
 
 ### Community 658 - "Community 658"
 Cohesion: 0.40
@@ -2205,10 +2221,6 @@ Nodes (3): 业务需求记忆, 规则, 需求索引
 Cohesion: 0.50
 Nodes (3): 前端, 后端, 需求：机器人与场景管理模块
 
-### Community 676 - "Community 676"
-Cohesion: 0.34
-Nodes (12): AsyncSession, ExportTaskSubmit, int, SysUser, cleanup_export_tasks(), create_export_task(), download_export_file(), ExportTaskResponse (+4 more)
-
 ### Community 680 - "Community 680"
 Cohesion: 0.34
 Nodes (11): int, int, build_database_url(), DatabaseCredentials, DatabaseType, DriverType, from_connection_string(), _parse_config_string() (+3 more)
@@ -2266,8 +2278,8 @@ Cohesion: 0.20
 Nodes (9): 任务地图优先选择与点位删除联动, 前端, 后端, 涉及范围, 状态, 相关文件, 约束与备注, 记录日期 (+1 more)
 
 ### Community 856 - "Community 856"
-Cohesion: 0.19
-Nodes (20): AsyncSession, int, PageRequest, RobotEventLogQueryParams, SysUser, AsyncSession, int, RobotEventLogQueryParams (+12 more)
+Cohesion: 0.09
+Nodes (35): AsyncSession, Select, AsyncSession, int, PageRequest, RobotEventLogQueryParams, SysUser, PageRequest (+27 more)
 
 ### Community 857 - "Community 857"
 Cohesion: 0.36
@@ -2294,31 +2306,51 @@ Cohesion: 0.20
 Nodes (9): 任务启用禁用按钮修复, 前端, 后端, 涉及范围, 状态, 相关文件, 约束与备注, 记录日期 (+1 more)
 
 ### Community 863 - "Community 863"
-Cohesion: 0.40
-Nodes (4): fetchGetDictItemsByDictCode(), dictCache, DictCacheEntry, loadDictItems()
+Cohesion: 0.39
+Nodes (6): str, main(), main(), _run_install(), _run_list(), _run_uninstall()
+
+### Community 864 - "Community 864"
+Cohesion: 0.25
+Nodes (8): code:powershell (uv sync), code:powershell (uv run python .\main.py), code:powershell (uv run python -c "import grpc_tools; print(grpc_tools.__file), code:powershell (git submodule update --init --recursive), ModuleNotFoundError: No module named 'grpc_tools', 修改 proto 后生成文件没有变化, 子模块目录为空, 常见问题
+
+### Community 865 - "Community 865"
+Cohesion: 0.53
+Nodes (4): FastAPI, on_activate(), register_middleware(), register_routes()
 
 ### Community 866 - "Community 866"
 Cohesion: 0.50
 Nodes (3): Any, Any, 构建数据库连接关键字参数          Returns:             连接参数字典
 
+### Community 867 - "Community 867"
+Cohesion: 0.50
+Nodes (4): 5. 注意导入路径修复, code:python (import map_pb2 as map__pb2), code:python (import app.grpc.generated.map.map_pb2 as map__pb2), code:python (prefix=f"app.grpc.generated.{module}.")
+
+### Community 868 - "Community 868"
+Cohesion: 0.50
+Nodes (4): code:text (protos/user/user.proto), code:python (modules = ["map", "user"]), code:powershell (uv run python .\main.py), 新增 proto 模块
+
 ### Community 881 - "Community 881"
 Cohesion: 0.67
 Nodes (3): engines, node, pnpm
 
+### Community 885 - "Community 885"
+Cohesion: 0.67
+Nodes (3): code:powershell (uv sync), code:powershell (uv run python -c "import grpc_tools; print(grpc_tools.__file), 安装依赖
+
 ## Knowledge Gaps
-- **2279 isolated node(s):** `PreToolUse`, `allow`, `allow`, `additionalDirectories`, `recommendations` (+2274 more)
+- **2323 isolated node(s):** `PreToolUse`, `allow`, `allow`, `additionalDirectories`, `recommendations` (+2318 more)
   These have ≤1 connection - possible missing edges or undocumented components.
-- **264 thin communities (<3 nodes) omitted from report** — run `graphify query` to explore isolated nodes.
+- **266 thin communities (<3 nodes) omitted from report** — run `graphify query` to explore isolated nodes.
 
 ## Suggested Questions
 _Questions this graph is uniquely positioned to answer:_
 
-- **Why does `NotFoundError` connect `Community 59` to `Community 0`, `Community 1`, `Community 3`, `Community 517`, `Community 6`, `Community 9`, `Community 11`, `Community 13`, `Community 656`, `Community 528`, `Community 18`, `Community 147`, `Community 21`, `Community 150`, `Community 535`, `Community 536`, `Community 537`, `Community 23`, `Community 29`, `Community 30`, `Community 543`, `Community 544`, `Community 545`, `Community 546`, `Community 676`, `Community 40`, `Community 41`, `Community 43`, `Community 182`, `Community 80`, `Community 856`, `Community 857`, `Community 91`, `Community 94`, `Community 489`, `Community 490`, `Community 117`, `Community 503`, `Community 509`?**
-  _High betweenness centrality (0.031) - this node is a cross-community bridge._
-- **Why does `PageRequest` connect `Community 6` to `Community 0`, `Community 3`, `Community 4`, `Community 5`, `Community 11`, `Community 13`, `Community 528`, `Community 18`, `Community 19`, `Community 147`, `Community 21`, `Community 23`, `Community 26`, `Community 30`, `Community 543`, `Community 38`, `Community 40`, `Community 177`, `Community 51`, `Community 182`, `Community 73`, `Community 80`, `Community 856`, `Community 94`, `Community 488`, `Community 117`?**
-  _High betweenness centrality (0.017) - this node is a cross-community bridge._
-- **Why does `Base` connect `Community 517` to `Community 0`, `Community 3`, `Community 6`, `Community 11`, `Community 13`, `Community 15`, `Community 17`, `Community 18`, `Community 147`, `Community 23`, `Community 29`, `Community 31`, `Community 160`, `Community 40`, `Community 41`, `Community 43`, `Community 178`, `Community 182`, `Community 91`, `Community 503`, `Community 632`?**
-  _High betweenness centrality (0.016) - this node is a cross-community bridge._
+- **Why does `NotFoundError` connect `Community 182` to `Community 0`, `Community 1`, `Community 3`, `Community 4`, `Community 517`, `Community 6`, `Community 9`, `Community 11`, `Community 13`, `Community 656`, `Community 528`, `Community 18`, `Community 147`, `Community 21`, `Community 150`, `Community 535`, `Community 536`, `Community 537`, `Community 23`, `Community 29`, `Community 30`, `Community 543`, `Community 544`, `Community 545`, `Community 546`, `Community 40`, `Community 41`, `Community 43`, `Community 51`, `Community 856`, `Community 857`, `Community 94`, `Community 490`, `Community 492`, `Community 117`, `Community 503`?**
+  _High betweenness centrality (0.036) - this node is a cross-community bridge._
+- **Why does `PageRequest` connect `Community 6` to `Community 3`, `Community 4`, `Community 11`, `Community 13`, `Community 528`, `Community 18`, `Community 19`, `Community 147`, `Community 21`, `Community 23`, `Community 26`, `Community 30`, `Community 543`, `Community 38`, `Community 40`, `Community 177`, `Community 53`, `Community 73`, `Community 80`, `Community 856`, `Community 91`, `Community 94`, `Community 488`, `Community 117`?**
+  _High betweenness centrality (0.025) - this node is a cross-community bridge._
+- **Why does `Path` connect `Community 657` to `Community 76`, `Community 93`, `Community 38`?**
+  _High betweenness centrality (0.019) - this node is a cross-community bridge._
 - **Are the 271 inferred relationships involving `NotFoundError` (e.g. with `LocalStorageBackend` and `str`) actually correct?**
   _`NotFoundError` has 271 INFERRED edges - model-reasoned connections that need verification._
 - **Are the 267 inferred relationships involving `PageRequest` (e.g. with `SysConfigQueryParams` and `PageRequest`) actually correct?**

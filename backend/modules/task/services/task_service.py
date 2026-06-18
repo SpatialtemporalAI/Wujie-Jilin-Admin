@@ -42,15 +42,14 @@ class TaskService:
             conditions.append(Task.task_type == query_params.task_type)
         if query_params.enabled is not None:
             conditions.append(Task.enabled == query_params.enabled)
-        if query_params.robot_id is not None or query_params.map_id is not None:
+        if query_params.map_id is not None:
+            conditions.append(Task.map_id == query_params.map_id)
+        if query_params.robot_id is not None:
             base_query = base_query.join(
                 task_robot_association,
                 Task.id == task_robot_association.c.task_id,
             ).join(Robot, Robot.id == task_robot_association.c.robot_id)
-            if query_params.robot_id is not None:
-                conditions.append(Robot.id == query_params.robot_id)
-            if query_params.map_id is not None:
-                conditions.append(Robot.map_id == query_params.map_id)
+            conditions.append(Robot.id == query_params.robot_id)
             conditions.append(Robot.deleted_at.is_(None))
             base_query = base_query.distinct()
 
@@ -109,6 +108,7 @@ class TaskService:
             # 创建任务主记录
             task_obj = Task(
                 name=task_in.name,
+                map_id=task_in.map_id,
                 task_type=task_in.task_type,
                 broadcast_text=task_in.broadcast_text,
                 broadcast_count=task_in.broadcast_count,
