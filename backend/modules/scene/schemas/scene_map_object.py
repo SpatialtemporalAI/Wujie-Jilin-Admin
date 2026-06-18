@@ -14,22 +14,26 @@ class SceneMapObjectCreate(BaseReqEntity):
 
     map_id: int = Field(..., description="地图ID")
     type: str = Field(..., description="物体类型(字典值)")
+    name: str | None = Field(None, description="物体名称")
     x: float = Field(..., description="X坐标")
     y: float = Field(..., description="Y坐标")
     width: float = Field(0, description="宽度")
     height: float = Field(0, description="高度")
     points: str | None = Field(None, description="多边形顶点(JSON数组)")
+    angle: float = Field(0, description="旋转角度(度)")
 
 
 class SceneMapObjectUpdate(BaseReqEntity):
     """更新场景地图物体"""
 
     type: str | None = Field(None, description="物体类型(字典值)")
+    name: str | None = Field(None, description="物体名称")
     x: float | None = Field(None, description="X坐标")
     y: float | None = Field(None, description="Y坐标")
     width: float | None = Field(None, description="宽度")
     height: float | None = Field(None, description="高度")
     points: str | None = Field(None, description="多边形顶点(JSON数组)")
+    angle: float | None = Field(None, description="旋转角度(度)")
 
 
 class SceneMapObjectResponseData(BaseRespEntity):
@@ -40,10 +44,12 @@ class SceneMapObjectResponseData(BaseRespEntity):
     id: int
     map_id: int
     type: str
+    name: str | None
     x: float
     y: float
     width: float
     height: float
     points: str | None
+    angle: float
     created_at: datetime | None
     updated_at: datetime | None

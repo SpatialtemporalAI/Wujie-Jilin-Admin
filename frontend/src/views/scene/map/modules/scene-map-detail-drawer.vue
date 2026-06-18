@@ -352,17 +352,31 @@ function closeDrawer() {
   <NDrawer v-model:show="visible" display-directive="show" :width="'80%'">
     <NDrawerContent title="场景地图详情" :native-scrollbar="false" closable>
       <!-- 地图图片预览 -->
-      <div v-if="mapData?.image_id" class="mb-16px">
-        <NImage
-          :src="getFilePreviewUrl(mapData.image_id)"
-          :alt="mapData.name"
-          object-fit="contain"
-          class="max-h-400px"
-          width="100%"
-        />
-      </div>
-      <div v-else class="mb-16px">
-        <NEmpty description="暂无地图图片" />
+      <div class="mb-16px grid grid-cols-1 gap-12px lg:grid-cols-2">
+        <div>
+          <div class="mb-8px text-sm font-medium">地图图片</div>
+          <NImage
+            v-if="mapData?.image_id"
+            :src="getFilePreviewUrl(mapData.image_id)"
+            :alt="mapData.name"
+            object-fit="contain"
+            class="max-h-400px"
+            width="100%"
+          />
+          <NEmpty v-else description="暂无地图图片" />
+        </div>
+        <div>
+          <div class="mb-8px text-sm font-medium">导航地图图片</div>
+          <NImage
+            v-if="mapData?.nav_image_id"
+            :src="getFilePreviewUrl(mapData.nav_image_id)"
+            :alt="`${mapData.name}导航地图`"
+            object-fit="contain"
+            class="max-h-400px"
+            width="100%"
+          />
+          <NEmpty v-else description="暂无导航地图图片" />
+        </div>
       </div>
 
       <!-- 地图基本信息 -->

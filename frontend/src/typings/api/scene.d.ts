@@ -50,11 +50,13 @@ declare namespace Api {
       group_name?: string;
       /** image file id */
       image_id: number | null;
+      /** navigation image file id (image with obstacles drawn for navigation) */
+      nav_image_id: number | null;
       /** map width */
       width: number | null;
       /** map height */
       height: number | null;
-      /** resolution (meters/pixel) */
+      /** mapping resolution */
       resolution: number;
       /** start point x */
       start_point_x: number;
@@ -75,6 +77,7 @@ declare namespace Api {
       group_id?: number | null;
       group_name?: string | null;
       image_id?: number | null;
+      nav_image_id?: number | null;
       width?: number | null;
       height?: number | null;
       resolution?: number;
@@ -124,6 +127,8 @@ declare namespace Api {
       map_id: number;
       /** object type (dict value) */
       type: string;
+      /** object name */
+      name: string | null;
       /** x coordinate */
       x: number;
       /** y coordinate */
@@ -134,6 +139,8 @@ declare namespace Api {
       height: number;
       /** polygon points (JSON) */
       points: string | null;
+      /** rotation angle (degrees) */
+      angle: number;
     }>;
 
     /** scene map object list */
@@ -143,11 +150,13 @@ declare namespace Api {
     type SceneMapObjectCreate = {
       map_id: number;
       type: string;
+      name?: string | null;
       x: number;
       y: number;
       width?: number;
       height?: number;
       points?: string | null;
+      angle?: number;
     };
 
     /** scene map object update */
@@ -205,11 +214,13 @@ declare namespace Api {
     type EditorObjectItem = {
       id?: number | null;
       type: string;
+      name?: string | null;
       x: number;
       y: number;
       width: number;
       height: number;
       points?: string | null;
+      angle?: number;
     };
 
     /** editor save request */

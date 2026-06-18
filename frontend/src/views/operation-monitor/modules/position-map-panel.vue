@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { ref, onMounted, onBeforeUnmount, watch, nextTick } from 'vue';
-import { Canvas, Circle, Rect, Polygon, Line, Group, Text, FabricImage, Triangle, Point } from 'fabric';
+import { Canvas, Circle, Rect, Polygon, Line, Group, Text, FabricImage, Triangle, Ellipse, Pattern, Point } from 'fabric';
 import { fetchGetEditorMapData } from '@/service/api/scene';
 import { getFilePreviewUrl } from '@/service/api/file';
 import { worldToPixel } from '@/utils/coordinate';
@@ -21,6 +21,13 @@ let backgroundImgObj: FabricImage | null = null;
 let robotMarker: Group | null = null;
 let elementMap: Map<string, any> = new Map();
 let resizeObserver: ResizeObserver | null = null;
+let restrictedPattern: Pattern | null = null;
+
+const OBSTACLE_FILL = 'rgba(59, 130, 246, 0.3)';
+const OBSTACLE_STROKE = '#3b82f6';
+const RESTRICTED_STROKE = '#6b7280';
+const POINT_FILL = '#22c55e';
+const RETURN_POINT_FILL = '#047857';
 
 const canvasWidth = ref(800);
 const canvasHeight = ref(600);
@@ -44,56 +51,92 @@ function centerContent() {
   fabricCanvas.setViewportTransform([zoom, 0, 0, zoom, Math.max(0, offsetX), Math.max(0, offsetY)]);
 }
 
-function getEffectiveOrigin() {
-  if (!mapData.value) return { x: 0, y: 0 };
-  const mMap = mapData.value.map;
-  const storedW = mMap.width || canvasWidth.value;
-  const storedH = mMap.height || canvasHeight.value;
-  const sx = canvasWidth.value / storedW;
-  const sy = canvasHeight.value / storedH;
-  return {
-    x: (mMap.start_point_x ?? 0) * sx,
-    y: (mMap.start_point_y ?? 0) * sy,
-  };
+function createRestrictedPattern(): Pattern {
+  const size = 8;
+  const canvas = document.createElement('canvas');
+  canvas.width = size;
+  canvas.height = size;
+  const ctx = canvas.getContext('2d')!;
+  ctx.fillStyle = 'rgba(107, 114, 128, 0.12)';
+  ctx.fillRect(0, 0, size, size);
+  ctx.strokeStyle = 'rgba(107, 114, 128, 0.6)';
+  ctx.lineWidth = 1;
+  ctx.beginPath();
+  ctx.moveTo(0, size);
+  ctx.lineTo(size, 0);
+  ctx.stroke();
+  ctx.beginPath();
+  ctx.moveTo(-size, size);
+  ctx.lineTo(size, -size);
+  ctx.stroke();
+  return new Pattern({ source: canvas, repeat: 'repeat' });
+}
+
+function getRestrictedPattern(): Pattern {
+  if (!restrictedPattern) restrictedPattern = createRestrictedPattern();
+  return restrictedPattern;
+}
+
+function worldToCanvasPoint(wx: number, wy: number) {
+  const mMap = mapData.value?.map;
+  const h = mMap?.height ?? canvasHeight.value;
+  const px = worldToPixel(wx, wy, mMap?.start_point_x ?? 0, mMap?.start_point_y ?? 0, mMap?.resolution ?? 0.2);
+  return { x: px.x, y: h - px.y };
 }
 
 function renderElements() {
   if (!fabricCanvas || !mapData.value) return;
   const existingKeys = new Set<string>();
-  const mMap = mapData.value.map;
-  const { x: originX, y: originY } = getEffectiveOrigin();
-  const res = mMap.resolution || 0.2;
 
-  // Render annotations (stored in world coordinates)
+  for (const path of mapData.value.paths) {
+    const key = `path-${path.id}`;
+    existingKeys.add(key);
+    const startAnn = mapData.value.annotations.find(a => a.id === path.start_annotation_id);
+    const endAnn = mapData.value.annotations.find(a => a.id === path.end_annotation_id);
+    if (!startAnn || !endAnn) continue;
+    if (elementMap.has(key)) continue;
+    const line = new Line([startAnn.x, startAnn.y, endAnn.x, endAnn.y], {
+      stroke: '#f97316',
+      strokeWidth: 3,
+      selectable: false,
+      evented: false
+    });
+    fabricCanvas.add(line);
+    fabricCanvas.sendObjectToBack(line);
+    elementMap.set(key, line);
+  }
+
   for (const ann of mapData.value.annotations) {
     const key = `ann-${ann.id}`;
     existingKeys.add(key);
-    const px = worldToPixel(ann.x, ann.y, originX, originY, res);
+    const isReturnPoint = ann.type === 'navigation' || ann.type === '返回点';
+    const color = isReturnPoint ? RETURN_POINT_FILL : POINT_FILL;
     if (elementMap.has(key)) {
       const group = elementMap.get(key);
-      group.set({ left: px.x, top: px.y });
+      group.set({ left: ann.x, top: ann.y });
       const text = group.getObjects()[1] as Text;
-      text.set('text', ann.name);
+      text.set({ text: ann.name, fill: color });
     } else {
       const circle = new Circle({
-        radius: 6,
-        fill: '#ef4444',
+        radius: 8,
+        fill: color,
         stroke: '#fff',
         strokeWidth: 2,
         originX: 'center',
         originY: 'center'
       });
       const text = new Text(ann.name, {
-        fontSize: 9,
-        fill: '#ef4444',
+        fontSize: 10,
+        fill: color,
         originX: 'center',
         originY: 'center',
-        top: 14,
-        fontFamily: 'sans-serif'
+        top: 18,
+        fontFamily: 'sans-serif',
+        fontWeight: 'bold'
       });
       const group = new Group([circle, text], {
-        left: px.x,
-        top: px.y,
+        left: ann.x,
+        top: ann.y,
         originX: 'center',
         originY: 'center',
         hasControls: false,
@@ -105,67 +148,67 @@ function renderElements() {
     }
   }
 
-  // Render paths
-  for (const path of mapData.value.paths) {
-    const key = `path-${path.id}`;
-    existingKeys.add(key);
-    const startAnn = mapData.value.annotations.find(a => a.id === path.start_annotation_id);
-    const endAnn = mapData.value.annotations.find(a => a.id === path.end_annotation_id);
-    if (!startAnn || !endAnn) continue;
-    const startPx = worldToPixel(startAnn.x, startAnn.y, originX, originY, res);
-    const endPx = worldToPixel(endAnn.x, endAnn.y, originX, originY, res);
-    if (elementMap.has(key)) {
-      const line = elementMap.get(key);
-      line.set({ x1: startPx.x, y1: startPx.y, x2: endPx.x, y2: endPx.y });
-    } else {
-      const line = new Line([startPx.x, startPx.y, endPx.x, endPx.y], {
-        stroke: '#f97316',
-        strokeWidth: 2,
-        selectable: false,
-        evented: false
-      });
-      fabricCanvas.add(line);
-      fabricCanvas.sendObjectToBack(line);
-      elementMap.set(key, line);
-    }
-  }
-
-  // Render objects
   for (const obj of mapData.value.objects) {
     const key = `obj-${obj.id}`;
     existingKeys.add(key);
-    const isRestricted = obj.type === 'restricted';
-    const fillColor = isRestricted ? 'rgba(234,179,8,0.25)' : 'rgba(239,68,68,0.25)';
-    const strokeColor = isRestricted ? '#eab308' : '#ef4444';
+    const isRestricted = obj.type === 'restricted' || obj.type === '禁区';
+    const fill = isRestricted ? getRestrictedPattern() : OBSTACLE_FILL;
+    const stroke = isRestricted ? RESTRICTED_STROKE : OBSTACLE_STROKE;
     if (elementMap.has(key)) {
       const fabricObj = elementMap.get(key);
-      fabricObj.set({ left: obj.x, top: obj.y });
+      fabricObj.set({ left: obj.x, top: obj.y, angle: obj.angle ?? 0 });
     } else {
+      let fabricObj: Rect | Polygon | Triangle | Ellipse | null = null;
       if (obj.points) {
         try {
-          const pts = JSON.parse(obj.points);
-          const polygon = new Polygon(pts, {
+          fabricObj = new Polygon(JSON.parse(obj.points), {
             left: obj.x,
             top: obj.y,
-            fill: fillColor,
-            stroke: strokeColor,
+            angle: obj.angle ?? 0,
+            fill,
+            stroke,
             strokeWidth: 2
           });
-          fabricCanvas.add(polygon);
-          elementMap.set(key, polygon);
         } catch { /* skip */ }
-      } else {
-        const rect = new Rect({
+      } else if (obj.type === 'obstacle-circle') {
+        fabricObj = new Ellipse({
           left: obj.x,
           top: obj.y,
-          width: obj.width || 40,
-          height: obj.height || 40,
-          fill: fillColor,
-          stroke: strokeColor,
+          angle: obj.angle ?? 0,
+          rx: (obj.width || 10) / 2,
+          ry: (obj.height || 10) / 2,
+          fill,
+          stroke,
           strokeWidth: 2
         });
-        fabricCanvas.add(rect);
-        elementMap.set(key, rect);
+      } else if (obj.type === 'obstacle-triangle') {
+        fabricObj = new Triangle({
+          left: obj.x,
+          top: obj.y,
+          angle: obj.angle ?? 0,
+          width: obj.width || 10,
+          height: obj.height || 10,
+          fill,
+          stroke,
+          strokeWidth: 2
+        });
+      } else {
+        const isSquare = obj.type === 'obstacle-square';
+        fabricObj = new Rect({
+          left: obj.x,
+          top: obj.y,
+          angle: obj.angle ?? 0,
+          width: obj.width || 10,
+          height: isSquare ? (obj.width || 10) : (obj.height || 10),
+          fill,
+          stroke,
+          strokeWidth: 2
+        });
+      }
+      if (fabricObj) {
+        fabricObj.set({ selectable: false, evented: false });
+        fabricCanvas.add(fabricObj);
+        elementMap.set(key, fabricObj);
       }
     }
   }
@@ -191,9 +234,7 @@ function renderRobotMarker() {
 
   if (!props.location) return;
 
-  const { x: originX, y: originY } = getEffectiveOrigin();
-  const res = mapData.value?.map.resolution || 0.2;
-  const robotPx = worldToPixel(props.location.x, props.location.y, originX, originY, res);
+  const robotPx = worldToCanvasPoint(props.location.x, props.location.y);
 
   const body = new Circle({
     radius: 12,
@@ -273,6 +314,11 @@ async function loadMapData(mapId: number) {
   try {
     const { data } = await fetchGetEditorMapData(mapId);
     if (!data) return;
+    for (const ann of data.annotations) {
+      const p = worldToPixel(ann.x, ann.y, data.map.start_point_x ?? 0, data.map.start_point_y ?? 0, data.map.resolution ?? 0.2);
+      ann.x = p.x;
+      ann.y = (data.map.height ?? canvasHeight.value) - p.y;
+    }
     mapData.value = data;
 
     // Clear existing elements
@@ -399,6 +445,7 @@ watch([containerWidth, containerHeight], () => {
   if (!fabricCanvas) return;
   fabricCanvas.setDimensions({ width: containerWidth.value, height: containerHeight.value });
   centerContent();
+  fabricCanvas.renderAll();
 });
 
 watch(() => props.mapId, (newMapId) => {
@@ -435,9 +482,9 @@ onBeforeUnmount(() => {
 </script>
 
 <template>
-  <div class="relative" style="min-height: 400px">
-    <NSpin :show="mapLoading">
-      <div ref="canvasContainer" class="h-400px w-full overflow-hidden rounded bg-gray-100">
+  <div class="relative h-full min-h-0">
+    <NSpin :show="mapLoading" class="h-full">
+      <div ref="canvasContainer" class="h-full min-h-360px w-full overflow-hidden rounded bg-gray-100">
         <canvas ref="canvasEl" />
         <div v-if="!mapId" class="absolute inset-0 flex items-center justify-center">
           <NEmpty description="该机器人未绑定场景地图" />

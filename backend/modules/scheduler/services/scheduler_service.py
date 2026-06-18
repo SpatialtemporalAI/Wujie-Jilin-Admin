@@ -5,7 +5,7 @@ from sqlalchemy import select, and_
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from core.exception.errors import NotFoundError, ConflictError
-from modules.scheduler.models.scheduled_task import SysScheduledTask
+from database.models.sys.scheduled_task import SysScheduledTask
 from modules.scheduler.schemas.scheduled_task import (
     ScheduledTaskCreate,
     ScheduledTaskUpdate,
@@ -25,11 +25,15 @@ class SchedulerService:
         if query_params.name:
             conditions.append(SysScheduledTask.name.like(f"%{query_params.name}%"))
         if query_params.task_key:
-            conditions.append(SysScheduledTask.task_key.like(f"%{query_params.task_key}%"))
+            conditions.append(
+                SysScheduledTask.task_key.like(f"%{query_params.task_key}%")
+            )
         if query_params.status is not None:
             conditions.append(SysScheduledTask.status == query_params.status)
         if query_params.trigger_type:
-            conditions.append(SysScheduledTask.trigger_type == query_params.trigger_type)
+            conditions.append(
+                SysScheduledTask.trigger_type == query_params.trigger_type
+            )
 
         stmt = select(SysScheduledTask).where(SysScheduledTask.deleted_at.is_(None))
         if conditions:
@@ -51,7 +55,9 @@ class SchedulerService:
         return task
 
     @staticmethod
-    async def get_task_by_key(db: AsyncSession, task_key: str) -> SysScheduledTask | None:
+    async def get_task_by_key(
+        db: AsyncSession, task_key: str
+    ) -> SysScheduledTask | None:
         """按 task_key 获取任务"""
         stmt = select(SysScheduledTask).where(
             SysScheduledTask.task_key == task_key,
@@ -61,7 +67,9 @@ class SchedulerService:
         return result.scalar_one_or_none()
 
     @staticmethod
-    async def create_task(db: AsyncSession, task_create: ScheduledTaskCreate) -> SysScheduledTask:
+    async def create_task(
+        db: AsyncSession, task_create: ScheduledTaskCreate
+    ) -> SysScheduledTask:
         """创建定时任务"""
         existing = await SchedulerService.get_task_by_key(db, task_create.task_key)
         if existing:
@@ -116,7 +124,9 @@ class SchedulerService:
         manager.remove_task_job(task_id)
 
     @staticmethod
-    async def toggle_status(db: AsyncSession, task_id: int, status: bool) -> SysScheduledTask:
+    async def toggle_status(
+        db: AsyncSession, task_id: int, status: bool
+    ) -> SysScheduledTask:
         """启用/禁用任务"""
         task = await SchedulerService.get_task(db, task_id)
         task.status = status
@@ -159,6 +169,7 @@ class SchedulerService:
                 existing.is_system = definition.is_system
                 if definition.trigger_params:
                     import json
+
                     existing.trigger_params = json.dumps(definition.trigger_params)
                 synced.append(task_key)
             else:
@@ -170,7 +181,11 @@ class SchedulerService:
                     description=definition.description,
                     cron_expression=definition.cron_expression,
                     trigger_type=definition.trigger_type,
-                    trigger_params=json.dumps(definition.trigger_params) if definition.trigger_params else None,
+                    trigger_params=(
+                        json.dumps(definition.trigger_params)
+                        if definition.trigger_params
+                        else None
+                    ),
                     status=True,
                     module=definition.module,
                     function_path=definition.function_path,
@@ -200,6 +215,7 @@ class SchedulerService:
                 next_str = manager.preview_cron(task.cron_expression, count=1)
                 if next_str:
                     from datetime import datetime
+
                     task.next_run_at = datetime.fromisoformat(next_str[0])
                 else:
                     task.next_run_at = None

@@ -11,6 +11,7 @@ from database.models.business.scene_map_annotation import SceneMapAnnotation
 from database.models.business.scene_map_path import SceneMapPath
 from database.models.business.scene_map_object import SceneMapObject
 from modules.scene.schemas.scene_map_editor import EditorSaveRequest
+from modules.task.services.task_service import TaskService
 
 
 class SceneMapEditorService:
@@ -61,6 +62,7 @@ class SceneMapEditorService:
 
         # 删除已删除的标注
         if save_request.deleted_annotation_ids:
+            await TaskService.delete_points_by_annotation_ids(db, save_request.deleted_annotation_ids)
             stmt = select(SceneMapAnnotation).where(
                 SceneMapAnnotation.id.in_(save_request.deleted_annotation_ids),
                 SceneMapAnnotation.map_id == map_id,
@@ -150,20 +152,24 @@ class SceneMapEditorService:
                 obj = result.scalar_one_or_none()
                 if obj:
                     obj.type = item.type
+                    obj.name = item.name
                     obj.x = item.x
                     obj.y = item.y
                     obj.width = item.width
                     obj.height = item.height
                     obj.points = item.points
+                    obj.angle = item.angle
             else:
                 obj = SceneMapObject(
                     map_id=map_id,
                     type=item.type,
+                    name=item.name,
                     x=item.x,
                     y=item.y,
                     width=item.width,
                     height=item.height,
                     points=item.points,
+                    angle=item.angle,
                 )
                 db.add(obj)
 

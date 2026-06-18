@@ -178,16 +178,20 @@ class TaskExecutionService:
             raise
 
     @staticmethod
-    def build_active_query() -> Select:
+    def build_active_query(query_params: TaskExecutionQueryParams | None = None) -> Select:
         """构建活跃执行查询"""
-        return (
-            select(TaskExecution)
-            .where(
-                TaskExecution.status.in_(["running", "paused"]),
-                TaskExecution.deleted_at.is_(None),
-            )
-            .order_by(TaskExecution.id.desc())
+        base_query = select(TaskExecution).where(
+            TaskExecution.status.in_(["running", "paused"]),
+            TaskExecution.deleted_at.is_(None),
         )
+        if query_params and (query_params.robot_id is not None or query_params.map_id is not None):
+            base_query = base_query.join(Robot, Robot.id == TaskExecution.robot_id)
+            if query_params.robot_id is not None:
+                base_query = base_query.where(Robot.id == query_params.robot_id)
+            if query_params.map_id is not None:
+                base_query = base_query.where(Robot.map_id == query_params.map_id)
+            base_query = base_query.where(Robot.deleted_at.is_(None))
+        return base_query.order_by(TaskExecution.id.desc())
 
     @staticmethod
     def build_history_query(query_params: TaskExecutionQueryParams) -> Select:
@@ -202,6 +206,13 @@ class TaskExecutionService:
             conditions.append(TaskExecution.task_name.contains(query_params.task_name))
         if query_params.status:
             conditions.append(TaskExecution.status == query_params.status)
+        if query_params.robot_id is not None or query_params.map_id is not None:
+            base_query = base_query.join(Robot, Robot.id == TaskExecution.robot_id)
+            if query_params.robot_id is not None:
+                conditions.append(Robot.id == query_params.robot_id)
+            if query_params.map_id is not None:
+                conditions.append(Robot.map_id == query_params.map_id)
+            conditions.append(Robot.deleted_at.is_(None))
 
         if conditions:
             base_query = base_query.where(and_(*conditions))

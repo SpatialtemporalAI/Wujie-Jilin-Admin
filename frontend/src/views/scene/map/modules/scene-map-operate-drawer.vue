@@ -49,6 +49,7 @@ interface MapModel {
   image_id: number | null;
   width: number | null;
   height: number | null;
+  resolution: number | null;
   start_point_x: number;
   start_point_y: number;
   status: Api.Common.EnableStatus;
@@ -64,6 +65,7 @@ function createDefaultModel(): MapModel {
     image_id: null,
     width: null,
     height: null,
+    resolution: 1,
     start_point_x: 0,
     start_point_y: 0,
     status: '1'
@@ -74,6 +76,7 @@ const rules = {
   name: { required: true, message: '请输入地图名称', trigger: 'blur' },
   group_id: { required: true, type: 'number', message: '请选择所属分组', trigger: 'change' },
   image_id: { required: true, type: 'number', message: '请上传地图图片', trigger: 'change' },
+  resolution: { required: true, type: 'number', message: '请输入映射比例', trigger: 'blur' },
   status: { required: true, message: '请选择状态', trigger: 'change' }
 };
 
@@ -147,6 +150,7 @@ function handleInitModel() {
     model.value.image_id = clonedData.image_id ?? null;
     model.value.width = clonedData.width ?? null;
     model.value.height = clonedData.height ?? null;
+    model.value.resolution = clonedData.resolution ?? 1;
     model.value.start_point_x = clonedData.start_point_x ?? 0;
     model.value.start_point_y = clonedData.start_point_y ?? 0;
     model.value.status = clonedData.status ?? '1';
@@ -171,6 +175,7 @@ async function handleSubmit() {
     image_id: model.value.image_id,
     width: model.value.width,
     height: model.value.height,
+    resolution: model.value.resolution,
     start_point_x: model.value.start_point_x,
     start_point_y: model.value.start_point_y,
     status: model.value.status
@@ -260,6 +265,16 @@ onMounted(() => {
             v-model:value="model.height"
             placeholder="请输入地图高度"
             :min="0"
+            class="w-full"
+          />
+        </NFormItem>
+        <NFormItem label="映射比例" path="resolution">
+          <NInputNumber
+            v-model:value="model.resolution"
+            placeholder="请输入映射比例"
+            :min="0"
+            :precision="6"
+            clearable
             class="w-full"
           />
         </NFormItem>

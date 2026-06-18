@@ -152,7 +152,6 @@ const {
 async function handleDelete(id: number) {
   try {
     await fetchDeleteRobotModel(id);
-    message.success($t('common.deleteSuccess'));
     onModelDeleted();
   } catch (error) {
     console.error('删除机器人型号失败:', error);
@@ -169,7 +168,6 @@ async function handleBatchDelete() {
     for (const key of checkedModelRowKeys.value) {
       await fetchDeleteRobotModel(Number(key));
     }
-    message.success($t('common.deleteSuccess'));
     onModelBatchDeleted();
   } catch (error) {
     console.error('批量删除机器人型号失败:', error);

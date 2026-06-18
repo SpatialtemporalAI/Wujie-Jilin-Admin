@@ -32,6 +32,12 @@ class SceneMap(Base):
         default=None,
         comment="地图图片文件ID",
     )
+    nav_image_id: Mapped[int | None] = mapped_column(
+        ForeignKey("sys_file.id"),
+        nullable=True,
+        default=None,
+        comment="导航地图图片文件ID",
+    )
     width: Mapped[int | None] = mapped_column(
         Integer, nullable=True, default=None, comment="地图宽度(像素)"
     )
@@ -39,7 +45,7 @@ class SceneMap(Base):
         Integer, nullable=True, default=None, comment="地图高度(像素)"
     )
     resolution: Mapped[float] = mapped_column(
-        Float, default=0.2, comment="分辨率(米/像素)，如0.2表示1像素=20厘米"
+        Float, default=1, comment="映射比例"
     )
     start_point_x: Mapped[float] = mapped_column(
         Float, default=0, comment="起始点位X坐标"
@@ -57,6 +63,12 @@ class SceneMap(Base):
         init=False,
     )
     image: Mapped["SysFile"] = relationship(
+        foreign_keys=[image_id],
+        lazy="noload",
+        init=False,
+    )
+    nav_image: Mapped["SysFile"] = relationship(
+        foreign_keys=[nav_image_id],
         lazy="noload",
         init=False,
     )

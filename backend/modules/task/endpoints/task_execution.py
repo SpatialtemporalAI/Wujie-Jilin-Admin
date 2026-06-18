@@ -22,6 +22,7 @@ from modules.admin.deps.auth.user_manager import current_user
 from modules.admin.deps.auth.permission import require_permission
 from database.models.sys.user import SysUser
 from database.models.business.robot import Robot
+from database.models.business.scene_map import SceneMap
 
 from modules.task.services.task_execution_service import TaskExecutionService
 from modules.task.schemas.task import (
@@ -42,12 +43,20 @@ async def _build_execution_response(exec_obj, db: AsyncSession = None) -> TaskEx
     """构建执行记录响应"""
     data = TaskExecutionResponseData.model_validate(exec_obj)
 
-    # 获取机器人名称
+    # 获取机器人和场景名称
     if exec_obj.robot_id and db:
         robot_result = await db.execute(
-            select(Robot.name).where(Robot.id == exec_obj.robot_id)
+            select(Robot).where(Robot.id == exec_obj.robot_id, Robot.deleted_at.is_(None))
         )
-        data.robot_name = robot_result.scalar_one_or_none()
+        robot = robot_result.scalar_one_or_none()
+        if robot:
+            data.robot_name = robot.name
+            data.map_id = robot.map_id
+            if robot.map_id is not None:
+                map_result = await db.execute(
+                    select(SceneMap.name).where(SceneMap.id == robot.map_id, SceneMap.deleted_at.is_(None))
+                )
+                data.map_name = map_result.scalar_one_or_none()
 
     return data
 
@@ -145,12 +154,13 @@ async def stop_execution(
     dependencies=[Depends(require_permission("task:list"))],
 )
 async def get_active_executions(
+    query_params: TaskExecutionQueryParams = Depends(),
     page_params: PageRequest = Depends(get_page_params),
     db: AsyncSession = Depends(get_session),
 ):
     """获取活跃执行列表"""
     try:
-        query = TaskExecutionService.build_active_query()
+        query = TaskExecutionService.build_active_query(query_params)
         page_data = await get_paginated_results(
             db=db,
             page_params=page_params,
@@ -158,14 +168,12 @@ async def get_active_executions(
             schema=TaskExecutionResponseData,
         )
 
-        # 补充机器人名称
         if page_data.records:
             for record in page_data.records:
-                if record.robot_id:
-                    robot_result = await db.execute(
-                        select(Robot.name).where(Robot.id == record.robot_id)
-                    )
-                    record.robot_name = robot_result.scalar_one_or_none()
+                filled = await _build_execution_response(record, db)
+                record.robot_name = filled.robot_name
+                record.map_id = filled.map_id
+                record.map_name = filled.map_name
 
         return response_base.page(data=page_data)
 
@@ -194,14 +202,12 @@ async def get_execution_history(
             schema=TaskExecutionResponseData,
         )
 
-        # 补充机器人名称
         if page_data.records:
             for record in page_data.records:
-                if record.robot_id:
-                    robot_result = await db.execute(
-                        select(Robot.name).where(Robot.id == record.robot_id)
-                    )
-                    record.robot_name = robot_result.scalar_one_or_none()
+                filled = await _build_execution_response(record, db)
+                record.robot_name = filled.robot_name
+                record.map_id = filled.map_id
+                record.map_name = filled.map_name
 
         return response_base.page(data=page_data)
 

@@ -24,6 +24,7 @@ from database.models.sys.user import SysUser
 from database.models.business.task import Task, task_robot_association
 from database.models.business.task_point import TaskPoint
 from database.models.business.robot import Robot
+from database.models.business.scene_map import SceneMap
 
 from modules.task.services.task_service import TaskService
 from modules.task.schemas.task import (
@@ -37,6 +38,31 @@ from modules.task.schemas.task import (
 )
 
 logger = logging.getLogger(__name__)
+
+
+async def _build_task_robot_briefs(db: AsyncSession, robots: list[Robot]) -> list[TaskRobotBrief]:
+    map_ids = {robot.map_id for robot in robots if robot.map_id is not None}
+    map_name_map: dict[int, str] = {}
+    if map_ids:
+        map_result = await db.execute(
+            select(SceneMap.id, SceneMap.name).where(
+                SceneMap.id.in_(map_ids),
+                SceneMap.deleted_at.is_(None),
+            )
+        )
+        map_name_map = {row.id: row.name for row in map_result.all()}
+
+    return [
+        TaskRobotBrief(
+            id=robot.id,
+            name=robot.name,
+            status=robot.status.value if hasattr(robot.status, 'value') else str(robot.status),
+            map_id=robot.map_id,
+            map_name=map_name_map.get(robot.map_id) if robot.map_id is not None else None,
+        )
+        for robot in robots
+    ]
+
 
 task_router = APIRouter(
     prefix="/manage", tags=["任务管理"], dependencies=[Depends(current_user)]
@@ -66,7 +92,7 @@ async def _build_task_response(task_obj: Task, db: AsyncSession, include_details
 
     # 获取关联机器人
     if task_obj.robots is not None:
-        data.robots = [TaskRobotBrief.model_validate(r) for r in task_obj.robots]
+        data.robots = await _build_task_robot_briefs(db, list(task_obj.robots))
     else:
         robot_result = await db.execute(
             select(Robot)
@@ -75,7 +101,7 @@ async def _build_task_response(task_obj: Task, db: AsyncSession, include_details
             .where(Robot.deleted_at.is_(None))
         )
         robots = robot_result.scalars().all()
-        data.robots = [TaskRobotBrief.model_validate(r) for r in robots]
+        data.robots = await _build_task_robot_briefs(db, list(robots))
 
     return data
 
@@ -121,7 +147,7 @@ async def get_task_list(
                     .where(Robot.deleted_at.is_(None))
                 )
                 robots = robot_result.scalars().all()
-                record.robots = [TaskRobotBrief(id=r.id, name=r.name, status=r.status.value if hasattr(r.status, 'value') else str(r.status)) for r in robots]
+                record.robots = await _build_task_robot_briefs(db, list(robots))
 
         return response_base.page(data=page_data)
 

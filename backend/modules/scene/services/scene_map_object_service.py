@@ -56,11 +56,13 @@ class SceneMapObjectService:
         obj = SceneMapObject(
             map_id=object_create.map_id,
             type=object_create.type,
+            name=object_create.name,
             x=object_create.x,
             y=object_create.y,
             width=object_create.width,
             height=object_create.height,
             points=object_create.points,
+            angle=object_create.angle,
         )
         db.add(obj)
         await db.flush()

@@ -16,7 +16,9 @@ const searchParams: Api.Task.TaskExecutionSearchParams = reactive({
   page: 1,
   page_size: 10,
   task_name: null,
-  status: null
+  status: null,
+  robot_id: null,
+  map_id: null
 });
 
 const statusColorMap: Record<string, NaiveUI.ThemeColor> = {
@@ -97,6 +99,13 @@ const {
       render: row => <span>{row.robot_name || '-'}</span>
     },
     {
+      key: 'map_name',
+      title: '场景地图',
+      align: 'center',
+      width: 140,
+      render: row => <span>{row.map_name || '-'}</span>
+    },
+    {
       key: 'started_at',
       title: '开始时间',
       align: 'center',
@@ -134,7 +143,7 @@ const {
 </script>
 
 <template>
-  <div class="h-full flex-col-stretch gap-12px">
+  <div class="min-h-500px flex-col-stretch gap-12px overflow-hidden lt-sm:overflow-auto">
     <TaskHistorySearch v-model:model="searchParams" @search="getDataByPage" @reset="getDataByPage" />
     <div>
       <TableHeaderOperation
@@ -155,7 +164,7 @@ const {
       remote
       :row-key="(row: Api.Task.TaskExecution) => row.id"
       :pagination="mobilePagination"
-      class="sm:h-full"
+      class="sm:flex-1-hidden"
     />
     <TaskDetailDrawer
       v-model:visible="detailDrawerVisible"

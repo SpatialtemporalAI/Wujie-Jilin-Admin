@@ -81,6 +81,7 @@ class SceneMapService:
                 "name": m.name,
                 "group_id": m.group_id,
                 "image_id": m.image_id,
+                "nav_image_id": m.nav_image_id,
                 "width": m.width,
                 "height": m.height,
                 "resolution": m.resolution,
@@ -143,10 +144,14 @@ class SceneMapService:
     async def create(db: AsyncSession, map_create: SceneMapCreate) -> SceneMap:
         """创建场景地图"""
         group_id = await SceneMapService._resolve_group_id(db, map_create)
+        nav_image_id = map_create.nav_image_id
+        if nav_image_id is None:
+            nav_image_id = map_create.image_id
         map_obj = SceneMap(
             name=map_create.name,
             group_id=group_id,
             image_id=map_create.image_id,
+            nav_image_id=nav_image_id,
             width=map_create.width,
             height=map_create.height,
             resolution=map_create.resolution,
@@ -161,16 +166,20 @@ class SceneMapService:
     @staticmethod
     async def update(
         db: AsyncSession, map_id: int, map_update: SceneMapUpdate
-    ) -> SceneMap:
-        """更新场景地图"""
+    ) -> Tuple[SceneMap, bool]:
+        """更新场景地图，返回 (地图对象, image_id 是否变化)"""
         map_obj = await SceneMapService.get(db, map_id)
+        old_image_id = map_obj.image_id
 
         update_data = map_update.model_dump(exclude_unset=True)
         for field, value in update_data.items():
             setattr(map_obj, field, value)
 
         await db.flush()
-        return map_obj
+        image_id_changed = (
+            "image_id" in update_data and map_obj.image_id != old_image_id
+        )
+        return map_obj, image_id_changed
 
     @staticmethod
     async def delete(db: AsyncSession, map_id: int) -> None:

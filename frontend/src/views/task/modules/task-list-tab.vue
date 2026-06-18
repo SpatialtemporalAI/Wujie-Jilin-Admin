@@ -6,6 +6,7 @@ import { useAppStore } from '@/store/modules/app';
 import { defaultTransform, useNaivePaginatedTable, useTableOperate } from '@/hooks/common/table';
 import { useAuth } from '@/hooks/business/auth';
 import { $t } from '@/locales';
+import { enableStatusToBoolean } from '@/utils/status';
 import TaskSearch from './task-search.vue';
 import TaskOperateDrawer from './task-operate-drawer.vue';
 
@@ -18,7 +19,9 @@ const searchParams: Api.Task.TaskSearchParams = reactive({
   page_size: 10,
   name: null,
   task_type: null,
-  enabled: null
+  enabled: null,
+  robot_id: null,
+  map_id: null
 });
 
 const taskTypeLabel: Record<string, string> = {
@@ -62,7 +65,14 @@ const {
   mobilePagination
 } = useNaivePaginatedTable({
   api: () => fetchGetTaskList(searchParams),
-  transform: response => defaultTransform(response),
+  transform: response => {
+    const result = defaultTransform(response);
+    result.data = result.data.map((task: Api.Task.Task & { enabled: boolean | string }) => ({
+      ...task,
+      enabled: enableStatusToBoolean(task.enabled)
+    }));
+    return result;
+  },
   onPaginationParamsChange: params => {
     searchParams.page = params.page;
     searchParams.page_size = params.pageSize;
@@ -116,6 +126,16 @@ const {
       render: row => <NTag size="small" type={row.enabled ? 'success' : 'default'}>{row.enabled ? '启用' : '禁用'}</NTag>
     },
     {
+      key: 'scene',
+      title: '场景地图',
+      align: 'center',
+      width: 140,
+      render: row => {
+        const mapNames = [...new Set((row.robots || []).map((r: Api.Task.TaskRobot) => r.map_name).filter(Boolean))];
+        return <span>{mapNames.length > 0 ? mapNames.join(', ') : '-'}</span>;
+      }
+    },
+    {
       key: 'robots',
       title: '绑定机器人',
       align: 'center',
@@ -143,11 +163,9 @@ const {
               {$t('common.edit')}
             </NButton>
           )}
-          {hasAuth('task:edit') && (
-            <NButton size="small" ghost onClick={() => handleToggleEnabled(row)}>
-              {row.enabled ? '禁用' : '启用'}
-            </NButton>
-          )}
+          <NButton size="small" ghost onClick={() => handleToggleEnabled(row)}>
+            {row.enabled ? '禁用' : '启用'}
+          </NButton>
           {hasAuth('task:delete') && (
             <NPopconfirm onPositiveClick={() => handleDelete(row.id)}>
               {{
@@ -175,7 +193,6 @@ const {
 async function handleDelete(id: number) {
   try {
     await fetchDeleteTask(id);
-    message.success($t('common.deleteSuccess'));
     onDeleted();
   } catch (error) {
     console.error('删除任务失败:', error);
@@ -183,12 +200,12 @@ async function handleDelete(id: number) {
 }
 
 async function handleToggleEnabled(row: Api.Task.Task) {
-  try {
-    await fetchToggleTaskEnabled(row.id, !row.enabled);
-    message.success(row.enabled ? '已禁用' : '已启用');
-    getData();
-  } catch (error) {
-    console.error('切换启用状态失败:', error);
+  const enabled = !row.enabled;
+  const { error } = await fetchToggleTaskEnabled(row.id, enabled);
+  if (!error) {
+    row.enabled = enabled;
+    message.success(enabled ? '已启用' : '已禁用');
+    await getDataByPage();
   }
 }
 
@@ -204,7 +221,7 @@ async function handleStart(row: Api.Task.Task) {
 </script>
 
 <template>
-  <div class="h-full flex-col-stretch gap-12px">
+  <div class="min-h-500px flex-col-stretch gap-12px overflow-hidden lt-sm:overflow-auto">
     <TaskSearch v-model:model="searchParams" @search="getDataByPage" @reset="getDataByPage" />
     <div>
       <TableHeaderOperation
@@ -228,7 +245,7 @@ async function handleStart(row: Api.Task.Task) {
       remote
       :row-key="(row: Api.Task.Task) => row.id"
       :pagination="mobilePagination"
-      class="sm:h-full"
+      class="sm:flex-1-hidden"
     />
     <TaskOperateDrawer
       v-model:visible="drawerVisible"

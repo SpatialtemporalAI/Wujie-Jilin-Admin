@@ -18,6 +18,16 @@
 - [2026-06-11 场景地图 JSON 点位导入](./business/2026-06-11_scene-map-json-import.md) — 地图编辑器支持将 label/position JSON 导入为标注点
 - [2026-06-11 机器人场景绑定可空与存量库缺列修复](./business/2026-06-11_robot-map-binding-nullable-fix.md) — robot.map_id 缺列自动补齐，未绑定场景不支持定位
 - [2026-06-11 地图编辑器新增场景图片与起始点位](./business/2026-06-11_map-editor-create-scene-image-start-point.md) — 新增场景上传图片并按原图/网页显示尺寸缩放保存起始点位
+- [2026-06-17 场景地图新增导航地图图片](./business/2026-06-17_scene-map-nav-image.md) — 异步将障碍物/禁区绘制到原图副本生成 nav_image_id
+- [2026-06-17 机器人管理移除列表状态列](./business/2026-06-17_robot-manage-remove-status-column.md) — 去掉机器人管理表格中的状态显示列
+- [2026-06-17 场景地图新增映射比例输入](./business/2026-06-17_scene-map-resolution-input.md) — 新增/编辑场景地图时填写 resolution，默认 1
+- [2026-06-17 任务管理页面白色卡片背景调整](./business/2026-06-17_task-page-card-background.md) — 任务管理页增加白色卡片容器以修正 UI 样式偏差
+- [2026-06-17 地图编辑器、机器人新增与任务管理修复](./business/2026-06-17_editor-robot-task-fixes.md) — 调整地图编辑器交互/默认值、机器人新增默认配置并修复任务页空白
+- [2026-06-17 场景地图、任务列表与运行监控 UI 修复](./business/2026-06-17_scene-task-monitor-ui-fixes.md) — 修复图片预览、任务表格/禁用操作和运行监控地图布局
+- [2026-06-17 任务新增编辑必填校验](./business/2026-06-17_task-form-required-validation.md) — 巡逻点位/动作和定时日期/开始时间提交前必填校验
+- [2026-06-17 任务启用禁用按钮修复](./business/2026-06-17_task-toggle-enabled-fix.md) — 统一任务列表 enabled 状态转换，修复切换按钮无反应
+- [2026-06-17 任务地图优先选择与点位删除联动](./business/2026-06-17_task-map-selection-and-point-cascade.md) — 任务先选地图、列表支持地图/机器人筛选，并联动删除任务点位
+- [2026-06-17 任务场景筛选显示与地图编辑器场景名](./business/2026-06-17_task-scene-filters-and-map-editor-name.md) — 任务各列表补场景显示/筛选，地图编辑器显示当前场景名
 
 ## 维护说明
 

@@ -1,14 +1,13 @@
 <script setup lang="ts">
 import { ref, computed, onMounted, onBeforeUnmount, watch, nextTick } from 'vue';
-import { Canvas, Circle, Rect, Polygon, Line, Group, Text, FabricImage, Triangle, Point } from 'fabric';
+import { Canvas, Circle, Rect, Polygon, Line, Group, Text, FabricImage, Triangle, Ellipse, Pattern, Point } from 'fabric';
 import { getFilePreviewUrl } from '@/service/api/file';
-import { pixelToWorld, worldToPixel } from '@/utils/coordinate';
-import type { SelectedElement, DrawingMode } from '../composables/useMapEditor';
+import { pixelToWorld, worldToPixel, radToDeg, degToRad } from '@/utils/coordinate';
+import type { SelectedElement } from '../composables/useMapEditor';
 import { fetchGetSceneMapList } from '@/service/api';
 interface Props {
   editorData: Api.Scene.EditorMapData | null;
   selectedElement: SelectedElement | null;
-  drawingMode: DrawingMode;
   gridSpacing: number;
   resolution: number;
   loading?: boolean;
@@ -20,12 +19,16 @@ const props = withDefaults(defineProps<Props>(), {
 
 const emit = defineEmits<{
   (e: 'select-element', el: SelectedElement | null): void;
-  (e: 'add-annotation', data: { x: number; y: number; type: string }): void;
-  (e: 'add-path', data: { startId: number; endId: number }): void;
-  (e: 'add-object', data: { type: string; x: number; y: number; width: number; height: number; points?: string }): void;
   (e: 'update-element', data: { type: string; id: number; updates: Record<string, any> }): void;
   (e: 'zoom-change', zoom: number): void;
   (e: 'cursor-position', x: number, y: number): void;
+  (e: 'undo'): void;
+  (e: 'redo'): void;
+  (e: 'context-menu', data: { x: number; y: number; clientX: number; clientY: number; target: { type: 'annotation' | 'object'; id: number } | null }): void;
+  (e: 'request-type-switch', data: { id: number; clientX: number; clientY: number }): void;
+  (e: 'rename-element', data: { type: 'annotation' | 'object'; id: number }): void;
+  (e: 'blank-click'): void;
+  (e: 'hover-element', data: { type: 'annotation' | 'object'; id: number; clientX: number; clientY: number } | null): void;
 }>();
 
 const canvasContainer = ref<HTMLDivElement>();
@@ -35,6 +38,8 @@ let fabricCanvas: Canvas | null = null;
 let gridGroup: Group | null = null;
 let backgroundImgObj: FabricImage | null = null;
 let elementMap: Map<string, any> = new Map();
+let annotationDecorations: Map<number, { text: Text; angleIndicator: Triangle }> = new Map();
+let objectLabels: Map<number, Text> = new Map();
 let resizeObserver: ResizeObserver | null = null;
 let lastGridSpacingM = 0;
 let originMarker: Group | null = null;
@@ -42,6 +47,10 @@ let originMarker: Group | null = null;
 const minimapImageUrl = ref('');
 const minimapRect = ref({ x: 0, y: 0, w: 0, h: 0 });
 const MINIMAP_SIZE = 180;
+
+// 鼠标世界坐标（显示在 minimap 上方）
+const cursorWorldX = ref(0);
+const cursorWorldY = ref(0);
 
 const minimapScale = computed(() => {
   const mw = canvasWidth.value;
@@ -147,15 +156,82 @@ let isPanning = false;
 let lastPanPoint = { x: 0, y: 0 };
 let spacePressed = false;
 
-let pathStartAnnotationId: number | null = null;
+let isDraggingObject = false;
+let justDragged = false;
+let clickTimer: number | null = null;
+let lastDblClickTime = 0;
+let mouseDownClientPos: { x: number; y: number } | null = null;
+let mouseDownTarget: any = null;
+let isLocalUpdate = false;
+let cursorEmitRafId: number | null = null;
+let lastCursorWorld = { x: 0, y: 0 };
+let minimapRafId: number | null = null;
 
-let drawingState: {
-  type: 'rect' | 'polygon' | null;
-  startX: number;
-  startY: number;
-  tempObj: any;
-  polygonPoints: { x: number; y: number }[];
-} | null = null;
+const MIN_OBJECT_SIZE = 1;
+const CLICK_MOVE_THRESHOLD = 5;
+const ARROW_WIDTH = 6;
+const ARROW_HEIGHT = 8;
+
+/**
+ * 计算点位方向箭头的位置和旋转角度（ROS 弧度 → Fabric）
+ * - ROS 弧度：0 朝东（右），π/2 朝北（上），π 朝西（左），逆时针为正
+ * - Fabric Triangle 默认顶点朝上、顺时针为正
+ * - 箭头底部贴合圆形边缘、顶点指向角度方向
+ */
+function getAnnotationArrowTransform(annX: number, annY: number, rosRad: number, radius: number) {
+  const dist = radius + ARROW_HEIGHT / 2;
+  return {
+    x: annX + dist * Math.cos(rosRad),
+    y: annY - dist * Math.sin(rosRad),
+    angle: -radToDeg(rosRad) + 90,
+  };
+}
+
+/**
+ * Fabric 圆形旋转角度（度） → ROS 弧度
+ * 反推公式：rosRad = (90 - fabricAngle) * π / 180
+ */
+function fabricAngleToAnnotationRad(fabricAngle: number): number {
+  return degToRad(90 - fabricAngle);
+}
+
+// 障碍物 / 禁区 / 点位 颜色
+const OBSTACLE_FILL = 'rgba(59, 130, 246, 0.3)';
+const OBSTACLE_STROKE = '#3b82f6';
+const RESTRICTED_STROKE = '#6b7280';
+const POINT_FILL = '#22c55e';
+const POINT_SELECTED_FILL = '#16a34a';
+const RETURN_POINT_FILL = '#047857';
+const RETURN_POINT_SELECTED_FILL = '#065f46';
+
+function createRestrictedPattern(): Pattern {
+  const size = 8;
+  const canvas = document.createElement('canvas');
+  canvas.width = size;
+  canvas.height = size;
+  const ctx = canvas.getContext('2d')!;
+  // 浅灰底
+  ctx.fillStyle = 'rgba(107, 114, 128, 0.12)';
+  ctx.fillRect(0, 0, size, size);
+  // 灰色斜线
+  ctx.strokeStyle = 'rgba(107, 114, 128, 0.6)';
+  ctx.lineWidth = 1;
+  ctx.beginPath();
+  ctx.moveTo(0, size);
+  ctx.lineTo(size, 0);
+  ctx.stroke();
+  ctx.beginPath();
+  ctx.moveTo(-size, size);
+  ctx.lineTo(size, -size);
+  ctx.stroke();
+  return new Pattern({ source: canvas, repeat: 'repeat' });
+}
+
+let restrictedPattern: Pattern | null = null;
+function getRestrictedPattern(): Pattern {
+  if (!restrictedPattern) restrictedPattern = createRestrictedPattern();
+  return restrictedPattern;
+}
 
 const canvasWidth = ref(800);
 const canvasHeight = ref(600);
@@ -210,6 +286,17 @@ function getEffectiveOrigin() {
   };
 }
 
+function canvasPointToWorld(px: number, py: number) {
+  // 网格按"左上角 (0,0)，向右向下递增"显示，鼠标坐标也按此口径
+  return { x: px * props.resolution, y: py * props.resolution };
+}
+
+function worldToCanvasPoint(wx: number, wy: number) {
+  const { x: originX, y: originY } = getEffectiveOrigin();
+  const px = worldToPixel(wx, wy, originX, originY, props.resolution);
+  return { x: px.x, y: canvasHeight.value - px.y };
+}
+
 function centerContent() {
   if (!fabricCanvas) return;
   const cw = containerWidth.value;
@@ -228,160 +315,300 @@ function centerContent() {
   updateMinimap();
 }
 
-function renderElements() {
+// 同步结构：仅在 annotations/paths/objects 的 id 集合变化时新增/删除 fabric 对象
+function syncStructure() {
   if (!fabricCanvas || !props.editorData) return;
+  const existingKeys = new Set<string>();
 
-  const map = props.editorData.map;
-  const { x: originX, y: originY } = getEffectiveOrigin();
-  const res = props.resolution;
+  // paths 最底层
+  for (const path of props.editorData.paths) {
+    const key = getElementKey('path', path.id);
+    existingKeys.add(key);
+    if (elementMap.has(key)) continue;
+    const startAnn = props.editorData.annotations.find(a => a.id === path.start_annotation_id);
+    const endAnn = props.editorData.annotations.find(a => a.id === path.end_annotation_id);
+    if (!startAnn || !endAnn) continue;
+    const line = new Line([startAnn.x, startAnn.y, endAnn.x, endAnn.y], {
+      stroke: '#f97316',
+      strokeWidth: 3,
+      selectable: false,
+      evented: false,
+    });
+    setElementData(line, { type: 'path', id: path.id });
+    fabricCanvas.add(line);
+    fabricCanvas.sendObjectToBack(line);
+    elementMap.set(key, line);
+  }
 
+  // objects 中间层
+  for (const obj of props.editorData.objects) {
+    const key = getElementKey('object', obj.id);
+    existingKeys.add(key);
+    if (elementMap.has(key)) continue;
 
-  console.log('canvasHeight:', canvasHeight.value, 'backgroundImgObj:', backgroundImgObj ? '已加载' : '未加载'); const existingKeys = new Set<string>();
+    const isRestricted = obj.type === 'restricted' || obj.type === '禁区';
+    const fillColor: any = isRestricted ? getRestrictedPattern() : OBSTACLE_FILL;
+    const strokeColor = isRestricted ? RESTRICTED_STROKE : OBSTACLE_STROKE;
+    const commonOpts = {
+      left: obj.x, top: obj.y,
+      originX: 'left' as const, originY: 'top' as const,
+      angle: obj.angle ?? 0,
+      fill: fillColor, stroke: strokeColor, strokeWidth: 2,
+      hasControls: true,
+    };
+
+    let fabricObj: any = null;
+
+    if (obj.points) {
+      try {
+        const pts = JSON.parse(obj.points);
+        fabricObj = new Polygon(pts, commonOpts);
+      } catch { /* skip invalid polygon */ }
+    } else if (obj.type === 'obstacle-circle') {
+      const w = obj.width || 10;
+      const h = obj.height || 10;
+      fabricObj = new Ellipse({
+        ...commonOpts,
+        rx: w / 2,
+        ry: h / 2,
+      });
+    } else if (obj.type === 'obstacle-triangle') {
+      fabricObj = new Triangle({
+        ...commonOpts,
+        width: obj.width || 5, height: obj.height || 5,
+      });
+    } else {
+      const isSquare = obj.type === 'obstacle-square';
+      fabricObj = new Rect({
+        ...commonOpts,
+        width: obj.width || 5,
+        height: isSquare ? (obj.width || 5) : (obj.height || 5),
+      });
+    }
+
+    if (fabricObj) {
+      setElementData(fabricObj, { type: 'object', id: obj.id });
+      fabricCanvas.add(fabricObj);
+      elementMap.set(key, fabricObj);
+
+      // 名称标签（不可交互，跟随图形位置）
+      const labelText = new Text(obj.name || '', {
+        fontSize: 10,
+        fill: strokeColor,
+        originX: 'center',
+        originY: 'center',
+        fontFamily: 'sans-serif',
+        fontWeight: 'bold',
+        evented: false,
+        selectable: false,
+        hasControls: false,
+        hoverCursor: 'default',
+      });
+      fabricCanvas.add(labelText);
+      objectLabels.set(obj.id, labelText);
+    }
+  }
+
+  // annotations 最顶层
   for (const ann of props.editorData.annotations) {
     const key = getElementKey('annotation', ann.id);
     existingKeys.add(key);
+    if (elementMap.has(key)) continue;
 
-    const px = worldToPixel(ann.x, ann.y, originX, originY, res);
-    px.y = canvasHeight.value - px.y;
     const isSelected = props.selectedElement?.type === 'annotation' && props.selectedElement?.id === ann.id;
-    const annColor = isSelected ? '#3b82f6' : '#ef4444';
+    const isReturnPoint = ann.type === 'navigation' || ann.type === '返回点';
+    const annColor = isReturnPoint
+      ? (isSelected ? RETURN_POINT_SELECTED_FILL : RETURN_POINT_FILL)
+      : (isSelected ? POINT_SELECTED_FILL : POINT_FILL);
 
-    if (elementMap.has(key)) {
-      const group = elementMap.get(key);
-      group.set({ left: px.x, top: px.y });
-      const circle = group.getObjects()[0] as Circle;
-      circle.set('fill', annColor);
-      circle.set('radius', isSelected ? 10 : 8);
-      const text = group.getObjects()[2] as Text;
-      text.set('text', ann.name);
-      text.set('fill', annColor);
-    } else {
-      const circle = new Circle({
-        radius: isSelected ? 10 : 8,
-        fill: annColor,
-        stroke: '#fff',
-        strokeWidth: 2,
-        originX: 'center',
-        originY: 'center',
+    // 可交互的 circle（拖动 + 旋转入口）
+    const circle = new Circle({
+      radius: isSelected ? 10 : 8,
+      fill: annColor,
+      stroke: '#fff',
+      strokeWidth: 2,
+      originX: 'center',
+      originY: 'center',
+      hasControls: true,
+      hasRotatingPoint: true,
+      lockScalingX: true,
+      lockScalingY: true,
+      lockUniScaling: true,
+    });
+    // 只保留旋转控制点，禁用所有缩放控制点
+    circle.setControlsVisibility({
+      ml: false, mr: false, mt: false, mb: false,
+      tl: false, tr: false, bl: false, br: false,
+      mtr: true,
+    });
+    setElementData(circle, { type: 'annotation', id: ann.id });
+    fabricCanvas.add(circle);
+    elementMap.set(key, circle);
+
+    // 装饰：角度指示器与文字（不可交互，纯渲染）
+    const arrowRadius = isSelected ? 10 : 8;
+    const arrowTransform = getAnnotationArrowTransform(ann.x, ann.y, ann.angle || 0, arrowRadius);
+    const angleIndicator = new Triangle({
+      width: ARROW_WIDTH,
+      height: ARROW_HEIGHT,
+      fill: annColor,
+      originX: 'center',
+      originY: 'center',
+      left: arrowTransform.x,
+      top: arrowTransform.y,
+      angle: arrowTransform.angle,
+      visible: true,
+      evented: false,
+      selectable: false,
+      hasControls: false,
+      hoverCursor: 'default',
+    });
+    fabricCanvas.add(angleIndicator);
+
+    const text = new Text(ann.name, {
+      fontSize: 10,
+      fill: annColor,
+      originX: 'center',
+      originY: 'center',
+      top: 18,
+      fontFamily: 'sans-serif',
+      fontWeight: 'bold',
+      evented: false,
+      selectable: false,
+      hasControls: false,
+      hoverCursor: 'default',
+    });
+    fabricCanvas.add(text);
+
+    annotationDecorations.set(ann.id, { text, angleIndicator });
+  }
+
+  // 移除不再存在的元素
+  for (const [key, obj] of elementMap) {
+    if (!existingKeys.has(key)) {
+      fabricCanvas.remove(obj);
+      elementMap.delete(key);
+      // key 形如 'object--1699876543210'（id 为负数），不能用 split('-')
+      const dashIdx = key.indexOf('-');
+      const type = key.substring(0, dashIdx);
+      const idStr = key.substring(dashIdx + 1);
+      const elemId = Number(idStr);
+      if (type === 'annotation') {
+        const deco = annotationDecorations.get(elemId);
+        if (deco) {
+          fabricCanvas.remove(deco.text);
+          fabricCanvas.remove(deco.angleIndicator);
+          annotationDecorations.delete(elemId);
+        }
+      } else if (type === 'object') {
+        const label = objectLabels.get(elemId);
+        if (label) {
+          fabricCanvas.remove(label);
+          objectLabels.delete(elemId);
+        }
+      }
+    }
+  }
+
+  renderOriginMarker();
+}
+
+// 仅更新位置和尺寸（拖动结束、undo/redo、loadMap）
+function updatePositions() {
+  if (!fabricCanvas || !props.editorData) return;
+
+  for (const ann of props.editorData.annotations) {
+    const key = getElementKey('annotation', ann.id);
+    const circle = elementMap.get(key);
+    if (!circle) continue;
+    circle.set({ left: ann.x, top: ann.y });
+    circle.setCoords();
+    const deco = annotationDecorations.get(ann.id);
+    if (deco) {
+      deco.text.set({ left: ann.x, top: ann.y + 18 });
+      deco.text.setCoords();
+      const isSelected = props.selectedElement?.type === 'annotation' && props.selectedElement?.id === ann.id;
+      const arrowTransform = getAnnotationArrowTransform(ann.x, ann.y, ann.angle || 0, isSelected ? 10 : 8);
+      deco.angleIndicator.set({
+        left: arrowTransform.x,
+        top: arrowTransform.y,
+        angle: arrowTransform.angle,
       });
-
-      const angleIndicator = new Triangle({
-        width: 8,
-        height: 12,
-        fill: annColor,
-        originX: 'center',
-        originY: 'center',
-        top: -16,
-        angle: ann.angle || 0,
-        visible: false,
-      });
-
-      const text = new Text(ann.name, {
-        fontSize: 10,
-        fill: annColor,
-        originX: 'center',
-        originY: 'center',
-        top: 18,
-        fontFamily: 'sans-serif',
-        fontWeight: 'bold',
-      });
-
-      const group = new Group([circle, angleIndicator, text], {
-        left: px.x,
-        top: px.y,
-        originX: 'center',
-        originY: 'center',
-        hasControls: false,
-      });
-      setElementData(group, { type: 'annotation', id: ann.id });
-
-      fabricCanvas.add(group);
-      elementMap.set(key, group);
+      deco.angleIndicator.setCoords();
     }
   }
 
   for (const path of props.editorData.paths) {
     const key = getElementKey('path', path.id);
-    existingKeys.add(key);
-
+    const line = elementMap.get(key);
+    if (!line) continue;
     const startAnn = props.editorData.annotations.find(a => a.id === path.start_annotation_id);
     const endAnn = props.editorData.annotations.find(a => a.id === path.end_annotation_id);
     if (!startAnn || !endAnn) continue;
-
-    const startPx = worldToPixel(startAnn.x, startAnn.y, originX, originY, res);
-    const endPx = worldToPixel(endAnn.x, endAnn.y, originX, originY, res);
-
-    if (elementMap.has(key)) {
-      const line = elementMap.get(key);
-      line.set({ x1: startPx.x, y1: startPx.y, x2: endPx.x, y2: endPx.y });
-    } else {
-      const line = new Line([startPx.x, startPx.y, endPx.x, endPx.y], {
-        stroke: '#f97316',
-        strokeWidth: 3,
-        selectable: false,
-        evented: false,
-      });
-      setElementData(line, { type: 'path', id: path.id });
-      fabricCanvas.add(line);
-      fabricCanvas.sendObjectToBack(line);
-      elementMap.set(key, line);
-    }
+    line.set({ x1: startAnn.x, y1: startAnn.y, x2: endAnn.x, y2: endAnn.y });
+    line.setCoords();
   }
 
   for (const obj of props.editorData.objects) {
     const key = getElementKey('object', obj.id);
-    existingKeys.add(key);
-
-    const isRestricted = obj.type === 'restricted' || obj.type === '禁区';
-    const fillColor = isRestricted ? 'rgba(234, 179, 8, 0.3)' : 'rgba(239, 68, 68, 0.3)';
-    const strokeColor = isRestricted ? '#eab308' : '#ef4444';
-
-    if (elementMap.has(key)) {
-      const fabricObj = elementMap.get(key);
-      fabricObj.set({ left: obj.x, top: obj.y });
-      if (fabricObj instanceof Rect) {
-        fabricObj.set({ width: obj.width, height: obj.height });
-      }
-    } else {
-      if (obj.points) {
-        try {
-          const pts = JSON.parse(obj.points);
-          const polygon = new Polygon(pts, {
-            left: obj.x, top: obj.y,
-            fill: fillColor, stroke: strokeColor, strokeWidth: 2,
-          });
-          setElementData(polygon, { type: 'object', id: obj.id });
-          fabricCanvas.add(polygon);
-          elementMap.set(key, polygon);
-        } catch { /* skip invalid polygon */ }
-      } else {
-        const rect = new Rect({
-          left: obj.x, top: obj.y,
-          width: obj.width || 40, height: obj.height || 40,
-          fill: fillColor, stroke: strokeColor, strokeWidth: 2,
-        });
-        setElementData(rect, { type: 'object', id: obj.id });
-        fabricCanvas.add(rect);
-        elementMap.set(key, rect);
-      }
+    const fabricObj = elementMap.get(key);
+    if (!fabricObj) continue;
+    fabricObj.set({ left: obj.x, top: obj.y, angle: obj.angle ?? 0 });
+    if (fabricObj instanceof Ellipse) {
+      fabricObj.set({ rx: (obj.width || 10) / 2, ry: (obj.height || 10) / 2 });
+    } else if (fabricObj instanceof Rect || fabricObj instanceof Triangle) {
+      fabricObj.set({ width: obj.width, height: obj.height });
+    }
+    fabricObj.setCoords();
+    const label = objectLabels.get(obj.id);
+    if (label) {
+      const bounds = fabricObj.getBoundingRect();
+      label.set({ left: bounds.left + bounds.width / 2, top: bounds.top + bounds.height + 12 });
+      label.setCoords();
     }
   }
+}
 
-  for (const [key, obj] of elementMap) {
-    if (!existingKeys.has(key)) {
-      fabricCanvas.remove(obj);
-      elementMap.delete(key);
-    }
-  }
+// 仅更新选中样式与文本（轻量路径，不重渲染结构）
+function updateSelectionStyle() {
+  if (!fabricCanvas || !props.editorData) return;
+  const sel = props.selectedElement;
 
-  // Bring annotations to front for higher z-order
   for (const ann of props.editorData.annotations) {
     const key = getElementKey('annotation', ann.id);
-    const obj = elementMap.get(key);
-    if (obj) fabricCanvas.bringObjectToFront(obj);
+    const circle = elementMap.get(key) as Circle | undefined;
+    if (!circle) continue;
+    const isSelected = sel?.type === 'annotation' && sel?.id === ann.id;
+    const isReturnPoint = ann.type === 'navigation' || ann.type === '返回点';
+    const annColor = isReturnPoint
+      ? (isSelected ? RETURN_POINT_SELECTED_FILL : RETURN_POINT_FILL)
+      : (isSelected ? POINT_SELECTED_FILL : POINT_FILL);
+    circle.set('fill', annColor);
+    circle.set('radius', isSelected ? 10 : 8);
+    circle.setCoords();
+    const deco = annotationDecorations.get(ann.id);
+    if (deco) {
+      deco.text.set('text', ann.name);
+      deco.text.set('fill', annColor);
+    }
   }
 
-  renderOriginMarker();
+  // 同步 object 的 name 文本（改名后立即刷新）
+  for (const obj of props.editorData.objects) {
+    const label = objectLabels.get(obj.id);
+    if (label) {
+      label.set('text', obj.name || '');
+    }
+  }
+}
+
+// 完整渲染：结构 + 位置 + 选中样式 + renderAll
+function renderElements() {
+  if (!fabricCanvas || !props.editorData) return;
+  if (isDraggingObject) return;
+  syncStructure();
+  updatePositions();
+  updateSelectionStyle();
   updateSelection();
   fabricCanvas.renderAll();
 }
@@ -413,11 +640,17 @@ function renderOriginMarker() {
 
 function updateSelection() {
   if (!fabricCanvas) return;
-  fabricCanvas.discardActiveObject();
-  if (props.selectedElement) {
-    const key = getElementKey(props.selectedElement.type, props.selectedElement.id);
-    const obj = elementMap.get(key);
-    if (obj) fabricCanvas.setActiveObject(obj);
+  if (isDraggingObject) return;
+  const sel = props.selectedElement;
+  const currentActive = fabricCanvas.getActiveObject();
+  if (sel) {
+    const key = getElementKey(sel.type, sel.id);
+    const targetObj = elementMap.get(key);
+    if (currentActive === targetObj) return; // 已选中，不打断 fabric
+    fabricCanvas.discardActiveObject();
+    if (targetObj) fabricCanvas.setActiveObject(targetObj);
+  } else if (currentActive) {
+    fabricCanvas.discardActiveObject();
   }
   fabricCanvas.renderAll();
 }
@@ -437,15 +670,20 @@ function renderGrid() {
   const h = canvasHeight.value;
   const zoom = currentZoom;
   const res = props.resolution;
-  const { x: originPx, y: originPy } = getEffectiveOrigin();
 
-  // Adaptive grid: target ~80px visual spacing on screen
-  const targetVisualPx = 80;
-  const rawSpacingM = (targetVisualPx / zoom) * res;
+  // 自动缩放：目标屏幕距离 ~60px，吸附到 nice step
+  const TARGET_SCREEN_PX = 60;
+  const niceSteps = [0.1, 0.2, 0.5, 1, 2, 5, 10, 20];
+  const rawSpacingM = (TARGET_SCREEN_PX / zoom) * res;
+  const candidate = niceSteps.find(s => s >= rawSpacingM) ?? niceSteps[niceSteps.length - 1];
 
-  // Pick the nearest "nice" real-world distance
-  const niceSteps = [0.05, 0.1, 0.2, 0.5, 1, 2, 5, 10, 20, 50, 100, 200, 500, 1000];
-  const spacingM = niceSteps.find(s => s >= rawSpacingM) || rawSpacingM;
+  // 15% 缓冲防抖：相邻档位且 raw 在缓冲区内则保持不变
+  const last = lastGridSpacingM;
+  const lastIdx = niceSteps.indexOf(last);
+  const candIdx = niceSteps.indexOf(candidate);
+  const isAdjacent = lastIdx >= 0 && candIdx >= 0 && Math.abs(lastIdx - candIdx) === 1;
+  const inBuffer = isAdjacent && rawSpacingM > last * 0.85 && rawSpacingM < last * 1.15;
+  const spacingM = inBuffer ? last : candidate;
 
   // Skip re-render if spacing hasn't changed
   if (Math.abs(spacingM - lastGridSpacingM) < 1e-6 && gridGroup) return;
@@ -456,7 +694,15 @@ function renderGrid() {
   const spacingPx = spacingM / res;
   if (spacingPx <= 0) return;
 
+  // 屏幕距离用于决定是否显示次网格
+  const majorScreenPx = spacingPx * zoom;
+  const showMinor = majorScreenPx > 100;
+  const minorSpacingPx = spacingPx / 5;
+
   const allObjects: any[] = [];
+  const GRID_MAJOR_COLOR = 'rgba(0,0,0,0.08)';
+  const GRID_MAJOR_OUT_COLOR = 'rgba(0,0,0,0.03)';
+  const GRID_MINOR_COLOR = 'rgba(0,0,0,0.04)';
 
   // Grid extends beyond image to fill visible area
   const margin = Math.max(w, h, 1000);
@@ -465,36 +711,49 @@ function renderGrid() {
   const endX = Math.ceil((w + margin) / spacingPx) * spacingPx;
   const endY = Math.ceil((h + margin) / spacingPx) * spacingPx;
 
-  // Vertical lines
+  // 次网格（更浅，无标签）
+  if (showMinor) {
+    for (let x = startX; x <= endX; x += minorSpacingPx) {
+      // 主网格位置跳过
+      if (Math.abs(x / spacingPx - Math.round(x / spacingPx)) < 1e-6) continue;
+      allObjects.push(new Line([x, startY, x, endY], {
+        stroke: GRID_MINOR_COLOR,
+        strokeWidth: 1,
+        selectable: false,
+        evented: false,
+      }));
+    }
+    for (let y = startY; y <= endY; y += minorSpacingPx) {
+      if (Math.abs(y / spacingPx - Math.round(y / spacingPx)) < 1e-6) continue;
+      allObjects.push(new Line([startX, y, endX, y], {
+        stroke: GRID_MINOR_COLOR,
+        strokeWidth: 1,
+        selectable: false,
+        evented: false,
+      }));
+    }
+  }
+
+  // Vertical lines（主网格）
   for (let x = startX; x <= endX; x += spacingPx) {
     const inBounds = x >= 0 && x <= w;
     allObjects.push(new Line([x, startY, x, endY], {
-      stroke: inBounds ? 'rgba(0,0,0,0.08)' : 'rgba(0,0,0,0.03)',
+      stroke: inBounds ? GRID_MAJOR_COLOR : GRID_MAJOR_OUT_COLOR,
       strokeWidth: 1,
       selectable: false,
       evented: false,
     }));
   }
-  // Horizontal lines
+  // Horizontal lines（主网格）
   for (let y = startY; y <= endY; y += spacingPx) {
     const inBounds = y >= 0 && y <= h;
     allObjects.push(new Line([startX, y, endX, y], {
-      stroke: inBounds ? 'rgba(0,0,0,0.08)' : 'rgba(0,0,0,0.03)',
+      stroke: inBounds ? GRID_MAJOR_COLOR : GRID_MAJOR_OUT_COLOR,
       strokeWidth: 1,
       selectable: false,
       evented: false,
     }));
   }
-
-  // // Zero-axis lines through origin (world X=0, Y=0)
-  // allObjects.push(new Line([originPx, startY, originPx, endY], {
-  //   stroke: 'rgba(37, 99, 235, 0.25)', strokeWidth: 2,
-  //   strokeDashArray: [8, 4], selectable: false, evented: false,
-  // }));
-  // allObjects.push(new Line([startX, originPy, endX, originPy], {
-  //   stroke: 'rgba(37, 99, 235, 0.25)', strokeWidth: 2,
-  //   strokeDashArray: [8, 4], selectable: false, evented: false,
-  // }));
 
   // Labels: font size adjusts inversely with zoom so it stays readable on screen
   const fontSize = Math.max(8, Math.min(14, 11 / zoom));
@@ -506,22 +765,20 @@ function renderGrid() {
     evented: false,
   };
 
-  // X-axis labels along bottom edge (world X coordinate at each vertical grid line)
+  // X-axis labels along top edge (米 = pixel × resolution，从左上角 0 递增)
   for (let x = 0; x <= endX; x += spacingPx) {
-    const world = pixelToWorld(x, 0, originPx, originPy, res);
-    const meters = Math.round(world.x * 1000) / 1000;
+    const meters = Math.round(x * res * 1000) / 1000;
     allObjects.push(new Text(formatDist(meters), {
       ...labelStyle,
       left: x,
-      top: h + 4,
+      top: -4,
       originX: 'center',
-      originY: 'top',
+      originY: 'bottom',
     }));
   }
-  // Y-axis labels along left edge (world Y coordinate at each horizontal grid line)
+  // Y-axis labels along left edge (米 = pixel × resolution，从左上角 0 向下递增)
   for (let y = 0; y <= endY; y += spacingPx) {
-    const world = pixelToWorld(0, y, originPx, originPy, res);
-    const meters = Math.round(world.y * 1000) / 1000;
+    const meters = Math.round(y * res * 1000) / 1000;
     allObjects.push(new Text(formatDist(meters), {
       ...labelStyle,
       left: -4,
@@ -588,78 +845,56 @@ function handleMouseDown(opt: any) {
     return;
   }
 
-  if (props.drawingMode === 'select') return;
+  // 右键由原生 contextmenu 事件处理
+  if (evt.button === 2) return;
 
-  const pointer = fabricCanvas.getViewportPoint(evt);
-  const x = pointer.x;
-  const y = pointer.y;
-
-  if (props.drawingMode === 'point-nav') {
-    const { x: originX, y: originY } = getEffectiveOrigin();
-    const world = pixelToWorld(x, y, originX, originY, props.resolution);
-    emit('add-annotation', { x: world.x, y: world.y, type: 'navigation' });
-    return;
-  }
-  if (props.drawingMode === 'point-recv') {
-    const { x: originX, y: originY } = getEffectiveOrigin();
-    const world = pixelToWorld(x, y, originX, originY, props.resolution);
-    emit('add-annotation', { x: world.x, y: world.y, type: 'reception' });
-    return;
-  }
-  if (props.drawingMode === 'path') {
-    const clickedAnnotation = findAnnotationAtPoint(x, y);
-    if (clickedAnnotation) {
-      if (pathStartAnnotationId === null) {
-        pathStartAnnotationId = clickedAnnotation.id;
-        window.$message?.info('已选择起始点位，请点击终点');
-      } else if (clickedAnnotation.id !== pathStartAnnotationId) {
-        emit('add-path', { startId: pathStartAnnotationId, endId: clickedAnnotation.id });
-        pathStartAnnotationId = null;
-      }
-    }
-    return;
-  }
-  if (props.drawingMode === 'rect-obstacle') {
-    drawingState = { type: 'rect', startX: x, startY: y, tempObj: null, polygonPoints: [] };
-    return;
-  }
-  if (props.drawingMode === 'polygon-restricted') {
-    if (!drawingState || drawingState.type !== 'polygon') {
-      drawingState = { type: 'polygon', startX: 0, startY: 0, tempObj: null, polygonPoints: [{ x, y }] };
-      window.$message?.info('单击添加顶点，双击闭合多边形');
-    } else {
-      drawingState.polygonPoints.push({ x, y });
-    }
-    return;
+  // 记录按下位置和目标，用于 click vs drag 判定
+  mouseDownClientPos = { x: evt.clientX, y: evt.clientY };
+  mouseDownTarget = opt.target ?? null;
+  // 点击空白（无目标）时通知外部关闭浮层
+  if (!opt.target) {
+    emit('blank-click');
   }
 }
 
 function handleMouseMove(opt: any) {
   if (!fabricCanvas) return;
   const evt = opt.e as MouseEvent;
-  const pointer = fabricCanvas.getViewportPoint(evt);
-  const { x: originX, y: originY } = getEffectiveOrigin();
-  const world = pixelToWorld(pointer.x, pointer.y, originX, originY, props.resolution);
-  emit('cursor-position', world.x, world.y);
+  const pointer = fabricCanvas.getScenePoint(evt);
 
   if (isPanning) {
     const dx = evt.clientX - lastPanPoint.x;
     const dy = evt.clientY - lastPanPoint.y;
     fabricCanvas.relativePan(new Point(dx, dy));
     lastPanPoint = { x: evt.clientX, y: evt.clientY };
-    updateMinimap();
+    if (minimapRafId === null) {
+      minimapRafId = requestAnimationFrame(() => {
+        minimapRafId = null;
+        updateMinimap();
+      });
+    }
     return;
   }
 
-  if (drawingState?.type === 'rect' && drawingState.tempObj) {
-    const w = pointer.x - drawingState.startX;
-    const h = pointer.y - drawingState.startY;
-    drawingState.tempObj.set({
-      width: Math.abs(w), height: Math.abs(h),
-      left: Math.min(drawingState.startX, pointer.x),
-      top: Math.min(drawingState.startY, pointer.y),
+  const world = canvasPointToWorld(pointer.x, pointer.y);
+  lastCursorWorld = world;
+  if (cursorEmitRafId === null) {
+    cursorEmitRafId = requestAnimationFrame(() => {
+      cursorEmitRafId = null;
+      cursorWorldX.value = lastCursorWorld.x;
+      cursorWorldY.value = lastCursorWorld.y;
+      emit('cursor-position', lastCursorWorld.x, lastCursorWorld.y);
     });
-    fabricCanvas.renderAll();
+  }
+
+  // hover tooltip：拖动时不弹出
+  if (!isDraggingObject) {
+    const hovered = findElementAtScenePoint(pointer.x, pointer.y);
+    if (hovered) {
+      emit('hover-element', { ...hovered, clientX: evt.clientX, clientY: evt.clientY });
+    } else {
+      emit('hover-element', null);
+    }
   }
 }
 
@@ -672,31 +907,67 @@ function handleMouseUp(opt: any) {
     }
     return;
   }
-  if (drawingState?.type === 'rect' && fabricCanvas) {
-    const pointer = fabricCanvas.getViewportPoint(opt.e);
-    const x = Math.min(drawingState.startX, pointer.x);
-    const y = Math.min(drawingState.startY, pointer.y);
-    const w = Math.abs(pointer.x - drawingState.startX);
-    const h = Math.abs(pointer.y - drawingState.startY);
-    if (drawingState.tempObj) fabricCanvas.remove(drawingState.tempObj);
-    if (w > 5 && h > 5) {
-      emit('add-object', { type: 'obstacle', x, y, width: w, height: h });
+
+  // 点位单击切换类型：用按下/抬起的屏幕距离判定是否为"点击"
+  // （fabric 的 object:moving 在 1-2px 抖动时也会触发，单靠 justDragged 不可靠）
+  const evt = opt.e as MouseEvent;
+  if (
+    mouseDownClientPos &&
+    evt &&
+    Date.now() - lastDblClickTime > 350
+  ) {
+    const dx = evt.clientX - mouseDownClientPos.x;
+    const dy = evt.clientY - mouseDownClientPos.y;
+    const isClick = Math.sqrt(dx * dx + dy * dy) < CLICK_MOVE_THRESHOLD;
+    if (isClick && mouseDownTarget) {
+      const data = getElementData(mouseDownTarget);
+      if (data?.type === 'annotation') {
+        if (clickTimer !== null) {
+          window.clearTimeout(clickTimer);
+          clickTimer = null;
+        }
+        const annId = data.id;
+        const clientX = evt.clientX;
+        const clientY = evt.clientY;
+        clickTimer = window.setTimeout(() => {
+          clickTimer = null;
+          emit('request-type-switch', { id: annId, clientX, clientY });
+        }, 250);
+      }
     }
-    drawingState = null;
+  }
+
+  mouseDownClientPos = null;
+  mouseDownTarget = null;
+  justDragged = false;
+}
+
+function handleDoubleClick(opt: any) {
+  // 取消点位单击切换类型的定时器
+  if (clickTimer !== null) {
+    window.clearTimeout(clickTimer);
+    clickTimer = null;
+  }
+  lastDblClickTime = Date.now();
+  const target = opt.target;
+  if (!target) return;
+  const data = getElementData(target);
+  if (!data) return;
+  if (data.type === 'annotation' || data.type === 'object') {
+    emit('rename-element', { type: data.type, id: data.id });
   }
 }
 
-function handleDoubleClick() {
-  if (drawingState?.type === 'polygon' && fabricCanvas) {
-    const pts = drawingState.polygonPoints;
-    if (pts.length >= 3) {
-      if (drawingState.tempObj) fabricCanvas.remove(drawingState.tempObj);
-      const minX = Math.min(...pts.map(p => p.x));
-      const minY = Math.min(...pts.map(p => p.y));
-      emit('add-object', { type: 'restricted', x: minX, y: minY, width: 0, height: 0, points: JSON.stringify(pts) });
-    }
-    drawingState = null;
-  }
+function updateObjectLabelPosition(obj: any, id: number) {
+  const label = objectLabels.get(id);
+  if (!label) return;
+  // 用 getBoundingRect 拿到旋转/缩放后的真实边界，label 跟随 bbox 底部中点
+  const bounds = obj.getBoundingRect();
+  label.set({
+    left: bounds.left + bounds.width / 2,
+    top: bounds.top + bounds.height + 12,
+  });
+  label.setCoords();
 }
 
 function handleObjectMoved(opt: any) {
@@ -704,22 +975,129 @@ function handleObjectMoved(opt: any) {
   if (!obj) return;
   const data = getElementData(obj);
   if (!data) return;
-  const updates: Record<string, any> = {};
+  isDraggingObject = true;
+  justDragged = true;
   if (data.type === 'annotation') {
-    const { x: originX, y: originY } = getEffectiveOrigin();
-    const world = pixelToWorld(obj.left!, obj.top!, originX, originY, props.resolution);
-    updates.x = world.x;
-    updates.y = world.y;
-  } else {
-    updates.x = obj.left;
-    updates.y = obj.top;
+    const deco = annotationDecorations.get(data.id);
+    if (deco) {
+      deco.text.set({ left: obj.left, top: (obj.top ?? 0) + 18 });
+      const ann = props.editorData?.annotations.find(a => a.id === data.id);
+      const isSelected = props.selectedElement?.type === 'annotation' && props.selectedElement?.id === data.id;
+      const arrowTransform = getAnnotationArrowTransform(
+        obj.left ?? 0,
+        obj.top ?? 0,
+        ann?.angle ?? 0,
+        isSelected ? 10 : 8,
+      );
+      deco.angleIndicator.set({
+        left: arrowTransform.x,
+        top: arrowTransform.y,
+        angle: arrowTransform.angle,
+      });
+    }
+  } else if (data.type === 'object') {
+    updateObjectLabelPosition(obj, data.id);
   }
-  if (data.type === 'object' && obj instanceof Rect) {
-    updates.width = obj.width * obj.scaleX;
-    updates.height = obj.height * obj.scaleY;
-    obj.set({ scaleX: 1, scaleY: 1 });
+}
+
+function handleObjectScaling(opt: any) {
+  const obj = opt.target;
+  if (!obj) return;
+  const data = getElementData(obj);
+  if (!data) return;
+  if (data.type === 'object') {
+    updateObjectLabelPosition(obj, data.id);
+    if (fabricCanvas) fabricCanvas.renderAll();
   }
+}
+
+function handleObjectRotating(opt: any) {
+  const obj = opt.target;
+  if (!obj) return;
+  const data = getElementData(obj);
+  if (!data) return;
+  if (data.type === 'object') {
+    updateObjectLabelPosition(obj, data.id);
+  } else if (data.type === 'annotation') {
+    // 点位旋转时实时同步箭头位置和角度
+    const deco = annotationDecorations.get(data.id);
+    if (deco) {
+      const rad = fabricAngleToAnnotationRad(obj.angle ?? 0);
+      const isSelected = props.selectedElement?.type === 'annotation' && props.selectedElement?.id === data.id;
+      const transform = getAnnotationArrowTransform(
+        obj.left ?? 0,
+        obj.top ?? 0,
+        rad,
+        isSelected ? 10 : 8,
+      );
+      deco.angleIndicator.set({
+        left: transform.x,
+        top: transform.y,
+        angle: transform.angle,
+      });
+    }
+  }
+  if (fabricCanvas) fabricCanvas.renderAll();
+}
+
+function handleObjectModifiedied(opt: any) {
+  const obj = opt.target;
+  if (!obj) return;
+  const data = getElementData(obj);
+  if (!data) return;
+
+  isDraggingObject = false;
+  obj.setCoords();
+
+  const updates: Record<string, any> = {};
+  updates.x = obj.left;
+  updates.y = obj.top;
+
+  if (data.type === 'annotation') {
+    // 点位旋转：把 Fabric 角度（度）转回 ROS 弧度；只在确有旋转时更新
+    if (Math.abs((obj.angle ?? 0)) > 0.01) {
+      const rad = fabricAngleToAnnotationRad(obj.angle ?? 0);
+      updates.angle = rad;
+      // 重置 circle 的 fabric angle 为 0，避免下次旋转累积（点位圆旋转对称，重置无视觉影响）
+      obj.set({ angle: 0 });
+      obj.setCoords();
+    }
+  }
+
+  if (data.type === 'object') {
+    // 旋转角度始终保存
+    updates.angle = obj.angle ?? 0;
+    // 应用 scale 到 width/height，并对最小尺寸做 clamp（最小 1×1 px）
+    if (obj instanceof Ellipse) {
+      const newRx = Math.max(MIN_OBJECT_SIZE / 2, (obj.rx ?? 1) * (obj.scaleX ?? 1));
+      const newRy = Math.max(MIN_OBJECT_SIZE / 2, (obj.ry ?? 1) * (obj.scaleY ?? 1));
+      obj.set({ rx: newRx, ry: newRy, scaleX: 1, scaleY: 1 });
+      updates.width = newRx * 2;
+      updates.height = newRy * 2;
+    } else if (obj instanceof Polygon) {
+      // 多边形禁区：clamp scale，不修改 points
+      const sx = Math.max(MIN_OBJECT_SIZE / (obj.width || 1), obj.scaleX ?? 1);
+      const sy = Math.max(MIN_OBJECT_SIZE / (obj.height || 1), obj.scaleY ?? 1);
+      obj.set({ scaleX: sx, scaleY: sy });
+      // scale 保留在 fabric 对象上，不归一化（points 不动）
+    } else {
+      // Rect / Triangle：归一化 scale 到 width/height
+      const newW = Math.max(MIN_OBJECT_SIZE, (obj.width ?? 1) * (obj.scaleX ?? 1));
+      const newH = Math.max(MIN_OBJECT_SIZE, (obj.height ?? 1) * (obj.scaleY ?? 1));
+      obj.set({ width: newW, height: newH, scaleX: 1, scaleY: 1 });
+      updates.width = newW;
+      updates.height = newH;
+    }
+  }
+
+  isLocalUpdate = true;
   emit('update-element', { type: data.type, id: data.id, updates });
+  // 拖动/缩放结束后立即同步标签位置（watch 被 isLocalUpdate 短路，不会自动刷新）
+  if (data.type === 'object') {
+    updateObjectLabelPosition(obj, data.id);
+    if (fabricCanvas) fabricCanvas.renderAll();
+  }
+  nextTick(() => { isLocalUpdate = false; });
 }
 
 function handleObjectSelected(opt: any) {
@@ -746,6 +1124,9 @@ function handleMouseWheel(opt: any) {
   fabricCanvas.zoomToPoint(new Point(evt.clientX, evt.clientY), zoom);
   currentZoom = zoom;
   sliderZoomValue.value = sliderValueToZoom(zoom);
+  fabricCanvas.getObjects().forEach((o: any) => {
+    if (typeof o.setCoords === 'function') o.setCoords();
+  });
   renderGrid();
   updateMinimap();
   emit('zoom-change', zoom);
@@ -753,17 +1134,60 @@ function handleMouseWheel(opt: any) {
 
 function findAnnotationAtPoint(x: number, y: number): Api.Scene.SceneMapAnnotation | null {
   if (!props.editorData) return null;
-  const { x: originX, y: originY } = getEffectiveOrigin();
   const threshold = 15;
   for (const ann of props.editorData.annotations) {
-    const pos = worldToPixel(ann.x, ann.y, originX, originY, props.resolution);
-    if (Math.abs(pos.x - x) < threshold && Math.abs(pos.y - y) < threshold) return ann;
+    if (Math.abs(ann.x - x) < threshold && Math.abs(ann.y - y) < threshold) return ann;
   }
   return null;
 }
 
+function findElementAtScenePoint(x: number, y: number): { type: 'annotation' | 'object'; id: number } | null {
+  if (!fabricCanvas) return null;
+  const point = new Point(x, y);
+  // annotation 在视觉顶层，优先匹配；其次 object
+  for (const layer of ['annotation', 'object'] as const) {
+    for (const [key, obj] of elementMap) {
+      if (!key.startsWith(layer + '-')) continue;
+      if (typeof obj.containsPoint === 'function' && obj.containsPoint(point)) {
+        const data = getElementData(obj);
+        if (data) return { type: layer, id: data.id };
+      }
+    }
+  }
+  return null;
+}
+
+function handleContextMenu(evt: MouseEvent) {
+  if (!fabricCanvas) return;
+  evt.preventDefault();
+  const pointer = fabricCanvas.getScenePoint(evt);
+  const target = findElementAtScenePoint(pointer.x, pointer.y);
+  emit('context-menu', {
+    x: pointer.x,
+    y: pointer.y,
+    clientX: evt.clientX,
+    clientY: evt.clientY,
+    target,
+  });
+}
+
 function handleKeyDown(evt: KeyboardEvent) {
-  if (evt.code === 'Space') { spacePressed = true; evt.preventDefault(); }
+  if (evt.code === 'Space') {
+    spacePressed = true;
+    evt.preventDefault();
+    return;
+  }
+  const target = evt.target as HTMLElement | null;
+  if (target && /^(INPUT|TEXTAREA|SELECT)$/.test(target.tagName)) return;
+  if (evt.ctrlKey || evt.metaKey) {
+    if (evt.code === 'KeyZ' && !evt.shiftKey) {
+      evt.preventDefault();
+      emit('undo');
+    } else if ((evt.code === 'KeyZ' && evt.shiftKey) || evt.code === 'KeyY') {
+      evt.preventDefault();
+      emit('redo');
+    }
+  }
 }
 
 function handleKeyUp(evt: KeyboardEvent) {
@@ -782,16 +1206,27 @@ function setupCanvas() {
     preserveObjectStacking: true,
     width: cw,
     height: ch,
+    targetFindTolerance: 8,
+    perPixelTargetFind: false,
   });
   fabricCanvas.on('mouse:down', handleMouseDown);
   fabricCanvas.on('mouse:move', handleMouseMove);
   fabricCanvas.on('mouse:up', handleMouseUp);
   fabricCanvas.on('mouse:dblclick', handleDoubleClick);
   fabricCanvas.on('mouse:wheel', handleMouseWheel);
+  fabricCanvas.on('mouse:out', () => emit('hover-element', null));
   fabricCanvas.on('object:moving', handleObjectMoved);
+  fabricCanvas.on('object:scaling', handleObjectScaling);
+  fabricCanvas.on('object:rotating', handleObjectRotating);
+  fabricCanvas.on('object:modified', handleObjectModifiedied);
   fabricCanvas.on('selection:created', handleObjectSelected);
   fabricCanvas.on('selection:updated', handleObjectSelected);
   fabricCanvas.on('selection:cleared', handleSelectionCleared);
+
+  const upperCanvas = (fabricCanvas as any).upperCanvasEl as HTMLCanvasElement | undefined;
+  if (upperCanvas) {
+    upperCanvas.addEventListener('contextmenu', handleContextMenu as EventListener);
+  }
 
   resizeObserver = new ResizeObserver((entries) => {
     for (const entry of entries) {
@@ -803,11 +1238,33 @@ function setupCanvas() {
 }
 
 function disposeCanvas() {
-  if (resizeObserver) { resizeObserver.disconnect(); resizeObserver = null; }
-  if (fabricCanvas) { fabricCanvas.dispose(); fabricCanvas = null; }
+  if (cursorEmitRafId !== null) {
+    cancelAnimationFrame(cursorEmitRafId);
+    cursorEmitRafId = null;
+  }
+  if (minimapRafId !== null) {
+    cancelAnimationFrame(minimapRafId);
+    minimapRafId = null;
+  }
+  if (clickTimer !== null) {
+    window.clearTimeout(clickTimer);
+    clickTimer = null;
+  }
+  if (fabricCanvas) {
+    const upperCanvas = (fabricCanvas as any).upperCanvasEl as HTMLCanvasElement | undefined;
+    if (upperCanvas) {
+      upperCanvas.removeEventListener('contextmenu', handleContextMenu as EventListener);
+    }
+    fabricCanvas.dispose();
+    fabricCanvas = null;
+  }
   elementMap.clear();
+  annotationDecorations.clear();
+  objectLabels.clear();
   originMarker = null;
   lastGridSpacingM = 0;
+  isDraggingObject = false;
+  justDragged = false;
 }
 
 watch([containerWidth, containerHeight], () => {
@@ -826,6 +1283,15 @@ watch(() => props.editorData, async (newData) => {
     fabricCanvas?.remove(obj);
   }
   elementMap.clear();
+  for (const { text, angleIndicator } of annotationDecorations.values()) {
+    fabricCanvas?.remove(text);
+    fabricCanvas?.remove(angleIndicator);
+  }
+  annotationDecorations.clear();
+  for (const label of objectLabels.values()) {
+    fabricCanvas?.remove(label);
+  }
+  objectLabels.clear();
   if (originMarker) {
     fabricCanvas?.remove(originMarker);
     originMarker = null;
@@ -852,19 +1318,48 @@ watch(() => props.editorData, async (newData) => {
   // renderElements();
 }, { deep: false });
 
-watch(() => props.editorData?.annotations, () => renderElements(), { deep: true });
-watch(() => props.editorData?.paths, () => renderElements(), { deep: true });
-watch(() => props.editorData?.objects, () => renderElements(), { deep: true });
-watch(() => props.selectedElement, () => { renderElements(); updateSelection(); });
-watch(() => props.gridSpacing, () => renderGrid());
-watch(() => props.drawingMode, (mode) => {
-  pathStartAnnotationId = null;
-  drawingState = null;
-  if (fabricCanvas) {
-    fabricCanvas.selection = mode === 'select';
-    fabricCanvas.defaultCursor = mode === 'select' ? 'default' : 'crosshair';
+watch(() => props.editorData?.annotations, () => {
+  if (isLocalUpdate || isDraggingObject || !fabricCanvas) return;
+  syncStructure();
+  updatePositions();
+  updateSelectionStyle();
+  fabricCanvas.renderAll();
+}, { deep: true });
+watch(() => props.editorData?.paths, () => {
+  if (isLocalUpdate || isDraggingObject || !fabricCanvas) return;
+  syncStructure();
+  updatePositions();
+  updateSelectionStyle();
+  fabricCanvas.renderAll();
+}, { deep: true });
+watch(() => props.editorData?.objects, () => {
+  if (isLocalUpdate || isDraggingObject || !fabricCanvas) return;
+  syncStructure();
+  updatePositions();
+  updateSelectionStyle();
+  fabricCanvas.renderAll();
+}, { deep: true });
+watch(() => props.selectedElement, () => {
+  if (!fabricCanvas) return;
+  updateSelectionStyle();
+  updateSelection();
+
+  // 选中点位时把它拉到顶层，避免被其他点位遮盖
+  const sel = props.selectedElement;
+  if (sel?.type === 'annotation') {
+    const key = getElementKey('annotation', sel.id);
+    const circle = elementMap.get(key);
+    const deco = annotationDecorations.get(sel.id);
+    if (circle) fabricCanvas.bringObjectToFront(circle);
+    if (deco) {
+      fabricCanvas.bringObjectToFront(deco.angleIndicator);
+      fabricCanvas.bringObjectToFront(deco.text);
+    }
   }
+
+  fabricCanvas.renderAll();
 });
+watch(() => props.gridSpacing, () => renderGrid());
 
 onMounted(async () => {
   await loadSceneList();
@@ -923,13 +1418,11 @@ function zoomReset() {
   emit('zoom-change', 1);
 }
 
-function locateMeterPoint(x: number, y: number) {
+function locatePixelPoint(x: number, y: number) {
   if (!fabricCanvas) return;
-  const { x: originX, y: originY } = getEffectiveOrigin();
-  const pixel = worldToPixel(x, y, originX, originY, props.resolution);
   const zoom = Math.max(currentZoom, MIN_ZOOM);
-  const offsetX = containerWidth.value / 2 - pixel.x * zoom;
-  const offsetY = containerHeight.value / 2 - pixel.y * zoom;
+  const offsetX = containerWidth.value / 2 - x * zoom;
+  const offsetY = containerHeight.value / 2 - y * zoom;
   fabricCanvas.setViewportTransform([zoom, 0, 0, zoom, offsetX, offsetY]);
   fabricCanvas.renderAll();
   updateMinimap();
@@ -945,12 +1438,46 @@ function handleSliderZoom(val: number) {
   emit('zoom-change', newZoom);
 }
 
-defineExpose({ exportCanvas, zoomIn, zoomOut, zoomReset, locateMeterPoint });
+defineExpose({ exportCanvas, zoomIn, zoomOut, zoomReset, locatePixelPoint });
 </script>
 
 <template>
   <div ref="canvasContainer" class="relative h-full w-full overflow-hidden bg-gray-100">
     <canvas ref="canvasEl" />
+
+    <!-- Legend -->
+    <div v-if="editorData"
+      class="absolute left-12px top-12px z-10 flex flex-col gap-6px rounded-lg bg-white/90 px-12px py-8px text-xs shadow-md">
+      <div class="max-w-180px truncate text-sm font-medium text-gray-700">{{ editorData.map.name }}</div>
+      <div class="my-2px h-1px bg-gray-200"></div>
+      <div class="flex items-center gap-6px">
+        <span class="inline-block h-10px w-10px" style="background-color: #ffffff; border: 1px solid #d1d5db"></span>
+        <span>可行区域</span>
+      </div>
+      <div class="flex items-center gap-6px">
+        <span class="inline-block h-10px w-10px" style="background-color: #000000"></span>
+        <span>不可行区域</span>
+      </div>
+      <div class="my-2px h-1px bg-gray-200"></div>
+      <div class="flex items-center gap-6px">
+        <span class="inline-block h-10px w-10px rounded-full" style="background-color: #22c55e"></span>
+        <span>接待点</span>
+      </div>
+      <div class="flex items-center gap-6px">
+        <span class="inline-block h-10px w-10px rounded-full" style="background-color: #047857"></span>
+        <span>返回点</span>
+      </div>
+      <div class="flex items-center gap-6px">
+        <span class="inline-block h-10px w-10px"
+          style="background-color: rgba(59, 130, 246, 0.3); border: 1px solid #3b82f6"></span>
+        <span>障碍物</span>
+      </div>
+      <div class="flex items-center gap-6px">
+        <span class="inline-block h-10px w-10px"
+          style="background-image: linear-gradient(135deg, transparent 45%, #6b7280 45%, #6b7280 55%, transparent 55%); background-color: rgba(107, 114, 128, 0.12); border: 1px solid #6b7280"></span>
+        <span>禁行区域</span>
+      </div>
+    </div>
     <div v-if="!editorData" class="absolute inset-0 flex items-center justify-center">
       <NEmpty description="请选择一个场景" />
     </div>
@@ -974,6 +1501,12 @@ defineExpose({ exportCanvas, zoomIn, zoomOut, zoomReset, locateMeterPoint });
         -
       </button>
       <div class="text-xs text-gray-500">{{ Math.round(currentZoom * 100) }}%</div>
+    </div>
+
+    <!-- Cursor coordinates (placed above minimap) -->
+    <div v-if="editorData" class="absolute left-12px z-10 rounded bg-black/50 px-8px py-4px text-xs text-white"
+      :style="{ bottom: minimapImageUrl ? `${MINIMAP_SIZE + 24}px` : '12px' }">
+      坐标: {{ cursorWorldX.toFixed(2) }}m, {{ cursorWorldY.toFixed(2) }}m
     </div>
 
     <!-- Minimap navigator -->
@@ -1005,5 +1538,3 @@ defineExpose({ exportCanvas, zoomIn, zoomOut, zoomReset, locateMeterPoint });
     </div>
   </div>
 </template>
-
-

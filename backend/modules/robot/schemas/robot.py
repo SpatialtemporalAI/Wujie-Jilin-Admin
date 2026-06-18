@@ -34,6 +34,8 @@ class RobotCreate(BaseReqEntity):
     serial_number: str = Field(..., description="序列号", max_length=100)
     map_id: Optional[int] = Field(None, description="绑定场景地图ID")
     status: str = Field("inactive", description="状态：online/offline/inactive")
+    speed_level: Optional[str] = Field(None, description="速度等级：normal/slow/low")
+    battery_threshold: Optional[int] = Field(None, description="电量报警阈值(%)")
 
 
 class RobotUpdate(BaseReqEntity):

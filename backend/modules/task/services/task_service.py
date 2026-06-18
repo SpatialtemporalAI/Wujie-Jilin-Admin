@@ -42,6 +42,17 @@ class TaskService:
             conditions.append(Task.task_type == query_params.task_type)
         if query_params.enabled is not None:
             conditions.append(Task.enabled == query_params.enabled)
+        if query_params.robot_id is not None or query_params.map_id is not None:
+            base_query = base_query.join(
+                task_robot_association,
+                Task.id == task_robot_association.c.task_id,
+            ).join(Robot, Robot.id == task_robot_association.c.robot_id)
+            if query_params.robot_id is not None:
+                conditions.append(Robot.id == query_params.robot_id)
+            if query_params.map_id is not None:
+                conditions.append(Robot.map_id == query_params.map_id)
+            conditions.append(Robot.deleted_at.is_(None))
+            base_query = base_query.distinct()
 
         if conditions:
             base_query = base_query.where(and_(*conditions))
@@ -94,14 +105,6 @@ class TaskService:
             robots = robot_result.scalars().all()
             if len(robots) != len(task_in.robot_ids):
                 raise NotFoundError(msg="部分机器人不存在")
-
-            # 巡逻任务校验机器人场景约束
-            if task_in.task_type == 'patrol':
-                robot_map_ids = set(r.map_id for r in robots)
-                if None in robot_map_ids:
-                    raise NotFoundError(msg="巡逻任务的机器人必须已分配场景")
-                if len(robot_map_ids) > 1:
-                    raise NotFoundError(msg="巡逻任务不能选择不同场景的机器人")
 
             # 创建任务主记录
             task_obj = Task(
@@ -190,15 +193,6 @@ class TaskService:
                 if len(robots) != len(task_in.robot_ids):
                     raise NotFoundError(msg="部分机器人不存在")
 
-                # 巡逻任务校验机器人场景约束
-                effective_type = task_in.task_type or task_obj.task_type
-                if effective_type == 'patrol':
-                    robot_map_ids = set(r.map_id for r in robots)
-                    if None in robot_map_ids:
-                        raise NotFoundError(msg="巡逻任务的机器人必须已分配场景")
-                    if len(robot_map_ids) > 1:
-                        raise NotFoundError(msg="巡逻任务不能选择不同场景的机器人")
-
                 await db.execute(
                     task_robot_association.delete().where(
                         task_robot_association.c.task_id == task_id
@@ -222,6 +216,47 @@ class TaskService:
             await db.rollback()
             logger.error("更新任务失败: %s", str(e), exc_info=True)
             raise
+
+    @staticmethod
+    async def delete_points_by_annotation_ids(db: AsyncSession, annotation_ids: list[int]) -> None:
+        if not annotation_ids:
+            return
+
+        result = await db.execute(
+            select(TaskPoint).where(
+                TaskPoint.annotation_id.in_(annotation_ids),
+                TaskPoint.deleted_at.is_(None),
+            )
+        )
+        points = result.scalars().all()
+        if not points:
+            return
+
+        task_ids = {point.task_id for point in points}
+        deleting_point_ids = {point.id for point in points}
+        for task_id in task_ids:
+            task_points_result = await db.execute(
+                select(TaskPoint)
+                .where(TaskPoint.task_id == task_id, TaskPoint.deleted_at.is_(None))
+                .order_by(TaskPoint.sort_order.asc(), TaskPoint.id.asc())
+            )
+            task_points = task_points_result.scalars().all()
+            if all(point.id in deleting_point_ids for point in task_points):
+                task_obj = await TaskService.get(db, task_id)
+                task_obj.soft_delete()
+                for point in task_points:
+                    await db.delete(point)
+                continue
+
+            sort_order = 0
+            for point in task_points:
+                if point.id in deleting_point_ids:
+                    await db.delete(point)
+                else:
+                    point.sort_order = sort_order
+                    sort_order += 1
+
+        await db.flush()
 
     @staticmethod
     async def delete(db: AsyncSession, task_id: int) -> bool:

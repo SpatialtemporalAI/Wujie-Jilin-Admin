@@ -146,7 +146,6 @@ function handleEditGroup(id: number) {
 async function handleDelete(id: number) {
   try {
     await fetchDeleteSceneGroup(id);
-    window.$message?.success('删除成功');
     onGroupDeleted();
   } catch (error) {
     console.error('删除场景分组失败:', error);

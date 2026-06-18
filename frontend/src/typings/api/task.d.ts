@@ -29,6 +29,8 @@ declare namespace Api {
       id: number;
       name: string;
       status: string | null;
+      map_id?: number | null;
+      map_name?: string | null;
     };
 
     /** task */
@@ -50,7 +52,7 @@ declare namespace Api {
 
     /** task search params */
     type TaskSearchParams = CommonType.RecordNullable<
-      Pick<Task, 'name' | 'task_type'> & { enabled: string | null } & CommonSearchParams
+      Pick<Task, 'name' | 'task_type'> & { enabled: string | null; robot_id?: number; map_id?: number } & CommonSearchParams
     >;
 
     /** task list */
@@ -92,12 +94,14 @@ declare namespace Api {
       error_message: string | null;
       robot_id: number | null;
       robot_name: string | null;
+      map_id: number | null;
+      map_name: string | null;
       triggered_by: string;
     };
 
     /** task execution search params */
     type TaskExecutionSearchParams = CommonType.RecordNullable<
-      { task_name?: string; status?: string; start_time?: string; end_time?: string } & CommonSearchParams
+      { task_name?: string; status?: string; robot_id?: number; map_id?: number; start_time?: string; end_time?: string } & CommonSearchParams
     >;
 
     /** task execution list */
