@@ -1,7 +1,7 @@
 """add task.map_id referencing scene_map.id
 
 Revision ID: 0020_task_map_id
-Revises: 0019_scene_map_resolution_default
+Revises: 0019_scene_map_resolution
 Create Date: 2026-06-17
 
 为 task 表新增 map_id 列，固话任务关联的场景地图，避免机器人改绑场景后影响任务的场景配置。
@@ -13,7 +13,7 @@ from alembic import op
 import sqlalchemy as sa
 
 revision: str = "0020_task_map_id"
-down_revision: Union[str, Sequence[str], None] = "0019_scene_map_resolution_default"
+down_revision: Union[str, Sequence[str], None] = "0019_scene_map_resolution"
 branch_labels: Union[str, Sequence[str], None] = None
 depends_on: Union[str, Sequence[str], None] = None
 

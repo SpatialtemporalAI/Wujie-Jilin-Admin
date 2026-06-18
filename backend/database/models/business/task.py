@@ -26,15 +26,15 @@ class Task(Base):
     """
 
     name: Mapped[str] = mapped_column(String(20), nullable=False, comment="任务名称")
+    task_type: Mapped[str] = mapped_column(
+        String(20), nullable=False, comment="任务类型: patrol-巡逻, broadcast-播报"
+    )
     map_id: Mapped[int | None] = mapped_column(
         BigInteger,
         ForeignKey("scene_map.id", ondelete="SET NULL"),
         nullable=True,
         default=None,
         comment="关联场景地图ID",
-    )
-    task_type: Mapped[str] = mapped_column(
-        String(20), nullable=False, comment="任务类型: patrol-巡逻, broadcast-播报"
     )
     broadcast_text: Mapped[str | None] = mapped_column(
         Text, nullable=True, default=None, comment="播报文本"

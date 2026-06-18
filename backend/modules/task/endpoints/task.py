@@ -109,8 +109,6 @@ async def _build_task_response(task_obj: Task, db: AsyncSession, include_details
     # 获取关联机器人
     if task_obj.robots is not None:
         data.robots = await _build_task_robot_briefs(db, list(task_obj.robots))
-
-    await _fill_task_map_name(db, [data])
     else:
         robot_result = await db.execute(
             select(Robot)
@@ -120,6 +118,8 @@ async def _build_task_response(task_obj: Task, db: AsyncSession, include_details
         )
         robots = robot_result.scalars().all()
         data.robots = await _build_task_robot_briefs(db, list(robots))
+
+    await _fill_task_map_name(db, [data])
 
     return data
 
