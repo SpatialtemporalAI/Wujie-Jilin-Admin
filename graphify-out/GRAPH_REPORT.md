@@ -703,9 +703,9 @@
 - `Backend Layer Rules` --semantically_similar_to--> `Backend Module Development Rules`  [INFERRED] [semantically similar]
   aiDoc/modules/backend-layer-rules.md → backend/MODULES_RULES.md
 - `RequestError` --uses--> `int`  [INFERRED]
-  D:/project/SmileX/SmileX-Fastapi-Cloud/backend/core/exception/errors.py → backend/core/storage/validator.py
+  D:/project/SpatialtemporalAi/Wujie-Jilin-Admin/backend/core/exception/errors.py → backend/core/storage/validator.py
 - `ResponseModel` --calls--> `get_all_pages()`  [INFERRED]
-  D:/project/SmileX/SmileX-Fastapi-Cloud/backend/core/response/response_schema.py → backend/modules/admin/endpoints/sys/menu.py
+  D:/project/SpatialtemporalAi/Wujie-Jilin-Admin/backend/core/response/response_schema.py → backend/modules/admin/endpoints/sys/menu.py
 - `CLAUDE.md Claude Adapter` --semantically_similar_to--> `Trae Project Rules Adapter`  [INFERRED] [semantically similar]
   CLAUDE.md → .trae/rules/project_rules.md
 
@@ -1051,7 +1051,7 @@ Nodes (12): AsyncSession, int, Request, RobotModelCreate, RobotModelUpdate, SysU
 
 ### Community 81 - "Community 81"
 Cohesion: 0.05
-Nodes (42): Claude Code 接入 MCP, code:block1 (SmileX-Fastapi-Cloud/), code:json ({), code:bash (curl http://127.0.0.1:9001/health), code:bash (cd frontend), code:bash (pnpm install), code:bash (pnpm dev), code:bash (cd backend) (+34 more)
+Nodes (42): Claude Code 接入 MCP, code:block1 (Wujie-Jilin-Admin/), code:json ({), code:bash (curl http://127.0.0.1:9001/health), code:bash (cd frontend), code:bash (pnpm install), code:bash (pnpm dev), code:bash (cd backend) (+34 more)
 
 ### Community 82 - "Community 82"
 Cohesion: 0.05
