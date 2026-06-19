@@ -114,32 +114,46 @@ class SceneMapNavImageService:
         失败仅记日志，不抛出。
         """
         import grpc
-        from sqlalchemy.orm import selectinload
 
+        from database.models.business.scene_map_annotation import SceneMapAnnotation
         from modules.grpc.client import MapServiceClient
         from modules.grpc.converter import scene_map_to_map_info
         from modules.admin.services.sys.file_service import FileService
 
-        # 重新加载带 annotations 的 map_obj（_regenerate 中只加载了 objects）
-        stmt = (
-            select(SceneMap)
-            .where(
-                SceneMap.id == map_obj.id,
-                SceneMap.deleted_at.is_(None),
+        # 直接查 map 主表，不再用 selectinload(annotations)。
+        # 原因：_regenerate 已在同一个 session 加载过 map_obj（带 objects，未带 annotations），
+        # 第二次 selectinload(annotations) 在 identity map 命中 + lazy="noload" 下不稳定，
+        # 实测 fresh.annotations 为空。改为显式查 annotations 表更可靠。
+        fresh = (
+            await db.execute(
+                select(SceneMap).where(
+                    SceneMap.id == map_obj.id,
+                    SceneMap.deleted_at.is_(None),
+                )
             )
-            .options(selectinload(SceneMap.annotations))
-        )
-        fresh = (await db.execute(stmt)).unique().scalar_one_or_none()
+        ).scalar_one_or_none()
         if fresh is None:
             logger.warning("notify_map_saved skipped: map %s not found", map_obj.id)
             return
+
+        # 直接查 annotations 表（与 scripts/dump_notify_map_saved.py 一致），过滤软删除
+        annotations = (
+            await db.execute(
+                select(SceneMapAnnotation)
+                .where(
+                    SceneMapAnnotation.map_id == map_obj.id,
+                    SceneMapAnnotation.deleted_at.is_(None),
+                )
+                .order_by(SceneMapAnnotation.id.asc())
+            )
+        ).scalars().all()
 
         file_id = fresh.nav_image_id or fresh.image_id
         image_url = ""
         if file_id:
             image_url = await FileService.get_file_url(db, file_id) or ""
 
-        map_info = scene_map_to_map_info(fresh, image_url)
+        map_info = scene_map_to_map_info(fresh, image_url, annotations=annotations)
         try:
             resp = await MapServiceClient.notify_map_saved(map_info)
             logger.info(

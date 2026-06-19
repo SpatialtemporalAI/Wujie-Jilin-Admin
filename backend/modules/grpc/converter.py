@@ -9,13 +9,27 @@ SceneMap -> proto MapInfo 转换器
 - version: int -> str（与 proto string 对齐）
 - labels: 由 SceneMap.annotations 映射而来
 """
+from typing import TYPE_CHECKING
+
 from app.grpc.generated.map import map_pb2
 
 from database.models.business.scene_map import SceneMap
 
+if TYPE_CHECKING:
+    from database.models.business.scene_map_annotation import SceneMapAnnotation
 
-def scene_map_to_map_info(map_obj: SceneMap, image_url: str) -> map_pb2.MapInfo:
-    """把 SceneMap + annotations 转换为 proto MapInfo"""
+
+def scene_map_to_map_info(
+    map_obj: SceneMap,
+    image_url: str,
+    annotations: "list[SceneMapAnnotation] | None" = None,
+) -> map_pb2.MapInfo:
+    """把 SceneMap + annotations 转换为 proto MapInfo
+
+    annotations: 显式传入的点位列表；为 None 时回退到 map_obj.annotations。
+    显式传入可绕开 lazy="noload" + identity map 命中导致关系属性为空的坑。
+    """
+    src = annotations if annotations is not None else (map_obj.annotations or [])
     labels = [
         map_pb2.MapLabel(
             id=str(a.id),
@@ -25,7 +39,7 @@ def scene_map_to_map_info(map_obj: SceneMap, image_url: str) -> map_pb2.MapInfo:
             y=float(a.y),
             angle=float(a.angle or 0),
         )
-        for a in (map_obj.annotations or [])
+        for a in src
     ]
     return map_pb2.MapInfo(
         id=str(map_obj.id),
