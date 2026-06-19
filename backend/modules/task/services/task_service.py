@@ -275,6 +275,22 @@ class TaskService:
             raise
 
     @staticmethod
+    async def soft_delete_by_map_id(db: AsyncSession, map_id: int) -> int:
+        """软删除某场景地图下的所有任务（不 commit，由调用方控制事务）。
+        返回软删除的记录数。"""
+        result = await db.execute(
+            select(Task).where(
+                Task.map_id == map_id,
+                Task.deleted_at.is_(None),
+            )
+        )
+        tasks = result.scalars().all()
+        for task_obj in tasks:
+            task_obj.soft_delete()
+        await db.flush()
+        return len(tasks)
+
+    @staticmethod
     async def toggle_enabled(db: AsyncSession, task_id: int, enabled: bool) -> Task:
         """切换启用/禁用"""
         try:

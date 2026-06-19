@@ -207,6 +207,18 @@ function handlePreviewImage(imageId: number) {
 }
 
 async function handleDelete(id: number) {
+  const confirmed = await new Promise<boolean>(resolve => {
+    window.$dialog?.warning({
+      title: '删除确认',
+      content: '删除场景地图将同步删除该地图下的所有任务，并解除所有机器人的地图绑定。此操作不可恢复，请确认是否继续？',
+      positiveText: '继续删除',
+      negativeText: '取消',
+      onPositiveClick: () => resolve(true),
+      onNegativeClick: () => resolve(false),
+      onMaskClick: () => resolve(false)
+    });
+  });
+  if (!confirmed) return;
   try {
     await fetchDeleteSceneMap(id);
     onMapDeleted();

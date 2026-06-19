@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 
+import logging
 from typing import List, Tuple
 
 from sqlalchemy import select, and_
@@ -17,6 +18,8 @@ from modules.scene.schemas.scene_map import (
     SceneMapUpdate,
     SceneMapQueryParams,
 )
+
+logger = logging.getLogger(__name__)
 
 
 class SceneMapService:
@@ -185,7 +188,18 @@ class SceneMapService:
 
     @staticmethod
     async def delete(db: AsyncSession, map_id: int) -> None:
-        """删除场景地图（软删除）"""
+        """删除场景地图（软删除）+ 同步软删关联 task + 解除 robot 绑定"""
         map_obj = await SceneMapService.get(db, map_id)
+
+        # 先级联清理外部关联（task.map_id 是 SET NULL、robot.map_id 无级联，必须显式处理），再软删地图本身
+        from modules.task.services.task_service import TaskService
+        from modules.robot.services.robot_service import RobotService
+        deleted_tasks = await TaskService.soft_delete_by_map_id(db, map_id)
+        unbound_robots = await RobotService.unbind_map(db, map_id)
+        logger.info(
+            "删除场景地图 %s：级联软删 %d 个任务，解绑 %d 个机器人",
+            map_id, deleted_tasks, unbound_robots,
+        )
+
         map_obj.soft_delete()
         await db.flush()
