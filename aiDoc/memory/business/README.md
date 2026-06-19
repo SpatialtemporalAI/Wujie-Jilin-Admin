@@ -32,3 +32,4 @@
 - [2026-06-18 NotifyMapSaved image_url HMAC 签名 URL](./2026-06-18_notify-map-saved-image-url-internal-token.md) — preview 端点改为 HMAC 签名 URL（?expires=&sig=），密钥不出后端，有时效
 - [2026-06-18 运行监控页面滚动 + 登录后底部栏隐藏](./2026-06-18_operation-monitor-scroll-and-footer-hidden.md) — operation-monitor 改为纵向滚动，主题 footer.visible 默认 false 并通过 overrideThemeSettings 强制覆盖老用户缓存
 - [2026-06-18 前后端生产环境启动脚本](./2026-06-18_prod-startup-scripts.md) — 前端 `pnpm start:prod` 串联 build+preview；后端 `backend/start_prod.sh` 用 gunicorn+uvicorn worker 启动并设 ENVIR=prod
+- [2026-06-19 地图编辑器电子围栏](./2026-06-19_map-editor-electronic-fence.md) — 右键新增电子围栏（红色矩形），多个围栏 OR 语义，后端 nav_image 反向涂黑围栏外区域

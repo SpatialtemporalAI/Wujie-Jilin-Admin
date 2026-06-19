@@ -195,10 +195,12 @@ function fabricAngleToAnnotationRad(fabricAngle: number): number {
   return degToRad(90 - fabricAngle);
 }
 
-// 障碍物 / 禁区 / 点位 颜色
+// 障碍物 / 禁区 / 点位 / 电子围栏 颜色
 const OBSTACLE_FILL = 'rgba(59, 130, 246, 0.3)';
 const OBSTACLE_STROKE = '#3b82f6';
 const RESTRICTED_STROKE = '#6b7280';
+const FENCE_FILL = 'rgba(239, 68, 68, 0.15)';
+const FENCE_STROKE = '#ef4444';
 const POINT_FILL = '#22c55e';
 const POINT_SELECTED_FILL = '#16a34a';
 const RETURN_POINT_FILL = '#047857';
@@ -347,13 +349,15 @@ function syncStructure() {
     if (elementMap.has(key)) continue;
 
     const isRestricted = obj.type === 'restricted' || obj.type === '禁区';
-    const fillColor: any = isRestricted ? getRestrictedPattern() : OBSTACLE_FILL;
-    const strokeColor = isRestricted ? RESTRICTED_STROKE : OBSTACLE_STROKE;
+    const isFence = obj.type === 'fence' || obj.type === '电子围栏';
+    const fillColor: any = isRestricted ? getRestrictedPattern() : (isFence ? FENCE_FILL : OBSTACLE_FILL);
+    const strokeColor = isRestricted ? RESTRICTED_STROKE : (isFence ? FENCE_STROKE : OBSTACLE_STROKE);
+    const strokeWidth = isFence ? 3 : 2;
     const commonOpts = {
       left: obj.x, top: obj.y,
       originX: 'left' as const, originY: 'top' as const,
       angle: obj.angle ?? 0,
-      fill: fillColor, stroke: strokeColor, strokeWidth: 2,
+      fill: fillColor, stroke: strokeColor, strokeWidth,
       hasControls: true,
     };
 
@@ -376,6 +380,12 @@ function syncStructure() {
       fabricObj = new Triangle({
         ...commonOpts,
         width: obj.width || 5, height: obj.height || 5,
+      });
+    } else if (isFence) {
+      fabricObj = new Rect({
+        ...commonOpts,
+        width: obj.width || 10,
+        height: obj.height || 10,
       });
     } else {
       const isSquare = obj.type === 'obstacle-square';
@@ -1476,6 +1486,11 @@ defineExpose({ exportCanvas, zoomIn, zoomOut, zoomReset, locatePixelPoint });
         <span class="inline-block h-10px w-10px"
           style="background-image: linear-gradient(135deg, transparent 45%, #6b7280 45%, #6b7280 55%, transparent 55%); background-color: rgba(107, 114, 128, 0.12); border: 1px solid #6b7280"></span>
         <span>禁行区域</span>
+      </div>
+      <div class="flex items-center gap-6px">
+        <span class="inline-block h-10px w-10px"
+          style="background-color: rgba(239, 68, 68, 0.15); border: 2px solid #ef4444"></span>
+        <span>电子围栏</span>
       </div>
     </div>
     <div v-if="!editorData" class="absolute inset-0 flex items-center justify-center">

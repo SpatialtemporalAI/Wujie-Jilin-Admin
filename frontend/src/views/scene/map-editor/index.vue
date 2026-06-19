@@ -35,6 +35,7 @@ const baseContextMenuOptions = [
     ],
   },
   { label: '禁行区域', key: 'add-restricted' },
+  { label: '电子围栏', key: 'add-fence' },
 ];
 
 const contextMenuOptions = computed(() => {
@@ -90,13 +91,14 @@ const hoverInfo = computed(() => {
   const obj = editor.editorData.value.objects.find(o => o.id === t.id);
   if (!obj) return null;
   const isRestricted = obj.type === 'restricted' || obj.type === '禁区';
+  const isFence = obj.type === 'fence' || obj.type === '电子围栏';
   const shapeMap: Record<string, string> = {
     'obstacle-circle': '圆形',
     'obstacle-triangle': '三角形',
     'obstacle-square': '正方形',
   };
-  const kind = isRestricted ? '禁行区域' : '障碍物';
-  const typeName = isRestricted ? '禁区' : (shapeMap[obj.type] || '障碍物');
+  const kind = isFence ? '电子围栏' : (isRestricted ? '禁行区域' : '障碍物');
+  const typeName = isFence ? '围栏' : (isRestricted ? '禁区' : (shapeMap[obj.type] || '障碍物'));
   return {
     kind,
     name: obj.name || '-',
@@ -382,6 +384,20 @@ function handleContextMenuSelect(key: string) {
     editor.addObject({
       type: 'restricted',
       name: `禁区${count}`,
+      x: x - 5,
+      y: y - 5,
+      width: 10,
+      height: 10,
+      points: null,
+    });
+    return;
+  }
+
+  if (key === 'add-fence') {
+    const count = (editor.editorData.value?.objects.filter(o => o.type === 'fence').length || 0) + 1;
+    editor.addObject({
+      type: 'fence',
+      name: `电子围栏${count}`,
       x: x - 5,
       y: y - 5,
       width: 10,

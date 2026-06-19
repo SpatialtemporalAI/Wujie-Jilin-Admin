@@ -20,6 +20,7 @@ logger = logging.getLogger(__name__)
 
 OBSTACLE_TYPES = {"obstacle-circle", "obstacle-square", "obstacle-triangle"}
 RESTRICTED_TYPES = {"restricted", "禁区"}
+FENCE_TYPES = {"fence", "电子围栏"}
 
 
 class SceneMapNavImageService:
@@ -56,7 +57,9 @@ class SceneMapNavImageService:
 
                 drawable = [
                     o for o in map_obj.objects
-                    if o.type in OBSTACLE_TYPES or o.type in RESTRICTED_TYPES
+                    if o.type in OBSTACLE_TYPES
+                    or o.type in RESTRICTED_TYPES
+                    or o.type in FENCE_TYPES
                 ]
 
                 if not drawable:
@@ -201,9 +204,18 @@ class SceneMapNavImageService:
         elif img.mode not in ("RGB", "RGBA"):
             img = img.convert("RGBA")
 
+        fences = [o for o in objects if o.type in FENCE_TYPES]
+        others = [o for o in objects if o.type not in FENCE_TYPES]
+
+        if fences:
+            try:
+                img = SceneMapNavImageService._apply_fence_mask(img, fences)
+            except Exception as exc:
+                logger.warning("apply fence mask failed: %s", exc)
+
         draw = ImageDraw.Draw(img)
 
-        for obj in objects:
+        for obj in others:
             try:
                 SceneMapNavImageService._draw_object(draw, obj)
             except Exception as exc:
@@ -216,6 +228,34 @@ class SceneMapNavImageService:
 
         img.save(out, format=save_format, **save_kwargs)
         return out.getvalue(), out_ext, out_mime
+
+    @staticmethod
+    def _apply_fence_mask(img, fences) -> "Image.Image":
+        """电子围栏反向遮罩：把所有围栏矩形并集之外的区域涂黑。
+
+        多个围栏采用 OR 语义 —— 位于任一围栏矩形内即视为可通行。
+        """
+        from PIL import Image, ImageDraw
+
+        W, H = img.size
+        mask = Image.new("L", (W, H), 0)
+        mask_draw = ImageDraw.Draw(mask)
+        for f in fences:
+            x = float(f.x)
+            y = float(f.y)
+            w = float(f.width)
+            h = float(f.height)
+            if w <= 0 or h <= 0:
+                continue
+            x0 = max(0, min(W - 1, x))
+            y0 = max(0, min(H - 1, y))
+            x1 = max(0, min(W - 1, x + w))
+            y1 = max(0, min(H - 1, y + h))
+            if x1 <= x0 or y1 <= y0:
+                continue
+            mask_draw.rectangle([x0, y0, x1, y1], fill=255)
+        black = Image.new(img.mode, (W, H), "black")
+        return Image.composite(img, black, mask)
 
     @staticmethod
     def _draw_object(draw, obj) -> None:
