@@ -13,6 +13,7 @@ class EditorAnnotationItem(BaseModel):
     """编辑器标注项（支持新建和更新）"""
 
     id: int | None = Field(None, description="标注ID，为空时新建")
+    client_temp_id: int | None = Field(None, description="前端临时id（负数），仅新建项需要，用于回填真实id")
     x: float = Field(..., description="X坐标")
     y: float = Field(..., description="Y坐标")
     name: str = Field(..., description="标注名称")
@@ -24,6 +25,7 @@ class EditorPathItem(BaseModel):
     """编辑器路径项（支持新建和更新）"""
 
     id: int | None = Field(None, description="路径ID，为空时新建")
+    client_temp_id: int | None = Field(None, description="前端临时id（负数），仅新建项需要，用于回填真实id")
     start_annotation_id: int = Field(..., description="起始标注ID")
     end_annotation_id: int = Field(..., description="结束标注ID")
     name: str | None = Field(None, description="路径名称")
@@ -34,6 +36,7 @@ class EditorObjectItem(BaseModel):
     """编辑器物体项（支持新建和更新）"""
 
     id: int | None = Field(None, description="物体ID，为空时新建")
+    client_temp_id: int | None = Field(None, description="前端临时id（负数），仅新建项需要，用于回填真实id")
     type: str = Field(..., description="物体类型(字典值)")
     name: str | None = Field(None, description="物体名称")
     x: float = Field(..., description="X坐标")
@@ -53,6 +56,21 @@ class EditorSaveRequest(BaseModel):
     deleted_annotation_ids: List[int] = Field(default_factory=list, description="已删除的标注ID")
     deleted_path_ids: List[int] = Field(default_factory=list, description="已删除的路径ID")
     deleted_object_ids: List[int] = Field(default_factory=list, description="已删除的物体ID")
+
+
+class CreatedIdMapping(BaseModel):
+    """新建元素的临时id与真实id映射"""
+
+    temp_id: int = Field(..., description="前端临时id")
+    id: int = Field(..., description="后端真实id")
+
+
+class EditorSaveResponse(BaseModel):
+    """编辑器保存响应：返回本次新建元素的真实id，供前端回填"""
+
+    created_annotations: List[CreatedIdMapping] = Field(default_factory=list, description="新建标注的id映射")
+    created_objects: List[CreatedIdMapping] = Field(default_factory=list, description="新建物体的id映射")
+    created_paths: List[CreatedIdMapping] = Field(default_factory=list, description="新建路径的id映射")
 
 
 class EditorMapAnnotationResponse(BaseRespEntity):

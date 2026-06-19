@@ -229,17 +229,12 @@ export function useMapEditor() {
     }
     saving.value = true;
     try {
-      const existingIds = new Set([
-        ...editorData.value.annotations.map(a => a.id),
-        ...editorData.value.paths.map(p => p.id),
-        ...editorData.value.objects.map(o => o.id),
-      ]);
-
-      await fetchSaveEditorData(selectedMapId.value, {
+      const resp = await fetchSaveEditorData(selectedMapId.value, {
         annotations: editorData.value.annotations.map(a => {
           const w = pixelToWorldCoords(a.x, a.y);
           return {
             id: a.id > 0 ? a.id : null,
+            client_temp_id: a.id > 0 ? null : a.id,
             x: w.x,
             y: w.y,
             name: a.name,
@@ -250,6 +245,7 @@ export function useMapEditor() {
         paths: [],
         objects: editorData.value.objects.map(o => ({
           id: o.id > 0 ? o.id : null,
+          client_temp_id: o.id > 0 ? null : o.id,
           type: o.type,
           name: o.name,
           x: o.x,
@@ -263,6 +259,33 @@ export function useMapEditor() {
         deleted_path_ids: [...deletedPathIds],
         deleted_object_ids: [...deletedObjectIds],
       });
+
+      // 回填新建元素的真实 id，避免再次保存时被当作新建导致重复插入
+      const data = resp.data;
+      if (data && editorData.value) {
+        const selTempId = selectedElement.value?.id ?? null;
+        const tempToReal = new Map<number, number>();
+        const backfill = <T extends { id: number }>(list: T[], mappings: Api.Scene.CreatedIdMapping[]) => {
+          const m = new Map(mappings.map(x => [x.temp_id, x.id]));
+          for (const item of list) {
+            const real = m.get(item.id);
+            if (real !== undefined) {
+              tempToReal.set(item.id, real);
+              item.id = real;
+            }
+          }
+        };
+        backfill(editorData.value.annotations, data.created_annotations);
+        backfill(editorData.value.objects, data.created_objects);
+        // paths 当前始终提交 []，无需回填
+        // 同步 selectedElement 指向的真实 id
+        if (selTempId !== null && selTempId < 0 && selectedElement.value && tempToReal.has(selTempId)) {
+          selectedElement.value = {
+            type: selectedElement.value.type,
+            id: tempToReal.get(selTempId)!,
+          };
+        }
+      }
 
       deletedAnnotationIds.clear();
       deletedPathIds.clear();

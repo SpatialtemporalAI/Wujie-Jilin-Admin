@@ -198,6 +198,7 @@ declare namespace Api {
     /** editor annotation item */
     type EditorAnnotationItem = {
       id?: number | null;
+      client_temp_id?: number | null;
       x: number;
       y: number;
       name: string;
@@ -208,6 +209,7 @@ declare namespace Api {
     /** editor path item */
     type EditorPathItem = {
       id?: number | null;
+      client_temp_id?: number | null;
       start_annotation_id: number;
       end_annotation_id: number;
       name?: string | null;
@@ -217,6 +219,7 @@ declare namespace Api {
     /** editor object item */
     type EditorObjectItem = {
       id?: number | null;
+      client_temp_id?: number | null;
       type: string;
       name?: string | null;
       x: number;
@@ -235,6 +238,19 @@ declare namespace Api {
       deleted_annotation_ids: number[];
       deleted_path_ids: number[];
       deleted_object_ids: number[];
+    };
+
+    /** created id mapping (temp_id -> real id) */
+    type CreatedIdMapping = {
+      temp_id: number;
+      id: number;
+    };
+
+    /** editor save response */
+    type EditorSaveResponse = {
+      created_annotations: CreatedIdMapping[];
+      created_objects: CreatedIdMapping[];
+      created_paths: CreatedIdMapping[];
     };
 
     /** editor map data */
