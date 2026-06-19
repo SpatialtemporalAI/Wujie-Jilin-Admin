@@ -20,6 +20,7 @@ logger = logging.getLogger(__name__)
 
 OBSTACLE_TYPES = {"obstacle-circle", "obstacle-square", "obstacle-triangle"}
 RESTRICTED_TYPES = {"restricted", "禁区"}
+FENCE_TYPES = {"fence", "电子围栏"}
 
 
 class SceneMapNavImageService:
@@ -56,45 +57,121 @@ class SceneMapNavImageService:
 
                 drawable = [
                     o for o in map_obj.objects
-                    if o.type in OBSTACLE_TYPES or o.type in RESTRICTED_TYPES
+                    if o.type in OBSTACLE_TYPES
+                    or o.type in RESTRICTED_TYPES
+                    or o.type in FENCE_TYPES
                 ]
 
                 if not drawable:
                     if map_obj.nav_image_id != map_obj.image_id:
                         map_obj.nav_image_id = map_obj.image_id
                         await db.commit()
-                    return
+                else:
+                    source_file, image_bytes = await FileService.get_file_content(db, map_obj.image_id)
 
-                source_file, image_bytes = await FileService.get_file_content(db, map_obj.image_id)
+                    rendered_bytes, ext, mime = SceneMapNavImageService._render(
+                        image_bytes, source_file.extension, source_file.mime_type, drawable
+                    )
 
-                rendered_bytes, ext, mime = SceneMapNavImageService._render(
-                    image_bytes, source_file.extension, source_file.mime_type, drawable
-                )
+                    base_name = os.path.splitext(source_file.original_name or "map")[0]
+                    new_name = f"{base_name}_nav.{ext}"
 
-                base_name = os.path.splitext(source_file.original_name or "map")[0]
-                new_name = f"{base_name}_nav.{ext}"
+                    new_file = await FileService.upload_file(
+                        db=db,
+                        file_data=rendered_bytes,
+                        original_name=new_name,
+                        mime_type=mime,
+                        created_by=user_id,
+                    )
 
-                new_file = await FileService.upload_file(
-                    db=db,
-                    file_data=rendered_bytes,
-                    original_name=new_name,
-                    mime_type=mime,
-                    created_by=user_id,
-                )
+                    map_obj.nav_image_id = new_file.id
+                    await db.commit()
+                    logger.info(
+                        "nav_image regenerated for map %s: nav_image_id=%s",
+                        map_id,
+                        new_file.id,
+                    )
 
-                map_obj.nav_image_id = new_file.id
-                await db.commit()
-                logger.info(
-                    "nav_image regenerated for map %s: nav_image_id=%s",
-                    map_id,
-                    new_file.id,
-                )
+                # nav_image_id 已就绪后，推送 NotifyMapSaved 给导览服务
+                try:
+                    await SceneMapNavImageService._notify_map_saved(db, map_obj)
+                except Exception as notify_exc:
+                    logger.warning(
+                        "notify_map_saved failed for map %s: %s",
+                        map_id,
+                        notify_exc,
+                    )
         except Exception as exc:
             logger.error(
                 "nav_image regenerate failed for map %s: %s",
                 map_id,
                 exc,
                 exc_info=True,
+            )
+
+    @staticmethod
+    async def _notify_map_saved(db: AsyncSession, map_obj: SceneMap) -> None:
+        """推送 MapInfo 给导览服务（NotifyMapSaved）
+
+        在 _regenerate 内部 nav_image_id 已 commit 后调用，确保推送时图片已就绪。
+        失败仅记日志，不抛出。
+        """
+        import grpc
+
+        from database.models.business.scene_map_annotation import SceneMapAnnotation
+        from modules.grpc.client import MapServiceClient
+        from modules.grpc.converter import scene_map_to_map_info
+        from modules.admin.services.sys.file_service import FileService
+
+        # 直接查 map 主表，不再用 selectinload(annotations)。
+        # 原因：_regenerate 已在同一个 session 加载过 map_obj（带 objects，未带 annotations），
+        # 第二次 selectinload(annotations) 在 identity map 命中 + lazy="noload" 下不稳定，
+        # 实测 fresh.annotations 为空。改为显式查 annotations 表更可靠。
+        fresh = (
+            await db.execute(
+                select(SceneMap).where(
+                    SceneMap.id == map_obj.id,
+                    SceneMap.deleted_at.is_(None),
+                )
+            )
+        ).scalar_one_or_none()
+        if fresh is None:
+            logger.warning("notify_map_saved skipped: map %s not found", map_obj.id)
+            return
+
+        # 直接查 annotations 表（与 scripts/dump_notify_map_saved.py 一致），过滤软删除
+        annotations = (
+            await db.execute(
+                select(SceneMapAnnotation)
+                .where(
+                    SceneMapAnnotation.map_id == map_obj.id,
+                    SceneMapAnnotation.deleted_at.is_(None),
+                )
+                .order_by(SceneMapAnnotation.id.asc())
+            )
+        ).scalars().all()
+
+        file_id = fresh.nav_image_id or fresh.image_id
+        image_url = ""
+        if file_id:
+            image_url = await FileService.get_file_url(db, file_id) or ""
+
+        map_info = scene_map_to_map_info(fresh, image_url, annotations=annotations)
+        try:
+            resp = await MapServiceClient.notify_map_saved(map_info)
+            logger.info(
+                "notify_map_saved ok map=%s version=%s status=%s msg=%s",
+                fresh.id,
+                fresh.version,
+                resp.status,
+                resp.message,
+            )
+        except grpc.aio.AioRpcError as exc:
+            logger.warning(
+                "notify_map_saved rpc failed map=%s code=%s details=%s",
+                fresh.id,
+                exc.code(),
+                exc.details(),
             )
 
     @staticmethod
@@ -127,9 +204,18 @@ class SceneMapNavImageService:
         elif img.mode not in ("RGB", "RGBA"):
             img = img.convert("RGBA")
 
+        fences = [o for o in objects if o.type in FENCE_TYPES]
+        others = [o for o in objects if o.type not in FENCE_TYPES]
+
+        if fences:
+            try:
+                img = SceneMapNavImageService._apply_fence_mask(img, fences)
+            except Exception as exc:
+                logger.warning("apply fence mask failed: %s", exc)
+
         draw = ImageDraw.Draw(img)
 
-        for obj in objects:
+        for obj in others:
             try:
                 SceneMapNavImageService._draw_object(draw, obj)
             except Exception as exc:
@@ -142,6 +228,34 @@ class SceneMapNavImageService:
 
         img.save(out, format=save_format, **save_kwargs)
         return out.getvalue(), out_ext, out_mime
+
+    @staticmethod
+    def _apply_fence_mask(img, fences) -> "Image.Image":
+        """电子围栏反向遮罩：把所有围栏矩形并集之外的区域涂黑。
+
+        多个围栏采用 OR 语义 —— 位于任一围栏矩形内即视为可通行。
+        """
+        from PIL import Image, ImageDraw
+
+        W, H = img.size
+        mask = Image.new("L", (W, H), 0)
+        mask_draw = ImageDraw.Draw(mask)
+        for f in fences:
+            x = float(f.x)
+            y = float(f.y)
+            w = float(f.width)
+            h = float(f.height)
+            if w <= 0 or h <= 0:
+                continue
+            x0 = max(0, min(W - 1, x))
+            y0 = max(0, min(H - 1, y))
+            x1 = max(0, min(W - 1, x + w))
+            y1 = max(0, min(H - 1, y + h))
+            if x1 <= x0 or y1 <= y0:
+                continue
+            mask_draw.rectangle([x0, y0, x1, y1], fill=255)
+        black = Image.new(img.mode, (W, H), "black")
+        return Image.composite(img, black, mask)
 
     @staticmethod
     def _draw_object(draw, obj) -> None:

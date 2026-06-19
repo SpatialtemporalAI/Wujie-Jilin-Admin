@@ -13,6 +13,7 @@ from modules.scene.services.scene_map_editor_service import SceneMapEditorServic
 from modules.scene.services.scene_map_nav_image_service import SceneMapNavImageService
 from modules.scene.schemas.scene_map_editor import (
     EditorSaveRequest,
+    EditorSaveResponse,
     EditorMapDataResponse,
     EditorMapAnnotationResponse,
     EditorMapPathResponse,
@@ -61,7 +62,7 @@ async def get_editor_data(
 
 @scene_map_editor_router.post(
     "/save",
-    response_model=ResponseModel,
+    response_model=ResponseModel[EditorSaveResponse],
     summary="批量保存编辑器数据",
     dependencies=[Depends(require_permission("scene:map:edit"))],
 )
@@ -71,8 +72,8 @@ async def save_editor_data(
     user: SysUser = Depends(current_user),
     db: AsyncSession = Depends(get_session),
 ):
-    """批量保存编辑器数据（标注、路径、物体的增删改）"""
-    await SceneMapEditorService.save_editor_data(db, map_id, save_request)
+    """批量保存编辑器数据（标注、路径、物体的增删改），返回新建元素的id映射"""
+    result = await SceneMapEditorService.save_editor_data(db, map_id, save_request)
     await db.commit()
     SceneMapNavImageService.schedule_regenerate(map_id, user.id)
-    return response_base.success(msg="保存成功")
+    return response_base.success(data=result, msg="保存成功")

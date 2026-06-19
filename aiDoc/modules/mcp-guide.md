@@ -42,7 +42,7 @@ backend/mcp/
 | 配置项 | 环境变量 | 默认值 | 说明 |
 |--------|----------|--------|------|
 | `ENABLED` | `MCP_ENABLED` | `True` | 是否启用 MCP 模块 |
-| `NAME` | `MCP_NAME` | `"SmileX MCP Server"` | MCP 服务器名称 |
+| `NAME` | `MCP_NAME` | `"Wujie-Jilin-Admin MCP Server"` | MCP 服务器名称 |
 | `VERSION` | `MCP_VERSION` | `"1.0.0"` | 版本号 |
 | `HOST` | `MCP_HOST` | `"127.0.0.1"` | 独立服务监听地址 |
 | `PORT` | `MCP_PORT` | `9000` | 独立服务监听端口 |

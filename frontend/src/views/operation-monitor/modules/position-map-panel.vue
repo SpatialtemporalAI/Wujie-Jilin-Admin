@@ -51,6 +51,23 @@ function centerContent() {
   fabricCanvas.setViewportTransform([zoom, 0, 0, zoom, Math.max(0, offsetX), Math.max(0, offsetY)]);
 }
 
+function clearMapState() {
+  mapData.value = null;
+  for (const [, obj] of elementMap) {
+    fabricCanvas?.remove(obj);
+  }
+  elementMap.clear();
+  if (robotMarker) {
+    fabricCanvas?.remove(robotMarker);
+    robotMarker = null;
+  }
+  if (backgroundImgObj) {
+    fabricCanvas?.remove(backgroundImgObj);
+    backgroundImgObj = null;
+  }
+  fabricCanvas?.renderAll();
+}
+
 function createRestrictedPattern(): Pattern {
   const size = 8;
   const canvas = document.createElement('canvas');
@@ -313,23 +330,18 @@ async function loadMapData(mapId: number) {
   mapLoading.value = true;
   try {
     const { data } = await fetchGetEditorMapData(mapId);
-    if (!data) return;
+    if (!data) {
+      clearMapState();
+      return;
+    }
     for (const ann of data.annotations) {
       const p = worldToPixel(ann.x, ann.y, data.map.start_point_x ?? 0, data.map.start_point_y ?? 0, data.map.resolution ?? 0.2);
       ann.x = p.x;
       ann.y = (data.map.height ?? canvasHeight.value) - p.y;
     }
-    mapData.value = data;
 
-    // Clear existing elements
-    for (const [, obj] of elementMap) {
-      fabricCanvas?.remove(obj);
-    }
-    elementMap.clear();
-    if (robotMarker) {
-      fabricCanvas?.remove(robotMarker);
-      robotMarker = null;
-    }
+    clearMapState();
+    mapData.value = data;
 
     if (data.map.image_id) {
       await loadBackgroundImage(data.map.image_id);
@@ -452,16 +464,7 @@ watch(() => props.mapId, (newMapId) => {
   if (newMapId) {
     loadMapData(newMapId);
   } else {
-    mapData.value = null;
-    for (const [, obj] of elementMap) {
-      fabricCanvas?.remove(obj);
-    }
-    elementMap.clear();
-    if (robotMarker) {
-      fabricCanvas?.remove(robotMarker);
-      robotMarker = null;
-    }
-    fabricCanvas?.renderAll();
+    clearMapState();
   }
 });
 
@@ -483,7 +486,7 @@ onBeforeUnmount(() => {
 
 <template>
   <div class="relative h-full min-h-0">
-    <NSpin :show="mapLoading" class="h-full">
+    <NSpin :show="mapLoading" class="h-full" content-class="h-full">
       <div ref="canvasContainer" class="h-full min-h-360px w-full overflow-hidden rounded bg-gray-100">
         <canvas ref="canvasEl" />
         <div v-if="!mapId" class="absolute inset-0 flex items-center justify-center">

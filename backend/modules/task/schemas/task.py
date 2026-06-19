@@ -81,6 +81,7 @@ class TaskQueryParams(BaseReqEntity):
 class TaskCreate(BaseReqEntity):
     """创建任务"""
     name: str = Field(..., description="任务名称", min_length=2, max_length=20)
+    map_id: Optional[int] = Field(None, description="关联场景地图ID")
     task_type: str = Field(..., description="任务类型: patrol/broadcast")
     points: Optional[List[TaskPointCreate]] = Field(None, description="巡逻点位列表")
     broadcast_text: Optional[str] = Field(None, description="播报文本")
@@ -100,6 +101,7 @@ class TaskCreate(BaseReqEntity):
 class TaskUpdate(BaseReqEntity):
     """更新任务"""
     name: Optional[str] = Field(None, description="任务名称", min_length=2, max_length=20)
+    map_id: Optional[int] = Field(None, description="关联场景地图ID")
     task_type: Optional[str] = Field(None, description="任务类型")
     points: Optional[List[TaskPointCreate]] = Field(None, description="巡逻点位列表")
     broadcast_text: Optional[str] = Field(None, description="播报文本")
@@ -122,6 +124,8 @@ class TaskResponseData(BaseEntity):
 
     id: int = Field(..., description="任务ID")
     name: str = Field(..., description="任务名称")
+    map_id: Optional[int] = Field(None, description="关联场景地图ID")
+    map_name: Optional[str] = Field(None, description="关联场景地图名称")
     task_type: str = Field(..., description="任务类型")
     enabled: EnableStatusField = Field(..., description="启用状态: 1-启用, 2-禁用")
     status: str = Field(..., description="执行状态")

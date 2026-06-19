@@ -16,7 +16,7 @@ class MCPSettings(BaseSettings):
         case_sensitive=False,
     )
 
-    NAME: str = Field("SmileX MCP Server", description="MCP 服务器名称")
+    NAME: str = Field("Wujie-Jilin-Admin MCP Server", description="MCP 服务器名称")
     HOST: str = Field("127.0.0.1", description="服务监听地址")
     PORT: int = Field(9001, description="服务监听端口")
     UPSTREAM_BASE_URL: str = Field("http://127.0.0.1:8000", description="上游应用 URL")

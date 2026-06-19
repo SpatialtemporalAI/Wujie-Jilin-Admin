@@ -130,6 +130,28 @@ class FileService:
         return sys_file
 
     @staticmethod
+    async def get_file_url(db: AsyncSession, file_id: int) -> str | None:
+        """构造文件 preview 完整 URL：
+
+        - 启用签名模式（SERVICE.INTERNAL_TOKEN 非空）：
+          返回带时效的签名 URL（HMAC），URL 不暴露密钥，过期前可直接 GET：
+          {BASE_URL}/admin/sys/file/{id}/preview?expires=<unix>&sig=<hex>
+        - 未启用签名模式：返回相对路径，由调用方自行处理鉴权
+        - 返回 None 表示文件不存在
+        """
+        try:
+            await FileService.get_file(db, file_id)
+        except NotFoundError:
+            return None
+        from core.security.file_signature import build_signed_url, is_enabled
+
+        if is_enabled():
+            return build_signed_url(file_id)
+
+        base_url = (settings.SERVICE.BASE_URL or "").rstrip("/")
+        return f"{base_url}/admin/sys/file/{file_id}/preview"
+
+    @staticmethod
     async def get_file_content(db: AsyncSession, file_id: int) -> tuple[SysFile, bytes]:
         """获取文件元数据和二进制内容"""
         sys_file = await FileService.get_file(db, file_id)

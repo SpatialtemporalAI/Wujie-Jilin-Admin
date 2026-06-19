@@ -239,7 +239,7 @@ async function handleInitModel() {
     model.value.schedule_repeat_cycles = cloned.schedule_repeat_cycle
       ? cloned.schedule_repeat_cycle.split(',').filter(v => v && v !== 'none')
       : [];
-    model.value.map_id = cloned.robots?.find(r => r.map_id)?.map_id ?? null;
+    model.value.map_id = cloned.map_id ?? cloned.robots?.find(r => r.map_id)?.map_id ?? null;
     model.value.robot_ids = cloned.robots?.map(r => r.id) || [];
 
     if (model.value.map_id !== null) {
@@ -259,7 +259,7 @@ async function handleInitModel() {
     if (cloned.id) {
       const { data: detail } = await fetchGetTask(cloned.id);
       if (detail) {
-        model.value.map_id = detail.robots?.find(r => r.map_id)?.map_id ?? model.value.map_id;
+        model.value.map_id = detail.map_id ?? detail.robots?.find(r => r.map_id)?.map_id ?? model.value.map_id;
         model.value.robot_ids = detail.robots?.map(r => r.id) || [];
         if (model.value.map_id !== null) {
           await loadAnnotations(model.value.map_id);
@@ -328,6 +328,7 @@ async function handleSubmit() {
   }
   const submitData: Api.Task.TaskCreate = {
     name: model.value.name,
+    map_id: model.value.map_id,
     task_type: model.value.task_type,
     robot_ids: model.value.robot_ids,
     schedule_enabled: model.value.schedule_enabled,

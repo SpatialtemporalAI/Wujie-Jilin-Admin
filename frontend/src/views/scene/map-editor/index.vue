@@ -4,9 +4,8 @@ import { useMapEditor } from './composables/useMapEditor';
 import EditorToolbar from './modules/editor-toolbar.vue';
 import CanvasEditor from './modules/canvas-editor.vue';
 import PropertyPanel from './modules/property-panel.vue';
-import { fetchCreateSceneMap } from '@/service/api/scene';
+import { fetchCreateSceneMap, fetchUpdateSceneMap, fetchGetSceneMap } from '@/service/api/scene';
 import { fetchUploadFile, getFilePreviewUrl } from '@/service/api/file';
-import { degToRad } from '@/utils/coordinate';
 
 defineOptions({ name: 'SceneMapEditor' });
 
@@ -36,6 +35,7 @@ const baseContextMenuOptions = [
     ],
   },
   { label: '禁行区域', key: 'add-restricted' },
+  { label: '电子围栏', key: 'add-fence' },
 ];
 
 const contextMenuOptions = computed(() => {
@@ -91,13 +91,14 @@ const hoverInfo = computed(() => {
   const obj = editor.editorData.value.objects.find(o => o.id === t.id);
   if (!obj) return null;
   const isRestricted = obj.type === 'restricted' || obj.type === '禁区';
+  const isFence = obj.type === 'fence' || obj.type === '电子围栏';
   const shapeMap: Record<string, string> = {
     'obstacle-circle': '圆形',
     'obstacle-triangle': '三角形',
     'obstacle-square': '正方形',
   };
-  const kind = isRestricted ? '禁行区域' : '障碍物';
-  const typeName = isRestricted ? '禁区' : (shapeMap[obj.type] || '障碍物');
+  const kind = isFence ? '电子围栏' : (isRestricted ? '禁行区域' : '障碍物');
+  const typeName = isFence ? '围栏' : (isRestricted ? '禁区' : (shapeMap[obj.type] || '障碍物'));
   return {
     kind,
     name: obj.name || '-',
@@ -121,40 +122,52 @@ function handleHoverElement(data: { type: 'annotation' | 'object'; id: number; c
   hoverInfoShow.value = true;
 }
 
-const addDialogVisible = ref(false);
-const newMapName = ref('');
-const newMapGroupId = ref<number | null>(null);
-const newMapImageId = ref<number | null>(null);
-const newMapImageUrl = ref('');
-const newMapOriginalWidth = ref<number | null>(null);
-const newMapOriginalHeight = ref<number | null>(null);
-const newMapImageRef = ref<HTMLImageElement>();
-const newMapPointX = ref<number | null>(null);
-const newMapPointY = ref<number | null>(null);
-const newMapPointAngle = ref(0);
-const newMapResolution = ref(0.05);
-const addSceneUploading = ref(false);
+const sceneDialogVisible = ref(false);
+const sceneDialogMode = ref<'add' | 'edit'>('add');
+const editMapId = ref<number | null>(null);
+const sceneFormName = ref('');
+const sceneFormGroupId = ref<number | null>(null);
+const sceneFormImageId = ref<number | null>(null);
+const sceneFormImageUrl = ref('');
+const sceneFormOriginalWidth = ref<number | null>(null);
+const sceneFormOriginalHeight = ref<number | null>(null);
+const sceneFormImageRef = ref<HTMLImageElement>();
+const sceneFormPointX = ref<number | null>(null);
+const sceneFormPointY = ref<number | null>(null);
+const sceneFormResolution = ref(0.05);
+const sceneUploading = ref(false);
 
 function getScaledStartPoint() {
-  const imageRect = newMapImageRef.value?.getBoundingClientRect();
+  const imageRect = sceneFormImageRef.value?.getBoundingClientRect();
   if (
     !imageRect ||
-    !newMapOriginalWidth.value ||
-    !newMapOriginalHeight.value ||
+    !sceneFormOriginalWidth.value ||
+    !sceneFormOriginalHeight.value ||
     imageRect.width <= 0 ||
     imageRect.height <= 0 ||
-    newMapPointX.value === null ||
-    newMapPointY.value === null
+    sceneFormPointX.value === null ||
+    sceneFormPointY.value === null
   ) {
     return null;
   }
-  const scaleX = newMapOriginalWidth.value / imageRect.width;
-  const scaleY = newMapOriginalHeight.value / imageRect.height;
+  const scaleX = sceneFormOriginalWidth.value / imageRect.width;
+  const scaleY = sceneFormOriginalHeight.value / imageRect.height;
   return {
-    x: newMapPointX.value * scaleX,
-    y: newMapPointY.value * scaleY,
-    angle: newMapPointAngle.value,
+    x: sceneFormPointX.value * scaleX,
+    y: sceneFormPointY.value * scaleY,
   };
+}
+
+function resetSceneForm() {
+  sceneFormName.value = '';
+  sceneFormGroupId.value = null;
+  sceneFormImageId.value = null;
+  sceneFormImageUrl.value = '';
+  sceneFormOriginalWidth.value = null;
+  sceneFormOriginalHeight.value = null;
+  sceneFormPointX.value = null;
+  sceneFormPointY.value = null;
+  sceneFormResolution.value = 0.05;
 }
 
 onMounted(async () => {
@@ -168,91 +181,142 @@ async function handleSelectMap(mapId: number) {
   await editor.loadMap(mapId);
 }
 
-async function handleAddScene() {
-  newMapName.value = '';
-  newMapGroupId.value = null;
-  newMapImageId.value = null;
-  newMapImageUrl.value = '';
-  newMapOriginalWidth.value = null;
-  newMapOriginalHeight.value = null;
-  newMapPointX.value = null;
-  newMapPointY.value = null;
-  newMapPointAngle.value = 0;
-  newMapResolution.value = 0.05;
-  addDialogVisible.value = true;
+function handleOpenAddScene() {
+  resetSceneForm();
+  sceneDialogMode.value = 'add';
+  editMapId.value = null;
+  sceneDialogVisible.value = true;
 }
 
-async function handleAddSceneUpload({ file }: { file: { file: File | null } }) {
+async function handleOpenEditScene(mapId: number) {
+  try {
+    const { data, error } = await fetchGetSceneMap(mapId);
+    if (error || !data) {
+      window.$message?.error('加载场景详情失败');
+      return;
+    }
+    resetSceneForm();
+    sceneDialogMode.value = 'edit';
+    editMapId.value = mapId;
+    sceneFormName.value = data.name || '';
+    sceneFormImageId.value = data.image_id ?? null;
+    sceneFormOriginalWidth.value = data.width ?? null;
+    sceneFormOriginalHeight.value = data.height ?? null;
+    sceneFormPointX.value = data.start_point_x ?? null;
+    sceneFormPointY.value = data.start_point_y ?? null;
+    sceneFormResolution.value = data.resolution ?? 0.05;
+    if (data.image_id) {
+      sceneFormImageUrl.value = getFilePreviewUrl(data.image_id);
+    }
+    sceneDialogVisible.value = true;
+  } catch (e: any) {
+    window.$message?.error(e?.message || '加载场景详情失败');
+  }
+}
+
+async function handleSceneUpload({ file }: { file: { file: File | null } }) {
   if (!file.file) return;
-  addSceneUploading.value = true;
+  sceneUploading.value = true;
   try {
     const { data, error } = await fetchUploadFile(file.file, { includeImageInfo: true });
     if (!error && data) {
-      newMapImageId.value = data.id;
-      newMapImageUrl.value = getFilePreviewUrl(data.id);
-      newMapOriginalWidth.value = data.image_width ?? null;
-      newMapOriginalHeight.value = data.image_height ?? null;
+      sceneFormImageId.value = data.id;
+      sceneFormImageUrl.value = getFilePreviewUrl(data.id);
+      sceneFormOriginalWidth.value = data.image_width ?? null;
+      sceneFormOriginalHeight.value = data.image_height ?? null;
       window.$message?.success('图片上传成功');
     }
   } finally {
-    addSceneUploading.value = false;
+    sceneUploading.value = false;
   }
 }
 
-function handleRemoveAddSceneImage() {
-  newMapImageId.value = null;
-  newMapImageUrl.value = '';
-  newMapOriginalWidth.value = null;
-  newMapOriginalHeight.value = null;
+function handleRemoveSceneImage() {
+  sceneFormImageId.value = null;
+  sceneFormImageUrl.value = '';
+  sceneFormOriginalWidth.value = null;
+  sceneFormOriginalHeight.value = null;
 }
 
-async function confirmAddScene() {
-  if (!newMapName.value.trim()) {
+async function confirmSceneSubmit() {
+  if (!sceneFormName.value.trim()) {
     window.$message?.warning('请输入场景名称');
     return false;
   }
-  if (!newMapImageId.value) {
-    window.$message?.warning('请上传场景图片');
+
+  if (sceneDialogMode.value === 'add') {
+    if (!sceneFormImageId.value) {
+      window.$message?.warning('请上传场景图片');
+      return false;
+    }
+    if (!sceneFormOriginalWidth.value || !sceneFormOriginalHeight.value) {
+      window.$message?.warning('请确认图片原图尺寸');
+      return false;
+    }
+    const startPoint = getScaledStartPoint();
+    if (!startPoint) {
+      window.$message?.warning('请输入起始点位 X、Y');
+      return false;
+    }
+    try {
+      const { data } = await fetchCreateSceneMap({
+        name: sceneFormName.value.trim(),
+        group_id: sceneFormGroupId.value,
+        image_id: sceneFormImageId.value,
+        width: sceneFormOriginalWidth.value,
+        height: sceneFormOriginalHeight.value,
+        resolution: sceneFormResolution.value,
+        start_point_x: startPoint.x,
+        start_point_y: startPoint.y,
+      });
+      if (data) {
+        sceneDialogVisible.value = false;
+        await editor.loadSceneList();
+        await editor.loadMap((data as any).id);
+
+        editor.addAnnotation({
+          x: 0,
+          y: 0,
+          name: '起始点位',
+          angle: 0,
+          type: 'navigation',
+        });
+        await editor.saveMap({ silent: true });
+
+        window.$message?.success('创建成功');
+      }
+    } catch (e: any) {
+      window.$message?.error(e?.message || '创建失败');
+    }
     return false;
   }
-  if (!newMapOriginalWidth.value || !newMapOriginalHeight.value) {
-    window.$message?.warning('请确认图片原图尺寸');
+
+  // edit 模式
+  if (sceneFormPointX.value === null || sceneFormPointY.value === null) {
+    window.$message?.warning('请输入起始点位 X、Y');
     return false;
   }
-  const startPoint = getScaledStartPoint();
-  if (!startPoint) {
-    window.$message?.warning('请输入起始点位 X、Y 和角度');
+  if (!editMapId.value) {
+    window.$message?.error('未找到场景 ID');
     return false;
   }
   try {
-    const { data } = await fetchCreateSceneMap({
-      name: newMapName.value.trim(),
-      group_id: newMapGroupId.value,
-      image_id: newMapImageId.value,
-      width: newMapOriginalWidth.value,
-      height: newMapOriginalHeight.value,
-      resolution: newMapResolution.value,
-      start_point_x: startPoint.x,
-      start_point_y: startPoint.y,
+    const { error } = await fetchUpdateSceneMap(editMapId.value, {
+      name: sceneFormName.value.trim(),
+      resolution: sceneFormResolution.value,
+      start_point_x: sceneFormPointX.value,
+      start_point_y: sceneFormPointY.value,
     });
-    if (data) {
-      addDialogVisible.value = false;
+    if (!error) {
+      sceneDialogVisible.value = false;
       await editor.loadSceneList();
-      await editor.loadMap((data as any).id);
-
-      editor.addAnnotation({
-        x: 0,
-        y: 0,
-        name: '起始点位',
-        angle: degToRad(startPoint.angle || 0),
-        type: 'navigation',
-      });
-      await editor.saveMap({ silent: true });
-
-      window.$message?.success('创建成功');
+      if (editor.selectedMapId.value === editMapId.value) {
+        await editor.loadMap(editMapId.value);
+      }
+      window.$message?.success('修改成功');
     }
   } catch (e: any) {
-    window.$message?.error(e?.message || '创建失败');
+    window.$message?.error(e?.message || '修改失败');
   }
   return false;
 }
@@ -320,6 +384,20 @@ function handleContextMenuSelect(key: string) {
     editor.addObject({
       type: 'restricted',
       name: `禁区${count}`,
+      x: x - 5,
+      y: y - 5,
+      width: 10,
+      height: 10,
+      points: null,
+    });
+    return;
+  }
+
+  if (key === 'add-fence') {
+    const count = (editor.editorData.value?.objects.filter(o => o.type === 'fence').length || 0) + 1;
+    editor.addObject({
+      type: 'fence',
+      name: `电子围栏${count}`,
       x: x - 5,
       y: y - 5,
       width: 10,
@@ -433,9 +511,9 @@ function handleFocusAnnotation(id: number) {
         :selected-element="editor.selectedElement.value" :resolution="editor.resolution.value"
         :scene-list="editor.sceneList.value" :selected-map-id="editor.selectedMapId.value"
         :map-id="editor.selectedMapId.value" @update-element="handleUpdateElement"
-        @remove-element="editor.removeElement" @select-scene="handleSelectMap" @add-scene="handleAddScene"
-        @delete-scene="handleDeleteScene" @locate-robot="handleLocateRobot" @focus-annotation="handleFocusAnnotation"
-        @select-element="el => (editor.selectedElement.value = el)" />
+        @remove-element="editor.removeElement" @select-scene="handleSelectMap" @add-scene="handleOpenAddScene"
+        @edit-scene="handleOpenEditScene" @delete-scene="handleDeleteScene" @locate-robot="handleLocateRobot"
+        @focus-annotation="handleFocusAnnotation" @select-element="el => (editor.selectedElement.value = el)" />
     </div>
 
     <!-- 右键上下文菜单 -->
@@ -479,40 +557,56 @@ function handleFocusAnnotation(id: number) {
       <NInput v-model:value="renameValue" placeholder="请输入名称" @keydown.enter="confirmRename" />
     </NModal>
 
-    <!-- Add scene dialog -->
-    <NModal v-model:show="addDialogVisible" preset="dialog" title="新增场景" positive-text="确定" negative-text="取消"
-      @positive-click="confirmAddScene">
+    <!-- Scene dialog (add/edit) -->
+    <NModal v-model:show="sceneDialogVisible" preset="dialog" :title="sceneDialogMode === 'edit' ? '编辑场景' : '新增场景'"
+      positive-text="确定" negative-text="取消" @positive-click="confirmSceneSubmit">
       <NForm label-placement="left" label-width="92">
         <NFormItem label="场景名称">
-          <NInput v-model:value="newMapName" placeholder="请输入场景名称" />
+          <NInput v-model:value="sceneFormName" placeholder="请输入场景名称" />
         </NFormItem>
-        <NFormItem label="场景图片">
+        <NFormItem v-if="sceneDialogMode === 'add'" label="场景图片">
           <div class="w-full">
-            <NUpload :max="1" accept="image/*" :custom-request="handleAddSceneUpload" :show-file-list="false">
-              <NButton :loading="addSceneUploading" ghost>
+            <NUpload :max="1" accept="image/*" :custom-request="handleSceneUpload" :show-file-list="false">
+              <NButton :loading="sceneUploading" ghost>
                 <template #icon><icon-ic-round-upload /></template>
-                {{ addSceneUploading ? '上传中...' : '选择图片' }}
+                {{ sceneUploading ? '上传中...' : '选择图片' }}
               </NButton>
             </NUpload>
-            <div v-if="newMapImageUrl" class="mt-8px flex items-center gap-8px">
-              <img ref="newMapImageRef" :src="newMapImageUrl" class="max-h-160px max-w-260px object-contain" />
+            <div v-if="sceneFormImageUrl" class="mt-8px flex items-center gap-8px">
+              <img ref="sceneFormImageRef" :src="sceneFormImageUrl" class="max-h-160px max-w-260px object-contain" />
               <div class="text-xs text-gray-500">
-                原图：{{ newMapOriginalWidth ?? '-' }} × {{ newMapOriginalHeight ?? '-' }} px
+                原图：{{ sceneFormOriginalWidth ?? '-' }} × {{ sceneFormOriginalHeight ?? '-' }} px
               </div>
-              <NButton text type="error" @click="handleRemoveAddSceneImage">移除</NButton>
+              <NButton text type="error" @click="handleRemoveSceneImage">移除</NButton>
             </div>
           </div>
         </NFormItem>
+        <NFormItem v-else label="场景图片">
+          <div v-if="sceneFormImageUrl" class="flex w-full items-center gap-8px">
+            <img :src="sceneFormImageUrl" class="max-h-160px max-w-260px object-contain" />
+            <div class="text-xs text-gray-500">
+              原图：{{ sceneFormOriginalWidth ?? '-' }} × {{ sceneFormOriginalHeight ?? '-' }} px
+            </div>
+          </div>
+          <span v-else class="text-xs text-gray-400">未设置图片</span>
+        </NFormItem>
         <NFormItem label="起始点位">
-          <div class="grid w-full grid-cols-4 gap-8px">
-            <NInputNumber v-model:value="newMapPointX" placeholder="原始X" class="w-full" />
-            <NInputNumber v-model:value="newMapPointY" placeholder="原始Y" class="w-full" />
-            <NInputNumber v-model:value="newMapPointAngle" placeholder="角度" class="w-full" />
-            <NInputNumber v-model:value="newMapResolution" placeholder="分辨率" :step="0.01" :min="0.01" class="w-full" />
+          <div class="flex w-full flex-col gap-8px">
+            <div class="grid w-full grid-cols-2 gap-8px">
+              <NInputNumber v-model:value="sceneFormPointX" :placeholder="sceneDialogMode === 'edit' ? 'X (米)' : '原始X'"
+                class="w-full" />
+              <NInputNumber v-model:value="sceneFormPointY" :placeholder="sceneDialogMode === 'edit' ? 'Y (米)' : '原始Y'"
+                class="w-full" />
+            </div>
+            <NInputNumber v-model:value="sceneFormResolution" placeholder="分辨率 (m/px)" :step="0.01" :min="0.01"
+              class="w-full" />
           </div>
         </NFormItem>
-        <div class="text-xs text-gray-500">
+        <div v-if="sceneDialogMode === 'add'" class="text-xs text-gray-500">
           起始点位按上方图片当前网页显示尺寸录入，保存时会按 原图尺寸 / 网页显示尺寸 缩放到地图原图坐标。分辨率(m/px)对应 ROS map.yaml 中的 resolution，默认 0.05。
+        </div>
+        <div v-else class="text-xs text-gray-500">
+          起始点位使用地图原图坐标系下的米值。分辨率(m/px)对应 ROS map.yaml 中的 resolution。
         </div>
       </NForm>
     </NModal>

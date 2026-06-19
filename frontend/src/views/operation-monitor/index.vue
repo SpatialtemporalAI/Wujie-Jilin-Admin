@@ -22,9 +22,9 @@ const {
 </script>
 
 <template>
-  <div class="min-h-500px flex-col-stretch gap-16px overflow-hidden lt-sm:overflow-auto">
-    <NSpin :show="loading" class="h-full">
-      <div class="h-full min-h-0 flex-col-stretch gap-16px">
+  <div class="flex-col-stretch gap-16px overflow-y-auto pb-16px">
+    <NSpin :show="loading">
+      <div class="flex flex-col gap-16px">
         <!-- 机器人选择 + 状态卡片 -->
         <RobotStatusCard
           :robot-list="robotList"
@@ -34,19 +34,12 @@ const {
         />
 
         <!-- Tab 切换 -->
-        <NCard :bordered="false" size="small" class="card-wrapper flex-1-hidden">
-          <NTabs
-            v-model:value="activeTab"
-            type="line"
-            animated
-            class="h-full min-h-0 flex flex-col"
-            pane-wrapper-class="min-h-0 flex-1"
-            pane-class="h-full min-h-0"
-          >
+        <NCard :bordered="false" size="small" class="card-wrapper">
+          <NTabs v-model:value="activeTab" type="line" animated>
             <NTabPane name="realtime" tab="实时">
-              <NGrid :x-gap="16" :y-gap="16" responsive="screen" item-responsive class="h-full min-h-0">
-                <NGi span="24 m:16" class="h-full min-h-0">
-                  <NCard :bordered="true" size="small" class="h-full" content-class="h-full min-h-0">
+              <NGrid :x-gap="16" :y-gap="16" responsive="screen" item-responsive>
+                <NGi span="24 m:16">
+                  <NCard :bordered="true" size="small" content-class="!p-0 overflow-hidden">
                     <template #header>
                       <NSpace align="center" :size="8">
                         <span>实时位置</span>
@@ -55,15 +48,19 @@ const {
                         </NTag>
                       </NSpace>
                     </template>
-                    <PositionMapPanel
-                      :map-id="selectedRobot?.map_id ?? null"
-                      :location="parsedLocation"
-                      :robot-name="selectedRobot?.name ?? ''"
-                    />
+                    <div class="h-520px">
+                      <PositionMapPanel
+                        :map-id="selectedRobot?.map_id ?? null"
+                        :location="parsedLocation"
+                        :robot-name="selectedRobot?.name ?? ''"
+                      />
+                    </div>
                   </NCard>
                 </NGi>
-                <NGi span="24 m:8" class="h-full min-h-0">
-                  <AlertPanel class="h-full" :robot-id="selectedRobotId" />
+                <NGi span="24 m:8">
+                  <div class="h-520px">
+                    <AlertPanel class="h-full" :robot-id="selectedRobotId" />
+                  </div>
                 </NGi>
               </NGrid>
             </NTabPane>

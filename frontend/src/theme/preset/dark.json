@@ -61,7 +61,7 @@
   },
   "watermark": {
     "visible": false,
-    "text": "SmileX 管理系统",
+    "text": "吉大二院 管理系统",
     "enableUserName": false,
     "enableTime": false,
     "timeFormat": "YYYY-MM-DD HH:mm"

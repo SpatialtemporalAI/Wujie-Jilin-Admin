@@ -1,6 +1,6 @@
 """set scene_map resolution default to 1
 
-Revision ID: 0019_scene_map_resolution_default
+Revision ID: 0019_scene_map_resolution
 Revises: 0018_scene_map_nav_image
 Create Date: 2026-06-17
 """
@@ -10,7 +10,7 @@ from typing import Sequence, Union
 from alembic import op
 import sqlalchemy as sa
 
-revision: str = "0019_scene_map_resolution_default"
+revision: str = "0019_scene_map_resolution"
 down_revision: Union[str, Sequence[str], None] = "0018_scene_map_nav_image"
 branch_labels: Union[str, Sequence[str], None] = None
 depends_on: Union[str, Sequence[str], None] = None

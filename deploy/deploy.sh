@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# SmileX Cloud Backend 部署脚本
+# Wujie-Jilin-Admin Cloud Backend 部署脚本
 # 用法: ./deploy.sh <command> [options]
 #
 # 命令:
@@ -96,7 +96,7 @@ check_prerequisites() {
 # ---- 子命令实现 ----
 
 cmd_setup() {
-    info "========== SmileX Cloud 首次部署 =========="
+    info "========== Wujie-Jilin-Admin Cloud 首次部署 =========="
     check_root
     check_prerequisites
     ensure_user
@@ -254,7 +254,7 @@ cmd_status() {
 # ---- 入口 ----
 
 usage() {
-    echo "SmileX Cloud Backend 部署脚本"
+    echo "Wujie-Jilin-Admin Cloud Backend 部署脚本"
     echo ""
     echo "用法: $0 <command> [options]"
     echo ""

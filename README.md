@@ -1,13 +1,13 @@
-# SmileX 项目
+# Wujie-Jilin-Admin 项目
 
-SmileX 是一个基于 FastAPI 和 Vue 的全栈云服务平台，提供完整的前后端解决方案，支持用户认证、权限管理、系统配置等核心功能。
+Wujie-Jilin-Admin 是一个基于 FastAPI 和 Vue 的全栈云服务平台，提供完整的前后端解决方案，支持用户认证、权限管理、系统配置等核心功能。
 
 ## 项目结构
 
 本项目采用前后端分离架构，后端代码位于 `backend` 目录，前端代码位于 `frontend` 目录。
 
 ```
-SmileX-Fastapi-Cloud/
+Wujie-jilin-Admin/
 ├── backend/            # 后端代码
 │   ├── app/            # 应用核心模块
 │   ├── config/         # 配置文件
@@ -107,7 +107,7 @@ SmileX-Fastapi-Cloud/
    # MCP 服务随主应用自动启动，无需手动操作
    # 默认配置如下（可在 .env 中覆盖）：
    # MCP__ENABLED=true
-   # MCP__NAME=SmileX MCP Server
+   # MCP__NAME=Wujie-Jilin-Admin MCP Server
    # MCP__HOST=127.0.0.1
    # MCP__PORT=9000
 
@@ -263,17 +263,47 @@ SmileX-Fastapi-Cloud/
 
 ### 后端部署
 
-1. **环境配置**: 确保服务器安装了 Python 3.9+
+1. **环境配置**: 确保服务器安装了 Python 3.11+（仅 Linux/WSL 支持生产模式）
 2. **依赖安装**: 使用 uv 安装依赖
-3. **环境变量**: 配置生产环境的 `.env` 文件
+   ```bash
+   cd backend && uv sync
+   ```
+3. **环境变量**: 配置 `backend/.env.prod`（数据库、Redis、JWT、gRPC 等）
 4. **数据库迁移**: 执行数据库迁移
-5. **服务启动**: 使用 Gunicorn 或 Uvicorn 启动服务
+   ```bash
+   cd backend && alembic upgrade head
+   ```
+5. **服务启动（生产模式）**: 使用项目内置脚本启动 gunicorn + uvicorn worker
+   ```bash
+   cd backend && ./start_prod.sh
+   # 自定义参数（可选）
+   HOST=0.0.0.0 PORT=8000 WORKERS=4 ./start_prod.sh
+   ```
+
+   脚本行为：
+   - 自动 `export ENVIR=prod` 加载 `backend/.env.prod`
+   - 默认 `-w 4 --timeout 120 --max-requests 5000 --max-requests-jitter 500`，与 `deploy/smilex-cloud.service` 对齐
+   - 支持 `HOST/PORT/WORKERS/TIMEOUT/MAX_REQUESTS/MAX_REQUESTS_JITTER/LOG_LEVEL` 环境变量覆盖
+   - 优先用 `backend/.venv/bin/gunicorn`，缺失时回退 PATH
+   - 访问/错误日志直通 stdout/stderr，便于 systemd / 容器收集
+
+   > 正式生产长期运行推荐 systemd：参考 `deploy/smilex-cloud.service` + `deploy/deploy.sh`，可享受开机自启、自动重启、日志轮转。
 
 ### 前端部署
 
-1. **构建**: 执行 `pnpm build` 命令构建前端代码
-2. **静态文件**: 将构建后的静态文件部署到 Nginx 或其他静态文件服务器
-3. **配置**: 配置 Nginx 代理后端 API 请求
+1. **生产模式启动（本地预览）**: 一条命令完成生产构建 + 预览
+   ```bash
+   cd frontend && pnpm start:prod
+   ```
+   等价于 `vite build --mode prod && vite preview`，构建产物到 `dist/` 后启动 vite 预览服务器。
+
+2. **正式部署**: 将构建产物部署到 Nginx 或其他静态服务器
+   ```bash
+   cd frontend && pnpm build      # 产物位于 dist/
+   ```
+   然后将 `dist/` 内容拷贝到 Nginx 静态目录，参考 `deploy/nginx.conf` 配置反向代理。
+
+3. **配置**: 在 Nginx 中将 `/api` 等后端路径代理到后端服务地址（生产环境前请确认 `frontend/.env.prod` 中 `VITE_SERVICE_BASE_URL` 已替换为真实后端）。
 
 ## 项目配置
 
@@ -334,9 +364,9 @@ SmileX-Fastapi-Cloud/
 
 ## 联系方式
 
-- 项目地址: [https://github.com/SmileX/SmileX-Fastapi-Cloud](https://github.com/SmileX/SmileX-Fastapi-Cloud)
-- 问题反馈: [https://github.com/SmileX/SmileX-Fastapi-Cloud/issues](https://github.com/SmileX/SmileX-Fastapi-Cloud/issues)
+- 项目地址: [https://github.com/SpatialtemporalAI/Wujie-jilin-admin](https://github.com/SpatialtemporalAI/Wujie-jilin-admin)
+- 问题反馈: [https://github.com/SpatialtemporalAI/Wujie-jilin-admin/issues](https://github.com/SpatialtemporalAI/Wujie-jilin-admin/issues)
 
 ---
 
-**SmileX** - 让云服务更简单，让开发更高效！
+**Wujie-Jilin-Admin** - 让云服务更简单，让开发更高效！

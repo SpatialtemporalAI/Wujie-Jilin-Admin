@@ -10,7 +10,11 @@ from database.models.business.scene_map import SceneMap
 from database.models.business.scene_map_annotation import SceneMapAnnotation
 from database.models.business.scene_map_path import SceneMapPath
 from database.models.business.scene_map_object import SceneMapObject
-from modules.scene.schemas.scene_map_editor import EditorSaveRequest
+from modules.scene.schemas.scene_map_editor import (
+    CreatedIdMapping,
+    EditorSaveRequest,
+    EditorSaveResponse,
+)
 from modules.task.services.task_service import TaskService
 
 
@@ -41,8 +45,8 @@ class SceneMapEditorService:
     @staticmethod
     async def save_editor_data(
         db: AsyncSession, map_id: int, save_request: EditorSaveRequest
-    ) -> None:
-        """批量保存编辑器数据"""
+    ) -> EditorSaveResponse:
+        """批量保存编辑器数据，并返回新建元素的真实id映射"""
 
         # 校验地图存在
         stmt = select(SceneMap).where(
@@ -91,6 +95,11 @@ class SceneMapEditorService:
             for obj in result.scalars().all():
                 await db.delete(obj)
 
+        # 收集新建对象（flush 后才能拿到 snowflake id）
+        new_annotations: list[tuple[int | None, SceneMapAnnotation]] = []
+        new_paths: list[tuple[int | None, SceneMapPath]] = []
+        new_objects: list[tuple[int | None, SceneMapObject]] = []
+
         # 新建/更新标注
         for item in save_request.annotations:
             if item.id:
@@ -116,6 +125,7 @@ class SceneMapEditorService:
                     type=item.type,
                 )
                 db.add(ann)
+                new_annotations.append((item.client_temp_id, ann))
 
         # 新建/更新路径
         for item in save_request.paths:
@@ -140,6 +150,7 @@ class SceneMapEditorService:
                     points=item.points,
                 )
                 db.add(path)
+                new_paths.append((item.client_temp_id, path))
 
         # 新建/更新物体
         for item in save_request.objects:
@@ -172,5 +183,32 @@ class SceneMapEditorService:
                     angle=item.angle,
                 )
                 db.add(obj)
+                new_objects.append((item.client_temp_id, obj))
+
+        # 编辑器保存触发版本号自增（用于与导览服务的版本对齐）
+        map_obj.version = (map_obj.version or 0) + 1
 
         await db.flush()
+
+        # 组装新建元素的 id 映射（flush 后 snowflake id 已生成）
+        created_annotations = [
+            CreatedIdMapping(temp_id=temp_id, id=ann.id)
+            for temp_id, ann in new_annotations
+            if temp_id is not None
+        ]
+        created_paths = [
+            CreatedIdMapping(temp_id=temp_id, id=path.id)
+            for temp_id, path in new_paths
+            if temp_id is not None
+        ]
+        created_objects = [
+            CreatedIdMapping(temp_id=temp_id, id=obj.id)
+            for temp_id, obj in new_objects
+            if temp_id is not None
+        ]
+
+        return EditorSaveResponse(
+            created_annotations=created_annotations,
+            created_objects=created_objects,
+            created_paths=created_paths,
+        )

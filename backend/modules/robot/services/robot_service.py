@@ -369,3 +369,19 @@ class RobotService:
             await db.rollback()
             logger.error("删除机器人失败: %s", str(e), exc_info=True)
             raise
+
+    @staticmethod
+    async def unbind_map(db: AsyncSession, map_id: int) -> int:
+        """解除某场景地图下所有机器人的绑定（map_id 置 null）。
+        不 commit，由调用方控制事务。返回解绑的记录数。"""
+        from sqlalchemy import update
+        result = await db.execute(
+            update(Robot)
+            .where(
+                Robot.map_id == map_id,
+                Robot.deleted_at.is_(None),
+            )
+            .values(map_id=None)
+        )
+        await db.flush()
+        return result.rowcount or 0

@@ -40,6 +40,22 @@ from modules.task.schemas.task import (
 logger = logging.getLogger(__name__)
 
 
+async def _fill_task_map_name(db: AsyncSession, records: list[TaskResponseData]) -> None:
+    map_ids = {record.map_id for record in records if record.map_id is not None}
+    if not map_ids:
+        return
+    result = await db.execute(
+        select(SceneMap.id, SceneMap.name).where(
+            SceneMap.id.in_(map_ids),
+            SceneMap.deleted_at.is_(None),
+        )
+    )
+    name_map = {row.id: row.name for row in result.all()}
+    for record in records:
+        if record.map_id is not None:
+            record.map_name = name_map.get(record.map_id)
+
+
 async def _build_task_robot_briefs(db: AsyncSession, robots: list[Robot]) -> list[TaskRobotBrief]:
     map_ids = {robot.map_id for robot in robots if robot.map_id is not None}
     map_name_map: dict[int, str] = {}
@@ -103,6 +119,8 @@ async def _build_task_response(task_obj: Task, db: AsyncSession, include_details
         robots = robot_result.scalars().all()
         data.robots = await _build_task_robot_briefs(db, list(robots))
 
+    await _fill_task_map_name(db, [data])
+
     return data
 
 
@@ -148,6 +166,8 @@ async def get_task_list(
                 )
                 robots = robot_result.scalars().all()
                 record.robots = await _build_task_robot_briefs(db, list(robots))
+
+            await _fill_task_map_name(db, list(page_data.records))
 
         return response_base.page(data=page_data)
 

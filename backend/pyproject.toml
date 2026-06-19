@@ -1,5 +1,5 @@
 [project]
-name = "smilex-fastapi-cloud"
+name = "Wujie-jilin-admin"
 version = "0.1.0"
 description = "Add your description here"
 readme = "README.md"
@@ -31,9 +31,11 @@ dependencies = [
     "python-multipart>=0.0.9",
     "pillow>=10.0.0",
     "apscheduler>=3.10.4",
+    "grpcio>=1.81.1",
+    "protobuf>=5.0.0",
 ]
 
 [tool.uv.workspace]
 members = [
-    "SmileX-Fastapi-Cloud",
+    "Wujie-jilin-admin",
 ]

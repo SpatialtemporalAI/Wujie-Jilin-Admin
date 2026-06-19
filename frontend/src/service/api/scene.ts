@@ -234,7 +234,7 @@ export function fetchGetEditorMapData(mapId: number) {
 
 /** save editor data */
 export function fetchSaveEditorData(mapId: number, data: Api.Scene.EditorSaveRequest) {
-  return request<void>({
+  return request<Api.Scene.EditorSaveResponse>({
     url: `/scene/map/${mapId}/editor/save`,
     method: 'post',
     data
