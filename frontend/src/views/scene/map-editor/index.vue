@@ -78,12 +78,13 @@ const hoverInfo = computed(() => {
     if (!ann) return null;
     const typeName = ann.type === 'navigation' || ann.type === '返回点' ? '返回点' : '接待点';
     const angleDeg = Math.round(((ann.angle || 0) * 180 / Math.PI + 360) % 360);
+    const w = editor.pixelToWorldCoords(ann.x, ann.y);
     return {
       kind: '点位',
       name: ann.name || '-',
       type: typeName,
-      x: (ann.x * editor.resolution.value).toFixed(2),
-      y: (ann.y * editor.resolution.value).toFixed(2),
+      x: w.x.toFixed(2),
+      y: w.y.toFixed(2),
       size: null as string | null,
       angle: `${angleDeg}°`,
     };
@@ -99,12 +100,13 @@ const hoverInfo = computed(() => {
   };
   const kind = isFence ? '电子围栏' : (isRestricted ? '禁行区域' : '障碍物');
   const typeName = isFence ? '围栏' : (isRestricted ? '禁区' : (shapeMap[obj.type] || '障碍物'));
+  const w = editor.pixelToWorldCoords(obj.x, obj.y);
   return {
     kind,
     name: obj.name || '-',
     type: typeName,
-    x: (obj.x * editor.resolution.value).toFixed(2),
-    y: (obj.y * editor.resolution.value).toFixed(2),
+    x: w.x.toFixed(2),
+    y: w.y.toFixed(2),
     size: `${(obj.width * editor.resolution.value).toFixed(2)} × ${(obj.height * editor.resolution.value).toFixed(2)} m`,
     angle: `${Math.round(obj.angle || 0)}°`,
   };
