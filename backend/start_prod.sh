@@ -1,16 +1,4 @@
 #!/usr/bin/env bash
-# 后端生产环境启动脚本（Linux + gunicorn + uvicorn worker）
-#
-# 用法：
-#   ./start_prod.sh
-#   # 或通过环境变量覆盖默认配置
-#   HOST=0.0.0.0 PORT=8000 WORKERS=4 ./start_prod.sh
-#
-# 说明：
-# - 自动设置 ENVIR=prod，加载 backend/.env.prod
-# - 使用 gunicorn 多进程 + uvicorn 异步 worker
-# - Windows 不支持 gunicorn，请在 Linux / WSL 运行
-# - 生产环境长期运行推荐 systemd（参考 deploy/smilex-cloud.service）
 
 set -euo pipefail
 
@@ -19,33 +7,164 @@ cd "${SCRIPT_DIR}"
 
 export ENVIR=prod
 
+APP_NAME="smilex-cloud"
+
 HOST="${HOST:-0.0.0.0}"
-PORT="${PORT:-8000}"
+PORT="${PORT:-8901}"
 WORKERS="${WORKERS:-4}"
 TIMEOUT="${TIMEOUT:-120}"
 MAX_REQUESTS="${MAX_REQUESTS:-5000}"
 MAX_REQUESTS_JITTER="${MAX_REQUESTS_JITTER:-500}"
 LOG_LEVEL="${LOG_LEVEL:-info}"
 
-# 优先使用虚拟环境内的 gunicorn，其次用 PATH 中的
+PID_DIR="${SCRIPT_DIR}/run"
+LOG_DIR="${SCRIPT_DIR}/logs"
+
+PID_FILE="${PID_DIR}/${APP_NAME}.pid"
+LOG_FILE="${LOG_DIR}/${APP_NAME}.log"
+
+mkdir -p "${PID_DIR}"
+mkdir -p "${LOG_DIR}"
+
+# gunicorn路径
 if [[ -x "${SCRIPT_DIR}/.venv/bin/gunicorn" ]]; then
     GUNICORN="${SCRIPT_DIR}/.venv/bin/gunicorn"
 elif command -v gunicorn &>/dev/null; then
-    GUNICORN="gunicorn"
+    GUNICORN="$(command -v gunicorn)"
 else
-    echo "[ERROR] 未找到 gunicorn，请先安装依赖：uv sync" >&2
+    echo "[ERROR] 未找到 gunicorn"
     exit 1
 fi
 
-echo "[INFO] 启动生产环境 | ENVIR=${ENVIR} host=${HOST} port=${PORT} workers=${WORKERS}"
+start() {
 
-exec "${GUNICORN}" main:app \
-    -w "${WORKERS}" \
-    -k uvicorn.workers.UvicornWorker \
-    -b "${HOST}:${PORT}" \
-    --timeout "${TIMEOUT}" \
-    --max-requests "${MAX_REQUESTS}" \
-    --max-requests-jitter "${MAX_REQUESTS_JITTER}" \
-    --access-logfile - \
-    --error-logfile - \
-    --log-level "${LOG_LEVEL}"
+    if [[ -f "${PID_FILE}" ]]; then
+        PID=$(cat "${PID_FILE}")
+
+        if kill -0 "${PID}" 2>/dev/null; then
+            echo "[INFO] 服务已运行 PID=${PID}"
+            exit 0
+        fi
+
+        rm -f "${PID_FILE}"
+    fi
+
+    echo "[INFO] 启动 ${APP_NAME}"
+
+    nohup "${GUNICORN}" main:app \
+        -w "${WORKERS}" \
+        -k uvicorn.workers.UvicornWorker \
+        -b "${HOST}:${PORT}" \
+        --timeout "${TIMEOUT}" \
+        --max-requests "${MAX_REQUESTS}" \
+        --max-requests-jitter "${MAX_REQUESTS_JITTER}" \
+        --access-logfile - \
+        --error-logfile - \
+        --log-level "${LOG_LEVEL}" \
+        >> "${LOG_FILE}" 2>&1 &
+
+    PID=$!
+
+    echo "${PID}" > "${PID_FILE}"
+
+    sleep 2
+
+    if kill -0 "${PID}" 2>/dev/null; then
+        echo "[SUCCESS] 启动成功 PID=${PID}"
+        echo "[INFO] 日志文件: ${LOG_FILE}"
+    else
+        echo "[ERROR] 启动失败"
+        exit 1
+    fi
+}
+
+stop() {
+
+    if [[ ! -f "${PID_FILE}" ]]; then
+        echo "[INFO] 服务未运行"
+        exit 0
+    fi
+
+    PID=$(cat "${PID_FILE}")
+
+    if ! kill -0 "${PID}" 2>/dev/null; then
+        rm -f "${PID_FILE}"
+        echo "[INFO] 服务已停止"
+        exit 0
+    fi
+
+    echo "[INFO] 停止服务 PID=${PID}"
+
+    kill -TERM "${PID}"
+
+    for i in {1..30}; do
+        if ! kill -0 "${PID}" 2>/dev/null; then
+            rm -f "${PID_FILE}"
+            echo "[SUCCESS] 已停止"
+            return
+        fi
+
+        sleep 1
+    done
+
+    echo "[WARN] 强制停止"
+
+    kill -9 "${PID}" || true
+
+    rm -f "${PID_FILE}"
+}
+
+status() {
+
+    if [[ ! -f "${PID_FILE}" ]]; then
+        echo "[INFO] 未运行"
+        return
+    fi
+
+    PID=$(cat "${PID_FILE}")
+
+    if kill -0 "${PID}" 2>/dev/null; then
+        echo "[RUNNING] PID=${PID}"
+        ps -fp "${PID}"
+    else
+        echo "[STOPPED]"
+        rm -f "${PID_FILE}"
+    fi
+}
+
+logs() {
+    tail -f "${LOG_FILE}"
+}
+
+restart() {
+    stop
+    sleep 2
+    start
+}
+
+case "${1:-}" in
+    start)
+        start
+        ;;
+    stop)
+        stop
+        ;;
+    restart)
+        restart
+        ;;
+    status)
+        status
+        ;;
+    logs)
+        logs
+        ;;
+    *)
+        echo "用法:"
+        echo "  $0 start"
+        echo "  $0 stop"
+        echo "  $0 restart"
+        echo "  $0 status"
+        echo "  $0 logs"
+        exit 1
+        ;;
+esac
