@@ -9,7 +9,7 @@ import logging
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select
 from sqlalchemy.orm import joinedload, selectinload, noload
-from typing import List
+from typing import List, Optional
 
 from database.models.sys.user import SysUser
 from database.models.sys.menu import SysMenu, MenuType
@@ -27,8 +27,18 @@ class RouteService:
     """路由管理服务类"""
 
     @staticmethod
-    def _menu_to_route(menu: SysMenu) -> MenuRouteResponse:
-        """将 SysMenu 模型转换为 MenuRouteResponse"""
+    def _menu_to_route(
+        menu: SysMenu,
+        children_map: Optional[dict] = None,
+    ) -> MenuRouteResponse:
+        """将 SysMenu 模型转换为 MenuRouteResponse
+
+        Args:
+            menu: 菜单对象
+            children_map: 可选的 {parent_id: [children]} 映射。普通用户场景下
+                传入此参数以使用经 menu_ids 过滤后的内存树，避免依赖 ORM 自动
+                加载（ORM 会把所有兄弟子菜单带出来导致权限越界）。
+        """
         route_name = menu.name
 
         meta = RouteMetaResponse(
@@ -42,10 +52,15 @@ class RouteService:
         )
 
         children = None
-        if menu.children:
+        if children_map is not None:
+            raw_children = children_map.get(menu.id, [])
+        else:
+            raw_children = menu.children
+
+        if raw_children:
             child_routes = [
-                RouteService._menu_to_route(child)
-                for child in menu.children
+                RouteService._menu_to_route(child, children_map)
+                for child in raw_children
                 if child.type != MenuType.BUTTON
                 and child.status
                 and child.deleted_at is None
@@ -119,6 +134,8 @@ class RouteService:
             buttons = [
                 m.permission for m in btn_result.scalars().all() if m.permission
             ]
+            routes = [RouteService._menu_to_route(menu) for menu in menus]
+            return UserRouteResponse(routes=routes, home="home", buttons=buttons)
         else:
             # 预加载 user.roles.menus
             stmt = (
@@ -166,37 +183,40 @@ class RouteService:
             if not menu_ids:
                 return UserRouteResponse(routes=[], home="home", buttons=buttons)
 
-            # 查询所有相关菜单并构建树
+            # Flat 查询所有相关菜单（按 menu_ids 过滤），不依赖 ORM 关系加载
             stmt = (
                 select(SysMenu)
                 .where(
                     SysMenu.id.in_(menu_ids),
-                    SysMenu.parent_id.is_(None),
+                    SysMenu.status == True,
                 )
                 .options(
-                    selectinload(SysMenu.children).selectinload(SysMenu.children),
-                    noload(SysMenu.roles),
+                    noload(SysMenu.children),
                     noload(SysMenu.parent),
+                    noload(SysMenu.roles),
                 )
                 .order_by(SysMenu.sort, SysMenu.id)
             )
             result = await db.execute(stmt)
-            menus = result.unique().scalars().all()
+            all_menus = result.scalars().all()
 
-            # 过滤子菜单中不属于用户权限的项
-            def filter_menu(menus_list):
-                filtered = []
-                for m in menus_list:
-                    if m.id not in menu_ids:
-                        continue
-                    filtered.append(m)
-                return filtered
+            # 在内存中构建 parent_id -> children 映射，递归生成 route
+            # 这一步天然按 menu_ids 过滤了子菜单（因为 all_menus 只含用户有权限的菜单）
+            children_map: dict[int | None, list[SysMenu]] = {}
+            for m in all_menus:
+                children_map.setdefault(m.parent_id, []).append(m)
 
-            # 对顶层菜单过滤
-            menus = [m for m in menus if m.id in menu_ids]
+            menu_id_set = {m.id for m in all_menus}
+            # 顶层：parent_id 为 None，或其父菜单不在结果集（理论上祖先补全已避免）
+            root_menus = [
+                m for m in all_menus
+                if m.parent_id is None or m.parent_id not in menu_id_set
+            ]
 
-        routes = [RouteService._menu_to_route(menu) for menu in menus]
-        return UserRouteResponse(routes=routes, home="home", buttons=buttons)
+            routes = [
+                RouteService._menu_to_route(m, children_map) for m in root_menus
+            ]
+            return UserRouteResponse(routes=routes, home="home", buttons=buttons)
 
     @staticmethod
     async def get_constant_routes() -> list[MenuRouteResponse]:

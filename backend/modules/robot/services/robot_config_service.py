@@ -46,6 +46,7 @@ class RobotConfigService:
                 logger.info("机器人 %d 语音配置不存在，返回默认空对象", robot_id)
                 return RobotVoiceConfig(
                     robot_id=robot_id,
+                    wake_word_enabled=False,
                     wake_word="",
                     tts_voice="female",
                     tts_speed=50,
@@ -74,6 +75,7 @@ class RobotConfigService:
             existing = result.scalar_one_or_none()
 
             if existing:
+                existing.wake_word_enabled = schema.wake_word_enabled
                 existing.wake_word = schema.wake_word
                 existing.tts_voice = schema.tts_voice
                 existing.tts_speed = schema.tts_speed
@@ -85,6 +87,7 @@ class RobotConfigService:
             else:
                 config = RobotVoiceConfig(
                     robot_id=schema.robot_id,
+                    wake_word_enabled=schema.wake_word_enabled,
                     wake_word=schema.wake_word,
                     tts_voice=schema.tts_voice,
                     tts_speed=schema.tts_speed,
