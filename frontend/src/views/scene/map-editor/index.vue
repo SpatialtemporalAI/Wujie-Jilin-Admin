@@ -591,16 +591,16 @@ function handleFocusAnnotation(id: number) {
           <span v-else class="text-xs text-gray-400">未设置图片</span>
         </NFormItem>
         <NFormItem label="起始点位">
-          <div class="flex w-full flex-col gap-8px">
-            <div class="grid w-full grid-cols-2 gap-8px">
-              <NInputNumber v-model:value="sceneFormPointX" :placeholder="sceneDialogMode === 'edit' ? 'X (米)' : '原始X'"
-                class="w-full" />
-              <NInputNumber v-model:value="sceneFormPointY" :placeholder="sceneDialogMode === 'edit' ? 'Y (米)' : '原始Y'"
-                class="w-full" />
-            </div>
-            <NInputNumber v-model:value="sceneFormResolution" placeholder="分辨率 (m/px)" :step="0.01" :min="0.01"
+          <div class="grid w-full grid-cols-2 gap-8px">
+            <NInputNumber v-model:value="sceneFormPointX" :placeholder="sceneDialogMode === 'edit' ? 'X (米)' : '原始X'"
+              class="w-full" />
+            <NInputNumber v-model:value="sceneFormPointY" :placeholder="sceneDialogMode === 'edit' ? 'Y (米)' : '原始Y'"
               class="w-full" />
           </div>
+        </NFormItem>
+        <NFormItem label="分辨率">
+          <NInputNumber v-model:value="sceneFormResolution" placeholder="m/px" :step="0.01" :min="0.01"
+            class="w-full" />
         </NFormItem>
         <div v-if="sceneDialogMode === 'add'" class="text-xs text-gray-500">
           起始点位按上方图片当前网页显示尺寸录入，保存时会按 原图尺寸 / 网页显示尺寸 缩放到地图原图坐标。分辨率(m/px)对应 ROS map.yaml 中的 resolution，默认 0.05。
