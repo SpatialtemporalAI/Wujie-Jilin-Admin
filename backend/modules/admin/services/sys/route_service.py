@@ -151,6 +151,9 @@ class RouteService:
             user_with_relations = result.unique().scalar_one()
 
             # 收集所有启用的非 BUTTON 菜单 ID 以及 BUTTON 权限标识
+            # 注意：分配了按钮 → 其父菜单必须可见（否则按钮无页面承载）
+            # 所以 BUTTON 的 parent_id 也加入 menu_ids,后续祖先补全会把
+            # 完整路径（如 log 目录 → log_login-log）一并加入
             menu_ids: set[int] = set()
             seen_perms: set[str] = set()
             for role in user_with_relations.roles:
@@ -163,6 +166,8 @@ class RouteService:
                         if menu.permission and menu.permission not in seen_perms:
                             seen_perms.add(menu.permission)
                             buttons.append(menu.permission)
+                        if menu.parent_id:
+                            menu_ids.add(menu.parent_id)
                         continue
                     menu_ids.add(menu.id)
 

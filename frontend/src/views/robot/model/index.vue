@@ -178,43 +178,20 @@ async function handleBatchDelete() {
 <template>
   <div class="min-h-500px flex-col-stretch gap-16px overflow-hidden lt-sm:overflow-auto">
     <RobotModelSearch v-model:model="searchParams" @search="getModelDataByPage" @reset="getModelDataByPage" />
-    <NCard
-      title="机器人型号管理"
-      :bordered="false"
-      size="small"
-      class="card-wrapper sm:flex-1-hidden"
-    >
+    <NCard title="机器人型号管理" :bordered="false" size="small" class="card-wrapper sm:flex-1-hidden">
       <template #header-extra>
-        <TableHeaderOperation
-          v-model:columns="modelColumnChecks"
-          :disabled-delete="checkedModelRowKeys.length === 0"
-          :loading="modelLoading"
-          @refresh="getModelData"
-        >
+        <TableHeaderOperation v-model:columns="modelColumnChecks" :disabled-delete="checkedModelRowKeys.length === 0"
+          :loading="modelLoading" @refresh="getModelData">
           <template #default>
-            <NButton
-              v-if="hasAuth('robot:model:add')"
-              size="small"
-              ghost
-              type="primary"
-              @click="handleAddModel"
-            >
+            <NButton v-if="hasAuth('robot:model:add')" size="small" ghost type="primary" @click="handleAddModel">
               <template #icon>
                 <icon-ic-round-plus class="text-icon" />
               </template>
               {{ $t('common.add') }}
             </NButton>
-            <NPopconfirm
-              v-if="hasAuth('robot:model:delete')"
-              @positive-click="handleBatchDelete"
-            >
+            <NPopconfirm v-if="hasAuth('robot:model:delete')" @positive-click="handleBatchDelete">
               <template #trigger>
-                <NButton
-                  size="small"
-                  ghost
-                  type="error"
-                  :disabled="checkedModelRowKeys.length === 0"
-                >
+                <NButton size="small" ghost type="error" :disabled="checkedModelRowKeys.length === 0">
                   <template #icon>
                     <icon-ic-round-delete class="text-icon" />
                   </template>
@@ -226,25 +203,11 @@ async function handleBatchDelete() {
           </template>
         </TableHeaderOperation>
       </template>
-      <NDataTable
-        v-model:checked-row-keys="checkedModelRowKeys"
-        :columns="modelColumns"
-        :data="modelData"
-        size="small"
-        :flex-height="!appStore.isMobile"
-        :scroll-x="900"
-        :loading="modelLoading"
-        remote
-        :row-key="row => row.id"
-        :pagination="modelMobilePagination"
-        class="sm:h-full"
-      />
-      <RobotModelOperateDrawer
-        v-model:visible="modelDrawerVisible"
-        :operate-type="modelOperateType"
-        :row-data="editingModelData"
-        @submitted="getModelDataByPage"
-      />
+      <NDataTable v-model:checked-row-keys="checkedModelRowKeys" :columns="modelColumns" :data="modelData" size="small"
+        :flex-height="!appStore.isMobile" :scroll-x="900" :loading="modelLoading" remote :row-key="row => row.id"
+        :pagination="modelMobilePagination" class="sm:h-full" />
+      <RobotModelOperateDrawer v-model:visible="modelDrawerVisible" :operate-type="modelOperateType"
+        :row-data="editingModelData" @submitted="getModelDataByPage" />
     </NCard>
   </div>
 </template>
