@@ -99,11 +99,16 @@ function pixelToMeter(px: number): number {
   return Math.round(px * props.resolution * 100) / 100;
 }
 
-function toWorldX(worldX: number): number {
+function toWorldX(pixelX: number): number {
+  const map = props.editorData?.map;
+  const worldX = pixelX * props.resolution + (map?.start_point_x ?? 0);
   return Math.round(worldX * 100) / 100;
 }
 
-function toWorldY(worldY: number): number {
+function toWorldY(pixelY: number): number {
+  const map = props.editorData?.map;
+  const h = map?.height ?? 0;
+  const worldY = (h - pixelY) * props.resolution + (map?.start_point_y ?? 0);
   return Math.round(worldY * 100) / 100;
 }
 
