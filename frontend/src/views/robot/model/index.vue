@@ -181,27 +181,8 @@ async function handleBatchDelete() {
     <NCard title="机器人型号管理" :bordered="false" size="small" class="card-wrapper sm:flex-1-hidden">
       <template #header-extra>
         <TableHeaderOperation v-model:columns="modelColumnChecks" :disabled-delete="checkedModelRowKeys.length === 0"
-          :loading="modelLoading" @refresh="getModelData">
-          <template #default>
-            <NButton v-if="hasAuth('robot:model:add')" size="small" ghost type="primary" @click="handleAddModel">
-              <template #icon>
-                <icon-ic-round-plus class="text-icon" />
-              </template>
-              {{ $t('common.add') }}
-            </NButton>
-            <NPopconfirm v-if="hasAuth('robot:model:delete')" @positive-click="handleBatchDelete">
-              <template #trigger>
-                <NButton size="small" ghost type="error" :disabled="checkedModelRowKeys.length === 0">
-                  <template #icon>
-                    <icon-ic-round-delete class="text-icon" />
-                  </template>
-                  {{ $t('common.batchDelete') }}
-                </NButton>
-              </template>
-              {{ $t('common.confirmDelete') }}
-            </NPopconfirm>
-          </template>
-        </TableHeaderOperation>
+          :loading="modelLoading" add-auth="robot:model:add" delete-auth="robot:model:delete" @add="handleAddModel"
+          @delete="handleBatchDelete" @refresh="getModelData" />
       </template>
       <NDataTable v-model:checked-row-keys="checkedModelRowKeys" :columns="modelColumns" :data="modelData" size="small"
         :flex-height="!appStore.isMobile" :scroll-x="900" :loading="modelLoading" remote :row-key="row => row.id"
