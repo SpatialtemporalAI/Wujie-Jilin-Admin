@@ -162,23 +162,11 @@ async function handleDelete(id: number) {
           v-model:columns="groupColumnChecks"
           :disabled-delete="checkedGroupRowKeys.length === 0"
           :loading="groupLoading"
+          add-auth="scene:group:add"
+          :show-delete="false"
+          @add="handleAddGroup"
           @refresh="getGroupData"
-        >
-          <template #default>
-            <NButton
-              v-if="hasAuth('scene:group:add')"
-              size="small"
-              ghost
-              type="primary"
-              @click="handleAddGroup"
-            >
-              <template #icon>
-                <icon-ic-round-plus class="text-icon" />
-              </template>
-              新增
-            </NButton>
-          </template>
-        </TableHeaderOperation>
+        />
       </template>
       <NDataTable
         v-model:checked-row-keys="checkedGroupRowKeys"

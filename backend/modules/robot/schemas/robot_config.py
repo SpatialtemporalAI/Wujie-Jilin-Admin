@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 
 from typing import Optional
-from pydantic import Field, ConfigDict, field_validator
+from pydantic import Field, ConfigDict, field_validator, model_validator
 from datetime import datetime
 from urllib.parse import urlsplit
 
@@ -24,10 +24,26 @@ class RobotVoiceConfigSchema(BaseReqEntity):
     """
 
     robot_id: int = Field(..., description="机器人ID")
-    wake_word: str = Field(..., description="唤醒词", min_length=4, max_length=6)
+    wake_word_enabled: bool = Field(default=False, description="是否启用唤醒词")
+    wake_word: Optional[str] = Field(default=None, description="唤醒词", max_length=20)
     tts_voice: str = Field(..., description="音色", max_length=50)
     tts_speed: int = Field(..., description="语速")
     tts_volume: int = Field(..., description="音量")
+
+    @model_validator(mode="after")
+    def validate_wake_word(self):
+        """开关启用时唤醒词必填且 4-6 字；关闭时可空"""
+        if self.wake_word_enabled:
+            if not self.wake_word or not self.wake_word.strip():
+                raise ValueError("唤醒词开关启用时，唤醒词不能为空")
+            stripped = self.wake_word.strip()
+            if len(stripped) < 4 or len(stripped) > 6:
+                raise ValueError("唤醒词必须为 4-6 个字")
+            self.wake_word = stripped
+        else:
+            if self.wake_word is not None:
+                self.wake_word = self.wake_word.strip() or None
+        return self
 
 
 class RobotVoiceConfigResponse(BaseRespEntity):
@@ -39,6 +55,7 @@ class RobotVoiceConfigResponse(BaseRespEntity):
 
     id: Optional[int] = Field(None, description="配置ID")
     robot_id: Optional[int] = Field(None, description="机器人ID")
+    wake_word_enabled: Optional[bool] = Field(None, description="是否启用唤醒词")
     wake_word: Optional[str] = Field(None, description="唤醒词")
     tts_voice: Optional[str] = Field(None, description="音色")
     tts_speed: Optional[int] = Field(None, description="语速")

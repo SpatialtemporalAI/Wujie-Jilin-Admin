@@ -160,9 +160,11 @@ const {
               {$t('common.edit')}
             </NButton>
           )}
-          <NButton size="small" ghost onClick={() => handleToggleEnabled(row)}>
-            {row.enabled ? '禁用' : '启用'}
-          </NButton>
+          {hasAuth('task:edit') && (
+            <NButton size="small" ghost onClick={() => handleToggleEnabled(row)}>
+              {row.enabled ? '禁用' : '启用'}
+            </NButton>
+          )}
           {hasAuth('task:delete') && (
             <NPopconfirm onPositiveClick={() => handleDelete(row.id)}>
               {{

@@ -246,23 +246,11 @@ function handleViewDetail(row: Api.Scene.SceneMap) {
           v-model:columns="mapColumnChecks"
           :disabled-delete="checkedMapRowKeys.length === 0"
           :loading="mapLoading"
+          add-auth="scene:map:add"
+          :show-delete="false"
+          @add="handleAddMap"
           @refresh="getMapData"
-        >
-          <template #default>
-            <NButton
-              v-if="hasAuth('scene:map:add')"
-              size="small"
-              ghost
-              type="primary"
-              @click="handleAddMap"
-            >
-              <template #icon>
-                <icon-ic-round-plus class="text-icon" />
-              </template>
-              新增
-            </NButton>
-          </template>
-        </TableHeaderOperation>
+        />
       </template>
       <NDataTable
         v-model:checked-row-keys="checkedMapRowKeys"

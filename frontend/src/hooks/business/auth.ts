@@ -7,7 +7,10 @@ export function useAuth() {
     if (!authStore.isLogin) {
       return false;
     }
-
+    const buttons = authStore.userInfo.buttons
+    console.log('robot:manage:add 在 buttons 里?', buttons.includes('robot:manage:add'));
+    console.log('robot:manage:delete 在 buttons 里?', buttons.includes('robot:manage:delete'));
+    console.log('完整 buttons:', JSON.stringify(buttons));
     if (typeof codes === 'string') {
       return authStore.userInfo.buttons.includes(codes);
     }

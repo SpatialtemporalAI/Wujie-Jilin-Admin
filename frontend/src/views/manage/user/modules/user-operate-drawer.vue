@@ -33,11 +33,10 @@ const visible = defineModel<boolean>('visible', {
 const { formRef, validate, restoreValidation } = useNaiveForm();
 const { defaultRequiredRule } = useFormRules();
 
-// 保存所有角色信息，用于编码和ID的映射
+// 保存所有角色信息，用于名称和ID的映射
 interface RoleInfo {
   id: number;
   name: string;
-  code: string;
 }
 const allRoles = ref<RoleInfo[]>([]);
 
@@ -160,7 +159,7 @@ async function getRoleOptions() {
 
     const options = data.map(item => ({
       label: item.name,
-      value: item.code
+      value: item.name
     }));
 
     roleOptions.value = options;

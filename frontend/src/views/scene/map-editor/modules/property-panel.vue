@@ -46,18 +46,6 @@ const sceneOptions = computed<SelectOption[]>(() =>
   }))
 );
 
-const statusColorMap: Record<Api.Robot.RobotStatusEnum, 'success' | 'warning' | 'default'> = {
-  online: 'success',
-  offline: 'warning',
-  inactive: 'default'
-};
-
-const statusLabelMap: Record<Api.Robot.RobotStatusEnum, string> = {
-  online: '在线',
-  offline: '离线',
-  inactive: '未激活'
-};
-
 const filteredList = computed(() => {
   if (!searchText.value) return props.sceneList;
   return props.sceneList.filter(m => m.name.includes(searchText.value));
@@ -111,11 +99,16 @@ function pixelToMeter(px: number): number {
   return Math.round(px * props.resolution * 100) / 100;
 }
 
-function toWorldX(worldX: number): number {
+function toWorldX(pixelX: number): number {
+  const map = props.editorData?.map;
+  const worldX = pixelX * props.resolution + (map?.start_point_x ?? 0);
   return Math.round(worldX * 100) / 100;
 }
 
-function toWorldY(worldY: number): number {
+function toWorldY(pixelY: number): number {
+  const map = props.editorData?.map;
+  const h = map?.height ?? 0;
+  const worldY = (h - pixelY) * props.resolution + (map?.start_point_y ?? 0);
   return Math.round(worldY * 100) / 100;
 }
 
@@ -205,21 +198,7 @@ onMounted(() => {
 
             <div class="mt-8px space-y-8px">
               <NCard v-for="robot in robotList" :key="robot.id" size="small" embedded>
-                <div class="flex items-start justify-between gap-8px">
-                  <div class="min-w-0 flex-1">
-                    <div class="truncate text-sm font-medium">{{ robot.name }}</div>
-                    <div class="mt-4px truncate text-xs text-gray-400">{{ robot.model_name || '-' }} / {{
-                      robot.serial_number }}
-                    </div>
-                  </div>
-                  <NTag :type="statusColorMap[robot.status]" size="small">
-                    {{ statusLabelMap[robot.status] }}
-                  </NTag>
-                </div>
-                <div class="mt-10px grid grid-cols-2 gap-8px text-xs text-gray-500">
-                  <div>速度档位：{{ robot.speed_level || '-' }}</div>
-                  <div>报警阈值：{{ robot.battery_threshold ?? '-' }}%</div>
-                </div>
+                <div class="truncate text-sm font-medium">{{ robot.name }}</div>
                 <div class="mt-8px flex items-center gap-8px">
                   <NSelect :value="robot.map_id ?? null" :options="sceneOptions" size="tiny" clearable
                     placeholder="绑定场景" class="min-w-0 flex-1" :loading="bindingRobotId === robot.id"

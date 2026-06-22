@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import type { HistoryEntry } from '../composables/useMapEditor';
+import { useAuth } from '@/hooks/business/auth';
 
 interface Props {
   canUndo: boolean;
@@ -19,6 +20,8 @@ const emit = defineEmits<{
   (e: 'export', format: 'png' | 'jpeg' | 'webp'): void;
   (e: 'jump-to-step', step: number): void;
 }>();
+
+const { hasAuth } = useAuth();
 
 function formatTime(ts: number): string {
   if (!ts) return '';
@@ -76,7 +79,7 @@ function handleJump(entry: HistoryEntry) {
 
     <div v-if="isDirty" class="text-xs text-orange-500">有未保存的更改</div>
 
-    <NButton type="primary" size="small" :loading="saving" @click="emit('save')">
+    <NButton v-if="hasAuth('scene:map:edit')" type="primary" size="small" :loading="saving" @click="emit('save')">
       <template #icon><icon-ic-round-save /></template>
       保存
     </NButton>

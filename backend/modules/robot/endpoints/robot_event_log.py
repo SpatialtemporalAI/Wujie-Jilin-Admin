@@ -49,7 +49,7 @@ async def _fill_robot_names(db: AsyncSession, records: list) -> None:
     "/list",
     response_model=ResponsePageModel[RobotEventLogResponse],
     summary="获取机器人事件日志列表",
-    dependencies=[Depends(require_permission("robot:event-log:list"))],
+    dependencies=[Depends(require_permission("robot:monitor:list"))],
 )
 async def get_event_log_list(
     query_params: RobotEventLogQueryParams = Depends(),

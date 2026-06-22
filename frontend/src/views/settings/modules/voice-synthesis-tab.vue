@@ -24,6 +24,7 @@ const selectedRobotId = ref<number | null>(null);
 
 const model = reactive<Api.RobotConfig.VoiceConfig>({
   robot_id: 0,
+  wake_word_enabled: false,
   wake_word: '',
   tts_voice: 'female',
   tts_speed: 50,
@@ -31,10 +32,12 @@ const model = reactive<Api.RobotConfig.VoiceConfig>({
 });
 
 const rules = computed(() => ({
-  wake_word: [
-    { required: true, message: '请输入唤醒词', trigger: 'blur' },
-    { min: 4, max: 6, message: '唤醒词必须为 4-6 个字', trigger: 'blur' }
-  ],
+  wake_word: model.wake_word_enabled
+    ? [
+        { required: true, message: '请输入唤醒词', trigger: 'blur' },
+        { min: 4, max: 6, message: '唤醒词必须为 4-6 个字', trigger: 'blur' }
+      ]
+    : [],
   tts_voice: { required: true, message: '请选择音色', trigger: 'change' }
 }));
 
@@ -44,6 +47,7 @@ const voiceOptions = [
 ];
 
 const canSaveWakeWord = computed(() => {
+  if (!model.wake_word_enabled) return true;
   const len = model.wake_word.trim().length;
   return len >= 4 && len <= 6;
 });
@@ -111,6 +115,10 @@ async function handleSaveVoice() {
 }
 
 async function handleTestWakeWord() {
+  if (!model.wake_word_enabled) {
+    message.warning('请先启用唤醒词');
+    return;
+  }
   if (!canSaveWakeWord.value) {
     message.warning('唤醒词必须为 4-6 个字');
     return;
@@ -194,6 +202,12 @@ onMounted(() => {
           <!-- 唤醒词 -->
           <NCard title="唤醒词设置" size="small">
             <NGrid responsive="screen" :cols="1">
+              <NFormItemGi label="启用唤醒词">
+                <NSwitch v-model:value="model.wake_word_enabled" />
+                <span class="ml-8px text-gray-400">
+                  {{ model.wake_word_enabled ? '已启用' : '已禁用' }}
+                </span>
+              </NFormItemGi>
               <NFormItemGi label="唤醒词" path="wake_word">
                 <NInput
                   v-model:value="model.wake_word"
@@ -201,11 +215,19 @@ onMounted(() => {
                   maxlength="6"
                   show-count
                   clearable
+                  :disabled="!model.wake_word_enabled"
                 />
               </NFormItemGi>
               <NFormItemGi>
                 <NSpace>
-                  <NButton type="primary" ghost @click="handleTestWakeWord">测试</NButton>
+                  <NButton
+                    type="primary"
+                    ghost
+                    :disabled="!model.wake_word_enabled || !canSaveWakeWord"
+                    @click="handleTestWakeWord"
+                  >
+                    测试
+                  </NButton>
                 </NSpace>
               </NFormItemGi>
             </NGrid>
