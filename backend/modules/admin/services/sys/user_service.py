@@ -71,7 +71,7 @@ class UserService:
         query_params: SysUserQueryParams,
     ) -> Select:
         """
-        构建用户列表查询对象（不加载关联角色）
+        构建用户列表查询对象（加载关联角色，用于编辑回显）
 
         Args:
             query_params: 查询参数
@@ -93,7 +93,8 @@ class UserService:
                 SysUser.last_login_ip,
                 SysUser.created_at,
                 SysUser.updated_at,
-            )
+            ),
+            selectinload(SysUser.roles),
         )
         return UserService._apply_user_filters(base_query, query_params)
 

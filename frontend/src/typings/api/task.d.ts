@@ -42,7 +42,6 @@ declare namespace Api {
       enabled: boolean;
       status: TaskStatus;
       broadcast_text: string | null;
-      broadcast_count: string | null;
       schedule_enabled: boolean;
       schedule_date: string | null;
       schedule_start_time: string | null;
@@ -73,7 +72,6 @@ declare namespace Api {
         voice_text?: string | null;
       }[];
       broadcast_text?: string | null;
-      broadcast_count?: string | null;
       robot_ids: number[];
       schedule_enabled?: boolean;
       schedule_date?: string | null;

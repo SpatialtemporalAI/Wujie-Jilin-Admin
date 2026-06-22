@@ -41,15 +41,6 @@ const actionOptions = [
   { label: '点头', value: 'nod' }
 ];
 
-/** 播报次数选项 */
-const broadcastCountOptions = [
-  { label: '1 次', value: '1' },
-  { label: '2 次', value: '2' },
-  { label: '3 次', value: '3' },
-  { label: '5 次', value: '5' },
-  { label: '循环播报', value: 'loop' }
-];
-
 /** 重复周期选项（星期复选框） */
 const weekdayOptions = [
   { label: '周一', value: 'mon' },
@@ -160,7 +151,6 @@ interface FormModel {
   map_id: number | null;
   points: PointItem[];
   broadcast_text: string | null;
-  broadcast_count: string | null;
   robot_ids: number[];
   schedule_enabled: boolean;
   schedule_date: number | null;
@@ -175,7 +165,6 @@ function createDefaultModel(): FormModel {
     map_id: null,
     points: [],
     broadcast_text: null,
-    broadcast_count: '1',
     robot_ids: [],
     schedule_enabled: false,
     schedule_date: null,
@@ -234,7 +223,6 @@ async function handleInitModel() {
     model.value.name = cloned.name || '';
     model.value.task_type = cloned.task_type || 'patrol';
     model.value.broadcast_text = cloned.broadcast_text || null;
-    model.value.broadcast_count = cloned.broadcast_count || '1';
     model.value.schedule_enabled = cloned.schedule_enabled || false;
     model.value.schedule_repeat_cycles = cloned.schedule_repeat_cycle
       ? cloned.schedule_repeat_cycle.split(',').filter(v => v && v !== 'none')
@@ -336,8 +324,7 @@ async function handleSubmit() {
       ? model.value.schedule_repeat_cycles.join(',')
       : null,
     points: model.value.task_type === 'patrol' ? model.value.points : undefined,
-    broadcast_text: model.value.task_type === 'broadcast' ? model.value.broadcast_text : undefined,
-    broadcast_count: model.value.task_type === 'broadcast' ? model.value.broadcast_count : undefined
+    broadcast_text: model.value.task_type === 'broadcast' ? model.value.broadcast_text : undefined
   };
 
   let error: unknown = null;
@@ -465,9 +452,6 @@ onMounted(() => {
           <NDivider title-placement="left">播报配置</NDivider>
           <NFormItem label="播报文本">
             <NInput v-model:value="model.broadcast_text" type="textarea" placeholder="请输入播报文本" :rows="3" />
-          </NFormItem>
-          <NFormItem label="播报次数">
-            <NSelect v-model:value="model.broadcast_count" :options="broadcastCountOptions" placeholder="选择播报次数" />
           </NFormItem>
         </template>
 

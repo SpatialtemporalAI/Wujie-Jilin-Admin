@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 
 from typing import Optional
-from pydantic import Field, ConfigDict
+from pydantic import Field, ConfigDict, field_serializer
 from datetime import datetime
 
 from pydantic import BaseModel
@@ -73,3 +73,9 @@ class RobotResponseData(BaseRespEntity):
     model_name: Optional[str] = Field(None, description="型号名称（关联查询）")
     created_at: datetime = Field(..., description="创建时间")
     updated_at: Optional[datetime] = Field(None, description="更新时间")
+
+    # 覆盖 BaseRespEntity 的 status 序列化器（后者将 status 当作布尔值转 "1"/"2"），
+    # 机器人状态是 online/offline/inactive 字符串枚举，需保持原值。
+    @field_serializer("status")
+    def serialize_status_output(self, value):
+        return value.value if hasattr(value, "value") else value
