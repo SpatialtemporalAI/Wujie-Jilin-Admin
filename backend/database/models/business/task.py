@@ -1,9 +1,11 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 
+from datetime import datetime
+
 from database.models.base import Base
 from sqlalchemy.orm import mapped_column, Mapped, relationship
-from sqlalchemy import String, Boolean, Text, Date, Time, Table, Column, BigInteger, ForeignKey
+from sqlalchemy import String, Boolean, Text, Date, Time, DateTime, Table, Column, BigInteger, ForeignKey
 from typing import TYPE_CHECKING, List
 
 if TYPE_CHECKING:
@@ -59,6 +61,18 @@ class Task(Base):
     )
     status: Mapped[str] = mapped_column(
         String(20), default="idle", comment="执行状态: idle/running/paused"
+    )
+    last_run_at: Mapped[datetime | None] = mapped_column(
+        DateTime(timezone=True), nullable=True, default=None, comment="最近一次开始执行时间"
+    )
+    next_run_at: Mapped[datetime | None] = mapped_column(
+        DateTime(timezone=True), nullable=True, default=None, comment="下一次计划执行时间"
+    )
+    finish_at: Mapped[datetime | None] = mapped_column(
+        DateTime(timezone=True), nullable=True, default=None, comment="最近一次结束时间"
+    )
+    error_message: Mapped[str | None] = mapped_column(
+        Text, nullable=True, default=None, comment="最近一次失败或取消原因"
     )
 
     points: Mapped[List["TaskPoint"]] = relationship(
