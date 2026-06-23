@@ -37,7 +37,7 @@ function search() {
 
 <template>
   <NCard :bordered="false" size="small" class="card-wrapper">
-    <NForm :model="model" label-placement="left" :label-width="80">
+    <NForm :model="model" label-placement="left" :label-width="108">
       <NGrid responsive="screen" item-responsive>
         <NFormItemGi span="24 s:12 m:6" label="机器人名称" path="name" class="pr-24px">
           <NInput v-model:value="model.name" placeholder="请输入机器人名称" clearable />

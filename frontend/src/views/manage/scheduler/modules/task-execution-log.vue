@@ -192,21 +192,10 @@ async function handleClear() {
 <template>
   <div class="flex-col-stretch gap-8px">
     <NSpace align="center" :wrap="true">
-      <NSelect
-        v-model:value="searchParams.status"
-        :options="statusOptions"
-        :placeholder="$t('page.manage.schedulerLog.form.status')"
-        clearable
-        size="small"
-        style="width: 120px"
-      />
-      <NDatePicker
-        v-model:value="timeRange"
-        type="datetimerange"
-        clearable
-        size="small"
-        style="width: 340px"
-      />
+      <NSelect v-model:value="searchParams.status" :options="statusOptions"
+        :placeholder="$t('page.manage.schedulerLog.form.status')" clearable size="small" style="width: 120px" />
+      <NDatePicker start-placeholder="开始时间" end-placeholder="结束时间" v-model:value="timeRange" type="datetimerange"
+        clearable size="small" style="width: 340px" />
       <NPopconfirm v-if="hasAuth('sys:scheduler:log:delete')" @positive-click="handleClear">
         {{ $t('page.manage.schedulerLog.clearConfirm') }}
         <template #trigger>
@@ -222,19 +211,8 @@ async function handleClear() {
         {{ $t('common.refresh') }}
       </NButton>
     </NSpace>
-    <NDataTable
-      :columns="columns"
-      :data="data"
-      size="small"
-      :scroll-x="900"
-      :loading="loading"
-      remote
-      :row-key="(row: Api.Scheduler.TaskLog) => row.id"
-      :pagination="mobilePagination"
-    />
-    <TaskLogDrawer
-      v-model:visible="logDetailVisible"
-      :log-id="detailLogId"
-    />
+    <NDataTable :columns="columns" :data="data" size="small" :scroll-x="900" :loading="loading" remote
+      :row-key="(row: Api.Scheduler.TaskLog) => row.id" :pagination="mobilePagination" />
+    <TaskLogDrawer v-model:visible="logDetailVisible" :log-id="detailLogId" />
   </div>
 </template>

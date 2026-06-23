@@ -50,10 +50,8 @@ function search() {
   <NCard :bordered="false" size="small" class="card-wrapper">
     <NForm :model="model" label-placement="left" :label-width="80">
       <NGrid responsive="screen" item-responsive>
-        <NFormItemGi span="24 s:12 m:6" :label="$t('page.log.operationLog.username')" path="username"
-          class="pr-24px">
-          <NInput v-model:value="model.username" :placeholder="$t('page.log.operationLog.form.username')"
-            clearable />
+        <NFormItemGi span="24 s:12 m:6" :label="$t('page.log.operationLog.username')" path="username" class="pr-24px">
+          <NInput v-model:value="model.username" :placeholder="$t('page.log.operationLog.form.username')" clearable />
         </NFormItemGi>
         <NFormItemGi span="24 s:12 m:6" :label="$t('page.log.operationLog.module')" path="module" class="pr-24px">
           <NInput v-model:value="model.module" :placeholder="$t('page.log.operationLog.form.module')" clearable />
@@ -62,7 +60,8 @@ function search() {
           <NInput v-model:value="model.action" :placeholder="$t('page.log.operationLog.form.action')" clearable />
         </NFormItemGi>
         <NFormItemGi span="24 s:12 m:6" :label="$t('page.log.operationLog.form.timeRange')" class="pr-24px">
-          <NDatePicker v-model:value="timeRange" type="datetimerange" clearable class="w-full" />
+          <NDatePicker start-placeholder="开始时间" end-placeholder="结束时间" v-model:value="timeRange" type="datetimerange"
+            clearable class="w-full" />
         </NFormItemGi>
       </NGrid>
       <NSpace class="mt-16px w-full" justify="end">

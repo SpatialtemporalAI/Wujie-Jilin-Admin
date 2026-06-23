@@ -88,32 +88,22 @@ onMounted(() => {
     <NForm :model="model" label-placement="left" :label-width="80">
       <NGrid responsive="screen" item-responsive>
         <NFormItemGi span="24 s:12 m:6" :label="$t('page.log.robotEventLog.robotName')" path="robot_id" class="pr-24px">
-          <NSelect
-            v-model:value="model.robot_id as any"
-            :options="robotOptions"
-            :placeholder="$t('page.log.robotEventLog.form.robotName')"
-            clearable
-            filterable
-          />
+          <NSelect v-model:value="model.robot_id as any" :options="robotOptions"
+            :placeholder="$t('page.log.robotEventLog.form.robotName')" clearable filterable />
         </NFormItemGi>
-        <NFormItemGi span="24 s:12 m:6" :label="$t('page.log.robotEventLog.eventType')" path="event_type" class="pr-24px">
-          <NSelect
-            v-model:value="model.event_type as any"
-            :options="eventTypeOptions"
-            :placeholder="$t('page.log.robotEventLog.form.eventType')"
-            clearable
-          />
+        <NFormItemGi span="24 s:12 m:6" :label="$t('page.log.robotEventLog.eventType')" path="event_type"
+          class="pr-24px">
+          <NSelect v-model:value="model.event_type as any" :options="eventTypeOptions"
+            :placeholder="$t('page.log.robotEventLog.form.eventType')" clearable />
         </NFormItemGi>
-        <NFormItemGi span="24 s:12 m:6" :label="$t('page.log.robotEventLog.eventStatus')" path="event_status" class="pr-24px">
-          <NSelect
-            v-model:value="model.event_status as any"
-            :options="eventStatusOptions"
-            :placeholder="$t('page.log.robotEventLog.form.eventStatus')"
-            clearable
-          />
+        <NFormItemGi span="24 s:12 m:6" :label="$t('page.log.robotEventLog.eventStatus')" path="event_status"
+          class="pr-24px">
+          <NSelect v-model:value="model.event_status as any" :options="eventStatusOptions"
+            :placeholder="$t('page.log.robotEventLog.form.eventStatus')" clearable />
         </NFormItemGi>
         <NFormItemGi span="24 s:12 m:6" :label="$t('page.log.robotEventLog.form.timeRange')" class="pr-24px">
-          <NDatePicker v-model:value="timeRange" type="datetimerange" clearable class="w-full" />
+          <NDatePicker start-placeholder="开始时间" end-placeholder="结束时间" v-model:value="timeRange" type="datetimerange"
+            clearable class="w-full" />
         </NFormItemGi>
       </NGrid>
       <NSpace class="mt-16px w-full" justify="end">

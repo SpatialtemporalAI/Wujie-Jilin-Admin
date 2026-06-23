@@ -66,7 +66,8 @@ function search() {
             :placeholder="$t('page.log.loginLog.form.status')" clearable />
         </NFormItemGi>
         <NFormItemGi span="24 s:12 m:6" :label="$t('page.log.loginLog.form.timeRange')" class="pr-24px">
-          <NDatePicker v-model:value="timeRange" type="datetimerange" clearable class="w-full" />
+          <NDatePicker start-placeholder="开始时间" end-placeholder="结束时间" v-model:value="timeRange" type="datetimerange"
+            clearable class="w-full" />
         </NFormItemGi>
       </NGrid>
       <NSpace class="mt-16px w-full" justify="end">

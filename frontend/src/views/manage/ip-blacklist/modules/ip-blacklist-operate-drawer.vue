@@ -119,22 +119,14 @@ async function handleSubmit() {
           <NFormItemGi :span="24" :label="$t('page.manage.ipBlacklist.type')" path="type">
             <NSelect v-model:value="form.type" :options="typeOptions" />
           </NFormItemGi>
-          <NFormItemGi v-if="form.type === 'temporary'" :span="24" :label="$t('page.manage.ipBlacklist.expireAt')" path="expire_at">
-            <NDatePicker
-              v-model:value="form.expire_at"
-              type="datetime"
-              clearable
-              class="w-full"
-              :placeholder="$t('page.manage.ipBlacklist.expireAtPlaceholder')"
-            />
+          <NFormItemGi v-if="form.type === 'temporary'" :span="24" :label="$t('page.manage.ipBlacklist.expireAt')"
+            path="expire_at">
+            <NDatePicker start-placeholder="开始时间" end-placeholder="结束时间" v-model:value="form.expire_at" type="datetime"
+              clearable class="w-full" :placeholder="$t('page.manage.ipBlacklist.expireAtPlaceholder')" />
           </NFormItemGi>
           <NFormItemGi :span="24" :label="$t('page.manage.ipBlacklist.reason')">
-            <NInput
-              v-model:value="form.reason"
-              type="textarea"
-              :autosize="{ minRows: 2, maxRows: 4 }"
-              :placeholder="$t('page.manage.ipBlacklist.reasonPlaceholder')"
-            />
+            <NInput v-model:value="form.reason" type="textarea" :autosize="{ minRows: 2, maxRows: 4 }"
+              :placeholder="$t('page.manage.ipBlacklist.reasonPlaceholder')" />
           </NFormItemGi>
         </NGrid>
       </NForm>

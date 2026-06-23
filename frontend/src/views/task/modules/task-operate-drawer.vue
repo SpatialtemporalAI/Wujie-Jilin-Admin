@@ -378,28 +378,16 @@ onMounted(() => {
 
         <NDivider title-placement="left">场景地图</NDivider>
         <NFormItem label="场景地图" path="map_id">
-          <NSelect
-            :value="model.map_id"
-            :options="mapOptions"
-            placeholder="请先选择场景地图"
-            filterable
-            clearable
-            @update:value="handleMapChange"
-          />
+          <NSelect :value="model.map_id" :options="mapOptions" placeholder="请先选择场景地图" filterable clearable
+            @update:value="handleMapChange" />
         </NFormItem>
 
         <!-- 机器人绑定 -->
         <NDivider title-placement="left">执行机器人</NDivider>
         <NFormItem label="绑定机器人" path="robot_ids">
-          <NSelect
-            v-model:value="model.robot_ids"
-            :options="filteredRobotOptions"
-            :placeholder="model.map_id === null ? '请先选择场景地图' : '至少选择一台机器人'"
-            multiple
-            filterable
-            :disabled="model.map_id === null"
-            :render-label="renderRobotLabel"
-          />
+          <NSelect v-model:value="model.robot_ids" :options="filteredRobotOptions"
+            :placeholder="model.map_id === null ? '请先选择场景地图' : '至少选择一台机器人'" multiple filterable
+            :disabled="model.map_id === null" :render-label="renderRobotLabel" />
         </NFormItem>
 
         <!-- 巡逻点位配置 -->
@@ -418,17 +406,12 @@ onMounted(() => {
               </template>
               <NGrid :cols="3" :x-gap="12">
                 <NFormItemGi label="巡逻点位" required>
-                  <NSelect
-                    v-model:value="point.annotation_id"
-                    :options="annotationOptions"
-                    :placeholder="selectedMapId === null ? '请先选择场景地图' : '请选择场景点位'"
-                    :disabled="selectedMapId === null"
-                    filterable
-                    @update:value="(val: number | null) => {
+                  <NSelect v-model:value="point.annotation_id" :options="annotationOptions"
+                    :placeholder="selectedMapId === null ? '请先选择场景地图' : '请选择场景点位'" :disabled="selectedMapId === null"
+                    filterable @update:value="(val: number | null) => {
                       const ann = val === null ? undefined : annotationMap.get(val);
                       point.point_name = ann?.name ?? null;
-                    }"
-                  />
+                    }" />
                 </NFormItemGi>
                 <NFormItemGi label="运控动作" required>
                   <NSelect v-model:value="point.action" :options="actionOptions" placeholder="选择动作" />
@@ -463,7 +446,8 @@ onMounted(() => {
         <template v-if="model.schedule_enabled">
           <NGrid :cols="2" :x-gap="16">
             <NFormItemGi label="调度日期" required>
-              <NDatePicker v-model:value="model.schedule_date" type="date" class="w-full" />
+              <NDatePicker start-placeholder="开始时间" end-placeholder="结束时间" v-model:value="model.schedule_date"
+                type="date" class="w-full" />
             </NFormItemGi>
             <NFormItemGi label="开始时间" required>
               <NTimePicker v-model:value="model.schedule_start_time" format="HH:mm" class="w-full" />
