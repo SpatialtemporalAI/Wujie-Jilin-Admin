@@ -54,60 +54,54 @@ function search() {
 
 <template>
   <NCard :bordered="false" size="small" class="card-wrapper">
-    <NCollapse :default-expanded-names="['notice-search']">
-      <NCollapseItem :title="$t('common.search')" name="notice-search">
-        <NForm :model="model" label-placement="left" :label-width="80">
-          <NGrid responsive="screen" item-responsive>
-            <NFormItemGi
-              span="24 s:12 m:6"
-              :label="$t('common.title')"
-              path="title"
-              class="pr-24px"
-            >
-              <NInput v-model:value="model.title" :placeholder="$t('page.manage.announcement.form.title')" clearable />
-            </NFormItemGi>
-            <NFormItemGi span="24 s:12 m:6" :label="$t('page.manage.announcement.noticeType')" path="type" class="pr-24px">
-              <NSelect v-model:value="model.type" :options="noticeTypeOptions" :placeholder="$t('page.manage.announcement.form.type')" clearable />
-            </NFormItemGi>
-            <NFormItemGi
-              span="24 s:12 m:6"
-              :label="$t('page.manage.announcement.targetTypeLabel')"
-              path="target_type"
-              class="pr-24px"
-            >
-              <NSelect v-model:value="model.target_type" :options="targetTypeOptions" :placeholder="$t('page.manage.announcement.form.targetType')" clearable />
-            </NFormItemGi>
-            <NFormItemGi span="24 s:12 m:6" :label="$t('common.status')" path="status" class="pr-24px">
-              <NSelect v-model:value="model.status" :options="enableStatusOptions" :placeholder="$t('page.manage.announcement.form.status')" clearable />
-            </NFormItemGi>
-            <NFormItemGi
-              span="24 s:12 m:6"
-              :label="$t('page.manage.announcement.priority')"
-              path="priority"
-              class="pr-24px"
-            >
-              <NSelect v-model:value="model.priority" :options="priorityOptions" :placeholder="$t('page.manage.announcement.form.priority')" clearable />
-            </NFormItemGi>
-            <NFormItemGi span="24 m:12" class="pr-24px">
-              <NSpace class="w-full" justify="end">
-                <NButton @click="resetModel">
-                  <template #icon>
-                    <icon-ic-round-refresh class="text-icon" />
-                  </template>
-                  {{ $t('common.reset') }}
-                </NButton>
-                <NButton type="primary" ghost @click="search">
-                  <template #icon>
-                    <icon-ic-round-search class="text-icon" />
-                  </template>
-                  {{ $t('common.search') }}
-                </NButton>
-              </NSpace>
-            </NFormItemGi>
-          </NGrid>
-        </NForm>
-      </NCollapseItem>
-    </NCollapse>
+    <NForm :model="model" label-placement="left" :label-width="80">
+      <NGrid responsive="screen" item-responsive>
+        <NFormItemGi
+          span="24 s:12 m:6"
+          :label="$t('common.title')"
+          path="title"
+          class="pr-24px"
+        >
+          <NInput v-model:value="model.title" :placeholder="$t('page.manage.announcement.form.title')" clearable />
+        </NFormItemGi>
+        <NFormItemGi span="24 s:12 m:6" :label="$t('page.manage.announcement.noticeType')" path="type" class="pr-24px">
+          <NSelect v-model:value="model.type" :options="noticeTypeOptions" :placeholder="$t('page.manage.announcement.form.type')" clearable />
+        </NFormItemGi>
+        <NFormItemGi
+          span="24 s:12 m:6"
+          :label="$t('page.manage.announcement.targetTypeLabel')"
+          path="target_type"
+          class="pr-24px"
+        >
+          <NSelect v-model:value="model.target_type" :options="targetTypeOptions" :placeholder="$t('page.manage.announcement.form.targetType')" clearable />
+        </NFormItemGi>
+        <NFormItemGi span="24 s:12 m:6" :label="$t('common.status')" path="status" class="pr-24px">
+          <NSelect v-model:value="model.status" :options="enableStatusOptions" :placeholder="$t('page.manage.announcement.form.status')" clearable />
+        </NFormItemGi>
+        <NFormItemGi
+          span="24 s:12 m:6"
+          :label="$t('page.manage.announcement.priority')"
+          path="priority"
+          class="pr-24px"
+        >
+          <NSelect v-model:value="model.priority" :options="priorityOptions" :placeholder="$t('page.manage.announcement.form.priority')" clearable />
+        </NFormItemGi>
+      </NGrid>
+      <NSpace class="mt-16px w-full" justify="end">
+        <NButton @click="resetModel">
+          <template #icon>
+            <icon-ic-round-refresh class="text-icon" />
+          </template>
+          {{ $t('common.reset') }}
+        </NButton>
+        <NButton type="primary" ghost @click="search">
+          <template #icon>
+            <icon-ic-round-search class="text-icon" />
+          </template>
+          {{ $t('common.search') }}
+        </NButton>
+      </NSpace>
+    </NForm>
   </NCard>
 </template>
 
