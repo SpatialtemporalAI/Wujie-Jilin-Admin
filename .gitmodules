@@ -1,3 +1,6 @@
 [submodule "backend/grpc"]
 	path = backend/grpc
 	url = git@github.com:SpatialtemporalAI/Wujie-Jilin-Grpc.git
+[submodule "backend/database"]
+	path = backend/database
+	url = git@github.com:SpatialtemporalAI/Wujie-Jilin-Database.git

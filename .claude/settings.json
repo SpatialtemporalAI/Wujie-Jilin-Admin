@@ -1,4 +1,10 @@
 {
+  "permissions": {
+    "allow": [
+      "Bash(npx pnpm *)",
+      "Bash(pnpm typecheck *)"
+    ]
+  },
   "hooks": {
     "PreToolUse": [
       {
@@ -10,11 +16,6 @@
           }
         ]
       }
-    ]
-  },
-  "permissions": {
-    "allow": [
-      "Bash(npx pnpm *)"
     ]
   }
 }
