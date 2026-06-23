@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { ref, watch } from 'vue';
-import { fetchGetExecutionDetail } from '@/service/api';
+import { fetchGetExecutionRecordDetail } from '@/service/api';
 
 defineOptions({ name: 'TaskDetailDrawer' });
 
@@ -13,7 +13,7 @@ const props = defineProps<Props>();
 const visible = defineModel<boolean>('visible', { default: false });
 
 const loading = ref(false);
-const detail = ref<Api.Task.TaskExecutionDetail | null>(null);
+const detail = ref<Api.Task.TaskExecutionRecordDetail | null>(null);
 
 const taskTypeLabel: Record<string, string> = {
   patrol: '巡逻',
@@ -29,6 +29,12 @@ const statusLabelMap: Record<string, string> = {
   cancelled: '已取消'
 };
 
+const sourceLabelMap: Record<string, string> = {
+  platform_schedule: '平台定时',
+  voice_trigger: '语音触发',
+  manual: '手动'
+};
+
 const actionLabel: Record<string, string> = {
   wave: '挥手',
   bow: '鞠躬',
@@ -41,7 +47,7 @@ async function loadDetail() {
   if (!props.execId) return;
   loading.value = true;
   try {
-    const { data, error } = await fetchGetExecutionDetail(props.execId);
+    const { data, error } = await fetchGetExecutionRecordDetail(props.execId);
     if (!error && data) {
       detail.value = data;
     }
@@ -55,6 +61,15 @@ watch(visible, () => {
     loadDetail();
   }
 });
+
+function pointStatusType(index: number): 'success' | 'default' | 'error' {
+  if (!detail.value?.progress) return 'default';
+  const statusItem = detail.value.progress.points_status.find(p => p.index === index);
+  if (!statusItem) return 'default';
+  if (statusItem.status === 'completed') return 'success';
+  if (statusItem.status === 'failed') return 'error';
+  return 'default';
+}
 </script>
 
 <template>
@@ -63,43 +78,57 @@ watch(visible, () => {
       <NSpin v-if="loading" class="w-full" />
       <template v-else-if="detail">
         <NDescriptions bordered :column="2" label-placement="left" size="small">
-          <NDescriptionsItem label="任务 ID">{{ detail.task_id }}</NDescriptionsItem>
-          <NDescriptionsItem label="任务名称">{{ detail.task_name }}</NDescriptionsItem>
-          <NDescriptionsItem label="任务类型">{{ taskTypeLabel[detail.task_type] || detail.task_type }}</NDescriptionsItem>
+          <NDescriptionsItem label="执行ID">{{ detail.id }}</NDescriptionsItem>
+          <NDescriptionsItem label="任务名称">
+            {{ detail.task_definition?.task_name || '-' }}
+          </NDescriptionsItem>
+          <NDescriptionsItem label="任务类型">
+            {{ taskTypeLabel[detail.task_definition?.task_type || ''] || detail.task_definition?.task_type || '-' }}
+          </NDescriptionsItem>
           <NDescriptionsItem label="执行状态">
             <NTag size="small" :type="detail.status === 'completed' ? 'success' : detail.status === 'failed' ? 'error' : 'default'">
               {{ statusLabelMap[detail.status] || detail.status }}
             </NTag>
           </NDescriptionsItem>
           <NDescriptionsItem label="执行机器人">{{ detail.robot_name || '-' }}</NDescriptionsItem>
-          <NDescriptionsItem label="触发方式">{{ detail.triggered_by === 'manual' ? '手动' : '定时' }}</NDescriptionsItem>
-          <NDescriptionsItem label="开始时间">{{ detail.started_at || '-' }}</NDescriptionsItem>
-          <NDescriptionsItem label="结束时间">{{ detail.ended_at || '-' }}</NDescriptionsItem>
-          <NDescriptionsItem label="进度" :span="2">
-            <NProgress type="line" :percentage="detail.progress" />
+          <NDescriptionsItem label="场景地图">{{ detail.scene_name || '-' }}</NDescriptionsItem>
+          <NDescriptionsItem label="触发源">
+            {{ sourceLabelMap[detail.source] || detail.source }}
           </NDescriptionsItem>
-          <NDescriptionsItem v-if="detail.error_message" label="错误信息" :span="2">
-            <NText type="error">{{ detail.error_message }}</NText>
+          <NDescriptionsItem label="触发用户">{{ detail.user_name || '-' }}</NDescriptionsItem>
+          <NDescriptionsItem label="开始时间">{{ detail.start_time || '-' }}</NDescriptionsItem>
+          <NDescriptionsItem label="结束时间">{{ detail.finish_time || '-' }}</NDescriptionsItem>
+          <NDescriptionsItem label="进度" :span="2">
+            <NProgress type="line" :percentage="detail.progress_per" />
+          </NDescriptionsItem>
+          <NDescriptionsItem v-if="detail.error_msg" label="错误信息" :span="2">
+            <NText type="error">{{ detail.error_msg }}</NText>
           </NDescriptionsItem>
         </NDescriptions>
 
         <!-- 巡逻点位时间线 -->
-        <template v-if="detail.task_type === 'patrol' && detail.points && detail.points.length > 0">
+        <template v-if="detail.task_definition?.task_type === 'patrol' && detail.task_definition?.points?.length">
           <NDivider title-placement="left">巡逻点位</NDivider>
           <NTimeline>
             <NTimelineItem
-              v-for="(point, index) in detail.points"
-              :key="point.id"
-              :type="index < (detail.progress / 100) * detail.points.length ? 'success' : 'default'"
+              v-for="(point, index) in detail.task_definition.points"
+              :key="index"
+              :type="pointStatusType(index)"
               :title="`点位 ${index + 1}: ${point.point_name || '-'}`"
             >
-              <NText depth="3">
-                动作: {{ actionLabel[point.action] || point.action }}
-              </NText>
-              <br v-if="point.voice_text" />
-              <NText v-if="point.voice_text" depth="3">
-                语音: {{ point.voice_text }}
-              </NText>
+              <template v-if="point.actions && point.actions.length > 0">
+                <div v-for="(actionItem, actionIdx) in point.actions" :key="actionIdx" class="mb-4px">
+                  <NText depth="3">
+                    动作{{ point.actions.length > 1 ? ` ${actionIdx + 1}` : '' }}: {{
+                      actionLabel[actionItem.action] || actionItem.action
+                    }}
+                  </NText>
+                  <br v-if="actionItem.voice_text" />
+                  <NText v-if="actionItem.voice_text" depth="3">
+                    语音: {{ actionItem.voice_text }}
+                  </NText>
+                </div>
+              </template>
             </NTimelineItem>
           </NTimeline>
         </template>

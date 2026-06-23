@@ -118,3 +118,64 @@ export function fetchGetExecutionDetail(execId: number) {
     method: 'get'
   });
 }
+
+/** ==================== 任务执行记录 API（新版，对应 task_execution_record 表） ==================== */
+
+/** start task execution (new record table) */
+export function fetchStartExecutionRecord(taskId: number, payload: Api.Task.TaskExecutionRecordStartIn) {
+  return request<Api.Task.TaskExecutionRecord>({
+    url: `/task/execution-record/${taskId}/start`,
+    method: 'post',
+    data: payload
+  });
+}
+
+/** pause execution record */
+export function fetchPauseExecutionRecord(recordId: number) {
+  return request<Api.Task.TaskExecutionRecord>({
+    url: `/task/execution-record/${recordId}/pause`,
+    method: 'post'
+  });
+}
+
+/** resume execution record */
+export function fetchResumeExecutionRecord(recordId: number) {
+  return request<Api.Task.TaskExecutionRecord>({
+    url: `/task/execution-record/${recordId}/resume`,
+    method: 'post'
+  });
+}
+
+/** stop execution record */
+export function fetchStopExecutionRecord(recordId: number) {
+  return request<Api.Task.TaskExecutionRecord>({
+    url: `/task/execution-record/${recordId}/stop`,
+    method: 'post'
+  });
+}
+
+/** get active execution records */
+export function fetchGetActiveExecutionRecords(params?: Api.Task.TaskExecutionRecordSearchParams) {
+  return request<Api.Task.TaskExecutionRecordList>({
+    url: '/task/execution-record/active',
+    method: 'get',
+    params
+  });
+}
+
+/** get execution record history */
+export function fetchGetExecutionRecordHistory(params?: Api.Task.TaskExecutionRecordSearchParams) {
+  return request<Api.Task.TaskExecutionRecordList>({
+    url: '/task/execution-record/history',
+    method: 'get',
+    params
+  });
+}
+
+/** get execution record detail */
+export function fetchGetExecutionRecordDetail(recordId: number) {
+  return request<Api.Task.TaskExecutionRecordDetail>({
+    url: `/task/execution-record/detail/${recordId}`,
+    method: 'get'
+  });
+}

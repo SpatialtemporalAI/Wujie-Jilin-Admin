@@ -14,14 +14,19 @@ declare namespace Api {
     /** patrol action */
     type TaskAction = 'wave' | 'bow' | 'turn' | 'wait' | 'nod';
 
+    /** patrol point action item (supports multiple actions per point) */
+    type TaskActionItem = {
+      action: TaskAction;
+      voice_text?: string | null;
+    };
+
     /** patrol point */
     type TaskPoint = Common.CommonRecord<{
       task_id: number;
       sort_order: number;
       point_name: string | null;
       annotation_id: number | null;
-      action: TaskAction;
-      voice_text: string | null;
+      actions: TaskActionItem[];
     }>;
 
     /** robot brief info for task */
@@ -68,8 +73,7 @@ declare namespace Api {
         sort_order: number;
         point_name?: string | null;
         annotation_id?: number | null;
-        action: TaskAction;
-        voice_text?: string | null;
+        actions: TaskActionItem[];
       }[];
       broadcast_text?: string | null;
       robot_ids: number[];
@@ -111,6 +115,95 @@ declare namespace Api {
     /** task execution detail (with points) */
     type TaskExecutionDetail = TaskExecution & {
       points: TaskPoint[] | null;
+    };
+
+    /** ==================== 新版任务执行记录（TaskExecutionRecord） ==================== */
+
+    /** execution source */
+    type TaskExecutionSource = 'platform_schedule' | 'voice_trigger' | 'manual';
+
+    /** execution record status */
+    type TaskExecutionRecordStatus = 'pending' | 'running' | 'paused' | 'completed' | 'cancelled' | 'failed';
+
+    /** point progress status */
+    type PointProgressStatus = {
+      index: number;
+      status: 'pending' | 'running' | 'completed' | 'failed';
+      started_at?: string | null;
+      finished_at?: string | null;
+    };
+
+    /** progress detail */
+    type ProgressDetail = {
+      total_points: number;
+      completed_points: number;
+      current_point_index: number;
+      points_status: PointProgressStatus[];
+    };
+
+    /** action snapshot */
+    type TaskActionSnapshot = {
+      action: TaskAction;
+      voice_text?: string | null;
+    };
+
+    /** point snapshot */
+    type TaskPointSnapshot = {
+      sort_order: number;
+      point_name: string | null;
+      annotation_id: number | null;
+      actions: TaskActionSnapshot[];
+    };
+
+    /** task definition snapshot */
+    type TaskDefinitionSnapshot = {
+      task_type: TaskType;
+      task_name: string | null;
+      points: TaskPointSnapshot[];
+      broadcast_text: string | null;
+    };
+
+    /** task execution record (new) */
+    type TaskExecutionRecord = Omit<Common.CommonRecord<object>, 'status'> & {
+      robot_id: number | null;
+      robot_name: string | null;
+      scene_id: number | null;
+      scene_name: string | null;
+      user_id: number | null;
+      user_name: string | null;
+      task_definition: TaskDefinitionSnapshot | null;
+      progress: ProgressDetail | null;
+      progress_per: number;
+      status: TaskExecutionRecordStatus;
+      source: TaskExecutionSource;
+      error_msg: string | null;
+      start_time: string | null;
+      finish_time: string | null;
+    };
+
+    /** task execution record search params */
+    type TaskExecutionRecordSearchParams = CommonType.RecordNullable<
+      {
+        status?: TaskExecutionRecordStatus;
+        robot_id?: number;
+        scene_id?: number;
+        user_id?: number;
+        source?: TaskExecutionSource;
+        start_time?: string;
+        end_time?: string;
+      } & CommonSearchParams
+    >;
+
+    /** task execution record list */
+    type TaskExecutionRecordList = Common.PaginatingQueryRecord<TaskExecutionRecord>;
+
+    /** task execution record detail (alias for now) */
+    type TaskExecutionRecordDetail = TaskExecutionRecord;
+
+    /** task execution record start input */
+    type TaskExecutionRecordStartIn = {
+      robot_ids: number[];
+      source?: TaskExecutionSource;
     };
   }
 }

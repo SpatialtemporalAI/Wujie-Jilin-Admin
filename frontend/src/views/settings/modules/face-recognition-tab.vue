@@ -12,9 +12,12 @@ import {
 } from '@/service/api';
 import { useAppStore } from '@/store/modules/app';
 import { useNaiveForm } from '@/hooks/common/form';
+import { useAuth } from '@/hooks/business/auth';
+import SvgIcon from '@/components/custom/svg-icon.vue';
 
 defineOptions({ name: 'FaceRecognitionTab' });
 
+const { hasAuth } = useAuth();
 const message = useMessage();
 const appStore = useAppStore();
 const { formRef, validate } = useNaiveForm();
@@ -22,6 +25,7 @@ const { formRef, validate } = useNaiveForm();
 const loading = ref(false);
 const tableLoading = ref(false);
 const editingId = ref<number | null>(null);
+const isFormExpanded = ref(true);
 
 const model = reactive<Api.RobotConfig.FaceRecognitionCreate>({
   person_name: '',
@@ -147,15 +151,19 @@ const columns = [
     width: 160,
     render: (row: Api.RobotConfig.FaceRecognition) => (
       <div class="flex-center gap-8px">
-        <NButton type="primary" ghost size="small" onClick={() => handleEdit(row)}>编辑</NButton>
-        <NPopconfirm onPositiveClick={() => handleDelete(row.id)}>
-          {{
-            default: () => '确认删除吗？',
-            trigger: () => (
-              <NButton type="error" ghost size="small">删除</NButton>
-            )
-          }}
-        </NPopconfirm>
+        {hasAuth('robot:config:edit') && (
+          <NButton type="primary" ghost size="small" onClick={() => handleEdit(row)}>编辑</NButton>
+        )}
+        {hasAuth('robot:config:edit') && (
+          <NPopconfirm onPositiveClick={() => handleDelete(row.id)}>
+            {{
+              default: () => '确认删除吗？',
+              trigger: () => (
+                <NButton type="error" ghost size="small">删除</NButton>
+              )
+            }}
+          </NPopconfirm>
+        )}
       </div>
     )
   }
@@ -172,36 +180,53 @@ onMounted(() => {
     <NCard title="配置人脸识别TTS" size="small">
       <NForm ref="formRef" :model="model" :rules="rules" label-placement="left" :label-width="100">
         <NGrid responsive="screen" :cols="1">
-          <NFormItemGi label="人员名称" path="person_name">
-            <NInput v-model:value="model.person_name" placeholder="请输入人员名称" clearable />
-          </NFormItemGi>
-          <NFormItemGi label="人像" path="photo_url">
-            <NUpload
-              v-model:file-list="fileList"
-              :max="1"
-              accept="image/*"
-              :custom-request="handleUpload"
-              :on-remove="handleRemovePhoto"
-              list-type="image-card"
-            />
-            <span v-if="model.photo_url && !fileList.length" class="text-12px text-gray">已上传: {{ model.photo_url }}</span>
-          </NFormItemGi>
-          <NFormItemGi label="播报内容" path="broadcast_text">
-            <NInput
-              v-model:value="model.broadcast_text"
-              type="textarea"
-              placeholder="请输入语音播报内容"
-              :rows="3"
-              clearable
-            />
-          </NFormItemGi>
+          <template v-if="isFormExpanded">
+            <NFormItemGi label="人员名称" path="person_name">
+              <NInput v-model:value="model.person_name" placeholder="请输入人员名称" clearable />
+            </NFormItemGi>
+            <NFormItemGi label="人像" path="photo_url">
+              <NUpload
+                v-if="hasAuth('robot:config:edit')"
+                v-model:file-list="fileList"
+                :max="1"
+                accept="image/*"
+                :custom-request="handleUpload"
+                :on-remove="handleRemovePhoto"
+                list-type="image-card"
+              />
+              <span v-if="model.photo_url && !fileList.length" class="text-12px text-gray">已上传: {{ model.photo_url }}</span>
+            </NFormItemGi>
+            <NFormItemGi label="播报内容" path="broadcast_text">
+              <NInput
+                v-model:value="model.broadcast_text"
+                type="textarea"
+                placeholder="请输入语音播报内容"
+                :rows="3"
+                clearable
+              />
+            </NFormItemGi>
+          </template>
           <NFormItemGi>
-            <NSpace>
-              <NButton type="primary" :loading="loading" @click="handleSave">
-                {{ editingId ? '更新配置' : '保存配置' }}
+            <div class="flex-center justify-between w-full">
+              <NSpace>
+                <NButton
+                  v-if="hasAuth('robot:config:edit')"
+                  type="primary"
+                  :loading="loading"
+                  :disabled="!isFormExpanded"
+                  @click="handleSave"
+                >
+                  {{ editingId ? '更新配置' : '保存配置' }}
+                </NButton>
+                <NButton v-if="editingId" @click="resetForm">取消</NButton>
+              </NSpace>
+              <NButton text @click="isFormExpanded = !isFormExpanded">
+                <template #icon>
+                  <SvgIcon :icon="isFormExpanded ? 'mdi:chevron-up' : 'mdi:chevron-down'" />
+                </template>
+                <span class="ml-4px">{{ isFormExpanded ? '收起' : '展开' }}</span>
               </NButton>
-              <NButton v-if="editingId" @click="resetForm">取消</NButton>
-            </NSpace>
+            </div>
           </NFormItemGi>
         </NGrid>
       </NForm>
@@ -240,5 +265,18 @@ onMounted(() => {
 }
 .text-gray {
   color: #999;
+}
+.flex-center {
+  display: flex;
+  align-items: center;
+}
+.justify-between {
+  justify-content: space-between;
+}
+.w-full {
+  width: 100%;
+}
+.ml-4px {
+  margin-left: 4px;
 }
 </style>

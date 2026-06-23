@@ -1,7 +1,7 @@
 <script setup lang="tsx">
 import { reactive, ref } from 'vue';
 import { NButton, NDataTable, NPopconfirm, NTag, useMessage } from 'naive-ui';
-import { fetchGetTaskList, fetchDeleteTask, fetchToggleTaskEnabled, fetchStartTaskExecution } from '@/service/api';
+import { fetchGetTaskList, fetchDeleteTask, fetchToggleTaskEnabled, fetchStartExecutionRecord } from '@/service/api';
 import { useAppStore } from '@/store/modules/app';
 import { defaultTransform, useNaivePaginatedTable, useTableOperate } from '@/hooks/common/table';
 import { useAuth } from '@/hooks/business/auth';
@@ -211,7 +211,7 @@ async function handleToggleEnabled(row: Api.Task.Task) {
 async function handleStart(row: Api.Task.Task) {
   try {
     const robotIds = row.robots?.map((r: Api.Task.TaskRobot) => r.id) || [];
-    await fetchStartTaskExecution(row.id, robotIds);
+    await fetchStartExecutionRecord(row.id, { robot_ids: robotIds, source: 'manual' });
     message.success('任务已启动');
   } catch (error) {
     console.error('启动任务失败:', error);

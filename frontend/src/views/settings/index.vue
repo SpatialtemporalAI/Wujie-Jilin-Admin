@@ -11,8 +11,8 @@ const activeTab = ref('voice');
 </script>
 
 <template>
-  <div class="min-h-500px flex-col-stretch gap-16px overflow-hidden lt-sm:overflow-auto">
-    <NCard :bordered="false" size="small" class="card-wrapper flex-1-hidden">
+  <div class="h-full overflow-y-auto">
+    <NCard :bordered="false" size="small" class="card-wrapper">
       <NTabs v-model:value="activeTab" type="line" animated>
         <NTabPane name="voice" tab="语音合成">
           <VoiceSynthesisTab />

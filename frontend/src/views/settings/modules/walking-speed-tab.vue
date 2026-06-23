@@ -2,9 +2,11 @@
 import { computed, onMounted, ref } from 'vue';
 import { useMessage } from 'naive-ui';
 import { fetchGetRobot, fetchGetRobotList, fetchUpdateRobot } from '@/service/api';
+import { useAuth } from '@/hooks/business/auth';
 
 defineOptions({ name: 'WalkingSpeedTab' });
 
+const { hasAuth } = useAuth();
 const message = useMessage();
 
 const robotList = ref<Api.Robot.Robot[]>([]);
@@ -121,7 +123,9 @@ onMounted(() => {
               <NSelect v-model:value="speedLevel" :options="speedOptions" placeholder="请选择速度等级" clearable />
             </NFormItem>
             <NFormItem>
-              <NButton type="primary" :loading="saving" @click="handleSave">保存设置</NButton>
+              <NButton v-if="hasAuth('robot:config:edit')" type="primary" :loading="saving" @click="handleSave">
+                保存设置
+              </NButton>
             </NFormItem>
           </NForm>
         </div>

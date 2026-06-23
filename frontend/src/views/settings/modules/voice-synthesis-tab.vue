@@ -9,9 +9,11 @@ import {
   fetchTestTTS
 } from '@/service/api';
 import { useNaiveForm } from '@/hooks/common/form';
+import { useAuth } from '@/hooks/business/auth';
 
 defineOptions({ name: 'VoiceSynthesisTab' });
 
+const { hasAuth } = useAuth();
 const message = useMessage();
 const { formRef, validate, restoreValidation } = useNaiveForm();
 const loading = ref(false);
@@ -221,6 +223,7 @@ onMounted(() => {
               <NFormItemGi>
                 <NSpace>
                   <NButton
+                    v-if="hasAuth('robot:config:edit')"
                     type="primary"
                     ghost
                     :disabled="!model.wake_word_enabled || !canSaveWakeWord"
@@ -249,14 +252,22 @@ onMounted(() => {
               </NFormItemGi>
               <NFormItemGi>
                 <NSpace>
-                  <NButton type="primary" ghost @click="handleTestTTS">测试语音</NButton>
+                  <NButton v-if="hasAuth('robot:config:edit')" type="primary" ghost @click="handleTestTTS">
+                    测试语音
+                  </NButton>
                 </NSpace>
               </NFormItemGi>
             </NGrid>
           </NCard>
 
           <div class="mt-16px">
-            <NButton type="primary" :loading="saving" :disabled="!canSaveWakeWord" @click="handleSaveVoice">
+            <NButton
+              v-if="hasAuth('robot:config:edit')"
+              type="primary"
+              :loading="saving"
+              :disabled="!canSaveWakeWord"
+              @click="handleSaveVoice"
+            >
               保存设置
             </NButton>
           </div>

@@ -137,12 +137,16 @@ function renderRobotLabel(option: RobotOption) {
 }
 
 /** 表单模型 */
+interface ActionItem {
+  action: Api.Task.TaskAction;
+  voice_text: string | null;
+}
+
 interface PointItem {
   sort_order: number;
   point_name: string | null;
   annotation_id: number | null;
-  action: Api.Task.TaskAction;
-  voice_text: string | null;
+  actions: ActionItem[];
 }
 
 interface FormModel {
@@ -181,8 +185,7 @@ function addPoint() {
     sort_order: model.value.points.length,
     point_name: null,
     annotation_id: null,
-    action: 'wave',
-    voice_text: null
+    actions: [{ action: 'wave', voice_text: null }]
   });
 }
 
@@ -191,6 +194,15 @@ function removePoint(index: number) {
   model.value.points.forEach((p, i) => {
     p.sort_order = i;
   });
+}
+
+/** 点位内动作管理 */
+function addAction(point: PointItem) {
+  point.actions.push({ action: 'wave', voice_text: null });
+}
+
+function removeAction(point: PointItem, index: number) {
+  point.actions.splice(index, 1);
 }
 
 /** 校验规则 */
@@ -239,8 +251,10 @@ async function handleInitModel() {
         sort_order: i,
         point_name: p.point_name || null,
         annotation_id: p.annotation_id ?? null,
-        action: p.action || 'wave',
-        voice_text: p.voice_text || null
+        actions:
+          p.actions && p.actions.length > 0
+            ? p.actions.map(a => ({ action: a.action || 'wave', voice_text: a.voice_text ?? null }))
+            : [{ action: 'wave', voice_text: null }]
       }));
     }
 
@@ -257,8 +271,10 @@ async function handleInitModel() {
             sort_order: i,
             point_name: p.point_name || null,
             annotation_id: p.annotation_id ?? null,
-            action: p.action || 'wave',
-            voice_text: p.voice_text || null
+            actions:
+              p.actions && p.actions.length > 0
+                ? p.actions.map(a => ({ action: a.action || 'wave', voice_text: a.voice_text ?? null }))
+                : [{ action: 'wave', voice_text: null }]
           }));
         }
       }
@@ -294,10 +310,17 @@ async function handleSubmit() {
       window.$message?.warning(`请选择点位 ${invalidPointIndex + 1} 的巡逻点位`);
       return;
     }
-    const invalidActionIndex = model.value.points.findIndex(point => !point.action);
-    if (invalidActionIndex !== -1) {
-      window.$message?.warning(`请选择点位 ${invalidActionIndex + 1} 的运控动作`);
-      return;
+    for (let i = 0; i < model.value.points.length; i += 1) {
+      const point = model.value.points[i];
+      if (!point.actions || point.actions.length === 0) {
+        window.$message?.warning(`请为点位 ${i + 1} 至少添加一个运控动作`);
+        return;
+      }
+      const invalidActionIndex = point.actions.findIndex(a => !a.action);
+      if (invalidActionIndex !== -1) {
+        window.$message?.warning(`请选择点位 ${i + 1} 中动作 ${invalidActionIndex + 1} 的运控类型`);
+        return;
+      }
     }
   }
   if (model.value.task_type === 'broadcast' && !model.value.broadcast_text) {
@@ -323,7 +346,15 @@ async function handleSubmit() {
     schedule_repeat_cycle: model.value.schedule_repeat_cycles.length > 0
       ? model.value.schedule_repeat_cycles.join(',')
       : null,
-    points: model.value.task_type === 'patrol' ? model.value.points : undefined,
+    points:
+      model.value.task_type === 'patrol'
+        ? model.value.points.map(p => ({
+            sort_order: p.sort_order,
+            point_name: p.point_name,
+            annotation_id: p.annotation_id,
+            actions: p.actions
+          }))
+        : undefined,
     broadcast_text: model.value.task_type === 'broadcast' ? model.value.broadcast_text : undefined
   };
 
@@ -404,22 +435,47 @@ onMounted(() => {
                   <NButton type="error" ghost size="tiny" @click="removePoint(index)">移除</NButton>
                 </NSpace>
               </template>
-              <NGrid :cols="3" :x-gap="12">
-                <NFormItemGi label="巡逻点位" required>
-                  <NSelect v-model:value="point.annotation_id" :options="annotationOptions"
-                    :placeholder="selectedMapId === null ? '请先选择场景地图' : '请选择场景点位'" :disabled="selectedMapId === null"
-                    filterable @update:value="(val: number | null) => {
-                      const ann = val === null ? undefined : annotationMap.get(val);
-                      point.point_name = ann?.name ?? null;
-                    }" />
-                </NFormItemGi>
-                <NFormItemGi label="运控动作" required>
-                  <NSelect v-model:value="point.action" :options="actionOptions" placeholder="选择动作" />
-                </NFormItemGi>
-                <NFormItemGi label="语音文本">
-                  <NInput v-model:value="point.voice_text" placeholder="语音播报文本" />
-                </NFormItemGi>
-              </NGrid>
+              <NFormItem label="巡逻点位" required>
+                <NSelect v-model:value="point.annotation_id" :options="annotationOptions"
+                  :placeholder="selectedMapId === null ? '请先选择场景地图' : '请选择场景点位'" :disabled="selectedMapId === null"
+                  filterable @update:value="(val: number | null) => {
+                    const ann = val === null ? undefined : annotationMap.get(val);
+                    point.point_name = ann?.name ?? null;
+                  }" />
+              </NFormItem>
+
+              <NDivider title-placement="left" style="margin-top: 8px; margin-bottom: 8px;">
+                运控动作（可添加多个）
+              </NDivider>
+              <div v-for="(actionItem, actionIndex) in point.actions" :key="actionIndex" class="mb-8px">
+                <NGrid :cols="3" :x-gap="12" responsive="screen">
+                  <NFormItemGi label="动作" required>
+                    <NSelect v-model:value="actionItem.action" :options="actionOptions" placeholder="选择动作" />
+                  </NFormItemGi>
+                  <NFormItemGi :span="2" label="语音文本">
+                    <NInput v-model:value="actionItem.voice_text" placeholder="语音播报文本" />
+                  </NFormItemGi>
+                  <NFormItemGi :span="3">
+                    <div class="flex justify-end">
+                      <NButton
+                        v-if="point.actions.length > 1"
+                        type="error"
+                        ghost
+                        size="small"
+                        @click="removeAction(point, actionIndex)"
+                      >
+                        删除动作
+                      </NButton>
+                    </div>
+                  </NFormItemGi>
+                </NGrid>
+              </div>
+              <NButton dashed size="small" block @click="addAction(point)">
+                <template #icon>
+                  <icon-ic-round-plus class="text-icon" />
+                </template>
+                添加动作
+              </NButton>
             </NCard>
           </div>
           <NButton dashed block :disabled="selectedMapId === null" @click="addPoint">

@@ -34,3 +34,4 @@
 - [2026-06-18 前后端生产环境启动脚本](./2026-06-18_prod-startup-scripts.md) — 前端 `pnpm start:prod` 串联 build+preview；后端 `backend/start_prod.sh` 用 gunicorn+uvicorn worker 启动并设 ENVIR=prod
 - [2026-06-19 地图编辑器电子围栏](./2026-06-19_map-editor-electronic-fence.md) — 右键新增电子围栏（红色矩形），多个围栏 OR 语义，后端 nav_image 反向涂黑围栏外区域
 - [2026-06-22 任务管理移除播报次数配置](./2026-06-22_task-remove-broadcast-count.md) — 播报类型任务只保留播报文本，后端字段保留兼容历史数据
+- [2026-06-23 settings 权限/滚动 + 任务多动作 + 独立执行记录表](./2026-06-23_settings-and-task-multi-action-execution-record.md) — settings 统一 robot:config:edit、表单可折叠、点位多动作(JSON)、新建 task_execution_record 表存储快照

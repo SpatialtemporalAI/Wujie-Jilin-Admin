@@ -128,8 +128,7 @@ class TaskService:
                         sort_order=pt.sort_order,
                         point_name=pt.point_name,
                         annotation_id=pt.annotation_id,
-                        action=pt.action,
-                        voice_text=pt.voice_text,
+                        actions=[a.model_dump() for a in pt.actions],
                     )
                     db.add(point_obj)
 
@@ -175,8 +174,7 @@ class TaskService:
                         sort_order=pt.sort_order,
                         point_name=pt.point_name,
                         annotation_id=pt.annotation_id,
-                        action=pt.action,
-                        voice_text=pt.voice_text,
+                        actions=[a.model_dump() for a in pt.actions],
                     )
                     db.add(point_obj)
 

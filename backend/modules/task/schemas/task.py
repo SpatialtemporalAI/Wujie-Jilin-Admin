@@ -32,13 +32,18 @@ def _validate_repeat_cycle(v: Optional[str]) -> Optional[str]:
 
 # ==================== 点位 Schema ====================
 
+class TaskActionItem(BaseReqEntity):
+    """巡逻点位单个动作"""
+    action: str = Field(..., description="运控动作: wave/bow/turn/wait/nod", max_length=20)
+    voice_text: Optional[str] = Field(None, description="语音播报文本")
+
+
 class TaskPointCreate(BaseReqEntity):
     """巡逻点位创建"""
     sort_order: int = Field(0, description="排序")
     point_name: Optional[str] = Field(None, description="点位名称", max_length=100)
     annotation_id: Optional[int] = Field(None, description="关联场景标注ID")
-    action: str = Field(..., description="运控动作: wave/bow/turn/wait/nod", max_length=20)
-    voice_text: Optional[str] = Field(None, description="语音播报文本")
+    actions: List[TaskActionItem] = Field(..., description="动作列表（支持多个）", min_length=1)
 
 
 class TaskPointResponse(BaseRespEntity):
@@ -50,8 +55,7 @@ class TaskPointResponse(BaseRespEntity):
     sort_order: int = Field(..., description="排序")
     point_name: Optional[str] = Field(None, description="点位名称")
     annotation_id: Optional[int] = Field(None, description="关联场景标注ID")
-    action: str = Field(..., description="运控动作")
-    voice_text: Optional[str] = Field(None, description="语音播报文本")
+    actions: List[TaskActionItem] = Field(..., description="动作列表")
 
 
 # ==================== 机器人简要 Schema ====================

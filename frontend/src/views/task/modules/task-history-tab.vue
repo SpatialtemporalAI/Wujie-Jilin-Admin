@@ -1,7 +1,7 @@
 <script setup lang="tsx">
 import { reactive, ref } from 'vue';
 import { NButton, NDataTable, NTag } from 'naive-ui';
-import { fetchGetExecutionHistory } from '@/service/api';
+import { fetchGetExecutionRecordHistory } from '@/service/api';
 import { useAppStore } from '@/store/modules/app';
 import { defaultTransform, useNaivePaginatedTable } from '@/hooks/common/table';
 import { $t } from '@/locales';
@@ -12,13 +12,16 @@ defineOptions({ name: 'TaskHistoryTab' });
 
 const appStore = useAppStore();
 
-const searchParams: Api.Task.TaskExecutionSearchParams = reactive({
+const searchParams: Api.Task.TaskExecutionRecordSearchParams = reactive({
   page: 1,
   page_size: 10,
-  task_name: null,
   status: null,
   robot_id: null,
-  map_id: null
+  scene_id: null,
+  user_id: null,
+  source: null,
+  start_time: null,
+  end_time: null
 });
 
 const statusColorMap: Record<string, NaiveUI.ThemeColor> = {
@@ -38,11 +41,17 @@ const taskTypeLabel: Record<string, string> = {
   broadcast: '播报'
 };
 
+const sourceLabelMap: Record<string, string> = {
+  platform_schedule: '平台定时',
+  voice_trigger: '语音触发',
+  manual: '手动'
+};
+
 /** 详情抽屉 */
 const detailDrawerVisible = ref(false);
 const detailExecId = ref<number | null>(null);
 
-function handleViewDetail(row: Api.Task.TaskExecution) {
+function handleViewDetail(row: Api.Task.TaskExecutionRecord) {
   detailExecId.value = row.id;
   detailDrawerVisible.value = true;
 }
@@ -56,7 +65,7 @@ const {
   loading,
   mobilePagination
 } = useNaivePaginatedTable({
-  api: () => fetchGetExecutionHistory(searchParams),
+  api: () => fetchGetExecutionRecordHistory(searchParams),
   transform: response => defaultTransform(response),
   onPaginationParamsChange: params => {
     searchParams.page = params.page;
@@ -75,56 +84,72 @@ const {
       title: '任务名称',
       align: 'center',
       minWidth: 140,
-      ellipsis: { tooltip: true }
+      ellipsis: { tooltip: true },
+      render: (row: Api.Task.TaskExecutionRecord) => (
+        <span>{row.task_definition?.task_name || '-'}</span>
+      )
     },
     {
       key: 'task_type',
       title: '任务类型',
       align: 'center',
       width: 100,
-      render: row => <NTag size="small" type={row.task_type === 'patrol' ? 'info' : 'success'}>{taskTypeLabel[row.task_type] || row.task_type}</NTag>
+      render: (row: Api.Task.TaskExecutionRecord) => {
+        const taskType = row.task_definition?.task_type;
+        return (
+          <NTag size="small" type={taskType === 'patrol' ? 'info' : 'success'}>
+            {taskTypeLabel[taskType as string] || taskType || '-'}
+          </NTag>
+        );
+      }
     },
     {
       key: 'status',
       title: '执行状态',
       align: 'center',
       width: 100,
-      render: row => <NTag size="small" type={statusColorMap[row.status] || 'default'}>{statusLabelMap[row.status] || row.status}</NTag>
+      render: (row: Api.Task.TaskExecutionRecord) => (
+        <NTag size="small" type={statusColorMap[row.status] || 'default'}>
+          {statusLabelMap[row.status] || row.status}
+        </NTag>
+      )
     },
     {
       key: 'robot_name',
       title: '执行机器人',
       align: 'center',
       width: 120,
-      render: row => <span>{row.robot_name || '-'}</span>
+      render: (row: Api.Task.TaskExecutionRecord) => <span>{row.robot_name || '-'}</span>
     },
     {
-      key: 'map_name',
+      key: 'scene_name',
       title: '场景地图',
       align: 'center',
       width: 140,
-      render: row => <span>{row.map_name || '-'}</span>
+      render: (row: Api.Task.TaskExecutionRecord) => <span>{row.scene_name || '-'}</span>
     },
     {
-      key: 'started_at',
+      key: 'start_time',
       title: '开始时间',
       align: 'center',
       width: 170,
-      render: row => <span>{row.started_at || '-'}</span>
+      render: (row: Api.Task.TaskExecutionRecord) => <span>{row.start_time || '-'}</span>
     },
     {
-      key: 'ended_at',
+      key: 'finish_time',
       title: '结束时间',
       align: 'center',
       width: 170,
-      render: row => <span>{row.ended_at || '-'}</span>
+      render: (row: Api.Task.TaskExecutionRecord) => <span>{row.finish_time || '-'}</span>
     },
     {
-      key: 'triggered_by',
-      title: '触发方式',
+      key: 'source',
+      title: '触发源',
       align: 'center',
       width: 100,
-      render: row => <span>{row.triggered_by === 'manual' ? '手动' : '定时'}</span>
+      render: (row: Api.Task.TaskExecutionRecord) => (
+        <span>{sourceLabelMap[row.source] || row.source}</span>
+      )
     },
     {
       key: 'operate',
@@ -132,7 +157,7 @@ const {
       align: 'center',
       width: 100,
       fixed: 'right',
-      render: row => (
+      render: (row: Api.Task.TaskExecutionRecord) => (
         <NButton type="primary" ghost size="small" onClick={() => handleViewDetail(row)}>
           查看详情
         </NButton>
@@ -159,10 +184,10 @@ const {
       :data="data"
       size="small"
       :flex-height="!appStore.isMobile"
-      :scroll-x="1100"
+      :scroll-x="1200"
       :loading="loading"
       remote
-      :row-key="(row: Api.Task.TaskExecution) => row.id"
+      :row-key="(row: Api.Task.TaskExecutionRecord) => row.id"
       :pagination="mobilePagination"
       class="sm:flex-1-hidden"
     />
