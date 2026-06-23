@@ -84,3 +84,23 @@ export function fetchDeleteFaceRecognition(id: number) {
     method: 'delete'
   });
 }
+
+/** ==================== 行走速度 / 电量阈值配置 ==================== */
+
+/** 更新机器人行走速度等级 */
+export function fetchUpdateSpeedLevel(robotId: number, speedLevel: string | null) {
+  return request<void>({
+    url: `/robot/config/speed-level/${robotId}`,
+    method: 'put',
+    data: { speed_level: speedLevel }
+  });
+}
+
+/** 更新机器人电量报警阈值 */
+export function fetchUpdateBatteryThreshold(robotId: number, batteryThreshold: number) {
+  return request<void>({
+    url: `/robot/config/battery-threshold/${robotId}`,
+    method: 'put',
+    data: { battery_threshold: batteryThreshold }
+  });
+}

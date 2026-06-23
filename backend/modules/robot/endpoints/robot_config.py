@@ -31,6 +31,8 @@ from modules.robot.schemas.robot_config import (
     RobotFaceRecognitionResponse,
     TestWakeWordRequest,
     TestTTSRequest,
+    RobotSpeedLevelUpdate,
+    RobotBatteryThresholdUpdate,
 )
 
 logger = logging.getLogger(__name__)
@@ -257,4 +259,65 @@ async def delete_face(
         return response_base.success(msg="删除成功")
     except Exception as e:
         logger.error("删除人脸识别TTS配置接口失败: %s", str(e), exc_info=True)
+        raise
+
+
+# ==================== 行走速度 / 电量阈值配置 ====================
+
+
+@robot_config_router.put(
+    "/speed-level/{robot_id}",
+    response_model=ResponseModel,
+    dependencies=[Depends(require_permission("robot:config:edit"))],
+)
+@log_operation(module="robot", action="update", description="更新机器人行走速度")
+async def update_speed_level(
+    robot_id: int,
+    payload: RobotSpeedLevelUpdate,
+    request: Request,
+    db: AsyncSession = Depends(get_session),
+    user: SysUser = Depends(current_user),
+):
+    """更新机器人行走速度等级（参数配置专用，权限 robot:config:edit）"""
+    try:
+        logger.info(
+            "更新机器人行走速度接口被调用，robot_id: %d, speed_level: %s",
+            robot_id,
+            payload.speed_level,
+        )
+        await RobotConfigService.update_speed_level(db, robot_id, payload.speed_level)
+        logger.info("更新机器人行走速度接口成功，robot_id: %d", robot_id)
+        return response_base.success(msg="保存成功")
+    except Exception as e:
+        logger.error("更新机器人行走速度接口失败: %s", str(e), exc_info=True)
+        raise
+
+
+@robot_config_router.put(
+    "/battery-threshold/{robot_id}",
+    response_model=ResponseModel,
+    dependencies=[Depends(require_permission("robot:config:edit"))],
+)
+@log_operation(module="robot", action="update", description="更新机器人电量报警阈值")
+async def update_battery_threshold(
+    robot_id: int,
+    payload: RobotBatteryThresholdUpdate,
+    request: Request,
+    db: AsyncSession = Depends(get_session),
+    user: SysUser = Depends(current_user),
+):
+    """更新机器人电量报警阈值（参数配置专用，权限 robot:config:edit）"""
+    try:
+        logger.info(
+            "更新机器人电量阈值接口被调用，robot_id: %d, battery_threshold: %d",
+            robot_id,
+            payload.battery_threshold,
+        )
+        await RobotConfigService.update_battery_threshold(
+            db, robot_id, payload.battery_threshold
+        )
+        logger.info("更新机器人电量阈值接口成功，robot_id: %d", robot_id)
+        return response_base.success(msg="保存成功")
+    except Exception as e:
+        logger.error("更新机器人电量阈值接口失败: %s", str(e), exc_info=True)
         raise

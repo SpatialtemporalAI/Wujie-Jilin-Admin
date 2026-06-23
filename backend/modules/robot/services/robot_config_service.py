@@ -231,3 +231,51 @@ class RobotConfigService:
             await db.rollback()
             logger.error("删除人脸识别TTS配置失败: %s", str(e), exc_info=True)
             raise
+
+    # ==================== 行走速度 / 电量阈值 ====================
+
+    @staticmethod
+    async def update_speed_level(db: AsyncSession, robot_id: int, speed_level: str | None) -> "Robot":
+        """更新机器人行走速度等级（独立于 robot:manage:edit，使用 robot:config:edit 权限）"""
+        try:
+            from database.models.business.robot import Robot
+
+            result = await db.execute(
+                select(Robot).where(Robot.id == robot_id, Robot.deleted_at.is_(None))
+            )
+            robot = result.scalar_one_or_none()
+            if not robot:
+                raise NotFoundError(msg=f"机器人 {robot_id} 不存在")
+            robot.speed_level = speed_level
+            await db.commit()
+            await db.refresh(robot)
+            return robot
+        except NotFoundError:
+            raise
+        except Exception as e:
+            await db.rollback()
+            logger.error("更新机器人行走速度失败: %s", str(e), exc_info=True)
+            raise
+
+    @staticmethod
+    async def update_battery_threshold(db: AsyncSession, robot_id: int, battery_threshold: int) -> "Robot":
+        """更新机器人电量报警阈值（独立于 robot:manage:edit，使用 robot:config:edit 权限）"""
+        try:
+            from database.models.business.robot import Robot
+
+            result = await db.execute(
+                select(Robot).where(Robot.id == robot_id, Robot.deleted_at.is_(None))
+            )
+            robot = result.scalar_one_or_none()
+            if not robot:
+                raise NotFoundError(msg=f"机器人 {robot_id} 不存在")
+            robot.battery_threshold = battery_threshold
+            await db.commit()
+            await db.refresh(robot)
+            return robot
+        except NotFoundError:
+            raise
+        except Exception as e:
+            await db.rollback()
+            logger.error("更新机器人电量阈值失败: %s", str(e), exc_info=True)
+            raise

@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { computed, onMounted, ref } from 'vue';
 import { useMessage } from 'naive-ui';
-import { fetchGetRobot, fetchGetRobotList, fetchUpdateRobot } from '@/service/api';
+import { fetchGetRobot, fetchGetRobotList, fetchUpdateBatteryThreshold } from '@/service/api';
 import { useAuth } from '@/hooks/business/auth';
 
 defineOptions({ name: 'BatteryThresholdTab' });
@@ -69,9 +69,7 @@ async function handleSave() {
 
   saving.value = true;
   try {
-    const { error } = await fetchUpdateRobot(selectedRobotId.value, {
-      battery_threshold: batteryThreshold.value
-    });
+    const { error } = await fetchUpdateBatteryThreshold(selectedRobotId.value, batteryThreshold.value);
     if (!error) {
       message.success('保存成功');
       const robot = robotList.value.find(item => item.id === selectedRobotId.value);

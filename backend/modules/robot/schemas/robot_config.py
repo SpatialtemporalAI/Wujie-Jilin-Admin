@@ -126,3 +126,19 @@ class TestTTSRequest(BaseModel):
     speed: int = Field(..., description="语速")
     volume: int = Field(..., description="音量")
     text: str = Field(..., description="要播报的文本")
+
+
+class RobotSpeedLevelUpdate(BaseReqEntity):
+    """机器人行走速度配置更新"""
+
+    speed_level: Optional[str] = Field(
+        None, description="速度等级: normal/slow/low", max_length=20
+    )
+
+
+class RobotBatteryThresholdUpdate(BaseReqEntity):
+    """机器人电量报警阈值更新"""
+
+    battery_threshold: int = Field(
+        ..., description="电量报警阈值(5-50)", ge=5, le=50
+    )
