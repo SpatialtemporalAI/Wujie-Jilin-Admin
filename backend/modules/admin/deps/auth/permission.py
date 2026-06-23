@@ -68,3 +68,50 @@ def require_permission(permission_code: str):
         return user
 
     return _check_permission
+
+
+def require_any_permission(*permission_codes: str):
+    """
+    创建一个权限校验依赖项，只要拥有任意一个权限码即通过（OR 关系）。
+
+    用于同一接口被多个页面共享、且各自有独立权限码的场景，
+    例如 scene_map / scene_map-editor 共享 /scene/map/list 接口。
+    """
+    async def _check_permission(
+        user: SysUser = Depends(current_user),
+        db: AsyncSession = Depends(get_session),
+    ) -> SysUser:
+        if user.is_superuser:
+            return user
+
+        _cache = get_memory_cache()
+        # 命中任一权限即可，因此按用户+全部 codes 聚合缓存
+        cache_key = f"{user.id}:any:{':'.join(permission_codes)}"
+        cached_result = _cache.get(CacheNamespace.PERMISSION, cache_key)
+        if cached_result is not None:
+            if not cached_result:
+                raise ForbiddenError(msg=f"没有操作权限: {', '.join(permission_codes)}")
+            return user
+
+        stmt = (
+            select(SysMenu.permission)
+            .join(SysMenu.roles)
+            .join(SysRole.users)
+            .where(
+                SysUser.id == user.id,
+                SysMenu.type == MenuType.BUTTON,
+                SysMenu.status == True,
+                SysRole.status == True,
+                SysMenu.permission.in_(permission_codes),
+            )
+            .limit(1)
+        )
+        result = await db.execute(stmt)
+        has_permission = result.scalar_one_or_none() is not None
+        _cache.set(CacheNamespace.PERMISSION, cache_key, has_permission, ttl=60)
+        if not has_permission:
+            raise ForbiddenError(msg=f"没有操作权限: {', '.join(permission_codes)}")
+
+        return user
+
+    return _check_permission

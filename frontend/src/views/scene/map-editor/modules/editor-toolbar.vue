@@ -79,7 +79,7 @@ function handleJump(entry: HistoryEntry) {
 
     <div v-if="isDirty" class="text-xs text-orange-500">有未保存的更改</div>
 
-    <NButton v-if="hasAuth('scene:map:edit')" type="primary" size="small" :loading="saving" @click="emit('save')">
+    <NButton v-if="hasAuth('scene:map-editor:edit')" type="primary" size="small" :loading="saving" @click="emit('save')">
       <template #icon><icon-ic-round-save /></template>
       保存
     </NButton>

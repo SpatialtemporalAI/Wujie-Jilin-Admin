@@ -8,7 +8,7 @@ from database.db_manager import get_session
 from core.response import ResponseModel, ResponsePageModel, response_base, ResponsePageDataModel
 from app.models.common.page import PageRequest, get_page_params, get_paginated_results
 from modules.admin.deps.auth.user_manager import current_user
-from modules.admin.deps.auth.permission import require_permission
+from modules.admin.deps.auth.permission import require_any_permission
 from database.models.sys.user import SysUser
 from modules.scene.services.scene_map_service import SceneMapService
 from modules.scene.services.scene_map_nav_image_service import SceneMapNavImageService
@@ -30,7 +30,7 @@ scene_map_router = APIRouter(
     "/list",
     response_model=ResponsePageModel[SceneMapResponseData],
     summary="获取场景地图列表",
-    dependencies=[Depends(require_permission("scene:map:list"))],
+    dependencies=[Depends(require_any_permission("scene:map:list", "scene:map-editor:list"))],
 )
 async def get_map_list(
     query_params: SceneMapQueryParams = Depends(),
@@ -56,7 +56,7 @@ async def get_map_list(
     "/{map_id}",
     response_model=ResponseModel[SceneMapResponseData],
     summary="获取场景地图详情",
-    dependencies=[Depends(require_permission("scene:map:detail"))],
+    dependencies=[Depends(require_any_permission("scene:map:detail", "scene:map-editor:list"))],
 )
 async def get_map(
     map_id: int,
@@ -72,7 +72,7 @@ async def get_map(
     "/add",
     response_model=ResponseModel[SceneMapResponseData],
     summary="创建场景地图",
-    dependencies=[Depends(require_permission("scene:map:add"))],
+    dependencies=[Depends(require_any_permission("scene:map:add", "scene:map-editor:add"))],
 )
 async def create_map(
     map_create: SceneMapCreate,
@@ -90,7 +90,7 @@ async def create_map(
     "/{map_id}",
     response_model=ResponseModel[SceneMapResponseData],
     summary="更新场景地图",
-    dependencies=[Depends(require_permission("scene:map:edit"))],
+    dependencies=[Depends(require_any_permission("scene:map:edit", "scene:map-editor:edit"))],
 )
 async def update_map(
     map_id: int,
@@ -111,7 +111,7 @@ async def update_map(
     "/{map_id}",
     response_model=ResponseModel,
     summary="删除场景地图",
-    dependencies=[Depends(require_permission("scene:map:delete"))],
+    dependencies=[Depends(require_any_permission("scene:map:delete", "scene:map-editor:delete"))],
 )
 async def delete_map(
     map_id: int,

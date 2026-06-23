@@ -7,7 +7,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from database.db_manager import get_session
 from core.response import ResponseModel, response_base
 from modules.admin.deps.auth.user_manager import current_user
-from modules.admin.deps.auth.permission import require_permission
+from modules.admin.deps.auth.permission import require_any_permission
 from database.models.sys.user import SysUser
 from modules.scene.services.scene_map_editor_service import SceneMapEditorService
 from modules.scene.services.scene_map_nav_image_service import SceneMapNavImageService
@@ -32,7 +32,7 @@ scene_map_editor_router = APIRouter(
     "/data",
     response_model=ResponseModel[EditorMapDataResponse],
     summary="获取编辑器完整数据",
-    dependencies=[Depends(require_permission("scene:map:list"))],
+    dependencies=[Depends(require_any_permission("scene:map-editor:list", "scene:map:list"))],
 )
 async def get_editor_data(
     map_id: int,
@@ -64,7 +64,7 @@ async def get_editor_data(
     "/save",
     response_model=ResponseModel[EditorSaveResponse],
     summary="批量保存编辑器数据",
-    dependencies=[Depends(require_permission("scene:map:edit"))],
+    dependencies=[Depends(require_any_permission("scene:map-editor:edit", "scene:map:edit"))],
 )
 async def save_editor_data(
     map_id: int,
