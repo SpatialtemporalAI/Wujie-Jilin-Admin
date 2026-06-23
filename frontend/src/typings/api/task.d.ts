@@ -52,6 +52,8 @@ declare namespace Api {
       schedule_start_time: string | null;
       schedule_repeat_cycle: string | null;
       point_count: number;
+      /** 活跃执行数（running/pending），后端 list 接口关联查询返回 */
+      active_execution_count: number;
       points: TaskPoint[] | null;
       robots: TaskRobot[] | null;
     };

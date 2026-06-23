@@ -140,6 +140,7 @@ class TaskResponseData(BaseEntity):
     schedule_start_time: Optional[str] = Field(None, description="调度开始时间")
     schedule_repeat_cycle: Optional[str] = Field(None, description="重复周期")
     point_count: int = Field(0, description="巡逻点位数量")
+    active_execution_count: int = Field(0, description="活跃执行数（running/pending）")
     points: Optional[List[TaskPointResponse]] = Field(None, description="巡逻点位列表")
     robots: Optional[List[TaskRobotBrief]] = Field(None, description="关联机器人列表")
     created_at: datetime = Field(..., description="创建时间")

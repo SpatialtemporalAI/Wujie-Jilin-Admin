@@ -218,6 +218,30 @@ class TaskExecutionRecordService:
             raise
 
     @staticmethod
+    async def pause_executions_by_task(db: AsyncSession, task_id: int) -> int:
+        """按任务 ID 批量暂停该任务下所有 running/pending 的执行记录，返回暂停条数"""
+        try:
+            result = await db.execute(
+                select(TaskExecutionRecord).where(
+                    TaskExecutionRecord.task_id == task_id,
+                    TaskExecutionRecord.status.in_(["running", "pending"]),
+                    TaskExecutionRecord.deleted_at.is_(None),
+                )
+            )
+            records = result.scalars().all()
+            if not records:
+                return 0
+            now = timezone.now()
+            for record in records:
+                record.status = "paused"
+            await db.commit()
+            return len(records)
+        except Exception as e:
+            await db.rollback()
+            logger.error("按任务暂停执行失败: %s", str(e), exc_info=True)
+            raise
+
+    @staticmethod
     def build_active_query(
         query_params: Optional[TaskExecutionRecordQueryParams] = None,
     ) -> Select:

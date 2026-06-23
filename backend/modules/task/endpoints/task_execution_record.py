@@ -119,6 +119,28 @@ async def pause_execution_record(
 
 
 @task_execution_record_router.post(
+    "/pause-by-task/{task_id}",
+    response_model=ResponseModel,
+    dependencies=[Depends(require_permission("task:execution:control"))],
+)
+@log_operation(module="task", action="pause", description="按任务批量暂停执行")
+async def pause_executions_by_task(
+    task_id: int,
+    request: Request,
+    db: AsyncSession = Depends(get_session),
+    user: SysUser = Depends(current_user),
+):
+    """按任务 ID 批量暂停该任务下所有 running/pending 执行记录"""
+    try:
+        count = await TaskExecutionRecordService.pause_executions_by_task(db, task_id)
+        msg = f"已暂停 {count} 条执行" if count > 0 else "该任务当前没有可暂停的执行"
+        return response_base.success(msg=msg)
+    except Exception as e:
+        logger.error("按任务暂停执行失败: %s", str(e), exc_info=True)
+        raise
+
+
+@task_execution_record_router.post(
     "/{record_id}/resume",
     response_model=ResponseModel[TaskExecutionRecordResponseData],
     dependencies=[Depends(require_permission("task:execution:control"))],

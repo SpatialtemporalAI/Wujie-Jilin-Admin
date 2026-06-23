@@ -23,6 +23,7 @@ from modules.admin.deps.auth.permission import require_permission
 from database.models.sys.user import SysUser
 from database.models.business.task import Task, task_robot_association
 from database.models.business.task_point import TaskPoint
+from database.models.business.task_execution_record import TaskExecutionRecord
 from database.models.business.robot import Robot
 from database.models.business.scene_map import SceneMap
 
@@ -106,6 +107,19 @@ async def _build_task_response(task_obj: Task, db: AsyncSession, include_details
         if include_details:
             data.points = [TaskPointResponse.model_validate(p) for p in points]
 
+    # 活跃执行数（running/pending）
+    from sqlalchemy import func
+    active_result = await db.execute(
+        select(func.count())
+        .select_from(TaskExecutionRecord)
+        .where(
+            TaskExecutionRecord.task_id == task_obj.id,
+            TaskExecutionRecord.status.in_(["running", "pending"]),
+            TaskExecutionRecord.deleted_at.is_(None),
+        )
+    )
+    data.active_execution_count = active_result.scalar() or 0
+
     # 获取关联机器人
     if task_obj.robots is not None:
         data.robots = await _build_task_robot_briefs(db, list(task_obj.robots))
@@ -146,11 +160,33 @@ async def get_task_list(
 
         # 补充点位数量和机器人信息
         if page_data.records:
+            from sqlalchemy import func
+
+            task_ids = [record.id for record in page_data.records]
+
+            # 批量查询活跃执行数（running/pending），避免 N+1
+            active_count_map: dict[int, int] = {}
+            if task_ids:
+                active_result = await db.execute(
+                    select(TaskExecutionRecord.task_id, func.count())
+                    .where(
+                        TaskExecutionRecord.task_id.in_(task_ids),
+                        TaskExecutionRecord.status.in_(["running", "pending"]),
+                        TaskExecutionRecord.deleted_at.is_(None),
+                    )
+                    .group_by(TaskExecutionRecord.task_id)
+                )
+                active_count_map = {
+                    row[0]: row[1] for row in active_result.all()
+                }
+
             for record in page_data.records:
                 task_id = record.id
 
+                # 活跃执行数
+                record.active_execution_count = active_count_map.get(task_id, 0)
+
                 # 点位数量
-                from sqlalchemy import func
                 count_q = select(func.count()).select_from(TaskPoint).where(
                     TaskPoint.task_id == task_id, TaskPoint.deleted_at.is_(None)
                 )

@@ -138,6 +138,14 @@ export function fetchPauseExecutionRecord(recordId: number) {
   });
 }
 
+/** pause all running/pending executions of a task */
+export function fetchPauseExecutionByTask(taskId: number) {
+  return request<void>({
+    url: `/task/execution-record/pause-by-task/${taskId}`,
+    method: 'post'
+  });
+}
+
 /** resume execution record */
 export function fetchResumeExecutionRecord(recordId: number) {
   return request<Api.Task.TaskExecutionRecord>({
