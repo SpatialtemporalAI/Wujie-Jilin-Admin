@@ -90,6 +90,15 @@ const {
       )
     },
     {
+      key: 'task_id',
+      title: '任务ID',
+      align: 'center',
+      width: 120,
+      render: (row: Api.Task.TaskExecutionRecord) => (
+        <span>{row.task_id === null || row.task_id === undefined ? '-' : row.task_id}</span>
+      )
+    },
+    {
       key: 'task_type',
       title: '任务类型',
       align: 'center',
@@ -184,7 +193,7 @@ const {
       :data="data"
       size="small"
       :flex-height="!appStore.isMobile"
-      :scroll-x="1200"
+      :scroll-x="1320"
       :loading="loading"
       remote
       :row-key="(row: Api.Task.TaskExecutionRecord) => row.id"

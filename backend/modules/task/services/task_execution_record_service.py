@@ -121,6 +121,7 @@ class TaskExecutionRecordService:
 
             for robot_id in robot_ids:
                 record = TaskExecutionRecord(
+                    task_id=task_id,
                     robot_id=robot_id,
                     scene_id=scene_id,
                     user_id=user_id,
@@ -226,6 +227,8 @@ class TaskExecutionRecordService:
         )
         if query_params:
             conditions = []
+            if query_params.task_id is not None:
+                conditions.append(TaskExecutionRecord.task_id == query_params.task_id)
             if query_params.robot_id is not None:
                 conditions.append(TaskExecutionRecord.robot_id == query_params.robot_id)
             if query_params.scene_id is not None:
@@ -250,6 +253,8 @@ class TaskExecutionRecordService:
         conditions = []
         if query_params.status:
             conditions.append(TaskExecutionRecord.status == query_params.status)
+        if query_params.task_id is not None:
+            conditions.append(TaskExecutionRecord.task_id == query_params.task_id)
         if query_params.robot_id is not None:
             conditions.append(TaskExecutionRecord.robot_id == query_params.robot_id)
         if query_params.scene_id is not None:

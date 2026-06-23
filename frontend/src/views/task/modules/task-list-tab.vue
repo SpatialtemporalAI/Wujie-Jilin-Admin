@@ -1,7 +1,14 @@
 <script setup lang="tsx">
-import { reactive, ref } from 'vue';
+import { reactive, ref, watch } from 'vue';
 import { NButton, NDataTable, NPopconfirm, NTag, useMessage } from 'naive-ui';
-import { fetchGetTaskList, fetchDeleteTask, fetchToggleTaskEnabled, fetchStartExecutionRecord } from '@/service/api';
+import {
+  fetchGetTaskList,
+  fetchDeleteTask,
+  fetchToggleTaskEnabled,
+  fetchStartExecutionRecord,
+  fetchGetActiveExecutionRecords,
+  fetchPauseExecutionRecord
+} from '@/service/api';
 import { useAppStore } from '@/store/modules/app';
 import { defaultTransform, useNaivePaginatedTable, useTableOperate } from '@/hooks/common/table';
 import { useAuth } from '@/hooks/business/auth';
@@ -40,6 +47,10 @@ const scheduleCycleLabel: Record<string, string> = {
   sun: '周日'
 };
 
+/** 活跃执行记录映射：task_id -> 该任务下的活跃执行记录列表 */
+const activeExecByTaskId = ref(new Map<number, Api.Task.TaskExecutionRecord[]>());
+const actionLoading = ref(false);
+
 function formatSchedule(row: Api.Task.Task): string {
   if (!row.schedule_enabled) return '未配置';
   const parts: string[] = [];
@@ -53,6 +64,12 @@ function formatSchedule(row: Api.Task.Task): string {
     if (labels.length > 0) parts.push(labels.join('、'));
   }
   return parts.length > 0 ? parts.join(' ') : '已启用';
+}
+
+/** 获取该任务下可暂停的执行记录（running 状态） */
+function getPausableRecords(taskId: number): Api.Task.TaskExecutionRecord[] {
+  const records = activeExecByTaskId.value.get(taskId) || [];
+  return records.filter(r => r.status === 'running' || r.status === 'pending');
 }
 
 const {
@@ -146,35 +163,57 @@ const {
       key: 'operate',
       title: $t('common.operate'),
       align: 'center',
-      width: 260,
+      width: 320,
       fixed: 'right',
-      render: row => (
-        <div class="flex-center gap-8px">
-          {row.enabled && hasAuth('task:execution:start') && (
-            <NButton type="success" ghost size="small" onClick={() => handleStart(row)}>
-              启动
-            </NButton>
-          )}
-          {hasAuth('task:edit') && (
-            <NButton type="primary" ghost size="small" onClick={() => handleEdit(row.id)}>
-              {$t('common.edit')}
-            </NButton>
-          )}
-          {hasAuth('task:edit') && (
-            <NButton size="small" ghost onClick={() => handleToggleEnabled(row)}>
-              {row.enabled ? '禁用' : '启用'}
-            </NButton>
-          )}
-          {hasAuth('task:delete') && (
-            <NPopconfirm onPositiveClick={() => handleDelete(row.id)}>
-              {{
-                default: () => $t('common.confirmDelete'),
-                trigger: () => <NButton type="error" ghost size="small">{$t('common.delete')}</NButton>
-              }}
-            </NPopconfirm>
-          )}
-        </div>
-      )
+      render: row => {
+        const pausableRecords = getPausableRecords(row.id);
+        const canPause = pausableRecords.length > 0 && hasAuth('task:execution:control');
+        const canStart = !canPause && row.enabled && hasAuth('task:execution:start');
+        return (
+          <div class="flex-center gap-8px">
+            {canStart && (
+              <NButton
+                type="success"
+                ghost
+                size="small"
+                loading={actionLoading.value}
+                onClick={() => handleStart(row)}
+              >
+                启动
+              </NButton>
+            )}
+            {canPause && (
+              <NButton
+                type="warning"
+                ghost
+                size="small"
+                loading={actionLoading.value}
+                onClick={() => handlePauseTask(row.id)}
+              >
+                暂停
+              </NButton>
+            )}
+            {hasAuth('task:edit') && (
+              <NButton type="primary" ghost size="small" onClick={() => handleEdit(row.id)}>
+                {$t('common.edit')}
+              </NButton>
+            )}
+            {hasAuth('task:edit') && (
+              <NButton size="small" ghost onClick={() => handleToggleEnabled(row)}>
+                {row.enabled ? '禁用' : '启用'}
+              </NButton>
+            )}
+            {hasAuth('task:delete') && (
+              <NPopconfirm onPositiveClick={() => handleDelete(row.id)}>
+                {{
+                  default: () => $t('common.confirmDelete'),
+                  trigger: () => <NButton type="error" ghost size="small">{$t('common.delete')}</NButton>
+                }}
+              </NPopconfirm>
+            )}
+          </div>
+        );
+      }
     }
   ]
 });
@@ -188,6 +227,44 @@ const {
   checkedRowKeys,
   onDeleted
 } = useTableOperate(data, 'id', getData);
+
+/** 加载当前页面所有任务对应的活跃执行记录（running/paused） */
+async function loadActiveExecutions() {
+  if (!data.value || data.value.length === 0) {
+    activeExecByTaskId.value = new Map();
+    return;
+  }
+  const taskIds = data.value.map(t => t.id);
+  const { data: result, error } = await fetchGetActiveExecutionRecords({
+    page: 1,
+    page_size: 999,
+    status: null,
+    task_id: null,
+    robot_id: null,
+    scene_id: null,
+    user_id: null,
+    source: null,
+    start_time: null,
+    end_time: null
+  });
+  if (!error && result) {
+    const records = result.records || [];
+    const map = new Map<number, Api.Task.TaskExecutionRecord[]>();
+    for (const rec of records) {
+      if (rec.task_id === null || rec.task_id === undefined) continue;
+      if (!taskIds.includes(rec.task_id)) continue;
+      const list = map.get(rec.task_id) || [];
+      list.push(rec);
+      map.set(rec.task_id, list);
+    }
+    activeExecByTaskId.value = map;
+  }
+}
+
+// 任务列表数据变化时，同步刷新活跃执行映射
+watch(data, () => {
+  loadActiveExecutions();
+}, { flush: 'post' });
 
 async function handleDelete(id: number) {
   try {
@@ -209,12 +286,45 @@ async function handleToggleEnabled(row: Api.Task.Task) {
 }
 
 async function handleStart(row: Api.Task.Task) {
+  if (!row.enabled) {
+    message.warning('请先启用任务');
+    return;
+  }
+  actionLoading.value = true;
   try {
     const robotIds = row.robots?.map((r: Api.Task.TaskRobot) => r.id) || [];
-    await fetchStartExecutionRecord(row.id, { robot_ids: robotIds, source: 'manual' });
-    message.success('任务已启动');
+    const { error } = await fetchStartExecutionRecord(row.id, { robot_ids: robotIds, source: 'manual' });
+    if (!error) {
+      message.success('任务已启动');
+      await loadActiveExecutions();
+    }
   } catch (error) {
     console.error('启动任务失败:', error);
+  } finally {
+    actionLoading.value = false;
+  }
+}
+
+/** 暂停该任务下所有 running/pending 的执行记录 */
+async function handlePauseTask(taskId: number) {
+  const records = getPausableRecords(taskId);
+  if (records.length === 0) return;
+  actionLoading.value = true;
+  try {
+    const results = await Promise.all(
+      records.map(r => fetchPauseExecutionRecord(r.id))
+    );
+    const failed = results.filter(r => r.error).length;
+    if (failed === 0) {
+      message.success(`已暂停 ${records.length} 条执行`);
+    } else {
+      message.warning(`${records.length - failed} 条已暂停，${failed} 条失败`);
+    }
+    await loadActiveExecutions();
+  } catch (error) {
+    console.error('暂停任务失败:', error);
+  } finally {
+    actionLoading.value = false;
   }
 }
 </script>
@@ -239,7 +349,7 @@ async function handleStart(row: Api.Task.Task) {
       :data="data"
       size="small"
       :flex-height="!appStore.isMobile"
-      :scroll-x="1100"
+      :scroll-x="1200"
       :loading="loading"
       remote
       :row-key="(row: Api.Task.Task) => row.id"

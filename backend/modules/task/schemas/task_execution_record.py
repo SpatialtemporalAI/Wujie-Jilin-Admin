@@ -65,6 +65,7 @@ class ProgressDetail(BaseReqEntity):
 class TaskExecutionRecordQueryParams(BaseReqEntity):
     """任务执行记录查询参数"""
     status: Optional[str] = Field(None, description="执行状态")
+    task_id: OptionalIntField = Field(None, description="来源任务ID")
     robot_id: OptionalIntField = Field(None, description="机器人ID")
     scene_id: OptionalIntField = Field(None, description="场景地图ID")
     user_id: OptionalIntField = Field(None, description="触发用户ID")
@@ -86,6 +87,7 @@ class TaskExecutionRecordResponseData(BaseRespEntity):
     model_config = ConfigDict(from_attributes=True)
 
     id: int = Field(..., description="执行记录ID")
+    task_id: Optional[int] = Field(None, description="来源任务ID（语音触发等无源任务时为空）")
     robot_id: Optional[int] = Field(None, description="机器人ID")
     robot_name: Optional[str] = Field(None, description="机器人名称")
     scene_id: Optional[int] = Field(None, description="场景地图ID")
