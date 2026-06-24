@@ -5,9 +5,11 @@
 定时任务：扫描启用了定时调度的任务并触发执行
 
 每分钟扫描所有 schedule_enabled=True 且 enabled=True 的任务，
-若当前本地时间命中调度配置（schedule_start_time 精确到分钟 +
-schedule_repeat_cycle 周期匹配，或 schedule_date 单次日期匹配），
-则按"启动任务"按钮同款逻辑调用 start_or_resume_execution：
+若当前本地时间命中调度配置：
+- 单次模式（无 repeat_cycle 或仅 'none'）：schedule_date + schedule_start_time 精确匹配
+- 重复模式（repeat_cycle 含有效星期）：当前星期 ∈ cycle_list 且 today >= schedule_date，且 start_time HH:MM 匹配
+
+命中后按"启动任务"按钮同款逻辑调用 start_or_resume_execution：
 - 已有 paused 执行 → 批量恢复
 - 无活跃执行 → 新建执行（source=platform_schedule）
 
@@ -31,33 +33,40 @@ WEEKDAY_KEYS = ["mon", "tue", "wed", "thu", "fri", "sat", "sun"]
 def _is_schedule_due(task_obj: Task, now: datetime) -> bool:
     """判断任务调度是否在当前时间命中。
 
-    匹配规则（与前端表单配置一致）：
-    - schedule_start_time 的 HH:MM 等于当前 HH:MM（精确到分钟，每分钟只匹配一次）
-    - 若配置了 schedule_repeat_cycle：当前星期几（mon-sun）必须在周期列表中
-    - 否则若配置了 schedule_date：日期必须等于今天
+    匹配规则：
+    - schedule_date 和 schedule_start_time 必须同时配置
+    - schedule_start_time 的 HH:MM 等于当前 HH:MM（精确到分钟）
+    - 若 schedule_repeat_cycle 为空或仅含 'none'：单次模式，schedule_date 必须等于今天
+    - 若 schedule_repeat_cycle 含有效星期：重复模式，当前星期 ∈ cycle_list 且 today >= schedule_date
     """
     start_time: time | None = task_obj.schedule_start_time
-    if start_time is None:
+    schedule_date: date | None = task_obj.schedule_date
+
+    if start_time is None or schedule_date is None:
         return False
 
     if start_time.strftime("%H:%M") != now.strftime("%H:%M"):
         return False
 
     repeat_cycle: str | None = task_obj.schedule_repeat_cycle
+    cycle_list: list[str] = []
     if repeat_cycle:
         cycle_list = [
-            w.strip().lower() for w in repeat_cycle.split(",") if w.strip()
+            w.strip().lower()
+            for w in repeat_cycle.split(",")
+            if w.strip() and w.strip().lower() != "none"
         ]
-        if not cycle_list:
-            return False
-        current_weekday = WEEKDAY_KEYS[now.weekday()]
-        return current_weekday in cycle_list
 
-    schedule_date: date | None = task_obj.schedule_date
-    if schedule_date is not None:
+    # 单次模式：date 必须等于今天
+    if not cycle_list:
         return schedule_date == now.date()
 
-    return False
+    # 重复模式：当前星期 ∈ cycle_list 且 起始日约束 today >= schedule_date
+    current_weekday = WEEKDAY_KEYS[now.weekday()]
+    if current_weekday not in cycle_list:
+        return False
+
+    return now.date() >= schedule_date
 
 
 @scheduled_task(

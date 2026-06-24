@@ -186,7 +186,7 @@ class TaskExecutionRecordService:
             record = await TaskExecutionRecordService._get_record(db, record_id)
             if record.status != "paused":
                 raise ConflictError(msg="只有已暂停的任务才能恢复")
-            record.status = "running"
+            record.status = "pending"
             await db.commit()
             await db.refresh(record)
             return record
@@ -251,7 +251,7 @@ class TaskExecutionRecordService:
     ) -> dict:
         """
         按任务启动执行：
-        - 若该任务下存在 paused 状态的执行记录，则批量恢复（resume），不创建新记录
+        - 若该任务下存在 paused 状态的执行记录，则批量置为 pending（等待中），不创建新记录
         - 否则按 robot_ids 创建新的执行记录
         返回 {"action": "resumed" | "created", "count": int}
         """
@@ -266,7 +266,7 @@ class TaskExecutionRecordService:
             paused_records = paused_result.scalars().all()
             if paused_records:
                 for record in paused_records:
-                    record.status = "running"
+                    record.status = "pending"
                 await db.commit()
                 return {"action": "resumed", "count": len(paused_records)}
 
@@ -288,7 +288,7 @@ class TaskExecutionRecordService:
         query_params: Optional[TaskExecutionRecordQueryParams] = None,
     ) -> Select:
         base_query = select(TaskExecutionRecord).where(
-            TaskExecutionRecord.status.in_(["running", "paused"]),
+            TaskExecutionRecord.status.in_(["pending", "running", "paused"]),
             TaskExecutionRecord.deleted_at.is_(None),
         )
         if query_params:

@@ -31,11 +31,11 @@
 
 ### 调度命中判断 `_is_schedule_due`
 
-1. 必须有 `schedule_start_time`，且其 `HH:MM` == 当前 `HH:MM`（精确到分钟）
-2. 满足条件 1 后：
-   - 若 `schedule_repeat_cycle` 非空：当前星期（`mon`~`sun`）必须在 cycle 列表中
-   - 否则若 `schedule_date` 非空：日期必须等于今天
-   - 都为空：不命中
+1. `schedule_date` 和 `schedule_start_time` 必须同时配置
+2. `schedule_start_time` 的 `HH:MM` == 当前 `HH:MM`（精确到分钟）
+3. 单次模式（`schedule_repeat_cycle` 为空或仅含 `'none'`）：`schedule_date == today` 才触发
+4. 重复模式（`schedule_repeat_cycle` 含有效星期）：当前星期 ∈ cycle_list 且 `today >= schedule_date` 才触发（schedule_date 作为起始日约束）
+5. 用户描述原话："首先是启用，其次当当前时间=日期和时间时，则触发一次，如果配置了重复，则在这个时间段以后的每个时间触发一次"
 
 ### 去重保证
 
