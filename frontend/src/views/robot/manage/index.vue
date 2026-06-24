@@ -9,6 +9,7 @@ import { $t } from '@/locales';
 import RobotOperateDrawer from './modules/robot-operate-drawer.vue';
 import RobotSearch from './modules/robot-search.vue';
 import RobotStatusDrawer from './modules/robot-status-drawer.vue';
+import RobotGrpcConfigDrawer from './modules/robot-grpc-config-drawer.vue';
 
 const appStore = useAppStore();
 const message = useMessage();
@@ -31,6 +32,15 @@ const statusDrawerRobotId = ref<number | null>(null);
 function handleViewStatus(row: Api.Robot.Robot) {
   statusDrawerRobotId.value = row.id;
   statusDrawerVisible.value = true;
+}
+
+/** gRPC 配置抽屉 */
+const grpcDrawerVisible = ref(false);
+const grpcDrawerRobotId = ref<number | null>(null);
+
+function handleEditGrpc(row: Api.Robot.Robot) {
+  grpcDrawerRobotId.value = row.id;
+  grpcDrawerVisible.value = true;
 }
 
 /** 机器人表格 */
@@ -93,7 +103,7 @@ const {
       key: 'operate',
       title: $t('common.operate'),
       align: 'center',
-      width: 240,
+      width: 320,
       fixed: 'right',
       render: row => {
         return (
@@ -103,9 +113,9 @@ const {
                 {$t('common.edit')}
               </NButton>
             )}
-            {hasAuth('robot:manage:list') && (
-              <NButton type="info" ghost size="small" onClick={() => handleViewStatus(row)}>
-                状态
+            {hasAuth('robot:manage:grpc_config') && (
+              <NButton type="info" ghost size="small" onClick={() => handleEditGrpc(row)}>
+                gRPC配置
               </NButton>
             )}
             {hasAuth('robot:manage:delete') && (
@@ -168,7 +178,6 @@ async function handleBatchDelete() {
 
 <template>
   <div class="min-h-500px flex-col-stretch gap-16px overflow-hidden lt-sm:overflow-auto">
-    <RobotSearch v-model:model="searchParams" @search="getRobotDataByPage" @reset="getRobotDataByPage" />
     <NCard
       title="机器人管理"
       :bordered="false"
@@ -209,6 +218,11 @@ async function handleBatchDelete() {
       <RobotStatusDrawer
         v-model:visible="statusDrawerVisible"
         :robot-id="statusDrawerRobotId"
+      />
+      <RobotGrpcConfigDrawer
+        v-model:visible="grpcDrawerVisible"
+        :robot-id="grpcDrawerRobotId"
+        @submitted="getRobotDataByPage"
       />
     </NCard>
   </div>

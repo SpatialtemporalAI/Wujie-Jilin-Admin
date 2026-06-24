@@ -23,6 +23,27 @@ class RobotQueryParams(BaseModel):
     map_id: Optional[int] = Field(None, description="绑定场景地图ID")
 
 
+class GrpcServiceConfig(BaseModel):
+    """单套 gRPC 服务配置（agent / middleware 各一份）"""
+
+    host: str = Field(..., description="gRPC 服务地址", max_length=128)
+    port: int = Field(..., description="gRPC 服务端口", ge=1, le=65535)
+    enabled: bool = Field(True, description="是否启用")
+
+
+class RobotGrpcConfigPayload(BaseModel):
+    """机器人 gRPC 配置载体：agent 与 middleware 两套"""
+
+    agent: Optional[GrpcServiceConfig] = Field(None, description="agent 端 gRPC 配置")
+    middleware: Optional[GrpcServiceConfig] = Field(None, description="middleware 端 gRPC 配置")
+
+
+class RobotGrpcConfigUpdate(BaseReqEntity):
+    """更新机器人 gRPC 配置请求"""
+
+    grpc_config: RobotGrpcConfigPayload = Field(..., description="gRPC 配置")
+
+
 class RobotCreate(BaseReqEntity):
     """
     机器人创建请求模型
@@ -70,6 +91,9 @@ class RobotResponseData(BaseRespEntity):
     status: str = Field(..., description="状态")
     speed_level: Optional[str] = Field(None, description="速度等级")
     battery_threshold: Optional[int] = Field(None, description="电量报警阈值(%)")
+    grpc_config: Optional[RobotGrpcConfigPayload] = Field(
+        None, description="gRPC 配置: { agent, middleware }"
+    )
     model_name: Optional[str] = Field(None, description="型号名称（关联查询）")
     created_at: datetime = Field(..., description="创建时间")
     updated_at: Optional[datetime] = Field(None, description="更新时间")

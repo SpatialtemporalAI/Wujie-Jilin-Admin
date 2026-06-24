@@ -105,6 +105,15 @@ export function fetchDeleteRobot(id: number) {
   });
 }
 
+/** update robot grpc config (agent + middleware) */
+export function fetchUpdateRobotGrpcConfig(id: number, data: Api.Robot.RobotGrpcConfig) {
+  return request<Api.Robot.Robot>({
+    url: `/robot/manage/${id}/grpc-config`,
+    method: 'put',
+    data: { grpc_config: data }
+  });
+}
+
 /** ==================== 机器人状态记录 API (只读) ==================== */
 
 /** get robot status records */

@@ -53,11 +53,23 @@ const weekdayOptions = [
 ];
 
 const mapOptions = ref<{ label: string; value: number }[]>([]);
+let mapOptionsLoaded = false;
 
-async function loadMapOptions() {
+async function loadMapOptions(force = false) {
+  if (!force && mapOptionsLoaded) return;
   const { data, error } = await fetchGetSceneMapList({ page: 1, page_size: 999, name: null, group_id: undefined, status: null });
-  if (!error && data) {
-    mapOptions.value = (data.records || []).map(map => ({ label: map.name, value: map.id }));
+  if (error) {
+    return;
+  }
+  if (data) {
+    const list = (data.records || []).map(map => ({ label: map.name, value: map.id }));
+    const currentId = model.value.map_id;
+    if (currentId !== null && !list.some(opt => opt.value === currentId)) {
+      const existing = mapOptions.value.find(opt => opt.value === currentId);
+      list.unshift(existing || { label: `地图 #${currentId}`, value: currentId });
+    }
+    mapOptions.value = list;
+    mapOptionsLoaded = true;
   }
 }
 
@@ -229,6 +241,8 @@ async function handleInitModel() {
   model.value = createDefaultModel();
   annotationOptions.value = [];
   annotationMap.value = new Map();
+  mapOptions.value = [];
+  mapOptionsLoaded = false;
 
   if (props.operateType === 'edit' && props.rowData) {
     const cloned = jsonClone(props.rowData) as Api.Task.Task;
@@ -243,6 +257,8 @@ async function handleInitModel() {
     model.value.robot_ids = cloned.robots?.map(r => r.id) || [];
 
     if (model.value.map_id !== null) {
+      const fallbackName = cloned.map_name || cloned.robots?.find(r => r.map_id)?.map_name || `地图 #${model.value.map_id}`;
+      mapOptions.value = [{ label: fallbackName, value: model.value.map_id }];
       await loadAnnotations(model.value.map_id);
     }
 
@@ -386,7 +402,6 @@ watch(selectedMapId, newMapId => {
 });
 
 onMounted(() => {
-  loadMapOptions();
   loadRobotOptions();
 });
 </script>
@@ -410,7 +425,7 @@ onMounted(() => {
         <NDivider title-placement="left">场景地图</NDivider>
         <NFormItem label="场景地图" path="map_id">
           <NSelect :value="model.map_id" :options="mapOptions" placeholder="请先选择场景地图" filterable clearable
-            @update:value="handleMapChange" />
+            @update:value="handleMapChange" @focus="() => loadMapOptions()" />
         </NFormItem>
 
         <!-- 机器人绑定 -->

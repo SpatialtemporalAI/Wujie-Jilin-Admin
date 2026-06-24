@@ -32,6 +32,7 @@ from modules.robot.schemas.robot import (
     RobotUpdate,
     RobotQueryParams,
     RobotResponseData,
+    RobotGrpcConfigUpdate,
 )
 
 logger = logging.getLogger(__name__)
@@ -212,4 +213,38 @@ async def delete_robot(
 
     except Exception as e:
         logger.error("删除机器人接口失败: %s", str(e), exc_info=True)
+        raise
+
+
+@robot_router.put(
+    "/{robot_id}/grpc-config",
+    response_model=ResponseModel[RobotResponseData],
+    dependencies=[Depends(require_permission("robot:manage:grpc_config"))],
+)
+@log_operation(module="robot", action="update", description="更新机器人 gRPC 配置")
+async def update_robot_grpc_config(
+    robot_id: int,
+    request: Request,
+    payload: RobotGrpcConfigUpdate,
+    db: AsyncSession = Depends(get_session),
+    user: SysUser = Depends(current_user),
+):
+    """
+    更新机器人 gRPC 配置（agent / middleware）
+    """
+    try:
+        logger.info("更新机器人 gRPC 配置接口被调用，机器人ID: %d", robot_id)
+
+        await RobotSchemaService.ensure_robot_map_binding(db)
+        robot_obj = await RobotService.update_grpc_config(
+            db, robot_id, payload.grpc_config
+        )
+        response_data = RobotResponseData.model_validate(robot_obj)
+        await _fill_robot_names(db, [response_data])
+
+        logger.info("更新机器人 gRPC 配置接口成功，机器人ID: %d", robot_id)
+        return response_base.success(data=response_data, msg="更新成功")
+
+    except Exception as e:
+        logger.error("更新机器人 gRPC 配置接口失败: %s", str(e), exc_info=True)
         raise

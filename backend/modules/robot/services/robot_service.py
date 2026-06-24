@@ -7,19 +7,23 @@
 """
 import logging
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy import select, and_, func, Select
+from sqlalchemy import select, and_, func, Select, update
 from sqlalchemy.orm import noload
 from typing import List, Tuple
 
 from database.models.business.robot import Robot, RobotStatus
 from database.models.business.robot_status_record import RobotStatusRecord
+from database.models.business.robot_voice_config import RobotVoiceConfig
+from database.models.business.robot_event_log import RobotEventLog
 from database.models.business.robot_model import RobotModel
 from database.models.business.scene_map import SceneMap
+from database.utils.timezone import timezone
 from core.exception.errors import NotFoundError, ConflictError
 from modules.robot.schemas.robot import (
     RobotCreate,
     RobotUpdate,
     RobotQueryParams,
+    RobotGrpcConfigPayload,
 )
 from modules.robot.services.robot_schema_service import RobotSchemaService
 
@@ -329,7 +333,11 @@ class RobotService:
     @staticmethod
     async def delete(db: AsyncSession, robot_id: int) -> bool:
         """
-        删除机器人
+        删除机器人（软删除，并联动清理一对一/一对多关联记录）
+
+        关联表 status_record / voice_config / event_log 外键无 ondelete 级联，
+        物理删除会触发外键约束；这里改为软删除 robot，并同步软删除关联记录，
+        既避免约束冲突，也避免留下孤儿数据。
 
         Args:
             db: 数据库会话
@@ -356,7 +364,36 @@ class RobotService:
                 logger.warning("机器人不存在，机器人ID: %d", robot_id)
                 raise NotFoundError(msg=f"机器人 {robot_id} 不存在")
 
-            await db.delete(robot_obj)
+            now = timezone.now()
+            robot_obj.deleted_at = now
+
+            await db.execute(
+                update(RobotStatusRecord)
+                .where(
+                    RobotStatusRecord.robot_id == robot_id,
+                    RobotStatusRecord.deleted_at.is_(None),
+                )
+                .values(deleted_at=now)
+            )
+
+            await db.execute(
+                update(RobotVoiceConfig)
+                .where(
+                    RobotVoiceConfig.robot_id == robot_id,
+                    RobotVoiceConfig.deleted_at.is_(None),
+                )
+                .values(deleted_at=now)
+            )
+
+            await db.execute(
+                update(RobotEventLog)
+                .where(
+                    RobotEventLog.robot_id == robot_id,
+                    RobotEventLog.deleted_at.is_(None),
+                )
+                .values(deleted_at=now)
+            )
+
             await db.commit()
 
             logger.info("删除机器人成功，机器人ID: %d", robot_id)
@@ -374,7 +411,6 @@ class RobotService:
     async def unbind_map(db: AsyncSession, map_id: int) -> int:
         """解除某场景地图下所有机器人的绑定（map_id 置 null）。
         不 commit，由调用方控制事务。返回解绑的记录数。"""
-        from sqlalchemy import update
         result = await db.execute(
             update(Robot)
             .where(
@@ -385,3 +421,56 @@ class RobotService:
         )
         await db.flush()
         return result.rowcount or 0
+
+    @staticmethod
+    async def update_grpc_config(
+        db: AsyncSession, robot_id: int, grpc_config: RobotGrpcConfigPayload
+    ) -> Robot:
+        """
+        更新机器人 gRPC 配置（agent / middleware）
+
+        与主表单 edit 权限解耦，单独由 robot:manage:grpc_config 控制。
+
+        Args:
+            db: 数据库会话
+            robot_id: 机器人ID
+            grpc_config: gRPC 配置载体
+
+        Returns:
+            更新后的机器人对象
+
+        Raises:
+            NotFoundError: 机器人不存在
+        """
+        try:
+            logger.info(
+                "更新机器人 gRPC 配置，机器人ID: %d",
+                robot_id,
+            )
+
+            result = await db.execute(
+                select(Robot)
+                .where(Robot.id == robot_id)
+                .where(Robot.deleted_at.is_(None))
+            )
+            existing = result.scalar_one_or_none()
+
+            if not existing:
+                logger.warning("机器人不存在，机器人ID: %d", robot_id)
+                raise NotFoundError(msg=f"机器人 {robot_id} 不存在")
+
+            existing.grpc_config = grpc_config.model_dump(exclude_none=True)
+
+            await db.commit()
+            await db.refresh(existing)
+
+            logger.info("更新机器人 gRPC 配置成功，机器人ID: %d", robot_id)
+            return existing
+
+        except NotFoundError:
+            await db.rollback()
+            raise
+        except Exception as e:
+            await db.rollback()
+            logger.error("更新机器人 gRPC 配置失败: %s", str(e), exc_info=True)
+            raise

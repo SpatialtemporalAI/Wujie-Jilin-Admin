@@ -34,6 +34,24 @@ declare namespace Api {
     /** robot status enum */
     type RobotStatusEnum = 'online' | 'offline' | 'inactive';
 
+    /** single grpc service config (agent / middleware) */
+    type GrpcServiceConfig = {
+      /** grpc host */
+      host: string;
+      /** grpc port */
+      port: number;
+      /** enabled flag */
+      enabled: boolean;
+    };
+
+    /** robot grpc config payload */
+    type RobotGrpcConfig = {
+      /** agent side grpc config */
+      agent?: GrpcServiceConfig | null;
+      /** middleware side grpc config */
+      middleware?: GrpcServiceConfig | null;
+    };
+
     /** robot */
     type Robot = Omit<Common.CommonRecord<object>, 'status'> & {
       /** robot name */
@@ -54,6 +72,8 @@ declare namespace Api {
       speed_level?: string | null;
       /** battery threshold */
       battery_threshold?: number | null;
+      /** grpc config (agent + middleware) */
+      grpc_config?: RobotGrpcConfig | null;
     };
 
     /** location info */
