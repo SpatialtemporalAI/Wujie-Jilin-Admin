@@ -214,11 +214,11 @@ onMounted(() => {
           当前机器人：{{ selectedRobot?.name }}（{{ selectedRobot?.serial_number }}）
         </div>
 
-        <NForm ref="formRef" :model="model" :rules="rules" label-placement="left" :label-width="100">
-          <!-- 人脸识别（免唤醒） -->
-          <NCard title="人脸识别（免唤醒）" size="small">
+        <NForm ref="formRef" :model="model" :rules="rules" label-placement="left" :label-width="140">
+          <!-- 唤醒词配置 -->
+          <NCard title="唤醒词配置" size="small">
             <NGrid responsive="screen" :cols="1">
-              <NFormItemGi label="人脸识别">
+              <NFormItemGi label="人脸识别（免唤醒）">
                 <NSwitch v-model:value="faceWakeEnabled" />
                 <span class="ml-8px text-gray-400">
                   {{ faceWakeEnabled ? '已开启' : '已关闭' }}
