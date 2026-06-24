@@ -3,15 +3,19 @@
 
 """
 任务执行记录 Schema（独立版本）
+
+注意：TaskExecutionRecordResponseData 继承自 BaseEntity（不是 BaseRespEntity），
+因为 BaseRespEntity 的 status 字段序列化器会把任何 truthy 值转成 "1"，
+而本 schema 的 status 是字符串枚举（pending/running/paused/...），需要原样返回。
+JS 大整数 ID 检查的序列化器在这里手动复制一份。
 """
-from typing import Optional, List, Dict, Any
-from pydantic import Field, ConfigDict
+from typing import Optional, List, Dict, Any, ClassVar
+from pydantic import Field, ConfigDict, field_serializer
 from datetime import datetime
 
 from app.models.common.base import (
     BaseEntity,
     BaseReqEntity,
-    BaseRespEntity,
     OptionalIntField,
 )
 
@@ -82,9 +86,11 @@ class TaskExecutionRecordStartIn(BaseReqEntity):
 
 # ==================== 响应 Schema ====================
 
-class TaskExecutionRecordResponseData(BaseRespEntity):
+class TaskExecutionRecordResponseData(BaseEntity):
     """执行记录响应"""
     model_config = ConfigDict(from_attributes=True)
+
+    JS_MAX_SAFE_INTEGER: ClassVar[int] = 9007199254740992  # 2^53
 
     id: int = Field(..., description="执行记录ID")
     task_id: Optional[int] = Field(None, description="来源任务ID（语音触发等无源任务时为空）")
@@ -105,6 +111,13 @@ class TaskExecutionRecordResponseData(BaseRespEntity):
     start_time: Optional[datetime] = Field(None, description="开始时间")
     finish_time: Optional[datetime] = Field(None, description="结束时间")
     created_at: datetime = Field(..., description="创建时间")
+
+    # 复制 BaseRespEntity 中的 ID 序列化器，避免超过 JS 安全整数范围
+    @field_serializer("id", check_fields=False)
+    def serialize_id_output(self, value: int):
+        if isinstance(value, int) and value >= self.JS_MAX_SAFE_INTEGER:
+            raise ValueError(f"ID {value} 超出JavaScript安全整数范围，请运行迁移修复")
+        return value
 
 
 class TaskExecutionRecordDetailResponseData(TaskExecutionRecordResponseData):
