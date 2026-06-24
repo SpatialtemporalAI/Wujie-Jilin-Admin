@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { reactive, ref, computed, onMounted } from 'vue';
-import { useMessage } from 'naive-ui';
+import { NText, useMessage } from 'naive-ui';
 import {
   fetchGetRobotList,
   fetchGetVoiceConfig,
@@ -34,7 +34,7 @@ const model = reactive<Api.RobotConfig.VoiceConfig>({
 });
 
 const rules = computed(() => ({
-  wake_word: model.wake_word_enabled
+  wake_word: !faceWakeEnabled.value
     ? [
         { required: true, message: '请输入唤醒词', trigger: 'blur' },
         { min: 4, max: 6, message: '唤醒词必须为 4-6 个字', trigger: 'blur' }
@@ -48,8 +48,22 @@ const voiceOptions = [
   { label: '女声', value: 'female' }
 ];
 
+/**
+ * 人脸识别（免唤醒）开关 - UI 状态
+ * 与后端 wake_word_enabled 字段语义相反：
+ *   faceWakeEnabled = true  ⇒ 人脸识别免唤醒模式（wake_word_enabled=false）
+ *   faceWakeEnabled = false ⇒ 唤醒词模式（wake_word_enabled=true）
+ */
+const faceWakeEnabled = computed<boolean>({
+  get: () => !model.wake_word_enabled,
+  set: val => {
+    model.wake_word_enabled = !val;
+  }
+});
+
 const canSaveWakeWord = computed(() => {
-  if (!model.wake_word_enabled) return true;
+  // 唤醒词模式下才校验长度
+  if (faceWakeEnabled.value) return true;
   const len = model.wake_word.trim().length;
   return len >= 4 && len <= 6;
 });
@@ -117,8 +131,8 @@ async function handleSaveVoice() {
 }
 
 async function handleTestWakeWord() {
-  if (!model.wake_word_enabled) {
-    message.warning('请先启用唤醒词');
+  if (faceWakeEnabled.value) {
+    message.warning('人脸识别免唤醒模式下无需测试唤醒词');
     return;
   }
   if (!canSaveWakeWord.value) {
@@ -201,32 +215,36 @@ onMounted(() => {
         </div>
 
         <NForm ref="formRef" :model="model" :rules="rules" label-placement="left" :label-width="100">
-          <!-- 唤醒词 -->
-          <NCard title="唤醒词设置" size="small">
+          <!-- 人脸识别（免唤醒） -->
+          <NCard title="人脸识别（免唤醒）" size="small">
             <NGrid responsive="screen" :cols="1">
-              <NFormItemGi label="启用唤醒词">
-                <NSwitch v-model:value="model.wake_word_enabled" />
+              <NFormItemGi label="人脸识别">
+                <NSwitch v-model:value="faceWakeEnabled" />
                 <span class="ml-8px text-gray-400">
-                  {{ model.wake_word_enabled ? '已启用' : '已禁用' }}
+                  {{ faceWakeEnabled ? '已开启' : '已关闭' }}
                 </span>
               </NFormItemGi>
-              <NFormItemGi label="唤醒词" path="wake_word">
+              <NFormItemGi label="说明" :show-label="false">
+                <NText depth="3" class="text-13px leading-relaxed">
+                  关闭时通过唤醒词与机器人交互；开启时检测到人脸可直接唤醒机器人，无需唤醒词
+                </NText>
+              </NFormItemGi>
+              <NFormItemGi v-if="!faceWakeEnabled" label="唤醒词" path="wake_word">
                 <NInput
                   v-model:value="model.wake_word"
                   placeholder="请输入 4-6 字唤醒词"
                   maxlength="6"
                   show-count
                   clearable
-                  :disabled="!model.wake_word_enabled"
                 />
               </NFormItemGi>
-              <NFormItemGi>
+              <NFormItemGi v-if="!faceWakeEnabled">
                 <NSpace>
                   <NButton
                     v-if="hasAuth('robot:config:edit')"
                     type="primary"
                     ghost
-                    :disabled="!model.wake_word_enabled || !canSaveWakeWord"
+                    :disabled="!canSaveWakeWord"
                     @click="handleTestWakeWord"
                   >
                     测试
