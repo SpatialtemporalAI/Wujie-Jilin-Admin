@@ -30,6 +30,7 @@
 - [2026-06-17 任务场景筛选显示与地图编辑器场景名](./business/2026-06-17_task-scene-filters-and-map-editor-name.md) — 任务各列表补场景显示/筛选，地图编辑器显示当前场景名
 - [2026-06-17 任务固化场景地图字段](./business/2026-06-17_task-map-id-fixed.md) — Task 新增 map_id，机器人改绑不再影响任务场景配置
 - [2026-06-24 定时扫描调度任务并自动启动/恢复执行](./business/2026-06-24_task-schedule-scan.md) — 每分钟扫描 schedule_enabled+enabled 的任务，命中调度时间则恢复或新建执行
+- [2026-06-24 场景地图主图上传接口独立权限化](./business/2026-06-24_scene-map-upload-image-endpoint.md) — 新增 /scene/map/upload-image 复用 scene:map:add/edit 权限；编辑器保存静默处理已软删 task
 
 ## 维护说明
 

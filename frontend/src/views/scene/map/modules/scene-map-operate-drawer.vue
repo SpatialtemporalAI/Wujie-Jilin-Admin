@@ -7,7 +7,7 @@ import {
   fetchCreateSceneMap,
   fetchUpdateSceneMap,
   fetchGetSceneGroupList,
-  fetchUploadFile,
+  fetchUploadSceneMapImage,
   getFilePreviewUrl
 } from '@/service/api';
 
@@ -115,7 +115,7 @@ const imageUrl = ref('');
 async function handleUpload({ file }: { file: { file: File } }) {
   uploading.value = true;
   try {
-    const { data, error } = await fetchUploadFile(file.file, { includeImageInfo: true });
+    const { data, error } = await fetchUploadSceneMapImage(file.file, { includeImageInfo: true });
     if (!error && data) {
       model.value.image_id = data.id;
       imageUrl.value = getFilePreviewUrl(data.id);

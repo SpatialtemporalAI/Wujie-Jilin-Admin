@@ -240,8 +240,9 @@ class TaskService:
             )
             task_points = task_points_result.scalars().all()
             if all(point.id in deleting_point_ids for point in task_points):
-                task_obj = await TaskService.get(db, task_id)
-                task_obj.soft_delete()
+                task_obj = await db.get(Task, task_id)
+                if task_obj is not None and task_obj.deleted_at is None:
+                    task_obj.soft_delete()
                 for point in task_points:
                     await db.delete(point)
                 continue

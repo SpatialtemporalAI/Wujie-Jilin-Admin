@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, UploadFile, File, Query
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from database.db_manager import get_session
@@ -9,6 +9,8 @@ from core.response import ResponseModel, ResponsePageModel, response_base, Respo
 from app.models.common.page import PageRequest, get_page_params, get_paginated_results
 from modules.admin.deps.auth.user_manager import current_user
 from modules.admin.deps.auth.permission import require_any_permission
+from modules.admin.services.sys.file_service import FileService
+from modules.admin.schemas.sys.file import SysFileUploadResponse
 from database.models.sys.user import SysUser
 from modules.scene.services.scene_map_service import SceneMapService
 from modules.scene.services.scene_map_nav_image_service import SceneMapNavImageService
@@ -66,6 +68,43 @@ async def get_map(
     """获取场景地图详情"""
     map_obj = await SceneMapService.get(db, map_id)
     return response_base.success(data=SceneMapResponseData.model_validate(map_obj))
+
+
+@scene_map_router.post(
+    "/upload-image",
+    response_model=ResponseModel[SysFileUploadResponse],
+    summary="上传场景地图主图",
+    dependencies=[Depends(require_any_permission("scene:map:add", "scene:map:edit"))],
+)
+async def upload_scene_map_image(
+    file: UploadFile = File(..., description="图片文件"),
+    include_image_info: bool = Query(False, description="是否返回图片宽高"),
+    db: AsyncSession = Depends(get_session),
+    user: SysUser = Depends(current_user),
+):
+    """上传场景地图主图（用于 image_id 字段）。
+
+    权限要求 scene:map:add 或 scene:map:edit，与新增/编辑场景地图保持一致，
+    避免依赖 sys:file:upload。底层调用 FileService.upload_file。
+    """
+    file_data = await file.read()
+    sys_file = await FileService.upload_file(
+        db=db,
+        file_data=file_data,
+        original_name=file.filename or "unknown",
+        mime_type=file.content_type or "application/octet-stream",
+        created_by=user.id,
+    )
+    await db.commit()
+
+    response = SysFileUploadResponse.model_validate(sys_file)
+    if include_image_info:
+        width, height = FileService.get_image_dimensions(
+            file_data, file.content_type or "application/octet-stream"
+        )
+        response.image_width = width
+        response.image_height = height
+    return response_base.success(data=response, msg="上传成功")
 
 
 @scene_map_router.post(
