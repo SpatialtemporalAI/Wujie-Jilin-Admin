@@ -108,6 +108,23 @@ export function fetchUploadSceneMapImage(file: File, options?: { includeImageInf
   });
 }
 
+/** upload scene map main image from map-editor entry (使用 scene:map-editor:add/edit 权限) */
+export function fetchUploadSceneMapEditorImage(file: File, options?: { includeImageInfo?: boolean }) {
+  const formData = new FormData();
+  formData.append('file', file);
+  const params: Record<string, boolean> = {};
+  if (options?.includeImageInfo) {
+    params.include_image_info = true;
+  }
+  return request<Api.FileManage.FileInfo>({
+    url: '/scene/map-editor/upload-image',
+    method: 'post',
+    data: formData,
+    params,
+    headers: { 'Content-Type': 'multipart/form-data' }
+  });
+}
+
 /** update scene map */
 export function fetchUpdateSceneMap(id: number, data: Api.Scene.SceneMapUpdate) {
   return request<Api.Scene.SceneMap>({

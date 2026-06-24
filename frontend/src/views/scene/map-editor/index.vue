@@ -4,8 +4,8 @@ import { useMapEditor } from './composables/useMapEditor';
 import EditorToolbar from './modules/editor-toolbar.vue';
 import CanvasEditor from './modules/canvas-editor.vue';
 import PropertyPanel from './modules/property-panel.vue';
-import { fetchCreateSceneMap, fetchUpdateSceneMap, fetchGetSceneMap } from '@/service/api/scene';
-import { fetchUploadFile, getFilePreviewUrl } from '@/service/api/file';
+import { fetchCreateSceneMap, fetchUpdateSceneMap, fetchGetSceneMap, fetchUploadSceneMapEditorImage } from '@/service/api/scene';
+import { getFilePreviewUrl } from '@/service/api/file';
 
 defineOptions({ name: 'SceneMapEditor' });
 
@@ -220,7 +220,7 @@ async function handleSceneUpload({ file }: { file: { file: File | null } }) {
   if (!file.file) return;
   sceneUploading.value = true;
   try {
-    const { data, error } = await fetchUploadFile(file.file, { includeImageInfo: true });
+    const { data, error } = await fetchUploadSceneMapEditorImage(file.file, { includeImageInfo: true });
     if (!error && data) {
       sceneFormImageId.value = data.id;
       sceneFormImageUrl.value = getFilePreviewUrl(data.id);

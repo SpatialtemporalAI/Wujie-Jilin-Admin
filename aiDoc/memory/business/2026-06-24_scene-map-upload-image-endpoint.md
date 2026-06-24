@@ -30,9 +30,19 @@
 
 ### 未改动
 
-- 地图编辑器 `map-editor/index.vue` 仍使用 `fetchUploadFile`
 - `nav_image_id` 流程未改动
 - 文件管理页 `fetchUploadFile` 保留
+
+### 后续补丁（2026-06-24 当天）
+
+- 地图编辑器 `frontend/src/views/scene/map-editor/index.vue` 的 `handleSceneUpload`（新增场景上传图片）改为独立的 `fetchUploadSceneMapEditorImage`，不再共用场景地图菜单的上传接口
+  - 此前曾简单替换为 `fetchUploadSceneMapImage`，但该接口权限是 `scene:map:add/edit`，对只有"地图编辑器"菜单权限的用户仍会 403
+  - **正确权限边界**：场景地图菜单和地图编辑器菜单权限严格分离
+    - 场景地图菜单上传 → `POST /scene/map/upload-image`（权限 `scene:map:add/edit`），由 `scene-map-operate-drawer.vue` 调用 `fetchUploadSceneMapImage`
+    - 地图编辑器菜单上传 → `POST /scene/map-editor/upload-image`（权限 `scene:map-editor:add/edit`），由 `map-editor/index.vue` 调用 `fetchUploadSceneMapEditorImage`
+- 后端在 `backend/modules/scene/endpoints/scene_map_editor.py` 新增 `scene_map_editor_public_router`（prefix `/map-editor`，不依赖 map_id），承载新增场景时无 map_id 的接口
+- `backend/modules/scene/router.py` 挂载新 router（`/scene/map-editor`）
+- `getFilePreviewUrl` 仍从 `@/service/api/file` 导入（仅根据 file id 拼预览 URL，不走权限）
 
 ## 约束与备注
 

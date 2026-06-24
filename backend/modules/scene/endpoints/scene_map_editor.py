@@ -1,13 +1,15 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, UploadFile, File, Query
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from database.db_manager import get_session
 from core.response import ResponseModel, response_base
 from modules.admin.deps.auth.user_manager import current_user
 from modules.admin.deps.auth.permission import require_any_permission
+from modules.admin.services.sys.file_service import FileService
+from modules.admin.schemas.sys.file import SysFileUploadResponse
 from database.models.sys.user import SysUser
 from modules.scene.services.scene_map_editor_service import SceneMapEditorService
 from modules.scene.services.scene_map_nav_image_service import SceneMapNavImageService
@@ -23,6 +25,14 @@ from modules.scene.schemas.scene_map import SceneMapResponseData
 
 scene_map_editor_router = APIRouter(
     prefix="/map/{map_id}/editor",
+    tags=["场景管理/地图编辑器"],
+    dependencies=[Depends(current_user)],
+)
+
+# 地图编辑器菜单下"不依赖 map_id"的接口（如新增场景时的图片上传）
+# 与 scene_map_router 的 /upload-image 严格分离，使用 scene:map-editor:* 权限
+scene_map_editor_public_router = APIRouter(
+    prefix="/map-editor",
     tags=["场景管理/地图编辑器"],
     dependencies=[Depends(current_user)],
 )
@@ -77,3 +87,41 @@ async def save_editor_data(
     await db.commit()
     SceneMapNavImageService.schedule_regenerate(map_id, user.id)
     return response_base.success(data=result, msg="保存成功")
+
+
+@scene_map_editor_public_router.post(
+    "/upload-image",
+    response_model=ResponseModel[SysFileUploadResponse],
+    summary="上传场景地图主图（地图编辑器入口）",
+    dependencies=[Depends(require_any_permission("scene:map-editor:add", "scene:map-editor:edit"))],
+)
+async def upload_scene_map_editor_image(
+    file: UploadFile = File(..., description="图片文件"),
+    include_image_info: bool = Query(False, description="是否返回图片宽高"),
+    db: AsyncSession = Depends(get_session),
+    user: SysUser = Depends(current_user),
+):
+    """地图编辑器新增/编辑场景时上传主图。
+
+    权限要求 scene:map-editor:add 或 scene:map-editor:edit，与地图编辑器菜单一致，
+    与场景地图菜单的 /scene/map/upload-image 严格分离。
+    底层调用 FileService.upload_file，不依赖 sys:file:upload。
+    """
+    file_data = await file.read()
+    sys_file = await FileService.upload_file(
+        db=db,
+        file_data=file_data,
+        original_name=file.filename or "unknown",
+        mime_type=file.content_type or "application/octet-stream",
+        created_by=user.id,
+    )
+    await db.commit()
+
+    response = SysFileUploadResponse.model_validate(sys_file)
+    if include_image_info:
+        width, height = FileService.get_image_dimensions(
+            file_data, file.content_type or "application/octet-stream"
+        )
+        response.image_width = width
+        response.image_height = height
+    return response_base.success(data=response, msg="上传成功")
