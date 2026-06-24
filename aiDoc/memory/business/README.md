@@ -40,3 +40,4 @@
 - [2026-06-24 语音合成语速参数改为 0.5-2 浮点 + slider 样式优化](./2026-06-24_tts-speed-float-range.md) — tts_speed 全栈 int(0-100)→float(0.5-2.0, step 0.1)，含 DB 迁移与 voice_pb2 二进制手改
 - [2026-06-24 唤醒词测试显示模拟回应话术 + proto 新增测试 RPC](./2026-06-24_voice-test-wakeword-response.md) — 点击测试在按钮右侧显示「<唤醒词>在呢，有什么可以帮您？」；voice.proto 新增 TestWakeWord / TestTTSConfig 两个 RPC
 - [2026-06-24 参数配置页面接入 gRPC client 骨架](./2026-06-24_param-config-grpc-scaffold.md) — 4 Tab 所有保存/测试/增删改按钮 DB commit 后调对应 Notify/Test RPC；通用 _dispatch 调度内核 + 4 业务 Client + ConfigServiceAddrProvider 抽象（为数据库读取预留）
+- [2026-06-25 gRPC 推送失败持久化重试队列](./2026-06-25_grpc-push-retry-queue.md) — 新建 grpc_retry_task 表 + 调度任务每分钟扫描重试（指数退避 60s/120s/240s，3 次后 dead）；前端"绿色 success + 备注"区分 synced/pending_retry；测试按钮失败直接 fail 不入队

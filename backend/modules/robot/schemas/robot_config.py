@@ -62,6 +62,9 @@ class RobotVoiceConfigResponse(BaseRespEntity):
     tts_volume: Optional[int] = Field(None, description="音量")
     created_at: Optional[datetime] = Field(None, description="创建时间")
     updated_at: Optional[datetime] = Field(None, description="更新时间")
+    grpc_status: Optional[str] = Field(
+        None, description="gRPC 推送状态：synced(已同步)/pending_retry(待重试)/disabled(未启用)"
+    )
 
 
 class RobotFaceRecognitionCreate(BaseReqEntity):
@@ -107,6 +110,9 @@ class RobotFaceRecognitionResponse(BaseRespEntity):
     broadcast_text: str = Field(..., description="语音播报内容")
     created_at: datetime = Field(..., description="创建时间")
     updated_at: Optional[datetime] = Field(None, description="更新时间")
+    grpc_status: Optional[str] = Field(
+        None, description="gRPC 推送状态：synced/pending_retry/disabled"
+    )
 
 
 class TestWakeWordRequest(BaseModel):
@@ -143,4 +149,12 @@ class RobotBatteryThresholdUpdate(BaseReqEntity):
 
     battery_threshold: int = Field(
         ..., description="电量报警阈值(5-50)", ge=5, le=50
+    )
+
+
+class ConfigUpdateResponse(BaseRespEntity):
+    """参数配置保存响应（speed/battery 等不返回完整 ORM 的场景，仅携带 grpc_status）"""
+
+    grpc_status: Optional[str] = Field(
+        None, description="gRPC 推送状态：synced/pending_retry/disabled"
     )

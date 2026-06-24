@@ -1,6 +1,9 @@
 declare namespace Api.RobotConfig {
   type CommonSearchParams = Pick<Common.PaginatingCommonParams, 'page' | 'page_size'>;
 
+  /** gRPC 推送状态：synced=已同步 / pending_retry=待重试 / disabled=未启用 */
+  type GrpcStatus = 'synced' | 'pending_retry' | 'disabled';
+
   interface VoiceConfig {
     id?: number;
     robot_id: number;
@@ -11,6 +14,7 @@ declare namespace Api.RobotConfig {
     tts_volume: number;
     created_at?: string;
     updated_at?: string | null;
+    grpc_status?: GrpcStatus;
   }
 
   interface FaceRecognition {
@@ -20,6 +24,7 @@ declare namespace Api.RobotConfig {
     broadcast_text: string;
     created_at: string;
     updated_at: string | null;
+    grpc_status?: GrpcStatus;
   }
 
   interface FaceRecognitionCreate {
@@ -47,5 +52,10 @@ declare namespace Api.RobotConfig {
     speed: number;
     volume: number;
     text: string;
+  }
+
+  /** 通用配置更新响应（speed/battery/delete face 等不返回完整 ORM 的场景） */
+  interface ConfigUpdateResponse {
+    grpc_status?: GrpcStatus;
   }
 }

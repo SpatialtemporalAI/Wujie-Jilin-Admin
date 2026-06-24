@@ -81,16 +81,18 @@ async function handleSave() {
     await validate();
     loading.value = true;
     if (editingId.value) {
-      const { error } = await fetchUpdateFaceRecognition(editingId.value, { ...model });
+      const { data, error } = await fetchUpdateFaceRecognition(editingId.value, { ...model });
       if (!error) {
-        message.success('更新成功');
+        const msg = data?.grpc_status === 'pending_retry' ? '更新成功（设备同步待重试）' : '更新成功';
+        message.success(msg);
         resetForm();
         await loadData();
       }
     } else {
-      const { error } = await fetchCreateFaceRecognition({ ...model });
+      const { data, error } = await fetchCreateFaceRecognition({ ...model });
       if (!error) {
-        message.success('保存成功');
+        const msg = data?.grpc_status === 'pending_retry' ? '保存成功（设备同步待重试）' : '保存成功';
+        message.success(msg);
         resetForm();
         await loadData();
       }
@@ -112,9 +114,10 @@ function handleEdit(row: Api.RobotConfig.FaceRecognition) {
 
 async function handleDelete(id: number) {
   try {
-    const { error } = await fetchDeleteFaceRecognition(id);
+    const { data, error } = await fetchDeleteFaceRecognition(id);
     if (!error) {
-      message.success('删除成功');
+      const msg = data?.grpc_status === 'pending_retry' ? '删除成功（设备同步待重试）' : '删除成功';
+      message.success(msg);
       await loadData();
     }
   } catch (err) {

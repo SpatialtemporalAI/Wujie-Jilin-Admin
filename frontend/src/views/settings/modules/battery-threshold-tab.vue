@@ -69,9 +69,10 @@ async function handleSave() {
 
   saving.value = true;
   try {
-    const { error } = await fetchUpdateBatteryThreshold(selectedRobotId.value, batteryThreshold.value);
+    const { data, error } = await fetchUpdateBatteryThreshold(selectedRobotId.value, batteryThreshold.value);
     if (!error) {
-      message.success('保存成功');
+      const msg = data?.grpc_status === 'pending_retry' ? '保存成功（设备同步待重试）' : '保存成功';
+      message.success(msg);
       const robot = robotList.value.find(item => item.id === selectedRobotId.value);
       if (robot) {
         robot.battery_threshold = batteryThreshold.value;

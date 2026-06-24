@@ -79,7 +79,7 @@ export function fetchUpdateFaceRecognition(id: number, data: Api.RobotConfig.Fac
 
 /** 删除人脸识别TTS配置 */
 export function fetchDeleteFaceRecognition(id: number) {
-  return request<void>({
+  return request<Api.RobotConfig.ConfigUpdateResponse>({
     url: `/robot/config/face/${id}`,
     method: 'delete'
   });
@@ -89,7 +89,7 @@ export function fetchDeleteFaceRecognition(id: number) {
 
 /** 更新机器人行走速度等级 */
 export function fetchUpdateSpeedLevel(robotId: number, speedLevel: string | null) {
-  return request<void>({
+  return request<Api.RobotConfig.ConfigUpdateResponse>({
     url: `/robot/config/speed-level/${robotId}`,
     method: 'put',
     data: { speed_level: speedLevel }
@@ -98,7 +98,7 @@ export function fetchUpdateSpeedLevel(robotId: number, speedLevel: string | null
 
 /** 更新机器人电量报警阈值 */
 export function fetchUpdateBatteryThreshold(robotId: number, batteryThreshold: number) {
-  return request<void>({
+  return request<Api.RobotConfig.ConfigUpdateResponse>({
     url: `/robot/config/battery-threshold/${robotId}`,
     method: 'put',
     data: { battery_threshold: batteryThreshold }

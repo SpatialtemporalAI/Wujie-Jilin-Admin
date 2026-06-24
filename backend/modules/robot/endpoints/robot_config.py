@@ -33,8 +33,16 @@ from modules.robot.schemas.robot_config import (
     TestTTSRequest,
     RobotSpeedLevelUpdate,
     RobotBatteryThresholdUpdate,
+    ConfigUpdateResponse,
 )
 from modules.grpc.config_client import VoiceConfigClient
+
+# grpc_status → 前端展示文案（绿色 success）
+_GRPC_MSG_MAP = {
+    "synced": "保存成功",
+    "pending_retry": "保存成功（设备同步待重试）",
+    "disabled": "保存成功",
+}
 
 logger = logging.getLogger(__name__)
 
@@ -85,10 +93,13 @@ async def save_voice_config(
     """
     try:
         logger.info("保存语音合成配置接口被调用")
-        config = await RobotConfigService.save_voice_config(db, config_in)
+        config, grpc_status = await RobotConfigService.save_voice_config(db, config_in)
         response_data = RobotVoiceConfigResponse.model_validate(config)
-        logger.info("保存语音合成配置接口成功")
-        return response_base.success(data=response_data, msg="保存成功")
+        response_data.grpc_status = grpc_status
+        logger.info("保存语音合成配置接口成功 grpc_status=%s", grpc_status)
+        return response_base.success(
+            data=response_data, msg=_GRPC_MSG_MAP.get(grpc_status, "保存成功")
+        )
     except Exception as e:
         logger.error("保存语音合成配置接口失败: %s", str(e), exc_info=True)
         raise
@@ -103,7 +114,10 @@ async def test_wake_word(
     body: TestWakeWordRequest,
     db: AsyncSession = Depends(get_session),
 ):
-    """测试唤醒词（调用 gRPC TestWakeWord，让机器人按当前唤醒词模拟一次响应）"""
+    """测试唤醒词（调用 gRPC TestWakeWord，让机器人按当前唤醒词模拟一次响应）
+
+    测试按钮失败时直接返回 fail，不入重试队列（实时语义，用户等响应）。
+    """
     logger.info(
         "测试唤醒词接口被调用，robot_id: %d, 文本: %s", body.robot_id, body.text
     )
@@ -112,7 +126,10 @@ async def test_wake_word(
     )
     if resp.success:
         return response_base.success(msg=resp.message or "测试指令已下发")
-    return response_base.fail(msg=resp.message or "设备未响应")
+    logger.warning(
+        "测试唤醒词失败 robot_id=%s code_msg=%s", body.robot_id, resp.message
+    )
+    return response_base.fail(msg="测试失败，请确保机器人在线")
 
 
 @robot_config_router.post(
@@ -124,7 +141,10 @@ async def test_tts(
     body: TestTTSRequest,
     db: AsyncSession = Depends(get_session),
 ):
-    """测试TTS语音合成（调用 gRPC TestTTSConfig，按指定参数播报测试文本）"""
+    """测试TTS语音合成（调用 gRPC TestTTSConfig，按指定参数播报测试文本）
+
+    测试按钮失败时直接返回 fail，不入重试队列（实时语义，用户等响应）。
+    """
     logger.info(
         "测试TTS接口被调用，robot_id: %d, 音色: %s", body.robot_id, body.voice
     )
@@ -137,7 +157,10 @@ async def test_tts(
     )
     if resp.success:
         return response_base.success(msg=resp.message or "测试指令已下发")
-    return response_base.fail(msg=resp.message or "设备未响应")
+    logger.warning(
+        "测试TTS失败 robot_id=%s code_msg=%s", body.robot_id, resp.message
+    )
+    return response_base.fail(msg="测试失败，请确保机器人在线")
 
 
 # ==================== 人脸识别TTS配置 ====================
@@ -211,15 +234,16 @@ async def create_face(
     db: AsyncSession = Depends(get_session),
     user: SysUser = Depends(current_user),
 ):
-    """
-    创建人脸识别TTS配置
-    """
+    """创建人脸识别TTS配置"""
     try:
         logger.info("创建人脸识别TTS配置接口被调用")
-        face = await RobotConfigService.create_face(db, face_in)
+        face, grpc_status = await RobotConfigService.create_face(db, face_in)
         response_data = RobotFaceRecognitionResponse.model_validate(face)
-        logger.info("创建人脸识别TTS配置接口成功，ID: %d", face.id)
-        return response_base.success(data=response_data, msg="创建成功")
+        response_data.grpc_status = grpc_status
+        logger.info("创建人脸识别TTS配置接口成功，ID: %d, grpc_status=%s", face.id, grpc_status)
+        return response_base.success(
+            data=response_data, msg=_GRPC_MSG_MAP.get(grpc_status, "创建成功")
+        )
     except Exception as e:
         logger.error("创建人脸识别TTS配置接口失败: %s", str(e), exc_info=True)
         raise
@@ -238,15 +262,16 @@ async def update_face(
     db: AsyncSession = Depends(get_session),
     user: SysUser = Depends(current_user),
 ):
-    """
-    更新人脸识别TTS配置
-    """
+    """更新人脸识别TTS配置"""
     try:
         logger.info("更新人脸识别TTS配置接口被调用，ID: %d", face_id)
-        face = await RobotConfigService.update_face(db, face_id, face_in)
+        face, grpc_status = await RobotConfigService.update_face(db, face_id, face_in)
         response_data = RobotFaceRecognitionResponse.model_validate(face)
-        logger.info("更新人脸识别TTS配置接口成功，ID: %d", face_id)
-        return response_base.success(data=response_data, msg="更新成功")
+        response_data.grpc_status = grpc_status
+        logger.info("更新人脸识别TTS配置接口成功，ID: %d, grpc_status=%s", face_id, grpc_status)
+        return response_base.success(
+            data=response_data, msg=_GRPC_MSG_MAP.get(grpc_status, "更新成功")
+        )
     except Exception as e:
         logger.error("更新人脸识别TTS配置接口失败: %s", str(e), exc_info=True)
         raise
@@ -254,7 +279,7 @@ async def update_face(
 
 @robot_config_router.delete(
     "/face/{face_id}",
-    response_model=ResponseModel,
+    response_model=ResponseModel[ConfigUpdateResponse],
     dependencies=[Depends(require_permission("robot:config:edit"))],
 )
 @log_operation(module="robot", action="delete", description="删除人脸识别TTS配置")
@@ -264,14 +289,15 @@ async def delete_face(
     db: AsyncSession = Depends(get_session),
     user: SysUser = Depends(current_user),
 ):
-    """
-    删除人脸识别TTS配置
-    """
+    """删除人脸识别TTS配置"""
     try:
         logger.info("删除人脸识别TTS配置接口被调用，ID: %d", face_id)
-        await RobotConfigService.delete_face(db, face_id)
-        logger.info("删除人脸识别TTS配置接口成功，ID: %d", face_id)
-        return response_base.success(msg="删除成功")
+        grpc_status = await RobotConfigService.delete_face(db, face_id)
+        logger.info("删除人脸识别TTS配置接口成功，ID: %d, grpc_status=%s", face_id, grpc_status)
+        return response_base.success(
+            data=ConfigUpdateResponse(grpc_status=grpc_status),
+            msg=_GRPC_MSG_MAP.get(grpc_status, "删除成功"),
+        )
     except Exception as e:
         logger.error("删除人脸识别TTS配置接口失败: %s", str(e), exc_info=True)
         raise
@@ -282,7 +308,7 @@ async def delete_face(
 
 @robot_config_router.put(
     "/speed-level/{robot_id}",
-    response_model=ResponseModel,
+    response_model=ResponseModel[ConfigUpdateResponse],
     dependencies=[Depends(require_permission("robot:config:edit"))],
 )
 @log_operation(module="robot", action="update", description="更新机器人行走速度")
@@ -300,9 +326,18 @@ async def update_speed_level(
             robot_id,
             payload.speed_level,
         )
-        await RobotConfigService.update_speed_level(db, robot_id, payload.speed_level)
-        logger.info("更新机器人行走速度接口成功，robot_id: %d", robot_id)
-        return response_base.success(msg="保存成功")
+        _, grpc_status = await RobotConfigService.update_speed_level(
+            db, robot_id, payload.speed_level
+        )
+        logger.info(
+            "更新机器人行走速度接口成功，robot_id: %d, grpc_status=%s",
+            robot_id,
+            grpc_status,
+        )
+        return response_base.success(
+            data=ConfigUpdateResponse(grpc_status=grpc_status),
+            msg=_GRPC_MSG_MAP.get(grpc_status, "保存成功"),
+        )
     except Exception as e:
         logger.error("更新机器人行走速度接口失败: %s", str(e), exc_info=True)
         raise
@@ -310,7 +345,7 @@ async def update_speed_level(
 
 @robot_config_router.put(
     "/battery-threshold/{robot_id}",
-    response_model=ResponseModel,
+    response_model=ResponseModel[ConfigUpdateResponse],
     dependencies=[Depends(require_permission("robot:config:edit"))],
 )
 @log_operation(module="robot", action="update", description="更新机器人电量报警阈值")
@@ -328,11 +363,18 @@ async def update_battery_threshold(
             robot_id,
             payload.battery_threshold,
         )
-        await RobotConfigService.update_battery_threshold(
+        _, grpc_status = await RobotConfigService.update_battery_threshold(
             db, robot_id, payload.battery_threshold
         )
-        logger.info("更新机器人电量阈值接口成功，robot_id: %d", robot_id)
-        return response_base.success(msg="保存成功")
+        logger.info(
+            "更新机器人电量阈值接口成功，robot_id: %d, grpc_status=%s",
+            robot_id,
+            grpc_status,
+        )
+        return response_base.success(
+            data=ConfigUpdateResponse(grpc_status=grpc_status),
+            msg=_GRPC_MSG_MAP.get(grpc_status, "保存成功"),
+        )
     except Exception as e:
         logger.error("更新机器人电量阈值接口失败: %s", str(e), exc_info=True)
         raise

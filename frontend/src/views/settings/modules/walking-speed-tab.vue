@@ -75,9 +75,10 @@ async function handleSave() {
 
   saving.value = true;
   try {
-    const { error } = await fetchUpdateSpeedLevel(selectedRobotId.value, speedLevel.value);
+    const { data, error } = await fetchUpdateSpeedLevel(selectedRobotId.value, speedLevel.value);
     if (!error) {
-      message.success('保存成功');
+      const msg = data?.grpc_status === 'pending_retry' ? '保存成功（设备同步待重试）' : '保存成功';
+      message.success(msg);
       const robot = robotList.value.find(item => item.id === selectedRobotId.value);
       if (robot) {
         robot.speed_level = speedLevel.value;

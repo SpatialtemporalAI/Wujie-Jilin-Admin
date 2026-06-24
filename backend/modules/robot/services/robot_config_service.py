@@ -6,15 +6,20 @@
 处理语音合成配置与人脸识别TTS配置的业务逻辑
 
 DB 写入成功后会调用 gRPC 推送（ConfigService），将最新配置同步给机器人侧立即生效。
-推送采用最终一致语义：失败仅记日志，不回滚 DB、不抛异常。
+推送采用最终一致语义：
+- ENABLED=false → 静默跳过，返回 grpc_status=disabled
+- 推送成功 → 返回 grpc_status=synced
+- 推送失败 → 写入 grpc_retry_task 表等待后台调度重试，返回 grpc_status=pending_retry
+所有 5 个保存方法返回 (orm_obj, grpc_status)。
 """
 import logging
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select, and_, func, Select
-from typing import List, Tuple
+from typing import Any, Awaitable, Callable, List, Optional, Tuple
 
 from database.models.business.robot_voice_config import RobotVoiceConfig
 from database.models.business.robot_face_recognition import RobotFaceRecognition
+from core.config import settings
 from core.exception.errors import NotFoundError
 from app.models.common.page import PageRequest, get_paginated_results
 from modules.grpc.config_client import (
@@ -23,6 +28,7 @@ from modules.grpc.config_client import (
     SpeedConfigClient,
     VoiceConfigClient,
 )
+from modules.grpc.retry_service import GrpcRetryService
 from modules.robot.schemas.robot_config import (
     RobotVoiceConfigSchema,
     RobotFaceRecognitionCreate,
@@ -37,8 +43,66 @@ class RobotConfigService:
     机器人参数配置服务类
     """
 
-    # ==================== 语音配置 ====================
+    # ==================== gRPC 推送工具 ====================
 
+    @staticmethod
+    async def _push_with_retry(
+        db: AsyncSession,
+        *,
+        rpc_call: Callable[[], Awaitable[Any]],
+        service_name: str,
+        method_name: str,
+        payload: dict,
+        robot_id: Optional[int] = None,
+    ) -> str:
+        """通用推送入口：调用 RPC，失败则入 grpc_retry_task 表。
+
+        Returns:
+            "synced" / "pending_retry" / "disabled"
+        """
+        if not settings.GRPC.ENABLED:
+            return "disabled"
+        try:
+            resp = await rpc_call()
+        except Exception as e:  # noqa: BLE001 - client 已吞，这里是双保险
+            logger.exception(
+                "grpc push raised service=%s method=%s", service_name, method_name
+            )
+            await GrpcRetryService.save_pending(
+                db,
+                service_name=service_name,
+                method_name=method_name,
+                payload=payload,
+                robot_id=robot_id,
+                last_error=f"调用异常: {e}",
+            )
+            return "pending_retry"
+
+        if getattr(resp, "success", False):
+            return "synced"
+
+        await GrpcRetryService.save_pending(
+            db,
+            service_name=service_name,
+            method_name=method_name,
+            payload=payload,
+            robot_id=robot_id,
+            last_error=getattr(resp, "message", "") or "设备未响应",
+        )
+        return "pending_retry"
+
+    @staticmethod
+    def _aggregate_status(statuses: List[str]) -> str:
+        """聚合多次 RPC 的状态：任一 pending_retry 则 pending_retry；否则取最坏值"""
+        if not statuses:
+            return "disabled" if not settings.GRPC.ENABLED else "synced"
+        if "pending_retry" in statuses:
+            return "pending_retry"
+        if "synced" in statuses:
+            return "synced"
+        return "disabled"
+
+    # ==================== 语音配置 ====================
     @staticmethod
     async def get_voice_config(db: AsyncSession, robot_id: int) -> RobotVoiceConfig:
         """
@@ -69,7 +133,7 @@ class RobotConfigService:
     @staticmethod
     async def save_voice_config(
         db: AsyncSession, schema: RobotVoiceConfigSchema
-    ) -> RobotVoiceConfig:
+    ) -> Tuple[RobotVoiceConfig, str]:
         """
         保存语音配置（按 robot_id upsert）
 
@@ -77,6 +141,8 @@ class RobotConfigService:
         - 唤醒词开关或内容变化 → NotifyWakeWordChanged
         - TTS 音色/语速/音量变化 → NotifyTTSConfigChanged
         新建记录时全量推送。
+
+        Returns: (orm_obj, grpc_status) grpc_status ∈ synced/pending_retry/disabled
         """
         try:
             logger.info("保存语音配置，请求数据: %s", schema.model_dump(exclude_none=True))
@@ -129,22 +195,45 @@ class RobotConfigService:
                 logger.info("创建语音配置成功，ID: %d", config.id)
                 saved = config
 
-            # DB 已落库，下面是尽力推送（_dispatch 内部已吞异常）
+            # DB 已落库，下面是尽力推送 + 失败入重试队列
+            statuses: List[str] = []
             if "wake" in changed:
-                await VoiceConfigClient.notify_wake_word(
-                    robot_id=saved.robot_id,
-                    wake_word_enabled=saved.wake_word_enabled,
-                    wake_word=saved.wake_word or "",
+                wake_payload = {
+                    "robot_id": saved.robot_id,
+                    "wake_word_enabled": bool(saved.wake_word_enabled),
+                    "wake_word": saved.wake_word or "",
+                }
+                statuses.append(
+                    await RobotConfigService._push_with_retry(
+                        db,
+                        rpc_call=lambda: VoiceConfigClient.notify_wake_word(
+                            **wake_payload
+                        ),
+                        service_name="voice",
+                        method_name="NotifyWakeWordChanged",
+                        payload=wake_payload,
+                        robot_id=saved.robot_id,
+                    )
                 )
             if "tts" in changed:
-                await VoiceConfigClient.notify_tts(
-                    robot_id=saved.robot_id,
-                    tts_voice=saved.tts_voice,
-                    tts_speed=saved.tts_speed,
-                    tts_volume=saved.tts_volume,
+                tts_payload = {
+                    "robot_id": saved.robot_id,
+                    "tts_voice": saved.tts_voice,
+                    "tts_speed": float(saved.tts_speed),
+                    "tts_volume": int(saved.tts_volume),
+                }
+                statuses.append(
+                    await RobotConfigService._push_with_retry(
+                        db,
+                        rpc_call=lambda: VoiceConfigClient.notify_tts(**tts_payload),
+                        service_name="voice",
+                        method_name="NotifyTTSConfigChanged",
+                        payload=tts_payload,
+                        robot_id=saved.robot_id,
+                    )
                 )
 
-            return saved
+            return saved, RobotConfigService._aggregate_status(statuses)
 
         except Exception as e:
             await db.rollback()
@@ -208,10 +297,8 @@ class RobotConfigService:
     @staticmethod
     async def create_face(
         db: AsyncSession, schema: RobotFaceRecognitionCreate
-    ) -> RobotFaceRecognition:
-        """
-        创建人脸识别TTS配置
-        """
+    ) -> Tuple[RobotFaceRecognition, str]:
+        """创建人脸识别TTS配置，返回 (orm_obj, grpc_status)"""
         try:
             logger.info(
                 "创建人脸识别TTS配置，请求数据: %s",
@@ -227,13 +314,22 @@ class RobotConfigService:
             await db.refresh(face)
             logger.info("创建人脸识别TTS配置成功，ID: %d", face.id)
             # 推送新增人员（全量字段）
-            await FaceRecognitionClient.notify_create(
-                face_id=face.id,
-                person_name=face.person_name,
-                photo_url=face.photo_url,
-                broadcast_text=face.broadcast_text,
+            payload = {
+                "operation": 1,  # FACE_OPERATION_CREATE
+                "face_id": face.id,
+                "person_name": face.person_name,
+                "photo_url": face.photo_url,
+                "broadcast_text": face.broadcast_text,
+            }
+            status = await RobotConfigService._push_with_retry(
+                db,
+                rpc_call=lambda: FaceRecognitionClient.notify_changed(**payload),
+                service_name="face_recognition",
+                method_name="NotifyFaceRecognitionChanged",
+                payload=payload,
+                robot_id=None,
             )
-            return face
+            return face, status
         except Exception as e:
             await db.rollback()
             logger.error("创建人脸识别TTS配置失败: %s", str(e), exc_info=True)
@@ -242,10 +338,8 @@ class RobotConfigService:
     @staticmethod
     async def update_face(
         db: AsyncSession, face_id: int, schema: RobotFaceRecognitionUpdate
-    ) -> RobotFaceRecognition:
-        """
-        更新人脸识别TTS配置
-        """
+    ) -> Tuple[RobotFaceRecognition, str]:
+        """更新人脸识别TTS配置，返回 (orm_obj, grpc_status)"""
         try:
             logger.info(
                 "更新人脸识别TTS配置，ID: %d，请求数据: %s",
@@ -260,13 +354,22 @@ class RobotConfigService:
             await db.refresh(face)
             logger.info("更新人脸识别TTS配置成功，ID: %d", face.id)
             # 推送更新（全量字段）
-            await FaceRecognitionClient.notify_update(
-                face_id=face.id,
-                person_name=face.person_name,
-                photo_url=face.photo_url,
-                broadcast_text=face.broadcast_text,
+            payload = {
+                "operation": 2,  # FACE_OPERATION_UPDATE
+                "face_id": face.id,
+                "person_name": face.person_name,
+                "photo_url": face.photo_url,
+                "broadcast_text": face.broadcast_text,
+            }
+            status = await RobotConfigService._push_with_retry(
+                db,
+                rpc_call=lambda: FaceRecognitionClient.notify_changed(**payload),
+                service_name="face_recognition",
+                method_name="NotifyFaceRecognitionChanged",
+                payload=payload,
+                robot_id=None,
             )
-            return face
+            return face, status
         except NotFoundError:
             raise
         except Exception as e:
@@ -275,10 +378,8 @@ class RobotConfigService:
             raise
 
     @staticmethod
-    async def delete_face(db: AsyncSession, face_id: int) -> bool:
-        """
-        删除人脸识别TTS配置（软删除）
-        """
+    async def delete_face(db: AsyncSession, face_id: int) -> str:
+        """删除人脸识别TTS配置（软删除），返回 grpc_status"""
         try:
             logger.info("删除人脸识别TTS配置，ID: %d", face_id)
             face = await RobotConfigService.get_face(db, face_id)
@@ -286,8 +387,22 @@ class RobotConfigService:
             await db.commit()
             logger.info("删除人脸识别TTS配置成功，ID: %d", face_id)
             # 推送删除（仅需 face_id）
-            await FaceRecognitionClient.notify_delete(face_id=face_id)
-            return True
+            payload = {
+                "operation": 3,  # FACE_OPERATION_DELETE
+                "face_id": face_id,
+                "person_name": "",
+                "photo_url": "",
+                "broadcast_text": "",
+            }
+            status = await RobotConfigService._push_with_retry(
+                db,
+                rpc_call=lambda: FaceRecognitionClient.notify_changed(**payload),
+                service_name="face_recognition",
+                method_name="NotifyFaceRecognitionChanged",
+                payload=payload,
+                robot_id=None,
+            )
+            return status
         except NotFoundError:
             raise
         except Exception as e:
@@ -298,8 +413,10 @@ class RobotConfigService:
     # ==================== 行走速度 / 电量阈值 ====================
 
     @staticmethod
-    async def update_speed_level(db: AsyncSession, robot_id: int, speed_level: str | None) -> "Robot":
-        """更新机器人行走速度等级（独立于 robot:manage:edit，使用 robot:config:edit 权限）"""
+    async def update_speed_level(
+        db: AsyncSession, robot_id: int, speed_level: str | None
+    ) -> Tuple["Robot", str]:
+        """更新机器人行走速度等级，返回 (orm_obj, grpc_status)"""
         try:
             from database.models.business.robot import Robot
 
@@ -313,10 +430,16 @@ class RobotConfigService:
             await db.commit()
             await db.refresh(robot)
             # 推送速度等级变更
-            await SpeedConfigClient.notify_speed_level(
-                robot_id=robot_id, speed_level=speed_level or ""
+            payload = {"robot_id": robot_id, "speed_level": speed_level or ""}
+            status = await RobotConfigService._push_with_retry(
+                db,
+                rpc_call=lambda: SpeedConfigClient.notify_speed_level(**payload),
+                service_name="speed",
+                method_name="NotifySpeedLevelChanged",
+                payload=payload,
+                robot_id=robot_id,
             )
-            return robot
+            return robot, status
         except NotFoundError:
             raise
         except Exception as e:
@@ -325,8 +448,10 @@ class RobotConfigService:
             raise
 
     @staticmethod
-    async def update_battery_threshold(db: AsyncSession, robot_id: int, battery_threshold: int) -> "Robot":
-        """更新机器人电量报警阈值（独立于 robot:manage:edit，使用 robot:config:edit 权限）"""
+    async def update_battery_threshold(
+        db: AsyncSession, robot_id: int, battery_threshold: int
+    ) -> Tuple["Robot", str]:
+        """更新机器人电量报警阈值，返回 (orm_obj, grpc_status)"""
         try:
             from database.models.business.robot import Robot
 
@@ -340,10 +465,16 @@ class RobotConfigService:
             await db.commit()
             await db.refresh(robot)
             # 推送电量阈值变更
-            await BatteryConfigClient.notify_battery_threshold(
-                robot_id=robot_id, battery_threshold=battery_threshold
+            payload = {"robot_id": robot_id, "battery_threshold": int(battery_threshold)}
+            status = await RobotConfigService._push_with_retry(
+                db,
+                rpc_call=lambda: BatteryConfigClient.notify_battery_threshold(**payload),
+                service_name="battery",
+                method_name="NotifyBatteryThresholdChanged",
+                payload=payload,
+                robot_id=robot_id,
             )
-            return robot
+            return robot, status
         except NotFoundError:
             raise
         except Exception as e:

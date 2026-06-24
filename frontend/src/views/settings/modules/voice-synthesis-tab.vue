@@ -117,9 +117,10 @@ async function handleSaveVoice() {
   try {
     await validate();
     saving.value = true;
-    const { error } = await fetchSaveVoiceConfig(model);
+    const { data, error } = await fetchSaveVoiceConfig(model);
     if (!error) {
-      message.success('保存成功');
+      const msg = data?.grpc_status === 'pending_retry' ? '保存成功（设备同步待重试）' : '保存成功';
+      message.success(msg);
       showAlert.value = true;
       setTimeout(() => {
         showAlert.value = false;
