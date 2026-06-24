@@ -149,7 +149,7 @@ const columns = [
         {row.status === 'paused' && (
           <NButton type="success" ghost size="small" onClick={() => handleResume(row.id)}>恢复</NButton>
         )}
-        {(row.status === 'running' || row.status === 'paused') && (
+        {(row.status === 'running' || row.status === 'paused' || row.status === 'pending') && (
           <NButton type="error" ghost size="small" onClick={() => handleStop(row.id)}>停止</NButton>
         )}
       </div>
