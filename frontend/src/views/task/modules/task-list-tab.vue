@@ -5,7 +5,7 @@ import {
   fetchGetTaskList,
   fetchDeleteTask,
   fetchToggleTaskEnabled,
-  fetchStartExecutionRecord,
+  fetchStartOrResumeExecution,
   fetchPauseExecutionByTask
 } from '@/service/api';
 import { useAppStore } from '@/store/modules/app';
@@ -246,9 +246,9 @@ async function handleStart(row: Api.Task.Task) {
   actionLoading.value = true;
   try {
     const robotIds = row.robots?.map((r: Api.Task.TaskRobot) => r.id) || [];
-    const { error } = await fetchStartExecutionRecord(row.id, { robot_ids: robotIds, source: 'manual' });
+    const { error } = await fetchStartOrResumeExecution(row.id, { robot_ids: robotIds, source: 'manual' });
     if (!error) {
-      message.success('任务已启动');
+      message.success('操作成功');
       await getData();
     }
   } catch (error) {

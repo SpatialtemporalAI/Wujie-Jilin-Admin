@@ -242,6 +242,48 @@ class TaskExecutionRecordService:
             raise
 
     @staticmethod
+    async def start_or_resume_execution(
+        db: AsyncSession,
+        task_id: int,
+        robot_ids: List[int],
+        user_id: Optional[int] = None,
+        source: str = "manual",
+    ) -> dict:
+        """
+        按任务启动执行：
+        - 若该任务下存在 paused 状态的执行记录，则批量恢复（resume），不创建新记录
+        - 否则按 robot_ids 创建新的执行记录
+        返回 {"action": "resumed" | "created", "count": int}
+        """
+        try:
+            paused_result = await db.execute(
+                select(TaskExecutionRecord).where(
+                    TaskExecutionRecord.task_id == task_id,
+                    TaskExecutionRecord.status == "paused",
+                    TaskExecutionRecord.deleted_at.is_(None),
+                )
+            )
+            paused_records = paused_result.scalars().all()
+            if paused_records:
+                for record in paused_records:
+                    record.status = "running"
+                await db.commit()
+                return {"action": "resumed", "count": len(paused_records)}
+
+            created = await TaskExecutionRecordService.start_execution(
+                db=db,
+                task_id=task_id,
+                robot_ids=robot_ids,
+                user_id=user_id,
+                source=source,
+            )
+            return {"action": "created", "count": len(created)}
+        except Exception as e:
+            await db.rollback()
+            logger.error("启动或恢复任务执行失败: %s", str(e), exc_info=True)
+            raise
+
+    @staticmethod
     def build_active_query(
         query_params: Optional[TaskExecutionRecordQueryParams] = None,
     ) -> Select:

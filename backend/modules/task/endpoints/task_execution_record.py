@@ -99,6 +99,42 @@ async def start_task_execution_record(
 
 
 @task_execution_record_router.post(
+    "/start-or-resume/{task_id}",
+    response_model=ResponseModel,
+    dependencies=[Depends(require_permission("task:execution:start"))],
+)
+@log_operation(module="task", action="start", description="启动或恢复任务")
+async def start_or_resume_task_execution_record(
+    task_id: int,
+    payload: TaskExecutionRecordStartIn,
+    request: Request,
+    db: AsyncSession = Depends(get_session),
+    user: SysUser = Depends(current_user),
+):
+    """
+    启动或恢复任务：
+    - 若该任务存在 paused 状态的执行记录，则批量恢复
+    - 否则按 robot_ids 创建新的执行记录
+    """
+    try:
+        result = await TaskExecutionRecordService.start_or_resume_execution(
+            db=db,
+            task_id=task_id,
+            robot_ids=payload.robot_ids,
+            user_id=user.id,
+            source=payload.source,
+        )
+        if result["action"] == "resumed":
+            msg = f"已恢复 {result['count']} 条暂停的执行"
+        else:
+            msg = f"已启动 {result['count']} 条新执行"
+        return response_base.success(msg=msg)
+    except Exception as e:
+        logger.error("启动或恢复任务失败: %s", str(e), exc_info=True)
+        raise
+
+
+@task_execution_record_router.post(
     "/{record_id}/pause",
     response_model=ResponseModel[TaskExecutionRecordResponseData],
     dependencies=[Depends(require_permission("task:execution:control"))],

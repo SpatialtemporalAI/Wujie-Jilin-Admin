@@ -130,6 +130,17 @@ export function fetchStartExecutionRecord(taskId: number, payload: Api.Task.Task
   });
 }
 
+/** start or resume task execution
+ * 若任务有 paused 记录则恢复，否则创建新执行记录
+ */
+export function fetchStartOrResumeExecution(taskId: number, payload: Api.Task.TaskExecutionRecordStartIn) {
+  return request<void>({
+    url: `/task/execution-record/start-or-resume/${taskId}`,
+    method: 'post',
+    data: payload
+  });
+}
+
 /** pause execution record */
 export function fetchPauseExecutionRecord(recordId: number) {
   return request<Api.Task.TaskExecutionRecord>({
