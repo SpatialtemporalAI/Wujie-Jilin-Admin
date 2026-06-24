@@ -45,6 +45,12 @@ const statusLabelMap: Record<string, string> = {
   pending: '等待中'
 };
 
+const statusOptions = [
+  { label: '等待中', value: 'pending' },
+  { label: '执行中', value: 'running' },
+  { label: '已暂停', value: 'paused' }
+];
+
 const sourceLabelMap: Record<string, string> = {
   platform_schedule: '平台定时',
   voice_trigger: '语音触发',
@@ -231,7 +237,12 @@ onUnmounted(() => {
 
 <template>
   <div class="min-h-500px flex-col-stretch gap-12px overflow-hidden lt-sm:overflow-auto">
-    <TaskHistorySearch v-model:model="searchParams" @search="handleSearch" @reset="handleSearch" />
+    <TaskHistorySearch
+      v-model:model="searchParams"
+      :status-options="statusOptions"
+      @search="handleSearch"
+      @reset="handleSearch"
+    />
     <NDataTable
       :columns="columns"
       :data="data"

@@ -15,13 +15,19 @@ const emit = defineEmits<Emits>();
 
 const model = defineModel<Api.Task.TaskExecutionRecordSearchParams>('model', { required: true });
 
+const props = defineProps<{
+  statusOptions?: { label: string; value: string }[];
+}>();
+
 const defaultModel = jsonClone(toRaw(model.value));
 
-const statusOptions = [
+const defaultStatusOptions = [
   { label: '已完成', value: 'completed' },
   { label: '已失败', value: 'failed' },
   { label: '已取消', value: 'cancelled' }
 ];
+
+const statusOptions = computed(() => props.statusOptions ?? defaultStatusOptions);
 
 const sourceOptions = [
   { label: '平台定时', value: 'platform_schedule' },
