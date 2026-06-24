@@ -35,3 +35,4 @@
 - [2026-06-19 地图编辑器电子围栏](./2026-06-19_map-editor-electronic-fence.md) — 右键新增电子围栏（红色矩形），多个围栏 OR 语义，后端 nav_image 反向涂黑围栏外区域
 - [2026-06-22 任务管理移除播报次数配置](./2026-06-22_task-remove-broadcast-count.md) — 播报类型任务只保留播报文本，后端字段保留兼容历史数据
 - [2026-06-23 settings 权限/滚动 + 任务多动作 + 独立执行记录表](./2026-06-23_settings-and-task-multi-action-execution-record.md) — settings 统一 robot:config:edit、表单可折叠、点位多动作(JSON)、新建 task_execution_record 表存储快照
+- [2026-06-24 定时扫描调度任务并自动启动/恢复执行](./2026-06-24_task-schedule-scan.md) — 每分钟扫描 schedule_enabled+enabled 的任务，命中 schedule_start_time+repeat_cycle/date 则恢复 paused 或新建执行（source=platform_schedule）
