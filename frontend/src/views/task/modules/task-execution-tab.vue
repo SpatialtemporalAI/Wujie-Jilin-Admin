@@ -51,12 +51,6 @@ const statusOptions = [
   { label: '已暂停', value: 'paused' }
 ];
 
-const sourceLabelMap: Record<string, string> = {
-  platform_schedule: '平台定时',
-  voice_trigger: '语音触发',
-  manual: '手动'
-};
-
 const columns = [
   {
     key: 'task_name',
@@ -104,15 +98,6 @@ const columns = [
     align: 'center' as const,
     width: 140,
     render: (row: Api.Task.TaskExecutionRecord) => <span>{row.scene_name || '-'}</span>
-  },
-  {
-    key: 'source',
-    title: '触发源',
-    align: 'center' as const,
-    width: 100,
-    render: (row: Api.Task.TaskExecutionRecord) => (
-      <span>{sourceLabelMap[row.source] || row.source}</span>
-    )
   },
   {
     key: 'progress_per',

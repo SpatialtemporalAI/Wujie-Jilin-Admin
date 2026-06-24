@@ -29,12 +29,6 @@ const defaultStatusOptions = [
 
 const statusOptions = computed(() => props.statusOptions ?? defaultStatusOptions);
 
-const sourceOptions = [
-  { label: '平台定时', value: 'platform_schedule' },
-  { label: '语音触发', value: 'voice_trigger' },
-  { label: '手动', value: 'manual' }
-];
-
 const mapOptions = ref<{ label: string; value: number }[]>([]);
 const robotOptions = ref<{ label: string; value: number; map_id: number | null }[]>([]);
 
@@ -89,9 +83,6 @@ onMounted(() => {
       <NGrid responsive="screen" item-responsive>
         <NFormItemGi span="24 s:12 m:6" label="执行状态" path="status" class="pr-24px">
           <NSelect v-model:value="model.status" :options="statusOptions" placeholder="请选择状态" clearable />
-        </NFormItemGi>
-        <NFormItemGi span="24 s:12 m:6" label="触发源" path="source" class="pr-24px">
-          <NSelect v-model:value="model.source" :options="sourceOptions" placeholder="请选择触发源" clearable />
         </NFormItemGi>
         <NFormItemGi span="24 s:12 m:6" label="场景地图" path="scene_id" class="pr-24px">
           <NSelect

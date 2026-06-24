@@ -41,12 +41,6 @@ const taskTypeLabel: Record<string, string> = {
   broadcast: '播报'
 };
 
-const sourceLabelMap: Record<string, string> = {
-  platform_schedule: '平台定时',
-  voice_trigger: '语音触发',
-  manual: '手动'
-};
-
 /** 详情抽屉 */
 const detailDrawerVisible = ref(false);
 const detailExecId = ref<number | null>(null);
@@ -150,15 +144,6 @@ const {
       align: 'center',
       width: 170,
       render: (row: Api.Task.TaskExecutionRecord) => <span>{row.finish_time || '-'}</span>
-    },
-    {
-      key: 'source',
-      title: '触发源',
-      align: 'center',
-      width: 100,
-      render: (row: Api.Task.TaskExecutionRecord) => (
-        <span>{sourceLabelMap[row.source] || row.source}</span>
-      )
     },
     {
       key: 'operate',
