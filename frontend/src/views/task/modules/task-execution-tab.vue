@@ -62,15 +62,15 @@ const columns = [
       <span>{row.task_definition?.task_name || '-'}</span>
     )
   },
-  {
-    key: 'task_id',
-    title: '任务ID',
-    align: 'center' as const,
-    width: 120,
-    render: (row: Api.Task.TaskExecutionRecord) => (
-      <span>{row.task_id === null || row.task_id === undefined ? '-' : row.task_id}</span>
-    )
-  },
+  // {
+  //   key: 'task_id',
+  //   title: '任务ID',
+  //   align: 'center' as const,
+  //   width: 120,
+  //   render: (row: Api.Task.TaskExecutionRecord) => (
+  //     <span>{row.task_id === null || row.task_id === undefined ? '-' : row.task_id}</span>
+  //   )
+  // },
   {
     key: 'task_type',
     title: '任务类型',
@@ -222,22 +222,10 @@ onUnmounted(() => {
 
 <template>
   <div class="min-h-500px flex-col-stretch gap-12px overflow-hidden lt-sm:overflow-auto">
-    <TaskHistorySearch
-      v-model:model="searchParams"
-      :status-options="statusOptions"
-      @search="handleSearch"
-      @reset="handleSearch"
-    />
-    <NDataTable
-      :columns="columns"
-      :data="data"
-      size="small"
-      :flex-height="!appStore.isMobile"
-      :scroll-x="1320"
-      :loading="loading"
-      remote
-      :row-key="(row: Api.Task.TaskExecutionRecord) => row.id"
-      :pagination="{
+    <TaskHistorySearch v-model:model="searchParams" :status-options="statusOptions" @search="handleSearch"
+      @reset="handleSearch" />
+    <NDataTable :columns="columns" :data="data" size="small" :flex-height="!appStore.isMobile" :scroll-x="1320"
+      :loading="loading" remote :row-key="(row: Api.Task.TaskExecutionRecord) => row.id" :pagination="{
         page: page,
         pageSize: pageSize,
         itemCount: total,
@@ -245,9 +233,7 @@ onUnmounted(() => {
         pageSizes: [10, 20, 50],
         onChange: handlePageChange,
         onUpdatePageSize: handlePageSizeChange
-      }"
-      class="sm:flex-1-hidden"
-    />
+      }" class="sm:flex-1-hidden" />
   </div>
 </template>
 

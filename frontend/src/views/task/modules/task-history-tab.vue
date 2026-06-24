@@ -83,15 +83,15 @@ const {
         <span>{row.task_definition?.task_name || '-'}</span>
       )
     },
-    {
-      key: 'task_id',
-      title: '任务ID',
-      align: 'center',
-      width: 120,
-      render: (row: Api.Task.TaskExecutionRecord) => (
-        <span>{row.task_id === null || row.task_id === undefined ? '-' : row.task_id}</span>
-      )
-    },
+    // {
+    //   key: 'task_id',
+    //   title: '任务ID',
+    //   align: 'center',
+    //   width: 120,
+    //   render: (row: Api.Task.TaskExecutionRecord) => (
+    //     <span>{row.task_id === null || row.task_id === undefined ? '-' : row.task_id}</span>
+    //   )
+    // },
     {
       key: 'task_type',
       title: '任务类型',
@@ -165,30 +165,13 @@ const {
   <div class="min-h-500px flex-col-stretch gap-12px overflow-hidden lt-sm:overflow-auto">
     <TaskHistorySearch v-model:model="searchParams" @search="getDataByPage" @reset="getDataByPage" />
     <div>
-      <TableHeaderOperation
-        v-model:columns="columnChecks"
-        :loading="loading"
-        :show-add="false"
-        :show-delete="false"
-        @refresh="getData"
-      />
+      <TableHeaderOperation v-model:columns="columnChecks" :loading="loading" :show-add="false" :show-delete="false"
+        @refresh="getData" />
     </div>
-    <NDataTable
-      :columns="columns"
-      :data="data"
-      size="small"
-      :flex-height="!appStore.isMobile"
-      :scroll-x="1320"
-      :loading="loading"
-      remote
-      :row-key="(row: Api.Task.TaskExecutionRecord) => row.id"
-      :pagination="mobilePagination"
-      class="sm:flex-1-hidden"
-    />
-    <TaskDetailDrawer
-      v-model:visible="detailDrawerVisible"
-      :exec-id="detailExecId"
-    />
+    <NDataTable :columns="columns" :data="data" size="small" :flex-height="!appStore.isMobile" :scroll-x="1320"
+      :loading="loading" remote :row-key="(row: Api.Task.TaskExecutionRecord) => row.id" :pagination="mobilePagination"
+      class="sm:flex-1-hidden" />
+    <TaskDetailDrawer v-model:visible="detailDrawerVisible" :exec-id="detailExecId" />
   </div>
 </template>
 
