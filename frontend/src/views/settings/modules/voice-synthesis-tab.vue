@@ -20,6 +20,8 @@ const loading = ref(false);
 const saving = ref(false);
 const robotLoading = ref(false);
 const showAlert = ref(false);
+const wakeWordTestText = ref('');
+let wakeWordTestTimer: ReturnType<typeof setTimeout> | null = null;
 
 const robotList = ref<Api.Robot.Robot[]>([]);
 const selectedRobotId = ref<number | null>(null);
@@ -143,6 +145,11 @@ async function handleTestWakeWord() {
     const { error } = await fetchTestWakeWord(model.wake_word);
     if (!error) {
       message.success('测试指令已下发');
+      wakeWordTestText.value = `${model.wake_word}在呢，有什么可以帮您？`;
+      if (wakeWordTestTimer) clearTimeout(wakeWordTestTimer);
+      wakeWordTestTimer = setTimeout(() => {
+        wakeWordTestText.value = '';
+      }, 5000);
     }
   } catch (err) {
     console.error('测试唤醒词失败:', err);
@@ -241,7 +248,7 @@ onMounted(() => {
                 />
               </NFormItemGi>
               <NFormItemGi v-if="!faceWakeEnabled">
-                <NSpace>
+                <NSpace align="center">
                   <NButton
                     v-if="hasAuth('robot:config:edit')"
                     type="primary"
@@ -251,6 +258,9 @@ onMounted(() => {
                   >
                     测试
                   </NButton>
+                  <NText v-if="wakeWordTestText" type="info" class="text-14px">
+                    {{ wakeWordTestText }}
+                  </NText>
                 </NSpace>
               </NFormItemGi>
             </NGrid>

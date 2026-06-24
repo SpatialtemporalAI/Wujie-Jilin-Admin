@@ -38,3 +38,4 @@
 - [2026-06-24 定时扫描调度任务并自动启动/恢复执行](./2026-06-24_task-schedule-scan.md) — 每分钟扫描 schedule_enabled+enabled 的任务，命中 schedule_start_time+repeat_cycle/date 则恢复 paused 或新建执行（source=platform_schedule）
 - [2026-06-24 voice.proto 拆分为唤醒词 + 语音合成两个 RPC](./2026-06-24_voice-proto-split-wakeword-tts.md) — `NotifyVoiceConfigChanged` 拆为 `NotifyWakeWordChanged` + `NotifyTTSConfigChanged`，message 与字段按职责分离
 - [2026-06-24 语音合成语速参数改为 0.5-2 浮点 + slider 样式优化](./2026-06-24_tts-speed-float-range.md) — tts_speed 全栈 int(0-100)→float(0.5-2.0, step 0.1)，含 DB 迁移与 voice_pb2 二进制手改
+- [2026-06-24 唤醒词测试显示模拟回应话术 + proto 新增测试 RPC](./2026-06-24_voice-test-wakeword-response.md) — 点击测试在按钮右侧显示「<唤醒词>在呢，有什么可以帮您？」；voice.proto 新增 TestWakeWord / TestTTSConfig 两个 RPC
