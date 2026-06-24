@@ -219,15 +219,17 @@ onMounted(() => {
           <NCard title="唤醒词配置" size="small">
             <NGrid responsive="screen" :cols="1">
               <NFormItemGi label="人脸识别（免唤醒）">
-                <NSwitch v-model:value="faceWakeEnabled" />
-                <span class="ml-8px text-gray-400">
-                  {{ faceWakeEnabled ? '已开启' : '已关闭' }}
-                </span>
-              </NFormItemGi>
-              <NFormItemGi label="说明" :show-label="false">
-                <NText depth="3" class="text-13px leading-relaxed">
-                  关闭时通过唤醒词与机器人交互；开启时检测到人脸可直接唤醒机器人，无需唤醒词
-                </NText>
+                <div class="flex-col gap-4px">
+                  <div>
+                    <NSwitch v-model:value="faceWakeEnabled" />
+                    <span class="ml-8px text-gray-400">
+                      {{ faceWakeEnabled ? '已开启' : '已关闭' }}
+                    </span>
+                  </div>
+                  <NText depth="3" class="text-13px leading-relaxed">
+                    关闭时通过唤醒词与机器人交互；开启时检测到人脸可直接唤醒机器人，无需唤醒词
+                  </NText>
+                </div>
               </NFormItemGi>
               <NFormItemGi v-if="!faceWakeEnabled" label="唤醒词" path="wake_word">
                 <NInput
