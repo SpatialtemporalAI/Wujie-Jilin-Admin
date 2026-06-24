@@ -21,11 +21,11 @@ export function fetchSaveVoiceConfig(data: Api.RobotConfig.VoiceConfig) {
 }
 
 /** 测试唤醒词 */
-export function fetchTestWakeWord(text: string) {
+export function fetchTestWakeWord(data: Api.RobotConfig.TestWakeWordRequest) {
   return request<void>({
     url: '/robot/config/voice/test-wake-word',
     method: 'post',
-    data: { text }
+    data
   });
 }
 

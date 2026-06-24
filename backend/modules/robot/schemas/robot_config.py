@@ -114,6 +114,7 @@ class TestWakeWordRequest(BaseModel):
     测试唤醒词请求模型
     """
 
+    robot_id: int = Field(..., description="机器人ID")
     text: str = Field(..., description="要测试的唤醒词文本")
 
 
@@ -122,6 +123,7 @@ class TestTTSRequest(BaseModel):
     测试TTS请求模型
     """
 
+    robot_id: int = Field(..., description="机器人ID")
     voice: str = Field(..., description="音色")
     speed: float = Field(..., description="语速（0.5-2.0）", ge=0.5, le=2.0)
     volume: int = Field(..., description="音量")

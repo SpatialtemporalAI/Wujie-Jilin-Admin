@@ -37,10 +37,12 @@ declare namespace Api.RobotConfig {
   }
 
   interface TestWakeWordRequest {
+    robot_id: number;
     text: string;
   }
 
   interface TestTTSRequest {
+    robot_id: number;
     voice: string;
     speed: number;
     volume: number;

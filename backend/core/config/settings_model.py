@@ -210,4 +210,8 @@ class GrpcModel(BaseModel):
     MAP_SERVICE_ADDR: str = Field(
         "127.0.0.1:50051", description="MapService 地址 host:port"
     )
+    CONFIG_SERVICE_ADDR: str = Field(
+        "127.0.0.1:50052",
+        description="ConfigService 地址 host:port（voice/speed/battery/face 共用）",
+    )
     TIMEOUT_SECONDS: float = Field(10.0, description="单次 RPC 超时(秒)")

@@ -4,6 +4,9 @@
 """
 机器人参数配置服务
 处理语音合成配置与人脸识别TTS配置的业务逻辑
+
+DB 写入成功后会调用 gRPC 推送（ConfigService），将最新配置同步给机器人侧立即生效。
+推送采用最终一致语义：失败仅记日志，不回滚 DB、不抛异常。
 """
 import logging
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -14,6 +17,12 @@ from database.models.business.robot_voice_config import RobotVoiceConfig
 from database.models.business.robot_face_recognition import RobotFaceRecognition
 from core.exception.errors import NotFoundError
 from app.models.common.page import PageRequest, get_paginated_results
+from modules.grpc.config_client import (
+    BatteryConfigClient,
+    FaceRecognitionClient,
+    SpeedConfigClient,
+    VoiceConfigClient,
+)
 from modules.robot.schemas.robot_config import (
     RobotVoiceConfigSchema,
     RobotFaceRecognitionCreate,
@@ -63,6 +72,11 @@ class RobotConfigService:
     ) -> RobotVoiceConfig:
         """
         保存语音配置（按 robot_id upsert）
+
+        DB 写入成功后按字段变化智能推送：
+        - 唤醒词开关或内容变化 → NotifyWakeWordChanged
+        - TTS 音色/语速/音量变化 → NotifyTTSConfigChanged
+        新建记录时全量推送。
         """
         try:
             logger.info("保存语音配置，请求数据: %s", schema.model_dump(exclude_none=True))
@@ -74,6 +88,22 @@ class RobotConfigService:
             )
             existing = result.scalar_one_or_none()
 
+            # 计算字段变化（用于决定调哪些 gRPC）
+            changed = {"wake", "tts"}  # 新建时全推
+            if existing:
+                changed = set()
+                if (
+                    existing.wake_word_enabled != schema.wake_word_enabled
+                    or (existing.wake_word or "") != (schema.wake_word or "")
+                ):
+                    changed.add("wake")
+                if (
+                    existing.tts_voice != schema.tts_voice
+                    or existing.tts_speed != schema.tts_speed
+                    or existing.tts_volume != schema.tts_volume
+                ):
+                    changed.add("tts")
+
             if existing:
                 existing.wake_word_enabled = schema.wake_word_enabled
                 existing.wake_word = schema.wake_word
@@ -83,7 +113,7 @@ class RobotConfigService:
                 await db.commit()
                 await db.refresh(existing)
                 logger.info("更新语音配置成功，ID: %d", existing.id)
-                return existing
+                saved = existing
             else:
                 config = RobotVoiceConfig(
                     robot_id=schema.robot_id,
@@ -97,7 +127,24 @@ class RobotConfigService:
                 await db.commit()
                 await db.refresh(config)
                 logger.info("创建语音配置成功，ID: %d", config.id)
-                return config
+                saved = config
+
+            # DB 已落库，下面是尽力推送（_dispatch 内部已吞异常）
+            if "wake" in changed:
+                await VoiceConfigClient.notify_wake_word(
+                    robot_id=saved.robot_id,
+                    wake_word_enabled=saved.wake_word_enabled,
+                    wake_word=saved.wake_word or "",
+                )
+            if "tts" in changed:
+                await VoiceConfigClient.notify_tts(
+                    robot_id=saved.robot_id,
+                    tts_voice=saved.tts_voice,
+                    tts_speed=saved.tts_speed,
+                    tts_volume=saved.tts_volume,
+                )
+
+            return saved
 
         except Exception as e:
             await db.rollback()
@@ -179,6 +226,13 @@ class RobotConfigService:
             await db.commit()
             await db.refresh(face)
             logger.info("创建人脸识别TTS配置成功，ID: %d", face.id)
+            # 推送新增人员（全量字段）
+            await FaceRecognitionClient.notify_create(
+                face_id=face.id,
+                person_name=face.person_name,
+                photo_url=face.photo_url,
+                broadcast_text=face.broadcast_text,
+            )
             return face
         except Exception as e:
             await db.rollback()
@@ -205,6 +259,13 @@ class RobotConfigService:
             await db.commit()
             await db.refresh(face)
             logger.info("更新人脸识别TTS配置成功，ID: %d", face.id)
+            # 推送更新（全量字段）
+            await FaceRecognitionClient.notify_update(
+                face_id=face.id,
+                person_name=face.person_name,
+                photo_url=face.photo_url,
+                broadcast_text=face.broadcast_text,
+            )
             return face
         except NotFoundError:
             raise
@@ -224,6 +285,8 @@ class RobotConfigService:
             face.soft_delete()
             await db.commit()
             logger.info("删除人脸识别TTS配置成功，ID: %d", face_id)
+            # 推送删除（仅需 face_id）
+            await FaceRecognitionClient.notify_delete(face_id=face_id)
             return True
         except NotFoundError:
             raise
@@ -249,6 +312,10 @@ class RobotConfigService:
             robot.speed_level = speed_level
             await db.commit()
             await db.refresh(robot)
+            # 推送速度等级变更
+            await SpeedConfigClient.notify_speed_level(
+                robot_id=robot_id, speed_level=speed_level or ""
+            )
             return robot
         except NotFoundError:
             raise
@@ -272,6 +339,10 @@ class RobotConfigService:
             robot.battery_threshold = battery_threshold
             await db.commit()
             await db.refresh(robot)
+            # 推送电量阈值变更
+            await BatteryConfigClient.notify_battery_threshold(
+                robot_id=robot_id, battery_threshold=battery_threshold
+            )
             return robot
         except NotFoundError:
             raise

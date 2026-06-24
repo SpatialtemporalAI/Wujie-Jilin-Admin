@@ -5,6 +5,10 @@ gRPC channel 单例管理
 - get_map_service_addr() / set_map_service_addr(addr) 用于读写当前地址
 - 切换地址会关闭旧 channel 并清空 stub 缓存，下次 RPC 自动按新地址重建
 - 仅内存级覆盖，重启后回到 .env 配置
+
+ConfigService（voice/speed/battery/face）使用独立的 channel：
+- get_config_channel() 通过 ConfigServiceAddrProvider 获取地址
+- 默认从 settings.GRPC.CONFIG_SERVICE_ADDR 读取，将来可注入数据库实现
 """
 import asyncio
 import logging
@@ -12,12 +16,18 @@ import logging
 import grpc
 
 from core.config import settings
+from modules.grpc.addr_provider import get_config_addr_provider
 
 logger = logging.getLogger(__name__)
 
 _channel: grpc.aio.Channel | None = None
 _override_addr: str | None = None
 _reconfigure_lock = asyncio.Lock()
+
+# ConfigService 独立 channel（与 MapService 解耦，地址来自 Provider）
+_config_channel: grpc.aio.Channel | None = None
+_config_channel_addr: str | None = None
+_config_reconfigure_lock = asyncio.Lock()
 
 
 def get_map_service_addr() -> str:
@@ -75,9 +85,43 @@ async def set_map_service_addr(addr: str) -> str:
 
 async def close_channel() -> None:
     """关闭并清理 channel，供应用 shutdown 时调用"""
-    global _channel, _override_addr
+    global _channel, _override_addr, _config_channel, _config_channel_addr
     async with _reconfigure_lock:
         if _channel is not None:
             await _channel.close()
             _channel = None
             logger.info("grpc channel closed")
+    async with _config_reconfigure_lock:
+        if _config_channel is not None:
+            await _config_channel.close()
+            _config_channel = None
+            _config_channel_addr = None
+            logger.info("grpc config channel closed")
+
+
+async def get_config_channel() -> grpc.aio.Channel:
+    """获取（惰性创建）ConfigService 单例 gRPC aio Channel
+
+    地址由 ConfigServiceAddrProvider 提供（默认 settings，可注入数据库实现）。
+    若 Provider 返回的地址与缓存不一致，关闭旧 channel 并重建。
+    """
+    global _config_channel, _config_channel_addr
+    provider = get_config_addr_provider()
+    addr = await provider.get_addr()
+    if _config_channel is not None and _config_channel_addr == addr:
+        return _config_channel
+    async with _config_reconfigure_lock:
+        # 双检锁：进入锁后再核对一次
+        if _config_channel is not None and _config_channel_addr == addr:
+            return _config_channel
+        if _config_channel is not None:
+            await _config_channel.close()
+            logger.info(
+                "grpc config channel closed for reconfigure: %s -> %s",
+                _config_channel_addr,
+                addr,
+            )
+        logger.info("create grpc.aio.insecure_channel config addr=%s", addr)
+        _config_channel = grpc.aio.insecure_channel(addr)
+        _config_channel_addr = addr
+        return _config_channel

@@ -133,6 +133,10 @@ async function handleSaveVoice() {
 }
 
 async function handleTestWakeWord() {
+  if (!selectedRobotId.value) {
+    message.warning('请先选择机器人');
+    return;
+  }
   if (faceWakeEnabled.value) {
     message.warning('人脸识别免唤醒模式下无需测试唤醒词');
     return;
@@ -142,7 +146,10 @@ async function handleTestWakeWord() {
     return;
   }
   try {
-    const { error } = await fetchTestWakeWord(model.wake_word);
+    const { error } = await fetchTestWakeWord({
+      robot_id: model.robot_id,
+      text: model.wake_word
+    });
     if (!error) {
       message.success('测试指令已下发');
       wakeWordTestText.value = `${model.wake_word}在呢，有什么可以帮您？`;
@@ -157,8 +164,13 @@ async function handleTestWakeWord() {
 }
 
 async function handleTestTTS() {
+  if (!selectedRobotId.value) {
+    message.warning('请先选择机器人');
+    return;
+  }
   try {
     const { error } = await fetchTestTTS({
+      robot_id: model.robot_id,
       voice: model.tts_voice,
       speed: model.tts_speed,
       volume: model.tts_volume,

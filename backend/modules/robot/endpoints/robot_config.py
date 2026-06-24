@@ -34,6 +34,7 @@ from modules.robot.schemas.robot_config import (
     RobotSpeedLevelUpdate,
     RobotBatteryThresholdUpdate,
 )
+from modules.grpc.config_client import VoiceConfigClient
 
 logger = logging.getLogger(__name__)
 
@@ -102,11 +103,16 @@ async def test_wake_word(
     body: TestWakeWordRequest,
     db: AsyncSession = Depends(get_session),
 ):
-    """
-    测试唤醒词（空壳端点）
-    """
-    logger.info("测试唤醒词接口被调用，文本: %s", body.text)
-    return response_base.success(msg="测试指令已下发")
+    """测试唤醒词（调用 gRPC TestWakeWord，让机器人按当前唤醒词模拟一次响应）"""
+    logger.info(
+        "测试唤醒词接口被调用，robot_id: %d, 文本: %s", body.robot_id, body.text
+    )
+    resp = await VoiceConfigClient.test_wake_word(
+        robot_id=body.robot_id, wake_word=body.text
+    )
+    if resp.success:
+        return response_base.success(msg=resp.message or "测试指令已下发")
+    return response_base.fail(msg=resp.message or "设备未响应")
 
 
 @robot_config_router.post(
@@ -118,11 +124,20 @@ async def test_tts(
     body: TestTTSRequest,
     db: AsyncSession = Depends(get_session),
 ):
-    """
-    测试TTS语音合成（空壳端点）
-    """
-    logger.info("测试TTS接口被调用，音色: %s", body.voice)
-    return response_base.success(msg="测试指令已下发")
+    """测试TTS语音合成（调用 gRPC TestTTSConfig，按指定参数播报测试文本）"""
+    logger.info(
+        "测试TTS接口被调用，robot_id: %d, 音色: %s", body.robot_id, body.voice
+    )
+    resp = await VoiceConfigClient.test_tts(
+        robot_id=body.robot_id,
+        tts_voice=body.voice,
+        tts_speed=body.speed,
+        tts_volume=body.volume,
+        text=body.text,
+    )
+    if resp.success:
+        return response_base.success(msg=resp.message or "测试指令已下发")
+    return response_base.fail(msg=resp.message or "设备未响应")
 
 
 # ==================== 人脸识别TTS配置 ====================
