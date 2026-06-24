@@ -29,7 +29,7 @@ const model = reactive<Api.RobotConfig.VoiceConfig>({
   wake_word_enabled: false,
   wake_word: '',
   tts_voice: 'female',
-  tts_speed: 50,
+  tts_speed: 1.0,
   tts_volume: 80
 });
 
@@ -263,12 +263,30 @@ onMounted(() => {
                 <NSelect v-model:value="model.tts_voice" :options="voiceOptions" placeholder="请选择音色" />
               </NFormItemGi>
               <NFormItemGi label="语速">
-                <NSlider v-model:value="model.tts_speed" :min="0" :max="100" :step="1" />
-                <span class="ml-8px">{{ model.tts_speed }}</span>
+                <div class="flex-col gap-8px w-full">
+                  <NSlider
+                    v-model:value="model.tts_speed"
+                    :min="0.5"
+                    :max="2"
+                    :step="0.1"
+                    :tooltip="false"
+                    :marks="{ 0.5: '0.5', 1: '1.0', 1.5: '1.5', 2: '2.0' }"
+                  />
+                  <span class="text-13px text-gray-400">当前语速：{{ model.tts_speed.toFixed(1) }} 倍</span>
+                </div>
               </NFormItemGi>
               <NFormItemGi label="音量">
-                <NSlider v-model:value="model.tts_volume" :min="0" :max="100" :step="1" />
-                <span class="ml-8px">{{ model.tts_volume }}</span>
+                <div class="flex-col gap-8px w-full">
+                  <NSlider
+                    v-model:value="model.tts_volume"
+                    :min="0"
+                    :max="100"
+                    :step="1"
+                    :tooltip="false"
+                    :marks="{ 0: '0', 50: '50', 100: '100' }"
+                  />
+                  <span class="text-13px text-gray-400">当前音量：{{ model.tts_volume }}</span>
+                </div>
               </NFormItemGi>
               <NFormItemGi>
                 <NSpace>

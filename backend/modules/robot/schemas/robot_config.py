@@ -27,7 +27,7 @@ class RobotVoiceConfigSchema(BaseReqEntity):
     wake_word_enabled: bool = Field(default=False, description="是否启用唤醒词")
     wake_word: Optional[str] = Field(default=None, description="唤醒词", max_length=20)
     tts_voice: str = Field(..., description="音色", max_length=50)
-    tts_speed: int = Field(..., description="语速")
+    tts_speed: float = Field(..., description="语速（0.5-2.0，步长 0.1）", ge=0.5, le=2.0)
     tts_volume: int = Field(..., description="音量")
 
     @model_validator(mode="after")
@@ -58,7 +58,7 @@ class RobotVoiceConfigResponse(BaseRespEntity):
     wake_word_enabled: Optional[bool] = Field(None, description="是否启用唤醒词")
     wake_word: Optional[str] = Field(None, description="唤醒词")
     tts_voice: Optional[str] = Field(None, description="音色")
-    tts_speed: Optional[int] = Field(None, description="语速")
+    tts_speed: Optional[float] = Field(None, description="语速（0.5-2.0）")
     tts_volume: Optional[int] = Field(None, description="音量")
     created_at: Optional[datetime] = Field(None, description="创建时间")
     updated_at: Optional[datetime] = Field(None, description="更新时间")
@@ -123,7 +123,7 @@ class TestTTSRequest(BaseModel):
     """
 
     voice: str = Field(..., description="音色")
-    speed: int = Field(..., description="语速")
+    speed: float = Field(..., description="语速（0.5-2.0）", ge=0.5, le=2.0)
     volume: int = Field(..., description="音量")
     text: str = Field(..., description="要播报的文本")
 

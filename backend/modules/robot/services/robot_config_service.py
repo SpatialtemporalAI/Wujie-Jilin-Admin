@@ -49,7 +49,7 @@ class RobotConfigService:
                     wake_word_enabled=False,
                     wake_word="",
                     tts_voice="female",
-                    tts_speed=50,
+                    tts_speed=1.0,
                     tts_volume=80,
                 )
             return config
