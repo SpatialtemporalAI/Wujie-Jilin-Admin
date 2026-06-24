@@ -275,38 +275,17 @@ async function handlePauseTask(taskId: number) {
 </script>
 
 <template>
-  <div class="min-h-500px flex-col-stretch gap-12px overflow-hidden lt-sm:overflow-auto">
+  <div class="h-full flex-col-stretch gap-12px overflow-hidden lt-sm:overflow-auto">
     <TaskSearch v-model:model="searchParams" @search="getDataByPage" @reset="getDataByPage" />
     <div>
-      <TableHeaderOperation
-        v-model:columns="columnChecks"
-        :disabled-delete="checkedRowKeys.length === 0"
-        :loading="loading"
-        add-auth="task:add"
-        :show-delete="false"
-        @add="handleAdd"
-        @refresh="getData"
-      />
+      <TableHeaderOperation v-model:columns="columnChecks" :disabled-delete="checkedRowKeys.length === 0"
+        :loading="loading" add-auth="task:add" :show-delete="false" @add="handleAdd" @refresh="getData" />
     </div>
-    <NDataTable
-      v-model:checked-row-keys="checkedRowKeys"
-      :columns="columns"
-      :data="data"
-      size="small"
-      :flex-height="!appStore.isMobile"
-      :scroll-x="1200"
-      :loading="loading"
-      remote
-      :row-key="(row: Api.Task.Task) => row.id"
-      :pagination="mobilePagination"
-      class="sm:flex-1-hidden"
-    />
-    <TaskOperateDrawer
-      v-model:visible="drawerVisible"
-      :operate-type="operateType"
-      :row-data="editingData"
-      @submitted="getDataByPage"
-    />
+    <NDataTable v-model:checked-row-keys="checkedRowKeys" :columns="columns" :data="data" size="small"
+      :flex-height="!appStore.isMobile" :scroll-x="1200" :loading="loading" remote
+      :row-key="(row: Api.Task.Task) => row.id" :pagination="mobilePagination" class="sm:flex-1-hidden" />
+    <TaskOperateDrawer v-model:visible="drawerVisible" :operate-type="operateType" :row-data="editingData"
+      @submitted="getDataByPage" />
   </div>
 </template>
 

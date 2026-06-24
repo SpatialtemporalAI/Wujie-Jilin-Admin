@@ -221,7 +221,7 @@ onUnmounted(() => {
 </script>
 
 <template>
-  <div class="min-h-500px flex-col-stretch gap-12px overflow-hidden lt-sm:overflow-auto">
+  <div class="h-full flex-col-stretch gap-12px overflow-hidden lt-sm:overflow-auto">
     <TaskHistorySearch v-model:model="searchParams" :status-options="statusOptions" @search="handleSearch"
       @reset="handleSearch" />
     <NDataTable :columns="columns" :data="data" size="small" :flex-height="!appStore.isMobile" :scroll-x="1320"

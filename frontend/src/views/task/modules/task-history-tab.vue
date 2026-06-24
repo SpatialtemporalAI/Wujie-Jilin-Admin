@@ -162,7 +162,7 @@ const {
 </script>
 
 <template>
-  <div class="min-h-500px flex-col-stretch gap-12px overflow-hidden lt-sm:overflow-auto">
+  <div class="h-full flex-col-stretch gap-12px overflow-hidden lt-sm:overflow-auto">
     <TaskHistorySearch v-model:model="searchParams" @search="getDataByPage" @reset="getDataByPage" />
     <div>
       <TableHeaderOperation v-model:columns="columnChecks" :loading="loading" :show-add="false" :show-delete="false"
