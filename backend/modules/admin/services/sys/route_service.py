@@ -95,6 +95,23 @@ class RouteService:
         )
 
     @staticmethod
+    def _find_first_leaf_route_name(
+        routes: List[MenuRouteResponse],
+    ) -> Optional[str]:
+        """按菜单顺序递归查找第一个可访问的叶子路由名（组件含 `view.` 的页面）。
+
+        用于动态决定登录后的默认访问页，避免始终硬编码为 "home"。
+        """
+        for route in routes:
+            if route.component and "view." in route.component:
+                return route.name
+            if route.children:
+                child = RouteService._find_first_leaf_route_name(route.children)
+                if child:
+                    return child
+        return None
+
+    @staticmethod
     async def get_user_routes(
         db: AsyncSession, user: SysUser
     ) -> UserRouteResponse:
@@ -135,7 +152,8 @@ class RouteService:
                 m.permission for m in btn_result.scalars().all() if m.permission
             ]
             routes = [RouteService._menu_to_route(menu) for menu in menus]
-            return UserRouteResponse(routes=routes, home="home", buttons=buttons)
+            home = RouteService._find_first_leaf_route_name(routes) or "home"
+            return UserRouteResponse(routes=routes, home=home, buttons=buttons)
         else:
             # 预加载 user.roles.menus
             stmt = (
@@ -221,7 +239,8 @@ class RouteService:
             routes = [
                 RouteService._menu_to_route(m, children_map) for m in root_menus
             ]
-            return UserRouteResponse(routes=routes, home="home", buttons=buttons)
+            home = RouteService._find_first_leaf_route_name(routes) or "home"
+            return UserRouteResponse(routes=routes, home=home, buttons=buttons)
 
     @staticmethod
     async def get_constant_routes() -> list[MenuRouteResponse]:

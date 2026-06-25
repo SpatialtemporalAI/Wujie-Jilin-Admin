@@ -32,6 +32,7 @@
 - [2026-06-24 定时扫描调度任务并自动启动/恢复执行](./business/2026-06-24_task-schedule-scan.md) — 每分钟扫描 schedule_enabled+enabled 的任务，命中调度时间则恢复或新建执行
 - [2026-06-24 场景地图主图上传接口独立权限化](./business/2026-06-24_scene-map-upload-image-endpoint.md) — 新增 /scene/map/upload-image 复用 scene:map:add/edit 权限；编辑器保存静默处理已软删 task
 - [2026-06-24 机器人管理 gRPC 配置 + UI 隐藏 + 删除/权限修复](./business/2026-06-24_robot-manage-grpc-config-and-fixes.md) — robot 表加 grpc_config JSON + robot:manage:grpc_config 权限；隐藏状态按钮/搜索框；修删除外键报错；修编辑任务触发 scene:map:list
+- [2026-06-25 登录后默认跳转权限列表第一个页面](./business/2026-06-25_login-redirect-first-permission.md) — RouteService 不再硬编码 home="home"，改为按菜单顺序取第一个叶子路由名作为首页
 
 ## 维护说明
 
