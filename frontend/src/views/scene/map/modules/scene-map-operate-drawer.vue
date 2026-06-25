@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { computed, onMounted, ref, watch } from 'vue';
+import type { UploadFileInfo } from 'naive-ui';
 import { jsonClone } from '@sa/utils';
 import { enableStatusOptions } from '@/constants/business';
 import { useNaiveForm } from '@/hooks/common/form';
@@ -111,6 +112,7 @@ function handleGroupChange(val: number | string | null) {
 /** 图片上传 */
 const uploading = ref(false);
 const imageUrl = ref('');
+const uploadFileList = ref<UploadFileInfo[]>([]);
 
 async function handleUpload({ file }: { file: { file: File } }) {
   uploading.value = true;
@@ -127,6 +129,7 @@ async function handleUpload({ file }: { file: { file: File } }) {
     }
   } finally {
     uploading.value = false;
+    uploadFileList.value = [];
   }
 }
 
@@ -232,6 +235,7 @@ onMounted(() => {
         <NFormItem label="地图图片" path="image_id">
           <div class="w-full">
             <NUpload
+              v-model:file-list="uploadFileList"
               :max="1"
               accept="image/*"
               :custom-request="handleUpload"

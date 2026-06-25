@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { computed, nextTick, onMounted, ref } from 'vue';
+import type { UploadFileInfo } from 'naive-ui';
 import { useMapEditor } from './composables/useMapEditor';
 import EditorToolbar from './modules/editor-toolbar.vue';
 import CanvasEditor from './modules/canvas-editor.vue';
@@ -138,6 +139,7 @@ const sceneFormPointX = ref<number | null>(null);
 const sceneFormPointY = ref<number | null>(null);
 const sceneFormResolution = ref(0.05);
 const sceneUploading = ref(false);
+const sceneUploadFileList = ref<UploadFileInfo[]>([]);
 
 function getScaledStartPoint() {
   const imageRect = sceneFormImageRef.value?.getBoundingClientRect();
@@ -230,6 +232,7 @@ async function handleSceneUpload({ file }: { file: { file: File | null } }) {
     }
   } finally {
     sceneUploading.value = false;
+    sceneUploadFileList.value = [];
   }
 }
 
@@ -568,7 +571,13 @@ function handleFocusAnnotation(id: number) {
         </NFormItem>
         <NFormItem v-if="sceneDialogMode === 'add'" label="场景图片">
           <div class="w-full">
-            <NUpload :max="1" accept="image/*" :custom-request="handleSceneUpload" :show-file-list="false">
+            <NUpload
+              v-model:file-list="sceneUploadFileList"
+              :max="1"
+              accept="image/*"
+              :custom-request="handleSceneUpload"
+              :show-file-list="false"
+            >
               <NButton :loading="sceneUploading" ghost>
                 <template #icon><icon-ic-round-upload /></template>
                 {{ sceneUploading ? '上传中...' : '选择图片' }}

@@ -44,6 +44,13 @@
 - `backend/modules/scene/router.py` 挂载新 router（`/scene/map-editor`）
 - `getFilePreviewUrl` 仍从 `@/service/api/file` 导入（仅根据 file id 拼预览 URL，不走权限）
 
+### 后续补丁 2：上传后无法重新上传（2026-06-24 当天）
+
+- 现象：场景地图/地图编辑器弹窗里上传图片成功后，再次点击"选择图片"无响应
+- 根因：`NUpload :max="1"` 在文件上传成功后保留内部文件计数，即使 `:show-file-list="false"` 不显示列表，下次选择仍被 `max` 拦截
+- 修复：两处上传组件（`scene-map-operate-drawer.vue` 与 `map-editor/index.vue`）都加 `v-model:file-list`，并在 `handleUpload` / `handleSceneUpload` 的 `finally` 中清空 `uploadFileList.value = []`
+- 类型：`import type { UploadFileInfo } from 'naive-ui'`
+
 ## 约束与备注
 
 - 不新增独立权限点 `scene:map:upload`，复用已有 `scene:map:add` / `scene:map:edit`
