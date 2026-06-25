@@ -1,8 +1,8 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 
-from typing import Optional
-from pydantic import Field, ConfigDict, field_serializer
+from typing import Any, Optional
+from pydantic import Field, ConfigDict, field_serializer, field_validator
 from datetime import datetime
 
 from pydantic import BaseModel
@@ -97,6 +97,22 @@ class RobotResponseData(BaseRespEntity):
     model_name: Optional[str] = Field(None, description="型号名称（关联查询）")
     created_at: datetime = Field(..., description="创建时间")
     updated_at: Optional[datetime] = Field(None, description="更新时间")
+
+    # 兜底历史脏数据：grpc_config 中 agent / middleware 子对象可能缺 host / port，
+    # 写入侧 (update_grpc_config) 已严格校验，但库里若有旧的部分结构会让整页 list
+    # 在响应序列化时 422。这里把不完整的子对象降级为 None，保住列表可用性。
+    @field_validator("grpc_config", mode="before")
+    @classmethod
+    def _sanitize_grpc_config(cls, value: Any) -> Any:
+        if not isinstance(value, dict):
+            return value
+        for key in ("agent", "middleware"):
+            sub = value.get(key)
+            if isinstance(sub, dict) and (
+                not sub.get("host") or sub.get("port") is None
+            ):
+                value[key] = None
+        return value
 
     # 覆盖 BaseRespEntity 的 status 序列化器（后者将 status 当作布尔值转 "1"/"2"），
     # 机器人状态是 online/offline/inactive 字符串枚举，需保持原值。
