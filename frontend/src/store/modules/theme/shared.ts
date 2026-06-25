@@ -257,7 +257,7 @@ export function getNaiveTheme(
     },
     Tag: {
       borderRadius: `${settings.themeRadius}px`
-    }
+    },
   };
 
   // If there are overrides, merge them with priority

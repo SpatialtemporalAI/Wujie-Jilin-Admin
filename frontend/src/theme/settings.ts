@@ -93,9 +93,11 @@ export const themeSettings: App.Theme.ThemeSetting = {
  *
  * If publish new version, use `overrideThemeSettings` to override certain theme settings
  */
-export const overrideThemeSettings: Partial<App.Theme.ThemeSetting> = {  footer: {
+export const overrideThemeSettings: Partial<App.Theme.ThemeSetting> = {
+  footer: {
     visible: false,
     fixed: false,
     height: 48,
     right: true
-  }};
+  }
+};
