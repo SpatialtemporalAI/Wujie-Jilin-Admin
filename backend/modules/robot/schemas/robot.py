@@ -32,10 +32,11 @@ class GrpcServiceConfig(BaseModel):
 
 
 class RobotGrpcConfigPayload(BaseModel):
-    """机器人 gRPC 配置载体：agent 与 middleware 两套"""
+    """机器人 gRPC 配置载体：agent / middleware / ros 三套"""
 
     agent: Optional[GrpcServiceConfig] = Field(None, description="agent 端 gRPC 配置")
     middleware: Optional[GrpcServiceConfig] = Field(None, description="middleware 端 gRPC 配置")
+    ros: Optional[GrpcServiceConfig] = Field(None, description="ros 端 gRPC 配置")
 
 
 class RobotGrpcConfigUpdate(BaseReqEntity):
@@ -92,13 +93,13 @@ class RobotResponseData(BaseRespEntity):
     speed_level: Optional[str] = Field(None, description="速度等级")
     battery_threshold: Optional[int] = Field(None, description="电量报警阈值(%)")
     grpc_config: Optional[RobotGrpcConfigPayload] = Field(
-        None, description="gRPC 配置: { agent, middleware }"
+        None, description="gRPC 配置: { agent, middleware, ros }"
     )
     model_name: Optional[str] = Field(None, description="型号名称（关联查询）")
     created_at: datetime = Field(..., description="创建时间")
     updated_at: Optional[datetime] = Field(None, description="更新时间")
 
-    # 兜底历史脏数据：grpc_config 中 agent / middleware 子对象可能缺 host / port，
+    # 兜底历史脏数据：grpc_config 中 agent / middleware / ros 子对象可能缺 host / port，
     # 写入侧 (update_grpc_config) 已严格校验，但库里若有旧的部分结构会让整页 list
     # 在响应序列化时 422。这里把不完整的子对象降级为 None，保住列表可用性。
     @field_validator("grpc_config", mode="before")
@@ -106,7 +107,7 @@ class RobotResponseData(BaseRespEntity):
     def _sanitize_grpc_config(cls, value: Any) -> Any:
         if not isinstance(value, dict):
             return value
-        for key in ("agent", "middleware"):
+        for key in ("agent", "middleware", "ros"):
             sub = value.get(key)
             if isinstance(sub, dict) and (
                 not sub.get("host") or sub.get("port") is None

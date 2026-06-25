@@ -427,7 +427,7 @@ class RobotService:
         db: AsyncSession, robot_id: int, grpc_config: RobotGrpcConfigPayload
     ) -> Robot:
         """
-        更新机器人 gRPC 配置（agent / middleware）
+        更新机器人 gRPC 配置（agent / middleware / ros）
 
         与主表单 edit 权限解耦，单独由 robot:manage:grpc_config 控制。
 

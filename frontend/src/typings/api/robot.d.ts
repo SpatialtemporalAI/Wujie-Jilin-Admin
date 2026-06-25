@@ -34,7 +34,7 @@ declare namespace Api {
     /** robot status enum */
     type RobotStatusEnum = 'online' | 'offline' | 'inactive';
 
-    /** single grpc service config (agent / middleware) */
+    /** single grpc service config (agent / middleware / ros) */
     type GrpcServiceConfig = {
       /** grpc host */
       host: string;
@@ -50,6 +50,8 @@ declare namespace Api {
       agent?: GrpcServiceConfig | null;
       /** middleware side grpc config */
       middleware?: GrpcServiceConfig | null;
+      /** ros side grpc config */
+      ros?: GrpcServiceConfig | null;
     };
 
     /** robot */
@@ -72,7 +74,7 @@ declare namespace Api {
       speed_level?: string | null;
       /** battery threshold */
       battery_threshold?: number | null;
-      /** grpc config (agent + middleware) */
+      /** grpc config (agent + middleware + ros) */
       grpc_config?: RobotGrpcConfig | null;
     };
 

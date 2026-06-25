@@ -36,6 +36,7 @@ interface ServiceFormModel {
 interface FormModel {
   agent: ServiceFormModel;
   middleware: ServiceFormModel;
+  ros: ServiceFormModel;
 }
 
 function createDefaultService(): ServiceFormModel {
@@ -45,7 +46,8 @@ function createDefaultService(): ServiceFormModel {
 function createDefaultModel(): FormModel {
   return {
     agent: createDefaultService(),
-    middleware: createDefaultService()
+    middleware: createDefaultService(),
+    ros: createDefaultService()
   };
 }
 
@@ -58,7 +60,9 @@ const rules: FormRules = {
   'agent.host': [{ required: true, message: '请输入 agent 服务地址', trigger: 'blur' }],
   'agent.port': [{ required: true, type: 'number', message: '请输入 agent 服务端口', trigger: 'blur' }],
   'middleware.host': [{ required: true, message: '请输入 middleware 服务地址', trigger: 'blur' }],
-  'middleware.port': [{ required: true, type: 'number', message: '请输入 middleware 服务端口', trigger: 'blur' }]
+  'middleware.port': [{ required: true, type: 'number', message: '请输入 middleware 服务端口', trigger: 'blur' }],
+  'ros.host': [{ required: true, message: '请输入 ros 服务地址', trigger: 'blur' }],
+  'ros.port': [{ required: true, type: 'number', message: '请输入 ros 服务端口', trigger: 'blur' }]
 };
 
 async function loadRobot(robotId: number) {
@@ -72,6 +76,7 @@ async function loadRobot(robotId: number) {
     const cfg = data.grpc_config || {};
     const a = cfg.agent;
     const m = cfg.middleware;
+    const r = cfg.ros;
     model.value = {
       agent: {
         host: a?.host ?? '',
@@ -82,6 +87,11 @@ async function loadRobot(robotId: number) {
         host: m?.host ?? '',
         port: m?.port ?? null,
         enabled: m?.enabled ?? false
+      },
+      ros: {
+        host: r?.host ?? '',
+        port: r?.port ?? null,
+        enabled: r?.enabled ?? false
       }
     };
   } finally {
@@ -111,6 +121,11 @@ async function handleSubmit() {
       host: model.value.middleware.host,
       port: Number(model.value.middleware.port),
       enabled: model.value.middleware.enabled
+    },
+    ros: {
+      host: model.value.ros.host,
+      port: Number(model.value.ros.port),
+      enabled: model.value.ros.enabled
     }
   };
 
@@ -171,6 +186,23 @@ watch(visible, val => {
           </NFormItem>
           <NFormItem label="启用">
             <NSwitch v-model:value="model.middleware.enabled" />
+          </NFormItem>
+
+          <NDivider title-placement="left">ROS</NDivider>
+          <NFormItem label="服务地址" path="ros.host">
+            <NInput v-model:value="model.ros.host" placeholder="例如 127.0.0.1" />
+          </NFormItem>
+          <NFormItem label="服务端口" path="ros.port">
+            <NInputNumber
+              v-model:value="model.ros.port"
+              placeholder="例如 50053"
+              :min="1"
+              :max="65535"
+              class="w-full"
+            />
+          </NFormItem>
+          <NFormItem label="启用">
+            <NSwitch v-model:value="model.ros.enabled" />
           </NFormItem>
         </NForm>
       </NSpin>
