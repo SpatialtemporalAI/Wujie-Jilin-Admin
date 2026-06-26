@@ -8,11 +8,8 @@ declare namespace Api {
     /** task execution status */
     type TaskStatus = 'idle' | 'running' | 'paused';
 
-    /** task execution record status */
-    type TaskExecutionStatus = 'pending' | 'running' | 'paused' | 'completed' | 'failed' | 'cancelled';
-
     /** patrol action */
-    type TaskAction = 'wave' | 'bow' | 'turn' | 'wait' | 'nod';
+    type TaskAction = 'shake_hands' | 'wave' | 'left_hand' | 'right_hand' | 'bend_no_hands' | 'bend_with_hands' | 'no';
 
     /** patrol point action item (supports multiple actions per point) */
     type TaskActionItem = {
@@ -88,38 +85,7 @@ declare namespace Api {
     /** task update */
     type TaskUpdate = Partial<TaskCreate>;
 
-    /** task execution */
-    type TaskExecution = Omit<Common.CommonRecord<object>, 'status'> & {
-      task_id: number;
-      task_name: string;
-      task_type: TaskType;
-      status: TaskExecutionStatus;
-      progress: number;
-      current_position: string | null;
-      started_at: string | null;
-      ended_at: string | null;
-      error_message: string | null;
-      robot_id: number | null;
-      robot_name: string | null;
-      map_id: number | null;
-      map_name: string | null;
-      triggered_by: string;
-    };
-
-    /** task execution search params */
-    type TaskExecutionSearchParams = CommonType.RecordNullable<
-      { task_name?: string; status?: string; robot_id?: number; map_id?: number; start_time?: string; end_time?: string } & CommonSearchParams
-    >;
-
-    /** task execution list */
-    type TaskExecutionList = Common.PaginatingQueryRecord<TaskExecution>;
-
-    /** task execution detail (with points) */
-    type TaskExecutionDetail = TaskExecution & {
-      points: TaskPoint[] | null;
-    };
-
-    /** ==================== 新版任务执行记录（TaskExecutionRecord） ==================== */
+    /** ==================== 任务执行记录（TaskExecutionRecord） ==================== */
 
     /** execution source */
     type TaskExecutionSource = 'platform_schedule' | 'voice_trigger' | 'manual';

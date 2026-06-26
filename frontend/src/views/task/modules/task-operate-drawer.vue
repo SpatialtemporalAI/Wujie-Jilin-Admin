@@ -34,11 +34,13 @@ const taskTypeOptions = [
 
 /** 运控动作选项 */
 const actionOptions = [
+  { label: '握手', value: 'shake_hands' },
   { label: '挥手', value: 'wave' },
-  { label: '鞠躬', value: 'bow' },
-  { label: '转身', value: 'turn' },
-  { label: '停留等待', value: 'wait' },
-  { label: '点头', value: 'nod' }
+  { label: '伸左手', value: 'left_hand' },
+  { label: '伸右手', value: 'right_hand' },
+  { label: '弯腰', value: 'bend_no_hands' },
+  { label: '弯腰和伸手', value: 'bend_with_hands' },
+  { label: '无动作', value: 'no' }
 ];
 
 /** 重复周期选项（星期复选框） */
@@ -197,7 +199,7 @@ function addPoint() {
     sort_order: model.value.points.length,
     point_name: null,
     annotation_id: null,
-    actions: [{ action: 'wave', voice_text: null }]
+    actions: [{ action: 'no', voice_text: null }]
   });
 }
 
@@ -210,7 +212,7 @@ function removePoint(index: number) {
 
 /** 点位内动作管理 */
 function addAction(point: PointItem) {
-  point.actions.push({ action: 'wave', voice_text: null });
+  point.actions.push({ action: 'no', voice_text: null });
 }
 
 function removeAction(point: PointItem, index: number) {
@@ -270,7 +272,7 @@ async function handleInitModel() {
         actions:
           p.actions && p.actions.length > 0
             ? p.actions.map(a => ({ action: a.action || 'wave', voice_text: a.voice_text ?? null }))
-            : [{ action: 'wave', voice_text: null }]
+            : []
       }));
     }
 
@@ -289,8 +291,8 @@ async function handleInitModel() {
             annotation_id: p.annotation_id ?? null,
             actions:
               p.actions && p.actions.length > 0
-                ? p.actions.map(a => ({ action: a.action || 'wave', voice_text: a.voice_text ?? null }))
-                : [{ action: 'wave', voice_text: null }]
+                ? p.actions.map(a => ({ action: a.action || 'no', voice_text: a.voice_text ?? null }))
+                : []
           }));
         }
       }
@@ -328,10 +330,6 @@ async function handleSubmit() {
     }
     for (let i = 0; i < model.value.points.length; i += 1) {
       const point = model.value.points[i];
-      if (!point.actions || point.actions.length === 0) {
-        window.$message?.warning(`请为点位 ${i + 1} 至少添加一个运控动作`);
-        return;
-      }
       const invalidActionIndex = point.actions.findIndex(a => !a.action);
       if (invalidActionIndex !== -1) {
         window.$message?.warning(`请选择点位 ${i + 1} 中动作 ${invalidActionIndex + 1} 的运控类型`);

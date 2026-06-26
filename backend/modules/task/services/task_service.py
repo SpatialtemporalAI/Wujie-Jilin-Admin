@@ -32,7 +32,6 @@ class TaskService:
         """构建任务查询"""
         base_query = select(Task).options(
             noload(Task.points),
-            noload(Task.executions),
             noload(Task.robots),
         )
 
@@ -65,7 +64,6 @@ class TaskService:
         """获取单个任务"""
         result = await db.execute(
             select(Task)
-            .options(noload(Task.executions))
             .where(Task.id == task_id)
             .where(Task.deleted_at.is_(None))
         )

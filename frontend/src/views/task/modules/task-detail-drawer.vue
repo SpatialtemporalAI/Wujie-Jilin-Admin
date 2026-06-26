@@ -36,7 +36,13 @@ const sourceLabelMap: Record<string, string> = {
 };
 
 const actionLabel: Record<string, string> = {
+  shake_hands: '握手',
   wave: '挥手',
+  left_hand: '伸左手',
+  right_hand: '伸右手',
+  bend_no_hands: '弯腰',
+  bend_with_hands: '弯腰和伸手',
+  no: '无动作',
   bow: '鞠躬',
   turn: '转身',
   wait: '停留等待',

@@ -34,7 +34,7 @@ def _validate_repeat_cycle(v: Optional[str]) -> Optional[str]:
 
 class TaskActionItem(BaseReqEntity):
     """巡逻点位单个动作"""
-    action: str = Field(..., description="运控动作: wave/bow/turn/wait/nod", max_length=20)
+    action: str = Field(..., description="运控动作: shake_hands/wave/left_hand/right_hand/bend_no_hands/bend_with_hands/no", max_length=20)
     voice_text: Optional[str] = Field(None, description="语音播报文本")
 
 
@@ -43,7 +43,7 @@ class TaskPointCreate(BaseReqEntity):
     sort_order: int = Field(0, description="排序")
     point_name: Optional[str] = Field(None, description="点位名称", max_length=100)
     annotation_id: Optional[int] = Field(None, description="关联场景标注ID")
-    actions: List[TaskActionItem] = Field(..., description="动作列表（支持多个）", min_length=1)
+    actions: List[TaskActionItem] = Field(default_factory=list, description="动作列表（支持多个，可为空）")
 
 
 class TaskPointResponse(BaseRespEntity):
@@ -55,7 +55,7 @@ class TaskPointResponse(BaseRespEntity):
     sort_order: int = Field(..., description="排序")
     point_name: Optional[str] = Field(None, description="点位名称")
     annotation_id: Optional[int] = Field(None, description="关联场景标注ID")
-    actions: List[TaskActionItem] = Field(..., description="动作列表")
+    actions: List[TaskActionItem] = Field(default_factory=list, description="动作列表")
 
 
 # ==================== 机器人简要 Schema ====================
@@ -150,42 +150,3 @@ class TaskResponseData(BaseEntity):
 class TaskToggleEnabled(BaseReqEntity):
     """切换启用/禁用"""
     enabled: bool = Field(..., description="启用状态")
-
-
-# ==================== 执行记录 Schema ====================
-
-class TaskExecutionQueryParams(BaseReqEntity):
-    """执行记录查询参数"""
-    task_name: Optional[str] = Field(None, description="任务名称")
-    status: Optional[str] = Field(None, description="执行状态: completed/failed/cancelled")
-    robot_id: OptionalIntField = Field(None, description="执行机器人ID")
-    map_id: OptionalIntField = Field(None, description="关联场景地图ID")
-    start_time: Optional[str] = Field(None, description="开始时间(起)")
-    end_time: Optional[str] = Field(None, description="结束时间(止)")
-
-
-class TaskExecutionResponseData(BaseEntity):
-    """执行记录响应"""
-    model_config = ConfigDict(from_attributes=True)
-
-    id: int = Field(..., description="执行记录ID")
-    task_id: int = Field(..., description="任务ID")
-    task_name: str = Field(..., description="任务名称")
-    task_type: str = Field(..., description="任务类型")
-    status: str = Field(..., description="执行状态")
-    progress: int = Field(..., description="进度百分比")
-    current_position: Optional[str] = Field(None, description="当前位置")
-    started_at: Optional[datetime] = Field(None, description="开始时间")
-    ended_at: Optional[datetime] = Field(None, description="结束时间")
-    error_message: Optional[str] = Field(None, description="错误信息")
-    robot_id: Optional[int] = Field(None, description="机器人ID")
-    robot_name: Optional[str] = Field(None, description="机器人名称")
-    map_id: Optional[int] = Field(None, description="场景地图ID")
-    map_name: Optional[str] = Field(None, description="场景地图名称")
-    triggered_by: str = Field(..., description="触发方式")
-    created_at: datetime = Field(..., description="创建时间")
-
-
-class TaskExecutionDetailResponseData(TaskExecutionResponseData):
-    """执行记录详情响应（含点位）"""
-    points: Optional[List[TaskPointResponse]] = Field(None, description="任务点位列表")
