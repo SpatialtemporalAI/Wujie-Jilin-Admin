@@ -42,7 +42,7 @@
 
 - `backend/modules/grpc/retry_service.py`
   - import 增加 `asyncio`
-  - 模块常量 `_CALL_TIMEOUT_SECONDS: float = 15.0`（单次重试硬超时）
+  - 模块常量 `_CALL_TIMEOUT_SECONDS: float = 30.0`（单次重试硬超时）
   - `_retry_one` 中 client 调用从 `await client_method(**kwargs)` 改为
     `await asyncio.wait_for(client_method(**kwargs), timeout=_CALL_TIMEOUT_SECONDS)`
   - 新增 `except asyncio.TimeoutError` 分支，与原 `except Exception`、
@@ -50,10 +50,10 @@
   - 模块 docstring 补一段说明硬超时兜底
 
 - `backend/modules/grpc/tasks/retry_failed_pushes.py`
-  - `@scheduled_task` 显式加 `timeout=800`
-  - 原默认 300s 在 pending 任务 ≥ 20 个时会被外层 `wait_for` 强制 cancel，
+  - `@scheduled_task` 显式加 `timeout=1600`
+  - 原默认 300s 在 pending 任务 ≥ 10 个时会被外层 `wait_for` 强制 cancel，
     导致内层 `_advance_fields` 没机会跑
-  - 800s = 50 task × 15s 硬超时 + 50s DB/连接开销余量
+  - 1600s = 50 task × 30s 硬超时 + 100s DB/连接开销余量
 
 ## 关键决策
 
@@ -68,11 +68,11 @@
 三种路径都通过 `_advance_fields` 推进 retry_count，按 60/120/240s 指数退避
 重新计算 next_retry_at，retry_count 达 max_retries=3 置 dead。
 
-### 内层 15s 硬超时 + 外层 800s 任务超时
+### 内层 30s 硬超时 + 外层 1600s 任务超时
 
-- 内层 15s：兜底 grpc.aio 不按 deadline 抛错的场景（对端 IP 不可达等）
-- 外层 800s：保证 50 task × 15s = 750s 不会被强制 cancel
-- 加 50s 余量覆盖 DB commit / 首次 channel 创建开销
+- 内层 30s：兜底 grpc.aio 不按 deadline 抛错的场景（对端 IP 不可达等）
+- 外层 1600s：保证 50 task × 30s = 1500s 不会被强制 cancel
+- 加 100s 余量覆盖 DB commit / 首次 channel 创建开销
 
 ### 不调整退避策略
 
@@ -92,7 +92,7 @@
 - 触发一次 voice 保存（业务层 _push_with_retry 入队）
 - 期望：
   - 入队后 status=pending, retry_count=0, next_retry_at=now+60s
-  - 60s 后调度扫描，15s 内必定 timeout，retry_count=1, next_retry_at=now+120s
+  - 60s 后调度扫描，30s 内必定 timeout，retry_count=1, next_retry_at=now+120s
   - 120s 后 retry_count=2, next_retry_at=now+240s
   - 240s 后 retry_count=3, status=dead
 
@@ -105,7 +105,7 @@
 ### 场景 3：大量 pending 任务
 
 - 入队 50+ 个 pending 任务（同 robot 不同 method，或不同 robot）
-- 期望：单次扫描 800s 内处理完所有到期任务，retry_count 各自推进
+- 期望：单次扫描 1600s 内处理完所有到期任务，retry_count 各自推进
 - 不再出现「外层 timeout 取消导致 retry_count 一直 0」
 
 ### 静态检查
@@ -114,10 +114,10 @@
 
 ## 部署注意
 
-- `@scheduled_task` 加 `timeout=800` 后，下次启动会通过
+- `@scheduled_task` 加 `timeout=1600` 后，下次启动会通过
   `seed_scheduler` → `SchedulerService.sync_registry_to_db` 自动同步到
   `sys_scheduled_task` 表（`sync_registry_to_db` 强制覆盖 timeout 字段）
-- 如已在 UI 手动调整过该任务 timeout，会被覆盖回 800
+- 如已在 UI 手动调整过该任务 timeout，会被覆盖回 1600
 
 ## 相关文件
 

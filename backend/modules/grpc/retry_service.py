@@ -37,7 +37,7 @@ _BACKOFF_SECONDS: Tuple[int, ...] = (60, 120, 240)
 
 # 单次重试的硬超时（秒）：兜底 settings.GRPC.TIMEOUT_SECONDS，
 # 防止 grpc.aio 在某些场景未按 deadline 抛错时把整个扫描卡死
-_CALL_TIMEOUT_SECONDS: float = 15.0
+_CALL_TIMEOUT_SECONDS: float = 30.0
 
 # (service_name, method_name) → (client_method_ref, required_payload_keys)
 # 用于把任务表的 service/method/payload 路由到对应 client 方法
