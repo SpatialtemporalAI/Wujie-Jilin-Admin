@@ -363,6 +363,29 @@ class TaskService:
             task_obj.enabled = enabled
             await db.commit()
             await db.refresh(task_obj)
+
+            # DB 落库后下发 gRPC 通知到机器人 agent；失败仅日志，不阻塞业务
+            assoc_result = await db.execute(
+                select(task_robot_association.c.robot_id).where(
+                    task_robot_association.c.task_id == task_id
+                )
+            )
+            robot_ids = [row[0] for row in assoc_result.all()]
+            operation = "enable" if enabled else "disable"
+            try:
+                await TaskConfigClient.broadcast_task_changed(
+                    task_id=task_id,
+                    operation=operation,
+                    robot_ids=robot_ids,
+                )
+            except Exception as exc:  # noqa: BLE001 - 推送容错
+                logger.warning(
+                    "grpc task broadcast %s failed task_id=%s err=%s",
+                    operation,
+                    task_id,
+                    exc,
+                )
+
             return task_obj
         except NotFoundError:
             await db.rollback()
