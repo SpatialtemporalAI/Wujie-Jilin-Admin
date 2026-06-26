@@ -166,8 +166,9 @@ async function handleAccountLogin(account: Account) {
         :loading="authStore.loginLoading"
         :disabled="loginDisabled"
         @click="handleSubmit"
+        class="text-16px"
       >
-        {{ $t('route.login') }}
+        {{ $t('route.loginSpace') }}
       </NButton>
       <!-- <div class="flex-y-center justify-between gap-12px">
         <NButton class="flex-1" block @click="toggleLoginModule('code-login')">

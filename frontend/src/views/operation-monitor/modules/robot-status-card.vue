@@ -73,71 +73,73 @@ const robotOptions = computed(() =>
       </NSpace>
     </div>
 
-    <NGrid v-if="selectedRobot" :x-gap="16" :y-gap="8" :cols="3" class="mt-16px">
-      <!-- 电量 -->
-      <NGi>
-        <NCard :bordered="true" size="small" class="flex items-center gap-12px">
-          <div class="flex h-40px w-40px flex-shrink-0 items-center justify-center rounded-lg" style="background-color: rgba(24,160,88,0.1)">
-            <icon-ic-round-battery-charging-full class="text-22px" style="color: #18a058" />
-          </div>
-          <div class="min-w-0 flex-1">
-            <div class="flex items-baseline gap-4px">
+    <NGrid v-if="selectedRobot" :x-gap="16" :y-gap="8" responsive="screen" item-responsive class="mt-16px">
+      <NGi span="24 s:24 m:12 l:8">
+        <NCard :bordered="true" size="small">
+          <div class="flex items-center gap-12px">
+            <div class="flex h-40px w-40px flex-shrink-0 items-center justify-center rounded-lg" style="background-color: rgba(24,160,88,0.1)">
+              <icon-ic-round-battery-charging-full class="text-22px" style="color: #18a058" />
+            </div>
+            <div class="flex items-baseline gap-4px flex-shrink-0">
               <span class="text-24px font-bold">{{ statusRecord?.battery ?? '--' }}</span>
               <span class="text-12px text-gray-400">% 电池</span>
             </div>
-            <NProgress
-              v-if="statusRecord"
-              type="line"
-              :percentage="statusRecord.battery"
-              :color="getBatteryColor(statusRecord.battery)"
-              :show-indicator="false"
-              :height="6"
-              class="mt-4px"
-            />
+            <div class="min-w-0 flex-1">
+              <NProgress
+                v-if="statusRecord"
+                type="line"
+                :percentage="statusRecord.battery"
+                :color="getBatteryColor(statusRecord.battery)"
+                :show-indicator="false"
+                :height="6"
+              />
+            </div>
           </div>
         </NCard>
       </NGi>
 
-      <!-- 信号 -->
-      <NGi>
-        <NCard :bordered="true" size="small" class="flex items-center gap-12px">
-          <div class="flex h-40px w-40px flex-shrink-0 items-center justify-center rounded-lg" style="background-color: rgba(32,128,240,0.1)">
-            <icon-ic-round-signal-cellular-alt class="text-22px" style="color: #2080f0" />
-          </div>
-          <div class="min-w-0 flex-1">
-            <div class="flex items-baseline gap-4px">
+      <NGi span="24 s:24 m:12 l:8">
+        <NCard :bordered="true" size="small">
+          <div class="flex items-center gap-12px">
+            <div class="flex h-40px w-40px flex-shrink-0 items-center justify-center rounded-lg" style="background-color: rgba(32,128,240,0.1)">
+              <icon-ic-round-signal-cellular-alt class="text-22px" style="color: #2080f0" />
+            </div>
+            <div class="flex items-baseline gap-4px flex-shrink-0">
               <span class="text-24px font-bold">{{ statusRecord?.signal ?? '--' }}</span>
               <span class="text-12px text-gray-400">% 信号</span>
             </div>
-            <span
-              v-if="statusRecord"
-              class="text-12px"
-              :style="{ color: getSignalLabel(statusRecord.signal).color }"
-            >
-              {{ getSignalLabel(statusRecord.signal).text }}
-            </span>
+            <div class="min-w-0 flex-1">
+              <span
+                v-if="statusRecord"
+                class="text-12px"
+                :style="{ color: getSignalLabel(statusRecord.signal).color }"
+              >
+                {{ getSignalLabel(statusRecord.signal).text }}
+              </span>
+            </div>
           </div>
         </NCard>
       </NGi>
 
-      <!-- 速度 -->
-      <NGi>
-        <NCard :bordered="true" size="small" class="flex items-center gap-12px">
-          <div class="flex h-40px w-40px flex-shrink-0 items-center justify-center rounded-lg" style="background-color: rgba(240,160,32,0.1)">
-            <icon-ic-round-speed class="text-22px" style="color: #f0a020" />
-          </div>
-          <div class="min-w-0 flex-1">
-            <div class="flex items-baseline gap-4px">
+      <NGi span="24 s:24 m:12 l:8">
+        <NCard :bordered="true" size="small">
+          <div class="flex items-center gap-12px">
+            <div class="flex h-40px w-40px flex-shrink-0 items-center justify-center rounded-lg" style="background-color: rgba(240,160,32,0.1)">
+              <icon-ic-round-speed class="text-22px" style="color: #f0a020" />
+            </div>
+            <div class="flex items-baseline gap-4px flex-shrink-0">
               <span class="text-24px font-bold">{{ statusRecord?.speed?.toFixed(1) ?? '0.0' }}</span>
               <span class="text-12px text-gray-400">m/s 速度</span>
             </div>
-            <span
-              v-if="statusRecord"
-              class="text-12px"
-              :style="{ color: getSpeedLabel(statusRecord.speed).color }"
-            >
-              {{ getSpeedLabel(statusRecord.speed).text }}
-            </span>
+            <div class="min-w-0 flex-1">
+              <span
+                v-if="statusRecord"
+                class="text-12px"
+                :style="{ color: getSpeedLabel(statusRecord.speed).color }"
+              >
+                {{ getSpeedLabel(statusRecord.speed).text }}
+              </span>
+            </div>
           </div>
         </NCard>
       </NGi>
