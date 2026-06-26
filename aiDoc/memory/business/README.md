@@ -27,7 +27,7 @@
 - [2026-06-11 地图编辑器机器人定位与绑定场景](./2026-06-11_map-editor-robot-location-binding.md) — 机器人总览列表支持定位与切换绑定场景
 - [2026-06-11 场景地图 JSON 点位导入](./2026-06-11_scene-map-json-import.md) — 地图编辑器支持将 label/position JSON 导入为标注点
 - [2026-06-11 机器人场景绑定可空与存量库缺列修复](./2026-06-11_robot-map-binding-nullable-fix.md) — robot.map_id 缺列自动补齐，未绑定场景不支持定位
-- [2026-06-11 地图编辑器新增场景图片与起始点位](./2026-06-11_map-editor-create-scene-image-start-point.md) — 新增场景上传图片并按原图/网页显示尺寸缩放保存起始点位
+- [2026-06-11 地图编辑器新增场景图片与扫图起始点](./2026-06-11_map-editor-create-scene-image-start-point.md) — 新增场景上传图片并按原图/网页显示尺寸缩放保存扫图起始点
 - [2026-06-17 场景地图新增导航地图图片](./2026-06-17_scene-map-nav-image.md) — 异步将障碍物/禁区绘制到原图副本生成 nav_image_id
 - [2026-06-18 NotifyMapSaved image_url HMAC 签名 URL](./2026-06-18_notify-map-saved-image-url-internal-token.md) — preview 端点改为 HMAC 签名 URL（?expires=&sig=），密钥不出后端，有时效
 - [2026-06-18 运行监控页面滚动 + 登录后底部栏隐藏](./2026-06-18_operation-monitor-scroll-and-footer-hidden.md) — operation-monitor 改为纵向滚动，主题 footer.visible 默认 false 并通过 overrideThemeSettings 强制覆盖老用户缓存

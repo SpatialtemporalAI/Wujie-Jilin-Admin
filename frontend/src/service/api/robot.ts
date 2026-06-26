@@ -105,7 +105,7 @@ export function fetchDeleteRobot(id: number) {
   });
 }
 
-/** update robot grpc config (agent + middleware) */
+/** update robot grpc config (agent + middleware + ros) */
 export function fetchUpdateRobotGrpcConfig(id: number, data: Api.Robot.RobotGrpcConfig) {
   return request<Api.Robot.Robot>({
     url: `/robot/manage/${id}/grpc-config`,

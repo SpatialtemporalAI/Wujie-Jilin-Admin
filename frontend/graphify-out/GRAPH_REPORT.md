@@ -1,16 +1,16 @@
-# Graph Report - frontend  (2026-06-24)
+# Graph Report - frontend  (2026-06-25)
 
 ## Corpus Check
-- 383 files · ~174,894 words
+- 383 files · ~175,084 words
 - Verdict: corpus is large enough that graph structure adds value.
 
 ## Summary
-- 2691 nodes · 3159 edges · 389 communities (351 shown, 38 thin omitted)
+- 2692 nodes · 3161 edges · 383 communities (345 shown, 38 thin omitted)
 - Extraction: 99% EXTRACTED · 1% INFERRED · 0% AMBIGUOUS · INFERRED: 19 edges (avg confidence: 0.8)
 - Token cost: 0 input · 0 output
 
 ## Graph Freshness
-- Built from commit: `cf0d3356`
+- Built from commit: `d0d730e1`
 - Run `git rev-parse HEAD` and compare to check if the graph is stale.
 - Run `graphify update .` after code changes (no API cost).
 
@@ -185,8 +185,6 @@
 - [[_COMMUNITY_Community 167|Community 167]]
 - [[_COMMUNITY_Community 168|Community 168]]
 - [[_COMMUNITY_Community 169|Community 169]]
-- [[_COMMUNITY_Community 170|Community 170]]
-- [[_COMMUNITY_Community 171|Community 171]]
 - [[_COMMUNITY_Community 172|Community 172]]
 - [[_COMMUNITY_Community 173|Community 173]]
 - [[_COMMUNITY_Community 174|Community 174]]
@@ -204,7 +202,6 @@
 - [[_COMMUNITY_Community 186|Community 186]]
 - [[_COMMUNITY_Community 187|Community 187]]
 - [[_COMMUNITY_Community 188|Community 188]]
-- [[_COMMUNITY_Community 189|Community 189]]
 - [[_COMMUNITY_Community 190|Community 190]]
 - [[_COMMUNITY_Community 191|Community 191]]
 - [[_COMMUNITY_Community 192|Community 192]]
@@ -217,8 +214,6 @@
 - [[_COMMUNITY_Community 199|Community 199]]
 - [[_COMMUNITY_Community 200|Community 200]]
 - [[_COMMUNITY_Community 201|Community 201]]
-- [[_COMMUNITY_Community 202|Community 202]]
-- [[_COMMUNITY_Community 203|Community 203]]
 - [[_COMMUNITY_Community 204|Community 204]]
 - [[_COMMUNITY_Community 205|Community 205]]
 - [[_COMMUNITY_Community 206|Community 206]]
@@ -238,7 +233,6 @@
 - [[_COMMUNITY_Community 220|Community 220]]
 - [[_COMMUNITY_Community 221|Community 221]]
 - [[_COMMUNITY_Community 222|Community 222]]
-- [[_COMMUNITY_Community 223|Community 223]]
 - [[_COMMUNITY_Community 224|Community 224]]
 - [[_COMMUNITY_Community 225|Community 225]]
 - [[_COMMUNITY_Community 226|Community 226]]
@@ -270,7 +264,7 @@
 - [[_COMMUNITY_Community 259|Community 259]]
 
 ## God Nodes (most connected - your core abstractions)
-1. `request` - 203 edges
+1. `request` - 204 edges
 2. `Changelog` - 74 edges
 3. `更新日志` - 24 edges
 4. `enableStatusToBoolean()` - 22 edges
@@ -293,11 +287,11 @@
 - `if()` --calls--> `dayjs`  [INFERRED]
   src/views/manage/scheduler-log/modules/task-log-search.vue → package.json
 
-## Communities (389 total, 38 thin omitted)
+## Communities (383 total, 38 thin omitted)
 
 ### Community 0 - "Community 0"
-Cohesion: 0.07
-Nodes (60): fetchCreateSceneGroup(), fetchCreateSceneMap(), fetchUpdateSceneGroup(), fetchUpdateSceneMap(), fetchAssignMenuToRole(), fetchBatchDeleteConfig(), fetchBatchDeleteIpBlacklist(), fetchBatchDeleteMenu() (+52 more)
+Cohesion: 0.08
+Nodes (51): fetchAssignMenuToRole(), fetchBatchDeleteConfig(), fetchBatchDeleteIpBlacklist(), fetchBatchDeleteMenu(), fetchBatchDeleteRole(), fetchBatchUpdateConfigs(), fetchBatchUpdateDictItemStatus(), fetchBatchUpdateDictStatus() (+43 more)
 
 ### Community 1 - "Community 1"
 Cohesion: 0.03
@@ -317,15 +311,15 @@ Nodes (43): BaseToken, Breadcrumb, ColorPaletteNumber, DemoResponse, DropdownKey
 
 ### Community 5 - "Community 5"
 Cohesion: 0.05
-Nodes (31): fixedHeaderAndTab, footerLeftGapClass, headerLeftGapClass, isContentScroll, isHorizontal, isVertical, isWrapperScroll, leftGapClass (+23 more)
+Nodes (37): fixedHeaderAndTab, footerLeftGapClass, headerLeftGapClass, isContentScroll, isHorizontal, isVertical, isWrapperScroll, leftGapClass (+29 more)
 
 ### Community 6 - "Community 6"
 Cohesion: 0.06
 Nodes (36): borderRadiusMedium, fontWeightStrong, paddingMedium, header, sider, tab, borderRadius, paddingMedium (+28 more)
 
 ### Community 7 - "Community 7"
-Cohesion: 0.07
-Nodes (30): fetchCreateMapAnnotation(), fetchCreateMapObject(), fetchCreateMapPath(), fetchDeleteMapAnnotation(), fetchDeleteMapObject(), fetchDeleteMapPath(), fetchDeleteSceneGroup(), fetchDeleteSceneMap() (+22 more)
+Cohesion: 0.08
+Nodes (28): fetchCreateMapAnnotation(), fetchCreateMapObject(), fetchCreateMapPath(), fetchCreateSceneGroup(), fetchCreateSceneMap(), fetchDeleteMapAnnotation(), fetchDeleteMapObject(), fetchDeleteMapPath() (+20 more)
 
 ### Community 8 - "Community 8"
 Cohesion: 0.06
@@ -352,8 +346,8 @@ Cohesion: 0.07
 Nodes (28): visible, desc, footer, visible, visible, header, breadcrumb, globalSearch (+20 more)
 
 ### Community 14 - "Community 14"
-Cohesion: 0.17
-Nodes (18): colorNameMap, colorNames, colorPalettes, getAntDColorPalette(), getColorPalette(), getNearestColorPaletteFamily(), getRecommendedColorPalette(), getRecommendedColorPaletteFamily() (+10 more)
+Cohesion: 0.11
+Nodes (31): colorNameMap, colorNames, colorPalettes, darkColorMap, getAntDColorPalette(), getAntDPaletteColorByIndex(), getHue(), getSaturation() (+23 more)
 
 ### Community 15 - "Community 15"
 Cohesion: 0.08
@@ -369,11 +363,11 @@ Nodes (23): 1、定制化管理后台开发, 2、企业外包服务, 3、联系�
 
 ### Community 18 - "Community 18"
 Cohesion: 0.09
-Nodes (22): Changelog, &nbsp;&nbsp;&nbsp;🐞 Bug Fixes, &nbsp;&nbsp;&nbsp;🐞 Bug Fixes, &nbsp;&nbsp;&nbsp;🐞 Bug Fixes, &nbsp;&nbsp;&nbsp;🏡 Chore, &nbsp;&nbsp;&nbsp;🏡 Chore, &nbsp;&nbsp;&nbsp;❤️ Contributors, &nbsp;&nbsp;&nbsp;❤️ Contributors (+14 more)
+Nodes (22): Changelog, &nbsp;&nbsp;&nbsp;🐞 Bug Fixes, &nbsp;&nbsp;&nbsp;🐞 Bug Fixes, &nbsp;&nbsp;&nbsp;🐞 Bug Fixes, &nbsp;&nbsp;&nbsp;🏡 Chore, &nbsp;&nbsp;&nbsp;🏡 Chore, &nbsp;&nbsp;&nbsp;🏡 Chore, &nbsp;&nbsp;&nbsp;❤️ Contributors (+14 more)
 
 ### Community 19 - "Community 19"
-Cohesion: 0.15
-Nodes (12): setDayjsLocale(), getLocale(), setupI18n(), setupAppVersionNotification(), setupDayjs(), setupIconifyOffline(), initPlugins(), pluginModules (+4 more)
+Cohesion: 0.11
+Nodes (15): setDayjsLocale(), getLocale(), setupI18n(), setupAppVersionNotification(), setupDayjs(), setupIconifyOffline(), resetSetupStore(), initPlugins() (+7 more)
 
 ### Community 20 - "Community 20"
 Cohesion: 0.09
@@ -384,8 +378,8 @@ Cohesion: 0.09
 Nodes (21): fetchCreateTask(), fetchDeleteTask(), fetchGetActiveExecutionRecords(), fetchGetActiveExecutions(), fetchGetExecutionDetail(), fetchGetExecutionHistory(), fetchGetExecutionRecordDetail(), fetchGetExecutionRecordHistory() (+13 more)
 
 ### Community 22 - "Community 22"
-Cohesion: 0.20
-Nodes (17): getRoutePath(), extractTabsByAllRoutes(), filterTabsByIds(), findTabByRouteName(), getAllTabs(), getDefaultHomeTab(), getFixedTabIds(), getFixedTabs() (+9 more)
+Cohesion: 0.16
+Nodes (18): useFormRules(), getRoutePath(), extractTabsByAllRoutes(), filterTabsByIds(), findTabByRouteName(), getAllTabs(), getDefaultHomeTab(), getFixedTabIds() (+10 more)
 
 ### Community 23 - "Community 23"
 Cohesion: 0.10
@@ -400,8 +394,8 @@ Cohesion: 0.10
 Nodes (19): fetchBatchDeleteLoginLog(), fetchBatchDeleteOperationLog(), fetchBatchDeleteRobotEventLog(), fetchClearLoginLog(), fetchClearOperationLog(), fetchClearRobotEventLog(), fetchDeleteLoginLog(), fetchDeleteOperationLog() (+11 more)
 
 ### Community 26 - "Community 26"
-Cohesion: 0.11
-Nodes (15): fetchCreateRobot(), fetchCreateRobotModel(), fetchDeleteRobot(), fetchDeleteRobotModel(), fetchGetAllRobotModels(), fetchGetLatestRobotStatus(), fetchGetRobot(), fetchGetRobotList() (+7 more)
+Cohesion: 0.10
+Nodes (17): fetchCreateRobot(), fetchCreateRobotModel(), fetchDeleteRobot(), fetchDeleteRobotModel(), fetchGetAllRobotModels(), fetchGetLatestRobotStatus(), fetchGetRobot(), fetchGetRobotList() (+9 more)
 
 ### Community 27 - "Community 27"
 Cohesion: 0.16
@@ -409,7 +403,7 @@ Nodes (12): layouts, views, generatedRoutes, routeMap, transformElegantRoutesToV
 
 ### Community 28 - "Community 28"
 Cohesion: 0.18
-Nodes (16): getPaletteColorByNumber(), overrideThemeSettings, themeSettings, addThemeVarsToGlobal(), createThemePaletteColors(), createThemeToken(), getCssVarByTokens(), getNaiveTheme() (+8 more)
+Nodes (15): overrideThemeSettings, themeSettings, addThemeVarsToGlobal(), createThemePaletteColors(), createThemeToken(), getCssVarByTokens(), getNaiveTheme(), getNaiveThemeColors() (+7 more)
 
 ### Community 29 - "Community 29"
 Cohesion: 0.11
@@ -440,8 +434,8 @@ Cohesion: 0.11
 Nodes (17): compilerOptions, allowSyntheticDefaultImports, baseUrl, esModuleInterop, forceConsistentCasingInFileNames, jsx, lib, module (+9 more)
 
 ### Community 36 - "Community 36"
-Cohesion: 0.16
-Nodes (15): appendPreviewToken(), { baseURL }, fetchBatchDeleteFiles(), fetchDeleteFile(), fetchDownloadFile(), fetchGetFile(), fetchGetFileList(), fetchUploadFile() (+7 more)
+Cohesion: 0.18
+Nodes (12): appendPreviewToken(), { baseURL }, fetchBatchDeleteFiles(), fetchDeleteFile(), fetchDownloadFile(), fetchGetFile(), fetchGetFileList(), fetchUploadFile() (+4 more)
 
 ### Community 37 - "Community 37"
 Cohesion: 0.22
@@ -456,12 +450,12 @@ Cohesion: 0.11
 Nodes (17): compilerOptions, allowSyntheticDefaultImports, baseUrl, esModuleInterop, forceConsistentCasingInFileNames, jsx, lib, module (+9 more)
 
 ### Community 40 - "Community 40"
-Cohesion: 0.12
-Nodes (7): resetSetupStore(), Crypto, createLocalforage(), createStorage(), LocalForage, LocalforageDriver, StorageType
+Cohesion: 0.14
+Nodes (6): Crypto, createLocalforage(), createStorage(), LocalForage, LocalforageDriver, StorageType
 
 ### Community 41 - "Community 41"
-Cohesion: 0.14
-Nodes (14): enableStatusOptions, enableStatusRecord, menuIconTypeOptions, menuIconTypeRecord, menuTypeOptions, menuTypeRecord, userGenderOptions, userGenderRecord (+6 more)
+Cohesion: 0.07
+Nodes (29): loginModuleRecord, themeLayoutModeOptions, themeLayoutModeRecord, themePageAnimationModeOptions, themePageAnimationModeRecord, themeSchemaOptions, themeSchemaRecord, themeScrollModeOptions (+21 more)
 
 ### Community 42 - "Community 42"
 Cohesion: 0.12
@@ -476,12 +470,12 @@ Cohesion: 0.12
 Nodes (15): bugs, url, description, engines, node, pnpm, homepage, keywords (+7 more)
 
 ### Community 45 - "Community 45"
-Cohesion: 0.23
-Nodes (11): fetchRefreshToken(), useAuthStore, useAuth(), permission, { baseURL, otherBaseURL }, demoRequest, getAuthorization(), handleExpiredRequest() (+3 more)
+Cohesion: 0.18
+Nodes (14): fetchRefreshToken(), useAuthStore, useAuth(), permission, { baseURL, otherBaseURL }, demoRequest, getAuthorization(), handleExpiredRequest() (+6 more)
 
 ### Community 46 - "Community 46"
-Cohesion: 0.14
-Nodes (14): ContentType, CustomAxiosRequestConfig, FlatRequestInstance, FlatResponseFailData, FlatResponseSuccessData, MappedType, RequestInstance, RequestInstanceCommon (+6 more)
+Cohesion: 0.13
+Nodes (15): ContentType, CustomAxiosRequestConfig, FlatRequestInstance, FlatResponseData, FlatResponseFailData, FlatResponseSuccessData, MappedType, RequestInstance (+7 more)
 
 ### Community 47 - "Community 47"
 Cohesion: 0.12
@@ -496,12 +490,12 @@ Cohesion: 0.16
 Nodes (7): useSvgIconRender(), GetApiData, PaginationData, TableColumnCheck, TableColumnCheckTitle, Transform, UseTableOptions
 
 ### Community 50 - "Community 50"
-Cohesion: 0.19
-Nodes (11): useAppStore, getColumnChecks(), PaginationParams, useNaivePaginatedTable(), UseNaivePaginatedTableOptions, useNaiveTable(), UseNaiveTableOptions, useTableOperate() (+3 more)
+Cohesion: 0.21
+Nodes (10): useAppStore, getColumnChecks(), PaginationParams, useNaivePaginatedTable(), UseNaivePaginatedTableOptions, useNaiveTable(), UseNaiveTableOptions, useTableOperate() (+2 more)
 
 ### Community 51 - "Community 51"
-Cohesion: 0.22
-Nodes (11): darkColorMap, getAntDPaletteColorByIndex(), getHue(), getSaturation(), getValue(), getDeltaE(), getHsv(), isValidColor() (+3 more)
+Cohesion: 0.15
+Nodes (12): fetchDeleteSceneMap(), fetchGetEditorMapData(), fetchGetSceneMapList(), fetchSaveEditorData(), DrawingMode, HistoryEntry, HistorySnapshot, SelectedElement (+4 more)
 
 ### Community 52 - "Community 52"
 Cohesion: 0.14
@@ -532,12 +526,12 @@ Cohesion: 0.15
 Nodes (12): colourWeakness, desc, fixedHeaderAndTab, grayscale, i18nkey, isInfoFollowPrimary, name, recommendColor (+4 more)
 
 ### Community 59 - "Community 59"
-Cohesion: 0.26
-Nodes (8): clearAuthStorage(), getToken(), connected, lastMessage, useWebSocketNotification(), localforage, localStg, sessionStg
+Cohesion: 0.20
+Nodes (11): clearAuthStorage(), getToken(), connected, lastMessage, useWebSocketNotification(), SetupStoreId, setLocale(), useTabStore (+3 more)
 
 ### Community 60 - "Community 60"
-Cohesion: 0.15
-Nodes (12): loginModuleRecord, themeLayoutModeOptions, themeLayoutModeRecord, themePageAnimationModeOptions, themePageAnimationModeRecord, themeSchemaOptions, themeSchemaRecord, themeScrollModeOptions (+4 more)
+Cohesion: 0.40
+Nodes (5): &nbsp;&nbsp;&nbsp;🐞 Bug Fixes, &nbsp;&nbsp;&nbsp;🏡 Chore, &nbsp;&nbsp;&nbsp;❤️ Contributors, &nbsp;&nbsp;&nbsp;📖 Documentation, [v0.10.2](https://github.com/honghuangdc/soybean-admin/compare/v0.10.1...v0.10.2) (2023-06-01)
 
 ### Community 61 - "Community 61"
 Cohesion: 0.15
@@ -572,8 +566,8 @@ Cohesion: 0.18
 Nodes (3): [], opt, result
 
 ### Community 69 - "Community 69"
-Cohesion: 0.27
-Nodes (8): ChartHooks, ECOption, useEcharts(), useRouterPush(), [provideMixMenuContext, useMixMenuContext], useMenu(), useMixMenu(), useThemeStore
+Cohesion: 0.19
+Nodes (12): ChartHooks, ECOption, useEcharts(), useRouterPush(), [provideMixMenuContext, useMixMenuContext], useMenu(), useMixMenu(), getRouteName() (+4 more)
 
 ### Community 70 - "Community 70"
 Cohesion: 0.18
@@ -612,8 +606,8 @@ Cohesion: 0.22
 Nodes (4): i18n, HeaderPlugin, _headerPlugins, registerPluginI18n()
 
 ### Community 79 - "Community 79"
-Cohesion: 0.20
-Nodes (5): useCaptcha(), useFormRules(), useCountDown(), useLoading(), createHookRequest()
+Cohesion: 0.29
+Nodes (4): useCaptcha(), useCountDown(), useLoading(), createHookRequest()
 
 ### Community 80 - "Community 80"
 Cohesion: 0.20
@@ -672,12 +666,8 @@ Cohesion: 0.28
 Nodes (6): fetchCheckCaptcha(), fetchCustomBackendError(), fetchGetCaptcha(), fetchGetUserInfo(), fetchLogin(), fetchVerifyCaptcha()
 
 ### Community 94 - "Community 94"
-Cohesion: 0.39
-Nodes (5): createRouterGuard(), createProgressGuard(), createRouteGuard(), createDocumentTitleGuard(), historyCreatorMap
-
-### Community 95 - "Community 95"
-Cohesion: 0.28
-Nodes (4): fetchGetApiStats(), fetchGetSystemMetrics(), fetchGetPermissions(), fetchIsRouteExist()
+Cohesion: 0.31
+Nodes (6): createRouterGuard(), createProgressGuard(), createRouteGuard(), createDocumentTitleGuard(), historyCreatorMap, router
 
 ### Community 96 - "Community 96"
 Cohesion: 0.25
@@ -816,8 +806,8 @@ Cohesion: 0.29
 Nodes (7): sider, collapsedWidth, inverted, mixChildMenuWidth, mixCollapsedWidth, mixWidth, width
 
 ### Community 130 - "Community 130"
-Cohesion: 0.48
-Nodes (6): createCssVars(), createTabCssVars(), addColorAlpha(), transformColorWithOpacity(), PageTabCssVars, PageTabCssVarsProps
+Cohesion: 0.40
+Nodes (5): &nbsp;&nbsp;&nbsp;🐞 Bug Fixes, &nbsp;&nbsp;&nbsp;❤️ Contributors, &nbsp;&nbsp;&nbsp;📖 Documentation, &nbsp;&nbsp;&nbsp;🎨 Styles, [v1.3.1](https://github.com/honghuangdc/soybean-admin/compare/v1.3.0...v1.3.1) (2024-07-22)
 
 ### Community 131 - "Community 131"
 Cohesion: 0.38
@@ -936,12 +926,12 @@ Cohesion: 0.33
 Nodes (3): local, local, locales
 
 ### Community 161 - "Community 161"
-Cohesion: 0.40
-Nodes (4): SetupStoreId, setLocale(), router, useTabStore
+Cohesion: 0.50
+Nodes (4): &nbsp;&nbsp;&nbsp;🐞 Bug Fixes, &nbsp;&nbsp;&nbsp;🏡 Chore, &nbsp;&nbsp;&nbsp;❤️ Contributors, [v2.0.2](https://github.com/soybeanjs/soybean-admin/compare/v2.0.1...v2.0.2) (2025-12-23)
 
 ### Community 162 - "Community 162"
-Cohesion: 0.53
-Nodes (4): getRouteName(), getRouteQueryOfLoginRoute(), initRoute(), useRouteStore
+Cohesion: 0.50
+Nodes (4): &nbsp;&nbsp;&nbsp;❤️ Contributors, &nbsp;&nbsp;&nbsp;📖 Documentation, &nbsp;&nbsp;&nbsp;🚀 Features, [v1.2.0](https://github.com/soybeanjs/soybean-admin/compare/v1.1.5...v1.2.0) (2024-06-06)
 
 ### Community 163 - "Community 163"
 Cohesion: 0.40
@@ -970,14 +960,6 @@ Nodes (5): &nbsp;&nbsp;&nbsp;🐞 Bug Fixes, &nbsp;&nbsp;&nbsp;🏡 Chore, &nbsp
 ### Community 169 - "Community 169"
 Cohesion: 0.40
 Nodes (5): &nbsp;&nbsp;&nbsp;🐞 Bug Fixes, &nbsp;&nbsp;&nbsp;❤️ Contributors, &nbsp;&nbsp;&nbsp;🔥 Performance, &nbsp;&nbsp;&nbsp;💅 Refactors, [v1.0.8](https://github.com/soybeanjs/soybean-admin/compare/v1.0.7...v1.0.8) (2024-04-27)
-
-### Community 170 - "Community 170"
-Cohesion: 0.40
-Nodes (5): &nbsp;&nbsp;&nbsp;🐞 Bug Fixes, &nbsp;&nbsp;&nbsp;🏡 Chore, &nbsp;&nbsp;&nbsp;❤️ Contributors, &nbsp;&nbsp;&nbsp;💅 Refactors, [v1.0.2](https://github.com/soybeanjs/soybean-admin/compare/v1.0.1...v1.0.2) (2024-04-08)
-
-### Community 171 - "Community 171"
-Cohesion: 0.40
-Nodes (5): &nbsp;&nbsp;&nbsp;🐞 Bug Fixes, &nbsp;&nbsp;&nbsp;🏡 Chore, &nbsp;&nbsp;&nbsp;❤️ Contributors, &nbsp;&nbsp;&nbsp;📖 Documentation, [v1.2.3](https://github.com/soybeanjs/soybean-admin/compare/v1.2.2...v1.2.3) (2024-06-13)
 
 ### Community 172 - "Community 172"
 Cohesion: 0.40
@@ -1043,10 +1025,6 @@ Nodes (5): otherColor, error, info, success, warning
 Cohesion: 0.40
 Nodes (4): darkMenu, isTopHybridHeaderFirst, menuWrapperClass, showLogo
 
-### Community 189 - "Community 189"
-Cohesion: 0.70
-Nodes (4): getLogoSvg(), setupLoading(), getRgb(), toggleHtmlClass()
-
 ### Community 190 - "Community 190"
 Cohesion: 0.40
 Nodes (4): FileInfo, FileList, FileListItem, FileSearchParams
@@ -1094,14 +1072,6 @@ Nodes (4): &nbsp;&nbsp;&nbsp;🏡 Chore, &nbsp;&nbsp;&nbsp;❤️ Contributors, 
 ### Community 201 - "Community 201"
 Cohesion: 0.50
 Nodes (4): &nbsp;&nbsp;&nbsp;🐞 Bug Fixes, &nbsp;&nbsp;&nbsp;🏡 Chore, &nbsp;&nbsp;&nbsp;❤️ Contributors, [v1.1.5](https://github.com/soybeanjs/soybean-admin/compare/v1.1.4...v1.1.5) (2024-06-06)
-
-### Community 202 - "Community 202"
-Cohesion: 0.50
-Nodes (4): &nbsp;&nbsp;&nbsp;🏡 Chore, &nbsp;&nbsp;&nbsp;❤️ Contributors, &nbsp;&nbsp;&nbsp;🛠 Optimizations, [v1.2.7](https://github.com/honghuangdc/soybean-admin/compare/v1.2.6...v1.2.7) (2024-07-12)
-
-### Community 203 - "Community 203"
-Cohesion: 0.50
-Nodes (4): &nbsp;&nbsp;&nbsp;🐞 Bug Fixes, &nbsp;&nbsp;&nbsp;❤️ Contributors, &nbsp;&nbsp;&nbsp;📖 Documentation, [v1.3.3](https://github.com/honghuangdc/soybean-admin/compare/v1.3.2...v1.3.3) (2024-07-30)
 
 ### Community 204 - "Community 204"
 Cohesion: 0.50
@@ -1163,16 +1133,16 @@ Nodes (3): page, animate, animateMode
 ## Suggested Questions
 _Questions this graph is uniquely positioned to answer:_
 
-- **Why does `request` connect `Community 0` to `Community 64`, `Community 65`, `Community 163`, `Community 36`, `Community 7`, `Community 45`, `Community 47`, `Community 79`, `Community 21`, `Community 25`, `Community 26`, `Community 93`, `Community 95`?**
+- **Why does `request` connect `Community 0` to `Community 64`, `Community 65`, `Community 163`, `Community 36`, `Community 7`, `Community 45`, `Community 47`, `Community 79`, `Community 51`, `Community 21`, `Community 25`, `Community 26`, `Community 93`, `Community 95`?**
   _High betweenness centrality (0.027) - this node is a cross-community bridge._
-- **Why does `Changelog` connect `Community 18` to `Community 134`, `Community 135`, `Community 136`, `Community 137`, `Community 138`, `Community 139`, `Community 140`, `Community 141`, `Community 142`, `Community 149`, `Community 150`, `Community 151`, `Community 152`, `Community 168`, `Community 169`, `Community 170`, `Community 171`, `Community 172`, `Community 173`, `Community 174`, `Community 175`, `Community 176`, `Community 177`, `Community 194`, `Community 195`, `Community 196`, `Community 197`, `Community 198`, `Community 71`, `Community 200`, `Community 201`, `Community 202`, `Community 203`, `Community 74`, `Community 77`, `Community 199`, `Community 73`, `Community 75`, `Community 81`, `Community 76`, `Community 83`, `Community 84`, `Community 85`, `Community 86`, `Community 87`, `Community 96`, `Community 97`, `Community 98`, `Community 99`, `Community 100`, `Community 104`, `Community 105`, `Community 106`, `Community 107`, `Community 108`, `Community 72`, `Community 113`, `Community 114`, `Community 115`, `Community 116`, `Community 117`, `Community 121`, `Community 122`, `Community 123`, `Community 124`, `Community 125`, `Community 126`, `Community 127`?**
+- **Why does `Changelog` connect `Community 18` to `Community 130`, `Community 134`, `Community 135`, `Community 136`, `Community 137`, `Community 138`, `Community 139`, `Community 140`, `Community 141`, `Community 142`, `Community 149`, `Community 150`, `Community 151`, `Community 152`, `Community 161`, `Community 162`, `Community 168`, `Community 169`, `Community 172`, `Community 173`, `Community 174`, `Community 175`, `Community 176`, `Community 177`, `Community 60`, `Community 194`, `Community 195`, `Community 196`, `Community 197`, `Community 198`, `Community 71`, `Community 200`, `Community 201`, `Community 74`, `Community 199`, `Community 73`, `Community 77`, `Community 75`, `Community 72`, `Community 76`, `Community 81`, `Community 83`, `Community 84`, `Community 85`, `Community 86`, `Community 87`, `Community 96`, `Community 97`, `Community 98`, `Community 99`, `Community 100`, `Community 104`, `Community 105`, `Community 106`, `Community 107`, `Community 108`, `Community 113`, `Community 114`, `Community 115`, `Community 116`, `Community 117`, `Community 121`, `Community 122`, `Community 123`, `Community 124`, `Community 125`, `Community 126`, `Community 127`?**
   _High betweenness centrality (0.026) - this node is a cross-community bridge._
-- **Why does `$T` connect `Community 22` to `Community 24`, `Community 4`, `Community 189`, `Community 79`?**
-  _High betweenness centrality (0.013) - this node is a cross-community bridge._
+- **Why does `$T` connect `Community 22` to `Community 24`, `Community 41`, `Community 4`?**
+  _High betweenness centrality (0.011) - this node is a cross-community bridge._
 - **What connects `name`, `type`, `version` to the rest of the system?**
   _1585 weakly-connected nodes found - possible documentation gaps or missing edges._
 - **Should `Community 0` be split into smaller, more focused modules?**
-  _Cohesion score 0.06994535519125683 - nodes in this community are weakly interconnected._
+  _Cohesion score 0.07616892911010557 - nodes in this community are weakly interconnected._
 - **Should `Community 1` be split into smaller, more focused modules?**
   _Cohesion score 0.03278688524590164 - nodes in this community are weakly interconnected._
 - **Should `Community 2` be split into smaller, more focused modules?**

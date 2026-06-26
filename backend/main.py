@@ -55,6 +55,16 @@ async def lifespan(app: FastAPI):
         logger.info("机器人场景绑定字段检查完成")
     except Exception as exc:
         logger.error("机器人场景绑定字段检查异常: %s", exc)
+    # 注入 ConfigService gRPC 地址 Provider（从 robot.grpc_config 解析地址）
+    try:
+        from modules.grpc.addr_provider import (
+            RobotConfigAddrProvider,
+            set_config_addr_provider,
+        )
+        set_config_addr_provider(RobotConfigAddrProvider())
+        logger.info("ConfigService gRPC 地址 Provider 已切换为 RobotConfigAddrProvider")
+    except Exception as exc:
+        logger.error("ConfigService gRPC 地址 Provider 注入异常: %s", exc)
     # 启动定时任务调度器
     try:
         from modules.scheduler.core.scheduler import SchedulerManager

@@ -6,9 +6,10 @@ gRPC channel 单例管理
 - 切换地址会关闭旧 channel 并清空 stub 缓存，下次 RPC 自动按新地址重建
 - 仅内存级覆盖，重启后回到 .env 配置
 
-ConfigService（voice/speed/battery/face）使用独立的 channel：
-- get_config_channel() 通过 ConfigServiceAddrProvider 获取地址
-- 默认从 settings.GRPC.CONFIG_SERVICE_ADDR 读取，将来可注入数据库实现
+ConfigService（voice/speed/battery/face）按地址缓存多通道：
+- get_config_channel_by_addr(addr) 按 host:port 维度缓存 channel
+- 不同 robot 的 grpc_config 地址不同时复用各自 channel，避免反复重建
+- 地址由调用方（config_client._dispatch_with_target）通过 ConfigServiceAddrProvider 解析后传入
 """
 import asyncio
 import logging
@@ -16,7 +17,6 @@ import logging
 import grpc
 
 from core.config import settings
-from modules.grpc.addr_provider import get_config_addr_provider
 
 logger = logging.getLogger(__name__)
 
@@ -24,9 +24,8 @@ _channel: grpc.aio.Channel | None = None
 _override_addr: str | None = None
 _reconfigure_lock = asyncio.Lock()
 
-# ConfigService 独立 channel（与 MapService 解耦，地址来自 Provider）
-_config_channel: grpc.aio.Channel | None = None
-_config_channel_addr: str | None = None
+# ConfigService 多通道缓存：按 host:port 维度缓存 channel
+_config_channels: dict[str, grpc.aio.Channel] = {}
 _config_reconfigure_lock = asyncio.Lock()
 
 
@@ -83,45 +82,40 @@ async def set_map_service_addr(addr: str) -> str:
         return new_addr
 
 
+async def get_config_channel_by_addr(addr: str) -> grpc.aio.Channel:
+    """按地址获取（惰性创建）ConfigService gRPC aio Channel
+
+    不同地址（来自不同 robot 的 grpc_config）各自缓存独立 channel，
+    并发安全（双检锁）。
+    """
+    if addr in _config_channels:
+        return _config_channels[addr]
+    async with _config_reconfigure_lock:
+        if addr in _config_channels:
+            return _config_channels[addr]
+        logger.info("create grpc.aio.insecure_channel config addr=%s", addr)
+        _config_channels[addr] = grpc.aio.insecure_channel(addr)
+        return _config_channels[addr]
+
+
+async def close_all_config_channels() -> None:
+    """关闭所有 ConfigService 缓存 channel（应用 shutdown 时调用）"""
+    async with _config_reconfigure_lock:
+        for addr, ch in _config_channels.items():
+            try:
+                await ch.close()
+                logger.info("grpc config channel closed addr=%s", addr)
+            except Exception:
+                logger.exception("close config channel failed addr=%s", addr)
+        _config_channels.clear()
+
+
 async def close_channel() -> None:
-    """关闭并清理 channel，供应用 shutdown 时调用"""
-    global _channel, _override_addr, _config_channel, _config_channel_addr
+    """关闭并清理所有 channel（MapService 单例 + ConfigService 多通道），供应用 shutdown 时调用"""
+    global _channel, _override_addr
     async with _reconfigure_lock:
         if _channel is not None:
             await _channel.close()
             _channel = None
             logger.info("grpc channel closed")
-    async with _config_reconfigure_lock:
-        if _config_channel is not None:
-            await _config_channel.close()
-            _config_channel = None
-            _config_channel_addr = None
-            logger.info("grpc config channel closed")
-
-
-async def get_config_channel() -> grpc.aio.Channel:
-    """获取（惰性创建）ConfigService 单例 gRPC aio Channel
-
-    地址由 ConfigServiceAddrProvider 提供（默认 settings，可注入数据库实现）。
-    若 Provider 返回的地址与缓存不一致，关闭旧 channel 并重建。
-    """
-    global _config_channel, _config_channel_addr
-    provider = get_config_addr_provider()
-    addr = await provider.get_addr()
-    if _config_channel is not None and _config_channel_addr == addr:
-        return _config_channel
-    async with _config_reconfigure_lock:
-        # 双检锁：进入锁后再核对一次
-        if _config_channel is not None and _config_channel_addr == addr:
-            return _config_channel
-        if _config_channel is not None:
-            await _config_channel.close()
-            logger.info(
-                "grpc config channel closed for reconfigure: %s -> %s",
-                _config_channel_addr,
-                addr,
-            )
-        logger.info("create grpc.aio.insecure_channel config addr=%s", addr)
-        _config_channel = grpc.aio.insecure_channel(addr)
-        _config_channel_addr = addr
-        return _config_channel
+    await close_all_config_channels()

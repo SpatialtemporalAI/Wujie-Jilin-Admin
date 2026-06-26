@@ -230,7 +230,7 @@ async def update_robot_grpc_config(
     user: SysUser = Depends(current_user),
 ):
     """
-    更新机器人 gRPC 配置（agent / middleware）
+    更新机器人 gRPC 配置（agent / middleware / ros）
     """
     try:
         logger.info("更新机器人 gRPC 配置接口被调用，机器人ID: %d", robot_id)

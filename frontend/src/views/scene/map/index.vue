@@ -105,7 +105,7 @@ const {
     },
     {
       key: 'start_point',
-      title: '起始点位',
+      title: '扫图起始点',
       align: 'center',
       width: 140,
       render: row => {

@@ -17,7 +17,7 @@
 - [2026-06-11 地图编辑器机器人定位与绑定场景](./business/2026-06-11_map-editor-robot-location-binding.md) — 机器人总览列表支持定位与切换绑定场景
 - [2026-06-11 场景地图 JSON 点位导入](./business/2026-06-11_scene-map-json-import.md) — 地图编辑器支持将 label/position JSON 导入为标注点
 - [2026-06-11 机器人场景绑定可空与存量库缺列修复](./business/2026-06-11_robot-map-binding-nullable-fix.md) — robot.map_id 缺列自动补齐，未绑定场景不支持定位
-- [2026-06-11 地图编辑器新增场景图片与起始点位](./business/2026-06-11_map-editor-create-scene-image-start-point.md) — 新增场景上传图片并按原图/网页显示尺寸缩放保存起始点位
+- [2026-06-11 地图编辑器新增场景图片与扫图起始点](./business/2026-06-11_map-editor-create-scene-image-start-point.md) — 新增场景上传图片并按原图/网页显示尺寸缩放保存扫图起始点
 - [2026-06-17 场景地图新增导航地图图片](./business/2026-06-17_scene-map-nav-image.md) — 异步将障碍物/禁区绘制到原图副本生成 nav_image_id
 - [2026-06-17 机器人管理移除列表状态列](./business/2026-06-17_robot-manage-remove-status-column.md) — 去掉机器人管理表格中的状态显示列
 - [2026-06-17 场景地图新增映射比例输入](./business/2026-06-17_scene-map-resolution-input.md) — 新增/编辑场景地图时填写 resolution，默认 1
@@ -33,6 +33,8 @@
 - [2026-06-24 场景地图主图上传接口独立权限化](./business/2026-06-24_scene-map-upload-image-endpoint.md) — 新增 /scene/map/upload-image 复用 scene:map:add/edit 权限；编辑器保存静默处理已软删 task
 - [2026-06-24 机器人管理 gRPC 配置 + UI 隐藏 + 删除/权限修复](./business/2026-06-24_robot-manage-grpc-config-and-fixes.md) — robot 表加 grpc_config JSON + robot:manage:grpc_config 权限；隐藏状态按钮/搜索框；修删除外键报错；修编辑任务触发 scene:map:list
 - [2026-06-25 登录后默认跳转权限列表第一个页面](./business/2026-06-25_login-redirect-first-permission.md) — RouteService 不再硬编码 home="home"，改为按菜单顺序取第一个叶子路由名作为首页
+- [2026-06-25 机器人 gRPC 配置新增 ros 选项](./business/2026-06-25_robot-grpc-config-add-ros.md) — grpc_config JSON 在 agent / middleware 基础上扩展 ros 子对象，无 DDL、无新增权限
+- [2026-06-25 参数配置 gRPC 调用从 robot.grpc_config 取地址](./business/2026-06-25_param-config-grpc-from-robot.md) — voice/speed/battery/face 4 类 RPC 按 RPC 类型分流到 grpc_config 的 agent/middleware；人脸走广播；不回退 settings
 
 ## 维护说明
 

@@ -282,18 +282,18 @@ onMounted(() => {
             class="w-full"
           />
         </NFormItem>
-        <NFormItem label="起始点位X" path="start_point_x">
+        <NFormItem label="扫图起始点X" path="start_point_x">
           <NInputNumber
             v-model:value="model.start_point_x"
-            placeholder="请输入起始点位X坐标"
+            placeholder="请输入扫图起始点X坐标"
             clearable
             class="w-full"
           />
         </NFormItem>
-        <NFormItem label="起始点位Y" path="start_point_y">
+        <NFormItem label="扫图起始点Y" path="start_point_y">
           <NInputNumber
             v-model:value="model.start_point_y"
-            placeholder="请输入起始点位Y坐标"
+            placeholder="请输入扫图起始点Y坐标"
             clearable
             class="w-full"
           />
