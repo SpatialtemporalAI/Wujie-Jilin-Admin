@@ -24,14 +24,36 @@ const scrollbarStyle = computed(() => {
 
 <template>
   <div class="h-full flex-1-hidden">
-    <Simplebar class="h-full" :style="scrollbarStyle">
+    <Simplebar class="h-full" :style="scrollbarStyle" :class="{'light': props.blueBg}">
       <slot />
     </Simplebar>
   </div>
 </template>
 
-<style scoped>
-:deep(.n-menu .n-menu-item-content.n-menu-item-content--selected::before) {
-  background-color: #ffffff;
+<style scoped lang="scss">
+.light{
+  :deep(.n-menu-item-content--child-active) {
+    background-color: #4576f5;
+  
+    &:hover {
+      &::before {
+        background-color: #4576f5 !important;
+      }
+  
+      .n-menu-item-content__icon {
+        color: #fff !important;
+      }
+  
+      .n-menu-item-content-header {
+        color: #fff !important;
+      }
+  
+  
+      .n-menu-item-content__arrow {
+        color: #fff !important;
+      }
+    }
+  }
+  
 }
 </style>

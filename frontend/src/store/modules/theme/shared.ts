@@ -268,6 +268,9 @@ export function getNaiveTheme(
       itemColorHover: '#fff',
       itemColorActiveHover: '#fff',
       itemColorActiveCollapsed: '#4576f5',
+      itemTextColorChildActive: '#fff',
+      itemIconColorChildActive: '#fff',
+      arrowColorChildActive: '#fff',
     },
   };
 
