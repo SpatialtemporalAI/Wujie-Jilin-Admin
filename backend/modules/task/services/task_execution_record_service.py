@@ -18,6 +18,7 @@ from database.models.business.scene_map import SceneMap
 from database.models.sys.user import SysUser
 from database.utils.timezone import timezone
 from core.exception.errors import NotFoundError, ConflictError
+from modules.grpc.task_client import TaskConfigClient
 from modules.task.schemas.task_execution_record import (
     TaskExecutionRecordQueryParams,
     TaskDefinitionSnapshot,
@@ -140,6 +141,21 @@ class TaskExecutionRecordService:
             await db.commit()
             for rec in created:
                 await db.refresh(rec)
+
+            # DB 落库后下发 gRPC 通知到机器人 agent；失败仅日志，不阻塞业务
+            try:
+                await TaskConfigClient.broadcast_task_changed(
+                    task_id=task_id,
+                    operation="run_now",
+                    robot_ids=list(robot_ids),
+                )
+            except Exception as exc:  # noqa: BLE001 - 推送容错
+                logger.warning(
+                    "grpc task broadcast run_now failed task_id=%s err=%s",
+                    task_id,
+                    exc,
+                )
+
             return created
 
         except (NotFoundError, ConflictError):
@@ -171,6 +187,22 @@ class TaskExecutionRecordService:
             record.status = "paused"
             await db.commit()
             await db.refresh(record)
+
+            if record.robot_id is not None:
+                try:
+                    await TaskConfigClient.broadcast_task_changed(
+                        task_id=record.task_id,
+                        operation="pause",
+                        robot_ids=[record.robot_id],
+                    )
+                except Exception as exc:  # noqa: BLE001 - 推送容错
+                    logger.warning(
+                        "grpc task broadcast pause failed task_id=%s robot_id=%s err=%s",
+                        record.task_id,
+                        record.robot_id,
+                        exc,
+                    )
+
             return record
         except (NotFoundError, ConflictError):
             await db.rollback()
@@ -189,6 +221,22 @@ class TaskExecutionRecordService:
             record.status = "pending"
             await db.commit()
             await db.refresh(record)
+
+            if record.robot_id is not None:
+                try:
+                    await TaskConfigClient.broadcast_task_changed(
+                        task_id=record.task_id,
+                        operation="resume",
+                        robot_ids=[record.robot_id],
+                    )
+                except Exception as exc:  # noqa: BLE001 - 推送容错
+                    logger.warning(
+                        "grpc task broadcast resume failed task_id=%s robot_id=%s err=%s",
+                        record.task_id,
+                        record.robot_id,
+                        exc,
+                    )
+
             return record
         except (NotFoundError, ConflictError):
             await db.rollback()
@@ -208,6 +256,22 @@ class TaskExecutionRecordService:
             record.finish_time = timezone.now()
             await db.commit()
             await db.refresh(record)
+
+            if record.robot_id is not None:
+                try:
+                    await TaskConfigClient.broadcast_task_changed(
+                        task_id=record.task_id,
+                        operation="stop",
+                        robot_ids=[record.robot_id],
+                    )
+                except Exception as exc:  # noqa: BLE001 - 推送容错
+                    logger.warning(
+                        "grpc task broadcast stop failed task_id=%s robot_id=%s err=%s",
+                        record.task_id,
+                        record.robot_id,
+                        exc,
+                    )
+
             return record
         except (NotFoundError, ConflictError):
             await db.rollback()
@@ -235,6 +299,21 @@ class TaskExecutionRecordService:
             for record in records:
                 record.status = "paused"
             await db.commit()
+
+            # 批量暂停后下发 pause 到该任务关联的所有 robot
+            try:
+                await TaskConfigClient.broadcast_task_changed(
+                    task_id=task_id,
+                    operation="pause",
+                    robot_ids=[r.robot_id for r in records if r.robot_id is not None],
+                )
+            except Exception as exc:  # noqa: BLE001 - 推送容错
+                logger.warning(
+                    "grpc task broadcast pause failed task_id=%s err=%s",
+                    task_id,
+                    exc,
+                )
+
             return len(records)
         except Exception as e:
             await db.rollback()
@@ -268,6 +347,21 @@ class TaskExecutionRecordService:
                 for record in paused_records:
                     record.status = "pending"
                 await db.commit()
+
+                # 已有暂停记录被恢复：下发 resume 到关联 robot
+                try:
+                    await TaskConfigClient.broadcast_task_changed(
+                        task_id=task_id,
+                        operation="resume",
+                        robot_ids=[r.robot_id for r in paused_records if r.robot_id is not None],
+                    )
+                except Exception as exc:  # noqa: BLE001 - 推送容错
+                    logger.warning(
+                        "grpc task broadcast resume failed task_id=%s err=%s",
+                        task_id,
+                        exc,
+                    )
+
                 return {"action": "resumed", "count": len(paused_records)}
 
             created = await TaskExecutionRecordService.start_execution(

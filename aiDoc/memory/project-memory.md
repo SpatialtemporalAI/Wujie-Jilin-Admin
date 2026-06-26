@@ -38,6 +38,7 @@
 - [2026-06-26 任务选地图权限 + gRPC 重试去重](./business/2026-06-26_task-scene-map-list-and-grpc-retry-dedup.md) — scene_map list 接口 OR 加入 task:list；grpc 重试 save_pending 前按业务键取消旧 pending（face 按 face_id，其他按 robot_id）
 - [2026-06-26 任务选地图后加载点位权限](./business/2026-06-26_task-scene-map-annotation-list-permission.md) — scene_map_annotation list 接口 OR 加入 task:list，修复编辑/选择地图后巡逻点位列表 403
 - [2026-06-26 gRPC 重试 retry_count 不递增](./business/2026-06-26_grpc-retry-count-not-advancing.md) — _retry_one 加 30s 硬超时 + 三种失败路径统一推进 retry_count；retry_failed_pushes 任务 timeout 调到 1600s
+- [2026-06-26 菜单本地图标类型不生效](./business/2026-06-26_menu-local-icon-type-persistence.md) — sys_menu 加 meta_icon_type 列；schema/前端 API 全栈透传 iconType，修复选「本地」保存后丢失
 
 ## 维护说明
 
