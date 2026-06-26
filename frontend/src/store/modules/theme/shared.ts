@@ -250,7 +250,11 @@ export function getNaiveTheme(
   const theme: GlobalThemeOverrides = {
     common: {
       ...getNaiveThemeColors(colors, settings.recommendColor),
-      borderRadius: `${settings.themeRadius}px`
+      borderRadius: `${settings.themeRadius}px`,
+      textColorBase: '#1a4355',
+      textColor1: '#1a4355',
+      textColor2: '#1a4355',
+      textColor3: '#1a4355',
     },
     LoadingBar: {
       colorLoading
@@ -267,7 +271,11 @@ export function getNaiveTheme(
       itemColorActive: '#fff',
       itemColorHover: '#fff',
       itemColorActiveHover: '#fff',
-      itemColorActiveCollapsed: '#4576f5',
+      itemColorActiveCollapsed: '#fff',
+      itemTextColorChildActive: '#fff',
+      itemIconColorChildActive: '#fff',
+      arrowColorChildActive: '#fff',
+      itemIconColorCollapsed: '#fff',
     },
   };
 

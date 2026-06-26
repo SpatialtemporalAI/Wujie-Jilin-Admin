@@ -4,10 +4,10 @@ export const themeSettings: App.Theme.ThemeSetting = {
   grayscale: false,
   colourWeakness: false,
   recommendColor: false,
-  themeColor: '#646cff',
+  themeColor: '#4576f5',
   themeRadius: 6,
   otherColor: {
-    info: '#2080f0',
+    info: '#646cff',
     success: '#52c41a',
     warning: '#faad14',
     error: '#f5222d'

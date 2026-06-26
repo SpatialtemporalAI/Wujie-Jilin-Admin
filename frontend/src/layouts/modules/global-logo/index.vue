@@ -28,7 +28,7 @@ const logoClass = computed(() => ({
 
 <template>
   <RouterLink to="/" :class="logoClass">
-    <SystemLogo class="size-32px" />
+    <img src="@/assets/imgs/logo2.png" alt="" class="w-24px h-24px object-contain mr-4px" />
     <h2 v-show="showTitle" class="pl-8px text-16px font-bold transition duration-300 ease-in-out"
       :class="themeStore.isLightSider ? 'text-#fff' : 'text-#pimary'">
       {{ $t('system.title') }}
