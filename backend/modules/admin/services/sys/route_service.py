@@ -41,10 +41,20 @@ class RouteService:
         """
         route_name = menu.name
 
+        # 根据 meta_icon_type 分流到 iconify 图标或本地图标：
+        # "2" → localIcon（前端从 src/assets/svg-icon 加载），"1" 或其他 → icon
+        if menu.meta_icon and menu.meta_icon_type == "2":
+            icon_value: str | None = None
+            local_icon_value: str | None = menu.meta_icon
+        else:
+            icon_value = menu.meta_icon
+            local_icon_value = None
+
         meta = RouteMetaResponse(
             title=menu.name,
             i18nKey=f"route.{menu.name}",
-            icon=menu.meta_icon,
+            icon=icon_value,
+            localIcon=local_icon_value,
             order=menu.sort if menu.sort else None,
             hideInMenu=menu.meta_hidden if menu.meta_hidden else None,
             keepAlive=menu.meta_keep_alive if menu.meta_keep_alive else None,

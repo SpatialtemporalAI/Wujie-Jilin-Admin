@@ -1,5 +1,5 @@
 <script setup lang="tsx">
-import { reactive, onMounted, onUnmounted, ref } from 'vue';
+import { reactive, onMounted, onUnmounted, onActivated, onDeactivated, ref } from 'vue';
 import { NButton, NDataTable, NProgress, NTag, useMessage } from 'naive-ui';
 import {
   fetchGetActiveExecutionRecords,
@@ -134,7 +134,7 @@ const columns = [
     fixed: 'right' as const,
     render: (row: Api.Task.TaskExecutionRecord) => (
       <div class="flex-center gap-8px">
-        {row.status === 'running' && (
+        {(row.status === 'running' || row.status === 'pending') && (
           <NButton type="warning" ghost size="small" onClick={() => handlePause(row.id)}>暂停</NButton>
         )}
         {row.status === 'paused' && (
@@ -149,6 +149,21 @@ const columns = [
 ];
 
 let pollTimer: ReturnType<typeof setInterval> | null = null;
+
+const POLL_INTERVAL_MS = 60_000;
+
+function startPolling() {
+  stopPolling();
+  getData();
+  pollTimer = setInterval(getData, POLL_INTERVAL_MS);
+}
+
+function stopPolling() {
+  if (pollTimer) {
+    clearInterval(pollTimer);
+    pollTimer = null;
+  }
+}
 
 async function getData() {
   loading.value = true;
@@ -207,17 +222,10 @@ function handleSearch() {
   getData();
 }
 
-onMounted(() => {
-  getData();
-  pollTimer = setInterval(getData, 5000);
-});
-
-onUnmounted(() => {
-  if (pollTimer) {
-    clearInterval(pollTimer);
-    pollTimer = null;
-  }
-});
+onMounted(startPolling);
+onActivated(startPolling);
+onDeactivated(stopPolling);
+onUnmounted(stopPolling);
 </script>
 
 <template>
