@@ -91,8 +91,8 @@ class TaskExecutionService:
         """暂停执行"""
         try:
             exec_obj = await TaskExecutionService._get_execution(db, exec_id)
-            if exec_obj.status != "running":
-                raise ConflictError(msg="只有运行中的任务才能暂停")
+            if exec_obj.status not in ("running", "pending"):
+                raise ConflictError(msg="只有运行中或等待中的任务才能暂停")
 
             exec_obj.status = "paused"
 
@@ -151,8 +151,8 @@ class TaskExecutionService:
         """停止执行"""
         try:
             exec_obj = await TaskExecutionService._get_execution(db, exec_id)
-            if exec_obj.status not in ("running", "paused"):
-                raise ConflictError(msg="只有运行中或已暂停的任务才能停止")
+            if exec_obj.status not in ("running", "paused", "pending"):
+                raise ConflictError(msg="只有运行中、已暂停或等待中的任务才能停止")
 
             exec_obj.status = "cancelled"
             exec_obj.ended_at = timezone.now()
