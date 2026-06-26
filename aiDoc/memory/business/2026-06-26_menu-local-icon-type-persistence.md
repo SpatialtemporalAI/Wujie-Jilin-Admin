@@ -59,6 +59,17 @@
   - `fetchUpdateMenu` data 增加 `meta_icon_type: menu.iconType || '1'`
   - 前端表单 `model.iconType` 已存在（[menu-operate-modal.vue:151](frontend/src/views/manage/menu/modules/menu-operate-modal.vue#L151)），无需改
 
+### 左侧菜单渲染链路（同样需要透传 localIcon）
+
+- `backend/modules/admin/schemas/sys/route.py`
+  - `RouteMetaResponse` 新增 `localIcon: str | None` 字段
+- `backend/modules/admin/services/sys/route_service.py`
+  - `_menu_to_route` 根据 `menu.meta_icon_type` 分流：
+    - `"2"` → 填 `localIcon=menu.meta_icon`，`icon=None`
+    - 其他 → 填 `icon=menu.meta_icon`，`localIcon=None`
+  - 前端 `store/modules/route/shared.ts` 已从 `route.meta.localIcon` 读取并交给 SvgIcon，
+    `localIcon` 存在时优先渲染本地图标（[svg-icon.vue:40](frontend/src/components/custom/svg-icon.vue#L40)）
+
 ## 关键决策
 
 ### 字段名：`meta_icon_type`
@@ -125,6 +136,8 @@
 - `backend/database/models/sys/menu.py`
 - `backend/modules/admin/schemas/sys/menu.py`
 - `backend/modules/admin/services/sys/menu_service.py`
+- `backend/modules/admin/schemas/sys/route.py`
+- `backend/modules/admin/services/sys/route_service.py`
 
 前端：
 - `frontend/src/service/api/system-manage.ts`

@@ -415,14 +415,6 @@ class MenuService:
 
         # 更新菜单信息
         update_data = menu_update.model_dump(exclude_unset=True)
-        logger.info(
-            "update_menu menu_id=%s raw_meta_icon_type=%r dump_meta_icon_type=%r has_orm_attr=%s update_keys=%s",
-            menu_id,
-            getattr(menu_update, "meta_icon_type", "<MISSING>"),
-            update_data.get("meta_icon_type", "<MISSING>"),
-            hasattr(menu, "meta_icon_type"),
-            list(update_data.keys()),
-        )
         for key, value in update_data.items():
             if hasattr(menu, key):
                 setattr(menu, key, value)
