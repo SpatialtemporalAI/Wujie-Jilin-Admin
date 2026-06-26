@@ -1,12 +1,13 @@
-# 任务定义变更 gRPC 推送（create/edit/delete）
+# 任务定义变更 gRPC 推送（create/edit/delete + enable/disable）
 
 ## 需求描述
 
-任务管理「任务列表」中，新增 / 编辑 / 删除任务时，需要通过 gRPC 通知机器人 agent，
-让 agent 端感知任务定义变更（重新加载/取消调度等）。
+任务管理「任务列表」中，新增 / 编辑 / 删除 / 启用 / 禁用 任务时，
+需要通过 gRPC 通知机器人 agent，让 agent 端感知任务定义变更
+（重新加载/取消调度等）。
 
 此前（2026-06-26）已为运行时控制（start/pause/resume/stop）接入 gRPC，
-但 create/edit/delete 任务定义变更一直未推送。本次补全这一块。
+但 create/edit/delete/enable/disable 任务定义变更一直未推送。本次补全这一块。
 
 ## 状态
 
@@ -25,6 +26,10 @@
   - 若未带 → 查 `task_robot_association` 当前关联 robot_ids
 - `TaskService.delete` —— 软删除前先取出 `task_robot_association` 关联 robot_ids，
   commit 后 broadcast `operation="delete"`
+- `TaskService.toggle_enabled` —— commit 后 broadcast：
+  - `enabled=True` → `operation="enable"`
+  - `enabled=False` → `operation="disable"`
+  - robot_ids 查 `task_robot_association` 当前关联
 
 ### 前端
 
@@ -44,11 +49,6 @@
 推送失败仅 `logger.warning`，不入 `grpc_retry_task` 队列。
 后续如需重试，可在 service 层失败分支入队，
 并在 `retry_service.py` 的 `_ROUTING` 表加 `("route_task", "NotifyTaskChanged")` 路由。
-
-### 不覆盖 enable/disable
-
-用户本次只说「新增删除编辑」，toggle enabled 的 gRPC 推送不在范围内。
-proto 注释已留好 `enable/disable` 取值，后续如需要再补。
 
 ### 放 service 层而非 endpoint 层
 
@@ -71,12 +71,13 @@ python -m py_compile modules/task/services/task_service.py
 - **编辑任务**：`PUT /task/manage/{task_id}` → 同上，operation=edit
 - **删除任务**：`DELETE /task/manage/{task_id}` → 同上，operation=delete，
   且推送发生在软删除之后
+- **启用/禁用**：`PUT /task/manage/{task_id}/toggle` → 同上，operation=enable/disable
 
 ## 相关文件
 
 - `backend/modules/task/services/task_service.py`（修改）
 - `backend/modules/grpc/task_client.py`（复用，无修改）
-- `backend/grpc/protos/task/task.proto`（无修改，注释里已列 create/edit/delete）
+- `backend/grpc/protos/task/task.proto`（无修改，注释里已列 create/edit/delete/enable/disable）
 
 ## 记录日期
 
