@@ -29,7 +29,7 @@ const emit = defineEmits<{
   (e: 'focus-annotation', id: number): void;
 }>();
 
-const activeTab = ref('overview');
+const activeTab = ref('scenes');
 // 属性面板 tab 暂时不显示，恢复时改为 true
 const showPropertiesTab = ref(false);
 const searchText = ref('');
@@ -185,36 +185,7 @@ onMounted(() => {
   <div class="flex h-full min-h-0 flex-col border-l border-gray-200 bg-white">
     <NTabs v-model:value="activeTab" type="line" size="small" class="property-panel-tabs h-full min-h-0 flex flex-col"
       pane-wrapper-class="min-h-0 flex-1 overflow-auto" pane-class="h-full">
-      <NTabPane name="overview" tab="机器人总览">
-        <div class="h-full overflow-auto p-12px">
-          <NSpin :show="robotLoading">
-            <div class="flex items-center justify-between">
-              <span class="text-sm font-medium">机器人列表</span>
-              <NButton size="tiny" quaternary :loading="robotLoading" @click="loadRobotList">
-                <template #icon><icon-ic-round-refresh /></template>
-                刷新
-              </NButton>
-            </div>
-
-            <div class="mt-8px space-y-8px">
-              <NCard v-for="robot in robotList" :key="robot.id" size="small" embedded>
-                <div class="truncate text-sm font-medium">{{ robot.name }}</div>
-                <div class="mt-8px flex items-center gap-8px">
-                  <NSelect :value="robot.map_id ?? null" :options="sceneOptions" size="tiny" clearable
-                    placeholder="绑定场景" class="min-w-0 flex-1" :loading="bindingRobotId === robot.id"
-                    @update:value="value => updateRobotMap(robot, value as number | null)" />
-                  <NButton size="tiny" type="primary" ghost :loading="locatingRobotId === robot.id"
-                    @click="locateRobot(robot)">
-                    定位
-                  </NButton>
-                </div>
-              </NCard>
-              <NEmpty v-if="!robotLoading && robotList.length === 0" description="暂无机器人" class="mt-20px" />
-            </div>
-          </NSpin>
-        </div>
-      </NTabPane>
-
+     
       <NTabPane name="scenes" tab="场景列表">
         <div class="flex h-full flex-col">
           <div class="border-b border-gray-200 p-12px">
@@ -370,6 +341,36 @@ onMounted(() => {
           </div>
         </div>
       </NTabPane>
+       <NTabPane name="overview" tab="机器人总览">
+        <div class="h-full overflow-auto p-12px">
+          <NSpin :show="robotLoading">
+            <div class="flex items-center justify-between">
+              <span class="text-sm font-medium">机器人列表</span>
+              <NButton size="tiny" quaternary :loading="robotLoading" @click="loadRobotList">
+                <template #icon><icon-ic-round-refresh /></template>
+                刷新
+              </NButton>
+            </div>
+
+            <div class="mt-8px space-y-8px">
+              <NCard v-for="robot in robotList" :key="robot.id" size="small" embedded>
+                <div class="truncate text-sm font-medium">{{ robot.name }}</div>
+                <div class="mt-8px flex items-center gap-8px">
+                  <NSelect :value="robot.map_id ?? null" :options="sceneOptions" size="tiny" clearable
+                    placeholder="绑定场景" class="min-w-0 flex-1" :loading="bindingRobotId === robot.id"
+                    @update:value="value => updateRobotMap(robot, value as number | null)" />
+                  <NButton size="tiny" type="primary" ghost :loading="locatingRobotId === robot.id"
+                    @click="locateRobot(robot)">
+                    定位
+                  </NButton>
+                </div>
+              </NCard>
+              <NEmpty v-if="!robotLoading && robotList.length === 0" description="暂无机器人" class="mt-20px" />
+            </div>
+          </NSpin>
+        </div>
+      </NTabPane>
+
     </NTabs>
   </div>
 </template>
