@@ -9,7 +9,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from database.db_manager import get_session
 from core.response import ResponseModel, response_base
 from modules.admin.deps.auth.user_manager import current_user
-from modules.admin.deps.auth.permission import require_permission
+from modules.admin.deps.auth.permission import require_permission, require_any_permission
 from database.models.sys.user import SysUser
 from modules.scene.services.scene_map_annotation_service import SceneMapAnnotationService
 from modules.scene.schemas.scene_map_annotation import (
@@ -29,7 +29,15 @@ scene_map_annotation_router = APIRouter(
     "/list",
     response_model=ResponseModel[List[SceneMapAnnotationResponseData]],
     summary="获取地图标注列表",
-    dependencies=[Depends(require_permission("scene:map:list"))],
+    dependencies=[
+        Depends(
+            require_any_permission(
+                "scene:map:list",
+                "scene:map-editor:list",
+                "task:list",
+            )
+        )
+    ],
 )
 async def get_annotation_list(
     map_id: int,

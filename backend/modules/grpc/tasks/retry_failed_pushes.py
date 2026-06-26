@@ -28,6 +28,10 @@ logger = logging.getLogger(__name__)
     task_key="grpc.retry_failed_pushes",
     is_system=True,
     concurrent_policy="skip",
+    # 单条重试硬超时 15s × limit 50 = 750s，外加 DB 开销，留余量到 800s
+    # 原默认 300s 会在 pending 任务 ≥ 20 个时被外层 wait_for 强制 cancel，
+    # 导致内层 _advance_fields 没机会跑、retry_count 永远为 0
+    timeout=800,
 )
 async def retry_failed_pushes():
     from database.db_manager import get_session

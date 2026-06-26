@@ -7,7 +7,12 @@ gRPC 推送失败重试服务
 3. _dispatch_retry：根据 service_name + method_name 路由到对应 client（复用 config_client.py）
 
 指数退避：60s -> 120s -> 240s（共 3 次），超过 max_retries 标记 dead。
+
+调用容错：单次重试用 asyncio.wait_for 加 _CALL_TIMEOUT_SECONDS 硬超时，
+无论 gRPC 不通抛异常 / 超时 / resp.success=False，都视为一次失败并推进 retry_count，
+避免对端 hang 或 grpc.aio 未按 deadline 抛错时任务永远停在 pending。
 """
+import asyncio
 import logging
 from datetime import timedelta
 from typing import Any, Awaitable, Callable, Dict, Optional, Tuple
@@ -29,6 +34,10 @@ logger = logging.getLogger(__name__)
 
 # 指数退避间隔（秒）：第 1 次 60s、第 2 次 120s、第 3 次 240s
 _BACKOFF_SECONDS: Tuple[int, ...] = (60, 120, 240)
+
+# 单次重试的硬超时（秒）：兜底 settings.GRPC.TIMEOUT_SECONDS，
+# 防止 grpc.aio 在某些场景未按 deadline 抛错时把整个扫描卡死
+_CALL_TIMEOUT_SECONDS: float = 15.0
 
 # (service_name, method_name) → (client_method_ref, required_payload_keys)
 # 用于把任务表的 service/method/payload 路由到对应 client 方法
@@ -244,7 +253,20 @@ class GrpcRetryService:
 
         try:
             kwargs = {k: payload[k] for k in required_keys}
-            resp = await client_method(**kwargs)
+            resp = await asyncio.wait_for(
+                client_method(**kwargs), timeout=_CALL_TIMEOUT_SECONDS
+            )
+        except asyncio.TimeoutError:
+            logger.warning(
+                "grpc retry call hard timeout task_id=%s service=%s method=%s",
+                task.id,
+                task.service_name,
+                task.method_name,
+            )
+            task.last_error = f"调用超时（{_CALL_TIMEOUT_SECONDS}s）"
+            GrpcRetryService._advance_fields(task)
+            await db.commit()
+            return "dead" if task.status == "dead" else "rescheduled"
         except Exception as e:  # noqa: BLE001 - client 内部已吞，这里是双保险
             logger.exception(
                 "grpc retry call raised task_id=%s service=%s method=%s",

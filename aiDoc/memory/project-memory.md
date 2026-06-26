@@ -36,6 +36,8 @@
 - [2026-06-25 机器人 gRPC 配置新增 ros 选项](./business/2026-06-25_robot-grpc-config-add-ros.md) — grpc_config JSON 在 agent / middleware 基础上扩展 ros 子对象，无 DDL、无新增权限
 - [2026-06-25 参数配置 gRPC 调用从 robot.grpc_config 取地址](./business/2026-06-25_param-config-grpc-from-robot.md) — voice/speed/battery/face 4 类 RPC 按 RPC 类型分流到 grpc_config 的 agent/middleware；人脸走广播；不回退 settings
 - [2026-06-26 任务选地图权限 + gRPC 重试去重](./business/2026-06-26_task-scene-map-list-and-grpc-retry-dedup.md) — scene_map list 接口 OR 加入 task:list；grpc 重试 save_pending 前按业务键取消旧 pending（face 按 face_id，其他按 robot_id）
+- [2026-06-26 任务选地图后加载点位权限](./business/2026-06-26_task-scene-map-annotation-list-permission.md) — scene_map_annotation list 接口 OR 加入 task:list，修复编辑/选择地图后巡逻点位列表 403
+- [2026-06-26 gRPC 重试 retry_count 不递增](./business/2026-06-26_grpc-retry-count-not-advancing.md) — _retry_one 加 15s 硬超时 + 三种失败路径统一推进 retry_count；retry_failed_pushes 任务 timeout 调到 800s
 
 ## 维护说明
 
