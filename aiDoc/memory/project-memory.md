@@ -34,6 +34,7 @@
 - [2026-06-24 机器人管理 gRPC 配置 + UI 隐藏 + 删除/权限修复](./business/2026-06-24_robot-manage-grpc-config-and-fixes.md) — robot 表加 grpc_config JSON + robot:manage:grpc_config 权限；隐藏状态按钮/搜索框；修删除外键报错；修编辑任务触发 scene:map:list
 - [2026-06-25 登录后默认跳转权限列表第一个页面](./business/2026-06-25_login-redirect-first-permission.md) — RouteService 不再硬编码 home="home"，改为按菜单顺序取第一个叶子路由名作为首页
 - [2026-06-25 机器人 gRPC 配置新增 ros 选项](./business/2026-06-25_robot-grpc-config-add-ros.md) — grpc_config JSON 在 agent / middleware 基础上扩展 ros 子对象，无 DDL、无新增权限
+- [2026-06-25 参数配置 gRPC 调用从 robot.grpc_config 取地址](./business/2026-06-25_param-config-grpc-from-robot.md) — voice/speed/battery/face 4 类 RPC 按 RPC 类型分流到 grpc_config 的 agent/middleware；人脸走广播；不回退 settings
 
 ## 维护说明
 
