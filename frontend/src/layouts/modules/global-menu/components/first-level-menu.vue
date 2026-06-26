@@ -4,6 +4,7 @@ import { createReusableTemplate } from '@vueuse/core';
 import { SimpleScrollbar } from '@sa/materials';
 import { transformColorWithOpacity } from '@sa/color';
 import type { RouteKey } from '@elegant-router/types';
+import { useThemeStore } from '@/store/modules/theme';
 
 defineOptions({
   name: 'FirstLevelMenu'
@@ -19,6 +20,8 @@ interface Props {
 }
 
 const props = defineProps<Props>();
+
+const themeStore = useThemeStore();
 
 interface Emits {
   (e: 'select', menuKey: RouteKey): boolean;
@@ -81,7 +84,7 @@ function toggleSiderCollapse() {
 
   <div class="h-full flex-col-stretch flex-1-hidden">
     <slot></slot>
-    <SimpleScrollbar>
+    <SimpleScrollbar :blue-bg="themeStore.isLightSider">
       <MixMenuItem
         v-for="menu in menus"
         :key="menu.key"

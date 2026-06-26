@@ -257,7 +257,18 @@ export function getNaiveTheme(
     },
     Tag: {
       borderRadius: `${settings.themeRadius}px`
-    }
+    },
+    Menu: {
+      itemTextColor: 'rgb(224, 224, 224)',
+      itemTextColorActive: '#3761d2',
+      itemTextColorHover: '#3761d2',
+      arrowColor: 'rgb(224, 224, 224)',
+      itemIconColor: 'rgb(224, 224, 224)',
+      itemColorActive: '#fff',
+      itemColorHover: '#fff',
+      itemColorActiveHover: '#fff',
+      itemColorActiveCollapsed: '#4576f5',
+    },
   };
 
   // If there are overrides, merge them with priority

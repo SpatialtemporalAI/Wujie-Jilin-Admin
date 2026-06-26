@@ -58,6 +58,9 @@ export const useThemeStore = defineStore(SetupStoreId.Theme, () => {
   /** Naive theme */
   const naiveTheme = computed(() => getNaiveTheme(themeColors.value, settings.value, naiveThemeOverrides.value));
 
+  /** Light mode with non-inverted sider (used for blue background) */
+  const isLightSider = computed(() => !darkMode.value && !settings.value.sider.inverted);
+
   /**
    * Settings json
    *
@@ -284,6 +287,7 @@ export const useThemeStore = defineStore(SetupStoreId.Theme, () => {
   return {
     ...toRefs(settings.value),
     darkMode,
+    isLightSider,
     themeColors,
     naiveTheme,
     settingsJson,

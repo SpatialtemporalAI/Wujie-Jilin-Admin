@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, watch } from 'vue';
+import { computed, ref, watch } from 'vue';
 import { useRoute } from 'vue-router';
 import { SimpleScrollbar } from '@sa/materials';
 import type { RouteKey } from '@elegant-router/types';
@@ -29,6 +29,8 @@ const {
 const { selectedKey } = useMenu();
 
 const expandedKeys = ref<string[]>([]);
+
+const isLightBlueBg = computed(() => !themeStore.darkMode);
 
 /**
  * Handle first level menu select
@@ -60,28 +62,14 @@ watch(
 
 <template>
   <Teleport :to="`#${GLOBAL_HEADER_MENU_ID}`">
-    <NMenu
-      mode="horizontal"
-      :value="activeFirstLevelMenuKey"
-      :options="firstLevelMenus"
-      :indent="18"
-      responsive
-      @update:value="handleSelectMenu"
-    />
+    <NMenu mode="horizontal" :value="activeFirstLevelMenuKey" :options="firstLevelMenus" :indent="18" responsive
+      @update:value="handleSelectMenu" />
   </Teleport>
   <Teleport :to="`#${GLOBAL_SIDER_MENU_ID}`">
-    <SimpleScrollbar>
-      <NMenu
-        v-model:expanded-keys="expandedKeys"
-        mode="vertical"
-        :value="selectedKey"
-        :collapsed="appStore.siderCollapse"
-        :collapsed-width="themeStore.sider.collapsedWidth"
-        :collapsed-icon-size="22"
-        :options="secondLevelMenus"
-        :indent="18"
-        @update:value="routerPushByKeyWithMetaQuery"
-      />
+    <SimpleScrollbar :blue-bg="isLightBlueBg">
+      <NMenu v-model:expanded-keys="expandedKeys" mode="vertical" :value="selectedKey"
+        :collapsed="appStore.siderCollapse" :collapsed-width="themeStore.sider.collapsedWidth" :collapsed-icon-size="22"
+        :options="secondLevelMenus" :indent="18" @update:value="routerPushByKeyWithMetaQuery" />
     </SimpleScrollbar>
   </Teleport>
 </template>
