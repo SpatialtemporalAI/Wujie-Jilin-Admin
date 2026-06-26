@@ -12,7 +12,7 @@ import logging
 from datetime import timedelta
 from typing import Any, Awaitable, Callable, Dict, Optional, Tuple
 
-from sqlalchemy import select
+from sqlalchemy import select, update
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from database.models.business.grpc_retry_task import GrpcRetryTask
@@ -62,8 +62,80 @@ def _calc_next_retry(retry_count: int) -> timedelta:
     return timedelta(seconds=_BACKOFF_SECONDS[idx])
 
 
+def _superseded_clause(
+    service_name: str,
+    method_name: str,
+    payload: Dict[str, Any],
+):
+    """构造「同业务键的 pending 任务」WHERE 条件列表
+
+    业务键规则：
+    - face_recognition: payload.face_id（同 face 的 CREATE/UPDATE/DELETE 互斥，新操作覆盖旧操作）
+    - voice/speed/battery: robot_id + method_name（同 robot 的同方法最终值覆盖中间值）
+    """
+    conditions = [
+        GrpcRetryTask.status == "pending",
+        GrpcRetryTask.deleted_at.is_(None),
+        GrpcRetryTask.service_name == service_name,
+        GrpcRetryTask.method_name == method_name,
+    ]
+
+    if service_name == "face_recognition":
+        face_id = payload.get("face_id")
+        if face_id is None:
+            return None
+        # PG JSON 路径：payload->>'face_id' = :face_id
+        conditions.append(
+            GrpcRetryTask.payload["face_id"].as_string() == str(face_id)
+        )
+    else:
+        robot_id = payload.get("robot_id")
+        if robot_id is None:
+            return None
+        conditions.append(GrpcRetryTask.robot_id == robot_id)
+
+    return conditions
+
+
 class GrpcRetryService:
     """gRPC 推送失败重试服务"""
+
+    @staticmethod
+    async def _cancel_superseded(
+        db: AsyncSession,
+        *,
+        service_name: str,
+        method_name: str,
+        payload: Dict[str, Any],
+    ) -> int:
+        """新任务入队前，取消被覆盖的旧 pending 任务（同业务键）。
+
+        场景示例：用户对同一条 face 记录「先编辑后删除」，编辑推送失败入队后，
+        删除又入队——此时旧 UPDATE 任务已无意义（设备最终应当只见 DELETE），
+        直接取消，避免设备端短时数据来回抖动。
+
+        Returns:
+            取消条数
+        """
+        conditions = _superseded_clause(service_name, method_name, payload)
+        if conditions is None:
+            return 0
+
+        result = await db.execute(
+            update(GrpcRetryTask)
+            .where(*conditions)
+            .values(status="cancelled", last_error="被新操作覆盖，不再重试")
+            .execution_options(synchronize_session=False)
+        )
+        cancelled = result.rowcount or 0
+        if cancelled:
+            logger.info(
+                "grpc retry superseded %s old task(s) service=%s method=%s",
+                cancelled,
+                service_name,
+                method_name,
+            )
+        return cancelled
 
     @staticmethod
     async def save_pending(
@@ -78,8 +150,16 @@ class GrpcRetryService:
     ) -> GrpcRetryTask:
         """业务层 gRPC 推送失败时调用：写入待重试任务
 
+        入队前先按业务键取消旧 pending 任务，避免被新操作覆盖的旧任务继续重试。
         next_retry_at = now() + 第一次退避（60s）
         """
+        await GrpcRetryService._cancel_superseded(
+            db,
+            service_name=service_name,
+            method_name=method_name,
+            payload=payload,
+        )
+
         task = GrpcRetryTask(
             service_name=service_name,
             method_name=method_name,

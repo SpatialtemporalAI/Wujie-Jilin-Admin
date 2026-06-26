@@ -32,7 +32,15 @@ scene_map_router = APIRouter(
     "/list",
     response_model=ResponsePageModel[SceneMapResponseData],
     summary="获取场景地图列表",
-    dependencies=[Depends(require_any_permission("scene:map:list", "scene:map-editor:list"))],
+    dependencies=[
+        Depends(
+            require_any_permission(
+                "scene:map:list",
+                "scene:map-editor:list",
+                "task:list",
+            )
+        )
+    ],
 )
 async def get_map_list(
     query_params: SceneMapQueryParams = Depends(),
