@@ -50,6 +50,13 @@ const voiceOptions = [
   { label: '女声', value: 'female' }
 ];
 
+const robotOptions = computed(() =>
+  robotList.value.map(robot => ({
+    label: `${robot.name}（${robot.serial_number}）`,
+    value: robot.id
+  }))
+);
+
 /**
  * 人脸识别（免唤醒）开关 - UI 状态
  * 与后端 wake_word_enabled 字段语义相反：
@@ -70,9 +77,7 @@ const canSaveWakeWord = computed(() => {
   return len >= 4 && len <= 6;
 });
 
-const selectedRobot = computed(() =>
-  robotList.value.find(r => r.id === selectedRobotId.value) || null
-);
+const selectedRobot = computed(() => robotList.value.find(r => r.id === selectedRobotId.value) || null);
 
 async function loadRobots() {
   robotLoading.value = true;
@@ -102,11 +107,13 @@ async function loadConfig(robotId: number) {
   }
 }
 
-function handleSelectRobot(robotId: number) {
+function handleSelectRobot(robotId: number | null) {
   selectedRobotId.value = robotId;
-  model.robot_id = robotId;
+  model.robot_id = robotId || 0;
   restoreValidation();
-  loadConfig(robotId);
+  if (robotId) {
+    loadConfig(robotId);
+  }
 }
 
 async function handleSaveVoice() {
@@ -185,163 +192,147 @@ async function handleTestTTS() {
   }
 }
 
-const robotColumns = [
-  { key: 'name', title: '机器人名称', align: 'center' as const, minWidth: 140 },
-  { key: 'serial_number', title: '序列号', align: 'center' as const, minWidth: 160 }
-];
-
-function rowClassName(row: Api.Robot.Robot, _index: number) {
-  return row.id === selectedRobotId.value ? 'selected-row' : '';
-}
-
 onMounted(() => {
   loadRobots();
 });
 </script>
 
 <template>
-  <div class="flex gap-16px h-full">
-    <!-- 左侧：机器人列表 -->
-    <NCard title="选择机器人" size="small" class="flex-1 flex flex-col">
-      <NDataTable
-        :columns="robotColumns"
-        :data="robotList"
-        size="small"
+  <div class="flex-col gap-16px">
+    <!-- 选择机器人 -->
+    <NCard title="选择机器人" size="small">
+      <NSelect
+        :value="selectedRobotId"
+        :options="robotOptions"
         :loading="robotLoading"
-        :row-key="row => row.id"
-        :row-class-name="rowClassName"
-        :scroll-x="300"
-        class="flex-1"
-        :row-props="(row: Api.Robot.Robot) => ({ onClick: () => handleSelectRobot(row.id), style: 'cursor: pointer' })"
-      >
-        <template #empty>
-          <NEmpty description="暂无机器人数据" />
-        </template>
-      </NDataTable>
+        placeholder="请选择机器人"
+        filterable
+        clearable
+        @update:value="handleSelectRobot"
+      />
     </NCard>
 
-    <!-- 右侧：配置表单 -->
-    <NCard title="语音配置" size="small" class="flex-1 flex flex-col">
-      <div v-if="!selectedRobotId" class="flex items-center justify-center h-full text-gray-400">
-        请在左侧选择机器人
-      </div>
-      <div v-else class="flex-col gap-16px">
-        <NAlert v-if="showAlert" type="info" closable>
-          唤醒词设置成功，预计 1 分钟后生效
-        </NAlert>
+    <!-- 配置区域 -->
+    <NCard title="语音配置" size="small">
+      <div v-if="!selectedRobotId" class="empty-tip">请先选择机器人</div>
+      <NSpin v-else :show="loading">
+        <div class="flex-col gap-16px">
+          <NAlert v-if="showAlert" type="info" closable>
+            唤醒词设置成功，预计 1 分钟后生效
+          </NAlert>
 
-        <div class="mb-8px text-14px font-medium">
-          当前机器人：{{ selectedRobot?.name }}（{{ selectedRobot?.serial_number }}）
-        </div>
-
-        <NForm ref="formRef" :model="model" :rules="rules" label-placement="left" :label-width="140">
-          <!-- 唤醒词配置 -->
-          <NCard title="唤醒词配置" size="small">
-            <NGrid responsive="screen" :cols="1">
-              <NFormItemGi label="人脸识别（免唤醒）">
-                <div class="flex-col gap-4px">
-                  <div>
-                    <NSwitch v-model:value="faceWakeEnabled" />
-                    <span class="ml-8px text-gray-400">
-                      {{ faceWakeEnabled ? '已开启' : '已关闭' }}
-                    </span>
-                  </div>
-                  <NText depth="3" class="text-13px leading-relaxed">
-                    关闭时通过唤醒词与机器人交互；开启时检测到人脸可直接唤醒机器人，无需唤醒词
-                  </NText>
-                </div>
-              </NFormItemGi>
-              <NFormItemGi v-if="!faceWakeEnabled" label="唤醒词" path="wake_word">
-                <NInput
-                  v-model:value="model.wake_word"
-                  placeholder="请输入 4-6 字唤醒词"
-                  maxlength="6"
-                  show-count
-                  clearable
-                />
-              </NFormItemGi>
-              <NFormItemGi v-if="!faceWakeEnabled">
-                <NSpace align="center">
-                  <NButton
-                    v-if="hasAuth('robot:config:edit')"
-                    type="primary"
-                    ghost
-                    :disabled="!canSaveWakeWord"
-                    @click="handleTestWakeWord"
-                  >
-                    测试
-                  </NButton>
-                  <NText v-if="wakeWordTestText" type="info" class="text-14px">
-                    {{ wakeWordTestText }}
-                  </NText>
-                </NSpace>
-              </NFormItemGi>
-            </NGrid>
-          </NCard>
-
-          <!-- 语音合成 -->
-          <NCard title="语音合成设置" size="small" class="mt-16px">
-            <NGrid responsive="screen" :cols="1">
-              <NFormItemGi label="音色" path="tts_voice">
-                <NSelect v-model:value="model.tts_voice" :options="voiceOptions" placeholder="请选择音色" />
-              </NFormItemGi>
-              <NFormItemGi label="语速">
-                <div class="flex-col gap-8px w-full">
-                  <NSlider
-                    v-model:value="model.tts_speed"
-                    :min="0.5"
-                    :max="2"
-                    :step="0.1"
-                    :tooltip="false"
-                    :marks="{ 0.5: '0.5', 1: '1.0', 1.5: '1.5', 2: '2.0' }"
-                  />
-                  <span class="text-13px text-gray-400">当前语速：{{ model.tts_speed.toFixed(1) }} 倍</span>
-                </div>
-              </NFormItemGi>
-              <NFormItemGi label="音量">
-                <div class="flex-col gap-8px w-full">
-                  <NSlider
-                    v-model:value="model.tts_volume"
-                    :min="0"
-                    :max="100"
-                    :step="1"
-                    :tooltip="false"
-                    :marks="{ 0: '0', 50: '50', 100: '100' }"
-                  />
-                  <span class="text-13px text-gray-400">当前音量：{{ model.tts_volume }}</span>
-                </div>
-              </NFormItemGi>
-              <NFormItemGi>
-                <NSpace>
-                  <NButton v-if="hasAuth('robot:config:edit')" type="primary" ghost @click="handleTestTTS">
-                    测试语音
-                  </NButton>
-                </NSpace>
-              </NFormItemGi>
-            </NGrid>
-          </NCard>
-
-          <div class="mt-16px">
-            <NButton
-              v-if="hasAuth('robot:config:edit')"
-              type="primary"
-              :loading="saving"
-              :disabled="!canSaveWakeWord"
-              @click="handleSaveVoice"
-            >
-              保存设置
-            </NButton>
+          <div class="text-14px font-medium">
+            当前机器人：{{ selectedRobot?.name }}（{{ selectedRobot?.serial_number }}）
           </div>
-        </NForm>
-      </div>
+
+          <NForm ref="formRef" :model="model" :rules="rules" label-placement="left" :label-width="140">
+            <div class="config-row">
+              <!-- 左侧：唤醒词配置 -->
+              <NCard title="唤醒词配置" size="small" class="flex-1">
+                <NGrid responsive="screen" :cols="1">
+                  <NFormItemGi label="人脸识别（免唤醒）">
+                    <div class="flex-col gap-4px">
+                      <div>
+                        <NSwitch v-model:value="faceWakeEnabled" />
+                        <span class="ml-8px text-gray-400">
+                          {{ faceWakeEnabled ? '已开启' : '已关闭' }}
+                        </span>
+                      </div>
+                      <NText depth="3" class="text-13px leading-relaxed">
+                        关闭时通过唤醒词与机器人交互；开启时检测到人脸可直接唤醒机器人，无需唤醒词
+                      </NText>
+                    </div>
+                  </NFormItemGi>
+                  <NFormItemGi v-if="!faceWakeEnabled" label="唤醒词" path="wake_word">
+                    <NInput
+                      v-model:value="model.wake_word"
+                      placeholder="请输入 4-6 字唤醒词"
+                      maxlength="6"
+                      show-count
+                      clearable
+                    />
+                  </NFormItemGi>
+                  <NFormItemGi v-if="!faceWakeEnabled">
+                    <NSpace align="center">
+                      <NButton
+                        v-if="hasAuth('robot:config:edit')"
+                        type="primary"
+                        ghost
+                        :disabled="!canSaveWakeWord"
+                        @click="handleTestWakeWord"
+                      >
+                        测试
+                      </NButton>
+                      <NText v-if="wakeWordTestText" type="info" class="text-14px">
+                        {{ wakeWordTestText }}
+                      </NText>
+                    </NSpace>
+                  </NFormItemGi>
+                </NGrid>
+              </NCard>
+
+              <!-- 右侧：语音合成设置 -->
+              <NCard title="语音合成设置" size="small" class="flex-1">
+                <NGrid responsive="screen" :cols="1">
+                  <NFormItemGi label="音色" path="tts_voice">
+                    <NSelect v-model:value="model.tts_voice" :options="voiceOptions" placeholder="请选择音色" />
+                  </NFormItemGi>
+                  <NFormItemGi label="语速">
+                    <div class="flex-col gap-8px w-full">
+                      <NSlider
+                        v-model:value="model.tts_speed"
+                        :min="0.5"
+                        :max="2"
+                        :step="0.1"
+                        :tooltip="false"
+                        :marks="{ 0.5: '0.5', 1: '1.0', 1.5: '1.5', 2: '2.0' }"
+                      />
+                      <span class="text-13px text-gray-400">当前语速：{{ model.tts_speed.toFixed(1) }} 倍</span>
+                    </div>
+                  </NFormItemGi>
+                  <NFormItemGi label="音量">
+                    <div class="flex-col gap-8px w-full">
+                      <NSlider
+                        v-model:value="model.tts_volume"
+                        :min="0"
+                        :max="100"
+                        :step="1"
+                        :tooltip="false"
+                        :marks="{ 0: '0', 50: '50', 100: '100' }"
+                      />
+                      <span class="text-13px text-gray-400">当前音量：{{ model.tts_volume }}</span>
+                    </div>
+                  </NFormItemGi>
+                  <NFormItemGi>
+                    <NSpace>
+                      <NButton v-if="hasAuth('robot:config:edit')" type="primary" ghost @click="handleTestTTS">
+                        测试语音
+                      </NButton>
+                    </NSpace>
+                  </NFormItemGi>
+                </NGrid>
+              </NCard>
+            </div>
+
+            <div class="mt-16px">
+              <NButton
+                v-if="hasAuth('robot:config:edit')"
+                type="primary"
+                :loading="saving"
+                :disabled="!canSaveWakeWord"
+                @click="handleSaveVoice"
+              >
+                保存设置
+              </NButton>
+            </div>
+          </NForm>
+        </div>
+      </NSpin>
     </NCard>
   </div>
 </template>
 
 <style scoped>
-.flex {
-  display: flex;
-}
 .flex-col {
   display: flex;
   flex-direction: column;
@@ -352,14 +343,14 @@ onMounted(() => {
 .gap-16px {
   gap: 16px;
 }
-.h-full {
-  height: 100%;
+.gap-4px {
+  gap: 4px;
 }
-.items-center {
-  align-items: center;
+.gap-8px {
+  gap: 8px;
 }
-.justify-center {
-  justify-content: center;
+.w-full {
+  width: 100%;
 }
 .mt-16px {
   margin-top: 16px;
@@ -367,11 +358,11 @@ onMounted(() => {
 .ml-8px {
   margin-left: 8px;
 }
-.mb-8px {
-  margin-bottom: 8px;
-}
 .text-14px {
   font-size: 14px;
+}
+.text-13px {
+  font-size: 13px;
 }
 .font-medium {
   font-weight: 500;
@@ -379,7 +370,23 @@ onMounted(() => {
 .text-gray-400 {
   color: #9ca3af;
 }
-:deep(.selected-row td) {
-  background-color: var(--n-td-color-hover) !important;
+.leading-relaxed {
+  line-height: 1.6;
+}
+.empty-tip {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 160px;
+  color: #9ca3af;
+}
+.config-row {
+  display: flex;
+  gap: 16px;
+}
+@media (max-width: 768px) {
+  .config-row {
+    flex-direction: column;
+  }
 }
 </style>

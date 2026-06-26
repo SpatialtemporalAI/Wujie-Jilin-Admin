@@ -69,7 +69,7 @@ const {
       key: 'parent_id',
       title: '上级分组',
       align: 'center',
-      width: 150,
+      width: 228,
       render: row => {
         return <span>{row.parent_name || (row.parent_id ? `ID: ${row.parent_id}` : '-')}</span>;
       }

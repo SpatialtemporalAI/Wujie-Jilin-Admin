@@ -76,6 +76,8 @@ declare namespace Api {
       battery_threshold?: number | null;
       /** grpc config (agent + middleware + ros) */
       grpc_config?: RobotGrpcConfig | null;
+      /** robot logo url */
+      logo?: string | null;
     };
 
     /** location info */
