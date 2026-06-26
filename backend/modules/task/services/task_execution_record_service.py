@@ -182,8 +182,8 @@ class TaskExecutionRecordService:
     async def pause_execution(db: AsyncSession, record_id: int) -> TaskExecutionRecord:
         try:
             record = await TaskExecutionRecordService._get_record(db, record_id)
-            if record.status != "running":
-                raise ConflictError(msg="只有运行中的任务才能暂停")
+            if record.status not in ("running", "pending"):
+                raise ConflictError(msg="只有运行中或等待中的任务才能暂停")
             record.status = "paused"
             await db.commit()
             await db.refresh(record)
@@ -250,8 +250,8 @@ class TaskExecutionRecordService:
     async def stop_execution(db: AsyncSession, record_id: int) -> TaskExecutionRecord:
         try:
             record = await TaskExecutionRecordService._get_record(db, record_id)
-            if record.status not in ("running", "paused"):
-                raise ConflictError(msg="只有运行中或已暂停的任务才能停止")
+            if record.status not in ("running", "paused", "pending"):
+                raise ConflictError(msg="只有运行中、已暂停或等待中的任务才能停止")
             record.status = "cancelled"
             record.finish_time = timezone.now()
             await db.commit()
