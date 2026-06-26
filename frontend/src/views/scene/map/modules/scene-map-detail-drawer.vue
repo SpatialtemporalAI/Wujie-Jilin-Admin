@@ -472,7 +472,7 @@ function closeDrawer() {
       :autosize="{ minRows: 12, maxRows: 18 }"
       placeholder="请粘贴包含 label、position 的 JSON 数组，例: [{&quot;label&quot;: &quot;点1&quot;, &quot;position&quot;: [1.0, 2.0, 90]}]"
     />
-    <div class="mt-8px text-xs text-gray-500">position 按 [x, y, angle] 导入，坐标使用 ROS 世界坐标系，将按地图分辨率和起始点位自动转换。</div>
+    <div class="mt-8px text-xs text-gray-500">position 按 [x, y, angle] 导入，坐标使用 ROS 世界坐标系，将按地图分辨率和扫图起始点自动转换。</div>
   </NModal>
 </template>
 
