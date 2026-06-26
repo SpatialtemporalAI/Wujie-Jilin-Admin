@@ -3,7 +3,7 @@ import { ref, computed, onMounted } from 'vue';
 import { NTag } from 'naive-ui';
 import type { SelectOption } from 'naive-ui';
 import type { SelectedElement } from '../composables/useMapEditor';
-import { fetchGetLatestRobotStatus, fetchGetRobotList, fetchUpdateRobot } from '@/service/api';
+import { fetchGetLatestRobotStatus, fetchGetRobotList, fetchUpdateRobotMapBinding } from '@/service/api';
 import { radToDeg, degToRad } from '@/utils/coordinate';
 
 interface Props {
@@ -162,7 +162,7 @@ async function locateRobot(robot: Api.Robot.Robot) {
 async function updateRobotMap(robot: Api.Robot.Robot, mapId: number | null) {
   bindingRobotId.value = robot.id;
   try {
-    const { data, error } = await fetchUpdateRobot(robot.id, { map_id: mapId });
+    const { data, error } = await fetchUpdateRobotMapBinding(robot.id, { map_id: mapId });
     if (!error && data) {
       const target = robotList.value.find(item => item.id === robot.id);
       if (target) {

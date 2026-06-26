@@ -19,7 +19,7 @@ from core.response.response_schema import (
 from app.models.common.page import PageRequest, get_page_params, get_paginated_results
 from core.decorators.operation_log import log_operation
 from modules.admin.deps.auth.user_manager import current_user
-from modules.admin.deps.auth.permission import require_permission
+from modules.admin.deps.auth.permission import require_permission, require_any_permission
 from database.models.sys.user import SysUser
 from database.models.business.robot import Robot
 from database.models.business.robot_model import RobotModel
@@ -33,6 +33,7 @@ from modules.robot.schemas.robot import (
     RobotQueryParams,
     RobotResponseData,
     RobotGrpcConfigUpdate,
+    RobotMapBindingUpdate,
 )
 
 logger = logging.getLogger(__name__)
@@ -247,4 +248,44 @@ async def update_robot_grpc_config(
 
     except Exception as e:
         logger.error("更新机器人 gRPC 配置接口失败: %s", str(e), exc_info=True)
+        raise
+
+
+@robot_router.put(
+    "/{robot_id}/bind-map",
+    response_model=ResponseModel[RobotResponseData],
+    dependencies=[
+        Depends(
+            require_any_permission("robot:manage:edit", "scene:map-editor:edit")
+        )
+    ],
+)
+@log_operation(module="robot", action="update", description="更新机器人绑定场景")
+async def update_robot_map_binding(
+    robot_id: int,
+    request: Request,
+    payload: RobotMapBindingUpdate,
+    db: AsyncSession = Depends(get_session),
+    user: SysUser = Depends(current_user),
+):
+    """
+    更新机器人绑定场景（地图编辑器专用）
+
+    与主表单 edit 解耦：机器人管理与地图编辑器各自独立的权限码任一通过即可。
+    """
+    try:
+        logger.info("更新机器人绑定场景接口被调用，机器人ID: %d", robot_id)
+
+        await RobotSchemaService.ensure_robot_map_binding(db)
+        robot_obj = await RobotService.update_map_binding(
+            db, robot_id, payload
+        )
+        response_data = RobotResponseData.model_validate(robot_obj)
+        await _fill_robot_names(db, [response_data])
+
+        logger.info("更新机器人绑定场景接口成功，机器人ID: %d", robot_id)
+        return response_base.success(data=response_data, msg="更新成功")
+
+    except Exception as e:
+        logger.error("更新机器人绑定场景接口失败: %s", str(e), exc_info=True)
         raise

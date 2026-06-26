@@ -114,6 +114,15 @@ export function fetchUpdateRobotGrpcConfig(id: number, data: Api.Robot.RobotGrpc
   });
 }
 
+/** update robot map binding (scene map editor only — uses scene:map-editor:edit permission) */
+export function fetchUpdateRobotMapBinding(id: number, data: { map_id: number | null }) {
+  return request<Api.Robot.Robot>({
+    url: `/robot/manage/${id}/bind-map`,
+    method: 'put',
+    data
+  });
+}
+
 /** ==================== 机器人状态记录 API (只读) ==================== */
 
 /** get robot status records */

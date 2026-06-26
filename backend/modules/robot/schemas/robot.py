@@ -45,6 +45,14 @@ class RobotGrpcConfigUpdate(BaseReqEntity):
     grpc_config: RobotGrpcConfigPayload = Field(..., description="gRPC 配置")
 
 
+class RobotMapBindingUpdate(BaseReqEntity):
+    """更新机器人绑定场景请求（地图编辑器专用，与主表单 edit 解耦）"""
+
+    map_id: Optional[int] = Field(
+        None, description="绑定场景地图ID，传 null 表示解绑"
+    )
+
+
 class RobotCreate(BaseReqEntity):
     """
     机器人创建请求模型

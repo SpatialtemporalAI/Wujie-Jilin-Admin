@@ -24,6 +24,7 @@ from modules.robot.schemas.robot import (
     RobotUpdate,
     RobotQueryParams,
     RobotGrpcConfigPayload,
+    RobotMapBindingUpdate,
 )
 from modules.robot.services.robot_schema_service import RobotSchemaService
 
@@ -473,4 +474,70 @@ class RobotService:
         except Exception as e:
             await db.rollback()
             logger.error("更新机器人 gRPC 配置失败: %s", str(e), exc_info=True)
+            raise
+
+    @staticmethod
+    async def update_map_binding(
+        db: AsyncSession, robot_id: int, payload: RobotMapBindingUpdate
+    ) -> Robot:
+        """
+        更新机器人绑定场景（地图编辑器专用）
+
+        与主表单 edit 解耦：只改 map_id 一个字段，不接受其他字段。
+        map_id=None 表示解绑。新增 / 切换绑定时校验 SceneMap 存在性。
+
+        Args:
+            db: 数据库会话
+            robot_id: 机器人ID
+            payload: 仅含 map_id
+
+        Returns:
+            更新后的机器人对象
+
+        Raises:
+            NotFoundError: 机器人不存在 / 场景地图不存在
+        """
+        try:
+            logger.info(
+                "更新机器人绑定场景，机器人ID: %d，map_id: %s",
+                robot_id,
+                payload.map_id,
+            )
+
+            result = await db.execute(
+                select(Robot)
+                .where(Robot.id == robot_id)
+                .where(Robot.deleted_at.is_(None))
+            )
+            existing = result.scalar_one_or_none()
+
+            if not existing:
+                logger.warning("机器人不存在，机器人ID: %d", robot_id)
+                raise NotFoundError(msg=f"机器人 {robot_id} 不存在")
+
+            if payload.map_id is not None:
+                map_result = await db.execute(
+                    select(SceneMap)
+                    .where(SceneMap.id == payload.map_id)
+                    .where(SceneMap.deleted_at.is_(None))
+                )
+                if not map_result.scalar_one_or_none():
+                    raise NotFoundError(
+                        msg=f"场景地图 {payload.map_id} 不存在"
+                    )
+
+            existing.map_id = payload.map_id
+
+            await db.commit()
+            await db.refresh(existing)
+
+            logger.info("更新机器人绑定场景成功，机器人ID: %d", robot_id)
+            return existing
+
+        except NotFoundError:
+            await db.rollback()
+            raise
+        except Exception as e:
+            await db.rollback()
+            logger.error("更新机器人绑定场景失败: %s", str(e), exc_info=True)
             raise
