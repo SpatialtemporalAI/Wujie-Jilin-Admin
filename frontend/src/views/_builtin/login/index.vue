@@ -56,7 +56,7 @@ const bgColor = computed(() => {
     <NCard :bordered="false" class="absolute z-4 w-auto rd-12px  logo-glass">
       <div class="w-324px lt-sm:w-300px">
         <div class="flex justify-center items-center mb-14px">
-          <img src="@/assets/imgs/logo.png" alt="" class="w-28px h-28px object-contain mr-10px" />
+          <img src="@/assets/imgs/logo.png" alt="" class="w-24px h-24px object-contain mr-10px" />
           <img src="@/assets/imgs/lvyaText.png" alt="" class="h-24px object-contain" />
         </div>
         <header class="flex-y-center justify-center">
