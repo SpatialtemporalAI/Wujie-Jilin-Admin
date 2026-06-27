@@ -271,7 +271,7 @@ async function handleInitModel() {
         annotation_id: p.annotation_id ?? null,
         actions:
           p.actions && p.actions.length > 0
-            ? p.actions.map(a => ({ action: a.action || 'wave', voice_text: a.voice_text ?? null }))
+            ? p.actions.map(a => ({ action: a.action || 'no', voice_text: a.voice_text ?? null }))
             : []
       }));
     }
