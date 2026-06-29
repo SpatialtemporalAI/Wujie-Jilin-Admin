@@ -1485,7 +1485,7 @@ defineExpose({ exportCanvas, zoomIn, zoomOut, zoomReset, locatePixelPoint });
       <div class="flex items-center gap-6px">
         <span class="inline-block h-10px w-10px"
           style="background-image: linear-gradient(135deg, transparent 45%, #6b7280 45%, #6b7280 55%, transparent 55%); background-color: rgba(107, 114, 128, 0.12); border: 1px solid #6b7280"></span>
-        <span>禁行区域</span>
+        <span>禁行区域/虚拟墙</span>
       </div>
       <div class="flex items-center gap-6px">
         <span class="inline-block h-10px w-10px"
