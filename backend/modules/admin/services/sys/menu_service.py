@@ -33,6 +33,37 @@ def _type_to_str(menu_type: MenuType) -> str:
     return mapping.get(menu_type, "1")
 
 
+def _normalize_menu_component(component: Optional[str], has_parent: bool) -> Optional[str]:
+    """根据是否有父级规范化菜单组件。
+
+    SoybeanAdmin 路由规则：根路由名不含 ``_``、组件须为 ``layout.<layout>$view.<page>``；
+    嵌套路由名含 ``_``、组件须为 ``view.<page>``。否则前端 ``transform.ts`` 会丢弃该路由，
+    导致页面无法访问。此处作为安全网，确保组件形态与挂载层级一致：
+
+    - 含 ``view.`` 的组件：根路由 → ``layout.<layout>$view.<page>``，嵌套 → ``view.<page>``
+    - 目录（仅 layout）/外链（None）/按钮：原样返回
+
+    保留用户选择的 layout 名（如 blank），缺省 base。
+    """
+    if not component or "view." not in component:
+        return component
+
+    layout_name: Optional[str] = None
+    view_part = component
+    if "$" in component:
+        left, view_part = component.split("$", 1)
+        if left.startswith("layout."):
+            layout_name = left[len("layout."):]
+
+    view_key = view_part[len("view."):] if view_part.startswith("view.") else view_part
+    if not view_key:
+        return component
+
+    if has_parent:
+        return f"view.{view_key}"
+    return f"layout.{layout_name or 'base'}$view.{view_key}"
+
+
 class MenuService:
     """
     菜单管理服务类
@@ -207,6 +238,7 @@ class MenuService:
                 label=menu.name,
                 pId=menu.parent_id,
                 menuType=_type_to_str(menu.type),
+                routePath=menu.path,
                 children=[],
             )
             menu_map[menu.id] = menu_response
@@ -333,6 +365,30 @@ class MenuService:
         return menu
 
     @staticmethod
+    async def _collect_descendant_ids(db: AsyncSession, menu_id: int) -> List[int]:
+        """递归收集某菜单的全部后代 ID（不含自身）。
+
+        一次性加载 (id, parent_id) 映射后按层遍历，菜单表数据量通常较小。
+        """
+        result = await db.execute(select(SysMenu.id, SysMenu.parent_id))
+        children_map: dict = {}
+        for mid, pid in result.all():
+            children_map.setdefault(pid, []).append(mid)
+
+        descendant_ids: List[int] = []
+        queue = [menu_id]
+        seen: set = set()
+        while queue:
+            current = queue.pop()
+            for child_id in children_map.get(current, []):
+                if child_id in seen:
+                    continue
+                seen.add(child_id)
+                descendant_ids.append(child_id)
+                queue.append(child_id)
+        return descendant_ids
+
+    @staticmethod
     async def update_menu(
         db: AsyncSession, menu_id: int, menu_update: SysMenuUpdate, *, is_superuser: bool = False
     ) -> SysMenu:
@@ -413,11 +469,34 @@ class MenuService:
                     )
                     ancestor_id = anc_result.scalar_one_or_none()
 
+        # 记录更新前的路径，用于目录路径变更时级联更新后代路径前缀
+        old_path = menu.path
+
         # 更新菜单信息
         update_data = menu_update.model_dump(exclude_unset=True)
         for key, value in update_data.items():
             if hasattr(menu, key):
                 setattr(menu, key, value)
+
+        new_path = menu.path
+
+        # 目录路径变更：同步替换全部后代 path 的前缀（仅改 path，不动 name/component，
+        # 以免破坏路由名与视图文件的映射导致页面丢失）
+        if old_path and new_path and old_path != new_path:
+            descendant_ids = await MenuService._collect_descendant_ids(db, menu_id)
+            if descendant_ids:
+                prefix = old_path.rstrip("/")
+                new_prefix = new_path.rstrip("/")
+                desc_result = await db.execute(
+                    select(SysMenu).where(SysMenu.id.in_(descendant_ids))
+                )
+                for child in desc_result.scalars().all():
+                    if child.path and child.path.startswith(prefix + "/"):
+                        child.path = new_prefix + child.path[len(prefix):]
+
+        # 规范 component：确保组件形态与挂载层级一致（根路由带 layout，嵌套仅 view）
+        if menu.type == MenuType.MENU:
+            menu.component = _normalize_menu_component(menu.component, bool(menu.parent_id))
 
         await db.commit()
         get_memory_cache().invalidate(CacheNamespace.PERMISSION)

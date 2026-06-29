@@ -168,6 +168,8 @@ declare namespace Api {
       label: string;
       pId: number;
       menuType: MenuType;
+      /** route path (full path of the menu, used as prefix for its children) */
+      routePath?: string;
       children?: MenuTree[];
     };
 

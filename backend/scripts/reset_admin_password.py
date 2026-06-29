@@ -15,7 +15,9 @@ from core.security.password import PasswordHasher
 
 
 def reset_admin_password():
-    sync_url = "postgresql+psycopg2://postgres:123456@localhost:5432/smilex_cloud"
+    sync_url = (
+        "postgresql+psycopg2://postgres:wjzh0317@192.168.112.198:5432/wujie_jinlin"
+    )
     engine = create_engine(sync_url, echo=False)
     Session = sessionmaker(bind=engine)
 

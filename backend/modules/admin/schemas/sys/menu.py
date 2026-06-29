@@ -185,6 +185,7 @@ class SysMenuTreeResponse(BaseRespEntity):
     label: str = Field(..., description="菜单标签")
     pId: Optional[int] = Field(None, description="父菜单ID")
     menuType: str = Field("1", description="菜单类型：1-目录, 2-菜单, 3-按钮")
+    routePath: Optional[str] = Field(None, validation_alias=AliasChoices("path", "routePath"), description="路由路径")
     children: List["SysMenuTreeResponse"] = Field([], description="子菜单列表")
 
 

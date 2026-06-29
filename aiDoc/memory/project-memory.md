@@ -44,6 +44,7 @@
 - [2026-06-29 阿里云人脸库管理模块](./business/2026-06-29_face-recognition-aliyun.md) — 新增 modules/face：facebody 人脸库增删查，密钥走 settings.FACE，UploadFile→viapi FileUtils→OSS→facebody
 - [2026-06-29 菜单管理按钮权限补全 i18n](./business/2026-06-29_menu-button-permissions-i18n.md) — 全部按钮权限(menuType=3)补 route.* 中英文翻译(动作词)；8 个中文 scheduler 按钮经 0035 迁移改 ASCII 名，修复表格按钮行显示 route.xxx
 - [2026-06-29 地图编辑器点位落障碍物拦截](./business/2026-06-29_map-editor-point-on-obstacle-guard.md) — 右键添加点位若落在 obstacle-* 上则拦截并提示「注意：点位不能设置在障碍物上！」
+- [2026-06-29 菜单路径前缀继承/目录级联/移到根目录](./business/2026-06-29_menu-path-prefix-cascade.md) — path 与 name 解耦：路径=父级前缀+自身段；目录改路径后端级联后代 path；移到根目录自动裁路由名末段+补 layout 使其作为一级路由渲染
 
 ## 维护说明
 

@@ -46,3 +46,4 @@
 - [2026-06-26 删除废弃 task_execution 表 + JSON 字段补类型注解](./2026-06-26_task-execution-cleanup-and-json-annotation.md) — 删 task_execution ORM/service/endpoint/schema/前端死代码 + 新建 0032 drop 迁移；task_execution_record 的 task_definition/progress 字段注释指向 Pydantic 类（文档作用，不加运行时校验）
 - [2026-06-29 商户管理 + 商户开放 API](./2026-06-29_merchant-openapi.md) — 新建 merchant/merchant_robot 表 + HMAC 签名开放 API（goto_point/navigate_route/execute_task/暂停/恢复/停止/speak），复用任务管线与 gRPC；api_secret Fernet 可逆加密
 - [2026-06-29 菜单管理按钮权限补全 i18n](./2026-06-29_menu-button-permissions-i18n.md) — 全部按钮权限(menuType=3)补 route.* 中英文翻译(动作词)；8 个中文 scheduler 按钮经 0035 迁移改 ASCII 名，修复表格按钮行显示 route.xxx
+- [2026-06-29 菜单路径前缀继承/目录级联/移到根目录](./2026-06-29_menu-path-prefix-cascade.md) — path 与 name 解耦：路径=父级前缀+自身段；目录改路径后端级联后代 path；移到根目录自动裁路由名末段+补 layout 使其作为一级路由渲染

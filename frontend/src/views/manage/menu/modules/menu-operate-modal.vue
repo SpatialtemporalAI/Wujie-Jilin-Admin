@@ -8,8 +8,10 @@ import { getLocalIcons } from '@/utils/icon';
 import { $t } from '@/locales';
 import SvgIcon from '@/components/custom/svg-icon.vue';
 import {
+  composePath,
   getLayoutAndPage,
-  getRoutePathByRouteName,
+  getLastPathSegment,
+  getLastSegmentByName,
   transformLayoutAndPageToComponent
 } from './shared';
 
@@ -71,6 +73,7 @@ type Model = Pick<
   permission: string;
   layout: string;
   page: string;
+  pathSegment: string;
 };
 
 const model = ref(createDefaultModel());
@@ -81,6 +84,26 @@ async function getMenuTree() {
   const { data } = await fetchGetMenuTree();
   menuTreeRaw.value = data || [];
 }
+
+/** 扁平 id → routePath 映射，用于查找父级路径前缀 */
+const menuPathMap = computed(() => {
+  const map = new Map<number, string>();
+  function walk(nodes: Api.SystemManage.MenuTree[]) {
+    for (const node of nodes) {
+      if (node.routePath) map.set(node.id, node.routePath);
+      if (node.children) walk(node.children);
+    }
+  }
+  walk(menuTreeRaw.value);
+  return map;
+});
+
+/** 父级目录的完整路径（只读前缀）；无父级（根目录）时为空 */
+const pathPrefix = computed(() => {
+  const parentId = model.value.parentId;
+  if (!parentId) return '';
+  return menuPathMap.value.get(parentId) || '';
+});
 
 function collectDescendantIds(trees: Api.SystemManage.MenuTree[], excludeId: number): Set<number> {
   const ids = new Set<number>();
@@ -144,6 +167,7 @@ function createDefaultModel(): Model {
     menuType: '1',
     menuName: '',
     routePath: '',
+    pathSegment: '',
     component: '',
     layout: 'base',
     page: '',
@@ -160,19 +184,19 @@ function createDefaultModel(): Model {
   };
 }
 
-type RuleKey = Extract<keyof Model, 'menuName' | 'status' | 'routePath' | 'permission'>;
+type RuleKey = Extract<keyof Model, 'menuName' | 'status' | 'pathSegment' | 'permission'>;
 
 const rules = computed<Record<RuleKey, App.Global.FormRule>>(() => {
   const base: Record<RuleKey, App.Global.FormRule> = {
     menuName: defaultRequiredRule,
     status: defaultRequiredRule,
-    routePath: defaultRequiredRule,
+    pathSegment: defaultRequiredRule,
     permission: defaultRequiredRule
   };
   if (model.value.menuType === '3') {
     return {
       ...base,
-      routePath: { required: false }
+      pathSegment: { required: false }
     } as Record<RuleKey, App.Global.FormRule>;
   }
   return {
@@ -251,6 +275,15 @@ function handleInitModel() {
 
     Object.assign(model.value, rest, { layout, page });
     model.value.permission = props.rowData.permission || '';
+
+    // 拆出自身路径段：优先去掉父级前缀，否则取末段
+    const fullPath = props.rowData.routePath || '';
+    const prefix = pathPrefix.value.replace(/\/+$/, '');
+    if (prefix && fullPath.startsWith(`${prefix}/`)) {
+      model.value.pathSegment = fullPath.slice(prefix.length + 1);
+    } else {
+      model.value.pathSegment = getLastPathSegment(fullPath);
+    }
   }
 }
 
@@ -262,16 +295,8 @@ function openIconLibrary() {
   window.open('https://icon-sets.iconify.design/', '_blank');
 }
 
-function handleUpdateRoutePathByMenuName() {
-  if (model.value.menuName) {
-    model.value.routePath = getRoutePathByRouteName(model.value.menuName);
-  } else {
-    model.value.routePath = '';
-  }
-}
-
 function getSubmitParams() {
-  const { layout, page, ...params } = model.value;
+  const { layout, page, pathSegment, ...params } = model.value;
 
   if (model.value.menuType === '3') {
     params.routePath = '';
@@ -280,9 +305,22 @@ function getSubmitParams() {
     return params;
   }
 
-  const effectiveLayout = model.value.parentId ? '' : layout;
+  const willBeRoot = !model.value.parentId;
+
+  // 移到根目录且路由名含 _：裁成末段（SoybeanAdmin 根路由名不能含 _，否则前端会丢弃该路由）。
+  // 通常 parentId watcher 已同步 model.menuName，此处做兜底。
+  let routeName = model.value.menuName;
+  if (willBeRoot && routeName.includes('_')) {
+    routeName = getLastSegmentByName(routeName);
+  }
+
+  // 组件：根路由需 layout.base$view.<page>，嵌套仅 view.<page>。
+  // 修复「移到根目录后 component 仍为 view.xxx（无 layout）」导致页面无法访问的问题。
+  const effectiveLayout = willBeRoot ? layout || 'base' : '';
   const component = transformLayoutAndPageToComponent(effectiveLayout, page);
 
+  params.menuName = routeName;
+  params.routePath = composePath(pathPrefix.value, pathSegment);
   params.component = component;
 
   return params;
@@ -310,18 +348,33 @@ async function handleSubmit() {
   }
 }
 
-watch(visible, () => {
+watch(visible, async () => {
   if (visible.value) {
+    // 先加载菜单树，确保 handleInitModel 中能查到父级路径前缀
+    await getMenuTree();
     handleInitModel();
     restoreValidation();
-    getMenuTree();
   }
 });
 
+// 新增菜单时按菜单名末段自动填充路径段（编辑时不覆盖已加载的段）
 watch(
   () => model.value.menuName,
-  () => {
-    handleUpdateRoutePathByMenuName();
+  newName => {
+    if (props.operateType !== 'edit') {
+      model.value.pathSegment = newName ? getLastSegmentByName(newName) : '';
+    }
+  }
+);
+
+// 移到根目录：路由名含 _ 时自动裁成末段（SoybeanAdmin 根路由名不能含 _），所见即所得
+watch(
+  () => model.value.parentId,
+  (newPid, oldPid) => {
+    if (!newPid && oldPid && model.value.menuName.includes('_')) {
+      model.value.menuName = getLastSegmentByName(model.value.menuName);
+      model.value.pathSegment = getLastSegmentByName(model.value.menuName);
+    }
   }
 );
 </script>
@@ -360,8 +413,17 @@ watch(
           >
             <NInput v-model:value="model.permission" :placeholder="$t('page.manage.menu.form.permission')" />
           </NFormItemGi>
-          <NFormItemGi v-if="!isButton" span="24 m:12" :label="$t('page.manage.menu.routePath')" path="routePath">
-            <NInput v-model:value="model.routePath" disabled :placeholder="$t('page.manage.menu.form.routePath')" />
+          <NFormItemGi v-if="!isButton" span="24 m:12" :label="$t('page.manage.menu.routePath')" path="pathSegment">
+            <NInputGroup>
+              <NInput
+                v-if="pathPrefix"
+                :value="pathPrefix"
+                disabled
+                :title="pathPrefix"
+                style="flex: 0 0 auto; max-width: 45%"
+              />
+              <NInput v-model:value="model.pathSegment" :placeholder="$t('page.manage.menu.form.routePath')" />
+            </NInputGroup>
           </NFormItemGi>
           <NFormItemGi v-if="!isButton && showLayout" span="24 m:12" :label="$t('page.manage.menu.layout')" path="layout">
             <NSelect

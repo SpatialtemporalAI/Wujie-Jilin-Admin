@@ -1,4 +1,8 @@
+import logging
+
 import bcrypt
+
+logger = logging.getLogger(__name__)
 
 
 class PasswordHasher:
@@ -16,6 +20,12 @@ class PasswordHasher:
 
     @staticmethod
     def verify(password: str, hashed_password: str) -> bool:
-        return bcrypt.checkpw(
-            password.encode("utf-8"), hashed_password.encode("utf-8")
-        )
+        try:
+            return bcrypt.checkpw(
+                password.encode("utf-8"), hashed_password.encode("utf-8")
+            )
+        except ValueError:
+            # 非法/非 bcrypt 哈希（如明文、其它算法、被截断）——按验证失败处理，
+            # 避免向上抛出 ValueError 被全局处理器转成不透明的 400。
+            logger.warning("密码哈希格式非法，按验证失败处理")
+            return False
