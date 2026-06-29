@@ -215,3 +215,33 @@ class GrpcModel(BaseModel):
         description="ConfigService 地址 host:port（voice/speed/battery/face 共用）",
     )
     TIMEOUT_SECONDS: float = Field(10.0, description="单次 RPC 超时(秒)")
+
+
+class MerchantModel(BaseModel):
+    """商户开放 API 配置模型"""
+
+    ENCRYPT_KEY: str = Field(
+        "wujie-merchant-default-key-please-change",
+        description="api_secret 可逆加密密钥（passphrase，生产环境必须修改）",
+    )
+    SIGN_TTL_SECONDS: int = Field(
+        300, description="HMAC 签名时间戳容差窗口(秒)"
+    )
+    NONCE_TTL_SECONDS: int = Field(
+        300, description="nonce 防重放缓存时长(秒)"
+    )
+    API_KEY_PREFIX: str = Field("mk_", description="api_key 前缀")
+    API_SECRET_PREFIX: str = Field("sk_", description="api_secret 前缀")
+
+
+class FaceRecognitionModel(BaseModel):
+    """阿里云人脸识别（Facebody）配置模型"""
+
+    ENABLED: bool = Field(False, description="是否启用阿里云人脸识别")
+    ACCESS_KEY_ID: str = Field("", description="阿里云 AccessKey ID")
+    ACCESS_KEY_SECRET: str = Field("", description="阿里云 AccessKey Secret")
+    ENDPOINT: str = Field(
+        "facebody.cn-shanghai.aliyuncs.com", description="人脸识别服务端点"
+    )
+    REGION_ID: str = Field("cn-shanghai", description="阿里云区域 ID")
+    DEFAULT_DB_NAME: str = Field("default", description="默认人脸库名称")

@@ -162,6 +162,46 @@
 
 机器人管理接口支持可空字段 `map_id` 表示绑定的场景地图 ID，响应额外返回 `map_name` 表示场景地图名称。地图编辑器中机器人定位依赖 `map_id` 与最新状态记录的 `location` 坐标。
 
+## 商户管理 + 商户开放 API 契约
+
+### 数据模型
+
+- `merchant`：`id, name, code(唯一), contact_name/phone/email, api_key(唯一,明文), api_secret_encrypted(Fernet加密), status, remark`
+- `merchant_robot`：`merchant_id × robot_id` 多对多关联（商户绑定的可操作机器人）
+
+### 后台管理接口（`/merchant`，JWT + 权限码 `merchant:list/add/edit/delete`）
+
+- `GET /merchant/list`（分页）、`GET /merchant/{id}`（详情含 `robot_ids`）
+- `POST /merchant/add` → 响应含 `api_secret` 明文（**仅本次返回**）
+- `PUT /merchant/{id}`、`DELETE /merchant/{id}`、`PUT /merchant/{id}/toggle`
+- `POST /merchant/{id}/reset-api-key` → 旧密钥立即失效，响应含新 `api_key`+`api_secret`（仅本次返回）
+- `PUT /merchant/{id}/robots`（全量替换绑定机器人）
+- 列表/详情响应**不含** `api_secret`；`status` 走 `BaseRespEntity` 的 `"1"/"2"` 桥接
+
+### 商户开放 API（`/openapi/v1`，HMAC 签名鉴权，独立于 JWT）
+
+请求头：`X-Api-Key` / `X-Timestamp`(秒) / `X-Nonce` / `X-Signature`
+待签名串：`{METHOD}\n{path}\n{timestamp}\n{nonce}\n{sha256(raw_body 十六进制)}`
+签名：`HMAC-SHA256(api_secret, 待签名串)` → 十六进制；时间戳容差 `MERCHANT__SIGN_TTL_SECONDS`；nonce 经 Redis `SET NX EX` 防重放。所有请求体带 `robot_sn`，按 `Robot.serial_number` 解析并校验该机器人已绑定到当前商户。
+
+| 方法 | 路径 | 入参 | 复用实现 |
+|------|------|------|----------|
+| POST | `/openapi/v1/goto_point` | `robot_sn, point_id` | 建临时 patrol 任务（name 以 `API-` 开头，≤20 字）→ `start_execution` |
+| POST | `/openapi/v1/navigate_route` | `robot_sn, point_ids[]` | 同上，多点按序 |
+| POST | `/openapi/v1/execute_task` | `robot_sn, task_id` | `start_or_resume_execution` |
+| POST | `/openapi/v1/pause_task` | `robot_sn` | 查该 robot 活跃记录 → `pause_execution` |
+| POST | `/openapi/v1/resume_task` | `robot_sn` | 查 paused 记录 → `resume_execution` |
+| POST | `/openapi/v1/stop_task` | `robot_sn` | 查活跃记录 → `stop_execution` |
+| POST | `/openapi/v1/speak` | `robot_sn, text, tts_params{voice,speed,volume}` | `VoiceConfigClient.test_tts` |
+
+响应统一走 `ResponseModel`，`data` 为 `{ success, message, data? }`。鉴权/重放/超时失败 → 401（`TokenError`）；商户禁用/机器人未绑定 → 403（`ForbiddenError`）。
+
+### 前端
+
+- 页面 `frontend/src/views/manage/merchant/`，样板参考 `manage/role`（NDrawer 表单 + NDataTable + TableHeaderOperation）
+- API `frontend/src/service/api/merchant.ts`，类型 `frontend/src/typings/api/merchant.d.ts`
+- 新增/重置成功用 `MerchantApiKeyModal` 展示 `api_key`+`api_secret`（secret 默认掩码、可切换显示、复制按钮），`NAlert` 提示"仅展示一次"
+
 ## 完成前检查清单
 
 - [ ] 后端响应结构与前端类型定义匹配

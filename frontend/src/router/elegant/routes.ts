@@ -194,6 +194,15 @@ export const generatedRoutes: GeneratedRoute[] = [
         }
       },
       {
+        name: 'manage_face',
+        path: '/manage/face',
+        component: 'view.manage_face',
+        meta: {
+          title: 'manage_face',
+          i18nKey: 'route.manage_face'
+        }
+      },
+      {
         name: 'manage_file',
         path: '/manage/file',
         component: 'view.manage_file',
@@ -218,6 +227,15 @@ export const generatedRoutes: GeneratedRoute[] = [
         meta: {
           title: 'manage_menu',
           i18nKey: 'route.manage_menu'
+        }
+      },
+      {
+        name: 'manage_merchant',
+        path: '/manage/merchant',
+        component: 'view.manage_merchant',
+        meta: {
+          title: 'manage_merchant',
+          i18nKey: 'route.manage_merchant'
         }
       },
       {

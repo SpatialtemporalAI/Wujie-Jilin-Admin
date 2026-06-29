@@ -24,6 +24,8 @@ from .settings_model import (
     RateLimitModel,
     PluginModel,
     GrpcModel,
+    MerchantModel,
+    FaceRecognitionModel,
 )
 
 
@@ -67,3 +69,7 @@ class GlobalSetting(BaseSettings):
     PLUGINS: PluginModel = PluginModel()
     # gRPC 客户端配置
     GRPC: GrpcModel = GrpcModel()
+    # 商户开放 API 配置
+    MERCHANT: MerchantModel = MerchantModel()
+    # 阿里云人脸识别配置
+    FACE: FaceRecognitionModel = FaceRecognitionModel()
