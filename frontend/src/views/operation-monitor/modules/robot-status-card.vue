@@ -33,7 +33,15 @@ function getSignalLabel(signal: number): { text: string; color: string } {
 
 function getSpeedLabel(speed: number): { text: string; color: string } {
   if (speed > 0) return { text: '移动中', color: '#2080f0' };
-  return { text: '静止', color: '#999' };
+  return { text: '静止', color: '#d03050' };
+}
+
+function getBatteryLabel(battery: number): { text: string; color: string } {
+  if (battery >= 80) return { text: '充足', color: '#18a058' };
+  if (battery >= 50) return { text: '良好', color: '#2080f0' };
+  if (battery >= 30) return { text: '一般', color: '#f0a020' };
+  if (battery >= 10) return { text: '偏低', color: '#f0a020' };
+  return { text: '极低', color: '#d03050' };
 }
 
 const robotOptions = computed(() =>
@@ -49,9 +57,7 @@ const robotOptions = computed(() =>
     <div class="flex items-center justify-between">
       <NSpace align="center" :size="16">
         <div class="flex items-center gap-8px">
-          <div class="flex h-36px w-36px items-center justify-center rounded-lg bg-green-500">
-            <icon-ic-round-smart-toy class="text-20px text-white" />
-          </div>
+          <img src="@/assets/imgs/monitor-title.png" class="h-60px w-60px object-contain" />
           <NSelect
             :value="selectedRobot?.id ?? null"
             :options="robotOptions"
@@ -73,18 +79,17 @@ const robotOptions = computed(() =>
       </NSpace>
     </div>
 
-    <NGrid v-if="selectedRobot" :x-gap="16" :y-gap="8" responsive="screen" item-responsive class="mt-16px">
-      <NGi span="24 s:24 m:12 l:8">
-        <NCard :bordered="true" size="small">
-          <div class="flex items-center gap-12px">
-            <div class="flex h-40px w-40px flex-shrink-0 items-center justify-center rounded-lg" style="background-color: rgba(24,160,88,0.1)">
-              <icon-ic-round-battery-charging-full class="text-22px" style="color: #18a058" />
-            </div>
-            <div class="flex items-baseline gap-4px flex-shrink-0">
-              <span class="text-24px font-bold">{{ statusRecord?.battery ?? '--' }}</span>
-              <span class="text-12px text-gray-400">% 电池</span>
-            </div>
-            <div class="min-w-0 flex-1">
+    <NGrid v-if="selectedRobot" :x-gap="16" :y-gap="8" :cols="3" class="mt-16px">
+      <!-- 电量 -->
+      <NGi>
+        <NCard :bordered="false" size="small" class="h-full">
+          <div class="status-item">
+            <img src="@/assets/imgs/monitor-battery.png" />
+            <div class="status-main">
+              <div class="flex items-baseline gap-4px">
+                <span class="text-24px font-bold">{{ statusRecord?.battery ?? '--' }}</span>
+                <span class="text-12px text-gray-400">% 电池</span>
+              </div>
               <NProgress
                 v-if="statusRecord"
                 type="line"
@@ -92,26 +97,37 @@ const robotOptions = computed(() =>
                 :color="getBatteryColor(statusRecord.battery)"
                 :show-indicator="false"
                 :height="6"
+                class="mt-4px"
               />
+            </div>
+            <div class="status-extra">
+              <span
+                v-if="statusRecord"
+                class="text-14px font-medium"
+                :style="{ color: getBatteryLabel(statusRecord.battery).color }"
+              >
+                {{ getBatteryLabel(statusRecord.battery).text }}
+              </span>
             </div>
           </div>
         </NCard>
       </NGi>
 
-      <NGi span="24 s:24 m:12 l:8">
-        <NCard :bordered="true" size="small">
-          <div class="flex items-center gap-12px">
-            <div class="flex h-40px w-40px flex-shrink-0 items-center justify-center rounded-lg" style="background-color: rgba(32,128,240,0.1)">
-              <icon-ic-round-signal-cellular-alt class="text-22px" style="color: #2080f0" />
+      <!-- 信号 -->
+      <NGi>
+        <NCard :bordered="false" size="small" class="h-full">
+          <div class="status-item">
+            <img src="@/assets/imgs/monitor-signal.png" />
+            <div class="status-main">
+              <div class="flex items-baseline gap-4px">
+                <span class="text-24px font-bold">{{ statusRecord?.signal ?? '--' }}</span>
+                <span class="text-12px text-gray-400">% 信号</span>
+              </div>
             </div>
-            <div class="flex items-baseline gap-4px flex-shrink-0">
-              <span class="text-24px font-bold">{{ statusRecord?.signal ?? '--' }}</span>
-              <span class="text-12px text-gray-400">% 信号</span>
-            </div>
-            <div class="min-w-0 flex-1">
+            <div class="status-extra">
               <span
                 v-if="statusRecord"
-                class="text-12px"
+                class="text-14px font-medium"
                 :style="{ color: getSignalLabel(statusRecord.signal).color }"
               >
                 {{ getSignalLabel(statusRecord.signal).text }}
@@ -121,20 +137,21 @@ const robotOptions = computed(() =>
         </NCard>
       </NGi>
 
-      <NGi span="24 s:24 m:12 l:8">
-        <NCard :bordered="true" size="small">
-          <div class="flex items-center gap-12px">
-            <div class="flex h-40px w-40px flex-shrink-0 items-center justify-center rounded-lg" style="background-color: rgba(240,160,32,0.1)">
-              <icon-ic-round-speed class="text-22px" style="color: #f0a020" />
+      <!-- 速度 -->
+      <NGi>
+        <NCard :bordered="false" size="small" class="h-full">
+          <div class="status-item">
+            <img src="@/assets/imgs/monitor-speed.png" />
+            <div class="status-main">
+              <div class="flex items-baseline gap-4px">
+                <span class="text-24px font-bold">{{ statusRecord?.speed?.toFixed(1) ?? '0.0' }}</span>
+                <span class="text-12px text-gray-400">m/s 速度</span>
+              </div>
             </div>
-            <div class="flex items-baseline gap-4px flex-shrink-0">
-              <span class="text-24px font-bold">{{ statusRecord?.speed?.toFixed(1) ?? '0.0' }}</span>
-              <span class="text-12px text-gray-400">m/s 速度</span>
-            </div>
-            <div class="min-w-0 flex-1">
+            <div class="status-extra">
               <span
                 v-if="statusRecord"
-                class="text-12px"
+                class="text-14px font-medium"
                 :style="{ color: getSpeedLabel(statusRecord.speed).color }"
               >
                 {{ getSpeedLabel(statusRecord.speed).text }}
@@ -147,4 +164,29 @@ const robotOptions = computed(() =>
   </NCard>
 </template>
 
-<style scoped></style>
+<style scoped lang="scss">
+.status-item {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  width: 100%;
+  img{
+    width: 60px;
+    height: 60px;
+    object-fit: contain;
+  }
+}
+
+.status-main {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.status-extra {
+  display: flex;
+  align-items: center;
+  margin-left: 8px;
+}
+</style>
