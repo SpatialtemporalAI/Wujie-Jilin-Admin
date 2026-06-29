@@ -28,7 +28,9 @@ from alibabacloud_facebody20191230.models import (
     DeleteFaceEntityRequest,
     DeleteFaceRequest,
     DetectFaceRequest,
+    GetFaceEntityRequest,
     ListFaceDbsRequest,
+    ListFaceEntitiesRequest,
     SearchFaceRequest,
 )
 from alibabacloud_tea_openapi.models import Config
@@ -177,6 +179,74 @@ class FaceService:
         except Exception as exc:
             logger.error("删除人脸实体失败: %s", getattr(exc, "code", exc))
             raise GatewayError(msg=f"删除人脸实体失败: {exc}") from exc
+
+    @staticmethod
+    async def list_face_entities(
+        db_name: str, offset: int = 0, limit: int = 10
+    ) -> dict:
+        """分页查询人脸库下的实体，返回 {entities, total_count}"""
+
+        def _call() -> dict:
+            client = get_client()
+            request = ListFaceEntitiesRequest(
+                db_name=db_name, offset=offset, limit=limit
+            )
+            response = client.list_face_entities_with_options(
+                request, _runtime_options
+            )
+            body_data = response.body.data if response.body else None
+            entities: List[dict] = []
+            if body_data and body_data.entities:
+                for e in body_data.entities:
+                    entities.append(
+                        {
+                            "entity_id": e.entity_id,
+                            "db_name": e.db_name,
+                            "face_count": e.face_count,
+                            "labels": e.labels,
+                            "created_at": e.created_at,
+                            "updated_at": e.updated_at,
+                        }
+                    )
+            total_count = getattr(body_data, "total_count", None) or 0
+            return {"entities": entities, "total_count": total_count}
+
+        try:
+            return await asyncio.to_thread(_call)
+        except (ServerError, GatewayError):
+            raise
+        except Exception as exc:
+            logger.error("查询人脸实体列表失败: %s", getattr(exc, "code", exc))
+            raise GatewayError(msg=f"查询人脸实体列表失败: {exc}") from exc
+
+    @staticmethod
+    async def get_face_entity(db_name: str, entity_id: str) -> dict:
+        """查询单个实体及其所有人脸图片 face_id"""
+
+        def _call() -> dict:
+            client = get_client()
+            request = GetFaceEntityRequest(db_name=db_name, entity_id=entity_id)
+            response = client.get_face_entity_with_options(
+                request, _runtime_options
+            )
+            body_data = response.body.data if response.body else None
+            faces: List[dict] = []
+            if body_data and body_data.faces:
+                faces = [{"face_id": f.face_id} for f in body_data.faces]
+            return {
+                "db_name": body_data.db_name if body_data else db_name,
+                "entity_id": entity_id,
+                "labels": body_data.labels if body_data else None,
+                "faces": faces,
+            }
+
+        try:
+            return await asyncio.to_thread(_call)
+        except (ServerError, GatewayError):
+            raise
+        except Exception as exc:
+            logger.error("查询人脸实体详情失败: %s", getattr(exc, "code", exc))
+            raise GatewayError(msg=f"查询人脸实体详情失败: {exc}") from exc
 
     # ------------------------------ 人脸图片 ------------------------------
     @staticmethod

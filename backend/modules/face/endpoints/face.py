@@ -10,7 +10,7 @@ from typing import Optional
 from fastapi import APIRouter, Depends, File, Form, Query, UploadFile
 
 from core.config import settings
-from core.response.response_schema import ResponseModel
+from core.response.response_schema import ResponseModel, ResponsePageModel, ResponsePageDataModel
 from modules.admin.deps.auth.user_manager import current_user
 from modules.admin.deps.auth.permission import require_permission
 
@@ -19,6 +19,8 @@ from modules.face.schemas.face import (
     FaceDbCreate,
     FaceDbListResponse,
     FaceEntityCreate,
+    FaceEntityListItem,
+    FaceEntityDetail,
     FaceImageAddResponse,
     FaceSearchResponse,
     FaceDetectResponse,
@@ -84,6 +86,48 @@ async def delete_face_entity(
     db_name = db_name or settings.FACE.DEFAULT_DB_NAME
     await FaceService.delete_face_entity(db_name, entity_id)
     return ResponseModel(msg="删除成功")
+
+
+@face_router.get(
+    "/entity/list",
+    response_model=ResponsePageModel[FaceEntityListItem],
+    dependencies=[Depends(require_permission("face:entity:list"))],
+)
+async def list_face_entities(
+    db_name: str = Query(..., description="人脸库名称"),
+    page: int = Query(1, ge=1, description="页码，从 1 开始"),
+    page_size: int = Query(10, ge=1, le=100, description="每页条数"),
+):
+    """分页查询人脸库下的实体"""
+    offset = (page - 1) * page_size
+    result = await FaceService.list_face_entities(
+        db_name, offset=offset, limit=page_size
+    )
+    total = result["total_count"]
+    total_pages = (total + page_size - 1) // page_size if total else 0
+    records = [FaceEntityListItem(**e) for e in result["entities"]]
+    page_data = ResponsePageDataModel[FaceEntityListItem](
+        records=records,
+        page=page,
+        page_size=page_size,
+        total=total,
+        total_pages=total_pages,
+    )
+    return ResponsePageModel[FaceEntityListItem](data=page_data)
+
+
+@face_router.get(
+    "/entity/detail",
+    response_model=ResponseModel[FaceEntityDetail],
+    dependencies=[Depends(require_permission("face:entity:list"))],
+)
+async def get_face_entity(
+    db_name: str = Query(..., description="人脸库名称"),
+    entity_id: str = Query(..., description="实体标识"),
+):
+    """查询单个实体及其人脸图片列表"""
+    result = await FaceService.get_face_entity(db_name, entity_id)
+    return ResponseModel(data=FaceEntityDetail(**result))
 
 
 # ------------------------------ 人脸图片 ------------------------------

@@ -32,7 +32,7 @@
 
 ### 前端
 
-- [frontend/src/locales/langs/zh-cn.ts](../../../frontend/src/locales/langs/zh-cn.ts) 与 [frontend/src/locales/langs/en-us.ts](../../../frontend/src/locales/langs/en-us.ts) 的 `route` 段补全 **全部约 63 个按钮权限**的中英文翻译，文案统一用**动作词**（查询/新增/编辑/删除/上传/下载/发布/移除/下线/查看/详情/启停/手动执行/启动/暂停·恢复/gRPC配置）——按钮作为树子节点挂在父菜单下，模块上下文由父菜单提供。
+- [frontend/src/locales/langs/zh-cn.ts](../../../frontend/src/locales/langs/zh-cn.ts) 与 [frontend/src/locales/langs/en-us.ts](../../../frontend/src/locales/langs/en-us.ts) 的 `route` 段补全 **全部按钮权限**的中英文翻译（共覆盖 89 个 BUTTON 节点 name，脚本交叉核对零缺失），文案统一用**动作词**（查询/新增/编辑/删除/上传/下载/发布/移除/下线/查看/详情/启停/手动执行/启动/暂停·恢复/gRPC配置/搜索/检测/新建）——按钮作为树子节点挂在父菜单下，模块上下文由父菜单提供。同时补了缺失的菜单名翻译 `manage_face`（人脸库管理）。
 
 ## 关键决策
 
@@ -43,7 +43,9 @@
 
 ## 按钮权限来源盘点
 
-按钮节点跨多个迁移播种：0002（系统/日志/文件/scheduler）、0003（robot_model/robot_manage/scene_group/scene_map）、0005（task）、0011（operation_monitor_list）、0024（scene_map_editor）、0027（task_execution_start/control）、0030（robot_manage_grpc_config）、0034（merchant_list/add/edit/delete）。本次翻译覆盖以上全部。
+按钮节点跨多个迁移播种：0002（系统/日志/文件/scheduler）、0003（robot_model/robot_manage/scene_group/scene_map）、0005（task）、**0006（settings_list/settings_edit — 参数配置）**、0011（operation_monitor_list）、0024（scene_map_editor）、0027（task_execution_start/control）、0030（robot_manage_grpc_config）、0034（merchant_list/add/edit/delete）、**0036（face_db_create/list、face_entity_add/delete、face_image_add/delete、face_search、face_detect — 人脸库管理）**。本次翻译覆盖以上全部。
+
+> 迭代备注：首轮仅 grep `'BUTTON'` 因 0002 输出占满结果配额被截断，**漏掉 0006（参数配置 settings）与 0036（人脸库 face）**；用户反馈"参数配置菜单下按钮 i18n 没更新好"后，改用脚本遍历全部迁移提取 BUTTON name 交叉核对（89 个节点零缺失）补齐。教训：盘点按钮节点须 `grep -l '"type": "BUTTON"'` 列全文件再逐个提取，不能依赖单次 grep 输出。
 
 ## 约束与备注
 

@@ -31,6 +31,32 @@ class FaceEntityCreate(BaseModel):
     entity_id: str = Field(..., description="实体标识（人物唯一 ID/名称）", max_length=128)
 
 
+class FaceEntityListItem(BaseModel):
+    """人脸实体列表项"""
+
+    entity_id: str = Field(..., description="实体标识")
+    db_name: str = Field(..., description="所属人脸库名称")
+    face_count: int = Field(0, description="该实体下的人脸图片数量")
+    labels: Optional[str] = Field(None, description="实体标签")
+    created_at: Optional[str] = Field(None, description="创建时间")
+    updated_at: Optional[str] = Field(None, description="更新时间")
+
+
+class FaceEntityFace(BaseModel):
+    """实体下的单张人脸图片"""
+
+    face_id: str = Field(..., description="阿里云人脸图片 ID")
+
+
+class FaceEntityDetail(BaseModel):
+    """人脸实体详情（含人脸图片列表）"""
+
+    db_name: str = Field(..., description="所属人脸库名称")
+    entity_id: str = Field(..., description="实体标识")
+    labels: Optional[str] = Field(None, description="实体标签")
+    faces: List[FaceEntityFace] = Field([], description="人脸图片列表")
+
+
 class FaceImageAddResponse(BaseModel):
     """人脸图片入库响应"""
 

@@ -27,7 +27,17 @@
 
 ### 前端
 
-无（本期不做前端页面）。
+- 页面 `frontend/src/views/manage/face/`：`index.vue`（NTabs 三页签：人脸库管理 / 搜索 / 检测）
+  + `modules/face-entity-faces-drawer.vue`（实体下人脸图片：列表/删除/上传入库）
+  + `modules/face-search.vue`、`modules/face-detect.vue`
+- 人脸库管理 Tab：人脸库下拉 + 新建库 + 实体分页表格（`useNaivePaginatedTable`，`immediate:false`，选库后才加载）
+  + 行内"查看人脸/删除"；表头新增实体
+- API `frontend/src/service/api/face.ts`、类型 `frontend/src/typings/api/face.d.ts`（namespace `Api.Face`），barrel 已导出
+- i18n：`route.manage_face` + `route.face_*`（按钮权限）+ `page.manage.face.*`（页内文案）；
+  Schema 手写在 `src/typings/app.d.ts` 的 `Schema.page.manage.face`（需与 locale 同步增删 key）
+- 路由由 `pnpm gen-route` 自动生成（`manage_face` → `src/views/manage/face/index.vue`），勿手改 `router/elegant/*`
+- 后端为支持表格浏览补了 `GET /face/entity/list`（分页）+ `GET /face/entity/detail`（含 faces），
+  对应 facebody `ListFaceEntities` / `GetFaceEntity`；新增权限码 `face:entity:list`
 
 ## 约束与备注
 

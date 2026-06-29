@@ -181,6 +181,7 @@ const routeMap: RouteMap = {
   "manage_announcement": "/manage/announcement",
   "manage_config": "/manage/config",
   "manage_dict": "/manage/dict",
+  "manage_face": "/manage/face",
   "manage_file": "/manage/file",
   "manage_ip-blacklist": "/manage/ip-blacklist",
   "manage_menu": "/manage/menu",

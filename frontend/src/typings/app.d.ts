@@ -673,6 +673,37 @@ declare namespace App {
               remark: string;
             };
           };
+          face: {
+            title: string;
+            selectDb: string;
+            selectDbFirst: string;
+            createDb: string;
+            dbNamePlaceholder: string;
+            addEntity: string;
+            entityIdPlaceholder: string;
+            viewFaces: string;
+            entityId: string;
+            faceCount: string;
+            labels: string;
+            createdAt: string;
+            facesTitle: string;
+            facesSub: string;
+            faceId: string;
+            uploadFace: string;
+            uploadImage: string;
+            noFaces: string;
+            searchTitle: string;
+            searchTip: string;
+            limit: string;
+            noMatch: string;
+            confidence: string;
+            detectTitle: string;
+            detectTip: string;
+            maxFaceNum: string;
+            faceRect: string;
+            probability: string;
+            noFace: string;
+          };
           user: {
             title: string;
             userName: string;
