@@ -229,4 +229,14 @@ async function handleAccountLogin(account: Account) {
   font-size: 13px;
   text-align: center;
 }
+
+/* 覆盖浏览器自动填充时的默认背景色 */
+:deep(.n-input__input-el:-webkit-autofill),
+:deep(.n-input__input-el:-webkit-autofill:hover),
+:deep(.n-input__input-el:-webkit-autofill:focus),
+:deep(.n-input__input-el:-webkit-autofill:active) {
+  -webkit-box-shadow: 0 0 0 1000px transparent inset !important;
+  -webkit-text-fill-color: inherit !important;
+  transition: background-color 5000s ease-in-out 0s;
+}
 </style>
