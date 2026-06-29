@@ -35,7 +35,7 @@ const baseContextMenuOptions = [
       { label: '正方形', key: 'add-obstacle-square' },
     ],
   },
-  { label: '禁行区域', key: 'add-restricted' },
+  { label: '禁行区域/虚拟墙', key: 'add-restricted' },
   { label: '电子围栏', key: 'add-fence' },
 ];
 
@@ -99,7 +99,7 @@ const hoverInfo = computed(() => {
     'obstacle-triangle': '三角形',
     'obstacle-square': '正方形',
   };
-  const kind = isFence ? '电子围栏' : (isRestricted ? '禁行区域' : '障碍物');
+  const kind = isFence ? '电子围栏' : (isRestricted ? '禁行区域/虚拟墙' : '障碍物');
   const typeName = isFence ? '围栏' : (isRestricted ? '禁区' : (shapeMap[obj.type] || '障碍物'));
   const w = editor.pixelToWorldCoords(obj.x, obj.y);
   return {
