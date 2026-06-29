@@ -134,7 +134,7 @@ loadData();
           <NEmpty description="暂无机器人数据" />
         </div>
         <div v-else class="robot-card-grid">
-          <div v-for="robot in robotList" :key="robot.id" class="robot-card">
+          <div v-for="robot in robotList" :key="robot.id" class="robot-card card-wrapper">
             <div class="robot-card-header">
               <div class="robot-logo">
                 <img v-if="robot.logo" :src="robot.logo" alt="logo" />
@@ -210,7 +210,7 @@ loadData();
 .robot-card-grid {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
-  gap: 16px;
+  gap: 20px;
   padding: 8px 0;
 }
 
