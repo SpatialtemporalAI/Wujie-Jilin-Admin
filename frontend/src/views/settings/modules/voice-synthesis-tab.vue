@@ -10,6 +10,7 @@ import {
 } from '@/service/api';
 import { useNaiveForm } from '@/hooks/common/form';
 import { useAuth } from '@/hooks/business/auth';
+import SvgIcon from '@/components/custom/svg-icon.vue';
 
 defineOptions({ name: 'VoiceSynthesisTab' });
 
@@ -28,7 +29,7 @@ const selectedRobotId = ref<number | null>(null);
 
 const model = reactive<Api.RobotConfig.VoiceConfig>({
   robot_id: 0,
-  wake_word_enabled: false,
+  wake_word_enabled: true,
   wake_word: '',
   tts_voice: 'female',
   tts_speed: 1.0,
@@ -153,6 +154,12 @@ async function handleTestWakeWord() {
     message.warning('唤醒词必须为 4-6 个字');
     return;
   }
+  // 点击后立即显示提示文字
+  wakeWordTestText.value = `${model.wake_word}在呢，有什么可以帮您？`;
+  if (wakeWordTestTimer) clearTimeout(wakeWordTestTimer);
+  wakeWordTestTimer = setTimeout(() => {
+    wakeWordTestText.value = '';
+  }, 5000);
   try {
     const { error } = await fetchTestWakeWord({
       robot_id: model.robot_id,
@@ -160,11 +167,6 @@ async function handleTestWakeWord() {
     });
     if (!error) {
       message.success('测试指令已下发');
-      wakeWordTestText.value = `${model.wake_word}在呢，有什么可以帮您？`;
-      if (wakeWordTestTimer) clearTimeout(wakeWordTestTimer);
-      wakeWordTestTimer = setTimeout(() => {
-        wakeWordTestText.value = '';
-      }, 5000);
     }
   } catch (err) {
     console.error('测试唤醒词失败:', err);
@@ -263,9 +265,12 @@ onMounted(() => {
                       >
                         测试
                       </NButton>
-                      <NText v-if="wakeWordTestText" type="info" class="text-14px">
-                        {{ wakeWordTestText }}
-                      </NText>
+                      <div v-if="wakeWordTestText" class="flex items-center gap-4px">
+                        <SvgIcon icon="mdi:volume-high" class="text-16px" />
+                        <NText type="info" class="text-14px">
+                          {{ wakeWordTestText }}
+                        </NText>
+                      </div>
                     </NSpace>
                   </NFormItemGi>
                 </NGrid>
