@@ -1941,73 +1941,6 @@ wheels = [
 ]
 
 [[package]]
-name = "Wujie-Jilin-Admin"
-version = "0.1.0"
-source = { virtual = "." }
-dependencies = [
-    { name = "aiofiles" },
-    { name = "aiohttp" },
-    { name = "aiomysql" },
-    { name = "alembic" },
-    { name = "apscheduler" },
-    { name = "asyncpg" },
-    { name = "bleach" },
-    { name = "fastapi" },
-    { name = "grpcio" },
-    { name = "gunicorn" },
-    { name = "httpx" },
-    { name = "mcp", extra = ["cli"] },
-    { name = "openpyxl" },
-    { name = "orjson" },
-    { name = "passlib", extra = ["bcrypt"] },
-    { name = "pillow" },
-    { name = "protobuf" },
-    { name = "psutil" },
-    { name = "psycopg2-binary" },
-    { name = "pydantic-settings" },
-    { name = "pyjwt" },
-    { name = "python-json-logger" },
-    { name = "python-multipart" },
-    { name = "pytz" },
-    { name = "redis" },
-    { name = "sqlalchemy" },
-    { name = "tzdata" },
-    { name = "uvicorn", extra = ["standard"] },
-]
-
-[package.metadata]
-requires-dist = [
-    { name = "aiofiles", specifier = ">=23.2.0" },
-    { name = "aiohttp", specifier = ">=3.9.0" },
-    { name = "aiomysql", specifier = ">=0.3.2" },
-    { name = "alembic", specifier = ">=1.17.2" },
-    { name = "apscheduler", specifier = ">=3.10.4" },
-    { name = "asyncpg", specifier = ">=0.31.0" },
-    { name = "bleach", specifier = ">=6.3.0" },
-    { name = "fastapi", specifier = ">=0.127.0" },
-    { name = "grpcio", specifier = ">=1.81.1" },
-    { name = "gunicorn", specifier = ">=23.0.0" },
-    { name = "httpx", specifier = ">=0.27.0" },
-    { name = "mcp", extras = ["cli"], specifier = ">=1.0.0" },
-    { name = "openpyxl", specifier = ">=3.1.5" },
-    { name = "orjson", specifier = ">=3.11.5" },
-    { name = "passlib", extras = ["bcrypt"], specifier = ">=1.7.4" },
-    { name = "pillow", specifier = ">=10.0.0" },
-    { name = "protobuf", specifier = ">=5.0.0" },
-    { name = "psutil", specifier = ">=5.9.0" },
-    { name = "psycopg2-binary", specifier = ">=2.9.11" },
-    { name = "pydantic-settings", specifier = ">=2.12.0" },
-    { name = "pyjwt", specifier = ">=2.10.1" },
-    { name = "python-json-logger", specifier = ">=4.0.0" },
-    { name = "python-multipart", specifier = ">=0.0.9" },
-    { name = "pytz", specifier = ">=2025.2" },
-    { name = "redis", specifier = ">=7.1.0" },
-    { name = "sqlalchemy", specifier = ">=2.0.45" },
-    { name = "tzdata", specifier = ">=2025.3" },
-    { name = "uvicorn", extras = ["standard"], specifier = ">=0.40.0" },
-]
-
-[[package]]
 name = "sqlalchemy"
 version = "2.0.45"
 source = { registry = "https://pypi.org/simple" }
@@ -2330,6 +2263,75 @@ wheels = [
     { url = "https://files.pythonhosted.org/packages/86/eb/20b6cdf273913d0ad05a6a14aed4b9a85591c18a987a3d47f20fa13dcc47/websockets-15.0.1-cp313-cp313-win32.whl", hash = "sha256:ba9e56e8ceeeedb2e080147ba85ffcd5cd0711b89576b83784d8605a7df455fa", size = 176393, upload-time = "2025-03-05T20:02:53.814Z" },
     { url = "https://files.pythonhosted.org/packages/1b/6c/c65773d6cab416a64d191d6ee8a8b1c68a09970ea6909d16965d26bfed1e/websockets-15.0.1-cp313-cp313-win_amd64.whl", hash = "sha256:e09473f095a819042ecb2ab9465aee615bd9c2028e4ef7d933600a8401c79561", size = 176837, upload-time = "2025-03-05T20:02:55.237Z" },
     { url = "https://files.pythonhosted.org/packages/fa/a8/5b41e0da817d64113292ab1f8247140aac61cbf6cfd085d6a0fa77f4984f/websockets-15.0.1-py3-none-any.whl", hash = "sha256:f7a866fbc1e97b5c617ee4116daaa09b722101d4a3c170c787450ba409f9736f", size = 169743, upload-time = "2025-03-05T20:03:39.41Z" },
+]
+
+[[package]]
+name = "wujie-jilin-admin"
+version = "0.1.0"
+source = { virtual = "." }
+dependencies = [
+    { name = "aiofiles" },
+    { name = "aiohttp" },
+    { name = "aiomysql" },
+    { name = "alembic" },
+    { name = "apscheduler" },
+    { name = "asyncpg" },
+    { name = "bleach" },
+    { name = "cryptography" },
+    { name = "fastapi" },
+    { name = "grpcio" },
+    { name = "gunicorn" },
+    { name = "httpx" },
+    { name = "mcp", extra = ["cli"] },
+    { name = "openpyxl" },
+    { name = "orjson" },
+    { name = "passlib", extra = ["bcrypt"] },
+    { name = "pillow" },
+    { name = "protobuf" },
+    { name = "psutil" },
+    { name = "psycopg2-binary" },
+    { name = "pydantic-settings" },
+    { name = "pyjwt" },
+    { name = "python-json-logger" },
+    { name = "python-multipart" },
+    { name = "pytz" },
+    { name = "redis" },
+    { name = "sqlalchemy" },
+    { name = "tzdata" },
+    { name = "uvicorn", extra = ["standard"] },
+]
+
+[package.metadata]
+requires-dist = [
+    { name = "aiofiles", specifier = ">=23.2.0" },
+    { name = "aiohttp", specifier = ">=3.9.0" },
+    { name = "aiomysql", specifier = ">=0.3.2" },
+    { name = "alembic", specifier = ">=1.17.2" },
+    { name = "apscheduler", specifier = ">=3.10.4" },
+    { name = "asyncpg", specifier = ">=0.31.0" },
+    { name = "bleach", specifier = ">=6.3.0" },
+    { name = "cryptography", specifier = ">=42.0.0" },
+    { name = "fastapi", specifier = ">=0.127.0" },
+    { name = "grpcio", specifier = ">=1.81.1" },
+    { name = "gunicorn", specifier = ">=23.0.0" },
+    { name = "httpx", specifier = ">=0.27.0" },
+    { name = "mcp", extras = ["cli"], specifier = ">=1.0.0" },
+    { name = "openpyxl", specifier = ">=3.1.5" },
+    { name = "orjson", specifier = ">=3.11.5" },
+    { name = "passlib", extras = ["bcrypt"], specifier = ">=1.7.4" },
+    { name = "pillow", specifier = ">=10.0.0" },
+    { name = "protobuf", specifier = ">=5.0.0" },
+    { name = "psutil", specifier = ">=5.9.0" },
+    { name = "psycopg2-binary", specifier = ">=2.9.11" },
+    { name = "pydantic-settings", specifier = ">=2.12.0" },
+    { name = "pyjwt", specifier = ">=2.10.1" },
+    { name = "python-json-logger", specifier = ">=4.0.0" },
+    { name = "python-multipart", specifier = ">=0.0.9" },
+    { name = "pytz", specifier = ">=2025.2" },
+    { name = "redis", specifier = ">=7.1.0" },
+    { name = "sqlalchemy", specifier = ">=2.0.45" },
+    { name = "tzdata", specifier = ">=2025.3" },
+    { name = "uvicorn", extras = ["standard"], specifier = ">=0.40.0" },
 ]
 
 [[package]]

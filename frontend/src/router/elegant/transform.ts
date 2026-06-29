@@ -184,6 +184,7 @@ const routeMap: RouteMap = {
   "manage_file": "/manage/file",
   "manage_ip-blacklist": "/manage/ip-blacklist",
   "manage_menu": "/manage/menu",
+  "manage_merchant": "/manage/merchant",
   "manage_role": "/manage/role",
   "manage_scheduler": "/manage/scheduler",
   "manage_scheduler-log": "/manage/scheduler-log",

@@ -33,6 +33,7 @@ dependencies = [
     "apscheduler>=3.10.4",
     "grpcio>=1.81.1",
     "protobuf>=5.0.0",
+    "cryptography>=42.0.0",
 ]
 
 [tool.uv.workspace]

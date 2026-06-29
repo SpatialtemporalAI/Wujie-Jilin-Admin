@@ -639,6 +639,40 @@ declare namespace App {
             menuAuth: string;
             buttonAuth: string;
           };
+          merchant: {
+            title: string;
+            merchantName: string;
+            merchantCode: string;
+            merchantStatus: string;
+            apiKey: string;
+            apiSecret: string;
+            contactName: string;
+            contactPhone: string;
+            contactEmail: string;
+            remark: string;
+            bindRobot: string;
+            addMerchant: string;
+            editMerchant: string;
+            resetApiKey: string;
+            resetConfirm: string;
+            apiKeyTitle: string;
+            secretOnceTip: string;
+            showSecret: string;
+            hideSecret: string;
+            copy: string;
+            copySuccess: string;
+            copyFailed: string;
+            form: {
+              merchantName: string;
+              merchantCode: string;
+              merchantStatus: string;
+              contactName: string;
+              contactPhone: string;
+              contactEmail: string;
+              bindRobot: string;
+              remark: string;
+            };
+          };
           user: {
             title: string;
             userName: string;

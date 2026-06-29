@@ -215,3 +215,20 @@ class GrpcModel(BaseModel):
         description="ConfigService 地址 host:port（voice/speed/battery/face 共用）",
     )
     TIMEOUT_SECONDS: float = Field(10.0, description="单次 RPC 超时(秒)")
+
+
+class MerchantModel(BaseModel):
+    """商户开放 API 配置模型"""
+
+    ENCRYPT_KEY: str = Field(
+        "wujie-merchant-default-key-please-change",
+        description="api_secret 可逆加密密钥（passphrase，生产环境必须修改）",
+    )
+    SIGN_TTL_SECONDS: int = Field(
+        300, description="HMAC 签名时间戳容差窗口(秒)"
+    )
+    NONCE_TTL_SECONDS: int = Field(
+        300, description="nonce 防重放缓存时长(秒)"
+    )
+    API_KEY_PREFIX: str = Field("mk_", description="api_key 前缀")
+    API_SECRET_PREFIX: str = Field("sk_", description="api_secret 前缀")

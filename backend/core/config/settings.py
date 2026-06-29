@@ -24,6 +24,7 @@ from .settings_model import (
     RateLimitModel,
     PluginModel,
     GrpcModel,
+    MerchantModel,
 )
 
 
@@ -67,3 +68,5 @@ class GlobalSetting(BaseSettings):
     PLUGINS: PluginModel = PluginModel()
     # gRPC 客户端配置
     GRPC: GrpcModel = GrpcModel()
+    # 商户开放 API 配置
+    MERCHANT: MerchantModel = MerchantModel()
