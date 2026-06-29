@@ -4,7 +4,6 @@ import { DARK_CLASS } from '@/constants/app';
 import { localStg } from '@/utils/storage';
 import { toggleHtmlClass } from '@/utils/common';
 import { $t } from '@/locales';
-
 export function setupLoading() {
   const themeColor = localStg.get('themeColor') || '#4576f5';
   const darkMode = localStg.get('darkMode') || false;
@@ -39,9 +38,6 @@ export function setupLoading() {
 
   const loading = `
 <div class="fixed-center flex-col bg-layout" style="${cssVars}">
-  <div class="w-128px h-128px">
-    ${getLogoSvg()}
-  </div>
   <div class="w-56px h-56px my-36px">
     <div class="relative h-full animate-spin">
       ${dot}

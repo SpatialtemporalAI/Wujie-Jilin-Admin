@@ -24,7 +24,7 @@ const speedOptions = [
 
 const robotOptions = computed(() =>
   robotList.value.map(robot => ({
-    label: `${robot.name}（${robot.serial_number}）`,
+    label: `${robot.name}`,
     value: robot.id
   }))
 );

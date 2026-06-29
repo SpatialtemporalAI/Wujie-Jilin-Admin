@@ -168,7 +168,7 @@ const robotOptions = computed(() =>
 .status-item {
   display: flex;
   align-items: center;
-  justify-content: center;
+  // justify-content: center;
   gap: 12px;
   width: 100%;
   img{

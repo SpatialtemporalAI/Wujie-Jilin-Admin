@@ -136,7 +136,7 @@ function resetForm() {
 
 const columns = [
   { key: 'index', title: '序号', align: 'center' as const, width: 64, render: (_: any, index: number) => index + 1 },
-  { key: 'person_name', title: '人员名称', align: 'center' as const, minWidth: 120 },
+  { key: 'person_name', title: '人员名称', align: 'center' as const, width: 300 },
   {
     key: 'photo_url',
     title: '人像',

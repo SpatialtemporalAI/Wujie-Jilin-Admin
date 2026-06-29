@@ -45,7 +45,7 @@ async function loadOptions() {
   }
   if (!robotResult.error && robotResult.data) {
     robotOptions.value = (robotResult.data.records || []).map(robot => ({
-      label: `${robot.name}（${robot.serial_number}）`,
+      label: `${robot.name}`,
       value: robot.id,
       map_id: robot.map_id ?? null
     }));
