@@ -26,23 +26,43 @@ watch(visible, v => {
   }
 });
 
+async function tryClipboardApi(text: string): Promise<boolean> {
+  // 仅安全上下文（HTTPS / localhost）下可用；HTTP 内网部署返回 false 走兜底
+  if (!window.isSecureContext || !navigator.clipboard) return false;
+  try {
+    await navigator.clipboard.writeText(text);
+    return true;
+  } catch {
+    return false;
+  }
+}
+
+function legacyCopy(text: string): boolean {
+  const ta = document.createElement('textarea');
+  ta.value = text;
+  ta.setAttribute('readonly', '');
+  ta.style.position = 'fixed';
+  ta.style.opacity = '0';
+  document.body.appendChild(ta);
+  ta.focus();
+  ta.select();
+  let ok = false;
+  try {
+    ok = document.execCommand('copy');
+  } catch {
+    ok = false;
+  }
+  document.body.removeChild(ta);
+  return ok;
+}
+
 async function copyText(text: string) {
   if (!text) return;
-  try {
-    if (navigator.clipboard) {
-      await navigator.clipboard.writeText(text);
-    } else {
-      const ta = document.createElement('textarea');
-      ta.value = text;
-      ta.style.position = 'fixed';
-      ta.style.opacity = '0';
-      document.body.appendChild(ta);
-      ta.select();
-      document.execCommand('copy');
-      document.body.removeChild(ta);
-    }
+  // Clipboard API 失败时回退到 execCommand，保证 HTTP 部署下也能复制
+  const ok = (await tryClipboardApi(text)) || legacyCopy(text);
+  if (ok) {
     window.$message?.success($t('page.manage.merchant.copySuccess'));
-  } catch {
+  } else {
     window.$message?.error($t('page.manage.merchant.copyFailed'));
   }
 }

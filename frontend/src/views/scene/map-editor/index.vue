@@ -356,6 +356,16 @@ function handleContextMenuSelect(key: string) {
   }
 
   if (key === 'add-point') {
+    // 点位不能设置在障碍物上：右键落在障碍物上时拦截并提示
+    const target = contextMenuTarget.value;
+    if (target?.type === 'object') {
+      const obj = editor.editorData.value?.objects.find(o => o.id === target.id);
+      if (obj && typeof obj.type === 'string' && obj.type.startsWith('obstacle-')) {
+        contextMenuTarget.value = null;
+        window.$message?.warning('注意：点位不能设置在障碍物上！');
+        return;
+      }
+    }
     const count = (editor.editorData.value?.annotations.length || 0) + 1;
     editor.addAnnotation({
       x,
@@ -603,22 +613,28 @@ function handleFocusAnnotation(id: number) {
         </NFormItem>
         <NFormItem label="扫图起始点">
           <div class="grid w-full grid-cols-2 gap-8px">
-            <NInputNumber v-model:value="sceneFormPointX" :placeholder="sceneDialogMode === 'edit' ? 'X (米)' : '原始X'"
-              class="w-full" />
-            <NInputNumber v-model:value="sceneFormPointY" :placeholder="sceneDialogMode === 'edit' ? 'Y (米)' : '原始Y'"
-              class="w-full" />
+            <NInputNumber v-model:value="sceneFormPointX" :placeholder="sceneDialogMode === 'edit' ? 'X' : '原始X'"
+              class="w-full">
+              <template #suffix>
+                <span class="text-xs text-gray-400">米</span>
+              </template>
+            </NInputNumber>
+            <NInputNumber v-model:value="sceneFormPointY" :placeholder="sceneDialogMode === 'edit' ? 'Y' : '原始Y'"
+              class="w-full">
+              <template #suffix>
+                <span class="text-xs text-gray-400">米</span>
+              </template>
+            </NInputNumber>
           </div>
         </NFormItem>
         <NFormItem label="分辨率">
           <NInputNumber v-model:value="sceneFormResolution" placeholder="m/px" :step="0.01" :min="0.01"
-            class="w-full" />
+            class="w-full">
+            <template #suffix>
+              <span class="text-xs text-gray-400">m/px</span>
+            </template>
+          </NInputNumber>
         </NFormItem>
-        <div v-if="sceneDialogMode === 'add'" class="text-xs text-gray-500">
-          扫图起始点按上方图片当前网页显示尺寸录入，保存时会按 原图尺寸 / 网页显示尺寸 缩放到地图原图坐标。分辨率(m/px)对应 ROS map.yaml 中的 resolution，默认 0.05。
-        </div>
-        <div v-else class="text-xs text-gray-500">
-          扫图起始点使用地图原图坐标系下的米值。分辨率(m/px)对应 ROS map.yaml 中的 resolution。
-        </div>
       </NForm>
     </NModal>
   </div>

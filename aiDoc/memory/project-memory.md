@@ -43,6 +43,7 @@
 - [2026-06-29 机器人管理卡片按钮补齐权限控制](./business/2026-06-29_robot-manage-button-permissions.md) — 编辑/gRPC配置/状态/删除 4 个按钮按 robot:manage:edit/grpc_config/list/delete 隐藏
 - [2026-06-29 阿里云人脸库管理模块](./business/2026-06-29_face-recognition-aliyun.md) — 新增 modules/face：facebody 人脸库增删查，密钥走 settings.FACE，UploadFile→viapi FileUtils→OSS→facebody
 - [2026-06-29 菜单管理按钮权限补全 i18n](./business/2026-06-29_menu-button-permissions-i18n.md) — 全部按钮权限(menuType=3)补 route.* 中英文翻译(动作词)；8 个中文 scheduler 按钮经 0035 迁移改 ASCII 名，修复表格按钮行显示 route.xxx
+- [2026-06-29 地图编辑器点位落障碍物拦截](./business/2026-06-29_map-editor-point-on-obstacle-guard.md) — 右键添加点位若落在 obstacle-* 上则拦截并提示「注意：点位不能设置在障碍物上！」
 
 ## 维护说明
 
