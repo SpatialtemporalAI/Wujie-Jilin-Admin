@@ -21,6 +21,7 @@ from modules.robot.router import router as robot_router
 from modules.scene.router import router as scene_router
 from modules.task.router import router as task_router
 from modules.merchant.router import router as merchant_router
+from modules.face.router import router as face_router
 from core.registry.setup_registry import setup_app
 from core.websocket import FastAPIConnectionManager
 
@@ -144,6 +145,7 @@ app.include_router(robot_router)
 app.include_router(scene_router)
 app.include_router(task_router)
 app.include_router(merchant_router)
+app.include_router(face_router)
 
 
 if __name__ == "__main__":

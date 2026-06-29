@@ -232,3 +232,16 @@ class MerchantModel(BaseModel):
     )
     API_KEY_PREFIX: str = Field("mk_", description="api_key 前缀")
     API_SECRET_PREFIX: str = Field("sk_", description="api_secret 前缀")
+
+
+class FaceRecognitionModel(BaseModel):
+    """阿里云人脸识别（Facebody）配置模型"""
+
+    ENABLED: bool = Field(False, description="是否启用阿里云人脸识别")
+    ACCESS_KEY_ID: str = Field("", description="阿里云 AccessKey ID")
+    ACCESS_KEY_SECRET: str = Field("", description="阿里云 AccessKey Secret")
+    ENDPOINT: str = Field(
+        "facebody.cn-shanghai.aliyuncs.com", description="人脸识别服务端点"
+    )
+    REGION_ID: str = Field("cn-shanghai", description="阿里云区域 ID")
+    DEFAULT_DB_NAME: str = Field("default", description="默认人脸库名称")

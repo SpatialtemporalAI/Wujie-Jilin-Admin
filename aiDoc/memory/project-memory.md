@@ -41,6 +41,8 @@
 - [2026-06-26 菜单本地图标类型不生效](./business/2026-06-26_menu-local-icon-type-persistence.md) — sys_menu 加 meta_icon_type 列；schema/前端 API 全栈透传 iconType，修复选「本地」保存后丢失
 - [2026-06-26 任务执行 gRPC 推送补全](./business/2026-06-26_task-execution-grpc-push.md) — 新建 TaskConfigClient + task_pb2 path bridge；start/pause/resume/stop 4 类操作 commit 后下发 agent，失败仅日志不入重试
 - [2026-06-29 机器人管理卡片按钮补齐权限控制](./business/2026-06-29_robot-manage-button-permissions.md) — 编辑/gRPC配置/状态/删除 4 个按钮按 robot:manage:edit/grpc_config/list/delete 隐藏
+- [2026-06-29 阿里云人脸库管理模块](./business/2026-06-29_face-recognition-aliyun.md) — 新增 modules/face：facebody 人脸库增删查，密钥走 settings.FACE，UploadFile→viapi FileUtils→OSS→facebody
+- [2026-06-29 菜单管理按钮权限补全 i18n](./business/2026-06-29_menu-button-permissions-i18n.md) — 全部按钮权限(menuType=3)补 route.* 中英文翻译(动作词)；8 个中文 scheduler 按钮经 0035 迁移改 ASCII 名，修复表格按钮行显示 route.xxx
 
 ## 维护说明
 

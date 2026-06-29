@@ -34,6 +34,15 @@ dependencies = [
     "grpcio>=1.81.1",
     "protobuf>=5.0.0",
     "cryptography>=42.0.0",
+    # 阿里云人脸识别（facebody）
+    "alibabacloud-facebody20191230>=2.0.0",
+    "alibabacloud-tea-openapi>=0.3.0",
+    "alibabacloud-tea-util>=0.3.0",
+    # viapi-utils 本地文件上传 OSS（其本身未声明对 legacy SDK / oss2 的依赖，需显式声明）
+    "viapi-utils>=0.0.1",
+    "aliyun-python-sdk-core>=2.13.0",
+    "aliyun-python-sdk-viapiutils>=0.0.1",
+    "oss2>=2.18.0",
 ]
 
 [tool.uv.workspace]

@@ -10,7 +10,7 @@
 
 ## 状态
 
-已完成（待菜单/权限种子入库后可视化）。
+已完成。菜单与按钮权限种子已写入（迁移 `0034_seed_merchant_menu`，挂载在 manage 目录 2874692539129857 下）；开放 API 接入文档见仓库根目录 `商户开放API接入文档.md`。
 
 ## 涉及范围
 
@@ -47,7 +47,9 @@
 
 - 后端：`backend/modules/merchant/`、`backend/core/security/crypto.py`、
   `backend/database/models/business/merchant.py`、`backend/database/models/business/merchant_robot.py`、
-  `backend/database/alembic/versions/0033_merchant_tables.py`、`backend/main.py`
+  `backend/database/alembic/versions/0033_merchant_tables.py`、
+  `backend/database/alembic/versions/0034_seed_merchant_menu.py`、`backend/main.py`
+- 文档：仓库根目录 `商户开放API接入文档.md`
 - 前端：`frontend/src/views/manage/merchant/`、`frontend/src/service/api/merchant.ts`、
   `frontend/src/typings/api/merchant.d.ts`、`frontend/src/locales/langs/{zh-cn,en-us}.ts`、
   `frontend/src/typings/app.d.ts`
