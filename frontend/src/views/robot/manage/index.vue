@@ -106,12 +106,7 @@ loadData();
 
 <template>
   <div class="min-h-500px flex-col-stretch gap-16px overflow-hidden lt-sm:overflow-auto">
-    <NCard
-      title="机器人管理"
-      :bordered="false"
-      size="small"
-      class="card-wrapper sm:flex-1-hidden"
-    >
+    <NCard title="机器人管理" :bordered="false" size="small" class="card-wrapper sm:flex-1-hidden">
       <template #header-extra>
         <NSpace>
           <NButton v-if="hasAuth('robot:manage:add')" type="primary" ghost size="small" @click="handleAddRobot">
@@ -164,16 +159,19 @@ loadData();
 
             <div class="robot-card-footer">
               <NSpace>
-                <NButton type="primary" ghost size="small" @click="handleEditRobot(robot)">
+                <NButton v-if="hasAuth('robot:manage:edit')" type="primary" ghost size="small"
+                  @click="handleEditRobot(robot)">
                   {{ $t('common.edit') }}
                 </NButton>
-                <NButton type="info" ghost size="small" @click="handleEditGrpc(robot)">
+                <NButton v-if="hasAuth('robot:manage:grpc_config')" type="info" ghost size="small"
+                  @click="handleEditGrpc(robot)">
                   gRPC配置
                 </NButton>
-                <NButton ghost size="small" @click="handleViewStatus(robot)">
+                <NButton class="hidden" v-if="hasAuth('robot:manage:list')" ghost size="small"
+                  @click="handleViewStatus(robot)">
                   状态
                 </NButton>
-                <NPopconfirm @positive-click="handleDelete(robot.id)">
+                <NPopconfirm v-if="hasAuth('robot:manage:delete')" @positive-click="handleDelete(robot.id)">
                   <template #trigger>
                     <NButton type="error" ghost size="small">
                       {{ $t('common.delete') }}
@@ -187,21 +185,10 @@ loadData();
         </div>
       </NSpin>
 
-      <RobotOperateDrawer
-        v-model:visible="robotDrawerVisible"
-        :operate-type="robotOperateType"
-        :row-data="editingRobotData"
-        @submitted="loadData"
-      />
-      <RobotStatusDrawer
-        v-model:visible="statusDrawerVisible"
-        :robot-id="statusDrawerRobotId"
-      />
-      <RobotGrpcConfigDrawer
-        v-model:visible="grpcDrawerVisible"
-        :robot-id="grpcDrawerRobotId"
-        @submitted="loadData"
-      />
+      <RobotOperateDrawer v-model:visible="robotDrawerVisible" :operate-type="robotOperateType"
+        :row-data="editingRobotData" @submitted="loadData" />
+      <RobotStatusDrawer v-model:visible="statusDrawerVisible" :robot-id="statusDrawerRobotId" />
+      <RobotGrpcConfigDrawer v-model:visible="grpcDrawerVisible" :robot-id="grpcDrawerRobotId" @submitted="loadData" />
     </NCard>
   </div>
 </template>
