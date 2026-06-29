@@ -58,67 +58,6 @@ export function fetchToggleTaskEnabled(id: number, enabled: boolean) {
   });
 }
 
-/** ==================== 任务执行 API ==================== */
-
-/** start task execution */
-export function fetchStartTaskExecution(taskId: number, robotIds: number[] = []) {
-  return request<Api.Task.TaskExecution>({
-    url: `/task/execution/${taskId}/start`,
-    method: 'post',
-    data: robotIds
-  });
-}
-
-/** pause execution */
-export function fetchPauseExecution(execId: number) {
-  return request<Api.Task.TaskExecution>({
-    url: `/task/execution/${execId}/pause`,
-    method: 'post'
-  });
-}
-
-/** resume execution */
-export function fetchResumeExecution(execId: number) {
-  return request<Api.Task.TaskExecution>({
-    url: `/task/execution/${execId}/resume`,
-    method: 'post'
-  });
-}
-
-/** stop execution */
-export function fetchStopExecution(execId: number) {
-  return request<Api.Task.TaskExecution>({
-    url: `/task/execution/${execId}/stop`,
-    method: 'post'
-  });
-}
-
-/** get active executions */
-export function fetchGetActiveExecutions(params?: Api.Task.TaskExecutionSearchParams) {
-  return request<Api.Task.TaskExecutionList>({
-    url: '/task/execution/active',
-    method: 'get',
-    params
-  });
-}
-
-/** get execution history */
-export function fetchGetExecutionHistory(params?: Api.Task.TaskExecutionSearchParams) {
-  return request<Api.Task.TaskExecutionList>({
-    url: '/task/execution/history',
-    method: 'get',
-    params
-  });
-}
-
-/** get execution detail */
-export function fetchGetExecutionDetail(execId: number) {
-  return request<Api.Task.TaskExecutionDetail>({
-    url: `/task/execution/detail/${execId}`,
-    method: 'get'
-  });
-}
-
 /** ==================== 任务执行记录 API（新版，对应 task_execution_record 表） ==================== */
 
 /** start task execution (new record table) */

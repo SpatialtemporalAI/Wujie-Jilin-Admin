@@ -14,6 +14,7 @@ from database.models.business.task import Task, task_robot_association
 from database.models.business.task_point import TaskPoint
 from database.models.business.robot import Robot
 from core.exception.errors import NotFoundError
+from modules.grpc.task_client import TaskConfigClient
 from modules.task.schemas.task import (
     TaskCreate,
     TaskUpdate,
@@ -31,7 +32,6 @@ class TaskService:
         """构建任务查询"""
         base_query = select(Task).options(
             noload(Task.points),
-            noload(Task.executions),
             noload(Task.robots),
         )
 
@@ -64,7 +64,6 @@ class TaskService:
         """获取单个任务"""
         result = await db.execute(
             select(Task)
-            .options(noload(Task.executions))
             .where(Task.id == task_id)
             .where(Task.deleted_at.is_(None))
         )
@@ -142,6 +141,21 @@ class TaskService:
 
             await db.commit()
             await db.refresh(task_obj)
+
+            # DB 落库后下发 gRPC 通知到机器人 agent；失败仅日志，不阻塞业务
+            try:
+                await TaskConfigClient.broadcast_task_changed(
+                    task_id=task_obj.id,
+                    operation="create",
+                    robot_ids=list(task_in.robot_ids),
+                )
+            except Exception as exc:  # noqa: BLE001 - 推送容错
+                logger.warning(
+                    "grpc task broadcast create failed task_id=%s err=%s",
+                    task_obj.id,
+                    exc,
+                )
+
             return task_obj
 
         except NotFoundError:
@@ -205,6 +219,32 @@ class TaskService:
 
             await db.commit()
             await db.refresh(task_obj)
+
+            # DB 落库后下发 gRPC 通知到机器人 agent；失败仅日志，不阻塞业务
+            # robot_ids 可能未在更新请求中提供，需读取 DB 当前关联值
+            if task_in.robot_ids is not None:
+                final_robot_ids = list(task_in.robot_ids)
+            else:
+                assoc_result = await db.execute(
+                    select(task_robot_association.c.robot_id).where(
+                        task_robot_association.c.task_id == task_id
+                    )
+                )
+                final_robot_ids = [row[0] for row in assoc_result.all()]
+
+            try:
+                await TaskConfigClient.broadcast_task_changed(
+                    task_id=task_id,
+                    operation="edit",
+                    robot_ids=final_robot_ids,
+                )
+            except Exception as exc:  # noqa: BLE001 - 推送容错
+                logger.warning(
+                    "grpc task broadcast edit failed task_id=%s err=%s",
+                    task_id,
+                    exc,
+                )
+
             return task_obj
 
         except NotFoundError:
@@ -262,8 +302,32 @@ class TaskService:
         """删除任务（软删除）"""
         try:
             task_obj = await TaskService.get(db, task_id)
+
+            # 软删除前先取出当前关联 robot_ids，删除后用于 gRPC 通知
+            assoc_result = await db.execute(
+                select(task_robot_association.c.robot_id).where(
+                    task_robot_association.c.task_id == task_id
+                )
+            )
+            robot_ids = [row[0] for row in assoc_result.all()]
+
             task_obj.soft_delete()
             await db.commit()
+
+            # DB 落库后下发 gRPC 通知到机器人 agent；失败仅日志，不阻塞业务
+            try:
+                await TaskConfigClient.broadcast_task_changed(
+                    task_id=task_id,
+                    operation="delete",
+                    robot_ids=robot_ids,
+                )
+            except Exception as exc:  # noqa: BLE001 - 推送容错
+                logger.warning(
+                    "grpc task broadcast delete failed task_id=%s err=%s",
+                    task_id,
+                    exc,
+                )
+
             return True
         except NotFoundError:
             await db.rollback()
@@ -297,6 +361,29 @@ class TaskService:
             task_obj.enabled = enabled
             await db.commit()
             await db.refresh(task_obj)
+
+            # DB 落库后下发 gRPC 通知到机器人 agent；失败仅日志，不阻塞业务
+            assoc_result = await db.execute(
+                select(task_robot_association.c.robot_id).where(
+                    task_robot_association.c.task_id == task_id
+                )
+            )
+            robot_ids = [row[0] for row in assoc_result.all()]
+            operation = "enable" if enabled else "disable"
+            try:
+                await TaskConfigClient.broadcast_task_changed(
+                    task_id=task_id,
+                    operation=operation,
+                    robot_ids=robot_ids,
+                )
+            except Exception as exc:  # noqa: BLE001 - 推送容错
+                logger.warning(
+                    "grpc task broadcast %s failed task_id=%s err=%s",
+                    operation,
+                    task_id,
+                    exc,
+                )
+
             return task_obj
         except NotFoundError:
             await db.rollback()

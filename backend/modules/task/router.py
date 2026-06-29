@@ -4,11 +4,9 @@
 from fastapi import APIRouter
 
 from .endpoints.task import task_router
-from .endpoints.task_execution import task_execution_router
 from .endpoints.task_execution_record import task_execution_record_router
 
 router = APIRouter(prefix="/task")
 
 router.include_router(task_router)
-router.include_router(task_execution_router)
 router.include_router(task_execution_record_router)

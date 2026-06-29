@@ -1,11 +1,12 @@
 <script setup lang="ts">
-import { computed, reactive, ref } from 'vue';
+import { computed, reactive, ref, watch } from 'vue';
 import { loginModuleRecord } from '@/constants/app';
 import { useAuthStore } from '@/store/modules/auth';
 import { useRouterPush } from '@/hooks/common/router';
 import { useFormRules, useNaiveForm } from '@/hooks/common/form';
 import { useSliderCaptcha } from '@/hooks/business/slider-captcha';
 import { $t } from '@/locales';
+import { localStg } from '@/utils/storage';
 import SliderCaptcha from '@/components/custom/slider-captcha.vue';
 
 defineOptions({
@@ -35,14 +36,35 @@ const loginDisabled = computed(() => {
   return captchaRequired.value && !captchaToken.value;
 });
 
+const LOGIN_REMEMBER_KEY = 'loginRemember';
+
+const encodePassword = (pwd: string) => btoa(encodeURIComponent(pwd));
+const decodePassword = (encoded: string) => {
+  try {
+    return decodeURIComponent(atob(encoded));
+  } catch {
+    return '';
+  }
+};
+
+const savedRemember = localStg.get(LOGIN_REMEMBER_KEY);
+
 interface FormModel {
   userName: string;
   password: string;
 }
 
 const model: FormModel = reactive({
-  userName: 'admin',
-  password: 'admin123'
+  userName: savedRemember?.checked ? savedRemember.userName : 'admin',
+  password: savedRemember?.checked ? decodePassword(savedRemember.password) : 'admin123'
+});
+
+const rememberMe = ref<boolean>(!!savedRemember?.checked);
+
+watch(rememberMe, checked => {
+  if (!checked) {
+    localStg.remove(LOGIN_REMEMBER_KEY);
+  }
 });
 
 const rules = computed<Record<keyof FormModel, App.Global.FormRule[]>>(() => {
@@ -72,6 +94,13 @@ async function handleSubmit() {
     showCaptcha();
   } else {
     resetCaptcha();
+    if (rememberMe.value) {
+      localStg.set(LOGIN_REMEMBER_KEY, {
+        userName: model.userName,
+        password: encodePassword(model.password),
+        checked: true
+      });
+    }
   }
 }
 
@@ -134,7 +163,7 @@ async function handleAccountLogin(account: Account) {
     </NFormItem>
     <NSpace vertical :size="24">
       <div class="flex-y-center justify-between">
-        <NCheckbox>{{ $t('page.login.pwdLogin.rememberMe') }}</NCheckbox>
+        <NCheckbox v-model:checked="rememberMe">{{ $t('page.login.pwdLogin.rememberMe') }}</NCheckbox>
         <!-- <NButton quaternary @click="toggleLoginModule('reset-pwd')">
           {{ $t('page.login.pwdLogin.forgetPassword') }}
         </NButton> -->

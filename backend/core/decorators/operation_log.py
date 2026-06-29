@@ -17,6 +17,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from database import get_session
 from database.models.sys.operation_log import SysOperationLog
 from core.middleware.share_middleware import request_ctx
+from core.utils.ip_utils import get_real_client_ip
 
 logger = logging.getLogger(__name__)
 
@@ -95,7 +96,7 @@ def log_operation(
                     # 尝试从 args 中提取
                     return result
 
-                ip = request.client.host if request.client else None
+                ip = get_real_client_ip(request)
                 response_code = None
                 if hasattr(result, "status_code"):
                     response_code = result.status_code

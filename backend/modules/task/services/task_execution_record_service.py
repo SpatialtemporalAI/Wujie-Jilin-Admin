@@ -54,7 +54,7 @@ class TaskExecutionRecordService:
         for pt in task_obj.points:
             actions = [
                 TaskActionSnapshot(
-                    action=a.get("action", "wave"),
+                    action=a.get("action", "no"),
                     voice_text=a.get("voice_text"),
                 )
                 for a in (pt.actions or [])
