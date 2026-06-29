@@ -352,7 +352,18 @@ const local: App.I18n.Schema = {
     task_delete: 'Delete',
     task_execution_start: 'Start',
     task_execution_control: 'Pause/Resume',
-    operation_monitor_list: 'List'
+    operation_monitor_list: 'List',
+    settings_list: 'List',
+    settings_edit: 'Edit',
+    manage_face: 'Face DB',
+    face_db_create: 'Create',
+    face_db_list: 'List',
+    face_entity_add: 'Add',
+    face_entity_delete: 'Delete',
+    face_image_add: 'Upload',
+    face_image_delete: 'Delete',
+    face_search: 'Search',
+    face_detect: 'Detect'
   },
   page: {
     login: {

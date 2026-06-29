@@ -348,7 +348,18 @@ const local: App.I18n.Schema = {
     task_delete: '删除',
     task_execution_start: '启动',
     task_execution_control: '暂停/恢复',
-    operation_monitor_list: '查询'
+    operation_monitor_list: '查询',
+    settings_list: '查询',
+    settings_edit: '编辑',
+    manage_face: '人脸库管理',
+    face_db_create: '新建',
+    face_db_list: '查询',
+    face_entity_add: '新增',
+    face_entity_delete: '删除',
+    face_image_add: '上传',
+    face_image_delete: '删除',
+    face_search: '搜索',
+    face_detect: '检测'
   },
   page: {
     login: {
