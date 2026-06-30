@@ -23,6 +23,7 @@ declare module "@elegant-router/types" {
     "demo": "/demo";
     "demo_dict": "/demo/dict";
     "demo_upload": "/demo/upload";
+    "face": "/face";
     "home": "/home";
     "iframe-page": "/iframe-page/:url";
     "log": "/log";
@@ -35,20 +36,19 @@ declare module "@elegant-router/types" {
     "manage_announcement": "/manage/announcement";
     "manage_config": "/manage/config";
     "manage_dict": "/manage/dict";
-    "manage_face": "/manage/face";
     "manage_file": "/manage/file";
     "manage_ip-blacklist": "/manage/ip-blacklist";
     "manage_menu": "/manage/menu";
-    "manage_merchant": "/manage/merchant";
     "manage_role": "/manage/role";
     "manage_scheduler": "/manage/scheduler";
     "manage_scheduler-log": "/manage/scheduler-log";
     "manage_user": "/manage/user";
+    "merchant": "/merchant";
     "monitor": "/monitor";
     "operation-monitor": "/operation-monitor";
     "robot": "/robot";
-    "robot_manage": "/robot/manage";
     "robot_model": "/robot/model";
+    "robots": "/robots";
     "scene": "/scene";
     "scene_group": "/scene/group";
     "scene_map": "/scene/map";
@@ -90,14 +90,17 @@ declare module "@elegant-router/types" {
     | "404"
     | "500"
     | "demo"
+    | "face"
     | "home"
     | "iframe-page"
     | "log"
     | "login"
     | "manage"
+    | "merchant"
     | "monitor"
     | "operation-monitor"
     | "robot"
+    | "robots"
     | "scene"
     | "settings"
     | "task"
@@ -124,6 +127,7 @@ declare module "@elegant-router/types" {
     | "login"
     | "demo_dict"
     | "demo_upload"
+    | "face"
     | "home"
     | "log_login-log"
     | "log_online-user"
@@ -132,19 +136,18 @@ declare module "@elegant-router/types" {
     | "manage_announcement"
     | "manage_config"
     | "manage_dict"
-    | "manage_face"
     | "manage_file"
     | "manage_ip-blacklist"
     | "manage_menu"
-    | "manage_merchant"
     | "manage_role"
     | "manage_scheduler-log"
     | "manage_scheduler"
     | "manage_user"
+    | "merchant"
     | "monitor"
     | "operation-monitor"
-    | "robot_manage"
     | "robot_model"
+    | "robots"
     | "scene_group"
     | "scene_map-editor"
     | "scene_map"
