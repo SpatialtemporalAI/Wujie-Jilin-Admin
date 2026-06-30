@@ -73,6 +73,7 @@ const rules = {
 
 const taskId = computed(() => props.rowData?.id || -1);
 const isEdit = computed(() => props.operateType === 'edit');
+const submitting = ref(false);
 
 function handleInitModel() {
   model.value = createDefaultModel();
@@ -109,20 +110,25 @@ async function handleCronPreview() {
 async function handleSubmit() {
   await validate();
 
-  let error: unknown = null;
+  submitting.value = true;
+  try {
+    let error: unknown = null;
 
-  if (isEdit.value) {
-    const result = await fetchUpdateScheduledTask(taskId.value, model.value);
-    error = result.error;
-  } else {
-    const result = await fetchCreateScheduledTask(model.value);
-    error = result.error;
-  }
+    if (isEdit.value) {
+      const result = await fetchUpdateScheduledTask(taskId.value, model.value);
+      error = result.error;
+    } else {
+      const result = await fetchCreateScheduledTask(model.value);
+      error = result.error;
+    }
 
-  if (!error) {
-    window.$message?.success(isEdit.value ? $t('common.updateSuccess') : $t('common.addSuccess'));
-    closeDrawer();
-    emit('submitted');
+    if (!error) {
+      window.$message?.success(isEdit.value ? $t('common.updateSuccess') : $t('common.addSuccess'));
+      closeDrawer();
+      emit('submitted');
+    }
+  } finally {
+    submitting.value = false;
   }
 }
 
@@ -180,7 +186,7 @@ watch(visible, () => {
       <template #footer>
         <NSpace :size="16">
           <NButton @click="closeDrawer">{{ $t('common.cancel') }}</NButton>
-          <NButton type="primary" @click="handleSubmit">{{ $t('common.confirm') }}</NButton>
+          <NButton type="primary" :loading="submitting" :disabled="submitting" @click="handleSubmit">{{ $t('common.confirm') }}</NButton>
         </NSpace>
       </template>
     </NDrawerContent>

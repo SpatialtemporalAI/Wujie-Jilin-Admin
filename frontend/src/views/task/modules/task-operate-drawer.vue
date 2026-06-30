@@ -266,6 +266,7 @@ const rules = computed(() => ({
 
 const taskId = computed(() => props.rowData?.id || -1);
 const isEdit = computed(() => props.operateType === 'edit');
+const submitting = ref(false);
 
 async function handleInitModel() {
   model.value = createDefaultModel();
@@ -406,19 +407,24 @@ async function handleSubmit() {
     broadcast_text: model.value.task_type === 'broadcast' ? model.value.broadcast_text : undefined
   };
 
-  let error: unknown = null;
-  if (isEdit.value) {
-    const result = await fetchUpdateTask(taskId.value, submitData);
-    error = result.error;
-  } else {
-    const result = await fetchCreateTask(submitData);
-    error = result.error;
-  }
+  submitting.value = true;
+  try {
+    let error: unknown = null;
+    if (isEdit.value) {
+      const result = await fetchUpdateTask(taskId.value, submitData);
+      error = result.error;
+    } else {
+      const result = await fetchCreateTask(submitData);
+      error = result.error;
+    }
 
-  if (!error) {
-    window.$message?.success(isEdit.value ? $t('common.updateSuccess') : $t('common.addSuccess'));
-    closeDrawer();
-    emit('submitted');
+    if (!error) {
+      window.$message?.success(isEdit.value ? $t('common.updateSuccess') : $t('common.addSuccess'));
+      closeDrawer();
+      emit('submitted');
+    }
+  } finally {
+    submitting.value = false;
   }
 }
 
@@ -568,7 +574,7 @@ onMounted(() => {
       <template #footer>
         <NSpace :size="16">
           <NButton @click="closeDrawer">{{ $t('common.cancel') }}</NButton>
-          <NButton type="primary" @click="handleSubmit">{{ $t('common.confirm') }}</NButton>
+          <NButton type="primary" :loading="submitting" :disabled="submitting" @click="handleSubmit">{{ $t('common.confirm') }}</NButton>
         </NSpace>
       </template>
     </NDrawerContent>
