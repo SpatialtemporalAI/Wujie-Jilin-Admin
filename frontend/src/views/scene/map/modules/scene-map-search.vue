@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { onMounted, ref } from 'vue';
-import { jsonClone } from '@sa/utils';
+import { useDebounceFn } from '@vueuse/core';
 import { fetchGetSceneGroupList } from '@/service/api';
 
 defineOptions({
@@ -9,14 +9,11 @@ defineOptions({
 
 interface Emits {
   (e: 'search'): void;
-  (e: 'reset'): void;
 }
 
 const emit = defineEmits<Emits>();
 
 const model = defineModel<Api.Scene.SceneMapSearchParams>('model', { required: true });
-
-const defaultModel = jsonClone(model.value);
 
 /** 分组选项 */
 const groupOptions = ref<{ label: string; value: number }[]>([]);
@@ -31,14 +28,14 @@ async function loadGroupOptions() {
   }
 }
 
-function resetModel() {
-  Object.assign(model.value, defaultModel);
-  emit('reset');
-}
-
-function search() {
+function handleSearch() {
+  model.value.page = 1;
   emit('search');
 }
+
+const debouncedSearch = useDebounceFn(() => {
+  handleSearch();
+}, 500);
 
 onMounted(() => {
   loadGroupOptions();
@@ -46,37 +43,23 @@ onMounted(() => {
 </script>
 
 <template>
-  <NCard :bordered="false" size="small" class="card-wrapper">
-    <NForm :model="model" label-placement="left" :label-width="80">
-      <NGrid responsive="screen" item-responsive>
-        <NFormItemGi span="24 s:12 m:6" label="地图名称" path="name" class="pr-24px">
-          <NInput v-model:value="model.name" placeholder="请输入地图名称" clearable />
-        </NFormItemGi>
-        <NFormItemGi span="24 s:12 m:6" label="所属分组" path="group_id" class="pr-24px">
-          <NSelect
-            v-model:value="model.group_id"
-            :options="groupOptions"
-            placeholder="请选择所属分组"
-            clearable
-          />
-        </NFormItemGi>
-      </NGrid>
-      <NSpace class="mt-16px w-full" justify="end">
-        <NButton @click="resetModel">
-          <template #icon>
-            <icon-ic-round-refresh class="text-icon" />
-          </template>
-          重置
-        </NButton>
-        <NButton type="primary" ghost @click="search">
-          <template #icon>
-            <icon-ic-round-search class="text-icon" />
-          </template>
-          搜索
-        </NButton>
-      </NSpace>
-    </NForm>
-  </NCard>
+  <div class="flex-y-center flex-wrap gap-12px">
+    <NInput
+      v-model:value="model.name"
+      placeholder="地图名称"
+      clearable
+      :style="{ width: '160px' }"
+      @update:value="debouncedSearch"
+    />
+    <NSelect
+      v-model:value="model.group_id"
+      :options="groupOptions"
+      placeholder="所属分组"
+      clearable
+      :style="{ width: '160px' }"
+      @update:value="handleSearch"
+    />
+  </div>
 </template>
 
 <style scoped></style>

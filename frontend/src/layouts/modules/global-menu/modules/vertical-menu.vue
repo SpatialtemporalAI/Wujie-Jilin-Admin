@@ -43,7 +43,7 @@ watch(
 
 <template>
   <Teleport :to="`#${GLOBAL_SIDER_MENU_ID}`">
-    <SimpleScrollbar :blue-bg="themeStore.isLightSider">
+    <SimpleScrollbar :blue-bg="themeStore.isLightSider" :dark-mode="themeStore.darkMode">
       <NMenu v-model:expanded-keys="expandedKeys" mode="vertical" :value="selectedKey"
         :collapsed="appStore.siderCollapse" :collapsed-width="themeStore.sider.collapsedWidth" :collapsed-icon-size="22"
         :options="routeStore.menus" :inverted="inverted" :indent="18" @update:value="routerPushByKeyWithMetaQuery" />

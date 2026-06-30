@@ -84,7 +84,7 @@ function toggleSiderCollapse() {
 
   <div class="h-full flex-col-stretch flex-1-hidden">
     <slot></slot>
-    <SimpleScrollbar :blue-bg="themeStore.isLightSider">
+    <SimpleScrollbar :blue-bg="themeStore.isLightSider" :dark-mode="themeStore.darkMode">
       <MixMenuItem
         v-for="menu in menus"
         :key="menu.key"

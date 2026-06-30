@@ -13,3 +13,14 @@ html {
   overflow-x: hidden;
   color: rgb(var(--base-text-color));
 }
+
+/* 表格容器卡片去除多余白边和层级 */
+.card-wrapper[class*="flex-1-hidden"] {
+  background: transparent !important;
+  box-shadow: none !important;
+  border-radius: 0 !important;
+}
+
+.card-wrapper[class*="flex-1-hidden"] .n-card__content {
+  padding: 0 !important;
+}

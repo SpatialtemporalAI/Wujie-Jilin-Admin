@@ -155,19 +155,19 @@ async function handleDelete(id: number) {
 
 <template>
   <div class="min-h-500px flex-col-stretch gap-16px overflow-hidden lt-sm:overflow-auto">
-    <SceneGroupSearch v-model:model="searchParams" @search="getGroupDataByPage" @reset="getGroupDataByPage" />
-    <NCard title="场景分组管理" :bordered="false" size="small" class="card-wrapper sm:flex-1-hidden">
-      <template #header-extra>
-        <TableHeaderOperation
-          v-model:columns="groupColumnChecks"
-          :disabled-delete="checkedGroupRowKeys.length === 0"
-          :loading="groupLoading"
-          add-auth="scene:group:add"
-          :show-delete="false"
-          @add="handleAddGroup"
-          @refresh="getGroupData"
-        />
-      </template>
+    <div class="flex-y-center justify-between gap-12px">
+      <SceneGroupSearch v-model:model="searchParams" @search="getGroupDataByPage" />
+      <TableHeaderOperation
+        v-model:columns="groupColumnChecks"
+        :disabled-delete="checkedGroupRowKeys.length === 0"
+        :loading="groupLoading"
+        add-auth="scene:group:add"
+        :show-delete="false"
+        @add="handleAddGroup"
+        @refresh="getGroupData"
+      />
+    </div>
+    <NCard :bordered="false" size="small" class="card-wrapper sm:flex-1-hidden">
       <NDataTable
         v-model:checked-row-keys="checkedGroupRowKeys"
         :columns="groupColumns"

@@ -122,30 +122,32 @@ async function handleKickAllOnline() {
 
 <template>
   <div class="min-h-500px flex-col-stretch gap-16px overflow-hidden lt-sm:overflow-auto">
-    <OnlineUserSearch v-model:model="searchParams" @search="getDataByPage" />
-    <NCard :title="$t('page.log.onlineUser.title')" :bordered="false" size="small" class="flex-1-hidden card-wrapper">
-      <template #header-extra>
-        <TableHeaderOperation
-          v-model:columns="columnChecks"
-          :loading="loading"
-          :show-add="false"
-          :show-delete="false"
-          @refresh="getData"
-        >
-          <template #suffix>
-            <NPopconfirm v-if="hasAuth('sys:online:kick')" @positive-click="handleKickAllOnline">
-              <template #trigger>
-                <NButton size="small" ghost type="error">
-                  <template #icon>
-                    <icon-ic-round-delete-forever class="text-icon" />
-                  </template>
-                  {{ $t('page.log.onlineUser.kickAll') }}
-                </NButton>
-              </template>
-              {{ $t('page.log.onlineUser.kickAllConfirm') }}
-            </NPopconfirm>
-          </template>
-        </TableHeaderOperation>
+    <NCard :bordered="false" size="small" class="flex-1-hidden card-wrapper">
+      <template #header>
+        <div class="flex-y-center justify-between gap-12px">
+          <OnlineUserSearch v-model:model="searchParams" @search="getDataByPage" />
+          <TableHeaderOperation
+            v-model:columns="columnChecks"
+            :loading="loading"
+            :show-add="false"
+            :show-delete="false"
+            @refresh="getData"
+          >
+            <template #suffix>
+              <NPopconfirm v-if="hasAuth('sys:online:kick')" @positive-click="handleKickAllOnline">
+                <template #trigger>
+                  <NButton size="small" ghost type="error">
+                    <template #icon>
+                      <icon-ic-round-delete-forever class="text-icon" />
+                    </template>
+                    {{ $t('page.log.onlineUser.kickAll') }}
+                  </NButton>
+                </template>
+                {{ $t('page.log.onlineUser.kickAllConfirm') }}
+              </NPopconfirm>
+            </template>
+          </TableHeaderOperation>
+        </div>
       </template>
       <NDataTable
         :columns="columns"

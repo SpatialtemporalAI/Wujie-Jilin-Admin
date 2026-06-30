@@ -150,19 +150,21 @@ async function handleBatchDelete() {
 
 <template>
   <div class="min-h-500px flex-col-stretch gap-16px overflow-hidden lt-sm:overflow-auto">
-    <IpBlacklistSearch v-model:model="searchParams" @search="getDataByPage" />
-    <NCard :title="$t('page.manage.ipBlacklist.title')" :bordered="false" size="small" class="card-wrapper sm:flex-1-hidden">
-      <template #header-extra>
-        <TableHeaderOperation
-          v-model:columns="columnChecks"
-          :disabled-delete="checkedRowKeys.length === 0"
-          :loading="loading"
-          add-auth="sys:blacklist:add"
-          delete-auth="sys:blacklist:remove"
-          @add="handleAdd"
-          @delete="handleBatchDelete"
-          @refresh="getData"
-        />
+    <NCard :bordered="false" size="small" class="card-wrapper sm:flex-1-hidden">
+      <template #header>
+        <div class="flex-y-center justify-between gap-12px">
+          <IpBlacklistSearch v-model:model="searchParams" @search="getDataByPage" />
+          <TableHeaderOperation
+            v-model:columns="columnChecks"
+            :disabled-delete="checkedRowKeys.length === 0"
+            :loading="loading"
+            add-auth="sys:blacklist:add"
+            delete-auth="sys:blacklist:remove"
+            @add="handleAdd"
+            @delete="handleBatchDelete"
+            @refresh="getData"
+          />
+        </div>
       </template>
       <NDataTable
         v-model:checked-row-keys="checkedRowKeys"

@@ -1,6 +1,6 @@
 <script setup lang="ts">
-import { toRaw } from 'vue';
-import { jsonClone } from '@sa/utils';
+import { NInput, NSelect } from 'naive-ui';
+import { useDebounceFn } from '@vueuse/core';
 import { $t } from '@/locales';
 
 defineOptions({
@@ -9,62 +9,45 @@ defineOptions({
 
 interface Emits {
   (e: 'search'): void;
-  (e: 'reset'): void;
 }
 
 const emit = defineEmits<Emits>();
 
 const model = defineModel<Api.SystemManage.IpBlacklistSearchParams>('model', { required: true });
 
-const defaultModel = jsonClone(toRaw(model.value));
-
 const typeOptions = [
   { label: $t('page.manage.ipBlacklist.typePermanent'), value: 'permanent' },
   { label: $t('page.manage.ipBlacklist.typeTemporary'), value: 'temporary' }
 ];
 
-function resetModel() {
-  Object.assign(model.value, defaultModel);
-  emit('reset');
-}
-
-function search() {
+function handleSearch() {
+  model.value.page = 1;
   emit('search');
 }
+
+const debouncedSearch = useDebounceFn(() => {
+  handleSearch();
+}, 500);
 </script>
 
 <template>
-  <NCard :bordered="false" size="small" class="card-wrapper">
-    <NForm :model="model" label-placement="left" :label-width="80">
-      <NGrid responsive="screen" item-responsive>
-        <NFormItemGi span="24 s:12 m:6" :label="$t('page.manage.ipBlacklist.ip')" path="ip" class="pr-24px">
-          <NInput v-model:value="model.ip" :placeholder="$t('page.manage.ipBlacklist.form.ip')" clearable />
-        </NFormItemGi>
-        <NFormItemGi span="24 s:12 m:6" :label="$t('page.manage.ipBlacklist.type')" path="type" class="pr-24px">
-          <NSelect
-            v-model:value="model.type"
-            :options="typeOptions"
-            :placeholder="$t('page.manage.ipBlacklist.form.type')"
-            clearable
-          />
-        </NFormItemGi>
-      </NGrid>
-      <NSpace class="mt-16px w-full" justify="end">
-        <NButton @click="resetModel">
-          <template #icon>
-            <icon-ic-round-refresh class="text-icon" />
-          </template>
-          {{ $t('common.reset') }}
-        </NButton>
-        <NButton type="primary" ghost @click="search">
-          <template #icon>
-            <icon-ic-round-search class="text-icon" />
-          </template>
-          {{ $t('common.search') }}
-        </NButton>
-      </NSpace>
-    </NForm>
-  </NCard>
+  <div class="flex-y-center flex-wrap gap-12px">
+    <NInput
+      v-model:value="model.ip"
+      :placeholder="$t('page.manage.ipBlacklist.form.ip')"
+      clearable
+      :style="{ width: '160px' }"
+      @update:value="debouncedSearch"
+    />
+    <NSelect
+      v-model:value="model.type"
+      :options="typeOptions"
+      :placeholder="$t('page.manage.ipBlacklist.form.type')"
+      clearable
+      :style="{ width: '140px' }"
+      @update:value="handleSearch"
+    />
+  </div>
 </template>
 
 <style scoped></style>

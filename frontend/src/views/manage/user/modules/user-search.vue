@@ -1,8 +1,6 @@
 <script setup lang="ts">
-import { computed, toRaw } from 'vue';
-import { jsonClone } from '@sa/utils';
-import { enableStatusOptions, userGenderOptions } from '@/constants/business';
-import { useFormRules, useNaiveForm } from '@/hooks/common/form';
+import { useDebounceFn } from '@vueuse/core';
+import { enableStatusOptions } from '@/constants/business';
 import { $t } from '@/locales';
 
 defineOptions({
@@ -15,79 +13,57 @@ interface Emits {
 
 const emit = defineEmits<Emits>();
 
-const { formRef, validate, restoreValidation } = useNaiveForm();
-
 const model = defineModel<Api.SystemManage.UserSearchParams>('model', { required: true });
 
-type RuleKey = Extract<keyof Api.SystemManage.UserSearchParams, 'email' | 'phone'>;
-
-const rules = computed<Record<RuleKey, App.Global.FormRule>>(() => {
-  const { patternRules } = useFormRules(); // inside computed to make locale reactive
-
-  return {
-    email: patternRules.email,
-    phone: patternRules.phone
-  };
-});
-
-const defaultModel = jsonClone(toRaw(model.value));
-
-function resetModel() {
-  Object.assign(model.value, defaultModel);
-}
-
-async function reset() {
-  await restoreValidation();
-  resetModel();
-}
-
-async function search() {
-  await validate();
+function handleSearch() {
+  model.value.page = 1;
   emit('search');
 }
+
+const debouncedSearch = useDebounceFn(() => {
+  handleSearch();
+}, 500);
 </script>
 
 <template>
-  <NCard :bordered="false" size="small" class="card-wrapper">
-    <NForm ref="formRef" :model="model" :rules="rules" label-placement="left" :label-width="80">
-      <NGrid responsive="screen" item-responsive>
-        <NFormItemGi span="24 s:12 m:6" :label="$t('page.manage.user.userName')" path="username" class="pr-24px">
-          <NInput v-model:value="model.username" :placeholder="$t('page.manage.user.form.userName')" />
-        </NFormItemGi>
-        <NFormItemGi span="24 s:12 m:6" :label="$t('page.manage.user.nickName')" path="nickname" class="pr-24px">
-          <NInput v-model:value="model.nickname" :placeholder="$t('page.manage.user.form.nickName')" />
-        </NFormItemGi>
-        <NFormItemGi span="24 s:12 m:6" :label="$t('page.manage.user.userPhone')" path="phone" class="pr-24px">
-          <NInput v-model:value="model.phone" :placeholder="$t('page.manage.user.form.userPhone')" />
-        </NFormItemGi>
-        <NFormItemGi span="24 s:12 m:6" :label="$t('page.manage.user.userEmail')" path="email" class="pr-24px">
-          <NInput v-model:value="model.email" :placeholder="$t('page.manage.user.form.userEmail')" />
-        </NFormItemGi>
-        <NFormItemGi span="24 s:12 m:6" :label="$t('page.manage.user.userStatus')" path="status" class="pr-24px">
-          <NSelect
-            v-model:value="model.status"
-            :placeholder="$t('page.manage.user.form.userStatus')"
-            :options="enableStatusOptions"
-            clearable
-          />
-        </NFormItemGi>
-      </NGrid>
-      <NSpace class="mt-16px w-full" justify="end">
-        <NButton @click="reset">
-          <template #icon>
-            <icon-ic-round-refresh class="text-icon" />
-          </template>
-          {{ $t('common.reset') }}
-        </NButton>
-        <NButton type="primary" ghost @click="search">
-          <template #icon>
-            <icon-ic-round-search class="text-icon" />
-          </template>
-          {{ $t('common.search') }}
-        </NButton>
-      </NSpace>
-    </NForm>
-  </NCard>
+  <div class="flex-y-center flex-wrap gap-12px">
+    <NInput
+      v-model:value="model.username"
+      :placeholder="$t('page.manage.user.form.userName')"
+      clearable
+      :style="{ width: '160px' }"
+      @update:value="debouncedSearch"
+    />
+    <NInput
+      v-model:value="model.nickname"
+      :placeholder="$t('page.manage.user.form.nickName')"
+      clearable
+      :style="{ width: '160px' }"
+      @update:value="debouncedSearch"
+    />
+    <NInput
+      v-model:value="model.phone"
+      :placeholder="$t('page.manage.user.form.userPhone')"
+      clearable
+      :style="{ width: '160px' }"
+      @update:value="debouncedSearch"
+    />
+    <NInput
+      v-model:value="model.email"
+      :placeholder="$t('page.manage.user.form.userEmail')"
+      clearable
+      :style="{ width: '200px' }"
+      @update:value="debouncedSearch"
+    />
+    <NSelect
+      v-model:value="model.status"
+      :options="enableStatusOptions"
+      :placeholder="$t('page.manage.user.form.userStatus')"
+      clearable
+      :style="{ width: '140px' }"
+      @update:value="handleSearch"
+    />
+  </div>
 </template>
 
 <style scoped></style>

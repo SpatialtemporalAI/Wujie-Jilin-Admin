@@ -107,7 +107,7 @@ watch(
               @click="appStore.toggleMixSiderFixed"
             />
           </header>
-          <SimpleScrollbar :blue-bg="themeStore.isLightSider">
+          <SimpleScrollbar :blue-bg="themeStore.isLightSider" :dark-mode="themeStore.darkMode">
             <NMenu
               v-model:expanded-keys="expandedKeys"
               mode="vertical"
