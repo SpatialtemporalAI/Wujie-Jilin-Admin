@@ -9,6 +9,7 @@ import {
 } from '@/service/api';
 import { useAppStore } from '@/store/modules/app';
 import { $t } from '@/locales';
+import TableHeaderOperation from '@/components/advanced/table-header-operation.vue';
 import TaskHistorySearch from './task-history-search.vue';
 
 defineOptions({ name: 'TaskExecutionTab' });
@@ -230,8 +231,10 @@ onUnmounted(stopPolling);
 
 <template>
   <div class="h-full flex-col-stretch gap-12px overflow-hidden lt-sm:overflow-auto">
-    <TaskHistorySearch v-model:model="searchParams" :status-options="statusOptions" @search="handleSearch"
-      @reset="handleSearch" />
+    <div class="flex-y-center justify-between gap-12px">
+      <TaskHistorySearch v-model:model="searchParams" :status-options="statusOptions" @search="handleSearch" />
+      <TableHeaderOperation :loading="loading" :show-add="false" :show-delete="false" @refresh="getData" />
+    </div>
     <NDataTable :columns="columns" :data="data" size="small" :flex-height="!appStore.isMobile" :scroll-x="1320"
       :loading="loading" remote :row-key="(row: Api.Task.TaskExecutionRecord) => row.id" :pagination="{
         page: page,

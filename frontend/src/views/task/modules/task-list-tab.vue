@@ -276,8 +276,8 @@ async function handlePauseTask(taskId: number) {
 
 <template>
   <div class="h-full flex-col-stretch gap-12px overflow-hidden lt-sm:overflow-auto">
-    <TaskSearch v-model:model="searchParams" @search="getDataByPage" @reset="getDataByPage" />
-    <div>
+    <div class="flex-y-center justify-between gap-12px">
+      <TaskSearch v-model:model="searchParams" @search="getDataByPage" />
       <TableHeaderOperation v-model:columns="columnChecks" :disabled-delete="checkedRowKeys.length === 0"
         :loading="loading" add-auth="task:add" :show-delete="false" @add="handleAdd" @refresh="getData" />
     </div>
