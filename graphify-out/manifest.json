@@ -2495,8 +2495,8 @@
     "semantic_hash": ""
   },
   "D:\\project\\SpatialtemporalAi\\Wujie-Jilin-Admin\\aiDoc\\memory\\project-memory.md": {
-    "mtime": 1782791257.8786738,
-    "ast_hash": "998223fcf80e6aead1298b17d24cad61",
+    "mtime": 1782792264.9724455,
+    "ast_hash": "4c959c62f4cdb2d7e8de3f14df38cc65",
     "semantic_hash": ""
   },
   "D:\\project\\SpatialtemporalAi\\Wujie-Jilin-Admin\\aiDoc\\memory\\README.md": {
@@ -3210,8 +3210,8 @@
     "semantic_hash": ""
   },
   "D:\\project\\SpatialtemporalAi\\Wujie-Jilin-Admin\\backend\\database\\models\\business\\robot_voice_config.py": {
-    "mtime": 1782274954.1031985,
-    "ast_hash": "75c0328b6dff5c5f5959ea09d9e29ab8",
+    "mtime": 1782792039.6589499,
+    "ast_hash": "edf44537cd0c9278ad4f7bcb7d4a1a7a",
     "semantic_hash": ""
   },
   "D:\\project\\SpatialtemporalAi\\Wujie-Jilin-Admin\\backend\\database\\models\\business\\scene_group.py": {
@@ -3310,8 +3310,8 @@
     "semantic_hash": ""
   },
   "D:\\project\\SpatialtemporalAi\\Wujie-Jilin-Admin\\backend\\modules\\robot\\services\\robot_config_service.py": {
-    "mtime": 1782789070.9948492,
-    "ast_hash": "2447711bc404af9ecfad5977d9d91f2b",
+    "mtime": 1782792114.8930483,
+    "ast_hash": "40db5a7e113dda1364b1939bcedf833a",
     "semantic_hash": ""
   },
   "D:\\project\\SpatialtemporalAi\\Wujie-Jilin-Admin\\backend\\modules\\robot\\services\\robot_model_service.py": {
@@ -3325,8 +3325,8 @@
     "semantic_hash": ""
   },
   "D:\\project\\SpatialtemporalAi\\Wujie-Jilin-Admin\\backend\\modules\\robot\\services\\robot_service.py": {
-    "mtime": 1782445527.914276,
-    "ast_hash": "8851aa3da62ada4ec6b123b52b367aad",
+    "mtime": 1782792085.6628578,
+    "ast_hash": "37b3c8dc1496b17058550237bce44223",
     "semantic_hash": ""
   },
   "D:\\project\\SpatialtemporalAi\\Wujie-Jilin-Admin\\backend\\modules\\robot\\services\\robot_status_record_service.py": {
@@ -4882,6 +4882,11 @@
   "D:\\project\\SpatialtemporalAi\\Wujie-Jilin-Admin\\frontend\\public\\logo.png": {
     "mtime": 1782789071.9028654,
     "ast_hash": "e6f7aadc15d36c6cf4fa844ca1618146",
+    "semantic_hash": ""
+  },
+  "D:\\project\\SpatialtemporalAi\\Wujie-Jilin-Admin\\aiDoc\\memory\\business\\2026-06-30_robot-default-wake-word.md": {
+    "mtime": 1782792243.9627542,
+    "ast_hash": "58de8b11345e04709d107ba400861dd2",
     "semantic_hash": ""
   }
 }

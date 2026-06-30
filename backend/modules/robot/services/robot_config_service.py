@@ -17,7 +17,14 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select, and_, func, Select
 from typing import Any, Awaitable, Callable, List, Optional, Tuple
 
-from database.models.business.robot_voice_config import RobotVoiceConfig
+from database.models.business.robot_voice_config import (
+    RobotVoiceConfig,
+    DEFAULT_WAKE_WORD_ENABLED,
+    DEFAULT_WAKE_WORD,
+    DEFAULT_TTS_VOICE,
+    DEFAULT_TTS_SPEED,
+    DEFAULT_TTS_VOLUME,
+)
 from database.models.business.robot_face_recognition import RobotFaceRecognition
 from core.config import settings
 from core.exception.errors import GatewayError, NotFoundError, RequestError
@@ -123,14 +130,14 @@ class RobotConfigService:
             )
             config = result.scalar_one_or_none()
             if not config:
-                logger.info("机器人 %d 语音配置不存在，返回默认空对象", robot_id)
+                logger.info("机器人 %d 语音配置不存在，返回默认对象", robot_id)
                 return RobotVoiceConfig(
                     robot_id=robot_id,
-                    wake_word_enabled=False,
-                    wake_word="",
-                    tts_voice="female",
-                    tts_speed=1.0,
-                    tts_volume=80,
+                    wake_word_enabled=DEFAULT_WAKE_WORD_ENABLED,
+                    wake_word=DEFAULT_WAKE_WORD,
+                    tts_voice=DEFAULT_TTS_VOICE,
+                    tts_speed=DEFAULT_TTS_SPEED,
+                    tts_volume=DEFAULT_TTS_VOLUME,
                 )
             return config
         except Exception as e:

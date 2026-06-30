@@ -47,6 +47,7 @@
 - [2026-06-29 菜单路径前缀继承/目录级联/移到根目录](./business/2026-06-29_menu-path-prefix-cascade.md) — path 与 name 解耦：路径=父级前缀+自身段；目录改路径后端级联后代 path；移到根目录自动裁路由名末段+补 layout 使其作为一级路由渲染
 - [2026-06-29 移除本服务定时调度 + 启动改纯 gRPC](./business/2026-06-29_task-schedule-removed-and-start-grpc-only.md) — 删除每分钟扫描器；schedule_* 字段保留作外部调度程序契约；任务管理/OpenAPI 启动只下发 gRPC run_now，不再写 execution_record
 - [2026-06-30 任务定时配置真正落库](./business/2026-06-30_task-schedule-fields-persist.md) — 前端 submitData 漏传 schedule_date/schedule_start_time（dayjs 时间戳↔ISO 转换）；后端 TaskResponseData 这两字段 Optional[str]→Optional[date]/[time]，修复落库后响应序列化 422
+- [2026-06-30 创建机器人默认启用唤醒词小护小护](./business/2026-06-30_robot-default-wake-word.md) — RobotService.create 建 RobotVoiceConfig 默认 wake_word_enabled=True/wake_word=小护小护；默认常量集中到 model 模块，get_voice_config 兜底默认同步
 
 ## 维护说明
 
