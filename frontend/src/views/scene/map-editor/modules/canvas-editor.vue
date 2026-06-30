@@ -210,8 +210,8 @@ const POINT_FILL = '#22c55e';
 const POINT_SELECTED_FILL = '#16a34a';
 const RETURN_POINT_FILL = '#047857';
 const RETURN_POINT_SELECTED_FILL = '#065f46';
-// 机器人实时位置标记（醒目蓝，区别于绿色点位）
-const ROBOT_FILL = '#2563eb';
+// 机器人实时位置标记（红色圆点，区别于绿色点位）
+const ROBOT_FILL = '#ef4444';
 const ROBOT_STROKE = '#ffffff';
 
 function createRestrictedPattern(): Pattern {
