@@ -81,18 +81,16 @@ async function handleSave() {
     await validate();
     loading.value = true;
     if (editingId.value) {
-      const { data, error } = await fetchUpdateFaceRecognition(editingId.value, { ...model });
+      const { error } = await fetchUpdateFaceRecognition(editingId.value, { ...model });
       if (!error) {
-        const msg = data?.grpc_status === 'pending_retry' ? '更新成功（设备同步待重试）' : '更新成功';
-        message.success(msg);
+        message.success('更新成功');
         resetForm();
         await loadData();
       }
     } else {
-      const { data, error } = await fetchCreateFaceRecognition({ ...model });
+      const { error } = await fetchCreateFaceRecognition({ ...model });
       if (!error) {
-        const msg = data?.grpc_status === 'pending_retry' ? '保存成功（设备同步待重试）' : '保存成功';
-        message.success(msg);
+        message.success('保存成功');
         resetForm();
         await loadData();
       }
@@ -114,10 +112,9 @@ function handleEdit(row: Api.RobotConfig.FaceRecognition) {
 
 async function handleDelete(id: number) {
   try {
-    const { data, error } = await fetchDeleteFaceRecognition(id);
+    const { error } = await fetchDeleteFaceRecognition(id);
     if (!error) {
-      const msg = data?.grpc_status === 'pending_retry' ? '删除成功（设备同步待重试）' : '删除成功';
-      message.success(msg);
+      message.success('删除成功');
       await loadData();
     }
   } catch (err) {
@@ -147,6 +144,14 @@ const columns = [
     )
   },
   { key: 'broadcast_text', title: '播报内容', align: 'center' as const, minWidth: 200, ellipsis: { tooltip: true } },
+  {
+    key: 'entity_id',
+    title: '实体ID',
+    align: 'center' as const,
+    width: 120,
+    ellipsis: { tooltip: true },
+    render: (row: Api.RobotConfig.FaceRecognition) => row.entity_id || '-'
+  },
   {
     key: 'operate',
     title: '操作',
@@ -243,7 +248,7 @@ onMounted(() => {
         size="small"
         :loading="tableLoading"
         :row-key="row => row.id"
-        :scroll-x="600"
+        :scroll-x="720"
         class="sm:h-full"
       />
     </NCard>

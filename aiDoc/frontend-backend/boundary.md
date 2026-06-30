@@ -202,6 +202,16 @@
 - API `frontend/src/service/api/merchant.ts`，类型 `frontend/src/typings/api/merchant.d.ts`
 - 新增/重置成功用 `MerchantApiKeyModal` 展示 `api_key`+`api_secret`（secret 默认掩码、可切换显示、复制按钮），`NAlert` 提示"仅展示一次"
 
+## 参数配置 · 人脸识别契约
+
+「参数配置」页人脸识别（`/robot/config/face*`）**不走设备 gRPC**，增删改直接调用阿里云 facebody（`FaceService`），把每条本地记录注册为人脸库 `lvya` 的一个 entity。
+
+- `RobotFaceRecognitionResponse` 字段：`id, person_name, photo_url, broadcast_text, entity_id?, face_id?, created_at, updated_at, grpc_status?`
+- `entity_id`：阿里云实体 ID，取本地记录主键字符串 `str(id)`；`face_id`：阿里云人脸图片 ID（换图替换时用于定位旧图）
+- `grpc_status` 对 face 恒为 `"synced"`（不再出现 `pending_retry`/`disabled`）；注册失败由后端抛错返回，前端按统一错误处理
+- 一致性语义：create/update 阿里云注册失败 → 回滚本地（不留残桩）；delete 以本地为准，阿里云删除 best-effort
+- 语音 / 速度 / 电量三类配置仍走 gRPC 推送 + 重试队列，不受影响
+
 ## 完成前检查清单
 
 - [ ] 后端响应结构与前端类型定义匹配

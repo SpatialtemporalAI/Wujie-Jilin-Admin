@@ -5,14 +5,14 @@
 机器人参数配置服务
 处理语音合成配置与人脸识别TTS配置的业务逻辑
 
-DB 写入成功后会调用 gRPC 推送（ConfigService），将最新配置同步给机器人侧立即生效。
-推送采用最终一致语义：
-- ENABLED=false → 静默跳过，返回 grpc_status=disabled
-- 推送成功 → 返回 grpc_status=synced
-- 推送失败 → 写入 grpc_retry_task 表等待后台调度重试，返回 grpc_status=pending_retry
-所有 5 个保存方法返回 (orm_obj, grpc_status)。
+- 语音 / 速度 / 电量：DB 写入后调用 gRPC 推送（ConfigService）同步给机器人侧，
+  采用最终一致语义（ENABLED=false 跳过 / 推送失败入 grpc_retry_task 重试队列）。
+- 人脸识别：不走 gRPC，DB 写入后直接调用阿里云 facebody（FaceService），把该记录注册为
+  人脸库 _FACE_DB_NAME 中的一个 entity。注册失败则回滚本地记录，保证本地与阿里云一致。
+所有保存方法返回 (orm_obj, grpc_status)。
 """
 import logging
+import re
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select, and_, func, Select
 from typing import Any, Awaitable, Callable, List, Optional, Tuple
@@ -20,15 +20,16 @@ from typing import Any, Awaitable, Callable, List, Optional, Tuple
 from database.models.business.robot_voice_config import RobotVoiceConfig
 from database.models.business.robot_face_recognition import RobotFaceRecognition
 from core.config import settings
-from core.exception.errors import NotFoundError
+from core.exception.errors import GatewayError, NotFoundError, RequestError
 from app.models.common.page import PageRequest, get_paginated_results
 from modules.grpc.config_client import (
     BatteryConfigClient,
-    FaceRecognitionClient,
     SpeedConfigClient,
     VoiceConfigClient,
 )
 from modules.grpc.retry_service import GrpcRetryService
+from modules.face.services.face_service import FaceService
+from modules.admin.services.sys.file_service import FileService
 from modules.robot.schemas.robot_config import (
     RobotVoiceConfigSchema,
     RobotFaceRecognitionCreate,
@@ -36,6 +37,12 @@ from modules.robot.schemas.robot_config import (
 )
 
 logger = logging.getLogger(__name__)
+
+# 参数配置·人脸识别直连的阿里云人脸库名称
+_FACE_DB_NAME = "lvya"
+
+# 匹配 photo_url 中的 file_id：/admin/sys/file/{id}/preview
+_PHOTO_FILE_ID_RE = re.compile(r"/file/(\d+)(?:/preview)?(?:[/?#]|$)")
 
 
 class RobotConfigService:
@@ -295,41 +302,82 @@ class RobotConfigService:
             raise
 
     @staticmethod
+    def _file_id_from_photo_url(photo_url: str) -> int:
+        """从 photo_url（/admin/sys/file/{id}/preview）解析出 file_id"""
+        match = _PHOTO_FILE_ID_RE.search(photo_url or "")
+        if not match:
+            raise RequestError(msg="人像图片解析失败")
+        return int(match.group(1))
+
+    @staticmethod
+    async def _upload_photo_to_aliyun_oss(
+        db: AsyncSession, photo_url: str
+    ) -> str:
+        """读取本地存储的人像字节并上传到阿里云 OSS，返回 OSS URL"""
+        file_id = RobotConfigService._file_id_from_photo_url(photo_url)
+        sys_file, content = await FileService.get_file_content(db, file_id)
+        return await FaceService.upload_bytes_to_oss(
+            content, sys_file.extension or "jpg"
+        )
+
+    @staticmethod
     async def create_face(
         db: AsyncSession, schema: RobotFaceRecognitionCreate
     ) -> Tuple[RobotFaceRecognition, str]:
-        """创建人脸识别TTS配置，返回 (orm_obj, grpc_status)"""
+        """创建人脸识别TTS配置并注册到阿里云人脸库 lvya，返回 (orm_obj, grpc_status)。
+
+        本地记录与阿里云 entity 保持一致：任一阿里云步骤失败则回滚本地记录（不留残桩）。
+        entity_id = str(face.id)，face_id 为阿里云返回的人脸图片ID。
+        """
         try:
             logger.info(
                 "创建人脸识别TTS配置，请求数据: %s",
                 schema.model_dump(exclude_none=True),
             )
+            # 先上传 OSS（本地尚未落库，失败直接抛，无需回滚）
+            oss_url = await RobotConfigService._upload_photo_to_aliyun_oss(
+                db, schema.photo_url
+            )
+
             face = RobotFaceRecognition(
                 person_name=schema.person_name,
                 photo_url=schema.photo_url,
                 broadcast_text=schema.broadcast_text,
             )
             db.add(face)
+            await db.flush()  # 拿到 face.id 作为 entity_id
+            entity_id = str(face.id)
+
+            # 注册阿里云实体 + 入库人脸图；入库失败则 best-effort 补偿删除刚建的实体
+            await FaceService.add_face_entity(_FACE_DB_NAME, entity_id)
+            try:
+                aliyun_face_id = await FaceService.add_face_image(
+                    _FACE_DB_NAME, entity_id, oss_url
+                )
+            except Exception:
+                try:
+                    await FaceService.delete_face_entity(_FACE_DB_NAME, entity_id)
+                except Exception as comp_exc:  # noqa: BLE001
+                    logger.warning(
+                        "补偿删除阿里云实体失败 entity_id=%s: %s",
+                        entity_id,
+                        comp_exc,
+                    )
+                raise
+
+            face.entity_id = entity_id
+            face.face_id = aliyun_face_id
             await db.commit()
             await db.refresh(face)
-            logger.info("创建人脸识别TTS配置成功，ID: %d", face.id)
-            # 推送新增人员（全量字段）
-            payload = {
-                "operation": 1,  # FACE_OPERATION_CREATE
-                "face_id": face.id,
-                "person_name": face.person_name,
-                "photo_url": face.photo_url,
-                "broadcast_text": face.broadcast_text,
-            }
-            status = await RobotConfigService._push_with_retry(
-                db,
-                rpc_call=lambda: FaceRecognitionClient.notify_changed(**payload),
-                service_name="face_recognition",
-                method_name="NotifyFaceRecognitionChanged",
-                payload=payload,
-                robot_id=None,
+            logger.info(
+                "创建人脸识别TTS配置成功，ID: %d, entity_id=%s",
+                face.id,
+                face.entity_id,
             )
-            return face, status
+            return face, "synced"
+        except (NotFoundError, RequestError, GatewayError):
+            await db.rollback()
+            raise
         except Exception as e:
             await db.rollback()
             logger.error("创建人脸识别TTS配置失败: %s", str(e), exc_info=True)
@@ -339,7 +387,10 @@ class RobotConfigService:
     async def update_face(
         db: AsyncSession, face_id: int, schema: RobotFaceRecognitionUpdate
     ) -> Tuple[RobotFaceRecognition, str]:
-        """更新人脸识别TTS配置，返回 (orm_obj, grpc_status)"""
+        """更新人脸识别TTS配置；换图则在阿里云侧替换人脸图，返回 (orm_obj, grpc_status)。
+
+        阿里云注册类步骤失败 → 回滚本地；删旧图 best-effort（失败仅告警，不回滚已注册新图）。
+        """
         try:
             logger.info(
                 "更新人脸识别TTS配置，ID: %d，请求数据: %s",
@@ -348,29 +399,48 @@ class RobotConfigService:
             )
             face = await RobotConfigService.get_face(db, face_id)
             update_data = schema.model_dump(exclude_unset=True)
+
+            photo_changed = "photo_url" in update_data and (
+                update_data["photo_url"] != face.photo_url
+            )
+            old_face_id = face.face_id if photo_changed else None
+
             for field, value in update_data.items():
                 setattr(face, field, value)
+
+            if photo_changed:
+                # 上传新图 + 入库到同一 entity；先入库新图，再 best-effort 删旧图
+                oss_url = await RobotConfigService._upload_photo_to_aliyun_oss(
+                    db, face.photo_url
+                )
+                entity_id = face.entity_id or str(face.id)
+                if not face.entity_id:
+                    # 旧记录未注册过：先建实体
+                    await FaceService.add_face_entity(_FACE_DB_NAME, entity_id)
+                    face.entity_id = entity_id
+                new_face_id = await FaceService.add_face_image(
+                    _FACE_DB_NAME, entity_id, oss_url
+                )
+                face.face_id = new_face_id
+                if old_face_id:
+                    try:
+                        await FaceService.delete_face(_FACE_DB_NAME, old_face_id)
+                    except Exception as del_exc:  # noqa: BLE001
+                        logger.warning(
+                            "删除旧人脸图失败 face_id=%s entity_id=%s: %s",
+                            old_face_id,
+                            entity_id,
+                            del_exc,
+                        )
+
             await db.commit()
             await db.refresh(face)
             logger.info("更新人脸识别TTS配置成功，ID: %d", face.id)
-            # 推送更新（全量字段）
-            payload = {
-                "operation": 2,  # FACE_OPERATION_UPDATE
-                "face_id": face.id,
-                "person_name": face.person_name,
-                "photo_url": face.photo_url,
-                "broadcast_text": face.broadcast_text,
-            }
-            status = await RobotConfigService._push_with_retry(
-                db,
-                rpc_call=lambda: FaceRecognitionClient.notify_changed(**payload),
-                service_name="face_recognition",
-                method_name="NotifyFaceRecognitionChanged",
-                payload=payload,
-                robot_id=None,
-            )
-            return face, status
+            return face, "synced"
         except NotFoundError:
+            raise
+        except (RequestError, GatewayError):
+            await db.rollback()
             raise
         except Exception as e:
             await db.rollback()
@@ -379,30 +449,30 @@ class RobotConfigService:
 
     @staticmethod
     async def delete_face(db: AsyncSession, face_id: int) -> str:
-        """删除人脸识别TTS配置（软删除），返回 grpc_status"""
+        """删除人脸识别TTS配置（软删除）；best-effort 删除阿里云实体，返回 grpc_status。
+
+        删除以本地为准：阿里云删除偶发失败仅告警，不阻塞本地删除
+        （与 create/update 的回滚语义区分）。
+        """
         try:
             logger.info("删除人脸识别TTS配置，ID: %d", face_id)
             face = await RobotConfigService.get_face(db, face_id)
+            entity_id = face.entity_id
             face.soft_delete()
             await db.commit()
             logger.info("删除人脸识别TTS配置成功，ID: %d", face_id)
-            # 推送删除（仅需 face_id）
-            payload = {
-                "operation": 3,  # FACE_OPERATION_DELETE
-                "face_id": face_id,
-                "person_name": "",
-                "photo_url": "",
-                "broadcast_text": "",
-            }
-            status = await RobotConfigService._push_with_retry(
-                db,
-                rpc_call=lambda: FaceRecognitionClient.notify_changed(**payload),
-                service_name="face_recognition",
-                method_name="NotifyFaceRecognitionChanged",
-                payload=payload,
-                robot_id=None,
-            )
-            return status
+            # best-effort 删除阿里云实体（本地已删，阿里云失败仅告警）
+            if entity_id:
+                try:
+                    await FaceService.delete_face_entity(_FACE_DB_NAME, entity_id)
+                except Exception as del_exc:  # noqa: BLE001
+                    logger.warning(
+                        "删除阿里云实体失败 entity_id=%s face_id=%d: %s",
+                        entity_id,
+                        face_id,
+                        del_exc,
+                    )
+            return "synced"
         except NotFoundError:
             raise
         except Exception as e:

@@ -77,20 +77,14 @@ class FaceService:
 
     # ------------------------------ OSS 上传 ------------------------------
     @staticmethod
-    async def upload_to_oss(file: UploadFile) -> str:
-        """把上传文件写入临时文件，经 viapi FileUtils 上传到阿里云 OSS，返回可访问 URL"""
+    async def _upload_bytes_to_oss(file_data: bytes, ext: str) -> str:
+        """把图片字节写入临时文件，经 viapi FileUtils 上传到阿里云 OSS，返回可访问 URL"""
         _ensure_enabled()
-        suffix = os.path.splitext(file.filename or "")[1] or ".jpg"
+        suffix = f".{ext.lstrip('.')}" if ext else ".jpg"
         tmp_path: str | None = None
         try:
-            data = await file.read()
-        except Exception as exc:
-            logger.error("读取上传文件失败: %s", exc)
-            raise RequestError(msg="读取上传文件失败") from exc
-
-        try:
             with tempfile.NamedTemporaryFile(delete=False, suffix=suffix) as tmp:
-                tmp.write(data)
+                tmp.write(file_data)
                 tmp_path = tmp.name
             file_utils = get_file_utils()
             file_type = suffix.lstrip(".") or "jpg"
@@ -111,6 +105,23 @@ class FaceService:
                     os.remove(tmp_path)
                 except OSError:
                     pass
+
+    @staticmethod
+    async def upload_to_oss(file: UploadFile) -> str:
+        """把上传文件写入临时文件，经 viapi FileUtils 上传到阿里云 OSS，返回可访问 URL"""
+        _ensure_enabled()
+        try:
+            data = await file.read()
+        except Exception as exc:
+            logger.error("读取上传文件失败: %s", exc)
+            raise RequestError(msg="读取上传文件失败") from exc
+        ext = os.path.splitext(file.filename or "")[1].lstrip(".") or "jpg"
+        return await FaceService._upload_bytes_to_oss(data, ext)
+
+    @staticmethod
+    async def upload_bytes_to_oss(file_data: bytes, ext: str) -> str:
+        """把图片字节（如本地存储读回的）上传到阿里云 OSS，返回可访问 URL（供其它模块复用）"""
+        return await FaceService._upload_bytes_to_oss(file_data, ext)
 
     # ------------------------------ 人脸库 ------------------------------
     @staticmethod

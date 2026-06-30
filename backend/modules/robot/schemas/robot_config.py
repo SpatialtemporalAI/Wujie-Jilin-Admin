@@ -108,6 +108,8 @@ class RobotFaceRecognitionResponse(BaseRespEntity):
     person_name: str = Field(..., description="人员名称")
     photo_url: str = Field(..., description="人像图片URL")
     broadcast_text: str = Field(..., description="语音播报内容")
+    entity_id: Optional[str] = Field(None, description="阿里云人脸库实体ID")
+    face_id: Optional[str] = Field(None, description="阿里云人脸图片ID")
     created_at: datetime = Field(..., description="创建时间")
     updated_at: Optional[datetime] = Field(None, description="更新时间")
     grpc_status: Optional[str] = Field(

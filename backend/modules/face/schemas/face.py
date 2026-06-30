@@ -5,6 +5,7 @@
 阿里云人脸库管理 - 数据契约
 无本地数据表，纯传输模型，直接使用阿里云 entity_id 作为实体标识
 """
+from datetime import datetime
 from typing import List, Optional
 
 from pydantic import BaseModel, Field
@@ -38,8 +39,8 @@ class FaceEntityListItem(BaseModel):
     db_name: str = Field(..., description="所属人脸库名称")
     face_count: int = Field(0, description="该实体下的人脸图片数量")
     labels: Optional[str] = Field(None, description="实体标签")
-    created_at: Optional[str] = Field(None, description="创建时间")
-    updated_at: Optional[str] = Field(None, description="更新时间")
+    created_at: Optional[datetime] = Field(None, description="创建时间")
+    updated_at: Optional[datetime] = Field(None, description="更新时间")
 
 
 class FaceEntityFace(BaseModel):

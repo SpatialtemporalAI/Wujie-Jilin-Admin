@@ -24,7 +24,6 @@ from database.models.business.grpc_retry_task import GrpcRetryTask
 from database.utils.timezone import timezone
 from modules.grpc.config_client import (
     BatteryConfigClient,
-    FaceRecognitionClient,
     SpeedConfigClient,
     VoiceConfigClient,
 )
@@ -58,10 +57,6 @@ _ROUTING: Dict[Tuple[str, str], Tuple[Callable[..., Awaitable[Any]], Tuple[str, 
         BatteryConfigClient.notify_battery_threshold,
         ("robot_id", "battery_threshold"),
     ),
-    ("face_recognition", "NotifyFaceRecognitionChanged"): (
-        FaceRecognitionClient.notify_changed,
-        ("operation", "face_id", "person_name", "photo_url", "broadcast_text"),
-    ),
 }
 
 
@@ -78,9 +73,7 @@ def _superseded_clause(
 ):
     """构造「同业务键的 pending 任务」WHERE 条件列表
 
-    业务键规则：
-    - face_recognition: payload.face_id（同 face 的 CREATE/UPDATE/DELETE 互斥，新操作覆盖旧操作）
-    - voice/speed/battery: robot_id + method_name（同 robot 的同方法最终值覆盖中间值）
+    业务键规则：voice/speed/battery 按 robot_id + method_name（同 robot 的同方法最终值覆盖中间值）。
     """
     conditions = [
         GrpcRetryTask.status == "pending",
@@ -89,19 +82,10 @@ def _superseded_clause(
         GrpcRetryTask.method_name == method_name,
     ]
 
-    if service_name == "face_recognition":
-        face_id = payload.get("face_id")
-        if face_id is None:
-            return None
-        # PG JSON 路径：payload->>'face_id' = :face_id
-        conditions.append(
-            GrpcRetryTask.payload["face_id"].as_string() == str(face_id)
-        )
-    else:
-        robot_id = payload.get("robot_id")
-        if robot_id is None:
-            return None
-        conditions.append(GrpcRetryTask.robot_id == robot_id)
+    robot_id = payload.get("robot_id")
+    if robot_id is None:
+        return None
+    conditions.append(GrpcRetryTask.robot_id == robot_id)
 
     return conditions
 
