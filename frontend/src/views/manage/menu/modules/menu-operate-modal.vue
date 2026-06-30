@@ -350,10 +350,14 @@ async function handleSubmit() {
 
 watch(visible, async () => {
   if (visible.value) {
-    // 先加载菜单树，确保 handleInitModel 中能查到父级路径前缀
-    await getMenuTree();
+    // 先同步初始化表单，弹窗打开后立即显示当前数据，避免旧数据残留
     handleInitModel();
     restoreValidation();
+    // 再异步加载菜单树，只影响父级菜单下拉选项
+    await getMenuTree();
+  } else {
+    // 关闭弹窗时清空表单，防止下次打开时先闪出旧数据
+    model.value = createDefaultModel();
   }
 });
 
