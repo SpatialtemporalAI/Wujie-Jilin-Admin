@@ -73,6 +73,15 @@ export const generatedRoutes: GeneratedRoute[] = [
     ]
   },
   {
+    name: 'face',
+    path: '/face',
+    component: 'layout.base$view.face',
+    meta: {
+      title: 'face',
+      i18nKey: 'route.face'
+    }
+  },
+  {
     name: 'home',
     path: '/home',
     component: 'layout.base$view.home',
@@ -194,15 +203,6 @@ export const generatedRoutes: GeneratedRoute[] = [
         }
       },
       {
-        name: 'manage_face',
-        path: '/manage/face',
-        component: 'view.manage_face',
-        meta: {
-          title: 'manage_face',
-          i18nKey: 'route.manage_face'
-        }
-      },
-      {
         name: 'manage_file',
         path: '/manage/file',
         component: 'view.manage_file',
@@ -227,15 +227,6 @@ export const generatedRoutes: GeneratedRoute[] = [
         meta: {
           title: 'manage_menu',
           i18nKey: 'route.manage_menu'
-        }
-      },
-      {
-        name: 'manage_merchant',
-        path: '/manage/merchant',
-        component: 'view.manage_merchant',
-        meta: {
-          title: 'manage_merchant',
-          i18nKey: 'route.manage_merchant'
         }
       },
       {
@@ -277,6 +268,15 @@ export const generatedRoutes: GeneratedRoute[] = [
     ]
   },
   {
+    name: 'merchant',
+    path: '/merchant',
+    component: 'layout.base$view.merchant',
+    meta: {
+      title: 'merchant',
+      i18nKey: 'route.merchant'
+    }
+  },
+  {
     name: 'monitor',
     path: '/monitor',
     component: 'layout.base$view.monitor',
@@ -306,15 +306,6 @@ export const generatedRoutes: GeneratedRoute[] = [
     },
     children: [
       {
-        name: 'robot_manage',
-        path: '/robot/manage',
-        component: 'view.robot_manage',
-        meta: {
-          title: 'robot_manage',
-          i18nKey: 'route.robot_manage'
-        }
-      },
-      {
         name: 'robot_model',
         path: '/robot/model',
         component: 'view.robot_model',
@@ -324,6 +315,15 @@ export const generatedRoutes: GeneratedRoute[] = [
         }
       }
     ]
+  },
+  {
+    name: 'robots',
+    path: '/robots',
+    component: 'layout.base$view.robots',
+    meta: {
+      title: 'robots',
+      i18nKey: 'route.robots'
+    }
   },
   {
     name: 'scene',

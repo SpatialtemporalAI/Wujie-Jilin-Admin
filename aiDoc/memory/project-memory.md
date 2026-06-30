@@ -45,6 +45,8 @@
 - [2026-06-29 菜单管理按钮权限补全 i18n](./business/2026-06-29_menu-button-permissions-i18n.md) — 全部按钮权限(menuType=3)补 route.* 中英文翻译(动作词)；8 个中文 scheduler 按钮经 0035 迁移改 ASCII 名，修复表格按钮行显示 route.xxx
 - [2026-06-29 地图编辑器点位落障碍物拦截](./business/2026-06-29_map-editor-point-on-obstacle-guard.md) — 右键添加点位若落在 obstacle-* 上则拦截并提示「注意：点位不能设置在障碍物上！」
 - [2026-06-29 菜单路径前缀继承/目录级联/移到根目录](./business/2026-06-29_menu-path-prefix-cascade.md) — path 与 name 解耦：路径=父级前缀+自身段；目录改路径后端级联后代 path；移到根目录自动裁路由名末段+补 layout 使其作为一级路由渲染
+- [2026-06-29 移除本服务定时调度 + 启动改纯 gRPC](./business/2026-06-29_task-schedule-removed-and-start-grpc-only.md) — 删除每分钟扫描器；schedule_* 字段保留作外部调度程序契约；任务管理/OpenAPI 启动只下发 gRPC run_now，不再写 execution_record
+- [2026-06-30 任务定时配置真正落库](./business/2026-06-30_task-schedule-fields-persist.md) — 前端 submitData 漏传 schedule_date/schedule_start_time（dayjs 时间戳↔ISO 转换）；后端 TaskResponseData 这两字段 Optional[str]→Optional[date]/[time]，修复落库后响应序列化 422
 
 ## 维护说明
 
