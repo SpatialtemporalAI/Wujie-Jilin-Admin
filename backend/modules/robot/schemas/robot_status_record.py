@@ -83,3 +83,32 @@ class RobotStatusRecordResponseData(BaseRespEntity):
                 return None
             return parsed if isinstance(parsed, dict) else None
         return v
+
+
+class RobotLocationItem(BaseModel):
+    """机器人位置项（地图编辑器按地图查询机器人实时位置用）
+
+    位置数据由外部写入 DB，平台只读。同时透传 location_info(JSON) 与
+    location(Text 历史字段)，由前端按优先级解析（见前端 extractRobotPoint）。
+    """
+
+    id: int = Field(..., description="机器人ID")
+    name: str = Field(..., description="机器人名称")
+    status: Optional[str] = Field(None, description="机器人状态：online/offline/inactive")
+    map_id: Optional[int] = Field(None, description="绑定场景地图ID")
+    location_info: Optional[LocationInfoData] = Field(
+        None, description="位置信息：{x, y, angle, update_at}"
+    )
+    location: Optional[str] = Field(None, description="位置信息(JSON 字符串，历史字段)")
+
+    @field_validator("location_info", mode="before")
+    @classmethod
+    def _normalize_location_info(cls, v: Any) -> Any:
+        if isinstance(v, str):
+            try:
+                parsed = json.loads(v)
+            except (ValueError, TypeError):
+                return None
+            return parsed if isinstance(parsed, dict) else None
+        return v
+

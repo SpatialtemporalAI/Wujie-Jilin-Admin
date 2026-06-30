@@ -141,3 +141,11 @@ export function fetchGetLatestRobotStatus(robotId: number) {
     method: 'get'
   });
 }
+
+/** get robot real-time locations bound to a map (for map editor canvas) */
+export function fetchGetMapRobotLocations(mapId: number) {
+  return request<Api.Robot.RobotLocationItem[]>({
+    url: `/robot/manage/map/${mapId}/robot-locations`,
+    method: 'get'
+  });
+}

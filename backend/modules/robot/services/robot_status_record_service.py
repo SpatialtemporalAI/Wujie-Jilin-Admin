@@ -8,13 +8,16 @@
 import logging
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select, and_, func, Select
-from sqlalchemy.orm import noload
+from sqlalchemy.orm import noload, selectinload
 from typing import List, Tuple, Optional
 
 from database.models.business.robot_status_record import RobotStatusRecord
 from database.models.business.robot import Robot
 from core.exception.errors import NotFoundError
-from modules.robot.schemas.robot_status_record import RobotStatusRecordQueryParams
+from modules.robot.schemas.robot_status_record import (
+    RobotStatusRecordQueryParams,
+    RobotLocationItem,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -155,5 +158,60 @@ class RobotStatusRecordService:
         except Exception as e:
             logger.error(
                 "获取机器人最新状态记录失败: %s", str(e), exc_info=True
+            )
+            raise
+
+    @staticmethod
+    async def get_map_robot_locations(
+        db: AsyncSession, map_id: int
+    ) -> List[RobotLocationItem]:
+        """按地图查询其绑定机器人的实时位置（地图编辑器画布展示用）。
+
+        位置数据由外部写入 DB，本方法只读。一次查询取出该地图下所有未删除机器人
+        及其一对一状态记录，透传 location_info(JSON) 与 location(Text 历史字段)，
+        由前端按优先级解析坐标。
+
+        Args:
+            db: 数据库会话
+            map_id: 场景地图ID
+
+        Returns:
+            机器人位置项列表
+        """
+        try:
+            result = await db.execute(
+                select(Robot)
+                .options(selectinload(Robot.status_record))
+                .where(Robot.map_id == map_id)
+                .where(Robot.deleted_at.is_(None))
+                .order_by(Robot.id.asc())
+            )
+            robots = result.unique().scalars().all()
+
+            items: List[RobotLocationItem] = []
+            for robot in robots:
+                sr = robot.status_record
+                items.append(
+                    RobotLocationItem(
+                        id=robot.id,
+                        name=robot.name,
+                        status=(
+                            robot.status.value
+                            if hasattr(robot.status, "value")
+                            else robot.status
+                        ),
+                        map_id=robot.map_id,
+                        location_info=sr.location_info if sr else None,
+                        location=sr.location if sr else None,
+                    )
+                )
+            return items
+
+        except Exception as e:
+            logger.error(
+                "按地图查询机器人位置失败 map_id=%s: %s",
+                map_id,
+                str(e),
+                exc_info=True,
             )
             raise

@@ -5,6 +5,7 @@ import type { SelectOption } from 'naive-ui';
 import type { SelectedElement } from '../composables/useMapEditor';
 import { fetchGetLatestRobotStatus, fetchGetRobotList, fetchUpdateRobotMapBinding } from '@/service/api';
 import { radToDeg, degToRad } from '@/utils/coordinate';
+import { extractRobotPoint } from '../utils/robot-location';
 
 interface Props {
   editorData: Api.Scene.EditorMapData | null;
@@ -148,12 +149,13 @@ async function locateRobot(robot: Api.Robot.Robot) {
       return;
     }
 
-    const info = data.location_info;
-    if (!info || typeof info.x !== 'number' || typeof info.y !== 'number') {
+    // 位置数据由外部写入 DB，location_info(JSON) 优先，location(Text) 兜底
+    const pt = extractRobotPoint(data);
+    if (!pt) {
       window.$message?.warning('机器人暂无定位信息');
       return;
     }
-    emit('locate-robot', { mapId: robot.map_id, x: info.x, y: info.y });
+    emit('locate-robot', { mapId: robot.map_id, x: pt.x, y: pt.y });
   } finally {
     locatingRobotId.value = null;
   }

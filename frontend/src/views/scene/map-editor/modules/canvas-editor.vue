@@ -4,6 +4,7 @@ import { Canvas, Circle, Rect, Polygon, Line, Group, Text, FabricImage, Triangle
 import { getFilePreviewUrl } from '@/service/api/file';
 import { pixelToWorld, worldToPixel, radToDeg, degToRad } from '@/utils/coordinate';
 import type { SelectedElement } from '../composables/useMapEditor';
+import { extractRobotPoint } from '../utils/robot-location';
 import { fetchGetSceneMapList } from '@/service/api';
 interface Props {
   editorData: Api.Scene.EditorMapData | null;
@@ -11,6 +12,8 @@ interface Props {
   gridSpacing: number;
   resolution: number;
   loading?: boolean;
+  /** 当前地图绑定机器人的实时位置（画布展示用，纯视觉，不落库/不导出/不选中） */
+  robotLocations?: Api.Robot.RobotLocationItem[];
 }
 
 const props = withDefaults(defineProps<Props>(), {
@@ -40,6 +43,8 @@ let backgroundImgObj: FabricImage | null = null;
 let elementMap: Map<string, any> = new Map();
 let annotationDecorations: Map<number, { text: Text; angleIndicator: Triangle }> = new Map();
 let objectLabels: Map<number, Text> = new Map();
+// 机器人位置标记：robotId -> Group（装饰层，不进 elementMap）
+let robotMarkers: Map<number, Group> = new Map();
 let resizeObserver: ResizeObserver | null = null;
 let lastGridSpacingM = 0;
 let originMarker: Group | null = null;
@@ -205,6 +210,9 @@ const POINT_FILL = '#22c55e';
 const POINT_SELECTED_FILL = '#16a34a';
 const RETURN_POINT_FILL = '#047857';
 const RETURN_POINT_SELECTED_FILL = '#065f46';
+// 机器人实时位置标记（醒目蓝，区别于绿色点位）
+const ROBOT_FILL = '#2563eb';
+const ROBOT_STROKE = '#ffffff';
 
 function createRestrictedPattern(): Pattern {
   const size = 8;
@@ -579,6 +587,93 @@ function updatePositions() {
   }
 }
 
+/**
+ * 渲染/更新机器人实时位置标记（装饰层，纯视觉）。
+ * 机器人世界坐标(米) → 像素，沿用 worldToPixelCoords 同公式：
+ *   px = (wx - start_point_x) / resolution
+ *   py = height - (wy - start_point_y) / resolution
+ * 标记不进 elementMap、evented/selectable/excludeFromExport 全关，
+ * 因此不参与选中、保存（保存只读 editorData）、导出。
+ */
+function renderRobots() {
+  if (!fabricCanvas) return;
+  const map = props.editorData?.map;
+  const h = map?.height ?? 0;
+  const ox = map?.start_point_x ?? 0;
+  const oy = map?.start_point_y ?? 0;
+  const res = props.resolution || 0.2;
+
+  const seen = new Set<number>();
+  for (const robot of props.robotLocations ?? []) {
+    const pt = extractRobotPoint(robot);
+    if (!pt) continue;
+    seen.add(robot.id);
+    const px = (pt.x - ox) / res;
+    const py = h - (pt.y - oy) / res;
+
+    const existing = robotMarkers.get(robot.id);
+    if (existing) {
+      existing.set({ left: px, top: py });
+      existing.setCoords();
+      continue;
+    }
+
+    const radius = 9;
+    const circle = new Circle({
+      radius,
+      fill: ROBOT_FILL,
+      stroke: ROBOT_STROKE,
+      strokeWidth: 2,
+      originX: 'center',
+      originY: 'center',
+      left: px,
+      top: py,
+    });
+    const label = new Text(robot.name || `#${robot.id}`, {
+      fontSize: 11,
+      fill: ROBOT_FILL,
+      fontFamily: 'sans-serif',
+      fontWeight: 'bold',
+      originX: 'center',
+      originY: 'center',
+      top: radius + 10,
+    });
+    const group = new Group([circle, label], {
+      left: px,
+      top: py,
+      originX: 'center',
+      originY: 'center',
+      selectable: false,
+      evented: false,
+      hasControls: false,
+      hoverCursor: 'default',
+      excludeFromExport: true,
+    });
+    fabricCanvas.add(group);
+    robotMarkers.set(robot.id, group);
+  }
+
+  // 移除不再上报位置的机器人
+  for (const [id, group] of robotMarkers) {
+    if (!seen.has(id)) {
+      fabricCanvas.remove(group);
+      robotMarkers.delete(id);
+    }
+  }
+  fabricCanvas.renderAll();
+}
+
+function clearRobotMarkers() {
+  if (!fabricCanvas) {
+    robotMarkers.clear();
+    return;
+  }
+  for (const group of robotMarkers.values()) {
+    fabricCanvas.remove(group);
+  }
+  robotMarkers.clear();
+}
+
 // 仅更新选中样式与文本（轻量路径，不重渲染结构）
 function updateSelectionStyle() {
   if (!fabricCanvas || !props.editorData) return;
@@ -620,6 +715,8 @@ function renderElements() {
   updatePositions();
   updateSelectionStyle();
   updateSelection();
+  // 机器人标记最后渲染，保证位于所有元素之上
+  renderRobots();
   fabricCanvas.renderAll();
 }
 
@@ -1271,6 +1368,7 @@ function disposeCanvas() {
   elementMap.clear();
   annotationDecorations.clear();
   objectLabels.clear();
+  robotMarkers.clear();
   originMarker = null;
   lastGridSpacingM = 0;
   isDraggingObject = false;
@@ -1302,6 +1400,7 @@ watch(() => props.editorData, async (newData) => {
     fabricCanvas?.remove(label);
   }
   objectLabels.clear();
+  clearRobotMarkers();
   if (originMarker) {
     fabricCanvas?.remove(originMarker);
     originMarker = null;
@@ -1348,6 +1447,10 @@ watch(() => props.editorData?.objects, () => {
   updatePositions();
   updateSelectionStyle();
   fabricCanvas.renderAll();
+}, { deep: true });
+watch(() => props.robotLocations, () => {
+  if (!fabricCanvas) return;
+  renderRobots();
 }, { deep: true });
 watch(() => props.selectedElement, () => {
   if (!fabricCanvas) return;

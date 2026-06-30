@@ -7,7 +7,7 @@
 import logging
 from fastapi import APIRouter, Depends
 from sqlalchemy.ext.asyncio import AsyncSession
-from typing import Optional
+from typing import Optional, List
 
 from database.db_manager import get_session
 from core.response.response_schema import (
@@ -23,6 +23,7 @@ from modules.robot.services.robot_status_record_service import RobotStatusRecord
 from modules.robot.schemas.robot_status_record import (
     RobotStatusRecordQueryParams,
     RobotStatusRecordResponseData,
+    RobotLocationItem,
 )
 
 logger = logging.getLogger(__name__)
@@ -96,4 +97,27 @@ async def get_robot_status_latest(
 
     except Exception as e:
         logger.error("获取机器人最新状态记录接口失败: %s", str(e), exc_info=True)
+        raise
+
+
+@robot_status_record_router.get(
+    "/map/{map_id}/robot-locations",
+    response_model=ResponseModel[List[RobotLocationItem]],
+    dependencies=[Depends(require_permission("robot:manage:list"))],
+)
+async def get_map_robot_locations(
+    map_id: int,
+    db: AsyncSession = Depends(get_session),
+):
+    """按地图查询其绑定机器人的实时位置（地图编辑器画布展示用）
+
+    位置数据由外部写入 DB，本接口只读。透传 location_info(JSON) 与
+    location(Text 历史字段)，前端按优先级解析坐标。
+    """
+    try:
+        items = await RobotStatusRecordService.get_map_robot_locations(db, map_id)
+        return response_base.success(data=items)
+
+    except Exception as e:
+        logger.error("按地图查询机器人位置接口失败: %s", str(e), exc_info=True)
         raise

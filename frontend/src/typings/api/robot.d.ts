@@ -135,5 +135,17 @@ declare namespace Api {
 
     /** robot status record list */
     type RobotStatusRecordList = Common.PaginatingQueryRecord<RobotStatusRecord>;
+
+    /** robot location item（地图编辑器按地图查询机器人实时位置） */
+    type RobotLocationItem = {
+      id: number;
+      name: string;
+      status: RobotStatusEnum | null;
+      map_id: number | null;
+      /** 位置信息（JSON，优先解析） */
+      location_info: LocationInfo | null;
+      /** 位置信息（JSON 字符串，历史字段兜底） */
+      location: string | null;
+    };
   }
 }

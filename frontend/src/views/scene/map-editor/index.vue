@@ -1,11 +1,12 @@
 <script setup lang="ts">
-import { computed, nextTick, onMounted, ref } from 'vue';
+import { computed, nextTick, onMounted, onBeforeUnmount, ref, watch } from 'vue';
 import type { UploadFileInfo } from 'naive-ui';
 import { useMapEditor } from './composables/useMapEditor';
 import EditorToolbar from './modules/editor-toolbar.vue';
 import CanvasEditor from './modules/canvas-editor.vue';
 import PropertyPanel from './modules/property-panel.vue';
 import { fetchCreateSceneMap, fetchUpdateSceneMap, fetchGetSceneMap, fetchUploadSceneMapEditorImage } from '@/service/api/scene';
+import { fetchGetMapRobotLocations } from '@/service/api';
 import { getFilePreviewUrl } from '@/service/api/file';
 
 defineOptions({ name: 'SceneMapEditor' });
@@ -16,6 +17,38 @@ const canvasRef = ref<InstanceType<typeof CanvasEditor>>();
 const zoomLevel = ref(1);
 const cursorX = ref(0);
 const cursorY = ref(0);
+
+// 当前地图绑定机器人的实时位置（画布展示）。位置数据由外部写入 DB，平台只读，定时轮询刷新。
+const ROBOT_LOCATION_POLL_MS = 5000;
+const robotLocations = ref<Api.Robot.RobotLocationItem[]>([]);
+let robotPollTimer: number | null = null;
+
+async function loadRobotLocations(mapId: number) {
+  const { data, error } = await fetchGetMapRobotLocations(mapId);
+  if (!error && data) {
+    robotLocations.value = data;
+  }
+}
+
+function stopRobotPolling() {
+  if (robotPollTimer !== null) {
+    window.clearInterval(robotPollTimer);
+    robotPollTimer = null;
+  }
+}
+
+// 切换地图时重启轮询；selectedMapId 由 loadMap 设置，覆盖初始加载/选择/新建场景等所有入口
+watch(
+  () => editor.selectedMapId.value,
+  mapId => {
+    stopRobotPolling();
+    robotLocations.value = [];
+    if (mapId) {
+      loadRobotLocations(mapId);
+      robotPollTimer = window.setInterval(() => loadRobotLocations(mapId), ROBOT_LOCATION_POLL_MS);
+    }
+  }
+);
 
 // 右键菜单状态
 const contextMenuShow = ref(false);
@@ -141,27 +174,6 @@ const sceneFormResolution = ref(0.05);
 const sceneUploading = ref(false);
 const sceneUploadFileList = ref<UploadFileInfo[]>([]);
 
-function getScaledStartPoint() {
-  const imageRect = sceneFormImageRef.value?.getBoundingClientRect();
-  if (
-    !imageRect ||
-    !sceneFormOriginalWidth.value ||
-    !sceneFormOriginalHeight.value ||
-    imageRect.width <= 0 ||
-    imageRect.height <= 0 ||
-    sceneFormPointX.value === null ||
-    sceneFormPointY.value === null
-  ) {
-    return null;
-  }
-  const scaleX = sceneFormOriginalWidth.value / imageRect.width;
-  const scaleY = sceneFormOriginalHeight.value / imageRect.height;
-  return {
-    x: sceneFormPointX.value * scaleX,
-    y: sceneFormPointY.value * scaleY,
-  };
-}
-
 function resetSceneForm() {
   sceneFormName.value = '';
   sceneFormGroupId.value = null;
@@ -179,6 +191,10 @@ onMounted(async () => {
   if (editor.sceneList.value.length > 0) {
     await editor.loadMap(editor.sceneList.value[0].id);
   }
+});
+
+onBeforeUnmount(() => {
+  stopRobotPolling();
 });
 
 async function handleSelectMap(mapId: number) {
@@ -258,8 +274,7 @@ async function confirmSceneSubmit() {
       window.$message?.warning('请确认图片原图尺寸');
       return false;
     }
-    const startPoint = getScaledStartPoint();
-    if (!startPoint) {
+    if (sceneFormPointX.value === null || sceneFormPointY.value === null) {
       window.$message?.warning('请输入扫图起始点 X、Y');
       return false;
     }
@@ -271,8 +286,9 @@ async function confirmSceneSubmit() {
         width: sceneFormOriginalWidth.value,
         height: sceneFormOriginalHeight.value,
         resolution: sceneFormResolution.value,
-        start_point_x: startPoint.x,
-        start_point_y: startPoint.y,
+        // start_point 为世界坐标（米），直接使用输入值，不做像素缩放转换
+        start_point_x: sceneFormPointX.value,
+        start_point_y: sceneFormPointY.value,
       });
       if (data) {
         sceneDialogVisible.value = false;
@@ -514,6 +530,7 @@ function handleFocusAnnotation(id: number) {
         <CanvasEditor ref="canvasRef" :editor-data="editor.editorData.value"
           :selected-element="editor.selectedElement.value"
           :grid-spacing="editor.gridSpacing.value" :resolution="editor.resolution.value" :loading="editor.loading.value"
+          :robot-locations="robotLocations"
           @select-element="el => (editor.selectedElement.value = el)" @update-element="handleUpdateElement"
           @zoom-change="handleZoomChange" @cursor-position="handleCursorPosition" @undo="editor.undo()"
           @redo="editor.redo()" @context-menu="handleContextMenu"
