@@ -22,6 +22,10 @@ declare namespace Api.RobotConfig {
     person_name: string;
     photo_url: string;
     broadcast_text: string;
+    /** 阿里云人脸库实体ID（= 本地记录 id 的字符串） */
+    entity_id?: string;
+    /** 阿里云人脸图片ID */
+    face_id?: string;
     created_at: string;
     updated_at: string | null;
     grpc_status?: GrpcStatus;

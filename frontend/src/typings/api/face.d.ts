@@ -5,8 +5,10 @@ declare namespace Api {
    * 阿里云人脸库管理（facebody）
    */
   namespace Face {
-    /** 人脸库名称列表 */
-    type FaceDbList = string[];
+    /** 人脸库列表响应 */
+    type FaceDbList = {
+      db_list: string[];
+    };
 
     /** 人脸实体（列表项） */
     type FaceEntity = {
