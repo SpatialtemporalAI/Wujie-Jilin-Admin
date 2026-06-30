@@ -295,9 +295,11 @@ async function confirmSceneSubmit() {
         await editor.loadSceneList();
         await editor.loadMap((data as any).id);
 
+        // 返回点固定在世界坐标 (0,0)，与场景 start_point 无关
+        const origin = editor.worldToPixelCoords(0, 0);
         editor.addAnnotation({
-          x: 0,
-          y: 0,
+          x: origin.x,
+          y: origin.y,
           name: '扫图起始点',
           angle: 0,
           type: 'navigation',

@@ -50,6 +50,7 @@
 - [2026-06-30 创建机器人默认启用唤醒词小护小护](./business/2026-06-30_robot-default-wake-word.md) — RobotService.create 建 RobotVoiceConfig 默认 wake_word_enabled=True/wake_word=小护小护；默认常量集中到 model 模块，get_voice_config 兜底默认同步
 - [2026-06-30 参数配置 gRPC target 调整](./business/2026-06-30_param-config-grpc-target-tweak.md) — 唤醒词测试 TestWakeWord + 电量阈值 NotifyBatteryThresholdChanged 的 target 由 middleware 改为 agent（config_client.py）
 - [2026-06-30 地图编辑器显示机器人位置 + 修复定位](./business/2026-06-30_map-editor-robot-position.md) — 位置数据外部写入 DB 平台只读；新增 GET /robot/manage/map/{id}/robot-locations；画布渲染蓝色机器人标记(纯视觉不落库/不导出)；extractRobotPoint 统一解析(location_info 优先,location 文本兜底)修复定位
+- [2026-06-30 地图编辑器「扫图起始点」返回点与 start_point 解耦](./business/2026-06-30_map-editor-start-point-decouple-return-point.md) — 新增场景自动创建的「扫图起始点」返回点固定存为世界坐标 (0,0)，不再随 start_point 变化；start_point 仍必填、仍作坐标系原点
 
 ## 维护说明
 

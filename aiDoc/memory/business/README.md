@@ -49,3 +49,4 @@
 - [2026-06-29 菜单路径前缀继承/目录级联/移到根目录](./2026-06-29_menu-path-prefix-cascade.md) — path 与 name 解耦：路径=父级前缀+自身段；目录改路径后端级联后代 path；移到根目录自动裁路由名末段+补 layout 使其作为一级路由渲染
 - [2026-06-29 移除本服务定时调度 + 启动任务改为纯 gRPC](./2026-06-29_task-schedule-removed-and-start-grpc-only.md) — 删 scan_scheduled_tasks 扫描器 + 0037 软删除调度行（定时调度移交外部程序，schedule_* 字段保留）；任务管理与 OpenAPI 的启动改为只下发 gRPC run_now，不再写 task_execution_record
 - [2026-06-30 参数配置·人脸识别改为直连阿里云 facebody](./2026-06-30_param-config-face-aliyun-direct.md) — face 增删改不再走 gRPC 广播，改直连 FaceService 注册到人脸库 lvya；新增 entity_id/face_id 列（0038）；注册失败回滚本地，换图替换、删除 best-effort
+- [2026-06-30 地图编辑器「扫图起始点」返回点与 start_point 解耦](./2026-06-30_map-editor-start-point-decouple-return-point.md) — 新增场景自动创建的「扫图起始点」返回点固定存为世界坐标 (0,0)，不再随 start_point 变化；start_point 仍必填、仍作坐标系原点
