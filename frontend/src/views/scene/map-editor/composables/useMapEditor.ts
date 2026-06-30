@@ -306,12 +306,17 @@ export function useMapEditor() {
 
   async function deleteScene(id: number) {
     await fetchDeleteSceneMap(id);
-    if (selectedMapId.value === id) {
+    const wasSelected = selectedMapId.value === id;
+    if (wasSelected) {
       editorData.value = null;
       selectedMapId.value = null;
       selectedElement.value = null;
     }
     await loadSceneList();
+    // 删除的是当前地图时，自动切换到列表第一个地图
+    if (wasSelected && sceneList.value.length > 0) {
+      await loadMap(sceneList.value[0].id);
+    }
     window.$message?.success('删除成功');
   }
 
