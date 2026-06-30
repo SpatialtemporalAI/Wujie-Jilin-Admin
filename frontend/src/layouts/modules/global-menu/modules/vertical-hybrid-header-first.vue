@@ -96,7 +96,8 @@ function updateExpandedKeys() {
     expandedKeys.value = [];
     return;
   }
-  expandedKeys.value = routeStore.getSelectedMenuKeyPath(selectedKey.value);
+  const selectedPath = routeStore.getSelectedMenuKeyPath(selectedKey.value);
+  expandedKeys.value = [...new Set([...expandedKeys.value, ...selectedPath])];
 }
 
 watch(
