@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { computed, h, onMounted, ref, watch } from 'vue';
+import dayjs from 'dayjs';
 import { jsonClone } from '@sa/utils';
 import { NText, NTooltip } from 'naive-ui';
 import { useNaiveForm } from '@/hooks/common/form';
@@ -171,7 +172,9 @@ interface FormModel {
   broadcast_text: string | null;
   robot_ids: number[];
   schedule_enabled: boolean;
+  /** 调度日期（时间戳，ms），提交时转换为 yyyy-MM-dd */
   schedule_date: number | null;
+  /** 调度开始时间（时间戳，ms），提交时转换为 HH:mm:ss */
   schedule_start_time: number | null;
   schedule_repeat_cycles: string[];
 }
@@ -192,6 +195,31 @@ function createDefaultModel(): FormModel {
 }
 
 const model = ref<FormModel>(createDefaultModel());
+
+/** 调度日期字符串（yyyy-MM-dd）→ 时间戳（ms），用于回填 NDatePicker */
+function dateStrToTs(value: string | null): number | null {
+  if (!value) return null;
+  const ts = dayjs(value, 'YYYY-MM-DD').valueOf();
+  return Number.isNaN(ts) ? null : ts;
+}
+
+/** 调度时间字符串（HH:mm 或 HH:mm:ss）→ 时间戳（ms），用于回填 NTimePicker */
+function timeStrToTs(value: string | null): number | null {
+  if (!value) return null;
+  // 以当天日期拼接，NTimePicker 仅取时分，具体日期不影响
+  const ts = dayjs(`${dayjs().format('YYYY-MM-DD')} ${value}`).valueOf();
+  return Number.isNaN(ts) ? null : ts;
+}
+
+/** 时间戳（ms）→ 调度日期字符串（yyyy-MM-dd），用于提交 */
+function tsToDateStr(ts: number | null): string | null {
+  return ts === null ? null : dayjs(ts).format('YYYY-MM-DD');
+}
+
+/** 时间戳（ms）→ 调度时间字符串（HH:mm:ss），用于提交 */
+function tsToTimeStr(ts: number | null): string | null {
+  return ts === null ? null : dayjs(ts).format('HH:mm:ss');
+}
 
 /** 点位管理 */
 function addPoint() {
@@ -252,6 +280,8 @@ async function handleInitModel() {
     model.value.task_type = cloned.task_type || 'patrol';
     model.value.broadcast_text = cloned.broadcast_text || null;
     model.value.schedule_enabled = cloned.schedule_enabled || false;
+    model.value.schedule_date = dateStrToTs(cloned.schedule_date);
+    model.value.schedule_start_time = timeStrToTs(cloned.schedule_start_time);
     model.value.schedule_repeat_cycles = cloned.schedule_repeat_cycle
       ? cloned.schedule_repeat_cycle.split(',').filter(v => v && v !== 'none')
       : [];
@@ -357,9 +387,13 @@ async function handleSubmit() {
     task_type: model.value.task_type,
     robot_ids: model.value.robot_ids,
     schedule_enabled: model.value.schedule_enabled,
-    schedule_repeat_cycle: model.value.schedule_repeat_cycles.length > 0
-      ? model.value.schedule_repeat_cycles.join(',')
-      : null,
+    // 未启用定时执行时，清空调度相关字段，避免残留脏数据
+    schedule_date: model.value.schedule_enabled ? tsToDateStr(model.value.schedule_date) : null,
+    schedule_start_time: model.value.schedule_enabled ? tsToTimeStr(model.value.schedule_start_time) : null,
+    schedule_repeat_cycle:
+      model.value.schedule_enabled && model.value.schedule_repeat_cycles.length > 0
+        ? model.value.schedule_repeat_cycles.join(',')
+        : null,
     points:
       model.value.task_type === 'patrol'
         ? model.value.points.map(p => ({
@@ -515,8 +549,7 @@ onMounted(() => {
         <template v-if="model.schedule_enabled">
           <NGrid :cols="2" :x-gap="16">
             <NFormItemGi label="调度日期" required>
-              <NDatePicker start-placeholder="开始时间" end-placeholder="结束时间" v-model:value="model.schedule_date"
-                type="date" class="w-full" />
+              <NDatePicker v-model:value="model.schedule_date" type="date" class="w-full" />
             </NFormItemGi>
             <NFormItemGi label="开始时间" required>
               <NTimePicker v-model:value="model.schedule_start_time" format="HH:mm" class="w-full" />

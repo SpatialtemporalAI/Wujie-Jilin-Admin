@@ -4,7 +4,7 @@
 import json
 from typing import Optional, Any
 from pydantic import Field, ConfigDict, field_validator
-from datetime import datetime
+from datetime import datetime, timezone
 
 from pydantic import BaseModel
 
@@ -30,6 +30,25 @@ class LocationInfoData(BaseModel):
     y: Optional[float] = Field(None, description="y 坐标")
     angle: Optional[float] = Field(None, description="角度")
     update_at: Optional[str] = Field(None, description="更新时间")
+
+    @field_validator("update_at", mode="before")
+    @classmethod
+    def _coerce_update_at(cls, v: Any) -> Any:
+        # 兼容上报/历史脏数据：update_at 可能是 datetime、数字时间戳(秒/毫秒)等非字符串，
+        # 而 schema 声明为 str，未规范化会导致响应序列化 422。统一转成字符串，无法解析置 None。
+        if v is None or isinstance(v, str):
+            return v
+        if isinstance(v, datetime):
+            return v.strftime("%Y-%m-%d %H:%M:%S")
+        if isinstance(v, (int, float)):
+            try:
+                ts = float(v)
+                if ts > 1e12:  # 毫秒级时间戳
+                    ts /= 1000
+                return datetime.fromtimestamp(ts, tz=timezone.utc).strftime("%Y-%m-%d %H:%M:%S")
+            except (OverflowError, OSError, ValueError):
+                return None
+        return None
 
 
 class RobotStatusRecordResponseData(BaseRespEntity):

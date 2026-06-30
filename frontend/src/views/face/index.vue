@@ -112,7 +112,10 @@ async function handleAddEntity() {
     return;
   }
   const entityId = newEntityId.value.trim();
-  if (!entityId) return;
+  if (!entityId) {
+    window.$message?.warning($t('page.manage.face.entityIdPlaceholder'));
+    return;
+  }
   const { error } = await fetchAddFaceEntity(selectedDb.value, entityId);
   if (!error) {
     window.$message?.success($t('common.addSuccess'));
@@ -151,10 +154,16 @@ onMounted(() => {
 
 <template>
   <div class="min-h-500px flex-col-stretch gap-16px overflow-hidden lt-sm:overflow-auto">
-    <NTabs type="line" animated>
+    <NTabs
+      type="line"
+      animated
+      class="h-full min-h-0 flex flex-col"
+      pane-wrapper-class="min-h-0 flex-1"
+      pane-class="h-full min-h-0"
+    >
       <!-- 人脸库管理 -->
       <NTabPane name="manage" :tab="$t('page.manage.face.title')">
-        <NSpace vertical :size="16">
+        <div class="h-full min-h-0 flex flex-col gap-16px">
           <NCard :bordered="false" size="small" class="card-wrapper">
             <NSpace align="center" :wrap="true" :size="12">
               <span class="text-14px">{{ $t('page.manage.face.selectDb') }}</span>
@@ -178,7 +187,7 @@ onMounted(() => {
             </NSpace>
           </NCard>
 
-          <NCard :title="$t('page.manage.face.title')" :bordered="false" size="small" class="card-wrapper sm:flex-1-hidden">
+          <NCard :title="$t('page.manage.face.title')" :bordered="false" size="small" class="card-wrapper min-h-0 sm:flex-1-hidden">
             <template #header-extra>
               <NSpace align="center" :size="8">
                 <NInput
@@ -204,7 +213,7 @@ onMounted(() => {
               class="sm:h-full"
             />
           </NCard>
-        </NSpace>
+        </div>
       </NTabPane>
 
       <!-- 人脸搜索 -->

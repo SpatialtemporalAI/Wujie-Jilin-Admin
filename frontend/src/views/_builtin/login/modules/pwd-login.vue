@@ -55,8 +55,8 @@ interface FormModel {
 }
 
 const model: FormModel = reactive({
-  userName: savedRemember?.checked ? savedRemember.userName : 'admin',
-  password: savedRemember?.checked ? decodePassword(savedRemember.password) : 'admin123'
+  userName: savedRemember?.checked ? savedRemember.userName : '',
+  password: savedRemember?.checked ? decodePassword(savedRemember.password) : ''
 });
 
 const rememberMe = ref<boolean>(!!savedRemember?.checked);
@@ -174,29 +174,13 @@ async function handleAccountLogin(account: Account) {
           请先完成下方滑块验证后再登录
         </NText>
         <NSpin :show="captchaLoading">
-          <SliderCaptcha
-            ref="sliderCaptchaRef"
-            :captcha-id="captchaId"
-            :background-image="backgroundImage"
-            :puzzle-image="puzzleImage"
-            :puzzle-y="puzzleY"
-            :slider-width="sliderWidth"
-            @success="onCaptchaSuccess"
-            @fail="onCaptchaFail"
-            @refresh="onCaptchaRefresh"
-          />
+          <SliderCaptcha ref="sliderCaptchaRef" :captcha-id="captchaId" :background-image="backgroundImage"
+            :puzzle-image="puzzleImage" :puzzle-y="puzzleY" :slider-width="sliderWidth" @success="onCaptchaSuccess"
+            @fail="onCaptchaFail" @refresh="onCaptchaRefresh" />
         </NSpin>
       </div>
-      <NButton
-        type="primary"
-        size="large"
-        round
-        block
-        :loading="authStore.loginLoading"
-        :disabled="loginDisabled"
-        @click="handleSubmit"
-        class="text-16px"
-      >
+      <NButton type="primary" size="large" round block :loading="authStore.loginLoading" :disabled="loginDisabled"
+        @click="handleSubmit" class="text-16px">
         {{ $t('route.login') }}
       </NButton>
       <!-- <div class="flex-y-center justify-between gap-12px">

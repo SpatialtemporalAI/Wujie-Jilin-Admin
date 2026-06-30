@@ -13,7 +13,14 @@ from typing import List, Tuple
 
 from database.models.business.robot import Robot, RobotStatus
 from database.models.business.robot_status_record import RobotStatusRecord
-from database.models.business.robot_voice_config import RobotVoiceConfig
+from database.models.business.robot_voice_config import (
+    RobotVoiceConfig,
+    DEFAULT_WAKE_WORD_ENABLED,
+    DEFAULT_WAKE_WORD,
+    DEFAULT_TTS_VOICE,
+    DEFAULT_TTS_SPEED,
+    DEFAULT_TTS_VOLUME,
+)
 from database.models.business.robot_event_log import RobotEventLog
 from database.models.business.robot_model import RobotModel
 from database.models.business.scene_map import SceneMap
@@ -218,6 +225,17 @@ class RobotService:
 
             status_record = RobotStatusRecord(robot_id=robot_obj.id)
             db.add(status_record)
+
+            # 初始化默认语音配置：唤醒词默认启用，唤醒词为「小护小护」
+            voice_config = RobotVoiceConfig(
+                robot_id=robot_obj.id,
+                wake_word_enabled=DEFAULT_WAKE_WORD_ENABLED,
+                wake_word=DEFAULT_WAKE_WORD,
+                tts_voice=DEFAULT_TTS_VOICE,
+                tts_speed=DEFAULT_TTS_SPEED,
+                tts_volume=DEFAULT_TTS_VOLUME,
+            )
+            db.add(voice_config)
 
             await db.commit()
             await db.refresh(robot_obj)
