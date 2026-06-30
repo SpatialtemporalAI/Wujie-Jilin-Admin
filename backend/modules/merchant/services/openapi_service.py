@@ -135,15 +135,12 @@ class OpenApiService:
         robot = await OpenApiService.resolve_robot(db, merchant, robot_sn)
         annotations = await OpenApiService._load_annotations(db, [point_id])
         task_obj = await OpenApiService._create_nav_task(db, robot, annotations)
-        records = await TaskExecutionRecordService.start_execution(
-            db, task_obj.id, [robot.id], source="open_api"
-        )
+        await TaskExecutionRecordService.start_execution(db, task_obj.id, [robot.id])
         return OpenApiResult(
             success=True,
             message="单点导航任务已下发",
             data={
                 "task_id": task_obj.id,
-                "record_id": records[0].id if records else None,
             },
         )
 
@@ -154,15 +151,12 @@ class OpenApiService:
         robot = await OpenApiService.resolve_robot(db, merchant, robot_sn)
         annotations = await OpenApiService._load_annotations(db, point_ids)
         task_obj = await OpenApiService._create_nav_task(db, robot, annotations)
-        records = await TaskExecutionRecordService.start_execution(
-            db, task_obj.id, [robot.id], source="open_api"
-        )
+        await TaskExecutionRecordService.start_execution(db, task_obj.id, [robot.id])
         return OpenApiResult(
             success=True,
             message=f"多点导航任务已下发（{len(annotations)} 个点位）",
             data={
                 "task_id": task_obj.id,
-                "record_id": records[0].id if records else None,
             },
         )
 
@@ -172,13 +166,11 @@ class OpenApiService:
     ) -> OpenApiResult:
         robot = await OpenApiService.resolve_robot(db, merchant, robot_sn)
         await TaskService.get(db, task_id)  # 校验任务存在
-        result = await TaskExecutionRecordService.start_or_resume_execution(
-            db, task_id, [robot.id], source="open_api"
-        )
+        await TaskExecutionRecordService.start_execution(db, task_id, [robot.id])
         return OpenApiResult(
             success=True,
-            message=f"任务已{ '恢复' if result.get('action') == 'resumed' else '启动' }",
-            data={"task_id": task_id, "action": result.get("action")},
+            message="任务已启动",
+            data={"task_id": task_id, "action": "started"},
         )
 
     @staticmethod

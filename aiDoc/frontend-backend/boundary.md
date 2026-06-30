@@ -186,9 +186,9 @@
 
 | 方法 | 路径 | 入参 | 复用实现 |
 |------|------|------|----------|
-| POST | `/openapi/v1/goto_point` | `robot_sn, point_id` | 建临时 patrol 任务（name 以 `API-` 开头，≤20 字）→ `start_execution` |
+| POST | `/openapi/v1/goto_point` | `robot_sn, point_id` | 建临时 patrol 任务（name 以 `API-` 开头，≤20 字）→ `start_execution`（仅下发 gRPC `run_now`，不写执行记录） |
 | POST | `/openapi/v1/navigate_route` | `robot_sn, point_ids[]` | 同上，多点按序 |
-| POST | `/openapi/v1/execute_task` | `robot_sn, task_id` | `start_or_resume_execution` |
+| POST | `/openapi/v1/execute_task` | `robot_sn, task_id` | `start_execution`（仅下发 gRPC `run_now`，不写执行记录；响应 `data.action="started"`，不再返回 `record_id`/区分 resumed） |
 | POST | `/openapi/v1/pause_task` | `robot_sn` | 查该 robot 活跃记录 → `pause_execution` |
 | POST | `/openapi/v1/resume_task` | `robot_sn` | 查 paused 记录 → `resume_execution` |
 | POST | `/openapi/v1/stop_task` | `robot_sn` | 查活跃记录 → `stop_execution` |

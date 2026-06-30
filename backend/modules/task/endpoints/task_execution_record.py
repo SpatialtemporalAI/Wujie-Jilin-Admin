@@ -70,29 +70,23 @@ async def _fill_relations(record: TaskExecutionRecordResponseData, db: AsyncSess
 
 @task_execution_record_router.post(
     "/{task_id}/start",
-    response_model=ResponseModel[TaskExecutionRecordResponseData],
+    response_model=ResponseModel,
     dependencies=[Depends(require_permission("task:execution:start"))],
 )
-@log_operation(module="task", action="start", description="启动任务（新执行记录表）")
+@log_operation(module="task", action="start", description="启动任务（gRPC 通知）")
 async def start_task_execution_record(
     task_id: int,
     payload: TaskExecutionRecordStartIn,
     db: AsyncSession = Depends(get_session),
-    user: SysUser = Depends(current_user),
 ):
-    """启动任务执行（创建执行记录）"""
+    """启动任务：下发 gRPC run_now 到机器人 agent，不写执行记录"""
     try:
-        records = await TaskExecutionRecordService.start_execution(
+        await TaskExecutionRecordService.start_execution(
             db=db,
             task_id=task_id,
             robot_ids=payload.robot_ids,
-            user_id=user.id,
-            source=payload.source,
         )
-        # 返回首条记录作为响应
-        data = TaskExecutionRecordResponseData.model_validate(records[0])
-        await _fill_relations(data, db)
-        return response_base.success(data=data, msg="任务已启动")
+        return response_base.success(msg="任务已启动")
     except Exception as e:
         logger.error("启动任务执行失败: %s", str(e), exc_info=True)
         raise
@@ -103,34 +97,23 @@ async def start_task_execution_record(
     response_model=ResponseModel,
     dependencies=[Depends(require_permission("task:execution:start"))],
 )
-@log_operation(module="task", action="start", description="启动或恢复任务")
+@log_operation(module="task", action="start", description="启动任务（gRPC 通知）")
 async def start_or_resume_task_execution_record(
     task_id: int,
     payload: TaskExecutionRecordStartIn,
     request: Request,
     db: AsyncSession = Depends(get_session),
-    user: SysUser = Depends(current_user),
 ):
-    """
-    启动或恢复任务：
-    - 若该任务存在 paused 状态的执行记录，则批量恢复
-    - 否则按 robot_ids 创建新的执行记录
-    """
+    """启动任务：下发 gRPC run_now 到机器人 agent，不写执行记录"""
     try:
-        result = await TaskExecutionRecordService.start_or_resume_execution(
+        await TaskExecutionRecordService.start_execution(
             db=db,
             task_id=task_id,
             robot_ids=payload.robot_ids,
-            user_id=user.id,
-            source=payload.source,
         )
-        if result["action"] == "resumed":
-            msg = f"已恢复 {result['count']} 条暂停的执行"
-        else:
-            msg = f"已启动 {result['count']} 条新执行"
-        return response_base.success(msg=msg)
+        return response_base.success(msg="任务已启动")
     except Exception as e:
-        logger.error("启动或恢复任务失败: %s", str(e), exc_info=True)
+        logger.error("启动任务失败: %s", str(e), exc_info=True)
         raise
 
 

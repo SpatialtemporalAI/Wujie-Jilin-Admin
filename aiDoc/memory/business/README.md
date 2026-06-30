@@ -47,3 +47,4 @@
 - [2026-06-29 商户管理 + 商户开放 API](./2026-06-29_merchant-openapi.md) — 新建 merchant/merchant_robot 表 + HMAC 签名开放 API（goto_point/navigate_route/execute_task/暂停/恢复/停止/speak），复用任务管线与 gRPC；api_secret Fernet 可逆加密
 - [2026-06-29 菜单管理按钮权限补全 i18n](./2026-06-29_menu-button-permissions-i18n.md) — 全部按钮权限(menuType=3)补 route.* 中英文翻译(动作词)；8 个中文 scheduler 按钮经 0035 迁移改 ASCII 名，修复表格按钮行显示 route.xxx
 - [2026-06-29 菜单路径前缀继承/目录级联/移到根目录](./2026-06-29_menu-path-prefix-cascade.md) — path 与 name 解耦：路径=父级前缀+自身段；目录改路径后端级联后代 path；移到根目录自动裁路由名末段+补 layout 使其作为一级路由渲染
+- [2026-06-29 移除本服务定时调度 + 启动任务改为纯 gRPC](./2026-06-29_task-schedule-removed-and-start-grpc-only.md) — 删 scan_scheduled_tasks 扫描器 + 0037 软删除调度行（定时调度移交外部程序，schedule_* 字段保留）；任务管理与 OpenAPI 的启动改为只下发 gRPC run_now，不再写 task_execution_record

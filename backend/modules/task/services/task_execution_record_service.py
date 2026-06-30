@@ -7,25 +7,15 @@
 import logging
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select, and_, Select
-from sqlalchemy.orm import selectinload
 from typing import List, Optional
 
 from database.models.business.task import Task
-from database.models.business.task_point import TaskPoint
 from database.models.business.task_execution_record import TaskExecutionRecord
-from database.models.business.robot import Robot
-from database.models.business.scene_map import SceneMap
-from database.models.sys.user import SysUser
 from database.utils.timezone import timezone
 from core.exception.errors import NotFoundError, ConflictError
 from modules.grpc.task_client import TaskConfigClient
 from modules.task.schemas.task_execution_record import (
     TaskExecutionRecordQueryParams,
-    TaskDefinitionSnapshot,
-    TaskPointSnapshot,
-    TaskActionSnapshot,
-    ProgressDetail,
-    PointProgressStatus,
 )
 
 logger = logging.getLogger(__name__)
@@ -35,136 +25,35 @@ class TaskExecutionRecordService:
     """任务执行记录服务类"""
 
     @staticmethod
-    async def _build_task_definition(
-        db: AsyncSession, task_id: int
-    ) -> tuple[TaskDefinitionSnapshot, Optional[int], List[int]]:
-        """读取任务 + 点位，构建 task_definition 快照，返回 (snapshot, scene_id, annotation_ids)"""
-        result = await db.execute(
-            select(Task)
-            .options(selectinload(Task.points))
-            .where(Task.id == task_id)
-            .where(Task.deleted_at.is_(None))
-        )
-        task_obj = result.unique().scalar_one_or_none()
-        if not task_obj:
-            raise NotFoundError(msg=f"任务 {task_id} 不存在")
-
-        annotation_ids: List[int] = []
-        point_snapshots: List[TaskPointSnapshot] = []
-        for pt in task_obj.points:
-            actions = [
-                TaskActionSnapshot(
-                    action=a.get("action", "no"),
-                    voice_text=a.get("voice_text"),
-                )
-                for a in (pt.actions or [])
-            ]
-            point_snapshots.append(
-                TaskPointSnapshot(
-                    sort_order=pt.sort_order,
-                    point_name=pt.point_name,
-                    annotation_id=pt.annotation_id,
-                    actions=actions,
-                )
-            )
-            if pt.annotation_id is not None:
-                annotation_ids.append(pt.annotation_id)
-
-        snapshot = TaskDefinitionSnapshot(
-            task_type=task_obj.task_type,
-            task_name=task_obj.name,
-            points=point_snapshots,
-            broadcast_text=task_obj.broadcast_text,
-        )
-        return snapshot, task_obj.map_id, annotation_ids
-
-    @staticmethod
-    def _init_progress(total_points: int) -> ProgressDetail:
-        """初始化 progress JSON"""
-        return ProgressDetail(
-            total_points=total_points,
-            completed_points=0,
-            current_point_index=0,
-            points_status=[
-                PointProgressStatus(index=i, status="pending")
-                for i in range(total_points)
-            ],
-        )
-
-    @staticmethod
     async def start_execution(
         db: AsyncSession,
         task_id: int,
         robot_ids: List[int],
-        user_id: Optional[int] = None,
-        source: str = "manual",
-    ) -> List[TaskExecutionRecord]:
-        """启动任务执行：为每个机器人创建一条独立执行记录"""
-        try:
-            task_definition, scene_id, _ = (
-                await TaskExecutionRecordService._build_task_definition(db, task_id)
+    ) -> dict:
+        """启动任务：仅下发 gRPC run_now 通知到机器人 agent，不再写 task_execution_record。
+
+        定时调度已移交外部程序负责，本服务的"启动"只做实时信号下发；
+        执行记录由机器人 agent 侧维护，平台不再落库。
+
+        Returns:
+            {"total": N, "success_count": N, "failed_count": N}
+            推送失败仅日志，不抛异常（与 broadcast_task_changed 约定一致）。
+        """
+        # 任务存在性校验（保持原 404 行为）
+        task_result = await db.execute(
+            select(Task).where(
+                Task.id == task_id,
+                Task.deleted_at.is_(None),
             )
+        )
+        if task_result.scalar_one_or_none() is None:
+            raise NotFoundError(msg=f"任务 {task_id} 不存在")
 
-            # 验证机器人
-            robot_result = await db.execute(
-                select(Robot).where(
-                    Robot.id.in_(robot_ids),
-                    Robot.deleted_at.is_(None),
-                )
-            )
-            robots = robot_result.scalars().all()
-            if len(robots) != len(robot_ids):
-                raise NotFoundError(msg="部分机器人不存在")
-
-            total_points = len(task_definition.points)
-            created: List[TaskExecutionRecord] = []
-            now = timezone.now()
-
-            for robot_id in robot_ids:
-                record = TaskExecutionRecord(
-                    task_id=task_id,
-                    robot_id=robot_id,
-                    scene_id=scene_id,
-                    user_id=user_id,
-                    task_definition=task_definition.model_dump(mode="json"),
-                    progress=TaskExecutionRecordService._init_progress(
-                        total_points
-                    ).model_dump(mode="json"),
-                    progress_per=0,
-                    status="running",
-                    source=source,
-                    start_time=now,
-                )
-                db.add(record)
-                created.append(record)
-
-            await db.commit()
-            for rec in created:
-                await db.refresh(rec)
-
-            # DB 落库后下发 gRPC 通知到机器人 agent；失败仅日志，不阻塞业务
-            try:
-                await TaskConfigClient.broadcast_task_changed(
-                    task_id=task_id,
-                    operation="run_now",
-                    robot_ids=list(robot_ids),
-                )
-            except Exception as exc:  # noqa: BLE001 - 推送容错
-                logger.warning(
-                    "grpc task broadcast run_now failed task_id=%s err=%s",
-                    task_id,
-                    exc,
-                )
-
-            return created
-
-        except (NotFoundError, ConflictError):
-            await db.rollback()
-            raise
-        except Exception as e:
-            await db.rollback()
-            logger.error("启动任务执行失败: %s", str(e), exc_info=True)
-            raise
+        return await TaskConfigClient.broadcast_task_changed(
+            task_id=task_id,
+            operation="run_now",
+            robot_ids=list(robot_ids),
+        )
 
     @staticmethod
     async def _get_record(db: AsyncSession, record_id: int) -> TaskExecutionRecord:
@@ -318,63 +207,6 @@ class TaskExecutionRecordService:
         except Exception as e:
             await db.rollback()
             logger.error("按任务暂停执行失败: %s", str(e), exc_info=True)
-            raise
-
-    @staticmethod
-    async def start_or_resume_execution(
-        db: AsyncSession,
-        task_id: int,
-        robot_ids: List[int],
-        user_id: Optional[int] = None,
-        source: str = "manual",
-    ) -> dict:
-        """
-        按任务启动执行：
-        - 若该任务下存在 paused 状态的执行记录，则批量置为 pending（等待中），不创建新记录
-        - 否则按 robot_ids 创建新的执行记录
-        返回 {"action": "resumed" | "created", "count": int}
-        """
-        try:
-            paused_result = await db.execute(
-                select(TaskExecutionRecord).where(
-                    TaskExecutionRecord.task_id == task_id,
-                    TaskExecutionRecord.status == "paused",
-                    TaskExecutionRecord.deleted_at.is_(None),
-                )
-            )
-            paused_records = paused_result.scalars().all()
-            if paused_records:
-                for record in paused_records:
-                    record.status = "pending"
-                await db.commit()
-
-                # 已有暂停记录被恢复：下发 resume 到关联 robot
-                try:
-                    await TaskConfigClient.broadcast_task_changed(
-                        task_id=task_id,
-                        operation="resume",
-                        robot_ids=[r.robot_id for r in paused_records if r.robot_id is not None],
-                    )
-                except Exception as exc:  # noqa: BLE001 - 推送容错
-                    logger.warning(
-                        "grpc task broadcast resume failed task_id=%s err=%s",
-                        task_id,
-                        exc,
-                    )
-
-                return {"action": "resumed", "count": len(paused_records)}
-
-            created = await TaskExecutionRecordService.start_execution(
-                db=db,
-                task_id=task_id,
-                robot_ids=robot_ids,
-                user_id=user_id,
-                source=source,
-            )
-            return {"action": "created", "count": len(created)}
-        except Exception as e:
-            await db.rollback()
-            logger.error("启动或恢复任务执行失败: %s", str(e), exc_info=True)
             raise
 
     @staticmethod
