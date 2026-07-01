@@ -24,6 +24,7 @@ from database.models.business.robot_voice_config import (
 from database.models.business.robot_event_log import RobotEventLog
 from database.models.business.robot_model import RobotModel
 from database.models.business.scene_map import SceneMap
+from database.models.business.task import task_robot_association
 from database.utils.timezone import timezone
 from core.exception.errors import NotFoundError, ConflictError
 from modules.robot.schemas.robot import (
@@ -352,11 +353,13 @@ class RobotService:
     @staticmethod
     async def delete(db: AsyncSession, robot_id: int) -> bool:
         """
-        删除机器人（软删除，并联动清理一对一/一对多关联记录）
+        删除机器人（软删除，并联动清理关联记录）
 
-        关联表 status_record / voice_config / event_log 外键无 ondelete 级联，
-        物理删除会触发外键约束；这里改为软删除 robot，并同步软删除关联记录，
-        既避免约束冲突，也避免留下孤儿数据。
+        - 一对一/一对多关联表 status_record / voice_config / event_log 外键无
+          ondelete 级联，物理删除会触发外键约束，故同步软删除；
+        - 多对多关联表 task_robot 无软删除字段，且 robot 为软删除不会触发
+          ondelete=CASCADE，故物理删除该 robot 的全部任务关联（即从关联任务
+          列表中移除该机器人），避免留下孤儿关联。
 
         Args:
             db: 数据库会话
@@ -411,6 +414,15 @@ class RobotService:
                     RobotEventLog.deleted_at.is_(None),
                 )
                 .values(deleted_at=now)
+            )
+
+            # 解除该机器人与所有任务的关联（多对多关联表物理删除）：
+            # task_robot 无软删除字段，且 robot 为软删除不会触发 ondelete=CASCADE，
+            # 需手动清理，否则会留下孤儿关联。
+            await db.execute(
+                task_robot_association.delete().where(
+                    task_robot_association.c.robot_id == robot_id
+                )
             )
 
             await db.commit()

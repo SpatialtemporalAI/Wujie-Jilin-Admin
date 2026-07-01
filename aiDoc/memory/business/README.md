@@ -51,3 +51,4 @@
 - [2026-06-30 参数配置·人脸识别改为直连阿里云 facebody](./2026-06-30_param-config-face-aliyun-direct.md) — face 增删改不再走 gRPC 广播，改直连 FaceService 注册到人脸库 lvya；新增 entity_id/face_id 列（0038）；注册失败回滚本地，换图替换、删除 best-effort
 - [2026-06-30 地图编辑器「扫图起始点」返回点与 start_point 解耦](./2026-06-30_map-editor-start-point-decouple-return-point.md) — 新增场景自动创建的「扫图起始点」返回点固定存为世界坐标 (0,0)，不再随 start_point 变化；start_point 仍必填、仍作坐标系原点
 - [2026-06-30 地图编辑器删除地图后自动切换到第一个](./2026-06-30_map-editor-delete-auto-switch.md) — 删除当前选中地图后自动 loadMap 列表第一项，避免画布空载；删非当前地图不影响当前画布
+- [2026-07-01 删除机器人清理任务关联](./2026-07-01_delete-robot-cleanup-task-association.md) — delete robot 时物理删除 task_robot 关联表中该 robot 的全部关联（从关联任务列表移除），避免孤儿关联；robot 软删除不触发 ondelete=CASCADE，不发 gRPC

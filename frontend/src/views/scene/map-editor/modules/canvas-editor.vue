@@ -175,8 +175,20 @@ let minimapRafId: number | null = null;
 
 const MIN_OBJECT_SIZE = 1;
 const CLICK_MOVE_THRESHOLD = 5;
-const ARROW_WIDTH = 6;
-const ARROW_HEIGHT = 8;
+// 点位 / 机器人位置标记整体等比缩小至 80%（视觉尺寸 ×0.8）
+const POINT_MARKER_SCALE = 0.8;
+// 点位圆形半径（未选中 / 选中）
+const ANN_RADIUS = 8 * POINT_MARKER_SCALE;
+const ANN_RADIUS_SELECTED = 10 * POINT_MARKER_SCALE;
+// 点位名称：字号与距圆心的垂直偏移
+const ANN_LABEL_FONT_SIZE = 10 * POINT_MARKER_SCALE;
+const ANN_LABEL_OFFSET = 18 * POINT_MARKER_SCALE;
+// 机器人实时位置圆形半径与名称字号
+const ROBOT_RADIUS = 9 * POINT_MARKER_SCALE;
+const ROBOT_LABEL_FONT_SIZE = 11 * POINT_MARKER_SCALE;
+// 方向箭头尺寸（点位与机器人共用）
+const ARROW_WIDTH = 6 * POINT_MARKER_SCALE;
+const ARROW_HEIGHT = 8 * POINT_MARKER_SCALE;
 
 /**
  * 计算点位方向箭头的位置和旋转角度（ROS 弧度 → Fabric）
@@ -442,7 +454,7 @@ function syncStructure() {
 
     // 可交互的 circle（拖动 + 旋转入口）
     const circle = new Circle({
-      radius: isSelected ? 10 : 8,
+      radius: isSelected ? ANN_RADIUS_SELECTED : ANN_RADIUS,
       fill: annColor,
       stroke: '#fff',
       strokeWidth: 2,
@@ -465,7 +477,7 @@ function syncStructure() {
     elementMap.set(key, circle);
 
     // 装饰：角度指示器与文字（不可交互，纯渲染）
-    const arrowRadius = isSelected ? 10 : 8;
+    const arrowRadius = isSelected ? ANN_RADIUS_SELECTED : ANN_RADIUS;
     const arrowTransform = getAnnotationArrowTransform(ann.x, ann.y, ann.angle || 0, arrowRadius);
     const angleIndicator = new Triangle({
       width: ARROW_WIDTH,
@@ -485,11 +497,11 @@ function syncStructure() {
     fabricCanvas.add(angleIndicator);
 
     const text = new Text(ann.name, {
-      fontSize: 10,
+      fontSize: ANN_LABEL_FONT_SIZE,
       fill: annColor,
       originX: 'center',
       originY: 'center',
-      top: 18,
+      top: ANN_LABEL_OFFSET,
       fontFamily: 'sans-serif',
       fontWeight: 'bold',
       evented: false,
@@ -544,10 +556,10 @@ function updatePositions() {
     circle.setCoords();
     const deco = annotationDecorations.get(ann.id);
     if (deco) {
-      deco.text.set({ left: ann.x, top: ann.y + 18 });
+      deco.text.set({ left: ann.x, top: ann.y + ANN_LABEL_OFFSET });
       deco.text.setCoords();
       const isSelected = props.selectedElement?.type === 'annotation' && props.selectedElement?.id === ann.id;
-      const arrowTransform = getAnnotationArrowTransform(ann.x, ann.y, ann.angle || 0, isSelected ? 10 : 8);
+      const arrowTransform = getAnnotationArrowTransform(ann.x, ann.y, ann.angle || 0, isSelected ? ANN_RADIUS_SELECTED : ANN_RADIUS);
       deco.angleIndicator.set({
         left: arrowTransform.x,
         top: arrowTransform.y,
@@ -614,7 +626,7 @@ function renderRobots() {
     const px = wp.x;
     const py = h - wp.y;
 
-    const radius = 9;
+    const radius = ROBOT_RADIUS;
     const labelTop = py + radius + 8;
     const labelText = robot.name || `#${robot.id}`;
     // 朝向角(ROS 弧度)：与点位同约定（0 朝东，π/2 朝北，逆时针为正）
@@ -673,7 +685,7 @@ function renderRobots() {
         })
       : null;
     const label = new Text(labelText, {
-      fontSize: 11,
+      fontSize: ROBOT_LABEL_FONT_SIZE,
       fill: ROBOT_FILL,
       fontFamily: 'sans-serif',
       fontWeight: 'bold',
@@ -732,7 +744,7 @@ function updateSelectionStyle() {
       ? (isSelected ? RETURN_POINT_SELECTED_FILL : RETURN_POINT_FILL)
       : (isSelected ? POINT_SELECTED_FILL : POINT_FILL);
     circle.set('fill', annColor);
-    circle.set('radius', isSelected ? 10 : 8);
+    circle.set('radius', isSelected ? ANN_RADIUS_SELECTED : ANN_RADIUS);
     circle.setCoords();
     const deco = annotationDecorations.get(ann.id);
     if (deco) {
@@ -1136,14 +1148,14 @@ function handleObjectMoved(opt: any) {
   if (data.type === 'annotation') {
     const deco = annotationDecorations.get(data.id);
     if (deco) {
-      deco.text.set({ left: obj.left, top: (obj.top ?? 0) + 18 });
+      deco.text.set({ left: obj.left, top: (obj.top ?? 0) + ANN_LABEL_OFFSET });
       const ann = props.editorData?.annotations.find(a => a.id === data.id);
       const isSelected = props.selectedElement?.type === 'annotation' && props.selectedElement?.id === data.id;
       const arrowTransform = getAnnotationArrowTransform(
         obj.left ?? 0,
         obj.top ?? 0,
         ann?.angle ?? 0,
-        isSelected ? 10 : 8,
+        isSelected ? ANN_RADIUS_SELECTED : ANN_RADIUS,
       );
       deco.angleIndicator.set({
         left: arrowTransform.x,
@@ -1184,7 +1196,7 @@ function handleObjectRotating(opt: any) {
         obj.left ?? 0,
         obj.top ?? 0,
         rad,
-        isSelected ? 10 : 8,
+        isSelected ? ANN_RADIUS_SELECTED : ANN_RADIUS,
       );
       deco.angleIndicator.set({
         left: transform.x,
