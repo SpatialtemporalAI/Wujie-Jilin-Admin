@@ -146,18 +146,8 @@ async function initRoute(to: RouteLocationNormalized): Promise<RouteLocationRaw 
     return null;
   }
 
-  // it is captured by the "not-found" route, then check whether the route exists
-  const exist = await routeStore.getIsAuthRouteExist(to.path as RoutePath);
-  const noPermissionRoute: RouteKey = '403';
-
-  if (exist) {
-    const location: RouteLocationRaw = {
-      name: noPermissionRoute
-    };
-
-    return location;
-  }
-
+  // captured by the "not-found" route: the user is accessing a menu/route without permission,
+  // or the route does not exist at all. In both cases stay on the "not-found" route so the 404 page is shown.
   return null;
 }
 
