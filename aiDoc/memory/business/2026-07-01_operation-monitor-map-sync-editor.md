@@ -39,6 +39,9 @@
 - 缩放范围保留监控页原 `MIN_ZOOM=0.5 / MAX_ZOOM=5`（未沿用编辑器的 1-5）：监控页无小地图，需允许缩小到 0.5 以纵览全图；滑块/对数换算对任意 MIN/MAX 均成立。
 - annotation 坐标已在 `loadMapData` 内统一做世界→像素转换（`ann.y = height - p.y`，Y 向下），角度保持 ROS 弧度不变，故箭头换算与编辑器完全同约定。
 - 机器人改红是为与新拷贝的图例（红项）保持一致；如需保留蓝色，改回 `#2080f0` 并相应改图例该项颜色即可。
+- **滚轮缩放定位**：`zoomToPoint` 需传入画布相对坐标；画布嵌在卡片内（有头部/内边距偏移），必须用 `evt.offsetX/offsetY`，不能用 `clientX/clientY`（视口坐标会让缩放定点漂移）。地图编辑器 `canvas-editor.vue` 同此问题，已一并改为 `offsetX/offsetY`。
+- **标记固定屏幕大小**：缩放时点位标记（圆点/方向箭头/名称）与机器人标记保持固定屏幕尺寸（不随地图变大变小，像地图大头针），而底图/障碍物/路径仍随视口缩放。实现：新增 `applyMarkerZoom()`（**无参，内部读 `fabricCanvas.getZoom()` 视口真实 zoom**，避免与 `currentZoom` 状态不同步）——对每个标记对象做 `scaleX=scaleY=1/zoom` 反向缩放（与视口 zoom 相消→屏幕尺寸恒定），`left/top` 仍为场景坐标（位置随地图走）；箭头位置用 `getAnnotationArrowTransform(...,zoom)` 把屏幕半径换算成 `半径/zoom` 的场景距离、文字 `top` 用 `ann.y + ANN_LABEL_OFFSET/zoom`，保证屏幕间距恒定。在 `renderElements` 末尾、`renderRobotMarker` 创建后（初始缩放也用 `getZoom()`）、以及 `handleMouseWheel/zoomIn/zoomOut/zoomReset/handleSliderZoom` 五处缩放入口调用。`getAnnotationArrowTransform` 新增 `zoom=1` 形参。
+- **切换地图标记大小跳变修复**：`loadMapData` 在 `clearMapState` 后显式 `fabricCanvas.setZoom(1)` 并重置 `currentZoom/sliderZoomValue`（无图分支补 `centerContent()`）。原因：原 `loadBackgroundImage` 只重置 `currentZoom.value=1` 而未重置视口真实 zoom，导致缩放下切图时状态(1)与视口(旧 zoom)不同步，点位按错误 zoom 反向缩放→大小跳变；改用 `getZoom()` + 切图时重置视口双重兜底。
 - 验证：`pnpm typecheck`（本次编辑文件 0 错误，仅余与本次无关的 `scene/map/*` 历史 NaiveUI 类型报错）。
 
 ## 相关文件

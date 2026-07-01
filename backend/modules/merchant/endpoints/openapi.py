@@ -21,6 +21,9 @@ from modules.merchant.schemas.openapi import (
     ExecuteTaskRequest,
     RobotSnRequest,
     SpeakRequest,
+    ScenesRequest,
+    PointsRequest,
+    TasksRequest,
     OpenApiResult,
 )
 
@@ -111,5 +114,45 @@ async def speak(
     """语音播报"""
     result = await OpenApiService.speak(
         db, merchant, body.robot_sn, body.text, body.tts_params
+    )
+    return ResponseModel(data=result)
+
+
+@openapi_router.post("/scenes", response_model=ResponseModel[OpenApiResult])
+async def list_scenes(
+    body: ScenesRequest,
+    db: AsyncSession = Depends(get_session),
+    merchant: Merchant = Depends(get_current_merchant),
+):
+    """获取商户可访问的场景列表（其机器人绑定的场景地图）"""
+    result = await OpenApiService.list_scenes(db, merchant, body.robot_sn)
+    return ResponseModel(data=result)
+
+
+@openapi_router.post("/points", response_model=ResponseModel[OpenApiResult])
+async def list_points(
+    body: PointsRequest,
+    db: AsyncSession = Depends(get_session),
+    merchant: Merchant = Depends(get_current_merchant),
+):
+    """获取指定场景下的点位列表"""
+    result = await OpenApiService.list_points(db, merchant, body.map_id)
+    return ResponseModel(data=result)
+
+
+@openapi_router.post("/tasks", response_model=ResponseModel[OpenApiResult])
+async def list_tasks(
+    body: TasksRequest,
+    db: AsyncSession = Depends(get_session),
+    merchant: Merchant = Depends(get_current_merchant),
+):
+    """获取关联到商户机器人的任务列表"""
+    result = await OpenApiService.list_tasks(
+        db,
+        merchant,
+        robot_sn=body.robot_sn,
+        map_id=body.map_id,
+        task_type=body.task_type,
+        status=body.status,
     )
     return ResponseModel(data=result)

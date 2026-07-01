@@ -53,6 +53,27 @@ class SpeakRequest(BaseEntity):
     tts_params: Optional[TtsParams] = Field(None, description="TTS 参数")
 
 
+class ScenesRequest(BaseEntity):
+    """获取场景列表"""
+
+    robot_sn: Optional[str] = Field(None, description="可选：仅返回该机器人绑定的场景")
+
+
+class PointsRequest(BaseEntity):
+    """获取点位列表"""
+
+    map_id: int = Field(..., description="场景地图ID（须属于当前商户可访问的场景）")
+
+
+class TasksRequest(BaseEntity):
+    """获取任务列表"""
+
+    robot_sn: Optional[str] = Field(None, description="可选：仅返回关联该机器人的任务")
+    map_id: Optional[int] = Field(None, description="可选：按场景地图过滤")
+    task_type: Optional[str] = Field(None, description="可选：任务类型 patrol/broadcast")
+    status: Optional[str] = Field(None, description="可选：执行状态 idle/running/paused")
+
+
 class OpenApiResult(BaseEntity):
     """开放 API 通用结果"""
 

@@ -15,6 +15,7 @@ from database.models.business.merchant import Merchant
 from database.models.business.merchant_robot import merchant_robot_association
 from database.models.business.robot import Robot
 from database.models.business.robot_voice_config import RobotVoiceConfig
+from database.models.business.scene_map import SceneMap
 from database.models.business.scene_map_annotation import SceneMapAnnotation
 from database.models.business.task import Task, task_robot_association
 from database.models.business.task_point import TaskPoint
@@ -24,6 +25,9 @@ from modules.task.services.task_execution_record_service import (
     TaskExecutionRecordService,
 )
 from modules.task.services.task_service import TaskService
+from modules.scene.services.scene_map_annotation_service import (
+    SceneMapAnnotationService,
+)
 from modules.grpc.config_client import VoiceConfigClient
 from modules.merchant.schemas.openapi import OpenApiResult, TtsParams
 
@@ -61,6 +65,37 @@ class OpenApiService:
         if bound.first() is None:
             raise ForbiddenError(msg="该机器人未绑定到当前商户")
         return robot
+
+    @staticmethod
+    async def _merchant_robot_ids(
+        db: AsyncSession, merchant: Merchant
+    ) -> List[int]:
+        """商户绑定的全部机器人ID集合"""
+        result = await db.execute(
+            select(merchant_robot_association.c.robot_id).where(
+                merchant_robot_association.c.merchant_id == merchant.id
+            )
+        )
+        return [row[0] for row in result.all()]
+
+    @staticmethod
+    async def _merchant_scene_ids(
+        db: AsyncSession, merchant: Merchant
+    ) -> List[int]:
+        """商户可访问的场景地图ID集合（其机器人绑定的 map_id 去重、去 NULL）"""
+        robot_ids = await OpenApiService._merchant_robot_ids(db, merchant)
+        if not robot_ids:
+            return []
+        result = await db.execute(
+            select(Robot.map_id)
+            .where(
+                Robot.id.in_(robot_ids),
+                Robot.map_id.is_not(None),
+                Robot.deleted_at.is_(None),
+            )
+            .distinct()
+        )
+        return [row[0] for row in result.all()]
 
     @staticmethod
     async def _load_annotations(
@@ -259,3 +294,120 @@ class OpenApiService:
         success = bool(getattr(resp, "success", False))
         message = getattr(resp, "message", "") or ("播报成功" if success else "播报失败")
         return OpenApiResult(success=success, message=message)
+
+    @staticmethod
+    async def list_scenes(
+        db: AsyncSession, merchant: Merchant, robot_sn: Optional[str] = None
+    ) -> OpenApiResult:
+        """获取商户可访问的场景列表"""
+        if robot_sn:
+            robot = await OpenApiService.resolve_robot(db, merchant, robot_sn)
+            map_ids = [robot.map_id] if robot.map_id is not None else []
+        else:
+            map_ids = await OpenApiService._merchant_scene_ids(db, merchant)
+
+        scenes: List[dict] = []
+        if map_ids:
+            result = await db.execute(
+                select(SceneMap)
+                .where(
+                    SceneMap.id.in_(map_ids),
+                    SceneMap.deleted_at.is_(None),
+                )
+                .order_by(SceneMap.id.desc())
+            )
+            scenes = [
+                {
+                    "id": m.id,
+                    "name": m.name,
+                    "width": m.width,
+                    "height": m.height,
+                    "status": m.status,
+                    "version": m.version,
+                }
+                for m in result.scalars().all()
+            ]
+        return OpenApiResult(
+            success=True, message=f"共 {len(scenes)} 个场景", data={"scenes": scenes}
+        )
+
+    @staticmethod
+    async def list_points(
+        db: AsyncSession, merchant: Merchant, map_id: int
+    ) -> OpenApiResult:
+        """获取指定场景下的点位列表"""
+        scene_ids = await OpenApiService._merchant_scene_ids(db, merchant)
+        if map_id not in scene_ids:
+            raise ForbiddenError(msg="该场景未绑定到当前商户的机器人")
+
+        annotations = await SceneMapAnnotationService.get_list(db, map_id)
+        points = [
+            {
+                "id": a.id,
+                "name": a.name,
+                "type": a.type,
+                "x": a.x,
+                "y": a.y,
+                "angle": a.angle,
+            }
+            for a in annotations
+        ]
+        return OpenApiResult(
+            success=True, message=f"共 {len(points)} 个点位", data={"points": points}
+        )
+
+    @staticmethod
+    async def list_tasks(
+        db: AsyncSession,
+        merchant: Merchant,
+        robot_sn: Optional[str] = None,
+        map_id: Optional[int] = None,
+        task_type: Optional[str] = None,
+        status: Optional[str] = None,
+    ) -> OpenApiResult:
+        """获取关联到商户机器人的任务列表"""
+        if robot_sn:
+            robot = await OpenApiService.resolve_robot(db, merchant, robot_sn)
+            robot_ids = [robot.id]
+        else:
+            robot_ids = await OpenApiService._merchant_robot_ids(db, merchant)
+
+        task_ids: List[int] = []
+        if robot_ids:
+            result = await db.execute(
+                select(task_robot_association.c.task_id).where(
+                    task_robot_association.c.robot_id.in_(robot_ids)
+                )
+            )
+            task_ids = list({row[0] for row in result.all()})
+
+        tasks: List[dict] = []
+        if task_ids:
+            stmt = select(Task).where(
+                Task.id.in_(task_ids),
+                Task.deleted_at.is_(None),
+            )
+            if map_id is not None:
+                stmt = stmt.where(Task.map_id == map_id)
+            if task_type:
+                stmt = stmt.where(Task.task_type == task_type)
+            if status:
+                stmt = stmt.where(Task.status == status)
+            stmt = stmt.order_by(Task.id.desc())
+            result = await db.execute(stmt)
+            tasks = [
+                {
+                    "id": t.id,
+                    "name": t.name,
+                    "task_type": t.task_type,
+                    "status": t.status,
+                    "enabled": t.enabled,
+                    "map_id": t.map_id,
+                    "last_run_at": t.last_run_at.isoformat() if t.last_run_at else None,
+                    "next_run_at": t.next_run_at.isoformat() if t.next_run_at else None,
+                }
+                for t in result.scalars().all()
+            ]
+        return OpenApiResult(
+            success=True, message=f"共 {len(tasks)} 个任务", data={"tasks": tasks}
+        )
