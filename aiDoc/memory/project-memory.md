@@ -53,6 +53,7 @@
 - [2026-06-30 地图编辑器「扫图起始点」返回点与 start_point 解耦](./business/2026-06-30_map-editor-start-point-decouple-return-point.md) — 新增场景自动创建的「扫图起始点」返回点固定存为世界坐标 (0,0)，不再随 start_point 变化；start_point 仍必填、仍作坐标系原点
 - [2026-06-30 地图编辑器删除地图后自动切换到第一个](./business/2026-06-30_map-editor-delete-auto-switch.md) — 删除当前选中地图后自动 loadMap 列表第一项，避免画布空载；删非当前地图不影响当前画布
 - [2026-06-30 map.proto 新增 SwitchMap 切换机器人当前地图](./business/2026-06-30_map-switch-rpc.md) — MapService 新增 SwitchMap(id+version)，与广播地图 NotifyMapSaved 共用同一 gRPC 地址；接入切换地图接口 PUT /robot/manage/{id}/bind-map，绑定成功后下发、解绑不下发、失败仅日志
+- [2026-07-01 任务点位动作列表可为空](./business/2026-07-01_task-point-actions-optional.md) — 添加/编辑任务新增点位时动作列表不再强制至少一个；addPoint 初始 actions=[]，删除动作去掉 >1 限制；后端本就支持空，仅前端表单调整
 
 ## 维护说明
 

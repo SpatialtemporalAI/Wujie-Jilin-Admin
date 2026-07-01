@@ -227,7 +227,8 @@ function addPoint() {
     sort_order: model.value.points.length,
     point_name: null,
     annotation_id: null,
-    actions: [{ action: 'no', voice_text: null }]
+    // 动作列表可为空：新增点位时不预置默认动作，用户按需添加
+    actions: []
   });
 }
 
@@ -505,7 +506,6 @@ onMounted(() => {
                   <NFormItemGi :span="3">
                     <div class="flex justify-end">
                       <NButton
-                        v-if="point.actions.length > 1"
                         type="error"
                         ghost
                         size="small"
