@@ -459,6 +459,12 @@ onMounted(() => {
               <NRadioButton v-for="opt in taskTypeOptions" :key="opt.value" :value="opt.value" :label="opt.label" />
             </NRadioGroup>
           </NFormItemGi>
+          <!-- 场景约束提示：机器人需位于任务绑定的场景内，任务才可执行 -->
+          <NGi :span="2">
+            <NAlert type="warning" class="mb-12px">
+              注意：任务绑定机器人后，若机器人不在任务绑定的场景下，该任务无法执行！
+            </NAlert>
+          </NGi>
         </NGrid>
 
         <NDivider style="font-size: 18px;"  title-placement="center">场景地图</NDivider>
