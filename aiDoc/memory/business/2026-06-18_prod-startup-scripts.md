@@ -36,6 +36,7 @@
 - 后端脚本仅支持 Linux/WSL（gunicorn 不支持 Windows）。Windows 本地开发继续用 `python main.py` 或 `uvicorn main:app --reload`。
 - 后端脚本面向"手动 / 临时启动"场景；正式生产部署仍推荐 systemd（参考 `deploy/smilex-cloud.service`）+ `deploy/deploy.sh`，可享受自动重启、日志轮转、健康检查。
 - 后端脚本运行前需保证 `backend/.env.prod` 已正确配置（DB / Redis / JWT / gRPC 等）。
+- 配置加载一致性（2026-07-01 修复）：`backend/database/config.py` 的 `settings` 现已按 `ENVIR` 选择 `.env.{env}`（与 `core/config` 对齐）。此前该处写死 `env_file=".env"`、无视 `ENVIR=prod`，导致 prod 启动时数据库连接池退回 `DatabaseModel` 默认值（`mysql/root/localhost`），报 `(pymysql.err.OperationalError) (1698, "Access denied for user 'root'@'localhost'")`。注意项目存在两套并行配置体系（`core/config/` 与 `database/config.py`），后者供数据库连接池使用。
 - 前端 `vite preview` 仅用于本地预览生产产物，**不是**生产级静态服务器；正式部署应使用 nginx（参考 `deploy/nginx.conf`）。
 - 前端 `.env.prod` 中 `VITE_SERVICE_BASE_URL` 当前指向 mock，正式部署前需替换为真实后端地址。
 

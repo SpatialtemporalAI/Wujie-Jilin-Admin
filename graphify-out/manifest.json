@@ -270,8 +270,8 @@
     "semantic_hash": ""
   },
   "D:\\project\\SpatialtemporalAi\\Wujie-Jilin-Admin\\backend\\database\\config.py": {
-    "mtime": 1782201398.1488726,
-    "ast_hash": "0b1cd36630370d8336c4a6c8a81b0d29",
+    "mtime": 1782876102.3036466,
+    "ast_hash": "667a4c157082ff689aa4e00cbc0a8ea0",
     "semantic_hash": ""
   },
   "D:\\project\\SpatialtemporalAi\\Wujie-Jilin-Admin\\backend\\database\\db_manager.py": {
@@ -2495,8 +2495,8 @@
     "semantic_hash": ""
   },
   "D:\\project\\SpatialtemporalAi\\Wujie-Jilin-Admin\\aiDoc\\memory\\project-memory.md": {
-    "mtime": 1782871771.404983,
-    "ast_hash": "6891ce5227290b3e5bf70ffe12eaf164",
+    "mtime": 1782875756.3356063,
+    "ast_hash": "12c2e558867624a2fc119561cc4358a2",
     "semantic_hash": ""
   },
   "D:\\project\\SpatialtemporalAi\\Wujie-Jilin-Admin\\aiDoc\\memory\\README.md": {
@@ -3790,8 +3790,8 @@
     "semantic_hash": ""
   },
   "D:\\project\\SpatialtemporalAi\\Wujie-Jilin-Admin\\frontend\\src\\views\\task\\modules\\task-operate-drawer.vue": {
-    "mtime": 1782872686.3745546,
-    "ast_hash": "8df97ffd20cecbfb71a7dc2837daac70",
+    "mtime": 1782875729.999035,
+    "ast_hash": "b435c7b1138ac55353ad6ace69319168",
     "semantic_hash": ""
   },
   "D:\\project\\SpatialtemporalAi\\Wujie-Jilin-Admin\\frontend\\src\\views\\task\\modules\\task-search.vue": {
@@ -4375,8 +4375,8 @@
     "semantic_hash": ""
   },
   "D:\\project\\SpatialtemporalAi\\Wujie-Jilin-Admin\\aiDoc\\memory\\business\\2026-06-18_prod-startup-scripts.md": {
-    "mtime": 1782201121.6636045,
-    "ast_hash": "9dd9fe8878f1e32944dbdc30635fb907",
+    "mtime": 1782876247.1759188,
+    "ast_hash": "44750c43a042fc54e5fd849379e536d3",
     "semantic_hash": ""
   },
   "D:\\project\\SpatialtemporalAi\\Wujie-Jilin-Admin\\aiDoc\\memory\\business\\2026-06-19_map-editor-electronic-fence.md": {
@@ -4922,6 +4922,11 @@
   "D:\\project\\SpatialtemporalAi\\Wujie-Jilin-Admin\\aiDoc\\memory\\business\\2026-07-01_task-point-actions-optional.md": {
     "mtime": 1782871757.1192484,
     "ast_hash": "07a0a8413977a4ee727f7727ac710446",
+    "semantic_hash": ""
+  },
+  "D:\\project\\SpatialtemporalAi\\Wujie-Jilin-Admin\\aiDoc\\memory\\business\\2026-07-01_task-bind-robot-scene-tip.md": {
+    "mtime": 1782875746.2161925,
+    "ast_hash": "353ccad80511f14d26b1ab20de84ffca",
     "semantic_hash": ""
   }
 }
