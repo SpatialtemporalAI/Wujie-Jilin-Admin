@@ -43,13 +43,42 @@ const ROBOT_STROKE = '#ffffff';
  * - Fabric Triangle 默认顶点朝上、顺时针为正
  * - 箭头底部贴合圆形边缘、顶点指向角度方向
  */
-function getAnnotationArrowTransform(annX: number, annY: number, rosRad: number, radius: number) {
-  const dist = radius + ARROW_HEIGHT / 2;
+function getAnnotationArrowTransform(annX: number, annY: number, rosRad: number, radius: number, zoom = 1) {
+  // 「半径 + 箭头半高」的屏幕距离换算成当前 zoom 下的场景距离，
+  // 配合外部对箭头做 1/zoom 反向缩放，保证缩放后箭头底部仍贴合圆点边缘
+  const sceneDist = (radius + ARROW_HEIGHT / 2) / zoom;
   return {
-    x: annX + dist * Math.cos(rosRad),
-    y: annY - dist * Math.sin(rosRad),
+    x: annX + sceneDist * Math.cos(rosRad),
+    y: annY - sceneDist * Math.sin(rosRad),
     angle: -radToDeg(rosRad) + 90,
   };
+}
+
+/**
+ * 缩放变化时让点位/机器人标记保持固定屏幕大小：
+ * - 读取视口「真实」zoom（getZoom），避免与 currentZoom 状态不同步导致标记大小跳变
+ * - 对标记对象做 1/zoom 反向缩放（与视口 zoom 相消 → 屏幕尺寸恒定）
+ * - left/top 仍是场景坐标，故位置随地图平移/缩放
+ * - 箭头/文字相对圆点的偏移按 1/zoom 收敛，保证屏幕间距恒定
+ * 地图底图、障碍物、路径等仍随视口正常缩放（此处不处理）。
+ */
+function applyMarkerZoom() {
+  if (!fabricCanvas || !mapData.value) return;
+  const zoom = fabricCanvas.getZoom() || 1;
+  const inv = zoom > 0 ? 1 / zoom : 1;
+  for (const ann of mapData.value.annotations) {
+    const circle = elementMap.get(`ann-${ann.id}`);
+    const arrow = elementMap.get(`ann-arrow-${ann.id}`);
+    const text = elementMap.get(`ann-text-${ann.id}`);
+    const t = getAnnotationArrowTransform(ann.x, ann.y, ann.angle || 0, ANN_RADIUS, zoom);
+    circle?.set({ scaleX: inv, scaleY: inv });
+    arrow?.set({ left: t.x, top: t.y, angle: t.angle, scaleX: inv, scaleY: inv });
+    text?.set({ left: ann.x, top: ann.y + ANN_LABEL_OFFSET * inv, scaleX: inv, scaleY: inv });
+  }
+  if (robotMarker) {
+    robotMarker.set({ scaleX: inv, scaleY: inv });
+  }
+  fabricCanvas.renderAll();
 }
 
 const canvasWidth = ref(800);
@@ -323,6 +352,7 @@ function renderElements() {
     }
   }
 
+  applyMarkerZoom();
   fabricCanvas.renderAll();
 }
 
@@ -377,6 +407,9 @@ function renderRobotMarker() {
     selectable: false,
     evented: false
   });
+  // 机器人标记按视口真实 zoom 反向缩放，保持固定屏幕大小
+  const robotInv = 1 / (fabricCanvas?.getZoom() || 1);
+  robotMarker.set({ scaleX: robotInv, scaleY: robotInv });
 
   fabricCanvas.add(robotMarker);
   fabricCanvas.renderAll();
@@ -428,12 +461,18 @@ async function loadMapData(mapId: number) {
 
     clearMapState();
     mapData.value = data;
+    // 切换地图时重置视口缩放为 1（与 currentZoom/slider 状态保持同步）。
+    // 否则上一张地图的缩放仍残留在视口里，新点位按 1/zoom 反向缩放后会出现大小跳变。
+    currentZoom.value = 1;
+    sliderZoomValue.value = zoomToSlider(1);
+    fabricCanvas?.setZoom(1);
 
     if (data.map.image_id) {
       await loadBackgroundImage(data.map.image_id);
     } else {
       canvasWidth.value = data.map.width || 800;
       canvasHeight.value = data.map.height || 600;
+      centerContent();
     }
 
     await nextTick();
@@ -459,6 +498,7 @@ function handleMouseWheel(opt: any) {
   fabricCanvas.zoomToPoint(new Point(evt.offsetX, evt.offsetY), zoom);
   currentZoom.value = zoom;
   sliderZoomValue.value = zoomToSlider(zoom);
+  applyMarkerZoom();
 }
 
 let isPanning = false;
@@ -527,6 +567,7 @@ function zoomIn() {
   fabricCanvas.zoomToPoint(center, newZoom);
   currentZoom.value = newZoom;
   sliderZoomValue.value = zoomToSlider(newZoom);
+  applyMarkerZoom();
 }
 
 function zoomOut() {
@@ -536,6 +577,7 @@ function zoomOut() {
   fabricCanvas.zoomToPoint(center, newZoom);
   currentZoom.value = newZoom;
   sliderZoomValue.value = zoomToSlider(newZoom);
+  applyMarkerZoom();
 }
 
 function zoomReset() {
@@ -543,6 +585,7 @@ function zoomReset() {
   currentZoom.value = 1;
   sliderZoomValue.value = zoomToSlider(1);
   centerContent();
+  applyMarkerZoom();
 }
 
 function handleSliderZoom(val: number) {
@@ -551,6 +594,7 @@ function handleSliderZoom(val: number) {
   const center = fabricCanvas.getCenterPoint();
   fabricCanvas.zoomToPoint(center, newZoom);
   currentZoom.value = newZoom;
+  applyMarkerZoom();
 }
 
 watch([containerWidth, containerHeight], () => {
