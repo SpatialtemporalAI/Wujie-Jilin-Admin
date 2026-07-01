@@ -502,7 +502,9 @@ class RobotService:
         更新机器人绑定场景（地图编辑器专用）
 
         与主表单 edit 解耦：只改 map_id 一个字段，不接受其他字段。
-        map_id=None 表示解绑。新增 / 切换绑定时校验 SceneMap 存在性。
+        map_id=None 表示解绑。新增 / 切换绑定时校验 SceneMap 存在性，并在绑定成功后
+        通过 SwitchMap 通知导览服务切换机器人当前地图（与广播地图 NotifyMapSaved 共用
+        同一 MapService gRPC 地址，失败仅记日志、不影响绑定结果）。
 
         Args:
             db: 数据库会话
@@ -533,13 +535,15 @@ class RobotService:
                 logger.warning("机器人不存在，机器人ID: %d", robot_id)
                 raise NotFoundError(msg=f"机器人 {robot_id} 不存在")
 
+            map_obj = None
             if payload.map_id is not None:
                 map_result = await db.execute(
                     select(SceneMap)
                     .where(SceneMap.id == payload.map_id)
                     .where(SceneMap.deleted_at.is_(None))
                 )
-                if not map_result.scalar_one_or_none():
+                map_obj = map_result.scalar_one_or_none()
+                if not map_obj:
                     raise NotFoundError(
                         msg=f"场景地图 {payload.map_id} 不存在"
                     )
@@ -548,6 +552,12 @@ class RobotService:
 
             await db.commit()
             await db.refresh(existing)
+
+            # 绑定/切换到新地图后，通知导览服务切换机器人当前地图。
+            # 与「广播地图」(NotifyMapSaved) 共用同一个 MapService 地址；
+            # 失败仅记日志，不影响绑定结果。解绑(map_id=None)不下发。
+            if map_obj is not None:
+                await RobotService._switch_map_via_grpc(map_obj.id, map_obj.version)
 
             logger.info("更新机器人绑定场景成功，机器人ID: %d", robot_id)
             return existing
@@ -559,3 +569,42 @@ class RobotService:
             await db.rollback()
             logger.error("更新机器人绑定场景失败: %s", str(e), exc_info=True)
             raise
+
+    @staticmethod
+    async def _switch_map_via_grpc(map_id: int, version: int) -> None:
+        """切换机器人当前地图（SwitchMap）
+
+        与「广播地图」(NotifyMapSaved) 使用同一个 MapService stub / channel 地址
+        （settings.GRPC.MAP_SERVICE_ADDR 或运行时覆盖地址）。失败仅记日志，不抛出，
+        因此导览服务不可用不会回滚已成功的绑定。
+        """
+        import grpc
+
+        from modules.grpc.client import MapServiceClient
+
+        try:
+            resp = await MapServiceClient.switch_map(map_id, version)
+            logger.info(
+                "switch_map ok map=%s version=%s status=%s msg=%s current_id=%s current_version=%s",
+                map_id,
+                version,
+                resp.status,
+                resp.message,
+                resp.current_id,
+                resp.current_version,
+            )
+        except grpc.aio.AioRpcError as exc:
+            logger.warning(
+                "switch_map rpc failed map=%s version=%s code=%s details=%s",
+                map_id,
+                version,
+                exc.code(),
+                exc.details(),
+            )
+        except Exception as exc:
+            logger.warning(
+                "switch_map failed map=%s version=%s: %s",
+                map_id,
+                version,
+                exc,
+            )

@@ -1,7 +1,7 @@
 """
 MapService gRPC 客户端
 
-封装 NotifyMapSaved / SearchMaps 两个 RPC，统一处理：
+封装 NotifyMapSaved / SearchMaps / SwitchMap 三个 RPC，统一处理：
 - ENABLED 开关（关闭时静默跳过）
 - 单例 stub 复用
 - 超时配置
@@ -51,3 +51,17 @@ class MapServiceClient:
             timeout=settings.GRPC.TIMEOUT_SECONDS,
         )
         return list(resp.maps)
+
+    @classmethod
+    async def switch_map(
+        cls, map_id: str | int, version: str | int
+    ) -> map_pb2.SwitchMapResponse:
+        """切换机器人当前地图到指定 id + version"""
+        if not settings.GRPC.ENABLED:
+            return map_pb2.SwitchMapResponse(
+                status="DISABLED", message="gRPC 未启用"
+            )
+        return await cls._stub_().SwitchMap(
+            map_pb2.SwitchMapRequest(id=str(map_id), version=str(version)),
+            timeout=settings.GRPC.TIMEOUT_SECONDS,
+        )
