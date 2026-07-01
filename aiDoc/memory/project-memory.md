@@ -4,7 +4,7 @@
 
 ## 长期记忆
 
-暂无。
+- [MappedAsDataclass 模型 Optional 字段需 default=None](./long-term/mappedasdataclass-optional-field-default.md) — 否则 dataclass __init__ 把 Optional 字段当必填位置参数，实例化时报 missing、接口 500
 
 ## 业务需求记忆
 
