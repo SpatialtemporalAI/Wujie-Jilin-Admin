@@ -36,13 +36,27 @@ const sourceLabelMap: Record<string, string> = {
 };
 
 const actionLabel: Record<string, string> = {
+  shake_hand: '握手',
+  high_five: '击掌',
+  hug: '拥抱',
+  high_wave: '高举挥手',
+  clap: '鼓掌',
+  face_wave: '挥手',
+  left_kiss: '左手飞吻',
+  hands_up: '平举双手',
+  x_ray: '动感光波',
+  right_hand_up: '平举右手',
+  reject: '拒绝',
+  right_kiss: '右手飞吻',
+  two_hand_kiss: '双手飞吻',
+  no: '无动作',
+  // 兼容历史快照数据
   shake_hands: '握手',
   wave: '挥手',
   left_hand: '伸左手',
   right_hand: '伸右手',
   bend_no_hands: '弯腰',
   bend_with_hands: '弯腰和伸手',
-  no: '无动作',
   bow: '鞠躬',
   turn: '转身',
   wait: '停留等待',

@@ -34,7 +34,7 @@ def _validate_repeat_cycle(v: Optional[str]) -> Optional[str]:
 
 class TaskActionItem(BaseReqEntity):
     """巡逻点位单个动作"""
-    action: str = Field(..., description="运控动作: shake_hands/wave/left_hand/right_hand/bend_no_hands/bend_with_hands/no", max_length=20)
+    action: str = Field(..., description="运控动作: shake_hand/high_five/hug/high_wave/clap/face_wave/left_kiss/hands_up/x_ray/right_hand_up/reject/right_kiss/two_hand_kiss/no", max_length=20)
     voice_text: Optional[str] = Field(None, description="语音播报文本")
 
 

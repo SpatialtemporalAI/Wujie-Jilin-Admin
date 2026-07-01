@@ -55,3 +55,4 @@
 - [2026-07-01 运行监控地图同步地图编辑器效果](./2026-07-01_operation-monitor-map-sync-editor.md) — operation-monitor 地图补左上角图例 + 右上角竖向滑块缩放（对数刻度）+ 点位角度方向箭头（annotation 改三个独立 fabric 对象，复用编辑器 getAnnotationArrowTransform）；机器人标记由蓝改红与图例对齐；滚轮缩放改用画布相对坐标 offsetX/Y（编辑器同改）；点位/机器人标记缩放时保持固定屏幕大小（applyMarkerZoom 反向缩放 1/zoom，位置仍随地图）
 - [2026-07-01 参数配置·人脸识别阿里云错误友好化解析](./2026-07-01_param-config-face-aliyun-error-parse.md) — face_service 新增错误码→中文提示映射 + _describe_aliyun_error 解析器，facebody/OSS 失败不再裸抛 Response 字典，前端 toast 显示「中文提示（错误码：XXX）」
 - [2026-07-01 参数配置·人脸识别编辑修复](./2026-07-01_param-config-face-edit-no-photo.md) — 编辑按钮点击后滚动回表单消除「无反应」；编辑态人像改只读预览不可改图，仅改名称/播报，后端 photo_changed 判定自动跳过换图
+- [2026-07-01 任务运控动作选项替换为新14项](./2026-07-01_task-action-options-replace.md) — 下拉换为 shake_hand/high_five/hug/high_wave/clap/face_wave/left_kiss/hands_up/x_ray/right_hand_up/reject/right_kiss/two_hand_kiss/no；详情抽屉保留旧值中文标签兼容历史快照；DB 无需迁移

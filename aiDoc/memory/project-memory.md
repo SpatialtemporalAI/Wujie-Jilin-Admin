@@ -56,6 +56,7 @@
 - [2026-07-01 任务点位动作列表可为空](./business/2026-07-01_task-point-actions-optional.md) — 添加/编辑任务新增点位时动作列表不再强制至少一个；addPoint 初始 actions=[]，删除动作去掉 >1 限制；后端本就支持空，仅前端表单调整
 - [2026-07-01 任务绑定机器人与场景一致性提示](./business/2026-07-01_task-bind-robot-scene-tip.md) — 新增/编辑任务抽屉「任务类型」下方加 NAlert 警示：机器人不在任务绑定场景下任务无法执行，纯前端展示
 - [2026-07-01 参数配置·人脸识别阿里云错误友好化解析](./business/2026-07-01_param-config-face-aliyun-error-parse.md) — face_service 新增错误码→中文提示映射 + _describe_aliyun_error 解析器，facebody/OSS 失败不再裸抛 Response 字典，前端 toast 显示「中文提示（错误码：XXX）」
+- [2026-07-01 任务运控动作选项替换为新14项](./business/2026-07-01_task-action-options-replace.md) — 下拉换为 shake_hand/high_five/hug/high_wave/clap/face_wave/left_kiss/hands_up/x_ray/right_hand_up/reject/right_kiss/two_hand_kiss/no；详情抽屉保留旧值中文标签兼容历史快照；DB 无需迁移
 
 ## 维护说明
 

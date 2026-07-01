@@ -9,7 +9,21 @@ declare namespace Api {
     type TaskStatus = 'idle' | 'running' | 'paused';
 
     /** patrol action */
-    type TaskAction = 'shake_hands' | 'wave' | 'left_hand' | 'right_hand' | 'bend_no_hands' | 'bend_with_hands' | 'no';
+    type TaskAction =
+      | 'shake_hand'
+      | 'high_five'
+      | 'hug'
+      | 'high_wave'
+      | 'clap'
+      | 'face_wave'
+      | 'left_kiss'
+      | 'hands_up'
+      | 'x_ray'
+      | 'right_hand_up'
+      | 'reject'
+      | 'right_kiss'
+      | 'two_hand_kiss'
+      | 'no';
 
     /** patrol point action item (supports multiple actions per point) */
     type TaskActionItem = {
