@@ -55,15 +55,21 @@
 - 验证：`pnpm typecheck`（canvas-editor.vue 0 错误；另有与本次无关的 `findAnnotationAtPoint`/`seq` 未使用 hint）。
 - 验证：`pnpm typecheck`（本次编辑文件 0 错误，仅余与本次无关的 `scene/map/*` 历史 NaiveUI 类型报错）。
 
-## 后续：机器人标记朝向角度修复（2026-07-01）
+## 后续：机器人标记朝向角度 + 名称固定下方（2026-07-01）
 
-**现象**：运行监控地图上机器人方向箭头的朝向始终不变（角度无变化）。
+**现象①**：运行监控地图上机器人方向箭头朝向始终不变（角度无变化）。
+**现象②**：修复①后机器人名称会随朝向一起旋转，不始终在圆点下方；用户要求名称固定在点位下方。
 
-**根因**：机器人标记 `robotMarker` 是 fabric `Group([body, arrow, label])`，其 `angle` 此前直接写 `props.location.angle || 0`。但 `props.location.angle` 与 annotation 同为 **ROS 弧度**（0 朝东、π/2 朝北、逆时针为正），被 Fabric 当作「度」直接旋转——弧度取值 0~6.28 仅对应 0~6.28°，肉眼几乎不可见，故表现为角度不变。上次同步编辑器时 annotation 箭头已用 `getAnnotationArrowTransform` 做弧度→度转换，但机器人标记 Group 的 angle 漏了。
+**根因**：机器人标记此前是 fabric `Group([body, arrow, label])`：
+- 朝向不变：Group 的 `angle` 直接写 `props.location.angle || 0`，而该值与 annotation 同为 **ROS 弧度**（0 朝东、π/2 朝北、逆时针为正），被 Fabric 当「度」旋转——弧度取值 0~6.28 仅对应 0~6.28°，肉眼不可见。
+- 名称跟转：Group 整体按 angle 旋转时，子元素 label 一同旋转，无法固定在下方。
 
-**修复**（`position-map-panel.vue` 的 `renderRobotMarker` 内 Group 构造）：`angle` 改为 `-radToDeg(props.location.angle || 0) + 90`，与 annotation 方向箭头同一公式——arrow 在 Group 内默认顶点朝上（北）、Fabric 顺时针为正，ROS 弧度→Fabric 度的换算同为 `-radToDeg(rad)+90`。`radToDeg` 早已从 `@/utils/coordinate` 引入，无需新增依赖。
+**修复**：改用与地图编辑器 `canvas-editor.vue` 完全一致的**三个独立 fabric 对象**（弃用 Group）：`body`(Circle 圆点) + `arrow`(Triangle 方向箭头，单独旋转) + `label`(Text 名称，绝对定位在圆点下方)。箭头复用 `getAnnotationArrowTransform(px, py, angle, ANN_RADIUS, zoom)` 取位置与 `angle=-radToDeg(rad)+90`（ROS 弧度→Fabric 度）；label 的 `top = robotPx.y + ANN_LABEL_OFFSET * inv`、`scaleX/Y = inv`，始终位于圆点正下方、不随朝向旋转。
+- `robotMarker` 类型由 `Group | null` 改为 `{ body: Circle; arrow: Triangle; label: Text } | null`；移除 import `Group`（`radToDeg` 仍被 `getAnnotationArrowTransform` 使用，保留）。
+- `applyMarkerZoom()` 机器人分支：由对单个 Group 反向缩放，改为分别对 body/arrow/label 设 `scaleX/Y=inv`，并用 `getAnnotationArrowTransform(...,zoom)` 重算 arrow 位置、`top = py + ANN_LABEL_OFFSET*inv` 重算 label 位置（与 annotation 同套缩放规则）。
+- `clearMapState()` 移除机器人标记改为 `remove(body, arrow, label)`。
 
-**验证**：`pnpm typecheck`（本次编辑文件 0 错误，仅余与本次无关的 `scene/map/*` 历史 NaiveUI 类型报错）。
+**验证**：`pnpm typecheck`（本次编辑文件 0 错误，仅余与本次无关的 `scene/map/*` 历史 NaiveUI 类型报错，共 22 个 error TS）。
 
 ## 相关文件
 

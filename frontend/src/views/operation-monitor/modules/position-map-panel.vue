@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { ref, onMounted, onBeforeUnmount, watch, nextTick } from 'vue';
-import { Canvas, Circle, Rect, Polygon, Line, Group, Text, FabricImage, Triangle, Ellipse, Pattern, Point } from 'fabric';
+import { Canvas, Circle, Rect, Polygon, Line, Text, FabricImage, Triangle, Ellipse, Pattern, Point } from 'fabric';
 import { fetchGetEditorMapData } from '@/service/api/scene';
 import { getFilePreviewUrl } from '@/service/api/file';
 import { worldToPixel, radToDeg } from '@/utils/coordinate';
@@ -18,7 +18,7 @@ const canvasContainer = ref<HTMLDivElement>();
 const canvasEl = ref<HTMLCanvasElement>();
 let fabricCanvas: Canvas | null = null;
 let backgroundImgObj: FabricImage | null = null;
-let robotMarker: Group | null = null;
+let robotMarker: { body: Circle; arrow: Triangle; label: Text } | null = null;
 let elementMap: Map<string, any> = new Map();
 let resizeObserver: ResizeObserver | null = null;
 let restrictedPattern: Pattern | null = null;
@@ -76,7 +76,12 @@ function applyMarkerZoom() {
     text?.set({ left: ann.x, top: ann.y + ANN_LABEL_OFFSET * inv, scaleX: inv, scaleY: inv });
   }
   if (robotMarker) {
-    robotMarker.set({ scaleX: inv, scaleY: inv });
+    const px = robotMarker.body.left ?? 0;
+    const py = robotMarker.body.top ?? 0;
+    const t = getAnnotationArrowTransform(px, py, props.location?.angle || 0, ANN_RADIUS, zoom);
+    robotMarker.body.set({ scaleX: inv, scaleY: inv });
+    robotMarker.arrow.set({ left: t.x, top: t.y, angle: t.angle, scaleX: inv, scaleY: inv });
+    robotMarker.label.set({ left: px, top: py + ANN_LABEL_OFFSET * inv, scaleX: inv, scaleY: inv });
   }
   fabricCanvas.renderAll();
 }
@@ -135,7 +140,7 @@ function clearMapState() {
   }
   elementMap.clear();
   if (robotMarker) {
-    fabricCanvas?.remove(robotMarker);
+    fabricCanvas?.remove(robotMarker.body, robotMarker.arrow, robotMarker.label);
     robotMarker = null;
   }
   if (backgroundImgObj) {
@@ -360,13 +365,18 @@ function renderRobotMarker() {
   if (!fabricCanvas) return;
 
   if (robotMarker) {
-    fabricCanvas.remove(robotMarker);
+    fabricCanvas.remove(robotMarker.body, robotMarker.arrow, robotMarker.label);
     robotMarker = null;
   }
 
   if (!props.location) return;
 
   const robotPx = worldToCanvasPoint(props.location.x, props.location.y);
+  // 三个独立对象（与地图编辑器同做法）：圆点居中、方向箭头单独旋转、
+  // 名称绝对定位在圆点正下方——避免 Group 整体旋转时名称跟着转向。
+  const zoom = fabricCanvas.getZoom() || 1;
+  const inv = 1 / zoom;
+  const arrowTransform = getAnnotationArrowTransform(robotPx.x, robotPx.y, props.location.angle || 0, ANN_RADIUS, zoom);
 
   const body = new Circle({
     radius: ANN_RADIUS,
@@ -374,7 +384,13 @@ function renderRobotMarker() {
     stroke: ROBOT_STROKE,
     strokeWidth: 2,
     originX: 'center',
-    originY: 'center'
+    originY: 'center',
+    left: robotPx.x,
+    top: robotPx.y,
+    scaleX: inv,
+    scaleY: inv,
+    selectable: false,
+    evented: false
   });
 
   const arrow = new Triangle({
@@ -383,8 +399,13 @@ function renderRobotMarker() {
     fill: ROBOT_FILL,
     originX: 'center',
     originY: 'center',
-    top: -(ANN_RADIUS + ARROW_HEIGHT / 2),
-    angle: 0
+    left: arrowTransform.x,
+    top: arrowTransform.y,
+    angle: arrowTransform.angle,
+    scaleX: inv,
+    scaleY: inv,
+    selectable: false,
+    evented: false
   });
 
   const label = new Text(props.robotName || '机器人', {
@@ -392,28 +413,18 @@ function renderRobotMarker() {
     fill: ROBOT_FILL,
     originX: 'center',
     originY: 'center',
-    top: 22,
-    fontFamily: 'sans-serif',
-    fontWeight: 'bold'
-  });
-
-  robotMarker = new Group([body, arrow, label], {
     left: robotPx.x,
-    top: robotPx.y,
-    originX: 'center',
-    originY: 'center',
-    // angle 为 ROS 弧度（0 朝东、π/2 朝北、逆时针为正，与点位/地图编辑器同约定）；
-    // Fabric Group 顺时针为正、arrow 默认顶点朝上（北），需做坐标系转换：-radToDeg(rad) + 90
-    angle: -radToDeg(props.location.angle || 0) + 90,
-    hasControls: false,
+    top: robotPx.y + ANN_LABEL_OFFSET * inv,
+    scaleX: inv,
+    scaleY: inv,
+    fontFamily: 'sans-serif',
+    fontWeight: 'bold',
     selectable: false,
     evented: false
   });
-  // 机器人标记按视口真实 zoom 反向缩放，保持固定屏幕大小
-  const robotInv = 1 / (fabricCanvas?.getZoom() || 1);
-  robotMarker.set({ scaleX: robotInv, scaleY: robotInv });
 
-  fabricCanvas.add(robotMarker);
+  robotMarker = { body, arrow, label };
+  fabricCanvas.add(body, arrow, label);
   fabricCanvas.renderAll();
 }
 
