@@ -3,7 +3,7 @@ import { ref, onMounted, onBeforeUnmount, watch, nextTick } from 'vue';
 import { Canvas, Circle, Rect, Polygon, Line, Group, Text, FabricImage, Triangle, Ellipse, Pattern, Point } from 'fabric';
 import { fetchGetEditorMapData } from '@/service/api/scene';
 import { getFilePreviewUrl } from '@/service/api/file';
-import { worldToPixel } from '@/utils/coordinate';
+import { worldToPixel, radToDeg } from '@/utils/coordinate';
 import type { ParsedLocation } from '../composables/useRobotMonitor';
 
 interface Props {
@@ -28,6 +28,29 @@ const OBSTACLE_STROKE = '#3b82f6';
 const RESTRICTED_STROKE = '#6b7280';
 const POINT_FILL = '#22c55e';
 const RETURN_POINT_FILL = '#047857';
+// 点位圆形半径、方向箭头尺寸、名称垂直偏移（与地图编辑器保持一致）
+const ANN_RADIUS = 8;
+const ARROW_WIDTH = 6;
+const ARROW_HEIGHT = 8;
+const ANN_LABEL_OFFSET = 18;
+// 机器人实时位置标记（红色圆点，与地图编辑器/图例保持一致）
+const ROBOT_FILL = '#ef4444';
+const ROBOT_STROKE = '#ffffff';
+
+/**
+ * 计算点位方向箭头的位置和旋转角度（ROS 弧度 → Fabric）
+ * - ROS 弧度：0 朝东（右），π/2 朝北（上），逆时针为正
+ * - Fabric Triangle 默认顶点朝上、顺时针为正
+ * - 箭头底部贴合圆形边缘、顶点指向角度方向
+ */
+function getAnnotationArrowTransform(annX: number, annY: number, rosRad: number, radius: number) {
+  const dist = radius + ARROW_HEIGHT / 2;
+  return {
+    x: annX + dist * Math.cos(rosRad),
+    y: annY - dist * Math.sin(rosRad),
+    angle: -radToDeg(rosRad) + 90,
+  };
+}
 
 const canvasWidth = ref(800);
 const canvasHeight = ref(600);
@@ -38,7 +61,32 @@ const mapData = ref<Api.Scene.EditorMapData | null>(null);
 
 const MIN_ZOOM = 0.5;
 const MAX_ZOOM = 5;
-let currentZoom = 1;
+const currentZoom = ref(1);
+const sliderZoomValue = ref(0);
+
+// 缩放滑块主题（与地图编辑器一致）
+const sliderThemeOverrides = {
+  fillColor: '#3b82f6',
+  fillColorHover: '#2563eb',
+  dotColor: '#3b82f6',
+  dotBorder: '2px solid #fff',
+  dotBoxShadow: '0 1px 4px rgba(0,0,0,0.2)',
+};
+
+/** 滑块值（0-100，对数刻度）→ 实际缩放倍率 */
+function sliderToZoom(sliderVal: number): number {
+  const minLog = Math.log(MIN_ZOOM);
+  const maxLog = Math.log(MAX_ZOOM);
+  const scale = (maxLog - minLog) / 100;
+  return Math.exp(minLog + scale * sliderVal);
+}
+
+/** 实际缩放倍率 → 滑块值（0-100，对数刻度） */
+function zoomToSlider(zoom: number): number {
+  const minLog = Math.log(MIN_ZOOM);
+  const maxLog = Math.log(MAX_ZOOM);
+  return Math.round(((Math.log(zoom) - minLog) / (maxLog - minLog)) * 100);
+}
 
 function centerContent() {
   if (!fabricCanvas) return;
@@ -124,44 +172,81 @@ function renderElements() {
   }
 
   for (const ann of mapData.value.annotations) {
-    const key = `ann-${ann.id}`;
-    existingKeys.add(key);
+    const circleKey = `ann-${ann.id}`;
+    const arrowKey = `ann-arrow-${ann.id}`;
+    const textKey = `ann-text-${ann.id}`;
+    existingKeys.add(circleKey);
+    existingKeys.add(arrowKey);
+    existingKeys.add(textKey);
+
     const isReturnPoint = ann.type === 'navigation' || ann.type === '返回点';
     const color = isReturnPoint ? RETURN_POINT_FILL : POINT_FILL;
-    if (elementMap.has(key)) {
-      const group = elementMap.get(key);
-      group.set({ left: ann.x, top: ann.y });
-      const text = group.getObjects()[1] as Text;
-      text.set({ text: ann.name, fill: color });
+    const arrowTransform = getAnnotationArrowTransform(ann.x, ann.y, ann.angle || 0, ANN_RADIUS);
+
+    // 圆点
+    if (elementMap.has(circleKey)) {
+      elementMap.get(circleKey).set({ left: ann.x, top: ann.y, fill: color });
     } else {
       const circle = new Circle({
-        radius: 8,
+        radius: ANN_RADIUS,
         fill: color,
         stroke: '#fff',
         strokeWidth: 2,
         originX: 'center',
-        originY: 'center'
+        originY: 'center',
+        left: ann.x,
+        top: ann.y,
+        selectable: false,
+        evented: false
       });
+      fabricCanvas.add(circle);
+      elementMap.set(circleKey, circle);
+    }
+
+    // 角度方向箭头（顶点指向点位朝向）
+    if (elementMap.has(arrowKey)) {
+      elementMap.get(arrowKey).set({
+        left: arrowTransform.x,
+        top: arrowTransform.y,
+        angle: arrowTransform.angle,
+        fill: color
+      });
+    } else {
+      const arrow = new Triangle({
+        width: ARROW_WIDTH,
+        height: ARROW_HEIGHT,
+        fill: color,
+        originX: 'center',
+        originY: 'center',
+        left: arrowTransform.x,
+        top: arrowTransform.y,
+        angle: arrowTransform.angle,
+        selectable: false,
+        evented: false
+      });
+      fabricCanvas.add(arrow);
+      elementMap.set(arrowKey, arrow);
+    }
+
+    // 名称
+    if (elementMap.has(textKey)) {
+      const text = elementMap.get(textKey) as Text;
+      text.set({ text: ann.name, fill: color, left: ann.x, top: ann.y + ANN_LABEL_OFFSET });
+    } else {
       const text = new Text(ann.name, {
         fontSize: 10,
         fill: color,
         originX: 'center',
         originY: 'center',
-        top: 18,
-        fontFamily: 'sans-serif',
-        fontWeight: 'bold'
-      });
-      const group = new Group([circle, text], {
         left: ann.x,
-        top: ann.y,
-        originX: 'center',
-        originY: 'center',
-        hasControls: false,
+        top: ann.y + ANN_LABEL_OFFSET,
+        fontFamily: 'sans-serif',
+        fontWeight: 'bold',
         selectable: false,
         evented: false
       });
-      fabricCanvas.add(group);
-      elementMap.set(key, group);
+      fabricCanvas.add(text);
+      elementMap.set(textKey, text);
     }
   }
 
@@ -255,8 +340,8 @@ function renderRobotMarker() {
 
   const body = new Circle({
     radius: 12,
-    fill: '#2080f0',
-    stroke: '#fff',
+    fill: ROBOT_FILL,
+    stroke: ROBOT_STROKE,
     strokeWidth: 3,
     originX: 'center',
     originY: 'center'
@@ -274,7 +359,7 @@ function renderRobotMarker() {
 
   const label = new Text(props.robotName || '机器人', {
     fontSize: 10,
-    fill: '#2080f0',
+    fill: ROBOT_FILL,
     originX: 'center',
     originY: 'center',
     top: 22,
@@ -320,7 +405,8 @@ async function loadBackgroundImage(imageId: number) {
     });
     centerContent();
     fabricCanvas.renderAll();
-    currentZoom = 1;
+    currentZoom.value = 1;
+    sliderZoomValue.value = zoomToSlider(1);
   } catch (e) {
     console.error('Failed to load background image:', e);
   }
@@ -369,7 +455,8 @@ function handleMouseWheel(opt: any) {
   zoom *= 0.999 ** evt.deltaY;
   zoom = Math.min(Math.max(zoom, MIN_ZOOM), MAX_ZOOM);
   fabricCanvas.zoomToPoint(new Point(evt.clientX, evt.clientY), zoom);
-  currentZoom = zoom;
+  currentZoom.value = zoom;
+  sliderZoomValue.value = zoomToSlider(zoom);
 }
 
 let isPanning = false;
@@ -433,24 +520,35 @@ function disposeCanvas() {
 
 function zoomIn() {
   if (!fabricCanvas) return;
-  const newZoom = Math.min(currentZoom * 1.2, MAX_ZOOM);
+  const newZoom = Math.min(currentZoom.value * 1.2, MAX_ZOOM);
   const center = fabricCanvas.getCenterPoint();
   fabricCanvas.zoomToPoint(center, newZoom);
-  currentZoom = newZoom;
+  currentZoom.value = newZoom;
+  sliderZoomValue.value = zoomToSlider(newZoom);
 }
 
 function zoomOut() {
   if (!fabricCanvas) return;
-  const newZoom = Math.max(currentZoom / 1.2, MIN_ZOOM);
+  const newZoom = Math.max(currentZoom.value / 1.2, MIN_ZOOM);
   const center = fabricCanvas.getCenterPoint();
   fabricCanvas.zoomToPoint(center, newZoom);
-  currentZoom = newZoom;
+  currentZoom.value = newZoom;
+  sliderZoomValue.value = zoomToSlider(newZoom);
 }
 
 function zoomReset() {
   if (!fabricCanvas) return;
-  currentZoom = 1;
+  currentZoom.value = 1;
+  sliderZoomValue.value = zoomToSlider(1);
   centerContent();
+}
+
+function handleSliderZoom(val: number) {
+  if (!fabricCanvas) return;
+  const newZoom = sliderToZoom(val);
+  const center = fabricCanvas.getCenterPoint();
+  fabricCanvas.zoomToPoint(center, newZoom);
+  currentZoom.value = newZoom;
 }
 
 watch([containerWidth, containerHeight], () => {
@@ -495,17 +593,67 @@ onBeforeUnmount(() => {
       </div>
     </NSpin>
 
-    <!-- 缩放控制 -->
-    <div v-if="mapData" class="absolute bottom-16px right-16px flex flex-col gap-4px">
-      <NButton size="tiny" quaternary @click="zoomIn">
-        <template #icon><icon-ic-round-add /></template>
-      </NButton>
-      <NButton size="tiny" quaternary @click="zoomReset">
-        <template #icon><icon-ic-round-gps-fixed /></template>
-      </NButton>
-      <NButton size="tiny" quaternary @click="zoomOut">
-        <template #icon><icon-ic-round-remove /></template>
-      </NButton>
+    <!-- 图例（与地图编辑器保持一致） -->
+    <div v-if="mapData"
+      class="absolute left-12px top-12px z-10 flex flex-col gap-6px rounded-lg bg-white/90 px-12px py-8px text-xs shadow-md">
+      <div class="max-w-180px truncate text-sm font-medium text-gray-700">{{ mapData.map.name }}</div>
+      <div class="my-2px h-1px bg-gray-200"></div>
+      <div class="flex items-center gap-6px">
+        <span class="inline-block h-10px w-10px" style="background-color: #ffffff; border: 1px solid #d1d5db"></span>
+        <span>可行区域</span>
+      </div>
+      <div class="flex items-center gap-6px">
+        <span class="inline-block h-10px w-10px" style="background-color: #000000"></span>
+        <span>不可行区域</span>
+      </div>
+      <div class="my-2px h-1px bg-gray-200"></div>
+      <div class="flex items-center gap-6px">
+        <span class="inline-block h-10px w-10px rounded-full" style="background-color: #22c55e"></span>
+        <span>接待点</span>
+      </div>
+      <div class="flex items-center gap-6px">
+        <span class="inline-block h-10px w-10px rounded-full" style="background-color: #047857"></span>
+        <span>返回点</span>
+      </div>
+      <div class="flex items-center gap-6px">
+        <span class="inline-block h-10px w-10px rounded-full" style="background-color: #ef4444; border: 2px solid #ffffff"></span>
+        <span>机器人位置</span>
+      </div>
+      <div class="flex items-center gap-6px">
+        <span class="inline-block h-10px w-10px"
+          style="background-color: rgba(59, 130, 246, 0.3); border: 1px solid #3b82f6"></span>
+        <span>障碍物</span>
+      </div>
+      <div class="flex items-center gap-6px">
+        <span class="inline-block h-10px w-10px"
+          style="background-image: linear-gradient(135deg, transparent 45%, #6b7280 45%, #6b7280 55%, transparent 55%); background-color: rgba(107, 114, 128, 0.12); border: 1px solid #6b7280"></span>
+        <span>禁行区域/虚拟墙</span>
+      </div>
+      <div class="flex items-center gap-6px">
+        <span class="inline-block h-10px w-10px"
+          style="background-color: rgba(239, 68, 68, 0.15); border: 2px solid #ef4444"></span>
+        <span>电子围栏</span>
+      </div>
+    </div>
+
+    <!-- 缩放控制（与地图编辑器保持一致） -->
+    <div v-if="mapData"
+      class="absolute right-12px top-12px z-10 flex flex-col items-center gap-4px rounded-lg bg-white/90 px-6px py-8px shadow-md">
+      <button
+        class="flex h-24px w-24px items-center justify-center rounded-full text-sm font-bold text-blue-500 transition-colors hover:bg-blue-50"
+        @click="zoomIn">
+        +
+      </button>
+      <NSlider v-model:value="sliderZoomValue" vertical :min="0" :max="100" :step="1" :tooltip="false"
+        :theme-overrides="sliderThemeOverrides" class="!h-160px" @update:value="handleSliderZoom" />
+      <button
+        class="flex h-24px w-24px items-center justify-center rounded-full text-sm font-bold text-blue-500 transition-colors hover:bg-blue-50"
+        @click="zoomOut">
+        -
+      </button>
+      <div class="cursor-pointer text-xs text-gray-500" title="点击重置缩放" @click="zoomReset">
+        {{ Math.round(currentZoom * 100) }}%
+      </div>
     </div>
   </div>
 </template>
