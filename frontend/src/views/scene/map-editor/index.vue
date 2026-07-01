@@ -414,6 +414,8 @@ function handleContextMenuSelect(key: string) {
     });
     // 保持无选中状态
     editor.selectedElement.value = null;
+    const pointWorld = editor.pixelToWorldCoords(x, y);
+    window.$message?.success(`已添加点位(${pointWorld.x.toFixed(2)}, ${pointWorld.y.toFixed(2)})`);
     return;
   }
 
@@ -429,6 +431,7 @@ function handleContextMenuSelect(key: string) {
       height: 10,
       points: null,
     });
+    window.$message?.success('已添加障碍物');
     return;
   }
 
@@ -443,6 +446,7 @@ function handleContextMenuSelect(key: string) {
       height: 10,
       points: null,
     });
+    window.$message?.success('已添加禁行区域');
     return;
   }
 
@@ -457,6 +461,7 @@ function handleContextMenuSelect(key: string) {
       height: 10,
       points: null,
     });
+    window.$message?.success('已添加电子围栏');
     return;
   }
 
