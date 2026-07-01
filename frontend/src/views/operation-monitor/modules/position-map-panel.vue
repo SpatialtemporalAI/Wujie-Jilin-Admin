@@ -369,21 +369,21 @@ function renderRobotMarker() {
   const robotPx = worldToCanvasPoint(props.location.x, props.location.y);
 
   const body = new Circle({
-    radius: 12,
+    radius: ANN_RADIUS,
     fill: ROBOT_FILL,
     stroke: ROBOT_STROKE,
-    strokeWidth: 3,
+    strokeWidth: 2,
     originX: 'center',
     originY: 'center'
   });
 
   const arrow = new Triangle({
-    width: 10,
-    height: 14,
-    fill: '#fff',
+    width: ARROW_WIDTH,
+    height: ARROW_HEIGHT,
+    fill: ROBOT_FILL,
     originX: 'center',
     originY: 'center',
-    top: -20,
+    top: -(ANN_RADIUS + ARROW_HEIGHT / 2),
     angle: 0
   });
 
