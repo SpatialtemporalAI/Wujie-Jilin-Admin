@@ -454,7 +454,9 @@ function handleMouseWheel(opt: any) {
   let zoom = fabricCanvas.getZoom();
   zoom *= 0.999 ** evt.deltaY;
   zoom = Math.min(Math.max(zoom, MIN_ZOOM), MAX_ZOOM);
-  fabricCanvas.zoomToPoint(new Point(evt.clientX, evt.clientY), zoom);
+  // offsetX/offsetY 是相对画布元素的坐标，clientX/clientY 是视口坐标；
+  // 监控画布嵌在卡片内（有头部/内边距偏移），必须用画布相对坐标才能按鼠标位置缩放
+  fabricCanvas.zoomToPoint(new Point(evt.offsetX, evt.offsetY), zoom);
   currentZoom.value = zoom;
   sliderZoomValue.value = zoomToSlider(zoom);
 }
