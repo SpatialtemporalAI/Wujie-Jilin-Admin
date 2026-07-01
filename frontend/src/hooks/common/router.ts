@@ -94,13 +94,12 @@ export function useRouterPush(inSetup = true) {
    * @param [needRedirect=true] Whether to redirect after login. Default is `true`
    */
   async function redirectFromLogin(needRedirect = true) {
-    const redirect = route.value.query?.redirect as string;
-
-    if (needRedirect && redirect) {
-      await routerPush(redirect);
-    } else {
-      await toHome();
-    }
+    // [temporarily disabled] after login, always go to home instead of redirecting
+    // back to the originally requested route (the `redirect` query param is ignored).
+    // To restore: `const redirect = route.value.query?.redirect as string;`
+    // then `if (needRedirect && redirect) { await routerPush(redirect); return; }`
+    void needRedirect;
+    await toHome();
   }
 
   return {
