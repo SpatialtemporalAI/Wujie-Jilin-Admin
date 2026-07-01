@@ -446,9 +446,8 @@ onMounted(() => {
 </script>
 
 <template>
-  <NDrawer v-model:show="visible" display-directive="show" :width="640">
-    <NDrawerContent :title="title" :native-scrollbar="false" closable>
-      <NForm ref="formRef" :model="model" :rules="rules" label-placement="top">
+  <NModal v-model:show="visible" display-directive="show" preset="card" :mask-closable="false" :title="title" style="width: 640px; max-width: 90vw;">
+    <NForm ref="formRef" :model="model" :rules="rules" label-placement="top">
         <!-- 基础信息 -->
         <NGrid :cols="2" :x-gap="16">
           <NFormItemGi :span="2" label="任务名称" path="name">
@@ -467,14 +466,14 @@ onMounted(() => {
           </NGi>
         </NGrid>
 
-        <NDivider style="font-size: 18px;"  title-placement="center">场景地图</NDivider>
-        <NFormItem label="场景地图" path="map_id">
+        <!-- <NDivider style="font-size: 16px;"  title-placement="center">场景地图</NDivider> -->
+        <NFormItem label="场景地图" path="map_id" class="mt-20px">
           <NSelect :value="model.map_id" :options="mapOptions" placeholder="请先选择场景地图" filterable clearable
             @update:value="handleMapChange" @focus="() => loadMapOptions()" />
         </NFormItem>
 
         <!-- 机器人绑定 -->
-        <NDivider style="font-size: 18px;" title-placement="center">执行机器人</NDivider>
+        <!-- <NDivider style="font-size: 16px;" title-placement="center">执行机器人</NDivider> -->
         <NFormItem label="绑定机器人" path="robot_ids">
           <NSelect v-model:value="model.robot_ids" :options="filteredRobotOptions"
             :placeholder="model.map_id === null ? '请先选择场景地图' : '至少选择一台机器人'" multiple filterable
@@ -483,7 +482,7 @@ onMounted(() => {
 
         <!-- 巡逻点位配置 -->
         <template v-if="model.task_type === 'patrol'">
-          <NDivider style="font-size: 18px;" title-placement="center">巡逻点位配置</NDivider>
+          <NDivider style="font-size: 16px;" title-placement="center">巡逻点位配置</NDivider>
           <div v-if="selectedMapId === null" class="mb-12px text-13px" style="color: var(--n-text-color-3, #999);">
             请先选择场景地图，才能选择巡逻点位
           </div>
@@ -504,7 +503,7 @@ onMounted(() => {
                   }" />
               </NFormItem>
 
-              <NDivider title-placement="center" style="margin-top: 8px; margin-bottom: 8px;font-size: 18px;">
+              <NDivider title-placement="center" style="font-size: 16px;">
                 运控动作（可添加多个）
               </NDivider>
               <div v-for="(actionItem, actionIndex) in point.actions" :key="actionIndex" class="mb-8px">
@@ -515,19 +514,17 @@ onMounted(() => {
                   <NFormItemGi :span="2" label="语音文本">
                     <NInput v-model:value="actionItem.voice_text" placeholder="语音播报文本" />
                   </NFormItemGi>
-                  <NFormItemGi :span="3">
-                    <div class="flex justify-end">
-                      <NButton
-                        type="error"
-                        ghost
-                        size="small"
-                        @click="removeAction(point, actionIndex)"
-                      >
-                        删除动作
-                      </NButton>
-                    </div>
-                  </NFormItemGi>
                 </NGrid>
+                <div class="flex mb-40px">
+                  <NButton
+                    type="error"
+                    ghost
+                    size="small"
+                    @click="removeAction(point, actionIndex)"
+                  >
+                    删除动作
+                  </NButton>
+                </div>
               </div>
               <NButton dashed size="small" block @click="addAction(point)">
                 <template #icon>
@@ -547,14 +544,14 @@ onMounted(() => {
 
         <!-- 播报配置 -->
         <template v-if="model.task_type === 'broadcast'">
-          <NDivider style="font-size: 18px;" title-placement="center">播报配置</NDivider>
+          <NDivider style="font-size: 16px;" title-placement="center">播报配置</NDivider>
           <NFormItem label="播报文本">
             <NInput v-model:value="model.broadcast_text" type="textarea" placeholder="请输入播报文本" :rows="3" />
           </NFormItem>
         </template>
 
         <!-- 定时配置 -->
-        <NDivider style="font-size: 18px;" title-placement="center">定时配置（可选）</NDivider>
+        <NDivider style="font-size: 16px;" title-placement="center">定时配置（可选）</NDivider>
         <NFormItem label="启用定时执行">
           <NSwitch v-model:value="model.schedule_enabled" />
         </NFormItem>
@@ -577,14 +574,13 @@ onMounted(() => {
         </template>
       </NForm>
 
-      <template #footer>
-        <NSpace :size="16">
+      <template #action>
+        <NSpace justify="end" :size="16">
           <NButton @click="closeDrawer">{{ $t('common.cancel') }}</NButton>
           <NButton type="primary" :loading="submitting" :disabled="submitting" @click="handleSubmit">{{ $t('common.confirm') }}</NButton>
         </NSpace>
       </template>
-    </NDrawerContent>
-  </NDrawer>
+    </NModal>
 </template>
 
 <style scoped>

@@ -10,8 +10,11 @@ import { fetchGetMapRobotLocations } from '@/service/api';
 import { getFilePreviewUrl } from '@/service/api/file';
 import { extractRobotPoint } from './utils/robot-location';
 import { radToDeg } from '@/utils/coordinate';
+import { useDialog, useMessage } from 'naive-ui'
 
 defineOptions({ name: 'SceneMapEditor' });
+const message = useMessage()
+const dialog = useDialog()
 
 const editor = useMapEditor();
 const canvasRef = ref<InstanceType<typeof CanvasEditor>>();
@@ -386,11 +389,24 @@ function handleContextMenuSelect(key: string) {
 
   if (key === 'delete-target') {
     const target = contextMenuTarget.value;
-    contextMenuTarget.value = null;
-    if (target) {
-      editor.removeElement(target.type, target.id);
-    }
-    return;
+    dialog.warning({
+      title: '提示',
+      content: '当前点位已有关联任务，删除点位后任务自动取消关联该点位，确认是否删除？ 删除后点击右上角保存生效',
+      positiveText: '确认',
+      negativeText: '取消',
+      draggable: true,
+      onPositiveClick: () => {
+        contextMenuTarget.value = null;
+        if (target) {
+          editor.removeElement(target.type, target.id);
+        }
+        return;
+      },
+      onNegativeClick: () => {
+        
+      }
+    })
+    
   }
 
   if (key === 'add-point') {
