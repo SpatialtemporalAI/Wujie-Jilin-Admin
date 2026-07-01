@@ -198,16 +198,17 @@ loadData();
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
   gap: 20px;
-  padding: 8px 0;
+  padding: 8px 16px;
 }
 
 .robot-card {
   display: flex;
   flex-direction: column;
   padding: 16px;
-  border-radius: 8px;
+  border-radius: 12px;
   border: 1px solid var(--n-border-color);
-  background-color: var(--n-card-color);
+  /* background-color: var(--n-card-color); */
+  background-color: #fff;
   transition: box-shadow 0.2s ease;
 }
 
