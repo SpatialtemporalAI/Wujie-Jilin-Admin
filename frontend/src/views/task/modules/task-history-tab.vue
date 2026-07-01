@@ -163,8 +163,8 @@ const {
 
 <template>
   <div class="h-full flex-col-stretch gap-12px overflow-hidden lt-sm:overflow-auto">
-    <TaskHistorySearch v-model:model="searchParams" @search="getDataByPage" @reset="getDataByPage" />
-    <div>
+    <div class="flex-y-center justify-between gap-12px">
+      <TaskHistorySearch v-model:model="searchParams" @search="getDataByPage" />
       <TableHeaderOperation v-model:columns="columnChecks" :loading="loading" :show-add="false" :show-delete="false"
         @refresh="getData" />
     </div>

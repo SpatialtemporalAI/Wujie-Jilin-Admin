@@ -211,31 +211,31 @@ async function handleClear() {
 </script>
 
 <template>
-  <div class="min-h-500px flex-col-stretch gap-16px overflow-hidden lt-sm:overflow-auto">
-    <OperationLogSearch v-model:model="searchParams" @search="getDataByPage" />
-    <NCard :title="$t('page.log.operationLog.title')" :bordered="false" size="small" class="flex-1-hidden card-wrapper">
-      <template #header-extra>
-        <TableHeaderOperation
-          v-model:columns="columnChecks"
-          :disabled-delete="checkedRowKeys.length === 0"
-          :loading="loading"
-          :show-add="false"
-          delete-auth="sys:oplog:delete"
-          @delete="handleBatchDelete"
-          @refresh="getData"
-        >
-          <template #prefix>
-            <NPopconfirm v-if="hasAuth('sys:oplog:delete')" @positive-click="handleClear">
-              {{ $t('page.log.operationLog.clearConfirm') }}
-              <template #trigger>
-                <NButton type="warning" ghost size="small" :disabled="loading">
-                  {{ $t('page.log.operationLog.clear') }}
-                </NButton>
-              </template>
-            </NPopconfirm>
-          </template>
-        </TableHeaderOperation>
-      </template>
+  <div class="min-h-500px flex-col-stretch gap-12px overflow-hidden lt-sm:overflow-auto">
+    <div class="flex-y-center justify-between gap-12px">
+      <OperationLogSearch v-model:model="searchParams" @search="getDataByPage" />
+      <TableHeaderOperation
+        v-model:columns="columnChecks"
+        :disabled-delete="checkedRowKeys.length === 0"
+        :loading="loading"
+        :show-add="false"
+        delete-auth="sys:oplog:delete"
+        @delete="handleBatchDelete"
+        @refresh="getData"
+      >
+        <template #prefix>
+          <NPopconfirm v-if="hasAuth('sys:oplog:delete')" @positive-click="handleClear">
+            {{ $t('page.log.operationLog.clearConfirm') }}
+            <template #trigger>
+              <NButton type="warning" ghost size="small" :disabled="loading">
+                {{ $t('page.log.operationLog.clear') }}
+              </NButton>
+            </template>
+          </NPopconfirm>
+        </template>
+      </TableHeaderOperation>
+    </div>
+    <NCard :bordered="false" size="small" class="flex-1-hidden card-wrapper">
       <NDataTable
         v-model:checked-row-keys="checkedRowKeys"
         :columns="columns"

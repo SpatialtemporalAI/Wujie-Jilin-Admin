@@ -63,7 +63,8 @@ function updateExpandedKeys() {
     expandedKeys.value = [];
     return;
   }
-  expandedKeys.value = routeStore.getSelectedMenuKeyPath(selectedKey.value);
+  const selectedPath = routeStore.getSelectedMenuKeyPath(selectedKey.value);
+  expandedKeys.value = [...new Set([...expandedKeys.value, ...selectedPath])];
 }
 
 watch(
@@ -107,7 +108,7 @@ watch(
               @click="appStore.toggleMixSiderFixed"
             />
           </header>
-          <SimpleScrollbar :blue-bg="themeStore.isLightSider">
+          <SimpleScrollbar :blue-bg="themeStore.isLightSider" :dark-mode="themeStore.darkMode">
             <NMenu
               v-model:expanded-keys="expandedKeys"
               mode="vertical"

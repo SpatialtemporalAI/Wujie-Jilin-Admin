@@ -207,20 +207,20 @@ function openPasswordDrawer(id: number) {
 
 <template>
   <div class="min-h-500px flex-col-stretch gap-16px overflow-hidden lt-sm:overflow-auto">
-    <UserSearch v-model:model="searchParams" @search="getDataByPage" />
-    <NCard :title="$t('page.manage.user.title')" :bordered="false" size="small" class="card-wrapper sm:flex-1-hidden">
-      <template #header-extra>
-        <TableHeaderOperation
-          v-model:columns="columnChecks"
-          :disabled-delete="checkedRowKeys.length === 0"
-          :loading="loading"
-          add-auth="sys:user:add"
-          delete-auth="sys:user:delete"
-          @add="handleAdd"
-          @delete="handleBatchDelete"
-          @refresh="getData"
-        />
-      </template>
+    <div class="flex-y-center justify-between gap-12px">
+      <UserSearch v-model:model="searchParams" @search="getDataByPage" />
+      <TableHeaderOperation
+        v-model:columns="columnChecks"
+        :disabled-delete="checkedRowKeys.length === 0"
+        :loading="loading"
+        add-auth="sys:user:add"
+        delete-auth="sys:user:delete"
+        @add="handleAdd"
+        @delete="handleBatchDelete"
+        @refresh="getData"
+      />
+    </div>
+    <NCard :bordered="false" size="small" class="card-wrapper sm:flex-1-hidden">
       <NDataTable
         v-model:checked-row-keys="checkedRowKeys"
         :columns="columns"

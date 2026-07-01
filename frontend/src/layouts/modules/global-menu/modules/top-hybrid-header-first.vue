@@ -48,7 +48,8 @@ function updateExpandedKeys() {
     expandedKeys.value = [];
     return;
   }
-  expandedKeys.value = routeStore.getSelectedMenuKeyPath(selectedKey.value);
+  const selectedPath = routeStore.getSelectedMenuKeyPath(selectedKey.value);
+  expandedKeys.value = [...new Set([...expandedKeys.value, ...selectedPath])];
 }
 
 watch(
@@ -66,7 +67,7 @@ watch(
       @update:value="handleSelectMenu" />
   </Teleport>
   <Teleport :to="`#${GLOBAL_SIDER_MENU_ID}`">
-    <SimpleScrollbar :blue-bg="isLightBlueBg">
+    <SimpleScrollbar :blue-bg="isLightBlueBg" :dark-mode="themeStore.darkMode">
       <NMenu v-model:expanded-keys="expandedKeys" mode="vertical" :value="selectedKey"
         :collapsed="appStore.siderCollapse" :collapsed-width="themeStore.sider.collapsedWidth" :collapsed-icon-size="22"
         :options="secondLevelMenus" :indent="18" @update:value="routerPushByKeyWithMetaQuery" />

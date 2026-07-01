@@ -239,19 +239,19 @@ function handleViewDetail(row: Api.Scene.SceneMap) {
 
 <template>
   <div class="min-h-500px flex-col-stretch gap-16px overflow-hidden lt-sm:overflow-auto">
-    <SceneMapSearch v-model:model="searchParams" @search="getMapDataByPage" @reset="getMapDataByPage" />
-    <NCard title="场景地图管理" :bordered="false" size="small" class="card-wrapper sm:flex-1-hidden">
-      <template #header-extra>
-        <TableHeaderOperation
-          v-model:columns="mapColumnChecks"
-          :disabled-delete="checkedMapRowKeys.length === 0"
-          :loading="mapLoading"
-          add-auth="scene:map:add"
-          :show-delete="false"
-          @add="handleAddMap"
-          @refresh="getMapData"
-        />
-      </template>
+    <div class="flex-y-center justify-between gap-12px">
+      <SceneMapSearch v-model:model="searchParams" @search="getMapDataByPage" />
+      <TableHeaderOperation
+        v-model:columns="mapColumnChecks"
+        :disabled-delete="checkedMapRowKeys.length === 0"
+        :loading="mapLoading"
+        add-auth="scene:map:add"
+        :show-delete="false"
+        @add="handleAddMap"
+        @refresh="getMapData"
+      />
+    </div>
+    <NCard :bordered="false" size="small" class="card-wrapper sm:flex-1-hidden">
       <NDataTable
         v-model:checked-row-keys="checkedMapRowKeys"
         :columns="mapColumns"

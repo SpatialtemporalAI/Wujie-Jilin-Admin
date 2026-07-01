@@ -177,13 +177,13 @@ async function handleBatchDelete() {
 
 <template>
   <div class="min-h-500px flex-col-stretch gap-16px overflow-hidden lt-sm:overflow-auto">
-    <RobotModelSearch v-model:model="searchParams" @search="getModelDataByPage" @reset="getModelDataByPage" />
-    <NCard title="机器人型号管理" :bordered="false" size="small" class="card-wrapper sm:flex-1-hidden">
-      <template #header-extra>
-        <TableHeaderOperation v-model:columns="modelColumnChecks" :disabled-delete="checkedModelRowKeys.length === 0"
-          :loading="modelLoading" add-auth="robot:model:add" delete-auth="robot:model:delete" @add="handleAddModel"
-          @delete="handleBatchDelete" @refresh="getModelData" />
-      </template>
+    <div class="flex-y-center justify-between gap-12px">
+      <RobotModelSearch v-model:model="searchParams" @search="getModelDataByPage" />
+      <TableHeaderOperation v-model:columns="modelColumnChecks" :disabled-delete="checkedModelRowKeys.length === 0"
+        :loading="modelLoading" add-auth="robot:model:add" delete-auth="robot:model:delete" @add="handleAddModel"
+        @delete="handleBatchDelete" @refresh="getModelData" />
+    </div>
+    <NCard :bordered="false" size="small" class="card-wrapper sm:flex-1-hidden">
       <NDataTable v-model:checked-row-keys="checkedModelRowKeys" :columns="modelColumns" :data="modelData" size="small"
         :flex-height="!appStore.isMobile" :scroll-x="900" :loading="modelLoading" remote :row-key="row => row.id"
         :pagination="modelMobilePagination" class="sm:h-full" />

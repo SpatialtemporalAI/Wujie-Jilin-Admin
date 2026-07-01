@@ -198,19 +198,21 @@ async function handleBatchDelete() {
 
 <template>
   <div class="min-h-500px flex-col-stretch gap-16px overflow-hidden lt-sm:overflow-auto">
-    <FileSearch v-model:model="searchParams" @search="getDataByPage" @reset="getDataByPage" />
-    <NCard :title="$t('page.manage.file.title')" :bordered="false" size="small" class="flex-1-hidden card-wrapper">
-      <template #header-extra>
-        <TableHeaderOperation
-          v-model:columns="columnChecks"
-          :disabled-delete="checkedRowKeys.length === 0"
-          :loading="loading"
-          add-auth="sys:file:upload"
-          delete-auth="sys:file:delete"
-          @add="handleUpload"
-          @delete="handleBatchDelete"
-          @refresh="getData"
-        />
+    <NCard :bordered="false" size="small" class="flex-1-hidden card-wrapper">
+      <template #header>
+        <div class="flex-y-center justify-between gap-12px">
+          <FileSearch v-model:model="searchParams" @search="getDataByPage" />
+          <TableHeaderOperation
+            v-model:columns="columnChecks"
+            :disabled-delete="checkedRowKeys.length === 0"
+            :loading="loading"
+            add-auth="sys:file:upload"
+            delete-auth="sys:file:delete"
+            @add="handleUpload"
+            @delete="handleBatchDelete"
+            @refresh="getData"
+          />
+        </div>
       </template>
       <NDataTable
         v-model:checked-row-keys="checkedRowKeys"

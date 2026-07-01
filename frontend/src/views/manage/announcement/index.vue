@@ -255,24 +255,25 @@ async function handleBatchDelete() {
 
 <template>
   <div class="min-h-500px flex-col-stretch gap-16px overflow-hidden lt-sm:overflow-auto">
-    <NoticeSearch v-model:model="searchParams" @search="getNoticeDataByPage" @reset="getNoticeDataByPage" />
     <NCard
-      :title="$t('page.manage.announcement.title')"
       :bordered="false"
       size="small"
       class="card-wrapper sm:flex-1-hidden"
     >
-      <template #header-extra>
-        <TableHeaderOperation
-          v-model:columns="noticeColumnChecks"
-          :disabled-delete="checkedNoticeRowKeys.length === 0"
-          :loading="noticeLoading"
-          add-auth="sys:notice:add"
-          delete-auth="sys:notice:delete"
-          @add="handleAddNotice"
-          @delete="handleBatchDelete"
-          @refresh="getNoticeData"
-        />
+      <template #header>
+        <div class="flex-y-center justify-between gap-12px">
+          <NoticeSearch v-model:model="searchParams" @search="getNoticeDataByPage" />
+          <TableHeaderOperation
+            v-model:columns="noticeColumnChecks"
+            :disabled-delete="checkedNoticeRowKeys.length === 0"
+            :loading="noticeLoading"
+            add-auth="sys:notice:add"
+            delete-auth="sys:notice:delete"
+            @add="handleAddNotice"
+            @delete="handleBatchDelete"
+            @refresh="getNoticeData"
+          />
+        </div>
       </template>
       <NDataTable
         v-model:checked-row-keys="checkedNoticeRowKeys"

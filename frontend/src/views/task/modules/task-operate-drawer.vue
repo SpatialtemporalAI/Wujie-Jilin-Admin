@@ -267,6 +267,7 @@ const rules = computed(() => ({
 
 const taskId = computed(() => props.rowData?.id || -1);
 const isEdit = computed(() => props.operateType === 'edit');
+const submitting = ref(false);
 
 async function handleInitModel() {
   model.value = createDefaultModel();
@@ -407,19 +408,24 @@ async function handleSubmit() {
     broadcast_text: model.value.task_type === 'broadcast' ? model.value.broadcast_text : undefined
   };
 
-  let error: unknown = null;
-  if (isEdit.value) {
-    const result = await fetchUpdateTask(taskId.value, submitData);
-    error = result.error;
-  } else {
-    const result = await fetchCreateTask(submitData);
-    error = result.error;
-  }
+  submitting.value = true;
+  try {
+    let error: unknown = null;
+    if (isEdit.value) {
+      const result = await fetchUpdateTask(taskId.value, submitData);
+      error = result.error;
+    } else {
+      const result = await fetchCreateTask(submitData);
+      error = result.error;
+    }
 
-  if (!error) {
-    window.$message?.success(isEdit.value ? $t('common.updateSuccess') : $t('common.addSuccess'));
-    closeDrawer();
-    emit('submitted');
+    if (!error) {
+      window.$message?.success(isEdit.value ? $t('common.updateSuccess') : $t('common.addSuccess'));
+      closeDrawer();
+      emit('submitted');
+    }
+  } finally {
+    submitting.value = false;
   }
 }
 
@@ -455,14 +461,14 @@ onMounted(() => {
           </NFormItemGi>
         </NGrid>
 
-        <NDivider title-placement="left">场景地图</NDivider>
+        <NDivider style="font-size: 18px;"  title-placement="center">场景地图</NDivider>
         <NFormItem label="场景地图" path="map_id">
           <NSelect :value="model.map_id" :options="mapOptions" placeholder="请先选择场景地图" filterable clearable
             @update:value="handleMapChange" @focus="() => loadMapOptions()" />
         </NFormItem>
 
         <!-- 机器人绑定 -->
-        <NDivider title-placement="left">执行机器人</NDivider>
+        <NDivider style="font-size: 18px;" title-placement="center">执行机器人</NDivider>
         <NFormItem label="绑定机器人" path="robot_ids">
           <NSelect v-model:value="model.robot_ids" :options="filteredRobotOptions"
             :placeholder="model.map_id === null ? '请先选择场景地图' : '至少选择一台机器人'" multiple filterable
@@ -471,7 +477,7 @@ onMounted(() => {
 
         <!-- 巡逻点位配置 -->
         <template v-if="model.task_type === 'patrol'">
-          <NDivider title-placement="left">巡逻点位配置</NDivider>
+          <NDivider style="font-size: 18px;" title-placement="center">巡逻点位配置</NDivider>
           <div v-if="selectedMapId === null" class="mb-12px text-13px" style="color: var(--n-text-color-3, #999);">
             请先选择场景地图，才能选择巡逻点位
           </div>
@@ -492,7 +498,7 @@ onMounted(() => {
                   }" />
               </NFormItem>
 
-              <NDivider title-placement="left" style="margin-top: 8px; margin-bottom: 8px;">
+              <NDivider title-placement="center" style="margin-top: 8px; margin-bottom: 8px;font-size: 18px;">
                 运控动作（可添加多个）
               </NDivider>
               <div v-for="(actionItem, actionIndex) in point.actions" :key="actionIndex" class="mb-8px">
@@ -535,14 +541,14 @@ onMounted(() => {
 
         <!-- 播报配置 -->
         <template v-if="model.task_type === 'broadcast'">
-          <NDivider title-placement="left">播报配置</NDivider>
+          <NDivider style="font-size: 18px;" title-placement="center">播报配置</NDivider>
           <NFormItem label="播报文本">
             <NInput v-model:value="model.broadcast_text" type="textarea" placeholder="请输入播报文本" :rows="3" />
           </NFormItem>
         </template>
 
         <!-- 定时配置 -->
-        <NDivider title-placement="left">定时配置（可选）</NDivider>
+        <NDivider style="font-size: 18px;" title-placement="center">定时配置（可选）</NDivider>
         <NFormItem label="启用定时执行">
           <NSwitch v-model:value="model.schedule_enabled" />
         </NFormItem>
@@ -568,11 +574,16 @@ onMounted(() => {
       <template #footer>
         <NSpace :size="16">
           <NButton @click="closeDrawer">{{ $t('common.cancel') }}</NButton>
-          <NButton type="primary" @click="handleSubmit">{{ $t('common.confirm') }}</NButton>
+          <NButton type="primary" :loading="submitting" :disabled="submitting" @click="handleSubmit">{{ $t('common.confirm') }}</NButton>
         </NSpace>
       </template>
     </NDrawerContent>
   </NDrawer>
 </template>
 
-<style scoped></style>
+<style scoped>
+:deep(.n-divider:not(.n-divider--dashed) .n-divider__line ){
+  background-color: transparent;
+}
+
+</style>
