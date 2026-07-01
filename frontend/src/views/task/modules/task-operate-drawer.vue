@@ -406,11 +406,11 @@ async function handleSubmit() {
     points:
       model.value.task_type === 'patrol'
         ? model.value.points.map(p => ({
-            sort_order: p.sort_order,
-            point_name: p.point_name,
-            annotation_id: p.annotation_id,
-            actions: p.actions
-          }))
+          sort_order: p.sort_order,
+          point_name: p.point_name,
+          annotation_id: p.annotation_id,
+          actions: p.actions
+        }))
         : undefined,
     broadcast_text: model.value.task_type === 'broadcast' ? model.value.broadcast_text : undefined
   };
@@ -453,146 +453,142 @@ onMounted(() => {
 </script>
 
 <template>
-  <NModal v-model:show="visible" display-directive="show" preset="card" :mask-closable="false" :title="title" style="width: 640px; max-width: 90vw;">
+  <NModal v-model:show="visible" display-directive="show" preset="card" :mask-closable="false" :title="title"
+    style="width: 640px; max-width: 90vw;">
     <NForm ref="formRef" :model="model" :rules="rules" label-placement="top">
-        <!-- 基础信息 -->
-        <NGrid :cols="2" :x-gap="16">
-          <NFormItemGi :span="2" label="任务名称" path="name">
-            <NInput v-model:value="model.name" placeholder="请输入任务名称（2-20字）" :maxlength="20" show-count />
-          </NFormItemGi>
-          <NFormItemGi :span="2" label="任务类型" path="task_type">
-            <NRadioGroup v-model:value="model.task_type">
-              <NRadioButton v-for="opt in taskTypeOptions" :key="opt.value" :value="opt.value" :label="opt.label" />
-            </NRadioGroup>
-          </NFormItemGi>
-          <!-- 场景约束提示：机器人需位于任务绑定的场景内，任务才可执行 -->
-          <NGi :span="2">
-            <NAlert type="warning" class="mb-12px">
-              注意：任务绑定机器人后，若机器人不在任务绑定的场景下，该任务无法执行！
-            </NAlert>
-          </NGi>
-        </NGrid>
+      <!-- 基础信息 -->
+      <NGrid :cols="2" :x-gap="16">
+        <NFormItemGi :span="2" label="任务名称" path="name">
+          <NInput v-model:value="model.name" placeholder="请输入任务名称（2-20字）" :maxlength="20" show-count />
+        </NFormItemGi>
+        <NFormItemGi :span="2" label="任务类型" path="task_type">
+          <NRadioGroup v-model:value="model.task_type">
+            <NRadioButton v-for="opt in taskTypeOptions" :key="opt.value" :value="opt.value" :label="opt.label" />
+          </NRadioGroup>
+        </NFormItemGi>
+        <!-- 场景约束提示：机器人需位于任务绑定的场景内，任务才可执行 -->
+        <NGi :span="2">
+          <NAlert type="warning" class="mb-12px">
+            注意：任务绑定机器人后，若机器人不在任务绑定的场景下，该任务无法执行！
+          </NAlert>
+        </NGi>
+      </NGrid>
 
-        <!-- <NDivider style="font-size: 16px;"  title-placement="center">场景地图</NDivider> -->
-        <NFormItem label="场景地图" path="map_id" class="mt-20px">
-          <NSelect :value="model.map_id" :options="mapOptions" placeholder="请先选择场景地图" filterable clearable
-            @update:value="handleMapChange" @focus="() => loadMapOptions()" />
-        </NFormItem>
+      <!-- <NDivider style="font-size: 16px;"  title-placement="center">场景地图</NDivider> -->
+      <NFormItem label="场景地图" path="map_id" class="mt-20px">
+        <NSelect :value="model.map_id" :options="mapOptions" placeholder="请先选择场景地图" filterable clearable
+          @update:value="handleMapChange" @focus="() => loadMapOptions()" />
+      </NFormItem>
 
-        <!-- 机器人绑定 -->
-        <!-- <NDivider style="font-size: 16px;" title-placement="center">执行机器人</NDivider> -->
-        <NFormItem label="绑定机器人" path="robot_ids">
-          <NSelect v-model:value="model.robot_ids" :options="filteredRobotOptions"
-            :placeholder="model.map_id === null ? '请先选择场景地图' : '至少选择一台机器人'" multiple filterable
-            :disabled="model.map_id === null" :render-label="renderRobotLabel" />
-        </NFormItem>
+      <!-- 机器人绑定 -->
+      <!-- <NDivider style="font-size: 16px;" title-placement="center">执行机器人</NDivider> -->
+      <NFormItem label="绑定机器人" path="robot_ids">
+        <NSelect v-model:value="model.robot_ids" :options="filteredRobotOptions"
+          :placeholder="model.map_id === null ? '请先选择场景地图' : '至少选择一台机器人'" multiple filterable
+          :disabled="model.map_id === null" :render-label="renderRobotLabel" />
+      </NFormItem>
 
-        <!-- 巡逻点位配置 -->
-        <template v-if="model.task_type === 'patrol'">
-          <NDivider style="font-size: 16px;" title-placement="center">巡逻点位配置</NDivider>
-          <div v-if="selectedMapId === null" class="mb-12px text-13px" style="color: var(--n-text-color-3, #999);">
-            请先选择场景地图，才能选择巡逻点位
-          </div>
-          <div v-for="(point, index) in model.points" :key="index" class="mb-12px">
-            <NCard size="small" embedded>
-              <template #header>
-                <NSpace align="center">
-                  <span>点位 {{ index + 1 }}</span>
-                  <NButton type="error" ghost size="tiny" @click="removePoint(index)">移除</NButton>
-                </NSpace>
-              </template>
-              <NFormItem label="巡逻点位" required>
-                <NSelect v-model:value="point.annotation_id" :options="annotationOptions"
-                  :placeholder="selectedMapId === null ? '请先选择场景地图' : '请选择场景点位'" :disabled="selectedMapId === null"
-                  filterable @update:value="(val: number | null) => {
-                    const ann = val === null ? undefined : annotationMap.get(val);
-                    point.point_name = ann?.name ?? null;
-                  }" />
-              </NFormItem>
-
-              <NDivider title-placement="center" style="font-size: 16px;">
-                运控动作（可添加多个）
-              </NDivider>
-              <div v-for="(actionItem, actionIndex) in point.actions" :key="actionIndex" class="mb-8px">
-                <NGrid :cols="3" :x-gap="12" responsive="screen">
-                  <NFormItemGi label="动作" required>
-                    <NSelect v-model:value="actionItem.action" :options="actionOptions" placeholder="选择动作" />
-                  </NFormItemGi>
-                  <NFormItemGi :span="2" label="语音文本">
-                    <NInput v-model:value="actionItem.voice_text" placeholder="语音播报文本" />
-                  </NFormItemGi>
-                </NGrid>
-                <div class="flex mb-40px">
-                  <NButton
-                    type="error"
-                    ghost
-                    size="small"
-                    @click="removeAction(point, actionIndex)"
-                  >
-                    删除动作
-                  </NButton>
-                </div>
-              </div>
-              <NButton dashed size="small" block @click="addAction(point)">
-                <template #icon>
-                  <icon-ic-round-plus class="text-icon" />
-                </template>
-                添加动作
-              </NButton>
-            </NCard>
-          </div>
-          <NButton dashed block :disabled="selectedMapId === null" @click="addPoint">
-            <template #icon>
-              <icon-ic-round-plus class="text-icon" />
-            </template>
-            添加点位
-          </NButton>
-        </template>
-
-        <!-- 播报配置 -->
-        <template v-if="model.task_type === 'broadcast'">
-          <NDivider style="font-size: 16px;" title-placement="center">播报配置</NDivider>
-          <NFormItem label="播报文本">
-            <NInput v-model:value="model.broadcast_text" type="textarea" placeholder="请输入播报文本" :rows="3" />
-          </NFormItem>
-        </template>
-
-        <!-- 定时配置 -->
-        <NDivider style="font-size: 16px;" title-placement="center">定时配置（可选）</NDivider>
-        <NFormItem label="启用定时执行">
-          <NSwitch v-model:value="model.schedule_enabled" />
-        </NFormItem>
-        <template v-if="model.schedule_enabled">
-          <NGrid :cols="2" :x-gap="16">
-            <NFormItemGi label="调度日期" required>
-              <NDatePicker v-model:value="model.schedule_date" type="date" class="w-full" />
-            </NFormItemGi>
-            <NFormItemGi label="开始时间" required>
-              <NTimePicker v-model:value="model.schedule_start_time" format="HH:mm" class="w-full" />
-            </NFormItemGi>
-          </NGrid>
-          <NFormItem label="重复周期（未选择则不重复）">
-            <NCheckboxGroup v-model:value="model.schedule_repeat_cycles">
-              <NSpace>
-                <NCheckbox v-for="opt in weekdayOptions" :key="opt.value" :value="opt.value" :label="opt.label" />
+      <!-- 巡逻点位配置 -->
+      <template v-if="model.task_type === 'patrol'">
+        <NDivider style="font-size: 16px;" title-placement="center">巡逻点位配置</NDivider>
+        <div v-if="selectedMapId === null" class="mb-12px text-13px" style="color: var(--n-text-color-3, #999);">
+          请先选择场景地图，才能选择巡逻点位
+        </div>
+        <div v-for="(point, index) in model.points" :key="index" class="mb-12px">
+          <NCard size="small" embedded>
+            <template #header>
+              <NSpace align="center">
+                <span>点位 {{ index + 1 }}</span>
+                <NButton type="error" ghost size="tiny" @click="removePoint(index)">移除</NButton>
               </NSpace>
-            </NCheckboxGroup>
-          </NFormItem>
-        </template>
-      </NForm>
+            </template>
+            <NFormItem label="巡逻点位" required>
+              <NSelect v-model:value="point.annotation_id" :options="annotationOptions"
+                :placeholder="selectedMapId === null ? '请先选择场景地图' : '请选择场景点位'" :disabled="selectedMapId === null"
+                filterable @update:value="(val: number | null) => {
+                  const ann = val === null ? undefined : annotationMap.get(val);
+                  point.point_name = ann?.name ?? null;
+                }" />
+            </NFormItem>
 
-      <template #action>
-        <NSpace justify="end" :size="16">
-          <NButton @click="closeDrawer">{{ $t('common.cancel') }}</NButton>
-          <NButton type="primary" :loading="submitting" :disabled="submitting" @click="handleSubmit">{{ $t('common.confirm') }}</NButton>
-        </NSpace>
+            <NDivider title-placement="center" style="font-size: 16px;">
+              运控动作（可添加多个）
+            </NDivider>
+            <div v-for="(actionItem, actionIndex) in point.actions" :key="actionIndex" class="mb-8px">
+              <NGrid :cols="3" :x-gap="12" responsive="screen">
+                <NFormItemGi label="动作">
+                  <NSelect v-model:value="actionItem.action" :options="actionOptions" placeholder="选择动作" />
+                </NFormItemGi>
+                <NFormItemGi :span="2" label="语音文本">
+                  <NInput v-model:value="actionItem.voice_text" placeholder="语音播报文本" />
+                </NFormItemGi>
+              </NGrid>
+              <div class="flex mb-40px">
+                <NButton type="error" ghost size="small" @click="removeAction(point, actionIndex)">
+                  删除动作
+                </NButton>
+              </div>
+            </div>
+            <NButton dashed size="small" block @click="addAction(point)">
+              <template #icon>
+                <icon-ic-round-plus class="text-icon" />
+              </template>
+              添加动作
+            </NButton>
+          </NCard>
+        </div>
+        <NButton dashed block :disabled="selectedMapId === null" @click="addPoint">
+          <template #icon>
+            <icon-ic-round-plus class="text-icon" />
+          </template>
+          添加点位
+        </NButton>
       </template>
-    </NModal>
+
+      <!-- 播报配置 -->
+      <template v-if="model.task_type === 'broadcast'">
+        <NDivider style="font-size: 16px;" title-placement="center">播报配置</NDivider>
+        <NFormItem label="播报文本">
+          <NInput v-model:value="model.broadcast_text" type="textarea" placeholder="请输入播报文本" :rows="3" />
+        </NFormItem>
+      </template>
+
+      <!-- 定时配置 -->
+      <NDivider style="font-size: 16px;" title-placement="center">定时配置（可选）</NDivider>
+      <NFormItem label="启用定时执行">
+        <NSwitch v-model:value="model.schedule_enabled" />
+      </NFormItem>
+      <template v-if="model.schedule_enabled">
+        <NGrid :cols="2" :x-gap="16">
+          <NFormItemGi label="调度日期" required>
+            <NDatePicker v-model:value="model.schedule_date" type="date" class="w-full" />
+          </NFormItemGi>
+          <NFormItemGi label="开始时间" required>
+            <NTimePicker v-model:value="model.schedule_start_time" format="HH:mm" class="w-full" />
+          </NFormItemGi>
+        </NGrid>
+        <NFormItem label="重复周期（未选择则不重复）">
+          <NCheckboxGroup v-model:value="model.schedule_repeat_cycles">
+            <NSpace>
+              <NCheckbox v-for="opt in weekdayOptions" :key="opt.value" :value="opt.value" :label="opt.label" />
+            </NSpace>
+          </NCheckboxGroup>
+        </NFormItem>
+      </template>
+    </NForm>
+
+    <template #action>
+      <NSpace justify="end" :size="16">
+        <NButton @click="closeDrawer">{{ $t('common.cancel') }}</NButton>
+        <NButton type="primary" :loading="submitting" :disabled="submitting" @click="handleSubmit">{{
+          $t('common.confirm') }}</NButton>
+      </NSpace>
+    </template>
+  </NModal>
 </template>
 
 <style scoped>
-:deep(.n-divider:not(.n-divider--dashed) .n-divider__line ){
+:deep(.n-divider:not(.n-divider--dashed) .n-divider__line) {
   background-color: transparent;
 }
-
 </style>
