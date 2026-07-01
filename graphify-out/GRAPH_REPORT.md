@@ -1,16 +1,16 @@
 # Graph Report - Wujie-Jilin-Admin  (2026-07-01)
 
 ## Corpus Check
-- 934 files · ~496,349 words
+- 934 files · ~495,690 words
 - Verdict: corpus is large enough that graph structure adds value.
 
 ## Summary
-- 9252 nodes · 18803 edges · 1195 communities (749 shown, 446 thin omitted)
+- 9252 nodes · 18803 edges · 1194 communities (748 shown, 446 thin omitted)
 - Extraction: 65% EXTRACTED · 35% INFERRED · 0% AMBIGUOUS · INFERRED: 6570 edges (avg confidence: 0.52)
 - Token cost: 0 input · 0 output
 
 ## Graph Freshness
-- Built from commit: `7ebbcde1`
+- Built from commit: `d3a7b789`
 - Run `git rev-parse HEAD` and compare to check if the graph is stale.
 - Run `graphify update .` after code changes (no API cost).
 
@@ -941,7 +941,6 @@
 - [[_COMMUNITY_Community 1189|Community 1189]]
 - [[_COMMUNITY_Community 1190|Community 1190]]
 - [[_COMMUNITY_Community 1191|Community 1191]]
-- [[_COMMUNITY_Community 1192|Community 1192]]
 - [[_COMMUNITY_Community 1193|Community 1193]]
 - [[_COMMUNITY_Community 1194|Community 1194]]
 
@@ -983,7 +982,7 @@
 - **App Branding and Identity Assets** — favicon_app_brand_icon, logo_sidebar_brand, banner_dashboard_hero, soybean_mascot [INFERRED 0.80]
 - **Feather-style Action Icons** — activity_heartbeat_icon, copy_clipboard_icon, cast_screencast_icon, heart_favorite_icon, wind_airflow_icon, at_sign_email_icon [INFERRED 0.85]
 
-## Communities (1195 total, 446 thin omitted)
+## Communities (1194 total, 446 thin omitted)
 
 ### Community 0 - "Community 0"
 Cohesion: 0.11
@@ -1146,8 +1145,8 @@ Cohesion: 0.11
 Nodes (83): Robot, SceneMapAnnotation, Task, TaskExecutionRecord, AsyncSession, bool, int, PageRequest (+75 more)
 
 ### Community 41 - "Community 41"
-Cohesion: 0.15
-Nodes (31): Any, bytes, str, str, AsyncSession, ExportTaskSubmit, int, str (+23 more)
+Cohesion: 0.14
+Nodes (29): Any, bytes, str, str, AsyncSession, ExportTaskSubmit, int, str (+21 more)
 
 ### Community 42 - "Community 42"
 Cohesion: 0.11
@@ -1190,8 +1189,8 @@ Cohesion: 0.36
 Nodes (31): AuthorizationError, Exception, FastAPI, HTTPException, bytes, UploadFile, BaseExceptionMixin, Client (+23 more)
 
 ### Community 52 - "Community 52"
-Cohesion: 0.13
-Nodes (20): FastMCP, str, str, create_manage_app(), get_all_tools(), get_tool(), register_tool(), tool_description() (+12 more)
+Cohesion: 0.20
+Nodes (13): FastMCP, str, create_manage_app(), _app_lifespan(), create_app(), create_mcp_server(), get_mcp_server(), _make_tool_handler() (+5 more)
 
 ### Community 53 - "Community 53"
 Cohesion: 0.15
@@ -1266,8 +1265,8 @@ Cohesion: 0.12
 Nodes (17): compilerOptions, allowSyntheticDefaultImports, baseUrl, esModuleInterop, forceConsistentCasingInFileNames, jsx, lib, module (+9 more)
 
 ### Community 71 - "Community 71"
-Cohesion: 0.18
-Nodes (10): str, McpContext, str, TextContent, ToolParam, McpHttpClient, CreateMenu, tool_description() (+2 more)
+Cohesion: 0.24
+Nodes (8): McpContext, str, TextContent, ToolParam, CreateMenu, tool_description(), tool_name(), tool_params()
 
 ### Community 72 - "Community 72"
 Cohesion: 0.12
@@ -1286,8 +1285,8 @@ Cohesion: 0.25
 Nodes (16): Per-tenant JWT configuration. All fields optional -- missing means 'use global'., Full JSON structure stored in tenant.config column., TenantConfigSchema, TenantJwtConfig, parse_config(), SelectTenantRequest, TenantAssignUser, TenantConfigResponse (+8 more)
 
 ### Community 76 - "Community 76"
-Cohesion: 0.21
-Nodes (15): JSONResponse, Request, str, create_tool(), health(), list_tools(), 触发优雅关闭，向当前进程发送 SIGTERM, shutdown() (+7 more)
+Cohesion: 0.14
+Nodes (22): JSONResponse, Request, str, str, create_tool(), health(), list_tools(), 触发优雅关闭，向当前进程发送 SIGTERM (+14 more)
 
 ### Community 77 - "Community 77"
 Cohesion: 0.15
@@ -1318,8 +1317,8 @@ Cohesion: 0.20
 Nodes (9): 任务场景筛选显示与地图编辑器场景名, 前端, 后端, 涉及范围, 状态, 相关文件, 约束与备注, 记录日期 (+1 more)
 
 ### Community 84 - "Community 84"
-Cohesion: 0.24
-Nodes (8): McpContext, str, TextContent, ToolParam, AssignMenusToRole, tool_description(), tool_name(), tool_params()
+Cohesion: 0.16
+Nodes (13): McpContext, TextContent, McpContext, str, TextContent, ToolParam, McpContext, McpTool (+5 more)
 
 ### Community 85 - "Community 85"
 Cohesion: 0.26
@@ -1466,8 +1465,8 @@ Cohesion: 0.24
 Nodes (8): McpContext, str, TextContent, ToolParam, CreatePermission, tool_description(), tool_name(), tool_params()
 
 ### Community 121 - "Community 121"
-Cohesion: 0.16
-Nodes (13): McpContext, TextContent, McpContext, str, TextContent, ToolParam, McpContext, McpTool (+5 more)
+Cohesion: 0.18
+Nodes (10): str, McpContext, str, TextContent, ToolParam, McpHttpClient, GenerateDictionary, tool_description() (+2 more)
 
 ### Community 122 - "Community 122"
 Cohesion: 0.13
@@ -1570,8 +1569,8 @@ Cohesion: 0.13
 Nodes (62): AsyncSession, int, PageRequest, Request, RobotCreate, RobotMapBindingUpdate, RobotQueryParams, RobotUpdate (+54 more)
 
 ### Community 148 - "Community 148"
-Cohesion: 0.22
-Nodes (9): 2. 生成脚本使用当前解释器, 3. 生成文件通常不建议手动修改, 4. 修改 `.proto` 后需要重新生成, 6. 注意生成目录与业务包路径一致, 7. 清理旧文件, code:powershell (uv run python .\main.py), code:text (generated/<module>/), code:text (app.grpc.generated.<module>.) (+1 more)
+Cohesion: 0.15
+Nodes (13): 1. 必须使用 `uv run`, 2. 生成脚本使用当前解释器, 3. 生成文件通常不建议手动修改, 4. 修改 `.proto` 后需要重新生成, 6. 注意生成目录与业务包路径一致, 7. 清理旧文件, code:powershell (uv run python .\main.py), code:powershell (python .\main.py) (+5 more)
 
 ### Community 149 - "Community 149"
 Cohesion: 0.09
@@ -2414,8 +2413,8 @@ Cohesion: 0.40
 Nodes (4): 使用规则, 目录说明, 相关文件, 记忆层
 
 ### Community 656 - "Community 656"
-Cohesion: 0.33
-Nodes (10): AsyncSession, ExportTaskSubmit, int, SysUser, cleanup_export_tasks(), create_export_task(), download_export_file(), ExportTaskResponse (+2 more)
+Cohesion: 0.34
+Nodes (12): AsyncSession, ExportTaskSubmit, int, SysUser, cleanup_export_tasks(), create_export_task(), download_export_file(), ExportTaskResponse (+4 more)
 
 ### Community 657 - "Community 657"
 Cohesion: 0.21
@@ -2909,10 +2908,6 @@ Nodes (4): datetime, _is_schedule_due(), 判断任务调度是否在当前时间
 Cohesion: 0.33
 Nodes (4): str, str, sanitize_rich_text(), sanitize_content()
 
-### Community 1192 - "Community 1192"
-Cohesion: 0.50
-Nodes (4): 1. 必须使用 `uv run`, code:powershell (uv run python .\main.py), code:powershell (python .\main.py), code:text (ModuleNotFoundError: No module named 'grpc_tools')
-
 ### Community 1194 - "Community 1194"
 Cohesion: 0.67
 Nodes (3): 🌟 功能特点, 技术特性, 核心功能
@@ -2929,7 +2924,7 @@ _Questions this graph is uniquely positioned to answer:_
   _High betweenness centrality (0.088) - this node is a cross-community bridge._
 - **Why does `RequestError` connect `Community 51` to `Community 704`, `Community 1`, `Community 35`, `Community 907`, `Community 45`, `Community 144`, `Community 503`?**
   _High betweenness centrality (0.046) - this node is a cross-community bridge._
-- **Why does `NotFoundError` connect `Community 528` to `Community 0`, `Community 1`, `Community 3`, `Community 4`, `Community 9`, `Community 10`, `Community 907`, `Community 1147`, `Community 144`, `Community 913`, `Community 19`, `Community 147`, `Community 21`, `Community 23`, `Community 27`, `Community 924`, `Community 1053`, `Community 30`, `Community 543`, `Community 927`, `Community 544`, `Community 35`, `Community 40`, `Community 41`, `Community 43`, `Community 45`, `Community 46`, `Community 50`, `Community 51`, `Community 54`, `Community 55`, `Community 858`, `Community 609`, `Community 114`, `Community 503`, `Community 1019`, `Community 1020`?**
+- **Why does `NotFoundError` connect `Community 528` to `Community 0`, `Community 1`, `Community 3`, `Community 4`, `Community 9`, `Community 10`, `Community 907`, `Community 1147`, `Community 656`, `Community 144`, `Community 913`, `Community 19`, `Community 147`, `Community 21`, `Community 23`, `Community 27`, `Community 924`, `Community 1053`, `Community 30`, `Community 543`, `Community 927`, `Community 544`, `Community 35`, `Community 40`, `Community 41`, `Community 43`, `Community 45`, `Community 46`, `Community 50`, `Community 51`, `Community 54`, `Community 55`, `Community 858`, `Community 609`, `Community 114`, `Community 503`, `Community 1019`, `Community 1020`?**
   _High betweenness centrality (0.036) - this node is a cross-community bridge._
 - **Are the 309 inferred relationships involving `NotFoundError` (e.g. with `FastAPI` and `Request`) actually correct?**
   _`NotFoundError` has 309 INFERRED edges - model-reasoned connections that need verification._

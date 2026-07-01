@@ -43,9 +43,9 @@ let backgroundImgObj: FabricImage | null = null;
 let elementMap: Map<string, any> = new Map();
 let annotationDecorations: Map<number, { text: Text; angleIndicator: Triangle }> = new Map();
 let objectLabels: Map<number, Text> = new Map();
-// 机器人位置标记：robotId -> { circle, label }（装饰层，不进 elementMap）
-// 用两个独立对象、各自绝对坐标定位，避免 Group bbox 重算导致圆点与名称错位/坐标偏移
-let robotMarkers: Map<number, { circle: Circle; label: Text }> = new Map();
+// 机器人位置标记：robotId -> { circle, arrow, label }（装饰层，不进 elementMap）
+// 用独立对象、各自绝对坐标定位，避免 Group bbox 重算导致圆点与名称错位/坐标偏移
+let robotMarkers: Map<number, { circle: Circle; arrow: Triangle | null; label: Text }> = new Map();
 let resizeObserver: ResizeObserver | null = null;
 let lastGridSpacingM = 0;
 let originMarker: Group | null = null;
@@ -617,6 +617,11 @@ function renderRobots() {
     const radius = 9;
     const labelTop = py + radius + 8;
     const labelText = robot.name || `#${robot.id}`;
+    // 朝向角(ROS 弧度)：与点位同约定（0 朝东，π/2 朝北，逆时针为正）
+    const hasAngle = pt.angle !== undefined;
+    const arrowTransform = hasAngle
+      ? getAnnotationArrowTransform(px, py, pt.angle as number, radius)
+      : null;
 
     const existing = robotMarkers.get(robot.id);
     if (existing) {
@@ -624,6 +629,14 @@ function renderRobots() {
       existing.circle.setCoords();
       existing.label.set({ left: px, top: labelTop, text: labelText });
       existing.label.setCoords();
+      if (existing.arrow) {
+        if (arrowTransform) {
+          existing.arrow.set({ left: arrowTransform.x, top: arrowTransform.y, angle: arrowTransform.angle, visible: true });
+        } else {
+          existing.arrow.set({ visible: false });
+        }
+        existing.arrow.setCoords();
+      }
       continue;
     }
 
@@ -642,6 +655,23 @@ function renderRobots() {
       hoverCursor: 'default',
       excludeFromExport: true,
     });
+    // 方向箭头（与点位同一 ROS 弧度 → Fabric 变换）；无角度时不渲染
+    const arrow = arrowTransform
+      ? new Triangle({
+          width: ARROW_WIDTH,
+          height: ARROW_HEIGHT,
+          fill: ROBOT_FILL,
+          originX: 'center',
+          originY: 'center',
+          left: arrowTransform.x,
+          top: arrowTransform.y,
+          angle: arrowTransform.angle,
+          selectable: false,
+          evented: false,
+          hoverCursor: 'default',
+          excludeFromExport: true,
+        })
+      : null;
     const label = new Text(labelText, {
       fontSize: 11,
       fill: ROBOT_FILL,
@@ -656,14 +686,19 @@ function renderRobots() {
       hoverCursor: 'default',
       excludeFromExport: true,
     });
-    fabricCanvas.add(circle, label);
-    robotMarkers.set(robot.id, { circle, label });
+    if (arrow) {
+      fabricCanvas.add(circle, arrow, label);
+    } else {
+      fabricCanvas.add(circle, label);
+    }
+    robotMarkers.set(robot.id, { circle, arrow, label });
   }
 
   // 移除不再上报位置的机器人
   for (const [id, marker] of robotMarkers) {
     if (!seen.has(id)) {
-      fabricCanvas.remove(marker.circle, marker.label);
+      if (marker.arrow) fabricCanvas.remove(marker.circle, marker.arrow, marker.label);
+      else fabricCanvas.remove(marker.circle, marker.label);
       robotMarkers.delete(id);
     }
   }
@@ -676,7 +711,8 @@ function clearRobotMarkers() {
     return;
   }
   for (const marker of robotMarkers.values()) {
-    fabricCanvas.remove(marker.circle, marker.label);
+    if (marker.arrow) fabricCanvas.remove(marker.circle, marker.arrow, marker.label);
+    else fabricCanvas.remove(marker.circle, marker.label);
   }
   robotMarkers.clear();
 }

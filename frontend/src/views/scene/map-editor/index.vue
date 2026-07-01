@@ -9,6 +9,7 @@ import { fetchCreateSceneMap, fetchUpdateSceneMap, fetchGetSceneMap, fetchUpload
 import { fetchGetMapRobotLocations } from '@/service/api';
 import { getFilePreviewUrl } from '@/service/api/file';
 import { extractRobotPoint } from './utils/robot-location';
+import { radToDeg } from '@/utils/coordinate';
 
 defineOptions({ name: 'SceneMapEditor' });
 
@@ -121,7 +122,8 @@ const hoverInfo = computed(() => {
       x: pt.x.toFixed(2),
       y: pt.y.toFixed(2),
       size: null as string | null,
-      angle: pt.angle !== undefined ? `${pt.angle.toFixed(1)}°` : '-',
+      // 朝向角(ROS 弧度) → 度并归一到 [0,360)
+      angle: pt.angle !== undefined ? `${Math.round(((radToDeg(pt.angle) % 360) + 360) % 360)}°` : '-',
     };
   }
   if (!editor.editorData.value) return null;
