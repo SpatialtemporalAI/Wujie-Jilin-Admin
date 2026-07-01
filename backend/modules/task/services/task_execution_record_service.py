@@ -219,6 +219,8 @@ class TaskExecutionRecordService:
         )
         if query_params:
             conditions = []
+            if query_params.status:
+                conditions.append(TaskExecutionRecord.status == query_params.status)
             if query_params.task_id is not None:
                 conditions.append(TaskExecutionRecord.task_id == query_params.task_id)
             if query_params.robot_id is not None:
