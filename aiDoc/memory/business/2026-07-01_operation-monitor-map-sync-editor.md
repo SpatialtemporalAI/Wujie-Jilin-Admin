@@ -42,7 +42,28 @@
 - **滚轮缩放定位**：`zoomToPoint` 需传入画布相对坐标；画布嵌在卡片内（有头部/内边距偏移），必须用 `evt.offsetX/offsetY`，不能用 `clientX/clientY`（视口坐标会让缩放定点漂移）。地图编辑器 `canvas-editor.vue` 同此问题，已一并改为 `offsetX/offsetY`。
 - **标记固定屏幕大小**：缩放时点位标记（圆点/方向箭头/名称）与机器人标记保持固定屏幕尺寸（不随地图变大变小，像地图大头针），而底图/障碍物/路径仍随视口缩放。实现：新增 `applyMarkerZoom()`（**无参，内部读 `fabricCanvas.getZoom()` 视口真实 zoom**，避免与 `currentZoom` 状态不同步）——对每个标记对象做 `scaleX=scaleY=1/zoom` 反向缩放（与视口 zoom 相消→屏幕尺寸恒定），`left/top` 仍为场景坐标（位置随地图走）；箭头位置用 `getAnnotationArrowTransform(...,zoom)` 把屏幕半径换算成 `半径/zoom` 的场景距离、文字 `top` 用 `ann.y + ANN_LABEL_OFFSET/zoom`，保证屏幕间距恒定。在 `renderElements` 末尾、`renderRobotMarker` 创建后（初始缩放也用 `getZoom()`）、以及 `handleMouseWheel/zoomIn/zoomOut/zoomReset/handleSliderZoom` 五处缩放入口调用。`getAnnotationArrowTransform` 新增 `zoom=1` 形参。
 - **切换地图标记大小跳变修复**：`loadMapData` 在 `clearMapState` 后显式 `fabricCanvas.setZoom(1)` 并重置 `currentZoom/sliderZoomValue`（无图分支补 `centerContent()`）。原因：原 `loadBackgroundImage` 只重置 `currentZoom.value=1` 而未重置视口真实 zoom，导致缩放下切图时状态(1)与视口(旧 zoom)不同步，点位按错误 zoom 反向缩放→大小跳变；改用 `getZoom()` + 切图时重置视口双重兜底。
+
+## 后续：地图编辑器同步同一套缩放逻辑（2026-07-01）
+
+用户要求"将地图编辑器的缩放逻辑同步这里的"，即把上述固定屏幕大小标记 + 切图跳变修复也应用到编辑器 `frontend/src/views/scene/map-editor/modules/canvas-editor.vue`：
+
+- `getAnnotationArrowTransform` 新增 `zoom=1` 形参（与监控页同）。
+- 新增 `applyMarkerZoom()`（无参，读 `fabricCanvas.getZoom()`）：对 annotation circle（**可交互**，仅设 `scaleX=scaleY=1/zoom`，不影响位置/角度/数据模型/保存）+ 其角度箭头/名称（`annotationDecorations`）+ 机器人标记（`robotMarkers` 的 circle/arrow/label，箭头位置由 `arrow.angle` 反推 ROS 弧度后按 zoom 重算）做反向缩放。
+- 调用点：`updatePositions` 末尾、`renderRobots` 末尾（覆盖 renderElements/拖动提交/robotLocations 轮询）、`handleMouseWheel/zoomIn/zoomOut/zoomReset/handleSliderZoom` 五个缩放入口。
+- 实时拖动/旋转路径（`handleObjectMoved`/`handleObjectRotating` 的 annotation 分支）改为 zoom 感知：文字 `top` 用 `ANN_LABEL_OFFSET*inv`、箭头 `getAnnotationArrowTransform(...,zoom)`，避免缩放下拖动时箭头漂浮（提交后由 `updatePositions→applyMarkerZoom` 兜底）。
+- 切图跳变修复：`loadBackgroundImage` 在 `centerContent()` 前 `fabricCanvas.setZoom(1)`（编辑器原本同样只重置 `currentZoom=1` 未重置视口）。
+- 验证：`pnpm typecheck`（canvas-editor.vue 0 错误；另有与本次无关的 `findAnnotationAtPoint`/`seq` 未使用 hint）。
 - 验证：`pnpm typecheck`（本次编辑文件 0 错误，仅余与本次无关的 `scene/map/*` 历史 NaiveUI 类型报错）。
+
+## 后续：机器人标记朝向角度修复（2026-07-01）
+
+**现象**：运行监控地图上机器人方向箭头的朝向始终不变（角度无变化）。
+
+**根因**：机器人标记 `robotMarker` 是 fabric `Group([body, arrow, label])`，其 `angle` 此前直接写 `props.location.angle || 0`。但 `props.location.angle` 与 annotation 同为 **ROS 弧度**（0 朝东、π/2 朝北、逆时针为正），被 Fabric 当作「度」直接旋转——弧度取值 0~6.28 仅对应 0~6.28°，肉眼几乎不可见，故表现为角度不变。上次同步编辑器时 annotation 箭头已用 `getAnnotationArrowTransform` 做弧度→度转换，但机器人标记 Group 的 angle 漏了。
+
+**修复**（`position-map-panel.vue` 的 `renderRobotMarker` 内 Group 构造）：`angle` 改为 `-radToDeg(props.location.angle || 0) + 90`，与 annotation 方向箭头同一公式——arrow 在 Group 内默认顶点朝上（北）、Fabric 顺时针为正，ROS 弧度→Fabric 度的换算同为 `-radToDeg(rad)+90`。`radToDeg` 早已从 `@/utils/coordinate` 引入，无需新增依赖。
+
+**验证**：`pnpm typecheck`（本次编辑文件 0 错误，仅余与本次无关的 `scene/map/*` 历史 NaiveUI 类型报错）。
 
 ## 相关文件
 

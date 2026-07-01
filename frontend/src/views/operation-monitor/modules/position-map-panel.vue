@@ -402,7 +402,9 @@ function renderRobotMarker() {
     top: robotPx.y,
     originX: 'center',
     originY: 'center',
-    angle: props.location.angle || 0,
+    // angle 为 ROS 弧度（0 朝东、π/2 朝北、逆时针为正，与点位/地图编辑器同约定）；
+    // Fabric Group 顺时针为正、arrow 默认顶点朝上（北），需做坐标系转换：-radToDeg(rad) + 90
+    angle: -radToDeg(props.location.angle || 0) + 90,
     hasControls: false,
     selectable: false,
     evented: false
