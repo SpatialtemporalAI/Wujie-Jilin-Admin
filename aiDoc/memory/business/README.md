@@ -53,3 +53,5 @@
 - [2026-06-30 地图编辑器删除地图后自动切换到第一个](./2026-06-30_map-editor-delete-auto-switch.md) — 删除当前选中地图后自动 loadMap 列表第一项，避免画布空载；删非当前地图不影响当前画布
 - [2026-07-01 删除机器人清理任务关联](./2026-07-01_delete-robot-cleanup-task-association.md) — delete robot 时物理删除 task_robot 关联表中该 robot 的全部关联（从关联任务列表移除），避免孤儿关联；robot 软删除不触发 ondelete=CASCADE，不发 gRPC
 - [2026-07-01 运行监控地图同步地图编辑器效果](./2026-07-01_operation-monitor-map-sync-editor.md) — operation-monitor 地图补左上角图例 + 右上角竖向滑块缩放（对数刻度）+ 点位角度方向箭头（annotation 改三个独立 fabric 对象，复用编辑器 getAnnotationArrowTransform）；机器人标记由蓝改红与图例对齐；滚轮缩放改用画布相对坐标 offsetX/Y（编辑器同改）；点位/机器人标记缩放时保持固定屏幕大小（applyMarkerZoom 反向缩放 1/zoom，位置仍随地图）
+- [2026-07-01 参数配置·人脸识别阿里云错误友好化解析](./2026-07-01_param-config-face-aliyun-error-parse.md) — face_service 新增错误码→中文提示映射 + _describe_aliyun_error 解析器，facebody/OSS 失败不再裸抛 Response 字典，前端 toast 显示「中文提示（错误码：XXX）」
+- [2026-07-01 参数配置·人脸识别编辑修复](./2026-07-01_param-config-face-edit-no-photo.md) — 编辑按钮点击后滚动回表单消除「无反应」；编辑态人像改只读预览不可改图，仅改名称/播报，后端 photo_changed 判定自动跳过换图

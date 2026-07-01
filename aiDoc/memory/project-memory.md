@@ -55,6 +55,7 @@
 - [2026-06-30 map.proto 新增 SwitchMap 切换机器人当前地图](./business/2026-06-30_map-switch-rpc.md) — MapService 新增 SwitchMap(id+version)，与广播地图 NotifyMapSaved 共用同一 gRPC 地址；接入切换地图接口 PUT /robot/manage/{id}/bind-map，绑定成功后下发、解绑不下发、失败仅日志
 - [2026-07-01 任务点位动作列表可为空](./business/2026-07-01_task-point-actions-optional.md) — 添加/编辑任务新增点位时动作列表不再强制至少一个；addPoint 初始 actions=[]，删除动作去掉 >1 限制；后端本就支持空，仅前端表单调整
 - [2026-07-01 任务绑定机器人与场景一致性提示](./business/2026-07-01_task-bind-robot-scene-tip.md) — 新增/编辑任务抽屉「任务类型」下方加 NAlert 警示：机器人不在任务绑定场景下任务无法执行，纯前端展示
+- [2026-07-01 参数配置·人脸识别阿里云错误友好化解析](./business/2026-07-01_param-config-face-aliyun-error-parse.md) — face_service 新增错误码→中文提示映射 + _describe_aliyun_error 解析器，facebody/OSS 失败不再裸抛 Response 字典，前端 toast 显示「中文提示（错误码：XXX）」
 
 ## 维护说明
 

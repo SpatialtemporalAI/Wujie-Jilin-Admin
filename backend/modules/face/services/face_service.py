@@ -12,6 +12,7 @@ from __future__ import annotations
 import asyncio
 import logging
 import os
+import re
 import tempfile
 from functools import lru_cache
 from typing import List
@@ -40,6 +41,51 @@ from viapi.fileutils import FileUtils
 logger = logging.getLogger(__name__)
 
 _runtime_options = RuntimeOptions()
+
+# 阿里云 facebody 常见错误码 → 中文友好提示（命中则用提示代替英文原始信息）
+_FACE_ERROR_HINT = {
+    "InvalidImage.NotFoundFace": "未在图片中检测到人脸，请使用清晰正面的真人照片",
+    "InvalidImage.DownloadError": "图片下载失败，请重新上传后再试",
+    "InvalidImage.DecodeError": "图片解析失败，请更换为清晰的 JPG/PNG 图片",
+    "InvalidImage.Format": "图片格式不支持，请更换为 JPG/PNG 图片",
+    "InvalidImage.URL": "图片地址无效，请重新上传图片",
+    "EntityNotExist": "人脸实体不存在",
+    "DataNotExist": "人脸实体或图片不存在",
+    "DBNameNotExist": "人脸库不存在",
+    "EntityIdAlreadyExist": "人脸实体已存在",
+    "FaceCountExceed": "单个人脸图片数量已达上限",
+    "FaceImageCountExceed": "单个人脸图片数量已达上限",
+    "ExceedEntityLimit": "人脸实体数量已达上限",
+    "InvalidParameterValue": "请求参数不合法",
+}
+
+# 抹掉阿里云 message 里 [pk=...,tag=viapi:default] 这类内部噪声前缀
+_FACE_ERROR_NOISE_RE = re.compile(r"^\[[^\]]*\]\s*")
+
+
+def _describe_aliyun_error(exc: Exception) -> str:
+    """解析阿里云 facebody / viapi 异常，返回「中文提示（错误码：XXX）」形式。
+
+    SDK 抛出的 TeaException 带有 code / message / statusCode 等属性；命中已知错误码时
+    给出中文友好提示，其余情况回退到清洗后的 message 或 str(exc)，避免把整个
+    Response 字典原样抛给前端。
+    """
+    code = getattr(exc, "code", None) or getattr(exc, "Code", None)
+    message = getattr(exc, "message", None) or getattr(exc, "Message", None)
+    if message and isinstance(message, str):
+        message = _FACE_ERROR_NOISE_RE.sub("", message).strip()
+
+    hint = _FACE_ERROR_HINT.get(code) if code else None
+
+    if hint and code:
+        return f"{hint}（错误码：{code}）"
+    if message and code:
+        return f"{message}（错误码：{code}）"
+    if hint:
+        return hint
+    if message:
+        return message
+    return str(exc)
 
 
 def _ensure_enabled() -> None:
@@ -97,8 +143,14 @@ class FaceService:
         except (ServerError, GatewayError, RequestError):
             raise
         except Exception as exc:
-            logger.error("上传文件到阿里云 OSS 异常: %s", exc)
-            raise GatewayError(msg="上传文件到阿里云 OSS 失败") from exc
+            logger.error(
+                "上传文件到阿里云 OSS 失败: %s | 原始异常: %s",
+                _describe_aliyun_error(exc),
+                exc,
+            )
+            raise GatewayError(
+                msg=f"上传文件到阿里云 OSS 失败：{_describe_aliyun_error(exc)}"
+            ) from exc
         finally:
             if tmp_path and os.path.exists(tmp_path):
                 try:
@@ -137,8 +189,8 @@ class FaceService:
         except (ServerError, GatewayError):
             raise
         except Exception as exc:
-            logger.error("创建人脸库失败: %s", getattr(exc, "code", exc))
-            raise GatewayError(msg=f"创建人脸库失败: {exc}") from exc
+            logger.error("创建人脸库失败: %s | 原始异常: %s", _describe_aliyun_error(exc), exc)
+            raise GatewayError(msg=f"创建人脸库失败: {_describe_aliyun_error(exc)}") from exc
 
     @staticmethod
     async def list_face_dbs() -> List[str]:
@@ -156,8 +208,8 @@ class FaceService:
         except (ServerError, GatewayError):
             raise
         except Exception as exc:
-            logger.error("查询人脸库列表失败: %s", getattr(exc, "code", exc))
-            raise GatewayError(msg=f"查询人脸库列表失败: {exc}") from exc
+            logger.error("查询人脸库列表失败: %s | 原始异常: %s", _describe_aliyun_error(exc), exc)
+            raise GatewayError(msg=f"查询人脸库列表失败: {_describe_aliyun_error(exc)}") from exc
 
     # ------------------------------ 实体 ------------------------------
     @staticmethod
@@ -173,8 +225,8 @@ class FaceService:
         except (ServerError, GatewayError):
             raise
         except Exception as exc:
-            logger.error("新增人脸实体失败: %s", getattr(exc, "code", exc))
-            raise GatewayError(msg=f"新增人脸实体失败: {exc}") from exc
+            logger.error("新增人脸实体失败: %s | 原始异常: %s", _describe_aliyun_error(exc), exc)
+            raise GatewayError(msg=f"新增人脸实体失败: {_describe_aliyun_error(exc)}") from exc
 
     @staticmethod
     async def delete_face_entity(db_name: str, entity_id: str) -> None:
@@ -188,8 +240,8 @@ class FaceService:
         except (ServerError, GatewayError):
             raise
         except Exception as exc:
-            logger.error("删除人脸实体失败: %s", getattr(exc, "code", exc))
-            raise GatewayError(msg=f"删除人脸实体失败: {exc}") from exc
+            logger.error("删除人脸实体失败: %s | 原始异常: %s", _describe_aliyun_error(exc), exc)
+            raise GatewayError(msg=f"删除人脸实体失败: {_describe_aliyun_error(exc)}") from exc
 
     @staticmethod
     async def list_face_entities(
@@ -227,8 +279,8 @@ class FaceService:
         except (ServerError, GatewayError):
             raise
         except Exception as exc:
-            logger.error("查询人脸实体列表失败: %s", getattr(exc, "code", exc))
-            raise GatewayError(msg=f"查询人脸实体列表失败: {exc}") from exc
+            logger.error("查询人脸实体列表失败: %s | 原始异常: %s", _describe_aliyun_error(exc), exc)
+            raise GatewayError(msg=f"查询人脸实体列表失败: {_describe_aliyun_error(exc)}") from exc
 
     @staticmethod
     async def get_face_entity(db_name: str, entity_id: str) -> dict:
@@ -256,8 +308,8 @@ class FaceService:
         except (ServerError, GatewayError):
             raise
         except Exception as exc:
-            logger.error("查询人脸实体详情失败: %s", getattr(exc, "code", exc))
-            raise GatewayError(msg=f"查询人脸实体详情失败: {exc}") from exc
+            logger.error("查询人脸实体详情失败: %s | 原始异常: %s", _describe_aliyun_error(exc), exc)
+            raise GatewayError(msg=f"查询人脸实体详情失败: {_describe_aliyun_error(exc)}") from exc
 
     # ------------------------------ 人脸图片 ------------------------------
     @staticmethod
@@ -278,8 +330,8 @@ class FaceService:
         except (ServerError, GatewayError):
             raise
         except Exception as exc:
-            logger.error("添加人脸图片失败: %s", getattr(exc, "code", exc))
-            raise GatewayError(msg=f"添加人脸图片失败: {exc}") from exc
+            logger.error("添加人脸图片失败: %s | 原始异常: %s", _describe_aliyun_error(exc), exc)
+            raise GatewayError(msg=f"添加人脸图片失败: {_describe_aliyun_error(exc)}") from exc
 
     @staticmethod
     async def delete_face(db_name: str, face_id: str) -> None:
@@ -293,8 +345,8 @@ class FaceService:
         except (ServerError, GatewayError):
             raise
         except Exception as exc:
-            logger.error("删除人脸图片失败: %s", getattr(exc, "code", exc))
-            raise GatewayError(msg=f"删除人脸图片失败: {exc}") from exc
+            logger.error("删除人脸图片失败: %s | 原始异常: %s", _describe_aliyun_error(exc), exc)
+            raise GatewayError(msg=f"删除人脸图片失败: {_describe_aliyun_error(exc)}") from exc
 
     # ------------------------------ 搜索 / 检测 ------------------------------
     @staticmethod
@@ -322,8 +374,8 @@ class FaceService:
         except (ServerError, GatewayError):
             raise
         except Exception as exc:
-            logger.error("人脸搜索失败: %s", getattr(exc, "code", exc))
-            raise GatewayError(msg=f"人脸搜索失败: {exc}") from exc
+            logger.error("人脸搜索失败: %s | 原始异常: %s", _describe_aliyun_error(exc), exc)
+            raise GatewayError(msg=f"人脸搜索失败: {_describe_aliyun_error(exc)}") from exc
 
     @staticmethod
     async def detect_face(oss_url: str, max_face_num: int = 10) -> List[dict]:
@@ -354,5 +406,5 @@ class FaceService:
         except (ServerError, GatewayError):
             raise
         except Exception as exc:
-            logger.error("人脸检测失败: %s", getattr(exc, "code", exc))
-            raise GatewayError(msg=f"人脸检测失败: {exc}") from exc
+            logger.error("人脸检测失败: %s | 原始异常: %s", _describe_aliyun_error(exc), exc)
+            raise GatewayError(msg=f"人脸检测失败: {_describe_aliyun_error(exc)}") from exc

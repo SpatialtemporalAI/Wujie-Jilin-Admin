@@ -1,5 +1,5 @@
 <script setup lang="tsx">
-import { reactive, ref, onMounted } from 'vue';
+import { reactive, ref, onMounted, nextTick } from 'vue';
 import { NButton, NCard, NDataTable, NForm, NFormItem, NInput, NPopconfirm, NSpace, NUpload, useMessage, type UploadFileInfo } from 'naive-ui';
 import {
   fetchGetFaceRecognitionList,
@@ -20,12 +20,13 @@ defineOptions({ name: 'FaceRecognitionTab' });
 const { hasAuth } = useAuth();
 const message = useMessage();
 const appStore = useAppStore();
-const { formRef, validate } = useNaiveForm();
+const { formRef, validate, restoreValidation } = useNaiveForm();
 
 const loading = ref(false);
 const tableLoading = ref(false);
 const editingId = ref<number | null>(null);
 const isFormExpanded = ref(true);
+const formAnchorRef = ref<HTMLElement | null>(null);
 
 const model = reactive<Api.RobotConfig.FaceRecognitionCreate>({
   person_name: '',
@@ -108,6 +109,12 @@ function handleEdit(row: Api.RobotConfig.FaceRecognition) {
   model.photo_url = row.photo_url;
   model.broadcast_text = row.broadcast_text;
   fileList.value = [];
+  isFormExpanded.value = true;
+  restoreValidation();
+  // 编辑表单位于列表上方，点击后滚动到表单，避免「点了没反应」的错觉
+  nextTick(() => {
+    formAnchorRef.value?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  });
 }
 
 async function handleDelete(id: number) {
@@ -185,60 +192,70 @@ onMounted(() => {
 <template>
   <div class="flex-col gap-16px">
     <!-- 配置表单 -->
-    <NCard title="配置人脸识别TTS" size="small">
-      <NForm ref="formRef" :model="model" :rules="rules" label-placement="left" :label-width="100">
-        <NGrid responsive="screen" :cols="1">
-          <template v-if="isFormExpanded">
-            <NFormItemGi label="人员名称" path="person_name">
-              <NInput v-model:value="model.person_name" placeholder="请输入人员名称" clearable />
-            </NFormItemGi>
-            <NFormItemGi label="人像" path="photo_url">
-              <NUpload
-                v-if="hasAuth('robot:config:edit')"
-                v-model:file-list="fileList"
-                :max="1"
-                accept="image/*"
-                :custom-request="handleUpload"
-                :on-remove="handleRemovePhoto"
-                list-type="image-card"
-              />
-              <span v-if="model.photo_url && !fileList.length" class="text-12px text-gray">已上传: {{ model.photo_url }}</span>
-            </NFormItemGi>
-            <NFormItemGi label="播报内容" path="broadcast_text">
-              <NInput
-                v-model:value="model.broadcast_text"
-                type="textarea"
-                placeholder="请输入语音播报内容"
-                :rows="3"
-                clearable
-              />
-            </NFormItemGi>
-          </template>
-          <NFormItemGi>
-            <div class="flex-center justify-between w-full">
-              <NSpace>
-                <NButton
+    <div ref="formAnchorRef">
+      <NCard :title="editingId ? '编辑人脸识别TTS' : '配置人脸识别TTS'" size="small">
+        <NForm ref="formRef" :model="model" :rules="rules" label-placement="left" :label-width="100">
+          <NGrid responsive="screen" :cols="1">
+            <template v-if="isFormExpanded">
+              <NFormItemGi label="人员名称" path="person_name">
+                <NInput v-model:value="model.person_name" placeholder="请输入人员名称" clearable />
+              </NFormItemGi>
+              <!-- 编辑模式：人像只读不可修改，仅可改名称与播报文字 -->
+              <NFormItemGi v-if="editingId" label="人像">
+                <div class="flex items-center gap-8px">
+                  <img :src="resolveFilePreviewUrl(model.photo_url)" class="h-48px w-48px rounded object-cover" alt="人像" />
+                  <span class="text-12px text-gray">编辑时不支持修改人像</span>
+                </div>
+              </NFormItemGi>
+              <!-- 新建模式：上传人像 -->
+              <NFormItemGi v-else label="人像" path="photo_url">
+                <NUpload
                   v-if="hasAuth('robot:config:edit')"
-                  type="primary"
-                  :loading="loading"
-                  :disabled="!isFormExpanded"
-                  @click="handleSave"
-                >
-                  {{ editingId ? '更新配置' : '保存配置' }}
+                  v-model:file-list="fileList"
+                  :max="1"
+                  accept="image/*"
+                  :custom-request="handleUpload"
+                  :on-remove="handleRemovePhoto"
+                  list-type="image-card"
+                />
+                <span v-if="model.photo_url && !fileList.length" class="text-12px text-gray">已上传: {{ model.photo_url }}</span>
+              </NFormItemGi>
+              <NFormItemGi label="播报内容" path="broadcast_text">
+                <NInput
+                  v-model:value="model.broadcast_text"
+                  type="textarea"
+                  placeholder="请输入语音播报内容"
+                  :rows="3"
+                  clearable
+                />
+              </NFormItemGi>
+            </template>
+            <NFormItemGi>
+              <div class="flex-center justify-between w-full">
+                <NSpace>
+                  <NButton
+                    v-if="hasAuth('robot:config:edit')"
+                    type="primary"
+                    :loading="loading"
+                    :disabled="!isFormExpanded"
+                    @click="handleSave"
+                  >
+                    {{ editingId ? '更新配置' : '保存配置' }}
+                  </NButton>
+                  <NButton v-if="editingId" @click="resetForm">取消</NButton>
+                </NSpace>
+                <NButton text @click="isFormExpanded = !isFormExpanded">
+                  <template #icon>
+                    <SvgIcon :icon="isFormExpanded ? 'mdi:chevron-up' : 'mdi:chevron-down'" />
+                  </template>
+                  <span class="ml-4px">{{ isFormExpanded ? '收起' : '展开' }}</span>
                 </NButton>
-                <NButton v-if="editingId" @click="resetForm">取消</NButton>
-              </NSpace>
-              <NButton text @click="isFormExpanded = !isFormExpanded">
-                <template #icon>
-                  <SvgIcon :icon="isFormExpanded ? 'mdi:chevron-up' : 'mdi:chevron-down'" />
-                </template>
-                <span class="ml-4px">{{ isFormExpanded ? '收起' : '展开' }}</span>
-              </NButton>
-            </div>
-          </NFormItemGi>
-        </NGrid>
-      </NForm>
-    </NCard>
+              </div>
+            </NFormItemGi>
+          </NGrid>
+        </NForm>
+      </NCard>
+    </div>
 
     <!-- 已配置列表 -->
     <NCard title="已配置人员列表" size="small">
