@@ -196,11 +196,13 @@ const ARROW_HEIGHT = 8 * POINT_MARKER_SCALE;
  * - Fabric Triangle 默认顶点朝上、顺时针为正
  * - 箭头底部贴合圆形边缘、顶点指向角度方向
  */
-function getAnnotationArrowTransform(annX: number, annY: number, rosRad: number, radius: number) {
-  const dist = radius + ARROW_HEIGHT / 2;
+function getAnnotationArrowTransform(annX: number, annY: number, rosRad: number, radius: number, zoom = 1) {
+  // 「半径 + 箭头半高」的屏幕距离换算成当前 zoom 下的场景距离，
+  // 配合外部对箭头做 1/zoom 反向缩放，保证缩放后箭头底部仍贴合圆点边缘
+  const sceneDist = (radius + ARROW_HEIGHT / 2) / zoom;
   return {
-    x: annX + dist * Math.cos(rosRad),
-    y: annY - dist * Math.sin(rosRad),
+    x: annX + sceneDist * Math.cos(rosRad),
+    y: annY - sceneDist * Math.sin(rosRad),
     angle: -radToDeg(rosRad) + 90,
   };
 }
@@ -598,6 +600,7 @@ function updatePositions() {
       label.setCoords();
     }
   }
+  applyMarkerZoom();
 }
 
 /**
@@ -714,6 +717,7 @@ function renderRobots() {
       robotMarkers.delete(id);
     }
   }
+  applyMarkerZoom();
   fabricCanvas.renderAll();
 }
 
@@ -727,6 +731,54 @@ function clearRobotMarkers() {
     else fabricCanvas.remove(marker.circle, marker.label);
   }
   robotMarkers.clear();
+}
+
+/**
+ * 缩放变化时让点位/机器人标记保持固定屏幕大小（与运行监控页一致）：
+ * - 读视口「真实」zoom（getZoom），对标记做 1/zoom 反向缩放（与视口 zoom 相消 → 屏幕尺寸恒定）
+ * - left/top 仍是场景坐标，故位置随地图平移/缩放
+ * - 箭头/文字相对圆点的偏移按 1/zoom 收敛，保证屏幕间距恒定
+ * annotation circle 虽可交互（拖动/旋转），但仅改 scaleX/scaleY —— 位置、角度、数据模型与保存均不受影响。
+ */
+function applyMarkerZoom() {
+  if (!fabricCanvas || !props.editorData) return;
+  const zoom = fabricCanvas.getZoom() || 1;
+  const inv = zoom > 0 ? 1 / zoom : 1;
+  // 点位：circle（可交互）+ 角度箭头 + 名称
+  for (const ann of props.editorData.annotations) {
+    const key = getElementKey('annotation', ann.id);
+    const circle = elementMap.get(key) as Circle | undefined;
+    const deco = annotationDecorations.get(ann.id);
+    const r = circle?.radius ?? ANN_RADIUS;
+    if (circle) {
+      circle.set({ scaleX: inv, scaleY: inv });
+      circle.setCoords();
+    }
+    if (deco) {
+      const t = getAnnotationArrowTransform(ann.x, ann.y, ann.angle || 0, r, zoom);
+      deco.angleIndicator.set({ left: t.x, top: t.y, angle: t.angle, scaleX: inv, scaleY: inv });
+      deco.angleIndicator.setCoords();
+      deco.text.set({ left: ann.x, top: ann.y + ANN_LABEL_OFFSET * inv, scaleX: inv, scaleY: inv });
+      deco.text.setCoords();
+    }
+  }
+  // 机器人标记：circle + 方向箭头 + 名称
+  for (const m of robotMarkers.values()) {
+    const px = m.circle.left ?? 0;
+    const py = m.circle.top ?? 0;
+    m.circle.set({ scaleX: inv, scaleY: inv });
+    m.circle.setCoords();
+    if (m.arrow) {
+      // 由箭头当前角度反推 ROS 弧度：arrow.angle = -radToDeg(rosRad) + 90
+      const rosRad = (90 - (m.arrow.angle ?? 0)) * Math.PI / 180;
+      const t = getAnnotationArrowTransform(px, py, rosRad, ROBOT_RADIUS, zoom);
+      m.arrow.set({ left: t.x, top: t.y, angle: t.angle, scaleX: inv, scaleY: inv });
+      m.arrow.setCoords();
+    }
+    m.label.set({ left: px, top: py + (ROBOT_RADIUS + 8) * inv, scaleX: inv, scaleY: inv });
+    m.label.setCoords();
+  }
+  fabricCanvas.renderAll();
 }
 
 // 仅更新选中样式与文本（轻量路径，不重渲染结构）
@@ -982,6 +1034,8 @@ async function loadBackgroundImage(imageId: number) {
       width: containerWidth.value || canvasContainer.value!.clientWidth,
       height: containerHeight.value || canvasContainer.value!.clientHeight,
     });
+    // 切换地图时重置视口缩放为 1（与 currentZoom/slider 状态同步），避免标记大小跳变
+    fabricCanvas.setZoom(1);
     centerContent();
     fabricCanvas.renderAll();
     renderGrid();
@@ -1148,7 +1202,9 @@ function handleObjectMoved(opt: any) {
   if (data.type === 'annotation') {
     const deco = annotationDecorations.get(data.id);
     if (deco) {
-      deco.text.set({ left: obj.left, top: (obj.top ?? 0) + ANN_LABEL_OFFSET });
+      const zoom = fabricCanvas?.getZoom() || 1;
+      const inv = zoom > 0 ? 1 / zoom : 1;
+      deco.text.set({ left: obj.left, top: (obj.top ?? 0) + ANN_LABEL_OFFSET * inv });
       const ann = props.editorData?.annotations.find(a => a.id === data.id);
       const isSelected = props.selectedElement?.type === 'annotation' && props.selectedElement?.id === data.id;
       const arrowTransform = getAnnotationArrowTransform(
@@ -1156,6 +1212,7 @@ function handleObjectMoved(opt: any) {
         obj.top ?? 0,
         ann?.angle ?? 0,
         isSelected ? ANN_RADIUS_SELECTED : ANN_RADIUS,
+        zoom,
       );
       deco.angleIndicator.set({
         left: arrowTransform.x,
@@ -1191,12 +1248,14 @@ function handleObjectRotating(opt: any) {
     const deco = annotationDecorations.get(data.id);
     if (deco) {
       const rad = fabricAngleToAnnotationRad(obj.angle ?? 0);
+      const zoom = fabricCanvas?.getZoom() || 1;
       const isSelected = props.selectedElement?.type === 'annotation' && props.selectedElement?.id === data.id;
       const transform = getAnnotationArrowTransform(
         obj.left ?? 0,
         obj.top ?? 0,
         rad,
         isSelected ? ANN_RADIUS_SELECTED : ANN_RADIUS,
+        zoom,
       );
       deco.angleIndicator.set({
         left: transform.x,
@@ -1297,6 +1356,7 @@ function handleMouseWheel(opt: any) {
   fabricCanvas.getObjects().forEach((o: any) => {
     if (typeof o.setCoords === 'function') o.setCoords();
   });
+  applyMarkerZoom();
   renderGrid();
   updateMinimap();
   emit('zoom-change', zoom);
@@ -1582,6 +1642,7 @@ function zoomIn() {
   fabricCanvas.zoomToPoint(center, newZoom);
   currentZoom = newZoom;
   sliderZoomValue.value = sliderValueToZoom(newZoom);
+  applyMarkerZoom();
   renderGrid();
   emit('zoom-change', newZoom);
 }
@@ -1593,6 +1654,7 @@ function zoomOut() {
   fabricCanvas.zoomToPoint(center, newZoom);
   currentZoom = newZoom;
   sliderZoomValue.value = sliderValueToZoom(newZoom);
+  applyMarkerZoom();
   renderGrid();
   emit('zoom-change', newZoom);
 }
@@ -1602,6 +1664,7 @@ function zoomReset() {
   currentZoom = 1;
   sliderZoomValue.value = sliderValueToZoom(1);
   centerContent();
+  applyMarkerZoom();
   renderGrid();
   emit('zoom-change', 1);
 }
@@ -1622,6 +1685,7 @@ function handleSliderZoom(val: number) {
   const center = fabricCanvas.getCenterPoint();
   fabricCanvas.zoomToPoint(center, newZoom);
   currentZoom = newZoom;
+  applyMarkerZoom();
   renderGrid();
   emit('zoom-change', newZoom);
 }
