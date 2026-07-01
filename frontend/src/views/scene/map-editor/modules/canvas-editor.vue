@@ -670,19 +670,19 @@ function renderRobots() {
     // 方向箭头（与点位同一 ROS 弧度 → Fabric 变换）；无角度时不渲染
     const arrow = arrowTransform
       ? new Triangle({
-          width: ARROW_WIDTH,
-          height: ARROW_HEIGHT,
-          fill: ROBOT_FILL,
-          originX: 'center',
-          originY: 'center',
-          left: arrowTransform.x,
-          top: arrowTransform.y,
-          angle: arrowTransform.angle,
-          selectable: false,
-          evented: false,
-          hoverCursor: 'default',
-          excludeFromExport: true,
-        })
+        width: ARROW_WIDTH,
+        height: ARROW_HEIGHT,
+        fill: ROBOT_FILL,
+        originX: 'center',
+        originY: 'center',
+        left: arrowTransform.x,
+        top: arrowTransform.y,
+        angle: arrowTransform.angle,
+        selectable: false,
+        evented: false,
+        hoverCursor: 'default',
+        excludeFromExport: true,
+      })
       : null;
     const label = new Text(labelText, {
       fontSize: ROBOT_LABEL_FONT_SIZE,
@@ -1652,6 +1652,10 @@ defineExpose({ exportCanvas, zoomIn, zoomOut, zoomReset, locatePixelPoint });
       <div class="flex items-center gap-6px">
         <span class="inline-block h-10px w-10px rounded-full" style="background-color: #047857"></span>
         <span>返回点</span>
+      </div>
+      <div class="flex items-center gap-6px">
+        <span class="inline-block h-10px w-10px rounded-full" style="background-color: #ef4444;"></span>
+        <span>机器人位置</span>
       </div>
       <div class="flex items-center gap-6px">
         <span class="inline-block h-10px w-10px"
