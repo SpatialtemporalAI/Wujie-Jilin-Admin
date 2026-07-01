@@ -90,7 +90,7 @@ const robotOptions = computed(() =>
                 <span class="text-24px font-bold">{{ statusRecord?.battery ?? '--' }}</span>
                 <span class="text-12px text-gray-400">% 电池</span>
               </div>
-              <NProgress
+              <!-- <NProgress
                 v-if="statusRecord"
                 type="line"
                 :percentage="statusRecord.battery"
@@ -98,7 +98,7 @@ const robotOptions = computed(() =>
                 :show-indicator="false"
                 :height="6"
                 class="mt-4px"
-              />
+              /> -->
             </div>
             <div class="status-extra">
               <span
