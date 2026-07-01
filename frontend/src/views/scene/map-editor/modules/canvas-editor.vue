@@ -43,8 +43,9 @@ let backgroundImgObj: FabricImage | null = null;
 let elementMap: Map<string, any> = new Map();
 let annotationDecorations: Map<number, { text: Text; angleIndicator: Triangle }> = new Map();
 let objectLabels: Map<number, Text> = new Map();
-// 机器人位置标记：robotId -> Group（装饰层，不进 elementMap）
-let robotMarkers: Map<number, Group> = new Map();
+// 机器人位置标记：robotId -> { circle, label }（装饰层，不进 elementMap）
+// 用两个独立对象、各自绝对坐标定位，避免 Group bbox 重算导致圆点与名称错位/坐标偏移
+let robotMarkers: Map<number, { circle: Circle; label: Text }> = new Map();
 let resizeObserver: ResizeObserver | null = null;
 let lastGridSpacingM = 0;
 let originMarker: Group | null = null;
@@ -613,14 +614,20 @@ function renderRobots() {
     const px = wp.x;
     const py = h - wp.y;
 
+    const radius = 9;
+    const labelTop = py + radius + 8;
+    const labelText = robot.name || `#${robot.id}`;
+
     const existing = robotMarkers.get(robot.id);
     if (existing) {
-      existing.set({ left: px, top: py });
-      existing.setCoords();
+      existing.circle.set({ left: px, top: py });
+      existing.circle.setCoords();
+      existing.label.set({ left: px, top: labelTop, text: labelText });
+      existing.label.setCoords();
       continue;
     }
 
-    const radius = 9;
+    // 圆点与名称各自绝对定位：圆点中心精确落在 (px, py)，名称在其正下方
     const circle = new Circle({
       radius,
       fill: ROBOT_FILL,
@@ -630,35 +637,33 @@ function renderRobots() {
       originY: 'center',
       left: px,
       top: py,
+      selectable: false,
+      evented: false,
+      hoverCursor: 'default',
+      excludeFromExport: true,
     });
-    const label = new Text(robot.name || `#${robot.id}`, {
+    const label = new Text(labelText, {
       fontSize: 11,
       fill: ROBOT_FILL,
       fontFamily: 'sans-serif',
       fontWeight: 'bold',
       originX: 'center',
       originY: 'center',
-      top: radius + 10,
-    });
-    const group = new Group([circle, label], {
       left: px,
-      top: py,
-      originX: 'center',
-      originY: 'center',
+      top: labelTop,
       selectable: false,
       evented: false,
-      hasControls: false,
       hoverCursor: 'default',
       excludeFromExport: true,
     });
-    fabricCanvas.add(group);
-    robotMarkers.set(robot.id, group);
+    fabricCanvas.add(circle, label);
+    robotMarkers.set(robot.id, { circle, label });
   }
 
   // 移除不再上报位置的机器人
-  for (const [id, group] of robotMarkers) {
+  for (const [id, marker] of robotMarkers) {
     if (!seen.has(id)) {
-      fabricCanvas.remove(group);
+      fabricCanvas.remove(marker.circle, marker.label);
       robotMarkers.delete(id);
     }
   }
@@ -670,8 +675,8 @@ function clearRobotMarkers() {
     robotMarkers.clear();
     return;
   }
-  for (const group of robotMarkers.values()) {
-    fabricCanvas.remove(group);
+  for (const marker of robotMarkers.values()) {
+    fabricCanvas.remove(marker.circle, marker.label);
   }
   robotMarkers.clear();
 }
@@ -1276,8 +1281,8 @@ function findElementAtScenePoint(x: number, y: number): { type: 'annotation' | '
 function findRobotAtScenePoint(x: number, y: number): { type: 'robot'; id: number } | null {
   if (!fabricCanvas) return null;
   const point = new Point(x, y);
-  for (const [id, group] of robotMarkers) {
-    if (typeof group.containsPoint === 'function' && group.containsPoint(point)) {
+  for (const [id, marker] of robotMarkers) {
+    if (typeof marker.circle.containsPoint === 'function' && marker.circle.containsPoint(point)) {
       return { type: 'robot', id };
     }
   }
