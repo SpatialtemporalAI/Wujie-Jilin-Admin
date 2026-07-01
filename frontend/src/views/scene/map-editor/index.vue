@@ -8,6 +8,7 @@ import PropertyPanel from './modules/property-panel.vue';
 import { fetchCreateSceneMap, fetchUpdateSceneMap, fetchGetSceneMap, fetchUploadSceneMapEditorImage } from '@/service/api/scene';
 import { fetchGetMapRobotLocations } from '@/service/api';
 import { getFilePreviewUrl } from '@/service/api/file';
+import { extractRobotPoint } from './utils/robot-location';
 
 defineOptions({ name: 'SceneMapEditor' });
 
@@ -102,11 +103,28 @@ const typeSwitchCurrentType = ref<'navigation' | 'reception'>('reception');
 const hoverInfoShow = ref(false);
 const hoverInfoX = ref(0);
 const hoverInfoY = ref(0);
-const hoverInfoTarget = ref<{ type: 'annotation' | 'object'; id: number } | null>(null);
+const hoverInfoTarget = ref<{ type: 'annotation' | 'object' | 'robot'; id: number } | null>(null);
 
 const hoverInfo = computed(() => {
   const t = hoverInfoTarget.value;
-  if (!t || !editor.editorData.value) return null;
+  if (!t) return null;
+  // 机器人：位置由外部写入 DB，世界坐标(米)直接展示（与点位同坐标系）
+  if (t.type === 'robot') {
+    const robot = robotLocations.value.find(r => r.id === t.id);
+    if (!robot) return null;
+    const pt = extractRobotPoint(robot);
+    if (!pt) return null;
+    return {
+      kind: '机器人',
+      name: robot.name || '-',
+      type: robot.status || '-',
+      x: pt.x.toFixed(2),
+      y: pt.y.toFixed(2),
+      size: null as string | null,
+      angle: pt.angle !== undefined ? `${pt.angle.toFixed(1)}°` : '-',
+    };
+  }
+  if (!editor.editorData.value) return null;
   if (t.type === 'annotation') {
     const ann = editor.editorData.value.annotations.find(a => a.id === t.id);
     if (!ann) return null;
@@ -146,7 +164,7 @@ const hoverInfo = computed(() => {
   };
 });
 
-function handleHoverElement(data: { type: 'annotation' | 'object'; id: number; clientX: number; clientY: number } | null) {
+function handleHoverElement(data: { type: 'annotation' | 'object' | 'robot'; id: number; clientX: number; clientY: number } | null) {
   if (!data) {
     hoverInfoShow.value = false;
     hoverInfoTarget.value = null;

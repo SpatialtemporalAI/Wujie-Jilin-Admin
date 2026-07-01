@@ -31,7 +31,7 @@ const emit = defineEmits<{
   (e: 'request-type-switch', data: { id: number; clientX: number; clientY: number }): void;
   (e: 'rename-element', data: { type: 'annotation' | 'object'; id: number }): void;
   (e: 'blank-click'): void;
-  (e: 'hover-element', data: { type: 'annotation' | 'object'; id: number; clientX: number; clientY: number } | null): void;
+  (e: 'hover-element', data: { type: 'annotation' | 'object' | 'robot'; id: number; clientX: number; clientY: number } | null): void;
 }>();
 
 const canvasContainer = ref<HTMLDivElement>();
@@ -589,9 +589,9 @@ function updatePositions() {
 
 /**
  * 渲染/更新机器人实时位置标记（装饰层，纯视觉）。
- * 机器人世界坐标(米) → 像素，沿用 worldToPixelCoords 同公式：
- *   px = (wx - start_point_x) / resolution
- *   py = height - (wy - start_point_y) / resolution
+ * 机器人世界坐标(米) → 像素，与点位(worldToPixelCoords)同规则：
+ *   wp = worldToPixel(wx, wy, start_point_x, start_point_y, resolution)
+ *   px = wp.x，py = height - wp.y
  * 标记不进 elementMap、evented/selectable/excludeFromExport 全关，
  * 因此不参与选中、保存（保存只读 editorData）、导出。
  */
@@ -608,8 +608,10 @@ function renderRobots() {
     const pt = extractRobotPoint(robot);
     if (!pt) continue;
     seen.add(robot.id);
-    const px = (pt.x - ox) / res;
-    const py = h - (pt.y - oy) / res;
+    // 与点位同规则：worldToPixel 后翻转 Y 轴
+    const wp = worldToPixel(pt.x, pt.y, ox, oy, res);
+    const px = wp.x;
+    const py = h - wp.y;
 
     const existing = robotMarkers.get(robot.id);
     if (existing) {
@@ -996,11 +998,17 @@ function handleMouseMove(opt: any) {
 
   // hover tooltip：拖动时不弹出
   if (!isDraggingObject) {
-    const hovered = findElementAtScenePoint(pointer.x, pointer.y);
-    if (hovered) {
-      emit('hover-element', { ...hovered, clientX: evt.clientX, clientY: evt.clientY });
+    // 机器人在视觉顶层，优先判定，命中则显示机器人信息
+    const robotHit = findRobotAtScenePoint(pointer.x, pointer.y);
+    if (robotHit) {
+      emit('hover-element', { ...robotHit, clientX: evt.clientX, clientY: evt.clientY });
     } else {
-      emit('hover-element', null);
+      const hovered = findElementAtScenePoint(pointer.x, pointer.y);
+      if (hovered) {
+        emit('hover-element', { ...hovered, clientX: evt.clientX, clientY: evt.clientY });
+      } else {
+        emit('hover-element', null);
+      }
     }
   }
 }
@@ -1259,6 +1267,18 @@ function findElementAtScenePoint(x: number, y: number): { type: 'annotation' | '
         const data = getElementData(obj);
         if (data) return { type: layer, id: data.id };
       }
+    }
+  }
+  return null;
+}
+
+// 机器人标记命中检测（仅用于 hover 展示信息；机器人不参与选中/右键/删除）
+function findRobotAtScenePoint(x: number, y: number): { type: 'robot'; id: number } | null {
+  if (!fabricCanvas) return null;
+  const point = new Point(x, y);
+  for (const [id, group] of robotMarkers) {
+    if (typeof group.containsPoint === 'function' && group.containsPoint(point)) {
+      return { type: 'robot', id };
     }
   }
   return null;

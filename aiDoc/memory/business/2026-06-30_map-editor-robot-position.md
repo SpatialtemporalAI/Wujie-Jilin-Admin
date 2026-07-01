@@ -34,7 +34,8 @@
 - `frontend/src/views/scene/map-editor/modules/property-panel.vue`：`locateRobot` 改用 `extractRobotPoint`（修复定位——此前直接读 `location_info.x/y`，外部若写到 `location` 文本则失效）。
 - `frontend/src/views/scene/map-editor/modules/canvas-editor.vue`：
   - 新增 prop `robotLocations`；模块级 `robotMarkers: Map<number, Group>`。
-  - `renderRobots()`：世界坐标(米)→像素（与 `worldToPixelCoords` 同公式：`px=(x-start_x)/res`、`py=height-(y-start_y)/res`），创建/更新红色圆点 `Group`（`ROBOT_FILL=#ef4444` 红 + 白描边 + 名称），`selectable/evented/hasControls=false`、`excludeFromExport=true`、不进 `elementMap` → **不参与选中/保存/导出**。
+  - `renderRobots()`：世界坐标(米)→像素，**与点位 `worldToPixelCoords` 同规则**（`worldToPixel(wx,wy,start_x,start_y,res)` 后 `py=height-wp.y`），创建/更新红色圆点 `Group`（`ROBOT_FILL=#ef4444` 红 + 白描边 + 名称），`selectable/evented/hasControls=false`、`excludeFromExport=true`、不进 `elementMap` → **不参与选中/保存/导出**。
+  - **悬停显示机器人信息**：新增 `findRobotAtScenePoint`（`group.containsPoint` 几何命中，不依赖 fabric evented），在 `handleMouseMove` hover 判定里**机器人优先**（视觉顶层），命中则 `emit('hover-element', {type:'robot', id})`；`index.vue` 的 `hoverInfo` 新增 robot 分支，展示 名称/状态/世界坐标(米，与点位同坐标系)/角度。机器人仅 hover 可交互，仍不可选中/右键/删除。
   - `renderElements()` 末尾调 `renderRobots()` 保证置于顶层；`watch(robotLocations)` 触发刷新；地图切换 watcher 与 `onBeforeUnmount` 调 `clearRobotMarkers`。
 - `frontend/src/views/scene/map-editor/index.vue`：新增 `robotLocations` ref + `loadRobotLocations` + 5s 轮询（常量 `ROBOT_LOCATION_POLL_MS=5000`）；`watch(editor.selectedMapId)` 集中处理「初始加载/选地图/新建场景」时的轮询启停与清空；`onBeforeUnmount` 清理；传 `:robot-locations` 给 `<CanvasEditor>`。
 
