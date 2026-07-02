@@ -2495,8 +2495,8 @@
     "semantic_hash": ""
   },
   "D:\\project\\SpatialtemporalAi\\Wujie-Jilin-Admin\\aiDoc\\memory\\project-memory.md": {
-    "mtime": 1782900135.68838,
-    "ast_hash": "b5493b10ed96f33f8d40640d4eb8c90d",
+    "mtime": 1782969602.4092877,
+    "ast_hash": "289404cec902fba1f268d8838e3c1952",
     "semantic_hash": ""
   },
   "D:\\project\\SpatialtemporalAi\\Wujie-Jilin-Admin\\aiDoc\\memory\\README.md": {
@@ -3895,8 +3895,8 @@
     "semantic_hash": ""
   },
   "D:\\project\\SpatialtemporalAi\\Wujie-Jilin-Admin\\backend\\modules\\robot\\schemas\\robot_event_log.py": {
-    "mtime": 1781232709.3417926,
-    "ast_hash": "5e0d2a6e094a16e44a606524a7040d98",
+    "mtime": 1782969581.5945559,
+    "ast_hash": "a35abd852c79d5266fe48174f301528f",
     "semantic_hash": ""
   },
   "D:\\project\\SpatialtemporalAi\\Wujie-Jilin-Admin\\backend\\modules\\robot\\services\\robot_event_log_service.py": {
@@ -3940,8 +3940,8 @@
     "semantic_hash": ""
   },
   "D:\\project\\SpatialtemporalAi\\Wujie-Jilin-Admin\\frontend\\src\\views\\operation-monitor\\modules\\position-map-panel.vue": {
-    "mtime": 1782891728.1351018,
-    "ast_hash": "32d718b2408153bd4d2fc138b0a41cc6",
+    "mtime": 1782969561.664842,
+    "ast_hash": "d66c2993746017f1ca212fecbd73f8ce",
     "semantic_hash": ""
   },
   "D:\\project\\SpatialtemporalAi\\Wujie-Jilin-Admin\\frontend\\src\\views\\operation-monitor\\modules\\robot-status-card.vue": {
@@ -4992,6 +4992,11 @@
   "D:\\project\\SpatialtemporalAi\\Wujie-Jilin-Admin\\aiDoc\\memory\\business\\2026-07-02_map-editor-edit-start-point-offset-children.md": {
     "mtime": 1782967015.3176386,
     "ast_hash": "3eccb4534c67706c605cb00662d39da8",
+    "semantic_hash": ""
+  },
+  "D:\\project\\SpatialtemporalAi\\Wujie-Jilin-Admin\\aiDoc\\memory\\business\\2026-07-02_operation-monitor-hide-robot-point-without-map.md": {
+    "mtime": 1782969599.9273226,
+    "ast_hash": "afc83936d48922cd50e6fc00d3a1a5d5",
     "semantic_hash": ""
   }
 }
