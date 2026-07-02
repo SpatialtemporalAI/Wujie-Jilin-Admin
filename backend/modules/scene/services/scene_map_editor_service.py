@@ -1,11 +1,12 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 
+import yaml
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 
-from core.exception.errors import NotFoundError, ValidationError
+from core.exception.errors import NotFoundError, RequestError, ValidationError
 from database.models.business.scene_map import SceneMap
 from database.models.business.scene_map_annotation import SceneMapAnnotation
 from database.models.business.scene_map_path import SceneMapPath
@@ -14,6 +15,7 @@ from modules.scene.schemas.scene_map_editor import (
     CreatedIdMapping,
     EditorSaveRequest,
     EditorSaveResponse,
+    SceneMapConfigParseResponse,
 )
 from modules.task.services.task_service import TaskService
 
@@ -41,6 +43,51 @@ class SceneMapEditorService:
         if not map_obj:
             raise NotFoundError(msg=f"场景地图 {map_id} 不存在")
         return map_obj
+
+    @staticmethod
+    async def parse_map_config(file_data: bytes) -> SceneMapConfigParseResponse:
+        """解析 ROS 地图配置文件(yaml)，返回分辨率与扫图起始点。
+
+        - resolution 取自 yaml 中的 ``resolution`` 字段（必须存在）
+        - start_point_x / start_point_y 取自 ``origin`` 数组的前两项（必须存在且长度 >= 2）
+
+        任一关键字段缺失或类型不合法时抛出 RequestError(400)。
+        """
+        try:
+            config = yaml.safe_load(file_data)
+        except yaml.YAMLError as e:  # noqa: BLE001
+            raise RequestError(msg=f"配置文件解析失败，请确认是合法的 yaml：{e}")
+
+        if not isinstance(config, dict):
+            raise RequestError(msg="配置文件内容不是有效的 yaml 映射(key-value)")
+
+        # resolution 必须存在且为数值
+        resolution = config.get("resolution")
+        if resolution is None:
+            raise RequestError(msg="配置文件缺少必填字段：resolution")
+        try:
+            resolution = float(resolution)
+        except (TypeError, ValueError):
+            raise RequestError(msg="配置文件 resolution 字段必须为数值")
+
+        # origin 必须存在，且数组前两项可作为起始点 X/Y
+        origin = config.get("origin")
+        if origin is None:
+            raise RequestError(msg="配置文件缺少必填字段：origin")
+        if not isinstance(origin, (list, tuple)) or len(origin) < 2:
+            raise RequestError(msg="配置文件 origin 字段必须是数组且至少包含 2 个元素")
+
+        try:
+            start_point_x = float(origin[0])
+            start_point_y = float(origin[1])
+        except (TypeError, ValueError):
+            raise RequestError(msg="配置文件 origin 数组前两项必须为数值")
+
+        return SceneMapConfigParseResponse(
+            resolution=resolution,
+            start_point_x=start_point_x,
+            start_point_y=start_point_y,
+        )
 
     @staticmethod
     async def save_editor_data(

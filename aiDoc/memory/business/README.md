@@ -56,3 +56,4 @@
 - [2026-07-01 参数配置·人脸识别阿里云错误友好化解析](./2026-07-01_param-config-face-aliyun-error-parse.md) — face_service 新增错误码→中文提示映射 + _describe_aliyun_error 解析器，facebody/OSS 失败不再裸抛 Response 字典，前端 toast 显示「中文提示（错误码：XXX）」
 - [2026-07-01 参数配置·人脸识别编辑修复](./2026-07-01_param-config-face-edit-no-photo.md) — 编辑按钮点击后滚动回表单消除「无反应」；编辑态人像改只读预览不可改图，仅改名称/播报，后端 photo_changed 判定自动跳过换图
 - [2026-07-01 任务运控动作选项替换为新14项](./2026-07-01_task-action-options-replace.md) — 下拉换为 shake_hand/high_five/hug/high_wave/clap/face_wave/left_kiss/hands_up/x_ray/right_hand_up/reject/right_kiss/two_hand_kiss/no；详情抽屉保留旧值中文标签兼容历史快照；DB 无需迁移
+- [2026-07-02 地图编辑器新增场景上传 ROS yaml 解析分辨率与起始点](./2026-07-02_map-editor-create-scene-yaml-config-parse.md) — 新增场景时扫图起始点/分辨率输入框禁用，改为上传 yaml 配置文件；新增独立解析接口 POST /scene/map-editor/parse-map-config（resolution + origin[0:2]），不改原 add 接口；requirements 显式加 pyyaml

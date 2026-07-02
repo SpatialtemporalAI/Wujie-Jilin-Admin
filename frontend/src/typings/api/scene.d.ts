@@ -260,5 +260,15 @@ declare namespace Api {
       paths: SceneMapPath[];
       objects: SceneMapObject[];
     };
+
+    /** ROS 地图配置文件(yaml)解析结果 */
+    type SceneMapConfigParseResult = {
+      /** 分辨率(m/px) */
+      resolution: number;
+      /** 扫图起始点X坐标(origin[0]) */
+      start_point_x: number;
+      /** 扫图起始点Y坐标(origin[1]) */
+      start_point_y: number;
+    };
   }
 }

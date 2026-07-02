@@ -20,6 +20,7 @@ from modules.scene.schemas.scene_map_editor import (
     EditorMapAnnotationResponse,
     EditorMapPathResponse,
     EditorMapObjectResponse,
+    SceneMapConfigParseResponse,
 )
 from modules.scene.schemas.scene_map import SceneMapResponseData
 
@@ -125,3 +126,26 @@ async def upload_scene_map_editor_image(
         response.image_width = width
         response.image_height = height
     return response_base.success(data=response, msg="上传成功")
+
+
+@scene_map_editor_public_router.post(
+    "/parse-map-config",
+    response_model=ResponseModel[SceneMapConfigParseResponse],
+    summary="解析 ROS 地图配置文件(yaml)",
+    dependencies=[Depends(require_any_permission("scene:map-editor:add", "scene:map-editor:edit"))],
+)
+async def parse_scene_map_config(
+    file: UploadFile = File(..., description="ROS 地图配置文件(yaml)"),
+    user: SysUser = Depends(current_user),
+):
+    """解析 ROS 地图配置文件(yaml)，回显分辨率与扫图起始点。
+
+    仅做读取解析，不落库、不依赖任何数据库会话：
+    - ``resolution`` 取自 yaml 中的 resolution 字段（必须存在）
+    - ``start_point_x`` / ``start_point_y`` 取自 origin 数组前两项（必须存在）
+
+    权限要求 scene:map-editor:add 或 scene:map-editor:edit，与地图编辑器新增/编辑场景一致。
+    """
+    file_data = await file.read()
+    data = await SceneMapEditorService.parse_map_config(file_data)
+    return response_base.success(data=data, msg="解析成功")

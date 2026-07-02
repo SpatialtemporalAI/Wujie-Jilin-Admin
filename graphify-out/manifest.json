@@ -2510,8 +2510,8 @@
     "semantic_hash": ""
   },
   "D:\\project\\SpatialtemporalAi\\Wujie-Jilin-Admin\\aiDoc\\memory\\business\\README.md": {
-    "mtime": 1782900125.2985487,
-    "ast_hash": "9444776df5f165a319f69c617f180693",
+    "mtime": 1782964545.6664908,
+    "ast_hash": "81ede3ad367b52d95362239115e8f7ba",
     "semantic_hash": ""
   },
   "D:\\project\\SpatialtemporalAi\\Wujie-Jilin-Admin\\aiDoc\\memory\\business\\TEMPLATE.md": {
@@ -2570,8 +2570,8 @@
     "semantic_hash": ""
   },
   "D:\\project\\SpatialtemporalAi\\Wujie-Jilin-Admin\\backend\\requirements.txt": {
-    "mtime": 1782201121.9109824,
-    "ast_hash": "342875cb1d7e4efcf318ecf5db4b3a54",
+    "mtime": 1782964258.4547458,
+    "ast_hash": "07da41e3e3e01382d982cf1a03a45116",
     "semantic_hash": ""
   },
   "D:\\project\\SpatialtemporalAi\\Wujie-Jilin-Admin\\backend\\.trae\\specs\\system_management_spec.md": {
@@ -3365,8 +3365,8 @@
     "semantic_hash": ""
   },
   "D:\\project\\SpatialtemporalAi\\Wujie-Jilin-Admin\\backend\\modules\\scene\\endpoints\\scene_map_editor.py": {
-    "mtime": 1782298091.7355952,
-    "ast_hash": "639bc91b7c19cd2599417debd03f5a51",
+    "mtime": 1782964258.3971722,
+    "ast_hash": "08eefd7ee135b61f124fd55420ce2d94",
     "semantic_hash": ""
   },
   "D:\\project\\SpatialtemporalAi\\Wujie-Jilin-Admin\\backend\\modules\\scene\\endpoints\\scene_map_object.py": {
@@ -3400,8 +3400,8 @@
     "semantic_hash": ""
   },
   "D:\\project\\SpatialtemporalAi\\Wujie-Jilin-Admin\\backend\\modules\\scene\\schemas\\scene_map_editor.py": {
-    "mtime": 1782201121.7926278,
-    "ast_hash": "5b74e5dd62bf62dc3544100a1bf51db4",
+    "mtime": 1782964258.4166286,
+    "ast_hash": "f8a7aa9739c5f03ec96b45dd27419da6",
     "semantic_hash": ""
   },
   "D:\\project\\SpatialtemporalAi\\Wujie-Jilin-Admin\\backend\\modules\\scene\\schemas\\scene_map_object.py": {
@@ -3430,8 +3430,8 @@
     "semantic_hash": ""
   },
   "D:\\project\\SpatialtemporalAi\\Wujie-Jilin-Admin\\backend\\modules\\scene\\services\\scene_map_editor_service.py": {
-    "mtime": 1782201121.8094883,
-    "ast_hash": "e2819acb23fb6bff4e832f82919537bc",
+    "mtime": 1782964258.438383,
+    "ast_hash": "b5efcef6fb3457d4ff6fd739c59f9c72",
     "semantic_hash": ""
   },
   "D:\\project\\SpatialtemporalAi\\Wujie-Jilin-Admin\\backend\\modules\\scene\\services\\scene_map_object_service.py": {
@@ -3610,8 +3610,8 @@
     "semantic_hash": ""
   },
   "D:\\project\\SpatialtemporalAi\\Wujie-Jilin-Admin\\frontend\\src\\service\\api\\scene.ts": {
-    "mtime": 1782298115.501596,
-    "ast_hash": "b533595d299b1a3cfc068d1104a413e1",
+    "mtime": 1782964258.4703946,
+    "ast_hash": "e1c740b06d1d7d4d5db867611861b313",
     "semantic_hash": ""
   },
   "D:\\project\\SpatialtemporalAi\\Wujie-Jilin-Admin\\frontend\\src\\service\\api\\task.ts": {
@@ -3630,8 +3630,8 @@
     "semantic_hash": ""
   },
   "D:\\project\\SpatialtemporalAi\\Wujie-Jilin-Admin\\frontend\\src\\typings\\api\\scene.d.ts": {
-    "mtime": 1782201122.008675,
-    "ast_hash": "c73d113d9a805742d524c83600a08970",
+    "mtime": 1782964258.4909854,
+    "ast_hash": "4d617a0d963915cc517ac56aeef2c1f5",
     "semantic_hash": ""
   },
   "D:\\project\\SpatialtemporalAi\\Wujie-Jilin-Admin\\frontend\\src\\typings\\api\\task.d.ts": {
@@ -3710,8 +3710,8 @@
     "semantic_hash": ""
   },
   "D:\\project\\SpatialtemporalAi\\Wujie-Jilin-Admin\\frontend\\src\\views\\scene\\map-editor\\index.vue": {
-    "mtime": 1782893736.282731,
-    "ast_hash": "56a2e194b25b9b876222ba4339e9840e",
+    "mtime": 1782964258.5165503,
+    "ast_hash": "90840669439f494788c43a47d6ddc84f",
     "semantic_hash": ""
   },
   "D:\\project\\SpatialtemporalAi\\Wujie-Jilin-Admin\\frontend\\src\\views\\scene\\map-editor\\composables\\useMapEditor.ts": {
@@ -4972,6 +4972,11 @@
   "D:\\project\\SpatialtemporalAi\\Wujie-Jilin-Admin\\aiDoc\\memory\\business\\2026-07-01_task-action-options-replace.md": {
     "mtime": 1782900111.3181028,
     "ast_hash": "b80bd9fe64e4dc550e3a91176c3bc27e",
+    "semantic_hash": ""
+  },
+  "D:\\project\\SpatialtemporalAi\\Wujie-Jilin-Admin\\aiDoc\\memory\\business\\2026-07-02_map-editor-create-scene-yaml-config-parse.md": {
+    "mtime": 1782964495.1883936,
+    "ast_hash": "b2e14c9460a6345f0b1b1ce553725931",
     "semantic_hash": ""
   }
 }
