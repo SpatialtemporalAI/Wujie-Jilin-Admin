@@ -170,7 +170,7 @@ const {
                 loading={actionLoading.value}
                 onClick={() => handleStart(row)}
               >
-                启动
+                立即启动
               </NButton>
             )}
             {canPause && (
