@@ -135,12 +135,10 @@ function handleEditAnnotation(row: Api.Scene.SceneMapAnnotation) {
 }
 
 async function handleDeleteAnnotation(id: number) {
-  try {
-    await fetchDeleteMapAnnotation(props.mapData?.id ?? 0, id);
+  const { error } = await fetchDeleteMapAnnotation(props.mapData?.id ?? 0, id);
+  if (!error) {
     window.$message?.success('删除成功');
     getAnnotationDataByPage();
-  } catch (error) {
-    console.error('删除标注失败:', error);
   }
 }
 
@@ -248,12 +246,10 @@ function handleEditObject(row: Api.Scene.SceneMapObject) {
 }
 
 async function handleDeleteObject(id: number) {
-  try {
-    await fetchDeleteMapObject(props.mapData?.id ?? 0, id);
+  const { error } = await fetchDeleteMapObject(props.mapData?.id ?? 0, id);
+  if (!error) {
     window.$message?.success('删除成功');
     getObjectDataByPage();
-  } catch (error) {
-    console.error('删除物体失败:', error);
   }
 }
 

@@ -62,6 +62,7 @@
 - [2026-07-02 任务运控动作下拉精简](./business/2026-07-02_task-action-options-trim.md) — 移除 击掌/拥抱/左手飞吻/右手飞吻/双手飞吻/动感光波 6 项，下拉保留 8 项；详情 actionLabel、TaskAction 类型、后端 schema 不动以兼容历史快照
 
 - [2026-07-02 任务新增/编辑机器人改为单选](./business/2026-07-02_task-robot-single-select.md) — 接口层限制 robot_ids 长度必须为 1，前端选择器改为单选，数据库结构不变
+- [2026-07-02 前端 CRUD 异常后仍弹成功提示修复](./business/2026-07-02_frontend-crud-error-success-toast.md) — 修正 user-operate-drawer 与 scene-map-detail-drawer 的错误处理，使用 `createFlatRequest` 返回的 `error` 字段判断，避免错误弹窗后再弹成功弹窗
 
 ## 维护说明
 
