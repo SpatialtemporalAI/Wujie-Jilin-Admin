@@ -197,6 +197,14 @@ function createDefaultModel(): FormModel {
 
 const model = ref<FormModel>(createDefaultModel());
 
+/** 机器人单选绑定（API 仍为 robot_ids 数组，但当前限制仅 1 个） */
+const robotId = computed({
+  get: () => model.value.robot_ids[0] ?? null,
+  set: (val: number | null) => {
+    model.value.robot_ids = val !== null ? [val] : [];
+  }
+});
+
 /** 调度日期字符串（yyyy-MM-dd）→ 时间戳（ms），用于回填 NDatePicker */
 function dateStrToTs(value: string | null): number | null {
   if (!value) return null;
@@ -261,7 +269,8 @@ const rules = computed(() => ({
     required: true,
     type: 'array' as const,
     min: 1,
-    message: '至少选择一台机器人',
+    max: 1,
+    message: '请选择一台机器人',
     trigger: 'change'
   }
 }));
@@ -289,7 +298,7 @@ async function handleInitModel() {
       ? cloned.schedule_repeat_cycle.split(',').filter(v => v && v !== 'none')
       : [];
     model.value.map_id = cloned.map_id ?? cloned.robots?.find(r => r.map_id)?.map_id ?? null;
-    model.value.robot_ids = cloned.robots?.map(r => r.id) || [];
+    model.value.robot_ids = cloned.robots?.map(r => r.id).slice(0, 1) || [];
 
     if (model.value.map_id !== null) {
       const fallbackName = cloned.map_name || cloned.robots?.find(r => r.map_id)?.map_name || `地图 #${model.value.map_id}`;
@@ -477,8 +486,8 @@ onMounted(() => {
       <!-- 机器人绑定 -->
       <!-- <NDivider style="font-size: 16px;" title-placement="center">执行机器人</NDivider> -->
       <NFormItem label="绑定机器人" path="robot_ids">
-        <NSelect v-model:value="model.robot_ids" :options="filteredRobotOptions"
-          :placeholder="model.map_id === null ? '请先选择场景地图' : '至少选择一台机器人'" multiple filterable
+        <NSelect v-model:value="robotId" :options="filteredRobotOptions"
+          :placeholder="model.map_id === null ? '请先选择场景地图' : '请选择一台机器人'" filterable clearable
           :disabled="model.map_id === null" :render-label="renderRobotLabel" />
       </NFormItem>
 

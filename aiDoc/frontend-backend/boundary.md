@@ -189,9 +189,15 @@
 - 前端 API 封装统一放在 `src/service/api/`
 - 跨栈变更必须同步更新 `aiDoc/frontend-backend/` 下的文档
 
-## 机器人与场景绑定契约
+## 任务管理 · 机器人绑定契约
 
-机器人管理接口支持可空字段 `map_id` 表示绑定的场景地图 ID，响应额外返回 `map_name` 表示场景地图名称。地图编辑器中机器人定位依赖 `map_id` 与最新状态记录的 `location` 坐标。
+任务新增/编辑接口（`POST /task/manage/add`、`PUT /task/manage/{task_id}`）中，`robot_ids` 字段**当前仅支持单选**，即数组长度必须为 1。该限制通过后端 Schema 校验（`min_length=1, max_length=1`）实现，数据库表结构与关联表逻辑保持不变，便于后续快速恢复多选。
+
+- 后端：`TaskCreate.robot_ids` / `TaskUpdate.robot_ids` 均限制 `max_length=1`
+- 前端：`task-operate-drawer.vue` 中机器人选择器已改为单选 `NSelect`
+- 类型：`robot_ids` 仍为 `number[]`，保持与未来多选扩展的兼容性
+
+## 机器人与场景绑定契约
 
 ## 商户管理 + 商户开放 API 契约
 

@@ -61,6 +61,8 @@
 - [2026-07-02 接口传参类型校验收紧](./business/2026-07-02_param-type-validation-tighten.md) — base.py 新增 `parse_optional_enum` 工厂；机器人/事件日志/执行记录/调度日志的 status、source、event_type 等查询字段补枚举校验；`RobotQueryParams.{model_id,map_id}`、`SceneMapQueryParams.group_id` 统一 `OptionalIntField`；前端 robot-operate-drawer 去掉 `undefined as unknown as number` 类型谎言
 - [2026-07-02 任务运控动作下拉精简](./business/2026-07-02_task-action-options-trim.md) — 移除 击掌/拥抱/左手飞吻/右手飞吻/双手飞吻/动感光波 6 项，下拉保留 8 项；详情 actionLabel、TaskAction 类型、后端 schema 不动以兼容历史快照
 
+- [2026-07-02 任务新增/编辑机器人改为单选](./business/2026-07-02_task-robot-single-select.md) — 接口层限制 robot_ids 长度必须为 1，前端选择器改为单选，数据库结构不变
+
 ## 维护说明
 
 - 新增记忆时，在对应目录创建 Markdown 文件，并在此索引中添加条目
