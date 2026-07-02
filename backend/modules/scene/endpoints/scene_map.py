@@ -146,10 +146,11 @@ async def update_map(
     db: AsyncSession = Depends(get_session),
 ):
     """更新场景地图"""
-    map_obj, image_id_changed = await SceneMapService.update(db, map_id, map_update)
+    map_obj, image_id_changed, start_point_changed = await SceneMapService.update(db, map_id, map_update)
     await db.commit()
     await db.refresh(map_obj)
-    if image_id_changed:
+    # image_id 变化需重建底图；start_point 变化会平移标注/物体，nav_image 也需重新生成
+    if image_id_changed or start_point_changed:
         SceneMapNavImageService.schedule_regenerate(map_id, user.id)
     return response_base.success(data=SceneMapResponseData.model_validate(map_obj), msg="更新成功")
 

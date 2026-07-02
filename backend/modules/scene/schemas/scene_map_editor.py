@@ -124,3 +124,15 @@ class EditorMapDataResponse(BaseModel):
     annotations: List[EditorMapAnnotationResponse] = Field(default_factory=list)
     paths: List[EditorMapPathResponse] = Field(default_factory=list)
     objects: List[EditorMapObjectResponse] = Field(default_factory=list)
+
+
+class SceneMapConfigParseResponse(BaseModel):
+    """ROS 地图配置文件(yaml)解析响应
+
+    resolution 取自 yaml 中的 resolution 字段；
+    start_point_x / start_point_y 取自 origin 数组的前两项。
+    """
+
+    resolution: float = Field(..., description="分辨率(m/px)")
+    start_point_x: float = Field(..., description="扫图起始点X坐标(origin[0])")
+    start_point_y: float = Field(..., description="扫图起始点Y坐标(origin[1])")

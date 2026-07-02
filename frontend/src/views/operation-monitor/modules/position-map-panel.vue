@@ -369,6 +369,8 @@ function renderRobotMarker() {
     robotMarker = null;
   }
 
+  // 未绑定场景地图时不渲染机器人点位：没有底图坐标系，坐标换算无意义
+  if (!mapData.value) return;
   if (!props.location) return;
 
   const robotPx = worldToCanvasPoint(props.location.x, props.location.y);

@@ -5,13 +5,13 @@ from datetime import datetime
 
 from pydantic import Field
 
-from app.models.common.base import BaseEntity
+from app.models.common.base import BaseEntity, OptionalIntField
 
 
 class RobotEventLogQueryParams(BaseEntity):
     """机器人事件日志查询参数"""
 
-    robot_id: int | None = Field(None, description="机器人ID")
+    robot_id: OptionalIntField = Field(None, description="机器人ID")
     event_type: str | None = Field(None, description="事件类型：task/alarm")
     event_status: str | None = Field(None, description="事件状态：normal/abnormal")
     start_time: str | None = Field(None, description="开始时间")

@@ -274,3 +274,15 @@ export function fetchSaveEditorData(mapId: number, data: Api.Scene.EditorSaveReq
     data
   });
 }
+
+/** parse ROS map config yaml (resolution + origin -> start_point)，新增场景时回显分辨率与起始点 */
+export function fetchParseSceneMapConfig(file: File) {
+  const formData = new FormData();
+  formData.append('file', file);
+  return request<Api.Scene.SceneMapConfigParseResult>({
+    url: '/scene/map-editor/parse-map-config',
+    method: 'post',
+    data: formData,
+    headers: { 'Content-Type': 'multipart/form-data' }
+  });
+}

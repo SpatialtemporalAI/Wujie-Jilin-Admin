@@ -5,7 +5,7 @@ import { useMapEditor } from './composables/useMapEditor';
 import EditorToolbar from './modules/editor-toolbar.vue';
 import CanvasEditor from './modules/canvas-editor.vue';
 import PropertyPanel from './modules/property-panel.vue';
-import { fetchCreateSceneMap, fetchUpdateSceneMap, fetchGetSceneMap, fetchUploadSceneMapEditorImage } from '@/service/api/scene';
+import { fetchCreateSceneMap, fetchUpdateSceneMap, fetchGetSceneMap, fetchUploadSceneMapEditorImage, fetchParseSceneMapConfig } from '@/service/api/scene';
 import { fetchGetMapRobotLocations } from '@/service/api';
 import { getFilePreviewUrl } from '@/service/api/file';
 import { extractRobotPoint } from './utils/robot-location';
@@ -196,6 +196,9 @@ const sceneFormPointY = ref<number | null>(null);
 const sceneFormResolution = ref(0.05);
 const sceneUploading = ref(false);
 const sceneUploadFileList = ref<UploadFileInfo[]>([]);
+const configUploading = ref(false);
+const configUploadFileList = ref<UploadFileInfo[]>([]);
+const configFileName = ref('');
 
 function resetSceneForm() {
   sceneFormName.value = '';
@@ -207,6 +210,8 @@ function resetSceneForm() {
   sceneFormPointX.value = null;
   sceneFormPointY.value = null;
   sceneFormResolution.value = 0.05;
+  configUploadFileList.value = [];
+  configFileName.value = '';
 }
 
 onMounted(async () => {
@@ -282,6 +287,28 @@ function handleRemoveSceneImage() {
   sceneFormOriginalHeight.value = null;
 }
 
+async function handleConfigUpload({ file }: { file: { file: File | null } }) {
+  if (!file.file) return;
+  configUploading.value = true;
+  try {
+    const { data, error } = await fetchParseSceneMapConfig(file.file);
+    if (!error && data) {
+      sceneFormResolution.value = data.resolution;
+      sceneFormPointX.value = data.start_point_x;
+      sceneFormPointY.value = data.start_point_y;
+      configFileName.value = file.file.name;
+      window.$message?.success('配置文件解析成功，已回显分辨率与起始点');
+    }
+  } finally {
+    configUploading.value = false;
+    configUploadFileList.value = [];
+  }
+}
+
+function handleRemoveConfig() {
+  configFileName.value = '';
+}
+
 async function confirmSceneSubmit() {
   if (!sceneFormName.value.trim()) {
     window.$message?.warning('请输入场景名称');
@@ -298,7 +325,7 @@ async function confirmSceneSubmit() {
       return false;
     }
     if (sceneFormPointX.value === null || sceneFormPointY.value === null) {
-      window.$message?.warning('请输入扫图起始点 X、Y');
+      window.$message?.warning('请上传配置文件(yaml)以解析扫图起始点与分辨率');
       return false;
     }
     try {
@@ -671,16 +698,39 @@ function handleFocusAnnotation(id: number) {
           </div>
           <span v-else class="text-xs text-gray-400">未设置图片</span>
         </NFormItem>
+        <NFormItem v-if="sceneDialogMode === 'add'" label="配置文件">
+          <div class="w-full">
+            <NUpload
+              v-model:file-list="configUploadFileList"
+              :max="1"
+              accept=".yaml,.yml,application/yaml,text/yaml"
+              :custom-request="handleConfigUpload"
+              :show-file-list="false"
+            >
+              <NButton :loading="configUploading" ghost>
+                <template #icon><icon-ic-round-upload /></template>
+                {{ configUploading ? '解析中...' : '选择配置文件' }}
+              </NButton>
+            </NUpload>
+            <div v-if="configFileName" class="mt-8px flex items-center gap-8px">
+              <NTag size="small" type="success" round>{{ configFileName }}</NTag>
+              <NButton text type="error" @click="handleRemoveConfig">移除</NButton>
+            </div>
+            <div class="mt-4px text-xs text-gray-400">
+              上传 ROS 地图 yaml，自动解析 resolution 与 origin 回显分辨率与起始点
+            </div>
+          </div>
+        </NFormItem>
         <NFormItem label="扫图起始点">
           <div class="grid w-full grid-cols-2 gap-8px">
             <NInputNumber v-model:value="sceneFormPointX" :placeholder="sceneDialogMode === 'edit' ? 'X' : '原始X'"
-              class="w-full">
+              :disabled="sceneDialogMode === 'add'" class="w-full">
               <template #suffix>
                 <span class="text-xs text-gray-400">米</span>
               </template>
             </NInputNumber>
             <NInputNumber v-model:value="sceneFormPointY" :placeholder="sceneDialogMode === 'edit' ? 'Y' : '原始Y'"
-              class="w-full">
+              :disabled="sceneDialogMode === 'add'" class="w-full">
               <template #suffix>
                 <span class="text-xs text-gray-400">米</span>
               </template>
@@ -689,7 +739,7 @@ function handleFocusAnnotation(id: number) {
         </NFormItem>
         <NFormItem label="分辨率">
           <NInputNumber v-model:value="sceneFormResolution" placeholder="m/px" :step="0.01" :min="0.01"
-            class="w-full">
+            :disabled="sceneDialogMode === 'add'" class="w-full">
             <template #suffix>
               <span class="text-xs text-gray-400">m/px</span>
             </template>

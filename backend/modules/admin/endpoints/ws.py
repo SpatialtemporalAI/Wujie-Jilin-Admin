@@ -56,7 +56,8 @@ async def notification_websocket(
     if token:
         try:
             jwt_manager = JWTAuthManager()
-            payload = jwt_manager.decode_token(token)
+            # 兼容 "Bearer <jwt>" 与裸 JWT 两种写法，与 sys/file.py 的 token 解析保持一致
+            payload = jwt_manager.decode_token(token.removeprefix("Bearer "))
             session_id = payload.get("session_id")
             _user_id = payload.get("user_id")
             user_role = payload.get("role")

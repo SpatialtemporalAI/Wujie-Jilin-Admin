@@ -17,7 +17,9 @@ const lastMessage = ref<any>(null);
 
 export function useWebSocketNotification() {
   function doConnect(token: string) {
-    const wsUrl = `${WS_BASE_URL}/admin/ws/notifications?token=${token}`;
+    // 入参可能是 "Bearer <jwt>"（与 Authorization 头一致），后端 ws 端点的 token query 只接收原始 JWT，因此剥离前缀
+    const rawToken = token.replace(/^Bearer\s+/i, '').trim();
+    const wsUrl = `${WS_BASE_URL}/admin/ws/notifications?token=${encodeURIComponent(rawToken)}`;
     ws = new WebSocket(wsUrl);
 
     ws.onopen = () => {
