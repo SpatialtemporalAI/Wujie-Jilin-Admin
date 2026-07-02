@@ -36,18 +36,12 @@ const taskTypeOptions = [
 /** 运控动作选项 */
 const actionOptions = [
   { label: '握手', value: 'shake_hand' },
-  { label: '击掌', value: 'high_five' },
-  { label: '拥抱', value: 'hug' },
   { label: '高举挥手', value: 'high_wave' },
   { label: '鼓掌', value: 'clap' },
   { label: '挥手', value: 'face_wave' },
-  { label: '左手飞吻', value: 'left_kiss' },
   { label: '平举双手', value: 'hands_up' },
-  { label: '动感光波', value: 'x_ray' },
   { label: '平举右手', value: 'right_hand_up' },
   { label: '拒绝', value: 'reject' },
-  { label: '右手飞吻', value: 'right_kiss' },
-  { label: '双手飞吻', value: 'two_hand_kiss' },
   { label: '无动作', value: 'no' }
 ];
 
