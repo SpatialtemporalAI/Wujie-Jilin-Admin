@@ -97,3 +97,23 @@ def parse_optional_int(value):
 
 
 OptionalIntField = Annotated[Optional[int], BeforeValidator(parse_optional_int)]
+
+
+def parse_optional_enum(allowed):
+    """生成可选枚举校验器：空值收敛为 None，合法值原样返回，非法值抛错。
+
+    与 OptionalIntField 同款 BeforeValidator + EMPTY_VALUES 模式，
+    供查询参数中"文档已写明取值"的字段收敛空值并强约束枚举。
+    """
+    allowed_set = {str(v) for v in allowed}
+
+    def parser(value):
+        if isinstance(value, str):
+            value = value.strip()
+        if value in EMPTY_VALUES:
+            return None
+        if value in allowed_set:
+            return value
+        raise ValueError(f"非法值: {value}，允许: {sorted(allowed_set)}")
+
+    return parser

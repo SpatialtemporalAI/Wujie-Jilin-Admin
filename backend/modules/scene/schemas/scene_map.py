@@ -8,14 +8,14 @@ from pydantic import Field, ConfigDict
 
 from pydantic import BaseModel
 
-from app.models.common.base import BaseReqEntity, BaseRespEntity, BoolField
+from app.models.common.base import BaseReqEntity, BaseRespEntity, BoolField, OptionalIntField
 
 
 class SceneMapQueryParams(BaseModel):
     """场景地图查询参数"""
 
     name: str | None = Field(None, description="地图名称")
-    group_id: int | None = Field(None, description="分组ID")
+    group_id: OptionalIntField = Field(None, description="分组ID")
     status: BoolField = Field(None, description="状态")
 
 

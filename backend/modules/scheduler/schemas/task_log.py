@@ -2,10 +2,15 @@
 # -*- coding: utf-8 -*-
 
 from datetime import datetime
+from typing import Annotated
 
-from pydantic import Field
+from pydantic import Field, BeforeValidator
 
-from app.models.common.base import BaseEntity, OptionalIntField
+from app.models.common.base import BaseEntity, OptionalIntField, parse_optional_enum
+
+TaskLogStatusField = Annotated[
+    str | None, BeforeValidator(parse_optional_enum({"running", "success", "timeout", "failed"}))
+]
 
 
 class TaskLogQueryParams(BaseEntity):
@@ -14,7 +19,7 @@ class TaskLogQueryParams(BaseEntity):
     task_id: OptionalIntField = Field(None, description="任务ID")
     task_name: str | None = Field(None, description="任务名称")
     task_key: str | None = Field(None, description="任务标识")
-    status: str | None = Field(None, description="执行状态")
+    status: TaskLogStatusField = Field(None, description="执行状态")
     start_time: str | None = Field(None, description="开始时间")
     end_time: str | None = Field(None, description="结束时间")
 

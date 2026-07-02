@@ -117,6 +117,37 @@
 
 ---
 
+## 枚举字段与可选 ID 查询参数
+
+查询参数（query）经 URL 编码后一律为字符串，空值可能以 `""`/`" "`/`"null"`/`"undefined"`/缺省等形式出现。后端在 `app/models/common/base.py` 提供两个统一收敛器，**所有可能为空的 query 字段都应使用**，避免裸 `int`/`str` 在空值时直接 422：
+
+- `OptionalIntField`：空值 → `None`，`"123"` → `123`，非数字字符串 → 422
+- `parse_optional_enum(allowed)`（工厂）：空值 → `None`，命中允许集 → 原值，非法值 → 422；用法 `Annotated[str | None, BeforeValidator(parse_optional_enum({...}))]`
+
+> 仅用于 query 参数。请求体（body）走 JSON，前端给的是带类型值，保持 `Optional[int]`/`Optional[str]` 即可。
+
+### 机器人状态枚举
+
+机器人 `status` 是字符串枚举（**不走**上面的 `"1"/"2"` bool 桥接），前后端取值必须一致：
+
+| 字段 | 取值 |
+|------|------|
+| `status` | `online` / `offline` / `inactive` |
+| `speed_level` | `normal` / `slow` / `low` |
+
+- 后端：`RobotStatusField` / `SpeedLevelField`（`modules/robot/schemas/robot.py`）
+- 前端：`RobotStatusEnum`（`typings/api/robot.d.ts`），表单选项须与上表一致
+
+### 其它已收敛枚举查询字段
+
+| 模块 | 字段 | 取值 |
+|------|------|------|
+| 机器人事件日志 | `event_type` / `event_status` | `task,alarm` / `normal,abnormal` |
+| 任务执行记录 | `status` / `source` | `pending,running,paused,cancelled,completed,failed` / `platform_schedule,voice_trigger,manual` |
+| 调度任务日志 | `status` | `running,success,timeout,failed` |
+
+---
+
 ## 时间字段桥接
 
 ### 后端 → 前端（响应序列化）
