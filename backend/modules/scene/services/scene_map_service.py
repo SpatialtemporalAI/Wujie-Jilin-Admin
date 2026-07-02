@@ -1,15 +1,19 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 
+import json
 import logging
 from typing import List, Tuple
 
-from sqlalchemy import select, and_
+from sqlalchemy import select, and_, update as sql_update
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import noload, joinedload
 
 from core.exception.errors import NotFoundError
 from database.models.business.scene_map import SceneMap
+from database.models.business.scene_map_annotation import SceneMapAnnotation
+from database.models.business.scene_map_object import SceneMapObject
+from database.models.business.scene_map_path import SceneMapPath
 from database.models.business.scene_group import SceneGroup
 from modules.scene.services.scene_group_service import SceneGroupService
 from database.utils.timezone import timezone
@@ -171,10 +175,18 @@ class SceneMapService:
     @staticmethod
     async def update(
         db: AsyncSession, map_id: int, map_update: SceneMapUpdate
-    ) -> Tuple[SceneMap, bool]:
-        """更新场景地图，返回 (地图对象, image_id 是否变化)"""
+    ) -> Tuple[SceneMap, bool, bool]:
+        """更新场景地图，返回 (地图对象, image_id 是否变化, start_point 是否变化)
+
+        start_point 变化时，会同步平移该地图下的标注/物体/路径坐标（按 start_point 新旧差值直接平移，
+        不涉及 resolution）。机器人坐标为独立世界系，不受影响。start_point 变化也需要重新生成 nav_image。
+        """
         map_obj = await SceneMapService.get(db, map_id)
         old_image_id = map_obj.image_id
+
+        # 记录旧值，用于判断 start_point 是否变化及计算平移偏移
+        old_start_x = map_obj.start_point_x
+        old_start_y = map_obj.start_point_y
 
         update_data = map_update.model_dump(exclude_unset=True)
         for field, value in update_data.items():
@@ -184,7 +196,100 @@ class SceneMapService:
         image_id_changed = (
             "image_id" in update_data and map_obj.image_id != old_image_id
         )
-        return map_obj, image_id_changed
+
+        new_start_x = map_obj.start_point_x
+        new_start_y = map_obj.start_point_y
+        start_point_changed = (
+            ("start_point_x" in update_data or "start_point_y" in update_data)
+            and (new_start_x != old_start_x or new_start_y != old_start_y)
+        )
+        if start_point_changed:
+            await SceneMapService._apply_start_point_offset(
+                db,
+                map_id=map_obj.id,
+                old_start_x=old_start_x,
+                old_start_y=old_start_y,
+                new_start_x=new_start_x,
+                new_start_y=new_start_y,
+            )
+            await db.flush()
+
+        return map_obj, image_id_changed, start_point_changed
+
+    @staticmethod
+    async def _apply_start_point_offset(
+        db: AsyncSession,
+        *,
+        map_id: int,
+        old_start_x: float,
+        old_start_y: float,
+        new_start_x: float,
+        new_start_y: float,
+    ) -> None:
+        """start_point 变化后，按新旧差值平移地图子元素(标注/物体/路径)坐标（不涉及 resolution/height）。
+
+        平移公式（直接加上 start_point 新旧差值）：
+            new_pixelX = old_pixelX + new_start_x - old_start_x
+            new_pixelY = old_pixelY + new_start_y - old_start_y
+
+        - 标注：平移 x、y
+        - 物体：平移 x、y（points 为相对物体自身原点的偏移，随 x/y 平移即可，不单独处理）
+        - 路径：仅平移中间点 points(JSON，绝对像素坐标)；起止为标注引用，随标注平移自动跟随
+        - 机器人：独立世界坐标系、外部写入，不在此处理
+        """
+        # 标注 x/y
+        await db.execute(
+            sql_update(SceneMapAnnotation)
+            .where(
+                SceneMapAnnotation.map_id == map_id,
+                SceneMapAnnotation.deleted_at.is_(None),
+            )
+            .values(
+                x=SceneMapAnnotation.x + new_start_x - old_start_x,
+                y=SceneMapAnnotation.y + new_start_y - old_start_y,
+            )
+        )
+        # 物体 x/y
+        await db.execute(
+            sql_update(SceneMapObject)
+            .where(
+                SceneMapObject.map_id == map_id,
+                SceneMapObject.deleted_at.is_(None),
+            )
+            .values(
+                x=SceneMapObject.x + new_start_x - old_start_x,
+                y=SceneMapObject.y + new_start_y - old_start_y,
+            )
+        )
+        # 路径中间点(JSON，绝对像素坐标)
+        stmt = select(SceneMapPath).where(
+            SceneMapPath.map_id == map_id,
+            SceneMapPath.deleted_at.is_(None),
+        )
+        paths = (await db.execute(stmt)).scalars().all()
+        for path in paths:
+            if not path.points:
+                continue
+            try:
+                data = json.loads(path.points)
+            except (TypeError, ValueError):
+                continue
+            if not isinstance(data, list):
+                continue
+            changed = False
+            for pt in data:
+                if isinstance(pt, dict) and "x" in pt and "y" in pt:
+                    old_px, old_py = float(pt["x"]), float(pt["y"])
+                    pt["x"] = old_px + new_start_x - old_start_x
+                    pt["y"] = old_py + new_start_y - old_start_y
+                    changed = True
+                elif isinstance(pt, list) and len(pt) >= 2:
+                    old_px, old_py = float(pt[0]), float(pt[1])
+                    pt[0] = old_px + new_start_x - old_start_x
+                    pt[1] = old_py + new_start_y - old_start_y
+                    changed = True
+            if changed:
+                path.points = json.dumps(data)
 
     @staticmethod
     async def delete(db: AsyncSession, map_id: int) -> None:

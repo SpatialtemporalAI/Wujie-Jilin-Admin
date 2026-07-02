@@ -57,3 +57,5 @@
 - [2026-07-01 参数配置·人脸识别编辑修复](./2026-07-01_param-config-face-edit-no-photo.md) — 编辑按钮点击后滚动回表单消除「无反应」；编辑态人像改只读预览不可改图，仅改名称/播报，后端 photo_changed 判定自动跳过换图
 - [2026-07-01 任务运控动作选项替换为新14项](./2026-07-01_task-action-options-replace.md) — 下拉换为 shake_hand/high_five/hug/high_wave/clap/face_wave/left_kiss/hands_up/x_ray/right_hand_up/reject/right_kiss/two_hand_kiss/no；详情抽屉保留旧值中文标签兼容历史快照；DB 无需迁移
 - [2026-07-02 地图编辑器新增场景上传 ROS yaml 解析分辨率与起始点](./2026-07-02_map-editor-create-scene-yaml-config-parse.md) — 新增场景时扫图起始点/分辨率输入框禁用，改为上传 yaml 配置文件；新增独立解析接口 POST /scene/map-editor/parse-map-config（resolution + origin[0:2]），不改原 add 接口；requirements 显式加 pyyaml
+- [2026-07-02 机器人事件日志挂到日志管理菜单](./2026-07-02_robot-event-log-menu.md) — 功能全栈已就绪，唯一缺口是 sys_menu 种子；新增迁移 0039 在日志管理目录下插入 log_robot-log 菜单 + list/delete 按钮（permission 对齐接口 robot:monitor:list / robot:event-log:delete）
+- [2026-07-02 编辑扫图起始点时按差值平移子元素](./2026-07-02_map-editor-edit-start-point-offset-children.md) — SceneMapService.update 检测 start_point 变化时，同事务平移标注/物体/路径坐标以保持世界坐标(米)不变（机器人不动）；通式兼容 resolution 同变；start_point 变化也触发 nav_image 重建
