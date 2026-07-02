@@ -40,7 +40,16 @@ const rules = computed(() => ({
   wake_word: !faceWakeEnabled.value
     ? [
         { required: true, message: '请输入唤醒词', trigger: 'blur' },
-        { min: 4, max: 6, message: '唤醒词必须为 4-6 个字', trigger: 'blur' }
+        {
+          validator: (_rule: unknown, value: string) => {
+            if (!value) return true;
+            if (!/^[\u4e00-\u9fa5]{4,6}$/.test(value)) {
+              return new Error('唤醒词必须为 4-6 个中文汉字，不能包含字母、数字、符号或空格');
+            }
+            return true;
+          },
+          trigger: 'blur'
+        }
       ]
     : [],
   tts_voice: { required: true, message: '请选择音色', trigger: 'change' }
@@ -72,10 +81,9 @@ const faceWakeEnabled = computed<boolean>({
 });
 
 const canSaveWakeWord = computed(() => {
-  // 唤醒词模式下才校验长度
+  // 唤醒词模式下才校验
   if (faceWakeEnabled.value) return true;
-  const len = model.wake_word.trim().length;
-  return len >= 4 && len <= 6;
+  return /^[\u4e00-\u9fa5]{4,6}$/.test(model.wake_word);
 });
 
 const selectedRobot = computed(() => robotList.value.find(r => r.id === selectedRobotId.value) || null);
@@ -248,7 +256,7 @@ onMounted(() => {
                   <NFormItemGi v-if="!faceWakeEnabled" label="唤醒词" path="wake_word">
                     <NInput
                       v-model:value="model.wake_word"
-                      placeholder="请输入 4-6 字唤醒词"
+                      placeholder="请输入 4-6 个中文汉字"
                       maxlength="6"
                       show-count
                       clearable
