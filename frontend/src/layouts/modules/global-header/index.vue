@@ -43,9 +43,9 @@ const headerPlugins = getHeaderPlugins();
       <GlobalBreadcrumb v-if="!appStore.isMobile" class="ml-12px" />
     </div>
     <div class="h-full flex-y-center justify-end">
-      <GlobalSearch v-if="themeStore.header.globalSearch.visible" />
+      <!-- <GlobalSearch v-if="themeStore.header.globalSearch.visible" /> -->
       <FullScreen v-if="!appStore.isMobile" :full="isFullscreen" @click="toggle" />
-      <LangSwitch
+      <!-- <LangSwitch
         v-if="themeStore.header.multilingual.visible"
         :lang="appStore.locale"
         :lang-options="appStore.localeOptions"
@@ -55,10 +55,10 @@ const headerPlugins = getHeaderPlugins();
         :theme-schema="themeStore.themeScheme"
         :is-dark="themeStore.darkMode"
         @switch="themeStore.toggleThemeScheme"
-      />
+      /> -->
       <NotificationCenter />
       <component v-for="plugin in headerPlugins" :key="plugin.name || plugin" :is="plugin" />
-      <ThemeButton />
+      <!-- <ThemeButton /> -->
       <UserAvatar />
     </div>
   </DarkModeContainer>
