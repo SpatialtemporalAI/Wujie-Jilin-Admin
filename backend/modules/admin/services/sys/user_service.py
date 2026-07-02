@@ -260,7 +260,9 @@ class UserService:
 
         db.add(user)
         await db.commit()
-        await db.refresh(user)
+
+        # 重新加载用户并主动加载 roles，避免响应序列化时触发懒加载
+        user = await UserService.get_user(db, user.id)
 
         logger.info("创建用户成功，用户ID: %s", user.id)
         return user
@@ -366,7 +368,9 @@ class UserService:
                 setattr(user, key, value)
 
         await db.commit()
-        await db.refresh(user)
+
+        # 重新加载用户并主动加载 roles，避免响应序列化时触发懒加载
+        user = await UserService.get_user(db, user_id)
 
         _invalidate_user_cache(user_id)
         if "role_ids" in user_update.model_dump(exclude_unset=True):
@@ -407,7 +411,9 @@ class UserService:
             user.roles = []
 
         await db.commit()
-        await db.refresh(user)
+
+        # 重新加载用户并主动加载 roles，避免响应序列化时触发懒加载
+        user = await UserService.get_user(db, user_id)
 
         _invalidate_user_cache(user_id)
         get_memory_cache().invalidate(CacheNamespace.PERMISSION)
