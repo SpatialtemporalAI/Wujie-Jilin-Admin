@@ -59,13 +59,10 @@ function handleJump(entry: HistoryEntry) {
         </NButton>
       </template>
       <div class="flex flex-col gap-2px" style="max-height: 360px; overflow-y: auto;">
-        <div
-          v-for="entry in historyList"
-          :key="entry.key"
+        <div v-for="entry in historyList" :key="entry.key"
           class="flex cursor-pointer items-center gap-8px rounded px-8px py-6px text-sm hover:bg-gray-100"
           :class="entry.isCurrent ? 'bg-blue-50 font-medium text-blue-600' : entry.isFuture ? 'text-gray-400' : ''"
-          @click="handleJump(entry)"
-        >
+          @click="handleJump(entry)">
           <span v-if="entry.isCurrent" class="text-blue-500">●</span>
           <span v-else-if="entry.isFuture" class="text-gray-300">○</span>
           <span v-else class="text-gray-400">○</span>
@@ -79,12 +76,13 @@ function handleJump(entry: HistoryEntry) {
 
     <div v-if="isDirty" class="text-xs text-orange-500">有未保存的更改</div>
 
-    <NButton v-if="hasAuth('scene:map-editor:edit')" type="primary" size="small" :loading="saving" @click="emit('save')">
+    <NButton v-if="hasAuth('scene:map-editor:edit')" type="primary" size="small" :loading="saving"
+      @click="emit('save')">
       <template #icon><icon-ic-round-save /></template>
       保存
     </NButton>
 
-    <NDropdown
+    <!-- <NDropdown
       :options="[
         { label: 'PNG', key: 'png' },
         { label: 'JPG', key: 'jpeg' },
@@ -96,6 +94,6 @@ function handleJump(entry: HistoryEntry) {
         <template #icon><icon-ic-round-download /></template>
         导出
       </NButton>
-    </NDropdown>
+    </NDropdown> -->
   </div>
 </template>
