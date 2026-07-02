@@ -58,6 +58,7 @@
 - [2026-07-01 参数配置·人脸识别阿里云错误友好化解析](./business/2026-07-01_param-config-face-aliyun-error-parse.md) — face_service 新增错误码→中文提示映射 + _describe_aliyun_error 解析器，facebody/OSS 失败不再裸抛 Response 字典，前端 toast 显示「中文提示（错误码：XXX）」
 - [2026-07-01 任务运控动作选项替换为新14项](./business/2026-07-01_task-action-options-replace.md) — 下拉换为 shake_hand/high_five/hug/high_wave/clap/face_wave/left_kiss/hands_up/x_ray/right_hand_up/reject/right_kiss/two_hand_kiss/no；详情抽屉保留旧值中文标签兼容历史快照；DB 无需迁移
 - [2026-07-02 运行监控未绑定场景地图时不显示机器人点位](./business/2026-07-02_operation-monitor-hide-robot-point-without-map.md) — renderRobotMarker 加 `!mapData.value` 守卫，未绑定地图时不在空白画布画红点
+- [2026-07-02 接口传参类型校验收紧](./business/2026-07-02_param-type-validation-tighten.md) — base.py 新增 `parse_optional_enum` 工厂；机器人/事件日志/执行记录/调度日志的 status、source、event_type 等查询字段补枚举校验；`RobotQueryParams.{model_id,map_id}`、`SceneMapQueryParams.group_id` 统一 `OptionalIntField`；前端 robot-operate-drawer 去掉 `undefined as unknown as number` 类型谎言
 
 ## 维护说明
 

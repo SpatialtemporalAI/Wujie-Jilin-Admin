@@ -9,15 +9,29 @@
 而本 schema 的 status 是字符串枚举（pending/running/paused/...），需要原样返回。
 JS 大整数 ID 检查的序列化器在这里手动复制一份。
 """
-from typing import Optional, List, Dict, Any, ClassVar
-from pydantic import Field, ConfigDict, field_serializer
+from typing import Optional, List, Dict, Any, ClassVar, Annotated, Literal
+from pydantic import Field, ConfigDict, field_serializer, BeforeValidator
 from datetime import datetime
 
 from app.models.common.base import (
     BaseEntity,
     BaseReqEntity,
     OptionalIntField,
+    parse_optional_enum,
 )
+
+ExecutionStatusField = Annotated[
+    str | None,
+    BeforeValidator(
+        parse_optional_enum(
+            {"pending", "running", "paused", "cancelled", "completed", "failed"}
+        )
+    ),
+]
+ExecutionSourceField = Annotated[
+    str | None,
+    BeforeValidator(parse_optional_enum({"platform_schedule", "voice_trigger", "manual"})),
+]
 
 
 # ==================== 任务定义快照 Schema ====================
@@ -68,12 +82,12 @@ class ProgressDetail(BaseReqEntity):
 
 class TaskExecutionRecordQueryParams(BaseReqEntity):
     """任务执行记录查询参数"""
-    status: Optional[str] = Field(None, description="执行状态")
+    status: ExecutionStatusField = Field(None, description="执行状态")
     task_id: OptionalIntField = Field(None, description="来源任务ID")
     robot_id: OptionalIntField = Field(None, description="机器人ID")
     scene_id: OptionalIntField = Field(None, description="场景地图ID")
     user_id: OptionalIntField = Field(None, description="触发用户ID")
-    source: Optional[str] = Field(None, description="触发源")
+    source: ExecutionSourceField = Field(None, description="触发源")
     start_time: Optional[str] = Field(None, description="开始时间(起)")
     end_time: Optional[str] = Field(None, description="结束时间(止)")
 
@@ -81,7 +95,9 @@ class TaskExecutionRecordQueryParams(BaseReqEntity):
 class TaskExecutionRecordStartIn(BaseReqEntity):
     """启动执行参数"""
     robot_ids: List[int] = Field(..., description="机器人ID列表", min_length=1)
-    source: str = Field("manual", description="触发源: platform_schedule/voice_trigger/manual")
+    source: Literal["platform_schedule", "voice_trigger", "manual"] = Field(
+        "manual", description="触发源: platform_schedule/voice_trigger/manual"
+    )
 
 
 # ==================== 响应 Schema ====================

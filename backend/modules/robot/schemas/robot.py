@@ -1,13 +1,20 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 
-from typing import Any, Optional
-from pydantic import Field, ConfigDict, field_serializer, field_validator
+from typing import Any, Optional, Annotated
+from pydantic import Field, ConfigDict, field_serializer, field_validator, BeforeValidator
 from datetime import datetime
 
 from pydantic import BaseModel
 
-from app.models.common.base import BaseRespEntity, BaseReqEntity
+from app.models.common.base import BaseRespEntity, BaseReqEntity, OptionalIntField, parse_optional_enum
+
+RobotStatusField = Annotated[
+    Optional[str], BeforeValidator(parse_optional_enum({"online", "offline", "inactive"}))
+]
+SpeedLevelField = Annotated[
+    Optional[str], BeforeValidator(parse_optional_enum({"normal", "slow", "low"}))
+]
 
 
 class RobotQueryParams(BaseModel):
@@ -18,9 +25,9 @@ class RobotQueryParams(BaseModel):
 
     name: Optional[str] = Field(None, description="机器人名称，支持模糊查询")
     serial_number: Optional[str] = Field(None, description="序列号，支持模糊查询")
-    status: Optional[str] = Field(None, description="状态：online/offline/inactive")
-    model_id: Optional[int] = Field(None, description="型号ID")
-    map_id: Optional[int] = Field(None, description="绑定场景地图ID")
+    status: RobotStatusField = Field(None, description="状态：online/offline/inactive")
+    model_id: OptionalIntField = Field(None, description="型号ID")
+    map_id: OptionalIntField = Field(None, description="绑定场景地图ID")
 
 
 class GrpcServiceConfig(BaseModel):
@@ -63,8 +70,8 @@ class RobotCreate(BaseReqEntity):
     model_id: int = Field(..., description="型号ID")
     serial_number: str = Field(..., description="序列号", max_length=100)
     map_id: Optional[int] = Field(None, description="绑定场景地图ID")
-    status: str = Field("inactive", description="状态：online/offline/inactive")
-    speed_level: Optional[str] = Field(None, description="速度等级：normal/slow/low")
+    status: RobotStatusField = Field("inactive", description="状态：online/offline/inactive")
+    speed_level: SpeedLevelField = Field(None, description="速度等级：normal/slow/low")
     battery_threshold: Optional[int] = Field(None, description="电量报警阈值(%)")
 
 
@@ -78,8 +85,8 @@ class RobotUpdate(BaseReqEntity):
     model_id: Optional[int] = Field(None, description="型号ID")
     serial_number: Optional[str] = Field(None, description="序列号", max_length=100)
     map_id: Optional[int] = Field(None, description="绑定场景地图ID")
-    status: Optional[str] = Field(None, description="状态：online/offline/inactive")
-    speed_level: Optional[str] = Field(None, description="速度等级：normal/slow/low")
+    status: RobotStatusField = Field(None, description="状态：online/offline/inactive")
+    speed_level: SpeedLevelField = Field(None, description="速度等级：normal/slow/low")
     battery_threshold: Optional[int] = Field(None, description="电量报警阈值(%)")
 
 

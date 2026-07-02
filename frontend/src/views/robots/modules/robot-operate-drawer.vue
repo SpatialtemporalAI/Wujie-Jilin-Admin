@@ -57,12 +57,14 @@ const statusOptions = [
   { label: '未激活', value: 'inactive' }
 ];
 
+type RobotOperateModel = Omit<Api.Robot.RobotCreate, 'model_id'> & { model_id: number | null };
+
 const model = ref(createDefaultModel());
 
-function createDefaultModel(): Api.Robot.RobotCreate {
+function createDefaultModel(): RobotOperateModel {
   return {
     name: '',
-    model_id: undefined as unknown as number,
+    model_id: null,
     serial_number: '',
     status: 'inactive',
     speed_level: 'normal',
@@ -98,13 +100,16 @@ function closeDrawer() {
 async function handleSubmit() {
   await validate();
 
+  // validate() 已确保 model_id 必填且为数字，提交前收敛 null → number
+  const payload = { ...model.value, model_id: model.value.model_id! };
+
   let error: unknown = null;
 
   if (isEdit.value) {
-    const result = await fetchUpdateRobot(robotId.value, model.value);
+    const result = await fetchUpdateRobot(robotId.value, payload);
     error = result.error;
   } else {
-    const result = await fetchCreateRobot(model.value);
+    const result = await fetchCreateRobot(payload);
     error = result.error;
   }
 
