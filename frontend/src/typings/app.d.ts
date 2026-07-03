@@ -1068,6 +1068,15 @@ declare namespace App {
           };
         };
       };
+      sceneMapEditor: {
+        unsavedChangesTitle: string;
+        unsavedChangesTip: string;
+        saveAndSwitch: string;
+        discardAndSwitch: string;
+        loadMapFailed: string;
+        deleteUnsavedTip: string;
+        continueDelete: string;
+      };
       };
       form: {
         required: string;

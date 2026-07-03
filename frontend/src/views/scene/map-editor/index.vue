@@ -1,6 +1,8 @@
 <script setup lang="ts">
-import { computed, nextTick, onMounted, onBeforeUnmount, ref, watch } from 'vue';
-import type { UploadFileInfo } from 'naive-ui';
+import { computed, h, nextTick, onMounted, onBeforeUnmount, ref, watch } from 'vue';
+import type { DialogReactive, UploadFileInfo } from 'naive-ui';
+import { NButton, NSpace, useDialog, useMessage } from 'naive-ui';
+import { $t } from '@/locales';
 import { useMapEditor } from './composables/useMapEditor';
 import type { SelectedElement } from './composables/useMapEditor';
 import EditorToolbar from './modules/editor-toolbar.vue';
@@ -11,7 +13,6 @@ import { fetchGetMapRobotLocations, fetchGetSceneGroupList } from '@/service/api
 import { getFilePreviewUrl } from '@/service/api/file';
 import { extractRobotPoint } from './utils/robot-location';
 import { radToDeg } from '@/utils/coordinate';
-import { useDialog, useMessage } from 'naive-ui'
 import { enableStatusOptions } from '@/constants/business';
 
 defineOptions({ name: 'SceneMapEditor' });
@@ -216,6 +217,94 @@ async function loadGroupOptions() {
   }
 }
 
+// 场景地图切换守卫
+type SwitchAction = 'save' | 'discard' | 'cancel';
+
+interface SwitchMapOptions {
+  /** 即使 mapId 与当前选中相同也强制重新加载（如编辑当前场景元数据） */
+  force?: boolean;
+}
+
+function showDirtySwitchDialog(): Promise<SwitchAction> {
+  return new Promise(resolve => {
+    let dialogInst: DialogReactive | null = null;
+
+    const close = (action: SwitchAction) => {
+      dialogInst?.destroy();
+      resolve(action);
+    };
+
+    dialogInst = dialog.warning({
+      title: $t('page.sceneMapEditor.unsavedChangesTitle'),
+      content: $t('page.sceneMapEditor.unsavedChangesTip'),
+      action: () =>
+        h(NSpace, { justify: 'end' }, () => [
+          h(
+            NButton,
+            { size: 'small', onClick: () => close('cancel') },
+            { default: () => $t('common.cancel') }
+          ),
+          h(
+            NButton,
+            { size: 'small', onClick: () => close('discard') },
+            { default: () => $t('page.sceneMapEditor.discardAndSwitch') }
+          ),
+          h(
+            NButton,
+            { size: 'small', type: 'primary', onClick: () => close('save') },
+            { default: () => $t('page.sceneMapEditor.saveAndSwitch') }
+          )
+        ]),
+      onClose: () => close('cancel'),
+      onMaskClick: () => close('cancel')
+    });
+  });
+}
+
+function showDeleteUnsavedDialog(): Promise<boolean> {
+  return new Promise(resolve => {
+    let dialogInst: DialogReactive | null = null;
+
+    const close = (confirmed: boolean) => {
+      dialogInst?.destroy();
+      resolve(confirmed);
+    };
+
+    dialogInst = dialog.warning({
+      title: $t('page.sceneMapEditor.unsavedChangesTitle'),
+      content: $t('page.sceneMapEditor.deleteUnsavedTip'),
+      positiveText: $t('page.sceneMapEditor.continueDelete'),
+      negativeText: $t('common.cancel'),
+      onPositiveClick: () => close(true),
+      onNegativeClick: () => close(false),
+      onClose: () => close(false),
+      onMaskClick: () => close(false)
+    });
+  });
+}
+
+async function switchMap(mapId: number, options: SwitchMapOptions = {}): Promise<boolean> {
+  if (editor.switching.value) return false;
+  if (!options.force && mapId === editor.selectedMapId.value) return true;
+
+  editor.switching.value = true;
+  try {
+    if (editor.isDirty.value) {
+      const action = await showDirtySwitchDialog();
+      if (action === 'cancel') return false;
+
+      if (action === 'save') {
+        const saved = await editor.saveMap({ silent: true });
+        if (!saved) return false;
+      }
+    }
+
+    return await editor.loadMap(mapId);
+  } finally {
+    editor.switching.value = false;
+  }
+}
+
 // 删除确认相关
 let isDeleteConfirming = false;
 
@@ -316,7 +405,7 @@ onMounted(async () => {
   window.addEventListener('keydown', handleDeleteKeyDown);
   await editor.loadSceneList();
   if (editor.sceneList.value.length > 0) {
-    await editor.loadMap(editor.sceneList.value[0].id);
+    await switchMap(editor.sceneList.value[0].id);
   }
 });
 
@@ -326,7 +415,7 @@ onBeforeUnmount(() => {
 });
 
 async function handleSelectMap(mapId: number) {
-  await editor.loadMap(mapId);
+  await switchMap(mapId);
 }
 
 function handleOpenAddScene() {
@@ -457,7 +546,8 @@ async function confirmSceneSubmit() {
       if (data) {
         sceneDialogVisible.value = false;
         await editor.loadSceneList();
-        await editor.loadMap((data as any).id);
+        const switched = await switchMap(data.id);
+        if (!switched) return false;
 
         // 返回点固定在世界坐标 (0,0)，与场景 start_point 无关
         const origin = editor.worldToPixelCoords(0, 0);
@@ -499,7 +589,7 @@ async function confirmSceneSubmit() {
       sceneDialogVisible.value = false;
       await editor.loadSceneList();
       if (editor.selectedMapId.value === editMapId.value) {
-        await editor.loadMap(editMapId.value);
+        await switchMap(editMapId.value, { force: true });
       }
       window.$message?.success('修改成功');
     }
@@ -511,7 +601,15 @@ async function confirmSceneSubmit() {
 
 async function handleDeleteScene(mapId: number) {
   try {
-    await editor.deleteScene(mapId);
+    if (editor.isDirty.value && editor.selectedMapId.value === mapId) {
+      const confirmed = await showDeleteUnsavedDialog();
+      if (!confirmed) return;
+    }
+
+    const { wasSelected } = await editor.deleteScene(mapId);
+    if (wasSelected && editor.sceneList.value.length > 0) {
+      await switchMap(editor.sceneList.value[0].id);
+    }
   } catch (e: any) {
     window.$message?.error(e?.message || '删除失败');
   }
@@ -665,7 +763,8 @@ function handleZoomChange(zoom: number) {
 
 async function handleLocateRobot(data: { mapId: number; x: number; y: number }) {
   if (editor.selectedMapId.value !== data.mapId) {
-    await editor.loadMap(data.mapId);
+    const switched = await switchMap(data.mapId);
+    if (!switched) return;
   }
   await nextTick();
   const px = editor.worldToPixelCoords(data.x, data.y);
