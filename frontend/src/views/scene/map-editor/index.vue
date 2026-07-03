@@ -2,6 +2,7 @@
 import { computed, nextTick, onMounted, onBeforeUnmount, ref, watch } from 'vue';
 import type { UploadFileInfo } from 'naive-ui';
 import { useMapEditor } from './composables/useMapEditor';
+import type { SelectedElement } from './composables/useMapEditor';
 import EditorToolbar from './modules/editor-toolbar.vue';
 import CanvasEditor from './modules/canvas-editor.vue';
 import PropertyPanel from './modules/property-panel.vue';
@@ -200,6 +201,87 @@ const configUploading = ref(false);
 const configUploadFileList = ref<UploadFileInfo[]>([]);
 const configFileName = ref('');
 
+// 删除确认相关
+let isDeleteConfirming = false;
+
+function isInputElementFocused() {
+  const active = document.activeElement;
+  if (!active) return false;
+  const tagName = active.tagName;
+  return tagName === 'INPUT' || tagName === 'TEXTAREA' || (active as HTMLElement).isContentEditable;
+}
+
+function getElementNameAndKind(target: SelectedElement) {
+  const data = editor.editorData.value;
+  if (!data) return { name: '', kind: '' };
+  if (target.type === 'annotation') {
+    const ann = data.annotations.find(a => a.id === target.id);
+    return { name: ann?.name || '', kind: '点位' };
+  }
+  if (target.type === 'object') {
+    const obj = data.objects.find(o => o.id === target.id);
+    if (!obj) return { name: '', kind: '' };
+    const shapeMap: Record<string, string> = {
+      'obstacle-circle': '圆形',
+      'obstacle-triangle': '三角形',
+      'obstacle-square': '正方形',
+    };
+    const isRestricted = obj.type === 'restricted' || obj.type === '禁区';
+    const isFence = obj.type === 'fence' || obj.type === '电子围栏';
+    const kind = isFence ? '电子围栏' : (isRestricted ? '禁行区域/虚拟墙' : (shapeMap[obj.type] || '障碍物'));
+    return { name: obj.name || '', kind };
+  }
+  return { name: '', kind: '路径' };
+}
+
+function confirmAndRemoveElement(target: SelectedElement | null) {
+  if (!target || isDeleteConfirming) return;
+  isDeleteConfirming = true;
+
+  const resetFlag = () => {
+    isDeleteConfirming = false;
+  };
+
+  if (target.type === 'annotation') {
+    dialog.warning({
+      title: '提示',
+      content: '当前点位已有关联任务，删除点位后任务自动取消关联该点位，确认是否删除？ 删除后点击右上角保存生效',
+      positiveText: '确认',
+      negativeText: '取消',
+      draggable: true,
+      onPositiveClick: () => {
+        editor.removeElement(target.type, target.id);
+      },
+      onNegativeClick: resetFlag,
+      onClose: resetFlag,
+    });
+  } else {
+    const { name, kind } = getElementNameAndKind(target);
+    const displayName = name || '未命名';
+    dialog.warning({
+      title: '提示',
+      content: `确认删除选中的「${displayName}」(${kind})？ 删除后点击右上角保存生效`,
+      positiveText: '确认',
+      negativeText: '取消',
+      draggable: true,
+      onPositiveClick: () => {
+        editor.removeElement(target.type, target.id);
+      },
+      onNegativeClick: resetFlag,
+      onClose: resetFlag,
+    });
+  }
+}
+
+function handleDeleteKeyDown(e: KeyboardEvent) {
+  if (e.key !== 'Delete' && e.key !== 'Backspace') return;
+  if (isInputElementFocused()) return;
+  const target = editor.selectedElement.value;
+  if (!target) return;
+  e.preventDefault();
+  confirmAndRemoveElement(target);
+}
+
 function resetSceneForm() {
   sceneFormName.value = '';
   sceneFormGroupId.value = null;
@@ -215,6 +297,7 @@ function resetSceneForm() {
 }
 
 onMounted(async () => {
+  window.addEventListener('keydown', handleDeleteKeyDown);
   await editor.loadSceneList();
   if (editor.sceneList.value.length > 0) {
     await editor.loadMap(editor.sceneList.value[0].id);
@@ -222,6 +305,7 @@ onMounted(async () => {
 });
 
 onBeforeUnmount(() => {
+  window.removeEventListener('keydown', handleDeleteKeyDown);
   stopRobotPolling();
 });
 
@@ -415,25 +499,8 @@ function handleContextMenuSelect(key: string) {
   const { x, y } = contextMenuScenePoint.value;
 
   if (key === 'delete-target') {
-    const target = contextMenuTarget.value;
-    dialog.warning({
-      title: '提示',
-      content: '当前点位已有关联任务，删除点位后任务自动取消关联该点位，确认是否删除？ 删除后点击右上角保存生效',
-      positiveText: '确认',
-      negativeText: '取消',
-      draggable: true,
-      onPositiveClick: () => {
-        contextMenuTarget.value = null;
-        if (target) {
-          editor.removeElement(target.type, target.id);
-        }
-        return;
-      },
-      onNegativeClick: () => {
-        
-      }
-    })
-    
+    confirmAndRemoveElement(contextMenuTarget.value);
+    return;
   }
 
   if (key === 'add-point') {
