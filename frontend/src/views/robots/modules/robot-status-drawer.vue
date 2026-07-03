@@ -102,7 +102,7 @@ const pagination = reactive({
   itemCount: 0,
   showSizePicker: true,
   pageSizes: [10, 15, 20, 25, 30],
-  prefix: (page: { itemCount: number }) => $t('datatable.itemCount', { total: page.itemCount }),
+  prefix: (page: { itemCount?: number }) => $t('datatable.itemCount', { total: page.itemCount ?? 0 }),
   onUpdatePage: (page: number) => {
     pagination.page = page;
     paginationParams.page = page;

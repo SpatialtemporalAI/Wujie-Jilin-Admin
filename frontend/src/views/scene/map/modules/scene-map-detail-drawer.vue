@@ -54,8 +54,8 @@ const {
     return { data: list, pageNum: 1, pageSize: list.length || 10, total: list.length, totalPages: 1 };
   },
   onPaginationParamsChange: params => {
-    annotationSearchParams.value.page = params.page;
-    annotationSearchParams.value.page_size = params.pageSize;
+    annotationSearchParams.value.page = params.page ?? 1;
+    annotationSearchParams.value.page_size = params.pageSize ?? 10;
   },
   columns: () => [
     {
@@ -166,8 +166,8 @@ const {
     return { data: list, pageNum: 1, pageSize: list.length || 10, total: list.length, totalPages: 1 };
   },
   onPaginationParamsChange: params => {
-    objectSearchParams.value.page = params.page;
-    objectSearchParams.value.page_size = params.pageSize;
+    objectSearchParams.value.page = params.page ?? 1;
+    objectSearchParams.value.page_size = params.pageSize ?? 10;
   },
   columns: () => [
     {

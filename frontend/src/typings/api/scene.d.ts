@@ -8,6 +8,8 @@ declare namespace Api {
       name: string;
       /** parent group id */
       parent_id: number | null;
+      /** parent group name (joined from parent group) */
+      parent_name?: string | null;
       /** sort order */
       sort: number;
     }>;

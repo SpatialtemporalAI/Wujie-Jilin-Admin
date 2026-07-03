@@ -53,7 +53,7 @@ function createDefaultModel(): ObjectModel {
   };
 }
 
-const rules = {
+const rules: NaiveUI.FormRules = {
   type: { required: true, message: '请选择物体类型', trigger: 'change' },
   x: { required: true, type: 'number', message: '请输入X坐标', trigger: 'blur' },
   y: { required: true, type: 'number', message: '请输入Y坐标', trigger: 'blur' }

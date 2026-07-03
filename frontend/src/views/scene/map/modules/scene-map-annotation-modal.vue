@@ -51,7 +51,7 @@ function createDefaultModel(): AnnotationModel {
   };
 }
 
-const rules = {
+const rules: NaiveUI.FormRules = {
   name: { required: true, message: '请输入标注名称', trigger: 'blur' },
   type: { required: true, message: '请选择标注类型', trigger: 'change' },
   x: { required: true, type: 'number', message: '请输入X坐标', trigger: 'blur' },

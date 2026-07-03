@@ -171,7 +171,7 @@ watch(visible, () => {
           </NSpace>
         </NFormItem>
         <NFormItem v-if="model.trigger_type !== 'cron'" :label="$t('page.manage.scheduler.triggerParams')" path="trigger_params">
-          <NInput v-model:value="model.trigger_params" type="textarea" :placeholder="trigger_type === 'interval' ? '{&quot;seconds&quot;: 60}' : '{&quot;run_date&quot;: &quot;2026-01-01 00:00:00&quot;}'" :rows="2" />
+          <NInput v-model:value="model.trigger_params" type="textarea" :placeholder="model.trigger_type === 'interval' ? '{&quot;seconds&quot;: 60}' : '{&quot;run_date&quot;: &quot;2026-01-01 00:00:00&quot;}'" :rows="2" />
         </NFormItem>
         <NFormItem :label="$t('page.manage.scheduler.timeout')" path="timeout">
           <NInputNumber v-model:value="model.timeout" :min="0" :step="60" class="w-full" />
