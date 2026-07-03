@@ -9,6 +9,7 @@ import GlobalSearch from '../global-search/index.vue';
 import ThemeButton from './components/theme-button.vue';
 import UserAvatar from './components/user-avatar.vue';
 import NotificationCenter from './components/notification-center.vue';
+import AboutUs from './components/about-us.vue';
 import { getHeaderPlugins } from '@/plugins/plugin-registry';
 
 defineOptions({
@@ -45,6 +46,7 @@ const headerPlugins = getHeaderPlugins();
     <div class="h-full flex-y-center justify-end">
       <!-- <GlobalSearch v-if="themeStore.header.globalSearch.visible" /> -->
       <FullScreen v-if="!appStore.isMobile" :full="isFullscreen" @click="toggle" />
+      <AboutUs />
       <!-- <LangSwitch
         v-if="themeStore.header.multilingual.visible"
         :lang="appStore.locale"
