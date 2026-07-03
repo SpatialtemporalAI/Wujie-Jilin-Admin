@@ -4,7 +4,7 @@
 from datetime import datetime
 from typing import Optional
 
-from pydantic import Field, ConfigDict, model_validator
+from pydantic import Field, ConfigDict
 
 from pydantic import BaseModel
 
@@ -23,8 +23,6 @@ class SceneMapCreate(BaseReqEntity):
     """创建场景地图"""
 
     name: str = Field(..., description="地图名称")
-    group_id: int | None = Field(None, description="分组ID（与group_name二选一）")
-    group_name: str | None = Field(None, description="分组名称（不存在时自动创建）")
     image_id: int = Field(..., description="地图图片文件ID")
     nav_image_id: int | None = Field(
         None, description="导航地图图片文件ID（为空时默认与image_id一致）"
@@ -34,20 +32,15 @@ class SceneMapCreate(BaseReqEntity):
     resolution: float = Field(..., description="映射比例")
     start_point_x: float = Field(..., description="扫图起始点X坐标")
     start_point_y: float = Field(..., description="扫图起始点Y坐标")
-    status: bool = Field(..., description="状态：True-启用，False-禁用")
-
-    @model_validator(mode="after")
-    def check_group(self):
-        if self.group_id is None and not self.group_name:
-            raise ValueError("group_id 与 group_name 必须填写一个")
-        return self
+    group_id: int | None = Field(None, description="分组ID（默认未分组）")
+    group_name: str | None = Field(None, description="分组名称（不存在时自动创建）")
+    status: bool = Field(True, description="状态：True-启用，False-禁用")
 
 
 class SceneMapUpdate(BaseReqEntity):
     """更新场景地图"""
 
     name: str = Field(..., description="地图名称")
-    group_id: int = Field(..., description="分组ID")
     image_id: int = Field(..., description="地图图片文件ID")
     nav_image_id: int | None = Field(None, description="导航地图图片文件ID")
     width: int = Field(..., description="地图宽度(像素)")
@@ -55,7 +48,8 @@ class SceneMapUpdate(BaseReqEntity):
     resolution: float = Field(..., description="映射比例")
     start_point_x: float = Field(..., description="扫图起始点X坐标")
     start_point_y: float = Field(..., description="扫图起始点Y坐标")
-    status: bool = Field(..., description="状态：True-启用，False-禁用")
+    group_id: int | None = Field(None, description="分组ID")
+    status: bool | None = Field(None, description="状态：True-启用，False-禁用")
 
 
 class SceneMapResponseData(BaseRespEntity):

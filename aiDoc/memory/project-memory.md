@@ -63,7 +63,7 @@
 
 - [2026-07-02 任务新增/编辑机器人改为单选](./business/2026-07-02_task-robot-single-select.md) — 接口层限制 robot_ids 长度必须为 1，前端选择器改为单选，数据库结构不变
 - [2026-07-02 前端 CRUD 异常后仍弹成功提示修复](./business/2026-07-02_frontend-crud-error-success-toast.md) — 修正 user-operate-drawer 与 scene-map-detail-drawer 的错误处理，使用 `createFlatRequest` 返回的 `error` 字段判断，避免错误弹窗后再弹成功弹窗
-- [2026-07-03 场景地图新增/编辑所有选项必填](./business/2026-07-03_scene-map-form-required-validation.md) — 地图编辑器新增/编辑场景时所有字段前后端双重校验必填
+- [2026-07-03 场景地图新增/编辑核心字段必填](./business/2026-07-03_scene-map-form-required-validation.md) — 地图管理与地图编辑器新增/编辑场景仅核心字段必填，状态与分组由后端默认值管理
 
 ## 维护说明
 

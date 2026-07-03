@@ -79,8 +79,6 @@ declare namespace Api {
     /** scene map create */
     type SceneMapCreate = {
       name: string;
-      group_id: number | null;
-      group_name?: string | null;
       image_id: number;
       nav_image_id?: number | null;
       width: number;
@@ -88,13 +86,14 @@ declare namespace Api {
       resolution: number;
       start_point_x: number;
       start_point_y: number;
-      status: Common.EnableStatus;
+      group_id?: number | null;
+      group_name?: string | null;
+      status?: Common.EnableStatus;
     };
 
     /** scene map update */
     type SceneMapUpdate = {
       name: string;
-      group_id: number;
       image_id: number;
       nav_image_id?: number | null;
       width: number;
@@ -102,7 +101,8 @@ declare namespace Api {
       resolution: number;
       start_point_x: number;
       start_point_y: number;
-      status: Common.EnableStatus;
+      group_id?: number | null;
+      status?: Common.EnableStatus;
     };
 
     /** scene map annotation */

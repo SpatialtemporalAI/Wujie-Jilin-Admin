@@ -9,11 +9,10 @@ import EditorToolbar from './modules/editor-toolbar.vue';
 import CanvasEditor from './modules/canvas-editor.vue';
 import PropertyPanel from './modules/property-panel.vue';
 import { fetchCreateSceneMap, fetchUpdateSceneMap, fetchGetSceneMap, fetchUploadSceneMapEditorImage, fetchParseSceneMapConfig } from '@/service/api/scene';
-import { fetchGetMapRobotLocations, fetchGetSceneGroupList } from '@/service/api';
+import { fetchGetMapRobotLocations } from '@/service/api';
 import { getFilePreviewUrl } from '@/service/api/file';
 import { extractRobotPoint } from './utils/robot-location';
 import { radToDeg } from '@/utils/coordinate';
-import { enableStatusOptions } from '@/constants/business';
 
 defineOptions({ name: 'SceneMapEditor' });
 const message = useMessage()
@@ -188,7 +187,6 @@ const sceneDialogVisible = ref(false);
 const sceneDialogMode = ref<'add' | 'edit'>('add');
 const editMapId = ref<number | null>(null);
 const sceneFormName = ref('');
-const sceneFormGroupId = ref<number | null>(null);
 const sceneFormImageId = ref<number | null>(null);
 const sceneFormImageUrl = ref('');
 const sceneFormOriginalWidth = ref<number | null>(null);
@@ -197,25 +195,11 @@ const sceneFormImageRef = ref<HTMLImageElement>();
 const sceneFormPointX = ref<number | null>(null);
 const sceneFormPointY = ref<number | null>(null);
 const sceneFormResolution = ref(0.05);
-const sceneFormStatus = ref<Api.Common.EnableStatus>('1');
 const sceneUploading = ref(false);
 const sceneUploadFileList = ref<UploadFileInfo[]>([]);
 const configUploading = ref(false);
 const configUploadFileList = ref<UploadFileInfo[]>([]);
 const configFileName = ref('');
-
-/** 分组选项 */
-const groupOptions = ref<{ label: string; value: number }[]>([]);
-
-async function loadGroupOptions() {
-  const { data } = await fetchGetSceneGroupList({ page: 1, page_size: 1000 });
-  if (data?.records) {
-    groupOptions.value = data.records.map((item: any) => ({
-      label: item.name,
-      value: item.id
-    }));
-  }
-}
 
 // 场景地图切换守卫
 type SwitchAction = 'save' | 'discard' | 'cancel';
@@ -388,7 +372,6 @@ function handleDeleteKeyDown(e: KeyboardEvent) {
 
 function resetSceneForm() {
   sceneFormName.value = '';
-  sceneFormGroupId.value = null;
   sceneFormImageId.value = null;
   sceneFormImageUrl.value = '';
   sceneFormOriginalWidth.value = null;
@@ -396,7 +379,6 @@ function resetSceneForm() {
   sceneFormPointX.value = null;
   sceneFormPointY.value = null;
   sceneFormResolution.value = 0.05;
-  sceneFormStatus.value = '1';
   configUploadFileList.value = [];
   configFileName.value = '';
 }
@@ -422,7 +404,6 @@ function handleOpenAddScene() {
   resetSceneForm();
   sceneDialogMode.value = 'add';
   editMapId.value = null;
-  loadGroupOptions();
   sceneDialogVisible.value = true;
 }
 
@@ -437,18 +418,15 @@ async function handleOpenEditScene(mapId: number) {
     sceneDialogMode.value = 'edit';
     editMapId.value = mapId;
     sceneFormName.value = data.name || '';
-    sceneFormGroupId.value = data.group_id ?? null;
     sceneFormImageId.value = data.image_id ?? null;
     sceneFormOriginalWidth.value = data.width ?? null;
     sceneFormOriginalHeight.value = data.height ?? null;
     sceneFormPointX.value = data.start_point_x ?? null;
     sceneFormPointY.value = data.start_point_y ?? null;
     sceneFormResolution.value = data.resolution ?? 0.05;
-    sceneFormStatus.value = data.status ?? '1';
     if (data.image_id) {
       sceneFormImageUrl.value = getFilePreviewUrl(data.image_id);
     }
-    loadGroupOptions();
     sceneDialogVisible.value = true;
   } catch (e: any) {
     window.$message?.error(e?.message || '加载场景详情失败');
@@ -508,10 +486,6 @@ async function confirmSceneSubmit() {
     window.$message?.warning('请输入场景名称');
     return false;
   }
-  if (sceneFormGroupId.value == null) {
-    window.$message?.warning('请选择所属分组');
-    return false;
-  }
   if (sceneFormImageId.value == null) {
     window.$message?.warning('请上传场景图片');
     return false;
@@ -533,15 +507,13 @@ async function confirmSceneSubmit() {
     try {
       const { data } = await fetchCreateSceneMap({
         name,
-        group_id: sceneFormGroupId.value,
         image_id: sceneFormImageId.value,
         width: sceneFormOriginalWidth.value,
         height: sceneFormOriginalHeight.value,
         resolution: sceneFormResolution.value,
         // start_point 为世界坐标（米），直接使用输入值，不做像素缩放转换
         start_point_x: sceneFormPointX.value,
-        start_point_y: sceneFormPointY.value,
-        status: sceneFormStatus.value
+        start_point_y: sceneFormPointY.value
       });
       if (data) {
         sceneDialogVisible.value = false;
@@ -576,14 +548,12 @@ async function confirmSceneSubmit() {
   try {
     const { error } = await fetchUpdateSceneMap(editMapId.value, {
       name,
-      group_id: sceneFormGroupId.value,
       image_id: sceneFormImageId.value,
       width: sceneFormOriginalWidth.value,
       height: sceneFormOriginalHeight.value,
       resolution: sceneFormResolution.value,
       start_point_x: sceneFormPointX.value,
-      start_point_y: sceneFormPointY.value,
-      status: sceneFormStatus.value
+      start_point_y: sceneFormPointY.value
     });
     if (!error) {
       sceneDialogVisible.value = false;
@@ -863,9 +833,6 @@ function handleFocusAnnotation(id: number) {
         <NFormItem label="场景名称">
           <NInput v-model:value="sceneFormName" placeholder="请输入场景名称" />
         </NFormItem>
-        <NFormItem label="所属分组">
-          <NSelect v-model:value="sceneFormGroupId" :options="groupOptions" placeholder="请选择所属分组" clearable />
-        </NFormItem>
         <NFormItem v-if="sceneDialogMode === 'add'" label="场景图片">
           <div class="w-full">
             <NUpload
@@ -944,13 +911,6 @@ function handleFocusAnnotation(id: number) {
               <span class="text-xs text-gray-400">m/px</span>
             </template>
           </NInputNumber>
-        </NFormItem>
-        <NFormItem label="状态">
-          <NRadioGroup v-model:value="sceneFormStatus">
-            <NRadio v-for="item in enableStatusOptions" :key="item.value" :value="item.value">
-              {{ item.label }}
-            </NRadio>
-          </NRadioGroup>
         </NFormItem>
       </NForm>
     </NModal>
