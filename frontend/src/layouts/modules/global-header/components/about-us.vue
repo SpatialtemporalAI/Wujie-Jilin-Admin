@@ -16,7 +16,7 @@ const showModal = ref(false);
         <div class="about-banner">
           <img :src="logoPng" alt="logo" class="about-logo" />
           <div class="flex-col gap-4px">
-            <div class="about-title">机器人管理平台 · 吉大二院</div>
+            <div class="about-title">吉大二院管理系统</div>
             <div class="about-meta">版本号：v1.0.0</div>
             <div class="about-meta">版本更新：2026-07-04</div>
           </div>
