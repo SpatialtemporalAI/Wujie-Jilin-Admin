@@ -199,6 +199,35 @@
 
 ## 机器人与场景绑定契约
 
+## 场景地图新增/编辑字段必填契约
+
+`POST /scene/map/add` 与 `PUT /scene/map/{map_id}` 中，以下字段均为必填：
+
+| 字段 | 前端类型 | 后端 Schema | 说明 |
+|------|----------|-------------|------|
+| `name` | `string` | `str` | 地图名称 |
+| `group_id` | `number \| null` | `int`（更新） | 所属分组ID |
+| `image_id` | `number` | `int` | 地图图片文件ID |
+| `width` | `number` | `int` | 地图宽度（像素），由上传图片自动回填 |
+| `height` | `number` | `int` | 地图高度（像素），由上传图片自动回填 |
+| `resolution` | `number` | `float` | 映射比例 |
+| `start_point_x` | `number` | `float` | 扫图起始点X坐标 |
+| `start_point_y` | `number` | `float` | 扫图起始点Y坐标 |
+| `status` | `EnableStatus` | `bool` | `"1"`→`true`，`"2"`→`false` |
+
+### 创建接口分组二选一
+
+创建接口中 `group_id` 与 `group_name` 二选一：
+- 选择已有分组 → 传 `group_id`
+- 输入新分组名 → 传 `group_name`，后端自动创建分组
+- 后端 `SceneMapCreate` 通过 `model_validator` 校验两者不能同时为空
+
+### 更新接口说明
+
+- `group_id` 必填，不再支持通过 `group_name` 创建新分组
+- `nav_image_id` 仍可选，为空时后端保持原值或自动与 `image_id` 同步
+- 前端抽屉编辑时须回显并提交全部字段
+
 ## 商户管理 + 商户开放 API 契约
 
 ### 数据模型

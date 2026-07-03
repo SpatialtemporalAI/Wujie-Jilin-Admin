@@ -77,21 +77,33 @@ declare namespace Api {
     type SceneMapList = Common.PaginatingQueryRecord<SceneMap>;
 
     /** scene map create */
-    type SceneMapCreate = Pick<SceneMap, 'name'> & {
-      group_id?: number | null;
+    type SceneMapCreate = {
+      name: string;
+      group_id: number | null;
       group_name?: string | null;
-      image_id?: number | null;
+      image_id: number;
       nav_image_id?: number | null;
-      width?: number | null;
-      height?: number | null;
-      resolution?: number;
-      start_point_x?: number;
-      start_point_y?: number;
-      status?: Common.EnableStatus;
+      width: number;
+      height: number;
+      resolution: number;
+      start_point_x: number;
+      start_point_y: number;
+      status: Common.EnableStatus;
     };
 
     /** scene map update */
-    type SceneMapUpdate = Partial<SceneMapCreate>;
+    type SceneMapUpdate = {
+      name: string;
+      group_id: number;
+      image_id: number;
+      nav_image_id?: number | null;
+      width: number;
+      height: number;
+      resolution: number;
+      start_point_x: number;
+      start_point_y: number;
+      status: Common.EnableStatus;
+    };
 
     /** scene map annotation */
     type SceneMapAnnotation = Common.CommonRecord<{

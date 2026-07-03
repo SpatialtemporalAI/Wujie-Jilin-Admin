@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { computed, onMounted, ref, watch } from 'vue';
-import type { UploadFileInfo } from 'naive-ui';
+import type { UploadFileInfo, FormRules, UploadCustomRequestOptions } from 'naive-ui';
 import { jsonClone } from '@sa/utils';
 import { enableStatusOptions } from '@/constants/business';
 import { useNaiveForm } from '@/hooks/common/form';
@@ -73,11 +73,24 @@ function createDefaultModel(): MapModel {
   };
 }
 
-const rules = {
+const rules: FormRules = {
   name: { required: true, message: '请输入地图名称', trigger: 'blur' },
-  group_id: { required: true, type: 'number', message: '请选择所属分组', trigger: 'change' },
+  group_id: {
+    required: true,
+    validator(_rule: unknown, _value: unknown) {
+      if (model.value.group_id != null || model.value.group_name) {
+        return true;
+      }
+      return new Error('请选择或输入所属分组');
+    },
+    trigger: 'change'
+  },
   image_id: { required: true, type: 'number', message: '请上传地图图片', trigger: 'change' },
+  width: { required: true, type: 'number', message: '请上传地图图片以获取宽度', trigger: 'change' },
+  height: { required: true, type: 'number', message: '请上传地图图片以获取高度', trigger: 'change' },
   resolution: { required: true, type: 'number', message: '请输入映射比例', trigger: 'blur' },
+  start_point_x: { required: true, type: 'number', message: '请输入扫图起始点X坐标', trigger: 'blur' },
+  start_point_y: { required: true, type: 'number', message: '请输入扫图起始点Y坐标', trigger: 'blur' },
   status: { required: true, message: '请选择状态', trigger: 'change' }
 };
 
@@ -114,7 +127,8 @@ const uploading = ref(false);
 const imageUrl = ref('');
 const uploadFileList = ref<UploadFileInfo[]>([]);
 
-async function handleUpload({ file }: { file: { file: File } }) {
+async function handleUpload({ file }: UploadCustomRequestOptions) {
+  if (!file.file) return;
   uploading.value = true;
   try {
     const { data, error } = await fetchUploadSceneMapImage(file.file, { includeImageInfo: true });
@@ -171,14 +185,14 @@ function closeDrawer() {
 async function handleSubmit() {
   await validate();
 
-  const submitData: Record<string, any> = {
+  const submitData: Api.Scene.SceneMapCreate = {
     name: model.value.name,
     group_id: model.value.group_id,
     group_name: model.value.group_name,
-    image_id: model.value.image_id,
-    width: model.value.width,
-    height: model.value.height,
-    resolution: model.value.resolution,
+    image_id: model.value.image_id as number,
+    width: model.value.width as number,
+    height: model.value.height as number,
+    resolution: model.value.resolution as number,
     start_point_x: model.value.start_point_x,
     start_point_y: model.value.start_point_y,
     status: model.value.status
@@ -187,7 +201,18 @@ async function handleSubmit() {
   let error: unknown = null;
 
   if (isEdit.value) {
-    const result = await fetchUpdateSceneMap(mapId.value, submitData);
+    const updateData: Api.Scene.SceneMapUpdate = {
+      name: submitData.name,
+      group_id: submitData.group_id as number,
+      image_id: submitData.image_id,
+      width: submitData.width,
+      height: submitData.height,
+      resolution: submitData.resolution,
+      start_point_x: submitData.start_point_x,
+      start_point_y: submitData.start_point_y,
+      status: submitData.status
+    };
+    const result = await fetchUpdateSceneMap(mapId.value, updateData);
     error = result.error;
   } else {
     const result = await fetchCreateSceneMap(submitData);

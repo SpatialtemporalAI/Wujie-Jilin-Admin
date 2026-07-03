@@ -7,11 +7,12 @@ import EditorToolbar from './modules/editor-toolbar.vue';
 import CanvasEditor from './modules/canvas-editor.vue';
 import PropertyPanel from './modules/property-panel.vue';
 import { fetchCreateSceneMap, fetchUpdateSceneMap, fetchGetSceneMap, fetchUploadSceneMapEditorImage, fetchParseSceneMapConfig } from '@/service/api/scene';
-import { fetchGetMapRobotLocations } from '@/service/api';
+import { fetchGetMapRobotLocations, fetchGetSceneGroupList } from '@/service/api';
 import { getFilePreviewUrl } from '@/service/api/file';
 import { extractRobotPoint } from './utils/robot-location';
 import { radToDeg } from '@/utils/coordinate';
 import { useDialog, useMessage } from 'naive-ui'
+import { enableStatusOptions } from '@/constants/business';
 
 defineOptions({ name: 'SceneMapEditor' });
 const message = useMessage()
@@ -195,11 +196,25 @@ const sceneFormImageRef = ref<HTMLImageElement>();
 const sceneFormPointX = ref<number | null>(null);
 const sceneFormPointY = ref<number | null>(null);
 const sceneFormResolution = ref(0.05);
+const sceneFormStatus = ref<Api.Common.EnableStatus>('1');
 const sceneUploading = ref(false);
 const sceneUploadFileList = ref<UploadFileInfo[]>([]);
 const configUploading = ref(false);
 const configUploadFileList = ref<UploadFileInfo[]>([]);
 const configFileName = ref('');
+
+/** 分组选项 */
+const groupOptions = ref<{ label: string; value: number }[]>([]);
+
+async function loadGroupOptions() {
+  const { data } = await fetchGetSceneGroupList({ page: 1, page_size: 1000 });
+  if (data?.records) {
+    groupOptions.value = data.records.map((item: any) => ({
+      label: item.name,
+      value: item.id
+    }));
+  }
+}
 
 // 删除确认相关
 let isDeleteConfirming = false;
@@ -292,6 +307,7 @@ function resetSceneForm() {
   sceneFormPointX.value = null;
   sceneFormPointY.value = null;
   sceneFormResolution.value = 0.05;
+  sceneFormStatus.value = '1';
   configUploadFileList.value = [];
   configFileName.value = '';
 }
@@ -317,6 +333,7 @@ function handleOpenAddScene() {
   resetSceneForm();
   sceneDialogMode.value = 'add';
   editMapId.value = null;
+  loadGroupOptions();
   sceneDialogVisible.value = true;
 }
 
@@ -331,15 +348,18 @@ async function handleOpenEditScene(mapId: number) {
     sceneDialogMode.value = 'edit';
     editMapId.value = mapId;
     sceneFormName.value = data.name || '';
+    sceneFormGroupId.value = data.group_id ?? null;
     sceneFormImageId.value = data.image_id ?? null;
     sceneFormOriginalWidth.value = data.width ?? null;
     sceneFormOriginalHeight.value = data.height ?? null;
     sceneFormPointX.value = data.start_point_x ?? null;
     sceneFormPointY.value = data.start_point_y ?? null;
     sceneFormResolution.value = data.resolution ?? 0.05;
+    sceneFormStatus.value = data.status ?? '1';
     if (data.image_id) {
       sceneFormImageUrl.value = getFilePreviewUrl(data.image_id);
     }
+    loadGroupOptions();
     sceneDialogVisible.value = true;
   } catch (e: any) {
     window.$message?.error(e?.message || '加载场景详情失败');
@@ -394,27 +414,36 @@ function handleRemoveConfig() {
 }
 
 async function confirmSceneSubmit() {
-  if (!sceneFormName.value.trim()) {
+  const name = sceneFormName.value.trim();
+  if (!name) {
     window.$message?.warning('请输入场景名称');
+    return false;
+  }
+  if (sceneFormGroupId.value == null) {
+    window.$message?.warning('请选择所属分组');
+    return false;
+  }
+  if (sceneFormImageId.value == null) {
+    window.$message?.warning('请上传场景图片');
+    return false;
+  }
+  if (sceneFormOriginalWidth.value == null || sceneFormOriginalHeight.value == null) {
+    window.$message?.warning('请确认图片原图尺寸');
+    return false;
+  }
+  if (sceneFormPointX.value == null || sceneFormPointY.value == null) {
+    window.$message?.warning('请输入扫图起始点 X、Y');
+    return false;
+  }
+  if (sceneFormResolution.value == null) {
+    window.$message?.warning('请输入分辨率');
     return false;
   }
 
   if (sceneDialogMode.value === 'add') {
-    if (!sceneFormImageId.value) {
-      window.$message?.warning('请上传场景图片');
-      return false;
-    }
-    if (!sceneFormOriginalWidth.value || !sceneFormOriginalHeight.value) {
-      window.$message?.warning('请确认图片原图尺寸');
-      return false;
-    }
-    if (sceneFormPointX.value === null || sceneFormPointY.value === null) {
-      window.$message?.warning('请上传配置文件(yaml)以解析扫图起始点与分辨率');
-      return false;
-    }
     try {
       const { data } = await fetchCreateSceneMap({
-        name: sceneFormName.value.trim(),
+        name,
         group_id: sceneFormGroupId.value,
         image_id: sceneFormImageId.value,
         width: sceneFormOriginalWidth.value,
@@ -423,6 +452,7 @@ async function confirmSceneSubmit() {
         // start_point 为世界坐标（米），直接使用输入值，不做像素缩放转换
         start_point_x: sceneFormPointX.value,
         start_point_y: sceneFormPointY.value,
+        status: sceneFormStatus.value
       });
       if (data) {
         sceneDialogVisible.value = false;
@@ -449,20 +479,21 @@ async function confirmSceneSubmit() {
   }
 
   // edit 模式
-  if (sceneFormPointX.value === null || sceneFormPointY.value === null) {
-    window.$message?.warning('请输入扫图起始点 X、Y');
-    return false;
-  }
   if (!editMapId.value) {
     window.$message?.error('未找到场景 ID');
     return false;
   }
   try {
     const { error } = await fetchUpdateSceneMap(editMapId.value, {
-      name: sceneFormName.value.trim(),
+      name,
+      group_id: sceneFormGroupId.value,
+      image_id: sceneFormImageId.value,
+      width: sceneFormOriginalWidth.value,
+      height: sceneFormOriginalHeight.value,
       resolution: sceneFormResolution.value,
       start_point_x: sceneFormPointX.value,
       start_point_y: sceneFormPointY.value,
+      status: sceneFormStatus.value
     });
     if (!error) {
       sceneDialogVisible.value = false;
@@ -733,6 +764,9 @@ function handleFocusAnnotation(id: number) {
         <NFormItem label="场景名称">
           <NInput v-model:value="sceneFormName" placeholder="请输入场景名称" />
         </NFormItem>
+        <NFormItem label="所属分组">
+          <NSelect v-model:value="sceneFormGroupId" :options="groupOptions" placeholder="请选择所属分组" clearable />
+        </NFormItem>
         <NFormItem v-if="sceneDialogMode === 'add'" label="场景图片">
           <div class="w-full">
             <NUpload
@@ -811,6 +845,13 @@ function handleFocusAnnotation(id: number) {
               <span class="text-xs text-gray-400">m/px</span>
             </template>
           </NInputNumber>
+        </NFormItem>
+        <NFormItem label="状态">
+          <NRadioGroup v-model:value="sceneFormStatus">
+            <NRadio v-for="item in enableStatusOptions" :key="item.value" :value="item.value">
+              {{ item.label }}
+            </NRadio>
+          </NRadioGroup>
         </NFormItem>
       </NForm>
     </NModal>
