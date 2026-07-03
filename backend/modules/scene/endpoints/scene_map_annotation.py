@@ -3,7 +3,7 @@
 
 from typing import List
 
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, Path
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from database.db_manager import get_session
@@ -40,7 +40,7 @@ scene_map_annotation_router = APIRouter(
     ],
 )
 async def get_annotation_list(
-    map_id: int,
+    map_id: int = Path(..., description="场景地图ID"),
     user: SysUser = Depends(current_user),
     db: AsyncSession = Depends(get_session),
 ):
@@ -57,8 +57,8 @@ async def get_annotation_list(
     dependencies=[Depends(require_permission("scene:map:edit"))],
 )
 async def create_annotation(
-    map_id: int,
     annotation_create: SceneMapAnnotationCreate,
+    map_id: int = Path(..., description="场景地图ID"),
     user: SysUser = Depends(current_user),
     db: AsyncSession = Depends(get_session),
 ):
@@ -80,9 +80,9 @@ async def create_annotation(
     dependencies=[Depends(require_permission("scene:map:edit"))],
 )
 async def update_annotation(
-    map_id: int,
-    annotation_id: int,
     annotation_update: SceneMapAnnotationUpdate,
+    map_id: int = Path(..., description="场景地图ID"),
+    annotation_id: int = Path(..., description="地图标注ID"),
     user: SysUser = Depends(current_user),
     db: AsyncSession = Depends(get_session),
 ):
@@ -102,8 +102,8 @@ async def update_annotation(
     dependencies=[Depends(require_permission("scene:map:edit"))],
 )
 async def delete_annotation(
-    map_id: int,
-    annotation_id: int,
+    map_id: int = Path(..., description="场景地图ID"),
+    annotation_id: int = Path(..., description="地图标注ID"),
     user: SysUser = Depends(current_user),
     db: AsyncSession = Depends(get_session),
 ):

@@ -5,7 +5,7 @@
 机器人管理相关接口
 """
 import logging
-from fastapi import APIRouter, Depends, Request
+from fastapi import APIRouter, Depends, Path, Request
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select
 from sqlalchemy.orm import noload
@@ -104,7 +104,7 @@ async def get_robot_list(
     response_model=ResponseModel[RobotResponseData],
 )
 async def get_robot(
-    robot_id: int,
+    robot_id: int = Path(..., description="机器人ID"),
     db: AsyncSession = Depends(get_session),
 ):
     """
@@ -164,9 +164,9 @@ async def create_robot(
 )
 @log_operation(module="robot", action="update", description="更新机器人")
 async def update_robot(
-    robot_id: int,
     request: Request,
     robot_in: RobotUpdate,
+    robot_id: int = Path(..., description="机器人ID"),
     db: AsyncSession = Depends(get_session),
     user: SysUser = Depends(current_user),
 ):
@@ -196,8 +196,8 @@ async def update_robot(
 )
 @log_operation(module="robot", action="delete", description="删除机器人")
 async def delete_robot(
-    robot_id: int,
     request: Request,
+    robot_id: int = Path(..., description="机器人ID"),
     db: AsyncSession = Depends(get_session),
     user: SysUser = Depends(current_user),
 ):
@@ -224,9 +224,9 @@ async def delete_robot(
 )
 @log_operation(module="robot", action="update", description="更新机器人 gRPC 配置")
 async def update_robot_grpc_config(
-    robot_id: int,
     request: Request,
     payload: RobotGrpcConfigUpdate,
+    robot_id: int = Path(..., description="机器人ID"),
     db: AsyncSession = Depends(get_session),
     user: SysUser = Depends(current_user),
 ):
@@ -262,9 +262,9 @@ async def update_robot_grpc_config(
 )
 @log_operation(module="robot", action="update", description="更新机器人绑定场景")
 async def update_robot_map_binding(
-    robot_id: int,
     request: Request,
     payload: RobotMapBindingUpdate,
+    robot_id: int = Path(..., description="机器人ID"),
     db: AsyncSession = Depends(get_session),
     user: SysUser = Depends(current_user),
 ):

@@ -5,7 +5,7 @@
 机器人事件日志管理接口
 """
 import logging
-from fastapi import APIRouter, Depends, Query
+from fastapi import APIRouter, Body, Depends, Path, Query
 from fastapi.responses import StreamingResponse
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select
@@ -76,7 +76,7 @@ async def get_event_log_list(
     summary="获取机器人事件日志详情",
 )
 async def get_event_log_detail(
-    log_id: int,
+    log_id: int = Path(..., description="日志ID"),
     user: SysUser = Depends(current_user),
     db: AsyncSession = Depends(get_session),
 ):
@@ -97,7 +97,7 @@ async def get_event_log_detail(
     dependencies=[Depends(require_permission("robot:event-log:delete"))],
 )
 async def batch_delete_logs(
-    log_ids: List[int] = ...,
+    log_ids: List[int] = Body(..., description="日志ID列表"),
     user: SysUser = Depends(current_user),
     db: AsyncSession = Depends(get_session),
 ):
@@ -129,7 +129,7 @@ async def clear_logs(
     dependencies=[Depends(require_permission("robot:event-log:delete"))],
 )
 async def delete_log(
-    log_id: int,
+    log_id: int = Path(..., description="日志ID"),
     user: SysUser = Depends(current_user),
     db: AsyncSession = Depends(get_session),
 ):

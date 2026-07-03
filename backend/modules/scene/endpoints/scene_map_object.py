@@ -3,7 +3,7 @@
 
 from typing import List
 
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, Path
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from database.db_manager import get_session
@@ -32,7 +32,7 @@ scene_map_object_router = APIRouter(
     dependencies=[Depends(require_permission("scene:map:list"))],
 )
 async def get_object_list(
-    map_id: int,
+    map_id: int = Path(..., description="场景地图ID"),
     user: SysUser = Depends(current_user),
     db: AsyncSession = Depends(get_session),
 ):
@@ -49,8 +49,8 @@ async def get_object_list(
     dependencies=[Depends(require_permission("scene:map:edit"))],
 )
 async def create_object(
-    map_id: int,
     object_create: SceneMapObjectCreate,
+    map_id: int = Path(..., description="场景地图ID"),
     user: SysUser = Depends(current_user),
     db: AsyncSession = Depends(get_session),
 ):
@@ -72,9 +72,9 @@ async def create_object(
     dependencies=[Depends(require_permission("scene:map:edit"))],
 )
 async def update_object(
-    map_id: int,
-    object_id: int,
     object_update: SceneMapObjectUpdate,
+    map_id: int = Path(..., description="场景地图ID"),
+    object_id: int = Path(..., description="地图物体ID"),
     user: SysUser = Depends(current_user),
     db: AsyncSession = Depends(get_session),
 ):
@@ -94,8 +94,8 @@ async def update_object(
     dependencies=[Depends(require_permission("scene:map:edit"))],
 )
 async def delete_object(
-    map_id: int,
-    object_id: int,
+    map_id: int = Path(..., description="场景地图ID"),
+    object_id: int = Path(..., description="地图物体ID"),
     user: SysUser = Depends(current_user),
     db: AsyncSession = Depends(get_session),
 ):

@@ -6,7 +6,7 @@
 """
 import logging
 from typing import List, Optional
-from fastapi import APIRouter, Depends, Request
+from fastapi import APIRouter, Depends, Path, Request
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select
 
@@ -75,8 +75,8 @@ async def _fill_relations(record: TaskExecutionRecordResponseData, db: AsyncSess
 )
 @log_operation(module="task", action="start", description="启动任务（gRPC 通知）")
 async def start_task_execution_record(
-    task_id: int,
     payload: TaskExecutionRecordStartIn,
+    task_id: int = Path(..., description="任务ID"),
     db: AsyncSession = Depends(get_session),
 ):
     """启动任务：下发 gRPC run_now 到机器人 agent，不写执行记录"""
@@ -99,9 +99,9 @@ async def start_task_execution_record(
 )
 @log_operation(module="task", action="start", description="启动任务（gRPC 通知）")
 async def start_or_resume_task_execution_record(
-    task_id: int,
     payload: TaskExecutionRecordStartIn,
     request: Request,
+    task_id: int = Path(..., description="任务ID"),
     db: AsyncSession = Depends(get_session),
 ):
     """启动任务：下发 gRPC run_now 到机器人 agent，不写执行记录"""
@@ -123,7 +123,7 @@ async def start_or_resume_task_execution_record(
     dependencies=[Depends(require_permission("task:execution:control"))],
 )
 async def pause_execution_record(
-    record_id: int,
+    record_id: int = Path(..., description="执行记录ID"),
     db: AsyncSession = Depends(get_session),
 ):
     """暂停执行"""
@@ -144,8 +144,8 @@ async def pause_execution_record(
 )
 @log_operation(module="task", action="pause", description="按任务批量暂停执行")
 async def pause_executions_by_task(
-    task_id: int,
     request: Request,
+    task_id: int = Path(..., description="任务ID"),
     db: AsyncSession = Depends(get_session),
     user: SysUser = Depends(current_user),
 ):
@@ -165,7 +165,7 @@ async def pause_executions_by_task(
     dependencies=[Depends(require_permission("task:execution:control"))],
 )
 async def resume_execution_record(
-    record_id: int,
+    record_id: int = Path(..., description="执行记录ID"),
     db: AsyncSession = Depends(get_session),
 ):
     """恢复执行"""
@@ -186,7 +186,7 @@ async def resume_execution_record(
 )
 @log_operation(module="task", action="stop", description="停止任务（新执行记录表）")
 async def stop_execution_record(
-    record_id: int,
+    record_id: int = Path(..., description="执行记录ID"),
     db: AsyncSession = Depends(get_session),
 ):
     """停止执行"""
@@ -266,7 +266,7 @@ async def get_execution_record_history(
     dependencies=[Depends(require_permission("task:list"))],
 )
 async def get_execution_record_detail(
-    record_id: int,
+    record_id: int = Path(..., description="执行记录ID"),
     db: AsyncSession = Depends(get_session),
 ):
     """获取执行详情（含完整 task_definition 和 progress）"""

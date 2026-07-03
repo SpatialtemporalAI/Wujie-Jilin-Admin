@@ -5,7 +5,7 @@
 机器人状态记录相关接口
 """
 import logging
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, Path
 from sqlalchemy.ext.asyncio import AsyncSession
 from typing import Optional, List
 
@@ -39,7 +39,7 @@ robot_status_record_router = APIRouter(
     dependencies=[Depends(require_permission("robot:manage:list"))],
 )
 async def get_robot_status_record_list(
-    robot_id: int,
+    robot_id: int = Path(..., description="机器人ID"),
     page_params: PageRequest = Depends(get_page_params),
     db: AsyncSession = Depends(get_session),
 ):
@@ -76,7 +76,7 @@ async def get_robot_status_record_list(
     response_model=ResponseModel[Optional[RobotStatusRecordResponseData]],
 )
 async def get_robot_status_latest(
-    robot_id: int,
+    robot_id: int = Path(..., description="机器人ID"),
     db: AsyncSession = Depends(get_session),
 ):
     """
@@ -106,7 +106,7 @@ async def get_robot_status_latest(
     dependencies=[Depends(require_permission("robot:manage:list"))],
 )
 async def get_map_robot_locations(
-    map_id: int,
+    map_id: int = Path(..., description="场景地图ID"),
     db: AsyncSession = Depends(get_session),
 ):
     """按地图查询其绑定机器人的实时位置（地图编辑器画布展示用）

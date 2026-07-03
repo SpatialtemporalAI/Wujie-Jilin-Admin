@@ -52,7 +52,7 @@ export function fetchToggleScheduledTaskStatus(taskId: number, status: boolean) 
   return request<Api.Scheduler.ScheduledTask>({
     url: `/admin/sys/scheduler-task/${taskId}/status`,
     method: 'put',
-    params: { status }
+    data: { status }
   });
 }
 

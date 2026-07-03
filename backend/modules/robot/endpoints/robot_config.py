@@ -5,7 +5,7 @@
 机器人参数配置相关接口
 """
 import logging
-from fastapi import APIRouter, Depends, Request, UploadFile, File
+from fastapi import APIRouter, Depends, Path, Request, UploadFile, File
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from database.db_manager import get_session
@@ -256,9 +256,9 @@ async def create_face(
 )
 @log_operation(module="robot", action="update", description="更新人脸识别TTS配置")
 async def update_face(
-    face_id: int,
     request: Request,
     face_in: RobotFaceRecognitionUpdate,
+    face_id: int = Path(..., description="人脸识别配置ID"),
     db: AsyncSession = Depends(get_session),
     user: SysUser = Depends(current_user),
 ):
@@ -284,8 +284,8 @@ async def update_face(
 )
 @log_operation(module="robot", action="delete", description="删除人脸识别TTS配置")
 async def delete_face(
-    face_id: int,
     request: Request,
+    face_id: int = Path(..., description="人脸识别配置ID"),
     db: AsyncSession = Depends(get_session),
     user: SysUser = Depends(current_user),
 ):
@@ -313,9 +313,9 @@ async def delete_face(
 )
 @log_operation(module="robot", action="update", description="更新机器人行走速度")
 async def update_speed_level(
-    robot_id: int,
-    payload: RobotSpeedLevelUpdate,
     request: Request,
+    payload: RobotSpeedLevelUpdate,
+    robot_id: int = Path(..., description="机器人ID"),
     db: AsyncSession = Depends(get_session),
     user: SysUser = Depends(current_user),
 ):
@@ -350,9 +350,9 @@ async def update_speed_level(
 )
 @log_operation(module="robot", action="update", description="更新机器人电量报警阈值")
 async def update_battery_threshold(
-    robot_id: int,
-    payload: RobotBatteryThresholdUpdate,
     request: Request,
+    payload: RobotBatteryThresholdUpdate,
+    robot_id: int = Path(..., description="机器人ID"),
     db: AsyncSession = Depends(get_session),
     user: SysUser = Depends(current_user),
 ):

@@ -5,7 +5,7 @@
 任务管理接口
 """
 import logging
-from fastapi import APIRouter, Depends, Request
+from fastapi import APIRouter, Depends, Path, Request
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select
 from sqlalchemy.orm import selectinload
@@ -217,7 +217,7 @@ async def get_task_list(
     response_model=ResponseModel[TaskResponseData],
 )
 async def get_task(
-    task_id: int,
+    task_id: int = Path(..., description="任务ID"),
     db: AsyncSession = Depends(get_session),
 ):
     """获取单个任务详情"""
@@ -261,9 +261,9 @@ async def create_task(
 )
 @log_operation(module="task", action="update", description="更新任务")
 async def update_task(
-    task_id: int,
     request: Request,
     task_in: TaskUpdate,
+    task_id: int = Path(..., description="任务ID"),
     db: AsyncSession = Depends(get_session),
     user: SysUser = Depends(current_user),
 ):
@@ -285,8 +285,8 @@ async def update_task(
 )
 @log_operation(module="task", action="delete", description="删除任务")
 async def delete_task(
-    task_id: int,
     request: Request,
+    task_id: int = Path(..., description="任务ID"),
     db: AsyncSession = Depends(get_session),
     user: SysUser = Depends(current_user),
 ):
@@ -306,8 +306,8 @@ async def delete_task(
     dependencies=[Depends(require_permission("task:edit"))],
 )
 async def toggle_task_enabled(
-    task_id: int,
     toggle_in: TaskToggleEnabled,
+    task_id: int = Path(..., description="任务ID"),
     db: AsyncSession = Depends(get_session),
 ):
     """切换任务启用/禁用"""
