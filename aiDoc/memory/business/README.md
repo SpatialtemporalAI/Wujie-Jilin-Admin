@@ -61,3 +61,4 @@
 - [2026-07-02 编辑扫图起始点时按差值平移子元素](./2026-07-02_map-editor-edit-start-point-offset-children.md) — SceneMapService.update 检测 start_point 变化时，同事务平移标注/物体/路径坐标以保持世界坐标(米)不变（机器人不动）；通式兼容 resolution 同变；start_point 变化也触发 nav_image 重建
 - [2026-07-02 接口传参类型校验收紧](./2026-07-02_param-type-validation-tighten.md) — base.py 新增 `parse_optional_enum` 工厂；机器人/事件日志/执行记录/调度日志的 status、source、event_type 等查询字段补枚举校验；`RobotQueryParams.{model_id,map_id}`、`SceneMapQueryParams.group_id` 统一 `OptionalIntField`；前端 robot-operate-drawer 去掉 `undefined as unknown as number` 类型谎言
 - [2026-07-02 任务运控动作下拉精简](./2026-07-02_task-action-options-trim.md) — 移除 击掌/拥抱/左手飞吻/右手飞吻/双手飞吻/动感光波 6 项，下拉保留 8 项；详情 actionLabel、TaskAction 类型、后端 schema 不动以兼容历史快照
+- [2026-07-02 前端 CRUD 异常后仍弹成功提示修复](./2026-07-02_frontend-crud-error-success-toast.md) — 修正 user-operate-drawer 与 scene-map-detail-drawer 的错误处理，使用 `createFlatRequest` 返回的 `error` 字段判断，避免错误弹窗后再弹成功弹窗
