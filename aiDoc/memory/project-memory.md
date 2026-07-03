@@ -66,6 +66,7 @@
 - [2026-07-03 场景地图新增/编辑核心字段必填](./business/2026-07-03_scene-map-form-required-validation.md) — 地图管理与地图编辑器新增/编辑场景仅核心字段必填，状态与分组由后端默认值管理
 - [2026-07-03 地图同步 gRPC 改走机器人 middleware 地址](./business/2026-07-03_map-grpc-to-middleware.md) — NotifyMapSaved 按 Robot.map_id 广播 + SwitchMap 按 robot_id 改走 robot.grpc_config.middleware；SearchMaps 仍走全局 MAP_SERVICE_ADDR；参数配置 gRPC 不变
 - [2026-07-03 运行监控速度按小数点后一位判断移动](./business/2026-07-03_operation-monitor-speed-round-one-decimal.md) — robot-status-card getSpeedLabel 改为先 `Math.round(speed*10)/10` 再 >0，与显示 toFixed(1) 对齐，过滤传感器微小波动误判
+- [2026-07-03 OpenAPI 导航补全 dedicated gRPC](./business/2026-07-03_openapi-nav-grpc.md) — 新增 NavigationService(NavigateToPoint/Route)；OpenAPI goto_point/navigate_route 不再建临时 Task，直接下发 robot.agent；speak 仍复用 TestTTSConfig，未新增 Speak RPC
 
 ## 维护说明
 

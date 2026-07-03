@@ -22,7 +22,7 @@
 - `core/config` 新增 `MERCHANT` 配置（ENCRYPT_KEY / SIGN_TTL_SECONDS / NONCE_TTL_SECONDS）
 - 依赖新增 `cryptography`
 - 复用：`TaskExecutionRecordService`（start/pause/resume/stop）、`TaskService.get`、
-  `VoiceConfigClient.test_tts`；导航请求会落一条临时 Task(task_type=patrol, name 以 `API-` 开头)
+  `VoiceConfigClient.test_tts`（speak）；导航走 `NavigationClient`（2026-07-03 起为 dedicated gRPC，详见 [[2026-07-03_openapi-nav-grpc]]；早期版本曾建临时 patrol Task）
 
 ### 前端
 
@@ -41,7 +41,7 @@
 - **机器人授权**：每个开放 API 请求体带 `robot_sn`，按 `Robot.serial_number` 解析，
   校验该 robot 在 `merchant_robot` 中属于当前商户；导航另校验"点位 map == 机器人 map"。
 - **权限码**：`merchant:list/add/edit/delete`（非超管需 sys_menu 种子；超管直通）。
-- 导航 = 复用任务管线（gRPC 仅下发 task_id+operation，agent 按 task_id 回查），无独立 goto 通道。
+- 导航 = `NavigationService.NavigateToPoint/Route` dedicated gRPC（2026-07-03 起；早期版本复用任务管线下发 task_id+operation）。
 
 ## 相关文件
 

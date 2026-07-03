@@ -254,13 +254,13 @@
 
 | 方法 | 路径 | 入参 | 复用实现 |
 |------|------|------|----------|
-| POST | `/openapi/v1/goto_point` | `robot_sn, point_id` | 建临时 patrol 任务（name 以 `API-` 开头，≤20 字）→ `start_execution`（仅下发 gRPC `run_now`，不写执行记录） |
-| POST | `/openapi/v1/navigate_route` | `robot_sn, point_ids[]` | 同上，多点按序 |
+| POST | `/openapi/v1/goto_point` | `robot_sn, point_id` | `NavigationClient.navigate_to_point`（gRPC `NavigationService.NavigateToPoint`，下发到 robot.agent；不落 Task） |
+| POST | `/openapi/v1/navigate_route` | `robot_sn, point_ids[]` | `NavigationClient.navigate_route`（gRPC `NavigationService.NavigateRoute`，多点按序） |
 | POST | `/openapi/v1/execute_task` | `robot_sn, task_id` | `start_execution`（仅下发 gRPC `run_now`，不写执行记录；响应 `data.action="started"`，不再返回 `record_id`/区分 resumed） |
 | POST | `/openapi/v1/pause_task` | `robot_sn` | 查该 robot 活跃记录 → `pause_execution` |
 | POST | `/openapi/v1/resume_task` | `robot_sn` | 查 paused 记录 → `resume_execution` |
 | POST | `/openapi/v1/stop_task` | `robot_sn` | 查活跃记录 → `stop_execution` |
-| POST | `/openapi/v1/speak` | `robot_sn, text, tts_params{voice,speed,volume}` | `VoiceConfigClient.test_tts` |
+| POST | `/openapi/v1/speak` | `robot_sn, text, tts_params{voice,speed,volume}` | `VoiceConfigClient.test_tts`（复用 `VoiceConfigService.TestTTSConfig`，按入参即时播报） |
 
 响应统一走 `ResponseModel`，`data` 为 `{ success, message, data? }`。鉴权/重放/超时失败 → 401（`TokenError`）；商户禁用/机器人未绑定 → 403（`ForbiddenError`）。
 
