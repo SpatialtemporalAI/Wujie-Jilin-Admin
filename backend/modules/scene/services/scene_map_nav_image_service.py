@@ -114,11 +114,13 @@ class SceneMapNavImageService:
         """推送 MapInfo 给导览服务（NotifyMapSaved）
 
         在 _regenerate 内部 nav_image_id 已 commit 后调用，确保推送时图片已就绪。
+        按 robot.middleware 广播：遍历 Robot.map_id == map_obj.id 且 middleware 启用的机器人。
         失败仅记日志，不抛出。
         """
         import grpc
 
         from database.models.business.scene_map_annotation import SceneMapAnnotation
+        from modules.grpc.addr_provider import get_config_addr_provider
         from modules.grpc.client import MapServiceClient
         from modules.grpc.converter import scene_map_to_map_info
         from modules.admin.services.sys.file_service import FileService
@@ -157,12 +159,18 @@ class SceneMapNavImageService:
             image_url = await FileService.get_file_url(db, file_id) or ""
 
         map_info = scene_map_to_map_info(fresh, image_url, annotations=annotations)
+
+        # 按 Robot.map_id 反查绑定该地图且启用 middleware 的机器人地址，逐个广播
+        targets = await get_config_addr_provider().find_addrs_by_target_and_map(
+            "middleware", fresh.id
+        )
         try:
-            resp = await MapServiceClient.notify_map_saved(map_info)
+            resp = await MapServiceClient.notify_map_saved(map_info, targets)
             logger.info(
-                "notify_map_saved ok map=%s version=%s status=%s msg=%s",
+                "notify_map_saved map=%s version=%s targets=%s status=%s msg=%s",
                 fresh.id,
                 fresh.version,
+                len(targets),
                 resp.status,
                 resp.message,
             )

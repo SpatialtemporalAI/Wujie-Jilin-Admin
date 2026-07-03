@@ -125,6 +125,39 @@ class RobotConfigAddrProvider(ConfigServiceAddrProvider):
                 out.append((robot_id, addr))
         return out
 
+    async def find_addrs_by_target_and_map(
+        self, target: str, map_id: int
+    ) -> List[Tuple[int, str]]:
+        """返回所有绑定指定 map 且启用 target 的 robot 地址 [(robot_id, host:port), ...]
+
+        地图保存/切换时按 Robot.map_id 反查需要下发的机器人。
+        """
+        try:
+            async for db in get_session():
+                result = await db.execute(
+                    select(Robot.id, Robot.grpc_config).where(
+                        Robot.map_id == map_id,
+                        Robot.deleted_at.is_(None),
+                        Robot.grpc_config.isnot(None),
+                    )
+                )
+                rows = result.all()
+                break
+        except Exception:
+            logger.exception(
+                "query robot.grpc_config by map failed target=%s map_id=%s",
+                target,
+                map_id,
+            )
+            return []
+
+        out: List[Tuple[int, str]] = []
+        for robot_id, grpc_config in rows:
+            addr = self._extract_addr(grpc_config, target)
+            if addr:
+                out.append((robot_id, addr))
+        return out
+
 
 _addr_provider: ConfigServiceAddrProvider = RobotConfigAddrProvider()
 

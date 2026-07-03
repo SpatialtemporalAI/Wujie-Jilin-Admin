@@ -113,9 +113,14 @@ async def close_all_config_channels() -> None:
 async def close_channel() -> None:
     """关闭并清理所有 channel（MapService 单例 + ConfigService 多通道），供应用 shutdown 时调用"""
     global _channel, _override_addr
+    # 延迟导入避免循环依赖
+    from modules.grpc.client import MapServiceClient
+
     async with _reconfigure_lock:
         if _channel is not None:
             await _channel.close()
             _channel = None
             logger.info("grpc channel closed")
     await close_all_config_channels()
+    # ConfigService channel 已关闭，清空引用这些 channel 的 MapService 按-addr stub 缓存
+    MapServiceClient._stubs_by_addr.clear()

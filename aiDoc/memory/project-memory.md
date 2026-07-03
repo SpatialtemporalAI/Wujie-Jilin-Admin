@@ -64,6 +64,8 @@
 - [2026-07-02 任务新增/编辑机器人改为单选](./business/2026-07-02_task-robot-single-select.md) — 接口层限制 robot_ids 长度必须为 1，前端选择器改为单选，数据库结构不变
 - [2026-07-02 前端 CRUD 异常后仍弹成功提示修复](./business/2026-07-02_frontend-crud-error-success-toast.md) — 修正 user-operate-drawer 与 scene-map-detail-drawer 的错误处理，使用 `createFlatRequest` 返回的 `error` 字段判断，避免错误弹窗后再弹成功弹窗
 - [2026-07-03 场景地图新增/编辑核心字段必填](./business/2026-07-03_scene-map-form-required-validation.md) — 地图管理与地图编辑器新增/编辑场景仅核心字段必填，状态与分组由后端默认值管理
+- [2026-07-03 地图同步 gRPC 改走机器人 middleware 地址](./business/2026-07-03_map-grpc-to-middleware.md) — NotifyMapSaved 按 Robot.map_id 广播 + SwitchMap 按 robot_id 改走 robot.grpc_config.middleware；SearchMaps 仍走全局 MAP_SERVICE_ADDR；参数配置 gRPC 不变
+- [2026-07-03 运行监控速度按小数点后一位判断移动](./business/2026-07-03_operation-monitor-speed-round-one-decimal.md) — robot-status-card getSpeedLabel 改为先 `Math.round(speed*10)/10` 再 >0，与显示 toFixed(1) 对齐，过滤传感器微小波动误判
 
 ## 维护说明
 
