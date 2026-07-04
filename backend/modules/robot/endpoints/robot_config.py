@@ -36,10 +36,14 @@ from modules.robot.schemas.robot_config import (
     ConfigUpdateResponse,
 )
 from modules.grpc.config_client import VoiceConfigClient
-from core.storage import validate_file_size
+from core.storage import validate_file_size, validate_file_extension
+from core.exception.errors import RequestError
 
-# 人像上传文件大小上限：2MB（人脸识别专用，小于全局 MAX_FILE_SIZE）
-MAX_FACE_PHOTO_SIZE = 2 * 1024 * 1024
+# 人像上传限制（对齐阿里云 facebody 要求；人脸占比 64×64 由 facebody 校验）
+ALLOWED_FACE_PHOTO_EXTS = ("jpg", "jpeg", "png")
+MAX_FACE_PHOTO_SIZE = 5 * 1024 * 1024  # 5MB
+MIN_FACE_PHOTO_DIM = 32  # 分辨率下限（>32）
+MAX_FACE_PHOTO_DIM = 4096  # 分辨率上限（<4096）
 
 # grpc_status → 前端展示文案（绿色 success）
 _GRPC_MSG_MAP = {
@@ -185,6 +189,19 @@ async def upload_face_photo(
     """
     file_data = await file.read()
     validate_file_size(len(file_data), MAX_FACE_PHOTO_SIZE)
+    validate_file_extension(file.filename or "unknown", ALLOWED_FACE_PHOTO_EXTS)
+    width, height = FileService.get_image_dimensions(
+        file_data, file.content_type or "application/octet-stream"
+    )
+    if width and height:
+        if width <= MIN_FACE_PHOTO_DIM or height <= MIN_FACE_PHOTO_DIM:
+            raise RequestError(
+                msg=f"图像分辨率需大于 32×32 像素，当前 {width}×{height}"
+            )
+        if width >= MAX_FACE_PHOTO_DIM or height >= MAX_FACE_PHOTO_DIM:
+            raise RequestError(
+                msg=f"图像分辨率需小于 4096×4096 像素，当前 {width}×{height}"
+            )
     sys_file = await FileService.upload_file(
         db=db,
         file_data=file_data,
