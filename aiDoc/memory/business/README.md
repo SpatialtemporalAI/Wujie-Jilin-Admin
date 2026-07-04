@@ -65,3 +65,4 @@
 - [2026-07-03 地图同步 gRPC 改走机器人 middleware 地址](./2026-07-03_map-grpc-to-middleware.md) — NotifyMapSaved 按 Robot.map_id 广播 + SwitchMap 按 robot_id 改走 robot.grpc_config.middleware；SearchMaps 仍走全局 MAP_SERVICE_ADDR；参数配置 gRPC 不变
 - [2026-07-03 运行监控速度按小数点后一位判断移动](./2026-07-03_operation-monitor-speed-round-one-decimal.md) — robot-status-card getSpeedLabel 改为先 `Math.round(speed*10)/10` 再 >0，与显示 toFixed(1) 对齐，过滤传感器微小波动误判
 - [2026-07-03 角色新增重名校验](./2026-07-03_role-create-duplicate-name-check.md) — `RoleService.create_role` 创建前查同名角色，存在则抛 `ConflictError(msg="角色名称已存在")`，HTTP 409 经前端 onError 自动 toast，无需改前端
+- [2026-07-03 参数配置·人脸识别TTS 人像上传限制 2MB](./2026-07-03_param-config-face-photo-size-limit.md) — 前端 `handleUpload` + 后端 `upload_face_photo` 各加 2MB 校验（前端即时提示不发请求，后端 `validate_file_size` 兜底）；2MB 为人脸专用上限，通用上传仍 10MB

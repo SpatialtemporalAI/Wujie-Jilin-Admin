@@ -17,6 +17,9 @@ import SvgIcon from '@/components/custom/svg-icon.vue';
 
 defineOptions({ name: 'FaceRecognitionTab' });
 
+/** 人像文件大小上限：2MB */
+const MAX_FACE_PHOTO_SIZE = 2 * 1024 * 1024;
+
 const { hasAuth } = useAuth();
 const message = useMessage();
 const appStore = useAppStore();
@@ -60,6 +63,11 @@ async function loadData() {
 
 async function handleUpload({ file }: { file: UploadFileInfo }) {
   if (!file.file) return;
+  if (file.file.size > MAX_FACE_PHOTO_SIZE) {
+    message.error('人像文件大小不能超过 2MB');
+    fileList.value = [];
+    return;
+  }
   try {
     const { data, error } = await fetchUploadFacePhoto(file.file);
     if (!error && data) {

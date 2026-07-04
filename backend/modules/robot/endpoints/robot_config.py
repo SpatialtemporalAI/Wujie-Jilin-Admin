@@ -36,6 +36,10 @@ from modules.robot.schemas.robot_config import (
     ConfigUpdateResponse,
 )
 from modules.grpc.config_client import VoiceConfigClient
+from core.storage import validate_file_size
+
+# 人像上传文件大小上限：2MB（人脸识别专用，小于全局 MAX_FILE_SIZE）
+MAX_FACE_PHOTO_SIZE = 2 * 1024 * 1024
 
 # grpc_status → 前端展示文案（绿色 success）
 _GRPC_MSG_MAP = {
@@ -180,6 +184,7 @@ async def upload_face_photo(
     上传人脸识别人像
     """
     file_data = await file.read()
+    validate_file_size(len(file_data), MAX_FACE_PHOTO_SIZE)
     sys_file = await FileService.upload_file(
         db=db,
         file_data=file_data,
