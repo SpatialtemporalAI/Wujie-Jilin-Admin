@@ -1,0 +1,28 @@
+. 
+====================== 2026-07-06===================== 
+docs: 更新商户开放API接入文档，新增查询类接口与文档优化
+feat: 新增即时任务类型与视频监控启停控制
+chore(backend/grpc): 更新grpc子模块的commit哈希
+feat: 新增视频监控控制功能并补充任务类型配置
+feat: 新增跨模块下拉轻量接口，修复权限不足问题
+feat(role): add length limit and word count for role name and desc
+fix(role): 限制角色名称最大长度为20字符并添加字数统计
+feat(validate): 全局必填字段非空校验 + 校验信息中文化
+feat(map-editor): 删除点位仅在其已关联任务时弹窗确认
+feat: 新增三日志页面导出Excel功能，集成异步导出任务体系
+feat: 为多个页面页面添加权限校验控制按钮展示
+. 
+ 
+====================== 2026-07-06===================== 
+docs: 更新商户开放API接入文档，新增查询类接口与文档优化
+feat: 新增即时任务类型与视频监控启停控制
+chore(backend/grpc): 更新grpc子模块的commit哈希
+feat: 新增视频监控控制功能并补充任务类型配置
+feat: 新增跨模块下拉轻量接口，修复权限不足问题
+feat(role): add length limit and word count for role name and desc
+fix(role): 限制角色名称最大长度为20字符并添加字数统计
+feat(validate): 全局必填字段非空校验 + 校验信息中文化
+feat(map-editor): 删除点位仅在其已关联任务时弹窗确认
+feat: 新增三日志页面导出Excel功能，集成异步导出任务体系
+feat: 为多个页面页面添加权限校验控制按钮展示
+ 
