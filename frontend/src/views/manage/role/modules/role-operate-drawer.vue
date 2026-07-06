@@ -204,7 +204,12 @@ watch(visible, async () => {
     <NDrawerContent :title="title" :native-scrollbar="false" closable>
       <NForm ref="formRef" :model="model" :rules="rules">
         <NFormItem :label="$t('page.manage.role.roleName')" path="name">
-          <NInput v-model:value="model.name" :placeholder="$t('page.manage.role.form.roleName')" />
+          <NInput
+            v-model:value="model.name"
+            :placeholder="$t('page.manage.role.form.roleName')"
+            :maxlength="20"
+            show-count
+          />
         </NFormItem>
         <NFormItem :label="$t('page.manage.role.roleStatus')" path="status">
           <NRadioGroup v-model:value="model.status">
