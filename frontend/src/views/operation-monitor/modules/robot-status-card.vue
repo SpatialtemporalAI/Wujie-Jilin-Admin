@@ -64,7 +64,7 @@ const robotOptions = computed(() =>
             :value="selectedRobot?.id ?? null"
             :options="robotOptions"
             placeholder="选择机器人"
-            style="width: 220px"
+            style="width: 280px"
             size="small"
             @update:value="val => val && emit('select', val)"
           />
