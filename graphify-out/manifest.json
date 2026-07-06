@@ -95,8 +95,8 @@
     "semantic_hash": ""
   },
   "D:\\project\\SpatialtemporalAi\\Wujie-Jilin-Admin\\backend\\core\\exception\\errors_handler.py": {
-    "mtime": 1783315628.462084,
-    "ast_hash": "37f9389562e1b7fad26850bb00b4ac5a",
+    "mtime": 1783328932.7479804,
+    "ast_hash": "671f99846f3d4d7dbcb5d650ba08e685",
     "semantic_hash": ""
   },
   "D:\\project\\SpatialtemporalAi\\Wujie-Jilin-Admin\\backend\\core\\exception\\__init__.py": {
@@ -2495,8 +2495,8 @@
     "semantic_hash": ""
   },
   "D:\\project\\SpatialtemporalAi\\Wujie-Jilin-Admin\\aiDoc\\memory\\project-memory.md": {
-    "mtime": 1783322716.3591206,
-    "ast_hash": "bea74d04b9cbcc3c8d3efe5408276687",
+    "mtime": 1783329490.2289376,
+    "ast_hash": "cf6dcb8131492e4012b6337fa85a6fe9",
     "semantic_hash": ""
   },
   "D:\\project\\SpatialtemporalAi\\Wujie-Jilin-Admin\\aiDoc\\memory\\README.md": {
@@ -2530,8 +2530,8 @@
     "semantic_hash": ""
   },
   "D:\\project\\SpatialtemporalAi\\Wujie-Jilin-Admin\\aiDoc\\modules\\backend-layer-rules.md": {
-    "mtime": 1783315628.457082,
-    "ast_hash": "00a2fd589c9d93ef71c0db191482da28",
+    "mtime": 1783329490.230476,
+    "ast_hash": "85ae4d02b68253e103f49b828ce4f24d",
     "semantic_hash": ""
   },
   "D:\\project\\SpatialtemporalAi\\Wujie-Jilin-Admin\\aiDoc\\modules\\mcp-guide.md": {
@@ -5157,6 +5157,16 @@
   "D:\\project\\SpatialtemporalAi\\Wujie-Jilin-Admin\\aiDoc\\memory\\business\\2026-07-06_openapi-param-validation.md": {
     "mtime": 1783326086.3587687,
     "ast_hash": "914a25d6476b323d2013ecf6e696d27b",
+    "semantic_hash": ""
+  },
+  "D:\\project\\SpatialtemporalAi\\Wujie-Jilin-Admin\\git_commit_summary.txt": {
+    "mtime": 1783327429.8071868,
+    "ast_hash": "fc7d76f607e3b54947e8ed61a93f4c09",
+    "semantic_hash": ""
+  },
+  "D:\\project\\SpatialtemporalAi\\Wujie-Jilin-Admin\\aiDoc\\memory\\business\\2026-07-06_validation-error-message-pure-chinese.md": {
+    "mtime": 1783329285.5171752,
+    "ast_hash": "30655130a7f07e3dd0a572131d1fa22e",
     "semantic_hash": ""
   }
 }

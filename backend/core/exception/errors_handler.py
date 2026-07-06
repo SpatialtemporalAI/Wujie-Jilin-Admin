@@ -2,11 +2,12 @@
 # -*- coding: utf-8 -*-
 
 import traceback
-from typing import Any, Callable, Dict, Optional, Type, Union
+import types
+from typing import Any, Callable, Dict, Optional, Type, Union, get_args, get_origin
 from fastapi import FastAPI, HTTPException, Request
 from fastapi.responses import JSONResponse, ORJSONResponse
 from fastapi.exceptions import RequestValidationError, ValidationException
-from pydantic import ValidationError
+from pydantic import BaseModel, ValidationError
 from core.exception.errors import (
     BaseExceptionMixin,
     CustomError,
@@ -277,56 +278,267 @@ async def http_exception_handler(
     )
 
 
-# Pydantic v2 错误类型 → 中文片段映射（字段名会拼接在前面）
-PYDANTIC_ERROR_ZH = {
+# Pydantic v2 错误类型 → 中文片段映射。
+# 片段会与字段中文描述（或回退的「该参数」）拼接，例如：
+#   有描述："{description}{zh}"  → "用户名必须为整数"
+#   无描述："该参数{zh}"         → "该参数必须为整数"
+# 因此片段需同时能与「字段中文描述」和「该参数」自然搭配，避免中英文混合。
+PYDANTIC_ERROR_ZH: Dict[str, str] = {
+    # 必填 / 缺失
     "missing": "为必填项，不能为空",
+    "missing_argument": "为必填项，不能为空",
+    "missing_position_argument": "缺少必要的参数",
+    "unexpected_position_argument": "存在多余的参数",
+    # 字符串
+    "string_type": "必须为字符串",
     "string_too_short": "长度过短",
     "string_too_long": "长度超出限制",
-    "too_short": "数量过少",
-    "too_long": "数量超出限制",
-    "string_type": "必须为字符串",
+    "string_pattern_mismatch": "格式不正确",
+    "string_substring": "包含不允许的内容",
+    # 整数
     "int_type": "必须为整数",
     "int_parsing": "必须为整数",
+    "int_parsing_size": "数值超出范围",
     "int_from_float": "必须为整数",
+    "int_float_exact": "必须为整数",
+    # 浮点数
     "float_type": "必须为数字",
     "float_parsing": "必须为数字",
+    "float_number_gt": "数值过小",
+    "float_number_ge": "数值过小",
+    "float_number_lt": "数值过大",
+    "float_number_le": "数值过大",
+    # 布尔
     "bool_type": "必须为布尔值",
     "bool_parsing": "必须为布尔值",
+    # 集合 / 容器
     "list_type": "必须为列表",
-    "dict_type": "必须为对象",
     "tuple_type": "必须为元组",
     "set_type": "必须为集合",
-    "greater_than": "数值不符合要求",
-    "greater_than_equal": "数值不符合要求",
-    "less_than": "数值不符合要求",
-    "less_than_equal": "数值不符合要求",
-    "multiple_of": "数值不符合要求",
-    "string_pattern_mismatch": "格式不正确",
-    "enum": "取值不合法",
-    "literal_error": "取值不合法",
+    "frozenset_type": "必须为冻结集合",
+    "dict_type": "必须为对象",
+    "mapping_type": "必须为对象",
+    "too_short": "数量过少",
+    "too_long": "数量超出限制",
+    # 日期时间
+    "date_type": "必须为日期",
+    "date_parsing": "日期格式不正确",
+    "date_object": "必须为日期",
+    "date_from_datetime": "必须为日期",
+    "date_from_datetime_inexact": "必须为日期",
+    "datetime_type": "必须为日期时间",
+    "datetime_parsing": "日期时间格式不正确",
+    "datetime_object": "必须为日期时间",
+    "time_type": "必须为时间",
+    "time_parsing": "时间格式不正确",
+    "time_object": "必须为时间",
+    "timedelta_type": "必须为时间跨度",
+    "timedelta_parsing": "时间跨度格式不正确",
+    # UUID / URL
     "uuid_type": "必须为 UUID",
     "uuid_parsing": "UUID 格式不正确",
-    "date_type": "必须为日期",
-    "datetime_type": "必须为日期时间",
+    "uuid_version": "UUID 版本不正确",
+    "url_type": "必须为 URL",
+    "url_parsing": "URL 格式不正确",
+    "url_scheme": "URL 协议不正确",
+    # 枚举 / 字面量
+    "enum": "取值不合法",
+    "literal_error": "取值不合法",
+    # 数值约束
+    "greater_than": "数值过小",
+    "greater_than_equal": "数值过小",
+    "less_than": "数值过大",
+    "less_than_equal": "数值过大",
+    "multiple_of": "数值不符合要求",
+    "finite_number": "必须为有限数值",
+    # 字节 / Decimal / 复数
+    "bytes_type": "必须为字节",
+    "bytes_too_short": "长度过短",
+    "bytes_too_long": "长度超出限制",
+    "decimal_type": "必须为数字",
+    "decimal_parsing": "数字格式不正确",
+    "complex_type": "必须为复数",
+    "complex_parsing": "复数格式不正确",
+    # 模型 / 结构
+    "model_type": "必须为对象",
+    "model_attributes_type": "必须为对象",
+    "model_class_type": "必须为模型类型",
+    "dataclass_type": "必须为数据类",
+    "dataclass_exact_type": "必须为数据类",
+    "arguments_type": "参数类型不合法",
+    # 额外字段
+    "extra_forbidden": "存在不允许的字段",
+    # JSON
+    "json_type": "必须为 JSON",
+    "json_invalid": "JSON 格式不正确",
+    "json_invalid_utf8": "JSON 编码不正确",
+    # 联合类型 / 判别
+    "union_tag_invalid": "取值不合法",
+    "union_tag_not_found": "取值不合法",
+    "discriminated_union_missing_discriminator": "缺少必要的类型标识",
+    "discriminated_union_invalid_discriminator": "类型标识不合法",
+    # 递归
+    "recursion_loop": "存在循环引用",
 }
 
 
-def _translate_validation_error(error: dict) -> str:
-    """将单个 Pydantic 请求校验错误翻译为中文消息。"""
-    loc = error.get("loc", [])
-    field = str(loc[-1]) if loc else ""
-    etype = error.get("type", "")
+def _ctx_fragment(error_type: str, ctx: Optional[Dict[str, Any]]) -> Optional[str]:
+    """优先根据校验上下文 ctx 生成更精确的中文片段；未命中返回 None。"""
+    if not ctx:
+        return None
+    try:
+        if error_type == "greater_than" and "gt" in ctx:
+            return f"必须大于 {ctx['gt']}"
+        if error_type == "greater_than_equal" and "ge" in ctx:
+            return f"必须大于等于 {ctx['ge']}"
+        if error_type == "less_than" and "lt" in ctx:
+            return f"必须小于 {ctx['lt']}"
+        if error_type == "less_than_equal" and "le" in ctx:
+            return f"必须小于等于 {ctx['le']}"
+        if error_type == "multiple_of" and "multiple_of" in ctx:
+            return f"必须是 {ctx['multiple_of']} 的倍数"
+        if error_type in ("string_too_short", "too_short", "bytes_too_short") and "min_length" in ctx:
+            return f"长度不能少于 {ctx['min_length']}"
+        if error_type in ("string_too_long", "too_long", "bytes_too_long") and "max_length" in ctx:
+            return f"长度不能超过 {ctx['max_length']}"
+    except Exception:
+        return None
+    return None
+
+
+def _model_from_annotation(annotation: Any) -> Optional[type]:
+    """从类型注解中提取 Pydantic BaseModel 子类，穿透 list/Union/Optional 等容器。"""
+    if annotation is None:
+        return None
+    origin = get_origin(annotation)
+    if origin in (list, set, tuple, frozenset, dict):
+        for arg in get_args(annotation):
+            model = _model_from_annotation(arg)
+            if model is not None:
+                return model
+        return None
+    if origin is Union or origin is getattr(types, "UnionType", None):
+        for arg in get_args(annotation):
+            if arg is type(None):
+                continue
+            model = _model_from_annotation(arg)
+            if model is not None:
+                return model
+        return None
+    if isinstance(annotation, type) and issubclass(annotation, BaseModel):
+        return annotation
+    return None
+
+
+def _description_in_model(model_cls: Any, path) -> Optional[str]:
+    """沿字段路径 path 递归钻取 model，返回最深层字段的中文描述（description，回退 title）。"""
+    if not path:
+        return None
+    if not (isinstance(model_cls, type) and issubclass(model_cls, BaseModel)):
+        return None
+    try:
+        field_info = model_cls.model_fields.get(path[0])
+    except Exception:
+        return None
+    if field_info is None:
+        return None
+    if len(path) == 1:
+        return field_info.description or field_info.title or None
+    return _description_in_model(
+        _model_from_annotation(field_info.annotation), path[1:]
+    )
+
+
+# FastAPI 请求参数种类 → Dependant 上的属性名映射
+_PARAM_CONTAINERS = {
+    "body": "body_params",
+    "query": "query_params",
+    "path": "path_params",
+    "header": "header_params",
+    "cookie": "cookie_params",
+}
+
+
+def _resolve_field_label(request: Optional[Request], loc) -> Optional[str]:
+    """根据错误 loc 反射出字段/参数的中文描述；失败返回 None（由调用方回退为「该参数」）。
+
+    - body：从请求体 model 的 model_fields 沿 loc 递归取 description
+    - query/path/header/cookie：按参数名匹配，取 FieldInfo.description
+    - 全程异常均吞掉，确保校验错误处理本身不会再次抛错
+    """
+    if request is None or not loc:
+        return None
+    try:
+        kind = loc[0]
+        tail = [str(x) for x in loc[1:]]
+        if not tail:
+            return None
+        route = request.scope.get("route")
+        dependant = getattr(route, "dependant", None) if route is not None else None
+        if dependant is None:
+            return None
+
+        if kind == "body":
+            body_params = getattr(dependant, "body_params", None) or []
+            if not body_params:
+                return None
+            # 单 body 参数：tail 直接对应 model 字段路径
+            first = body_params[0]
+            desc = _description_in_model(getattr(first, "type_", None), tail)
+            if desc:
+                return desc
+            # 多 body / embed 场景：tail[0] 可能是参数名，按名定位后再钻取
+            if len(tail) > 1:
+                for param in body_params:
+                    if str(getattr(param, "name", "")) == tail[0]:
+                        return _description_in_model(
+                            getattr(param, "type_", None), tail[1:]
+                        )
+            return None
+
+        container_attr = _PARAM_CONTAINERS.get(str(kind))
+        if not container_attr:
+            return None
+        name = tail[0]
+        for param in getattr(dependant, container_attr, None) or []:
+            if str(getattr(param, "name", "")) == name:
+                field_info = getattr(param, "field_info", None)
+                if field_info is not None:
+                    return getattr(field_info, "description", None) or getattr(
+                        field_info, "title", None
+                    )
+        return None
+    except Exception:
+        return None
+
+
+def _translate_validation_error(request: Optional[Request], error: dict) -> str:
+    """将单个 Pydantic 校验错误翻译为纯中文消息（避免中英文字段名混合）。
+
+    优先级：
+      1. 自定义 validator 抛出的 ValueError/AssertionError：沿用其原始（通常为中文）消息
+      2. 字段中文描述 + 中文错误片段：如「用户名必须为整数」
+      3. 无描述时回退「该参数 + 片段」：如「该参数必须为整数」
+    """
+    loc = error.get("loc", []) or []
+    error_type = error.get("type", "")
     ctx = error.get("ctx") or {}
 
-    # 自定义 validator 抛出的 ValueError：优先使用其原始消息（项目内通常已是中文）
-    if etype == "value_error" and ctx.get("error") is not None:
-        return str(ctx["error"])
+    # 1. 自定义校验器的原始消息优先（项目内通常已是中文）
+    if error_type in ("value_error", "assertion_error"):
+        inner = ctx.get("error")
+        if inner is not None:
+            return str(inner)
 
-    zh = PYDANTIC_ERROR_ZH.get(etype)
-    if zh:
-        return f"{field}{zh}" if field else zh
+    # 2. 解析中文片段：ctx 精确优先 → 映射表 → 兜底「不合法」
+    zh = (
+        _ctx_fragment(error_type, ctx)
+        or PYDANTIC_ERROR_ZH.get(error_type)
+        or "不合法"
+    )
 
-    return f"{field}参数不合法" if field else "参数校验失败"
+    label = _resolve_field_label(request, loc)
+    return f"{label}{zh}" if label else f"该参数{zh}"
 
 
 async def validation_exception_handler(
@@ -339,7 +551,7 @@ async def validation_exception_handler(
     # 只取第一条错误并翻译为中文
     errors = []
     for error in exc.errors():
-        errors.append(_translate_validation_error(error))
+        errors.append(_translate_validation_error(request, error))
         break
     # 记录日志
     logger.warning(
@@ -364,12 +576,8 @@ async def pydantic_validation_error_handler(
     Pydantic模型验证异常处理器
     """
     request_id = get_request_trace_id(request)
-    # 格式化验证错误信息
-    errors = []
-    for error in exc.errors():
-        field = ".".join(str(loc) for loc in error.get("loc", []))
-        message = error.get("msg", "验证错误")
-        errors.append(f"{field}: {message}")
+    # 格式化验证错误信息（纯中文，避免字段名与英文消息混合）
+    errors = [_translate_validation_error(None, error) for error in exc.errors()]
     # 记录日志
     logger.warning(
         f"模型验证失败: path={request.url.path}, method={request.method}, "

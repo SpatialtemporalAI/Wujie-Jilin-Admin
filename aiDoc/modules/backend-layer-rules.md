@@ -92,6 +92,8 @@ Base = DataClassBase + LogicMixin + DateTimeMixin
 
 校验失败信息中文化见 `core/exception/errors_handler.py`：`validation_exception_handler` 按 Pydantic 错误 `type` 映射中文（`PYDANTIC_ERROR_ZH`），自定义 validator 抛出的中文 `ValueError` 原样透传（如"邮箱格式不正确"）。
 
+提示词需避免中英文混合：优先用字段 `description` 指代字段（如「用户名必须为整数」），无描述时回退「该参数 + 片段」（如「该参数必须为整数」），不再把英文字段名拼接到中文；数值/长度边界优先用 ctx 生成精确提示（如「必须大于 0」「长度不能超过 5」）。映射表未覆盖的类型走 `{label}不合法` / `该参数不合法`。
+
 ---
 
 ## Service 层
