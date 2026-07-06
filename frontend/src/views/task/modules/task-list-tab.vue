@@ -282,7 +282,7 @@ async function handlePauseTask(taskId: number) {
         :loading="loading" add-auth="task:add" :show-delete="false" @add="handleAdd" @refresh="getData" />
     </div>
     <NDataTable v-model:checked-row-keys="checkedRowKeys" :columns="columns" :data="data" size="small"
-      :flex-height="!appStore.isMobile" :scroll-x="1200" :loading="loading" remote
+      :flex-height="!appStore.isMobile" :scroll-x="1300" :loading="loading" remote
       :row-key="(row: Api.Task.Task) => row.id" :pagination="mobilePagination" class="sm:flex-1-hidden" />
     <TaskOperateDrawer v-model:visible="drawerVisible" :operate-type="operateType" :row-data="editingData"
       @submitted="getDataByPage" />

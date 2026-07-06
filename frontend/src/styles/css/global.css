@@ -24,3 +24,8 @@ html {
 .card-wrapper[class*="flex-1-hidden"] .n-card__content {
   padding: 0 !important;
 }
+
+/* 防止表格在 flex 容器内因 min-width: auto 无法缩紧，导致横向滚动异常 */
+.n-data-table {
+  min-width: 0;
+}
