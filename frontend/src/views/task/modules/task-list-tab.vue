@@ -46,7 +46,8 @@ const scheduleCycleLabel: Record<string, string> = {
   sun: '周日'
 };
 
-const actionLoading = ref(false);
+const startingTaskId = ref<number | null>(null);
+const pausingTaskId = ref<number | null>(null);
 
 function formatSchedule(row: Api.Task.Task): string {
   if (!row.schedule_enabled) return '未配置';
@@ -167,10 +168,11 @@ const {
                 type="success"
                 ghost
                 size="small"
-                loading={actionLoading.value}
+                loading={startingTaskId.value === row.id}
+                disabled={startingTaskId.value !== null || pausingTaskId.value !== null}
                 onClick={() => handleStart(row)}
               >
-                立即启动
+                {startingTaskId.value === row.id ? '启动中' : '立即启动'}
               </NButton>
             )}
             {canPause && (
@@ -178,10 +180,11 @@ const {
                 type="warning"
                 ghost
                 size="small"
-                loading={actionLoading.value}
+                loading={pausingTaskId.value === row.id}
+                disabled={startingTaskId.value !== null || pausingTaskId.value !== null}
                 onClick={() => handlePauseTask(row.id)}
               >
-                暂停
+                {pausingTaskId.value === row.id ? '暂停中' : '暂停'}
               </NButton>
             )}
             {hasAuth('task:edit') && (
@@ -243,7 +246,9 @@ async function handleStart(row: Api.Task.Task) {
     message.warning('请先启用任务');
     return;
   }
-  actionLoading.value = true;
+  if (startingTaskId.value !== null || pausingTaskId.value !== null) return;
+
+  startingTaskId.value = row.id;
   try {
     const robotIds = row.robots?.map((r: Api.Task.TaskRobot) => r.id) || [];
     const { error } = await fetchStartOrResumeExecution(row.id, { robot_ids: robotIds, source: 'manual' });
@@ -254,12 +259,14 @@ async function handleStart(row: Api.Task.Task) {
   } catch (error) {
     console.error('启动任务失败:', error);
   } finally {
-    actionLoading.value = false;
+    startingTaskId.value = null;
   }
 }
 
 async function handlePauseTask(taskId: number) {
-  actionLoading.value = true;
+  if (startingTaskId.value !== null || pausingTaskId.value !== null) return;
+
+  pausingTaskId.value = taskId;
   try {
     const { error } = await fetchPauseExecutionByTask(taskId);
     if (!error) {
@@ -269,7 +276,7 @@ async function handlePauseTask(taskId: number) {
   } catch (error) {
     console.error('暂停任务失败:', error);
   } finally {
-    actionLoading.value = false;
+    pausingTaskId.value = null;
   }
 }
 </script>
