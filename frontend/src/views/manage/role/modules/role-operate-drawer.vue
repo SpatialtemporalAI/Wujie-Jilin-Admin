@@ -217,7 +217,12 @@ watch(visible, async () => {
           </NRadioGroup>
         </NFormItem>
         <NFormItem :label="$t('page.manage.role.roleDesc')" path="desc">
-          <NInput v-model:value="model.desc" :placeholder="$t('page.manage.role.form.roleDesc')" />
+          <NInput
+            v-model:value="model.desc"
+            :placeholder="$t('page.manage.role.form.roleDesc')"
+            :maxlength="200"
+            show-count
+          />
         </NFormItem>
         <NFormItem :label="$t('page.manage.role.menuAuth')" class="flex-1-hidden">
           <NTree
