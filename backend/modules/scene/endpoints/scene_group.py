@@ -3,7 +3,7 @@
 
 from typing import List
 
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, Path
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from database.db_manager import get_session
@@ -73,7 +73,7 @@ async def get_group_tree(
     dependencies=[Depends(require_permission("scene:group:detail"))],
 )
 async def get_group(
-    group_id: int,
+    group_id: int = Path(..., description="场景分组ID"),
     user: SysUser = Depends(current_user),
     db: AsyncSession = Depends(get_session),
 ):
@@ -107,8 +107,8 @@ async def create_group(
     dependencies=[Depends(require_permission("scene:group:edit"))],
 )
 async def update_group(
-    group_id: int,
     group_update: SceneGroupUpdate,
+    group_id: int = Path(..., description="场景分组ID"),
     user: SysUser = Depends(current_user),
     db: AsyncSession = Depends(get_session),
 ):
@@ -126,7 +126,7 @@ async def update_group(
     dependencies=[Depends(require_permission("scene:group:delete"))],
 )
 async def delete_group(
-    group_id: int,
+    group_id: int = Path(..., description="场景分组ID"),
     user: SysUser = Depends(current_user),
     db: AsyncSession = Depends(get_session),
 ):

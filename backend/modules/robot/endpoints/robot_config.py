@@ -5,7 +5,7 @@
 机器人参数配置相关接口
 """
 import logging
-from fastapi import APIRouter, Depends, Request, UploadFile, File
+from fastapi import APIRouter, Depends, Path, Request, UploadFile, File
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from database.db_manager import get_session
@@ -36,6 +36,14 @@ from modules.robot.schemas.robot_config import (
     ConfigUpdateResponse,
 )
 from modules.grpc.config_client import VoiceConfigClient
+from core.storage import validate_file_size, validate_file_extension
+from core.exception.errors import RequestError
+
+# 人像上传限制（对齐阿里云 facebody 要求；人脸占比 64×64 由 facebody 校验）
+ALLOWED_FACE_PHOTO_EXTS = ("jpg", "jpeg", "png")
+MAX_FACE_PHOTO_SIZE = 5 * 1024 * 1024  # 5MB
+MIN_FACE_PHOTO_DIM = 32  # 分辨率下限（>32）
+MAX_FACE_PHOTO_DIM = 4096  # 分辨率上限（<4096）
 
 # grpc_status → 前端展示文案（绿色 success）
 _GRPC_MSG_MAP = {
@@ -180,6 +188,20 @@ async def upload_face_photo(
     上传人脸识别人像
     """
     file_data = await file.read()
+    validate_file_size(len(file_data), MAX_FACE_PHOTO_SIZE)
+    validate_file_extension(file.filename or "unknown", ALLOWED_FACE_PHOTO_EXTS)
+    width, height = FileService.get_image_dimensions(
+        file_data, file.content_type or "application/octet-stream"
+    )
+    if width and height:
+        if width <= MIN_FACE_PHOTO_DIM or height <= MIN_FACE_PHOTO_DIM:
+            raise RequestError(
+                msg=f"图像分辨率需大于 32×32 像素，当前 {width}×{height}"
+            )
+        if width >= MAX_FACE_PHOTO_DIM or height >= MAX_FACE_PHOTO_DIM:
+            raise RequestError(
+                msg=f"图像分辨率需小于 4096×4096 像素，当前 {width}×{height}"
+            )
     sys_file = await FileService.upload_file(
         db=db,
         file_data=file_data,
@@ -256,9 +278,9 @@ async def create_face(
 )
 @log_operation(module="robot", action="update", description="更新人脸识别TTS配置")
 async def update_face(
-    face_id: int,
     request: Request,
     face_in: RobotFaceRecognitionUpdate,
+    face_id: int = Path(..., description="人脸识别配置ID"),
     db: AsyncSession = Depends(get_session),
     user: SysUser = Depends(current_user),
 ):
@@ -284,8 +306,8 @@ async def update_face(
 )
 @log_operation(module="robot", action="delete", description="删除人脸识别TTS配置")
 async def delete_face(
-    face_id: int,
     request: Request,
+    face_id: int = Path(..., description="人脸识别配置ID"),
     db: AsyncSession = Depends(get_session),
     user: SysUser = Depends(current_user),
 ):
@@ -313,9 +335,9 @@ async def delete_face(
 )
 @log_operation(module="robot", action="update", description="更新机器人行走速度")
 async def update_speed_level(
-    robot_id: int,
-    payload: RobotSpeedLevelUpdate,
     request: Request,
+    payload: RobotSpeedLevelUpdate,
+    robot_id: int = Path(..., description="机器人ID"),
     db: AsyncSession = Depends(get_session),
     user: SysUser = Depends(current_user),
 ):
@@ -350,9 +372,9 @@ async def update_speed_level(
 )
 @log_operation(module="robot", action="update", description="更新机器人电量报警阈值")
 async def update_battery_threshold(
-    robot_id: int,
-    payload: RobotBatteryThresholdUpdate,
     request: Request,
+    payload: RobotBatteryThresholdUpdate,
+    robot_id: int = Path(..., description="机器人ID"),
     db: AsyncSession = Depends(get_session),
     user: SysUser = Depends(current_user),
 ):

@@ -1,4 +1,4 @@
-import { computed, ref, toValue, watch } from 'vue';
+import { computed, ref, toValue, watch, type Ref } from 'vue';
 import { fetchGetDictItemsByDictCode } from '@/service/api/system-manage';
 
 interface DictCacheEntry {
@@ -37,11 +37,13 @@ export function useDict(code: string | Ref<string> | (() => string)) {
   const loading = ref(false);
   const items = ref<Api.SystemManage.DictItem[]>([]) as Ref<Api.SystemManage.DictItem[]>;
 
-  const options = computed(() => items.value.map(item => ({ label: item.label, value: item.value })));
+  const options = computed(() =>
+    items.value.map((item: Api.SystemManage.DictItem) => ({ label: item.label, value: item.value }))
+  );
 
   function getLabelByValue(value: string | null | undefined): string {
     if (value == null) return '';
-    const found = items.value.find(item => item.value === value);
+    const found = items.value.find((item: Api.SystemManage.DictItem) => item.value === value);
     return found ? found.label : value;
   }
 

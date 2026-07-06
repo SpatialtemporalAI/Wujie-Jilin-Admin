@@ -8,7 +8,7 @@
 import logging
 from typing import List, Optional
 
-from sqlalchemy import select, insert
+from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from database.models.business.merchant import Merchant
@@ -18,7 +18,6 @@ from database.models.business.robot_voice_config import RobotVoiceConfig
 from database.models.business.scene_map import SceneMap
 from database.models.business.scene_map_annotation import SceneMapAnnotation
 from database.models.business.task import Task, task_robot_association
-from database.models.business.task_point import TaskPoint
 from database.models.business.task_execution_record import TaskExecutionRecord
 from core.exception.errors import NotFoundError, ForbiddenError, ConflictError
 from modules.task.services.task_execution_record_service import (
@@ -29,6 +28,7 @@ from modules.scene.services.scene_map_annotation_service import (
     SceneMapAnnotationService,
 )
 from modules.grpc.config_client import VoiceConfigClient
+from modules.grpc.navigation_client import NavigationClient
 from modules.merchant.schemas.openapi import OpenApiResult, TtsParams
 
 logger = logging.getLogger(__name__)
@@ -121,47 +121,26 @@ class OpenApiService:
         return ordered
 
     @staticmethod
-    async def _create_nav_task(
-        db: AsyncSession, robot: Robot, annotations: List[SceneMapAnnotation]
-    ) -> Task:
-        """构建一次性导航任务（patrol 类型）并落库，返回 Task"""
-        first_name = annotations[0].name or "导航"
-        task_name = f"API-{first_name}"[:20]  # Task.name 最长 20
-
+    def _assert_points_on_robot_map(
+        robot: Robot, annotations: List[SceneMapAnnotation]
+    ) -> None:
+        """导航前校验：机器人已绑定地图，且所有点位都属于该地图"""
         if robot.map_id is None:
             raise ForbiddenError(msg="机器人未绑定场景地图，无法导航")
         for ann in annotations:
             if ann.map_id != robot.map_id:
                 raise ForbiddenError(msg=f"点位 {ann.id} 不在机器人所在地图")
 
-        task_obj = Task(
-            name=task_name,
-            task_type="patrol",
-            map_id=robot.map_id,
-            enabled=True,
-            status="running",
-        )
-        db.add(task_obj)
-        await db.flush()
-
-        for idx, ann in enumerate(annotations):
-            db.add(
-                TaskPoint(
-                    task_id=task_obj.id,
-                    sort_order=idx,
-                    point_name=ann.name,
-                    annotation_id=ann.id,
-                    actions=[],
-                )
-            )
-        await db.execute(
-            insert(task_robot_association).values(
-                task_id=task_obj.id, robot_id=robot.id
-            )
-        )
-        await db.commit()
-        await db.refresh(task_obj)
-        return task_obj
+    @staticmethod
+    def _annotation_to_point(ann: SceneMapAnnotation) -> dict:
+        """SceneMapAnnotation → NavigationClient 所需的 point dict"""
+        return {
+            "point_id": ann.id,
+            "name": ann.name,
+            "x": ann.x,
+            "y": ann.y,
+            "angle": ann.angle,
+        }
 
     @staticmethod
     async def goto_point(
@@ -169,15 +148,13 @@ class OpenApiService:
     ) -> OpenApiResult:
         robot = await OpenApiService.resolve_robot(db, merchant, robot_sn)
         annotations = await OpenApiService._load_annotations(db, [point_id])
-        task_obj = await OpenApiService._create_nav_task(db, robot, annotations)
-        await TaskExecutionRecordService.start_execution(db, task_obj.id, [robot.id])
-        return OpenApiResult(
-            success=True,
-            message="单点导航任务已下发",
-            data={
-                "task_id": task_obj.id,
-            },
+        OpenApiService._assert_points_on_robot_map(robot, annotations)
+        resp = await NavigationClient.navigate_to_point(
+            robot.id, robot.map_id, OpenApiService._annotation_to_point(annotations[0])
         )
+        success = bool(getattr(resp, "success", False))
+        message = getattr(resp, "message", "") or ("单点导航已下发" if success else "导航下发失败")
+        return OpenApiResult(success=success, message=message)
 
     @staticmethod
     async def navigate_route(
@@ -185,15 +162,15 @@ class OpenApiService:
     ) -> OpenApiResult:
         robot = await OpenApiService.resolve_robot(db, merchant, robot_sn)
         annotations = await OpenApiService._load_annotations(db, point_ids)
-        task_obj = await OpenApiService._create_nav_task(db, robot, annotations)
-        await TaskExecutionRecordService.start_execution(db, task_obj.id, [robot.id])
-        return OpenApiResult(
-            success=True,
-            message=f"多点导航任务已下发（{len(annotations)} 个点位）",
-            data={
-                "task_id": task_obj.id,
-            },
+        OpenApiService._assert_points_on_robot_map(robot, annotations)
+        points = [OpenApiService._annotation_to_point(a) for a in annotations]
+        resp = await NavigationClient.navigate_route(robot.id, robot.map_id, points)
+        success = bool(getattr(resp, "success", False))
+        message = (
+            getattr(resp, "message", "")
+            or (f"多点导航已下发（{len(annotations)} 个点位）" if success else "导航下发失败")
         )
+        return OpenApiResult(success=success, message=message)
 
     @staticmethod
     async def execute_task(

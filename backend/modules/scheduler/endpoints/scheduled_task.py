@@ -3,7 +3,7 @@
 
 from typing import List
 
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Body, Depends, Path
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from database.db_manager import get_session
@@ -63,7 +63,7 @@ async def get_task_list(
     dependencies=[Depends(require_permission("sys:scheduler:detail"))],
 )
 async def get_task(
-    task_id: int,
+    task_id: int = Path(..., description="定时任务ID"),
     user: SysUser = Depends(current_user),
     db: AsyncSession = Depends(get_session),
 ):
@@ -97,8 +97,8 @@ async def create_task(
     dependencies=[Depends(require_permission("sys:scheduler:edit"))],
 )
 async def update_task(
-    task_id: int,
     task_update: ScheduledTaskUpdate,
+    task_id: int = Path(..., description="定时任务ID"),
     user: SysUser = Depends(current_user),
     db: AsyncSession = Depends(get_session),
 ):
@@ -116,7 +116,7 @@ async def update_task(
     dependencies=[Depends(require_permission("sys:scheduler:delete"))],
 )
 async def delete_task(
-    task_id: int,
+    task_id: int = Path(..., description="定时任务ID"),
     user: SysUser = Depends(current_user),
     db: AsyncSession = Depends(get_session),
 ):
@@ -133,7 +133,7 @@ async def delete_task(
     dependencies=[Depends(require_permission("sys:scheduler:delete"))],
 )
 async def batch_delete_tasks(
-    task_ids: List[int],
+    task_ids: List[int] = Body(..., description="定时任务ID列表"),
     user: SysUser = Depends(current_user),
     db: AsyncSession = Depends(get_session),
 ):
@@ -156,8 +156,8 @@ async def batch_delete_tasks(
     dependencies=[Depends(require_permission("sys:scheduler:status"))],
 )
 async def toggle_task_status(
-    task_id: int,
-    status: bool,
+    task_id: int = Path(..., description="定时任务ID"),
+    status: bool = Body(..., description="状态：True-启用，False-禁用"),
     user: SysUser = Depends(current_user),
     db: AsyncSession = Depends(get_session),
 ):
@@ -175,7 +175,7 @@ async def toggle_task_status(
     dependencies=[Depends(require_permission("sys:scheduler:trigger"))],
 )
 async def manual_trigger_task(
-    task_id: int,
+    task_id: int = Path(..., description="定时任务ID"),
     user: SysUser = Depends(current_user),
     db: AsyncSession = Depends(get_session),
 ):

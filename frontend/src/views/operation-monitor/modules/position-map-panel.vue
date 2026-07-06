@@ -677,7 +677,7 @@ onBeforeUnmount(() => {
         <span>返回点</span>
       </div>
       <div class="flex items-center gap-6px">
-        <span class="inline-block h-10px w-10px rounded-full" style="background-color: #ef4444; border: 2px solid #ffffff"></span>
+        <span class="inline-block h-10px w-10px rounded-full" style="background-color: #ef4444"></span>
         <span>机器人位置</span>
       </div>
       <div class="flex items-center gap-6px">

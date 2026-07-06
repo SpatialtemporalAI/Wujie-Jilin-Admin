@@ -1,13 +1,11 @@
 <script setup lang="ts">
-import { computed, onMounted, ref, watch } from 'vue';
-import type { UploadFileInfo } from 'naive-ui';
+import { computed, ref, watch } from 'vue';
+import type { UploadFileInfo, FormRules, UploadCustomRequestOptions } from 'naive-ui';
 import { jsonClone } from '@sa/utils';
-import { enableStatusOptions } from '@/constants/business';
 import { useNaiveForm } from '@/hooks/common/form';
 import {
   fetchCreateSceneMap,
   fetchUpdateSceneMap,
-  fetchGetSceneGroupList,
   fetchUploadSceneMapImage,
   getFilePreviewUrl
 } from '@/service/api';
@@ -45,15 +43,12 @@ const title = computed(() => {
 
 interface MapModel {
   name: string;
-  group_id: number | null;
-  group_name: string | null;
   image_id: number | null;
   width: number | null;
   height: number | null;
   resolution: number | null;
   start_point_x: number;
   start_point_y: number;
-  status: Api.Common.EnableStatus;
 }
 
 const model = ref<MapModel>(createDefaultModel());
@@ -61,60 +56,32 @@ const model = ref<MapModel>(createDefaultModel());
 function createDefaultModel(): MapModel {
   return {
     name: '',
-    group_id: null,
-    group_name: null,
     image_id: null,
     width: null,
     height: null,
     resolution: 1,
     start_point_x: 0,
-    start_point_y: 0,
-    status: '1'
+    start_point_y: 0
   };
 }
 
-const rules = {
+const rules: FormRules = {
   name: { required: true, message: '请输入地图名称', trigger: 'blur' },
-  group_id: { required: true, type: 'number', message: '请选择所属分组', trigger: 'change' },
   image_id: { required: true, type: 'number', message: '请上传地图图片', trigger: 'change' },
+  width: { required: true, type: 'number', message: '请上传地图图片以获取宽度', trigger: 'change' },
+  height: { required: true, type: 'number', message: '请上传地图图片以获取高度', trigger: 'change' },
   resolution: { required: true, type: 'number', message: '请输入映射比例', trigger: 'blur' },
-  status: { required: true, message: '请选择状态', trigger: 'change' }
+  start_point_x: { required: true, type: 'number', message: '请输入扫图起始点X坐标', trigger: 'blur' },
+  start_point_y: { required: true, type: 'number', message: '请输入扫图起始点Y坐标', trigger: 'blur' }
 };
-
-/** 分组选项 */
-const groupOptions = ref<{ label: string; value: number }[]>([]);
-const groupValue = ref<number | string | null>(null);
-
-async function loadGroupOptions() {
-  const { data } = await fetchGetSceneGroupList({ page: 1, page_size: 1000 });
-  if (data?.records) {
-    groupOptions.value = data.records.map((item: any) => ({
-      label: item.name,
-      value: item.id
-    }));
-  }
-}
-
-function handleGroupChange(val: number | string | null) {
-  groupValue.value = val;
-  if (val === null) {
-    model.value.group_id = null;
-    model.value.group_name = null;
-  } else if (typeof val === 'number') {
-    model.value.group_id = val;
-    model.value.group_name = null;
-  } else {
-    model.value.group_id = null;
-    model.value.group_name = val;
-  }
-}
 
 /** 图片上传 */
 const uploading = ref(false);
 const imageUrl = ref('');
 const uploadFileList = ref<UploadFileInfo[]>([]);
 
-async function handleUpload({ file }: { file: { file: File } }) {
+async function handleUpload({ file }: UploadCustomRequestOptions) {
+  if (!file.file) return;
   uploading.value = true;
   try {
     const { data, error } = await fetchUploadSceneMapImage(file.file, { includeImageInfo: true });
@@ -143,21 +110,17 @@ const isEdit = computed(() => props.operateType === 'edit');
 
 function handleInitModel() {
   model.value = createDefaultModel();
-  groupValue.value = null;
   imageUrl.value = '';
 
   if (props.operateType === 'edit' && props.rowData) {
     const clonedData = jsonClone(props.rowData);
     model.value.name = clonedData.name || '';
-    model.value.group_id = clonedData.group_id ?? null;
     model.value.image_id = clonedData.image_id ?? null;
     model.value.width = clonedData.width ?? null;
     model.value.height = clonedData.height ?? null;
     model.value.resolution = clonedData.resolution ?? 1;
     model.value.start_point_x = clonedData.start_point_x ?? 0;
     model.value.start_point_y = clonedData.start_point_y ?? 0;
-    model.value.status = clonedData.status ?? '1';
-    groupValue.value = clonedData.group_id ?? null;
     if (clonedData.image_id) {
       imageUrl.value = getFilePreviewUrl(clonedData.image_id);
     }
@@ -171,23 +134,29 @@ function closeDrawer() {
 async function handleSubmit() {
   await validate();
 
-  const submitData: Record<string, any> = {
+  const submitData: Api.Scene.SceneMapCreate = {
     name: model.value.name,
-    group_id: model.value.group_id,
-    group_name: model.value.group_name,
-    image_id: model.value.image_id,
-    width: model.value.width,
-    height: model.value.height,
-    resolution: model.value.resolution,
+    image_id: model.value.image_id as number,
+    width: model.value.width as number,
+    height: model.value.height as number,
+    resolution: model.value.resolution as number,
     start_point_x: model.value.start_point_x,
-    start_point_y: model.value.start_point_y,
-    status: model.value.status
+    start_point_y: model.value.start_point_y
   };
 
   let error: unknown = null;
 
   if (isEdit.value) {
-    const result = await fetchUpdateSceneMap(mapId.value, submitData);
+    const updateData: Api.Scene.SceneMapUpdate = {
+      name: submitData.name,
+      image_id: submitData.image_id,
+      width: submitData.width,
+      height: submitData.height,
+      resolution: submitData.resolution,
+      start_point_x: submitData.start_point_x,
+      start_point_y: submitData.start_point_y
+    };
+    const result = await fetchUpdateSceneMap(mapId.value, updateData);
     error = result.error;
   } else {
     const result = await fetchCreateSceneMap(submitData);
@@ -205,12 +174,7 @@ watch(visible, () => {
   if (visible.value) {
     handleInitModel();
     restoreValidation();
-    loadGroupOptions();
   }
-});
-
-onMounted(() => {
-  loadGroupOptions();
 });
 </script>
 
@@ -220,17 +184,6 @@ onMounted(() => {
       <NForm ref="formRef" :model="model" :rules="rules">
         <NFormItem label="地图名称" path="name">
           <NInput v-model:value="model.name" placeholder="请输入地图名称" maxlength="200" show-count />
-        </NFormItem>
-        <NFormItem label="所属分组" path="group_id">
-          <NSelect
-            :value="groupValue"
-            :options="groupOptions"
-            placeholder="选择或输入分组名称"
-            filterable
-            tag
-            clearable
-            @update:value="handleGroupChange"
-          />
         </NFormItem>
         <NFormItem label="地图图片" path="image_id">
           <div class="w-full">
@@ -297,13 +250,6 @@ onMounted(() => {
             clearable
             class="w-full"
           />
-        </NFormItem>
-        <NFormItem label="状态" path="status">
-          <NRadioGroup v-model:value="model.status">
-            <NRadio v-for="item in enableStatusOptions" :key="item.value" :value="item.value">
-              {{ item.label }}
-            </NRadio>
-          </NRadioGroup>
         </NFormItem>
       </NForm>
       <template #footer>

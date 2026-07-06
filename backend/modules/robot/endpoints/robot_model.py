@@ -5,7 +5,7 @@
 机器人型号管理相关接口
 """
 import logging
-from fastapi import APIRouter, Depends, Request
+from fastapi import APIRouter, Depends, Path, Request
 from sqlalchemy.ext.asyncio import AsyncSession
 from typing import List
 
@@ -98,7 +98,7 @@ async def get_all_robot_models(
     response_model=ResponseModel[RobotModelResponseData],
 )
 async def get_robot_model(
-    model_id: int,
+    model_id: int = Path(..., description="机器人型号ID"),
     db: AsyncSession = Depends(get_session),
 ):
     """
@@ -154,9 +154,9 @@ async def create_robot_model(
 )
 @log_operation(module="robot_model", action="update", description="更新机器人型号")
 async def update_robot_model(
-    model_id: int,
     request: Request,
     model_in: RobotModelUpdate,
+    model_id: int = Path(..., description="机器人型号ID"),
     db: AsyncSession = Depends(get_session),
     user: SysUser = Depends(current_user),
 ):
@@ -184,8 +184,8 @@ async def update_robot_model(
 )
 @log_operation(module="robot_model", action="delete", description="删除机器人型号")
 async def delete_robot_model(
-    model_id: int,
     request: Request,
+    model_id: int = Path(..., description="机器人型号ID"),
     db: AsyncSession = Depends(get_session),
     user: SysUser = Depends(current_user),
 ):

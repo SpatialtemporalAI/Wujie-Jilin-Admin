@@ -2,6 +2,8 @@ declare namespace NaiveUI {
   type ThemeColor = 'default' | 'error' | 'primary' | 'info' | 'success' | 'warning';
   type Align = 'stretch' | 'baseline' | 'start' | 'end' | 'center' | 'flex-end' | 'flex-start';
 
+  type FormRules = import('naive-ui').FormRules;
+
   type DataTableBaseColumn<T> = import('naive-ui').DataTableBaseColumn<T>;
   type DataTableExpandColumn<T> = import('naive-ui').DataTableExpandColumn<T>;
   type DataTableSelectionColumn<T> = import('naive-ui').DataTableSelectionColumn<T>;
@@ -9,7 +11,7 @@ declare namespace NaiveUI {
   type TableColumnCheck = import('@sa/hooks').TableColumnCheck;
   type TableColumnFixed = import('@sa/hooks').TableColumnCheck['fixed'];
 
-  type SetTableColumnKey<C, T> = Omit<C, 'key'> & { key: keyof T | (string & {}) };
+  type SetTableColumnKey<C, T> = Omit<C, 'key'> & { key: Extract<keyof T, string | number> | (string & {}) };
 
   type TableColumnWithKey<T> = SetTableColumnKey<DataTableBaseColumn<T>, T> | SetTableColumnKey<TableColumnGroup<T>, T>;
 

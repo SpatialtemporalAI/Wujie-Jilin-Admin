@@ -1,0 +1,21 @@
+"""
+Path bridge: app.grpc.generated.navigation -> backend/grpc/generated/navigation
+
+`*_pb2_grpc.py` 硬编码了 `import app.grpc.generated.navigation.navigation_pb2` 等，
+通过把本包的 __path__ 指向 git 子模块 `backend/grpc/generated/navigation/`，
+让该导入解析到 submodule 实际生成文件，无需复制副本。
+"""
+import os
+
+# __file__: backend/app/grpc/generated/navigation/__init__.py
+# 上溯 5 层 -> backend
+_backend_root = os.path.dirname(
+    os.path.dirname(
+        os.path.dirname(
+            os.path.dirname(
+                os.path.dirname(__file__)
+            )
+        )
+    )
+)
+__path__ = [os.path.join(_backend_root, "grpc", "generated", "navigation")]

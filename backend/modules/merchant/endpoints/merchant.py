@@ -6,7 +6,7 @@
 """
 import logging
 
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, Path
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from database.db_manager import get_session
@@ -65,7 +65,7 @@ async def get_merchant_list(
     dependencies=[Depends(require_permission("merchant:list"))],
 )
 async def get_merchant(
-    merchant_id: int,
+    merchant_id: int = Path(..., description="商户ID"),
     db: AsyncSession = Depends(get_session),
 ):
     """获取商户详情（含绑定机器人ID）"""
@@ -100,8 +100,8 @@ async def create_merchant(
 )
 @log_operation(module="merchant", action="update", description="更新商户")
 async def update_merchant(
-    merchant_id: int,
     merchant_update: MerchantUpdate,
+    merchant_id: int = Path(..., description="商户ID"),
     db: AsyncSession = Depends(get_session),
     user: SysUser = Depends(current_user),
 ):
@@ -119,8 +119,8 @@ async def update_merchant(
 )
 @log_operation(module="merchant", action="toggle", description="切换商户状态")
 async def toggle_merchant_status(
-    merchant_id: int,
     status_update: MerchantStatusUpdate,
+    merchant_id: int = Path(..., description="商户ID"),
     db: AsyncSession = Depends(get_session),
     user: SysUser = Depends(current_user),
 ):
@@ -141,7 +141,7 @@ async def toggle_merchant_status(
 )
 @log_operation(module="merchant", action="reset_api_key", description="重置商户API密钥")
 async def reset_merchant_api_key(
-    merchant_id: int,
+    merchant_id: int = Path(..., description="商户ID"),
     db: AsyncSession = Depends(get_session),
     user: SysUser = Depends(current_user),
 ):
@@ -159,8 +159,8 @@ async def reset_merchant_api_key(
 )
 @log_operation(module="merchant", action="bind_robots", description="绑定商户机器人")
 async def bind_merchant_robots(
-    merchant_id: int,
     bind: MerchantRobotBind,
+    merchant_id: int = Path(..., description="商户ID"),
     db: AsyncSession = Depends(get_session),
     user: SysUser = Depends(current_user),
 ):
@@ -180,7 +180,7 @@ async def bind_merchant_robots(
 )
 @log_operation(module="merchant", action="delete", description="删除商户")
 async def delete_merchant(
-    merchant_id: int,
+    merchant_id: int = Path(..., description="商户ID"),
     db: AsyncSession = Depends(get_session),
     user: SysUser = Depends(current_user),
 ):

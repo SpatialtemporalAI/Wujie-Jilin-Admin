@@ -134,14 +134,12 @@ def load_map_payload(engine, map_id: int) -> dict[str, Any]:
         }
 
 
-async def send_via_grpc(payload: dict[str, Any], grpc_addr: str | None) -> None:
-    """通过 MapServiceClient 推送"""
-    if grpc_addr:
-        # 运行时切换地址，仅在本次脚本进程生效
-        from modules.grpc.channel import set_map_service_addr
-        await set_map_service_addr(grpc_addr)
-
+async def send_via_grpc(
+    payload: dict[str, Any], map_id: int, grpc_addr: str | None
+) -> None:
+    """通过 MapServiceClient 推送（按 robot.middleware 广播）"""
     from app.grpc.generated.map import map_pb2
+    from modules.grpc.addr_provider import get_config_addr_provider
     from modules.grpc.client import MapServiceClient
 
     info = payload["map_info"]
@@ -168,7 +166,19 @@ async def send_via_grpc(payload: dict[str, Any], grpc_addr: str | None) -> None:
         ],
     )
 
-    resp = await MapServiceClient.notify_map_saved(map_info)
+    if grpc_addr:
+        # 手动指定地址，跳过 DB 反查（调试用）
+        targets: list[tuple[int, str]] = [(0, grpc_addr)]
+    else:
+        targets = await get_config_addr_provider().find_addrs_by_target_and_map(
+            "middleware", map_id
+        )
+
+    print(f"---- targets ({len(targets)}) ----")
+    for rid, addr in targets:
+        print(f"robot_id={rid} addr={addr}")
+
+    resp = await MapServiceClient.notify_map_saved(map_info, targets)
     print("---- gRPC response ----")
     print(f"status:  {resp.status}")
     print(f"message: {resp.message}")
@@ -187,7 +197,7 @@ def parse_args() -> argparse.Namespace:
         "--grpc-addr",
         type=str,
         default=None,
-        help="覆盖 MapService 地址 host:port（仅本次发送生效）",
+        help="手动指定推送目标地址 host:port，跳过按 robot.middleware 反查（调试用）",
     )
     return p.parse_args()
 
@@ -211,7 +221,7 @@ def main() -> None:
         print(rendered)
 
     if args.send:
-        asyncio.run(send_via_grpc(payload, args.grpc_addr))
+        asyncio.run(send_via_grpc(payload, args.map_id, args.grpc_addr))
 
 
 if __name__ == "__main__":

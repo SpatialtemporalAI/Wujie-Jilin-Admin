@@ -34,8 +34,8 @@
   "msg": "Success",
   "data": {
     "success": true,
-    "message": "单点导航任务已下发",
-    "data": { "task_id": 123456, "record_id": 789 }
+    "message": "任务已启动",
+    "data": { "task_id": 123456, "action": "started" }
   },
   "request_id": "xxxxxxxx",
   "err_code": null
@@ -112,8 +112,11 @@
 **响应 data**
 
 ```json
-{ "success": true, "message": "单点导航任务已下发", "data": { "task_id": 123, "record_id": 456 } }
+{ "success": true, "message": "单点导航已下发" }
 ```
+
+- `success`：导航指令是否成功下发到设备。
+- 单点/多点导航为**即时指令**，不再创建任务，因此不返回 `task_id` / `record_id`。
 
 > 约束：点位必须位于该机器人绑定的场景地图上。
 
@@ -131,8 +134,10 @@
 **响应 data**
 
 ```json
-{ "success": true, "message": "多点导航任务已下发（3 个点位）", "data": { "task_id": 123, "record_id": 456 } }
+{ "success": true, "message": "多点导航已下发（3 个点位）" }
 ```
+
+- 即时指令，不创建任务、不返回 `task_id` / `record_id`。
 
 ### 4.3 执行任务 — `POST /openapi/v1/execute_task`
 
@@ -148,10 +153,10 @@
 **响应 data**
 
 ```json
-{ "success": true, "message": "任务已启动", "data": { "task_id": 10, "action": "created" } }
+{ "success": true, "message": "任务已启动", "data": { "task_id": 10, "action": "started" } }
 ```
 
-> `action`：`created`（新建执行）或 `resumed`（恢复暂停中的执行）。
+> `action` 固定为 `"started"`（启动后只下发 gRPC `run_now`，不再创建执行记录、不再区分新建/恢复、不返回 `record_id`）。
 
 ### 4.4 暂停任务 — `POST /openapi/v1/pause_task`
 
@@ -314,7 +319,7 @@ call('/openapi/v1/speak', { robot_sn: 'WJ-001', text: '你好' }).then(console.l
 
 - **机器人授权**：每个请求的 `robot_sn` 必须是已绑定到当前商户的机器人，否则返回 403。
 - **地图匹配**：`goto_point` / `navigate_route` 的点位必须位于机器人当前绑定的场景地图上，否则返回 403。
-- **导航即任务**：单点/多点导航在后端会创建一次性任务并下发执行，返回 `task_id` 与 `record_id`；随后可用 `pause_task` / `resume_task` / `stop_task` 控制该机器人的当前任务。
+- **导航是即时指令**：单点/多点导航直接把目标点位下发给设备，**不再创建任务**，因此不返回 `task_id` / `record_id`，也无法用 `pause_task` / `resume_task` / `stop_task` 控制一次导航。若需要按任务维度暂停/恢复/停止，请改用 `execute_task` 启动已有任务，再对其控制。
 - **凭证安全**：`api_secret` 等同于密码，请只在服务端保管，不要暴露在浏览器/小程序前端；建议按需设置 IP 白名单等网络层防护。
 - **时间同步**：请确保调用方服务器时间准确（NTP），否则时间戳校验会失败。
 
@@ -325,3 +330,4 @@ call('/openapi/v1/speak', { robot_sn: 'WJ-001', text: '你好' }).then(console.l
 | 日期 | 说明 |
 |------|------|
 | 2026-06-29 | v1 首版：goto_point / navigate_route / execute_task / pause_task / resume_task / stop_task / speak |
+| 2026-07-03 | 导航改为即时指令：`goto_point` / `navigate_route` 不再创建任务，响应移除 `task_id` / `record_id`，文案改为「单点/多点导航已下发」；`execute_task` 的 `action` 统一为 `"started"`（不再区分 created/resumed，不返回 record_id）。 |

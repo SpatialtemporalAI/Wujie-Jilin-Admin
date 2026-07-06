@@ -1,4 +1,5 @@
 import { reactive, ref, computed } from 'vue';
+import { $t } from '@/locales';
 import { fetchGetEditorMapData, fetchSaveEditorData, fetchGetSceneMapList, fetchDeleteSceneMap } from '@/service/api/scene';
 import { pixelToWorld, worldToPixel, pixelsDeltaToMeters, metersDeltaToPixels } from '@/utils/coordinate';
 
@@ -35,6 +36,7 @@ export function useMapEditor() {
   const isDirty = ref(false);
   const loading = ref(false);
   const saving = ref(false);
+  const switching = ref(false);
   const sceneList = ref<Api.Scene.SceneMap[]>([]);
 
   const historyTimeline = ref<HistorySnapshot[]>([]);
@@ -78,30 +80,37 @@ export function useMapEditor() {
     }
   }
 
-  async function loadMap(mapId: number) {
+  async function loadMap(mapId: number): Promise<boolean> {
     loading.value = true;
     try {
-      const { data } = await fetchGetEditorMapData(mapId);
-      if (data) {
-        editorData.value = data;
-        for (const ann of data.annotations) {
-          const p = worldToPixelCoords(ann.x, ann.y);
-          ann.x = p.x;
-          ann.y = p.y;
-        }
-        selectedMapId.value = mapId;
-        selectedElement.value = null;
-        isDirty.value = false;
-        historyTimeline.value = [{
-          snapshot: snapshotCurrent(),
-          description: '初始状态',
-          timestamp: Date.now(),
-        }];
-        currentStep.value = 0;
-        deletedAnnotationIds.clear();
-        deletedPathIds.clear();
-        deletedObjectIds.clear();
+      const { data, error } = await fetchGetEditorMapData(mapId);
+      if (error || !data) {
+        window.$message?.error($t('page.sceneMapEditor.loadMapFailed'));
+        return false;
       }
+      editorData.value = data;
+      for (const ann of data.annotations) {
+        const p = worldToPixelCoords(ann.x, ann.y);
+        ann.x = p.x;
+        ann.y = p.y;
+      }
+      selectedMapId.value = mapId;
+      selectedElement.value = null;
+      isDirty.value = false;
+      historyTimeline.value = [{
+        snapshot: snapshotCurrent(),
+        description: '初始状态',
+        timestamp: Date.now(),
+      }];
+      currentStep.value = 0;
+      deletedAnnotationIds.clear();
+      deletedPathIds.clear();
+      deletedObjectIds.clear();
+      return true;
+    } catch (e: unknown) {
+      const msg = e instanceof Error ? e.message : '';
+      window.$message?.error(msg || $t('page.sceneMapEditor.loadMapFailed'));
+      return false;
     } finally {
       loading.value = false;
     }
@@ -304,20 +313,23 @@ export function useMapEditor() {
     }
   }
 
-  async function deleteScene(id: number) {
+  async function deleteScene(id: number): Promise<{ wasSelected: boolean }> {
     await fetchDeleteSceneMap(id);
     const wasSelected = selectedMapId.value === id;
     if (wasSelected) {
       editorData.value = null;
       selectedMapId.value = null;
       selectedElement.value = null;
+      isDirty.value = false;
+      historyTimeline.value = [];
+      currentStep.value = -1;
+      deletedAnnotationIds.clear();
+      deletedPathIds.clear();
+      deletedObjectIds.clear();
     }
     await loadSceneList();
-    // 删除的是当前地图时，自动切换到列表第一个地图
-    if (wasSelected && sceneList.value.length > 0) {
-      await loadMap(sceneList.value[0].id);
-    }
-    window.$message?.success('删除成功');
+    window.$message?.success($t('common.deleteSuccess'));
+    return { wasSelected };
   }
 
   function createAnnotation(annotation: { x: number; y: number; name: string; angle: number; type: string }, id: number) {
@@ -443,6 +455,7 @@ export function useMapEditor() {
     isDirty,
     loading,
     saving,
+    switching,
     sceneList,
     resolution,
     canUndo,

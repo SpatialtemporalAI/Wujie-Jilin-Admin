@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 
-from fastapi import APIRouter, Depends, UploadFile, File, Query
+from fastapi import APIRouter, Depends, Path, UploadFile, File, Query
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from database.db_manager import get_session
@@ -69,7 +69,7 @@ async def get_map_list(
     dependencies=[Depends(require_any_permission("scene:map:detail", "scene:map-editor:list"))],
 )
 async def get_map(
-    map_id: int,
+    map_id: int = Path(..., description="场景地图ID"),
     user: SysUser = Depends(current_user),
     db: AsyncSession = Depends(get_session),
 ):
@@ -140,8 +140,8 @@ async def create_map(
     dependencies=[Depends(require_any_permission("scene:map:edit", "scene:map-editor:edit"))],
 )
 async def update_map(
-    map_id: int,
     map_update: SceneMapUpdate,
+    map_id: int = Path(..., description="场景地图ID"),
     user: SysUser = Depends(current_user),
     db: AsyncSession = Depends(get_session),
 ):
@@ -162,7 +162,7 @@ async def update_map(
     dependencies=[Depends(require_any_permission("scene:map:delete", "scene:map-editor:delete"))],
 )
 async def delete_map(
-    map_id: int,
+    map_id: int = Path(..., description="场景地图ID"),
     user: SysUser = Depends(current_user),
     db: AsyncSession = Depends(get_session),
 ):

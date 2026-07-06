@@ -936,6 +936,15 @@ const local: App.I18n.Schema = {
           timeRange: '时间范围'
         }
       }
+    },
+    sceneMapEditor: {
+      unsavedChangesTitle: '未保存的更改',
+      unsavedChangesTip: '当前场景有未保存的更改，切换前是否保存？',
+      saveAndSwitch: '保存并切换',
+      discardAndSwitch: '不保存切换',
+      loadMapFailed: '加载地图失败',
+      deleteUnsavedTip: '当前场景有未保存的更改，删除后将丢失，是否继续删除？',
+      continueDelete: '继续删除'
     }
   },
   form: {

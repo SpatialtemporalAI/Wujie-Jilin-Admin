@@ -62,3 +62,7 @@
 - [2026-07-02 接口传参类型校验收紧](./2026-07-02_param-type-validation-tighten.md) — base.py 新增 `parse_optional_enum` 工厂；机器人/事件日志/执行记录/调度日志的 status、source、event_type 等查询字段补枚举校验；`RobotQueryParams.{model_id,map_id}`、`SceneMapQueryParams.group_id` 统一 `OptionalIntField`；前端 robot-operate-drawer 去掉 `undefined as unknown as number` 类型谎言
 - [2026-07-02 任务运控动作下拉精简](./2026-07-02_task-action-options-trim.md) — 移除 击掌/拥抱/左手飞吻/右手飞吻/双手飞吻/动感光波 6 项，下拉保留 8 项；详情 actionLabel、TaskAction 类型、后端 schema 不动以兼容历史快照
 - [2026-07-02 前端 CRUD 异常后仍弹成功提示修复](./2026-07-02_frontend-crud-error-success-toast.md) — 修正 user-operate-drawer 与 scene-map-detail-drawer 的错误处理，使用 `createFlatRequest` 返回的 `error` 字段判断，避免错误弹窗后再弹成功弹窗
+- [2026-07-03 地图同步 gRPC 改走机器人 middleware 地址](./2026-07-03_map-grpc-to-middleware.md) — NotifyMapSaved 按 Robot.map_id 广播 + SwitchMap 按 robot_id 改走 robot.grpc_config.middleware；SearchMaps 仍走全局 MAP_SERVICE_ADDR；参数配置 gRPC 不变
+- [2026-07-03 运行监控速度按小数点后一位判断移动](./2026-07-03_operation-monitor-speed-round-one-decimal.md) — robot-status-card getSpeedLabel 改为先 `Math.round(speed*10)/10` 再 >0，与显示 toFixed(1) 对齐，过滤传感器微小波动误判
+- [2026-07-03 角色新增重名校验](./2026-07-03_role-create-duplicate-name-check.md) — `RoleService.create_role` 创建前查同名角色，存在则抛 `ConflictError(msg="角色名称已存在")`，HTTP 409 经前端 onError 自动 toast，无需改前端
+- [2026-07-03 参数配置·人脸识别TTS 人像上传限制（5MB+格式+分辨率+说明）](./2026-07-03_param-config-face-photo-size-limit.md) — 对齐阿里云 facebody：前后端各校验 JPG/JPEG/PNG、≤5MB、分辨率 32×32~4096×4096；人脸占比 64×64 由 facebody 校验；人像输入框右侧加 5 条说明

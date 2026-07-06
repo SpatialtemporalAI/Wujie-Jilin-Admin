@@ -1,7 +1,10 @@
 <script setup lang="ts">
-import { computed, nextTick, onMounted, onBeforeUnmount, ref, watch } from 'vue';
-import type { UploadFileInfo } from 'naive-ui';
+import { computed, h, nextTick, onMounted, onBeforeUnmount, ref, watch } from 'vue';
+import type { DialogReactive, UploadFileInfo } from 'naive-ui';
+import { NButton, NSpace, useDialog, useMessage } from 'naive-ui';
+import { $t } from '@/locales';
 import { useMapEditor } from './composables/useMapEditor';
+import type { SelectedElement } from './composables/useMapEditor';
 import EditorToolbar from './modules/editor-toolbar.vue';
 import CanvasEditor from './modules/canvas-editor.vue';
 import PropertyPanel from './modules/property-panel.vue';
@@ -10,7 +13,6 @@ import { fetchGetMapRobotLocations } from '@/service/api';
 import { getFilePreviewUrl } from '@/service/api/file';
 import { extractRobotPoint } from './utils/robot-location';
 import { radToDeg } from '@/utils/coordinate';
-import { useDialog, useMessage } from 'naive-ui'
 
 defineOptions({ name: 'SceneMapEditor' });
 const message = useMessage()
@@ -185,7 +187,6 @@ const sceneDialogVisible = ref(false);
 const sceneDialogMode = ref<'add' | 'edit'>('add');
 const editMapId = ref<number | null>(null);
 const sceneFormName = ref('');
-const sceneFormGroupId = ref<number | null>(null);
 const sceneFormImageId = ref<number | null>(null);
 const sceneFormImageUrl = ref('');
 const sceneFormOriginalWidth = ref<number | null>(null);
@@ -200,9 +201,177 @@ const configUploading = ref(false);
 const configUploadFileList = ref<UploadFileInfo[]>([]);
 const configFileName = ref('');
 
+// 场景地图切换守卫
+type SwitchAction = 'save' | 'discard' | 'cancel';
+
+interface SwitchMapOptions {
+  /** 即使 mapId 与当前选中相同也强制重新加载（如编辑当前场景元数据） */
+  force?: boolean;
+}
+
+function showDirtySwitchDialog(): Promise<SwitchAction> {
+  return new Promise(resolve => {
+    let dialogInst: DialogReactive | null = null;
+
+    const close = (action: SwitchAction) => {
+      dialogInst?.destroy();
+      resolve(action);
+    };
+
+    dialogInst = dialog.warning({
+      title: $t('page.sceneMapEditor.unsavedChangesTitle'),
+      content: $t('page.sceneMapEditor.unsavedChangesTip'),
+      action: () =>
+        h(NSpace, { justify: 'end' }, () => [
+          h(
+            NButton,
+            { size: 'small', onClick: () => close('cancel') },
+            { default: () => $t('common.cancel') }
+          ),
+          h(
+            NButton,
+            { size: 'small', onClick: () => close('discard') },
+            { default: () => $t('page.sceneMapEditor.discardAndSwitch') }
+          ),
+          h(
+            NButton,
+            { size: 'small', type: 'primary', onClick: () => close('save') },
+            { default: () => $t('page.sceneMapEditor.saveAndSwitch') }
+          )
+        ]),
+      onClose: () => close('cancel'),
+      onMaskClick: () => close('cancel')
+    });
+  });
+}
+
+function showDeleteUnsavedDialog(): Promise<boolean> {
+  return new Promise(resolve => {
+    let dialogInst: DialogReactive | null = null;
+
+    const close = (confirmed: boolean) => {
+      dialogInst?.destroy();
+      resolve(confirmed);
+    };
+
+    dialogInst = dialog.warning({
+      title: $t('page.sceneMapEditor.unsavedChangesTitle'),
+      content: $t('page.sceneMapEditor.deleteUnsavedTip'),
+      positiveText: $t('page.sceneMapEditor.continueDelete'),
+      negativeText: $t('common.cancel'),
+      onPositiveClick: () => close(true),
+      onNegativeClick: () => close(false),
+      onClose: () => close(false),
+      onMaskClick: () => close(false)
+    });
+  });
+}
+
+async function switchMap(mapId: number, options: SwitchMapOptions = {}): Promise<boolean> {
+  if (editor.switching.value) return false;
+  if (!options.force && mapId === editor.selectedMapId.value) return true;
+
+  editor.switching.value = true;
+  try {
+    if (editor.isDirty.value) {
+      const action = await showDirtySwitchDialog();
+      if (action === 'cancel') return false;
+
+      if (action === 'save') {
+        const saved = await editor.saveMap({ silent: true });
+        if (!saved) return false;
+      }
+    }
+
+    return await editor.loadMap(mapId);
+  } finally {
+    editor.switching.value = false;
+  }
+}
+
+// 删除确认相关
+let isDeleteConfirming = false;
+
+function isInputElementFocused() {
+  const active = document.activeElement;
+  if (!active) return false;
+  const tagName = active.tagName;
+  return tagName === 'INPUT' || tagName === 'TEXTAREA' || (active as HTMLElement).isContentEditable;
+}
+
+function getElementNameAndKind(target: SelectedElement) {
+  const data = editor.editorData.value;
+  if (!data) return { name: '', kind: '' };
+  if (target.type === 'annotation') {
+    const ann = data.annotations.find(a => a.id === target.id);
+    return { name: ann?.name || '', kind: '点位' };
+  }
+  if (target.type === 'object') {
+    const obj = data.objects.find(o => o.id === target.id);
+    if (!obj) return { name: '', kind: '' };
+    const shapeMap: Record<string, string> = {
+      'obstacle-circle': '圆形',
+      'obstacle-triangle': '三角形',
+      'obstacle-square': '正方形',
+    };
+    const isRestricted = obj.type === 'restricted' || obj.type === '禁区';
+    const isFence = obj.type === 'fence' || obj.type === '电子围栏';
+    const kind = isFence ? '电子围栏' : (isRestricted ? '禁行区域/虚拟墙' : (shapeMap[obj.type] || '障碍物'));
+    return { name: obj.name || '', kind };
+  }
+  return { name: '', kind: '路径' };
+}
+
+function confirmAndRemoveElement(target: SelectedElement | null) {
+  if (!target || isDeleteConfirming) return;
+  isDeleteConfirming = true;
+
+  const resetFlag = () => {
+    isDeleteConfirming = false;
+  };
+
+  if (target.type === 'annotation') {
+    dialog.warning({
+      title: '提示',
+      content: '当前点位已有关联任务，删除点位后任务自动取消关联该点位，确认是否删除？ 删除后点击右上角保存生效',
+      positiveText: '确认',
+      negativeText: '取消',
+      draggable: true,
+      onPositiveClick: () => {
+        editor.removeElement(target.type, target.id);
+      },
+      onNegativeClick: resetFlag,
+      onClose: resetFlag,
+    });
+  } else {
+    const { name, kind } = getElementNameAndKind(target);
+    const displayName = name || '未命名';
+    dialog.warning({
+      title: '提示',
+      content: `确认删除选中的「${displayName}」(${kind})？ 删除后点击右上角保存生效`,
+      positiveText: '确认',
+      negativeText: '取消',
+      draggable: true,
+      onPositiveClick: () => {
+        editor.removeElement(target.type, target.id);
+      },
+      onNegativeClick: resetFlag,
+      onClose: resetFlag,
+    });
+  }
+}
+
+function handleDeleteKeyDown(e: KeyboardEvent) {
+  if (e.key !== 'Delete' && e.key !== 'Backspace') return;
+  if (isInputElementFocused()) return;
+  const target = editor.selectedElement.value;
+  if (!target) return;
+  e.preventDefault();
+  confirmAndRemoveElement(target);
+}
+
 function resetSceneForm() {
   sceneFormName.value = '';
-  sceneFormGroupId.value = null;
   sceneFormImageId.value = null;
   sceneFormImageUrl.value = '';
   sceneFormOriginalWidth.value = null;
@@ -215,18 +384,20 @@ function resetSceneForm() {
 }
 
 onMounted(async () => {
+  window.addEventListener('keydown', handleDeleteKeyDown);
   await editor.loadSceneList();
   if (editor.sceneList.value.length > 0) {
-    await editor.loadMap(editor.sceneList.value[0].id);
+    await switchMap(editor.sceneList.value[0].id);
   }
 });
 
 onBeforeUnmount(() => {
+  window.removeEventListener('keydown', handleDeleteKeyDown);
   stopRobotPolling();
 });
 
 async function handleSelectMap(mapId: number) {
-  await editor.loadMap(mapId);
+  await switchMap(mapId);
 }
 
 function handleOpenAddScene() {
@@ -310,40 +481,45 @@ function handleRemoveConfig() {
 }
 
 async function confirmSceneSubmit() {
-  if (!sceneFormName.value.trim()) {
+  const name = sceneFormName.value.trim();
+  if (!name) {
     window.$message?.warning('请输入场景名称');
+    return false;
+  }
+  if (sceneFormImageId.value == null) {
+    window.$message?.warning('请上传场景图片');
+    return false;
+  }
+  if (sceneFormOriginalWidth.value == null || sceneFormOriginalHeight.value == null) {
+    window.$message?.warning('请确认图片原图尺寸');
+    return false;
+  }
+  if (sceneFormPointX.value == null || sceneFormPointY.value == null) {
+    window.$message?.warning('请输入扫图起始点 X、Y');
+    return false;
+  }
+  if (sceneFormResolution.value == null) {
+    window.$message?.warning('请输入分辨率');
     return false;
   }
 
   if (sceneDialogMode.value === 'add') {
-    if (!sceneFormImageId.value) {
-      window.$message?.warning('请上传场景图片');
-      return false;
-    }
-    if (!sceneFormOriginalWidth.value || !sceneFormOriginalHeight.value) {
-      window.$message?.warning('请确认图片原图尺寸');
-      return false;
-    }
-    if (sceneFormPointX.value === null || sceneFormPointY.value === null) {
-      window.$message?.warning('请上传配置文件(yaml)以解析扫图起始点与分辨率');
-      return false;
-    }
     try {
       const { data } = await fetchCreateSceneMap({
-        name: sceneFormName.value.trim(),
-        group_id: sceneFormGroupId.value,
+        name,
         image_id: sceneFormImageId.value,
         width: sceneFormOriginalWidth.value,
         height: sceneFormOriginalHeight.value,
         resolution: sceneFormResolution.value,
         // start_point 为世界坐标（米），直接使用输入值，不做像素缩放转换
         start_point_x: sceneFormPointX.value,
-        start_point_y: sceneFormPointY.value,
+        start_point_y: sceneFormPointY.value
       });
       if (data) {
         sceneDialogVisible.value = false;
         await editor.loadSceneList();
-        await editor.loadMap((data as any).id);
+        const switched = await switchMap(data.id);
+        if (!switched) return false;
 
         // 返回点固定在世界坐标 (0,0)，与场景 start_point 无关
         const origin = editor.worldToPixelCoords(0, 0);
@@ -365,26 +541,25 @@ async function confirmSceneSubmit() {
   }
 
   // edit 模式
-  if (sceneFormPointX.value === null || sceneFormPointY.value === null) {
-    window.$message?.warning('请输入扫图起始点 X、Y');
-    return false;
-  }
   if (!editMapId.value) {
     window.$message?.error('未找到场景 ID');
     return false;
   }
   try {
     const { error } = await fetchUpdateSceneMap(editMapId.value, {
-      name: sceneFormName.value.trim(),
+      name,
+      image_id: sceneFormImageId.value,
+      width: sceneFormOriginalWidth.value,
+      height: sceneFormOriginalHeight.value,
       resolution: sceneFormResolution.value,
       start_point_x: sceneFormPointX.value,
-      start_point_y: sceneFormPointY.value,
+      start_point_y: sceneFormPointY.value
     });
     if (!error) {
       sceneDialogVisible.value = false;
       await editor.loadSceneList();
       if (editor.selectedMapId.value === editMapId.value) {
-        await editor.loadMap(editMapId.value);
+        await switchMap(editMapId.value, { force: true });
       }
       window.$message?.success('修改成功');
     }
@@ -396,7 +571,15 @@ async function confirmSceneSubmit() {
 
 async function handleDeleteScene(mapId: number) {
   try {
-    await editor.deleteScene(mapId);
+    if (editor.isDirty.value && editor.selectedMapId.value === mapId) {
+      const confirmed = await showDeleteUnsavedDialog();
+      if (!confirmed) return;
+    }
+
+    const { wasSelected } = await editor.deleteScene(mapId);
+    if (wasSelected && editor.sceneList.value.length > 0) {
+      await switchMap(editor.sceneList.value[0].id);
+    }
   } catch (e: any) {
     window.$message?.error(e?.message || '删除失败');
   }
@@ -415,25 +598,8 @@ function handleContextMenuSelect(key: string) {
   const { x, y } = contextMenuScenePoint.value;
 
   if (key === 'delete-target') {
-    const target = contextMenuTarget.value;
-    dialog.warning({
-      title: '提示',
-      content: '当前点位已有关联任务，删除点位后任务自动取消关联该点位，确认是否删除？ 删除后点击右上角保存生效',
-      positiveText: '确认',
-      negativeText: '取消',
-      draggable: true,
-      onPositiveClick: () => {
-        contextMenuTarget.value = null;
-        if (target) {
-          editor.removeElement(target.type, target.id);
-        }
-        return;
-      },
-      onNegativeClick: () => {
-        
-      }
-    })
-    
+    confirmAndRemoveElement(contextMenuTarget.value);
+    return;
   }
 
   if (key === 'add-point') {
@@ -567,7 +733,8 @@ function handleZoomChange(zoom: number) {
 
 async function handleLocateRobot(data: { mapId: number; x: number; y: number }) {
   if (editor.selectedMapId.value !== data.mapId) {
-    await editor.loadMap(data.mapId);
+    const switched = await switchMap(data.mapId);
+    if (!switched) return;
   }
   await nextTick();
   const px = editor.worldToPixelCoords(data.x, data.y);

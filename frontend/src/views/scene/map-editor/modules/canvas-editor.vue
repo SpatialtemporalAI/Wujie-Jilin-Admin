@@ -48,7 +48,6 @@ let objectLabels: Map<number, Text> = new Map();
 let robotMarkers: Map<number, { circle: Circle; arrow: Triangle | null; label: Text }> = new Map();
 let resizeObserver: ResizeObserver | null = null;
 let lastGridSpacingM = 0;
-let originMarker: Group | null = null;
 
 const minimapImageUrl = ref('');
 const minimapRect = ref({ x: 0, y: 0, w: 0, h: 0 });
@@ -542,8 +541,6 @@ function syncStructure() {
       }
     }
   }
-
-  renderOriginMarker();
 }
 
 // 仅更新位置和尺寸（拖动结束、undo/redo、loadMap）
@@ -825,31 +822,6 @@ function renderElements() {
   // 机器人标记最后渲染，保证位于所有元素之上
   renderRobots();
   fabricCanvas.renderAll();
-}
-
-function renderOriginMarker() {
-  if (!fabricCanvas || !props.editorData) return;
-  if (originMarker) {
-    fabricCanvas.remove(originMarker);
-    originMarker = null;
-  }
-
-  // const { x: ox, y: oy } = getEffectiveOrigin();
-  const ox = 0
-  const oy = 0
-  const s = 12;
-  const hLine = new Line([ox - s, oy, ox + s, oy], {
-    stroke: '#2563eb', strokeWidth: 2, selectable: false, evented: false,
-  });
-  const vLine = new Line([ox, oy - s, ox, oy + s], {
-    stroke: '#2563eb', strokeWidth: 2, selectable: false, evented: false,
-  });
-  const label = new Text('O', {
-    fontSize: 10, fill: '#2563eb', fontFamily: 'sans-serif', fontWeight: 'bold',
-    left: ox + 6, top: oy - 14, selectable: false, evented: false,
-  });
-  originMarker = new Group([hLine, vLine, label], { selectable: false, evented: false });
-  fabricCanvas.add(originMarker);
 }
 
 function updateSelection() {
@@ -1504,7 +1476,6 @@ function disposeCanvas() {
   annotationDecorations.clear();
   objectLabels.clear();
   robotMarkers.clear();
-  originMarker = null;
   lastGridSpacingM = 0;
   isDraggingObject = false;
   justDragged = false;
@@ -1536,10 +1507,6 @@ watch(() => props.editorData, async (newData) => {
   }
   objectLabels.clear();
   clearRobotMarkers();
-  if (originMarker) {
-    fabricCanvas?.remove(originMarker);
-    originMarker = null;
-  }
   lastGridSpacingM = 0;
 
   if (newData.map.image_id) {

@@ -199,6 +199,37 @@
 
 ## 机器人与场景绑定契约
 
+## 场景地图新增/编辑字段契约
+
+`POST /scene/map/add` 与 `PUT /scene/map/{map_id}` 共用同一套 Schema，前端两个入口（地图管理、地图编辑器）提交相同的核心字段集合。
+
+### 前端提交字段（两个入口一致）
+
+以下字段均为必填：
+
+| 字段 | 前端类型 | 后端 Schema | 说明 |
+|------|----------|-------------|------|
+| `name` | `string` | `str` | 地图/场景名称 |
+| `image_id` | `number` | `int` | 地图/场景图片文件ID |
+| `width` | `number` | `int` | 图片宽度（像素），由上传图片自动回填 |
+| `height` | `number` | `int` | 图片高度（像素），由上传图片自动回填 |
+| `resolution` | `number` | `float` | 映射比例 |
+| `start_point_x` | `number` | `float` | 扫图起始点X坐标 |
+| `start_point_y` | `number` | `float` | 扫图起始点Y坐标 |
+
+### 不在前端表单中填写的字段
+
+| 字段 | 后端行为 |
+|------|----------|
+| `status` | 创建默认 `True`（启用），更新时不传则保持原值 |
+| `group_id` / `group_name` | 不传则保持 `null`（未分组） |
+
+### 后端 Schema 说明
+
+- `SceneMapCreate` / `SceneMapUpdate` 中 `name`、`image_id`、`width`、`height`、`resolution`、`start_point_x`、`start_point_y` 必填。
+- `group_id`、`group_name`、`status` 为可选。
+- `nav_image_id` 仍可选，为空时后端保持原值或自动与 `image_id` 同步。
+
 ## 商户管理 + 商户开放 API 契约
 
 ### 数据模型
@@ -223,13 +254,13 @@
 
 | 方法 | 路径 | 入参 | 复用实现 |
 |------|------|------|----------|
-| POST | `/openapi/v1/goto_point` | `robot_sn, point_id` | 建临时 patrol 任务（name 以 `API-` 开头，≤20 字）→ `start_execution`（仅下发 gRPC `run_now`，不写执行记录） |
-| POST | `/openapi/v1/navigate_route` | `robot_sn, point_ids[]` | 同上，多点按序 |
+| POST | `/openapi/v1/goto_point` | `robot_sn, point_id` | `NavigationClient.navigate_to_point`（gRPC `NavigationService.NavigateToPoint`，下发到 robot.agent；不落 Task） |
+| POST | `/openapi/v1/navigate_route` | `robot_sn, point_ids[]` | `NavigationClient.navigate_route`（gRPC `NavigationService.NavigateRoute`，多点按序） |
 | POST | `/openapi/v1/execute_task` | `robot_sn, task_id` | `start_execution`（仅下发 gRPC `run_now`，不写执行记录；响应 `data.action="started"`，不再返回 `record_id`/区分 resumed） |
 | POST | `/openapi/v1/pause_task` | `robot_sn` | 查该 robot 活跃记录 → `pause_execution` |
 | POST | `/openapi/v1/resume_task` | `robot_sn` | 查 paused 记录 → `resume_execution` |
 | POST | `/openapi/v1/stop_task` | `robot_sn` | 查活跃记录 → `stop_execution` |
-| POST | `/openapi/v1/speak` | `robot_sn, text, tts_params{voice,speed,volume}` | `VoiceConfigClient.test_tts` |
+| POST | `/openapi/v1/speak` | `robot_sn, text, tts_params{voice,speed,volume}` | `VoiceConfigClient.test_tts`（复用 `VoiceConfigService.TestTTSConfig`，按入参即时播报） |
 
 响应统一走 `ResponseModel`，`data` 为 `{ success, message, data? }`。鉴权/重放/超时失败 → 401（`TokenError`）；商户禁用/机器人未绑定 → 403（`ForbiddenError`）。
 

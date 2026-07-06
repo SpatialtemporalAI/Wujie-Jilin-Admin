@@ -32,7 +32,9 @@ function getSignalLabel(signal: number): { text: string; color: string } {
 }
 
 function getSpeedLabel(speed: number): { text: string; color: string } {
-  if (speed > 0) return { text: '移动中', color: '#2080f0' };
+  // 只保留小数点后一位判断是否行走，过滤传感器微小波动导致的误判（与速度显示 toFixed(1) 对齐）
+  const roundedSpeed = Math.round(speed * 10) / 10;
+  if (roundedSpeed > 0) return { text: '移动中', color: '#2080f0' };
   return { text: '静止', color: '#d03050' };
 }
 

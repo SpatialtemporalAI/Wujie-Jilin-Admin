@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Body, Depends, Path, Query
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from database.db_manager import get_session
@@ -54,7 +54,7 @@ async def get_log_list(
     dependencies=[Depends(require_permission("sys:scheduler:log:detail"))],
 )
 async def get_log(
-    log_id: int,
+    log_id: int = Path(..., description="日志ID"),
     user: SysUser = Depends(current_user),
     db: AsyncSession = Depends(get_session),
 ):
@@ -70,7 +70,7 @@ async def get_log(
     dependencies=[Depends(require_permission("sys:scheduler:log:delete"))],
 )
 async def batch_delete_logs(
-    log_ids: list[int],
+    log_ids: list[int] = Body(..., description="日志ID列表"),
     user: SysUser = Depends(current_user),
     db: AsyncSession = Depends(get_session),
 ):
@@ -86,7 +86,7 @@ async def batch_delete_logs(
     dependencies=[Depends(require_permission("sys:scheduler:log:delete"))],
 )
 async def clear_logs(
-    days: int = 30,
+    days: int = Query(30, description="清理多少天前的日志"),
     user: SysUser = Depends(current_user),
     db: AsyncSession = Depends(get_session),
 ):

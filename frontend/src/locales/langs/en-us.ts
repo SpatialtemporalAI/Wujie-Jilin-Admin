@@ -941,6 +941,15 @@ const local: App.I18n.Schema = {
           timeRange: 'Time Range'
         }
       }
+    },
+    sceneMapEditor: {
+      unsavedChangesTitle: 'Unsaved Changes',
+      unsavedChangesTip: 'The current scene has unsaved changes. Do you want to save before switching?',
+      saveAndSwitch: 'Save and Switch',
+      discardAndSwitch: 'Discard and Switch',
+      loadMapFailed: 'Failed to load map',
+      deleteUnsavedTip: 'The current scene has unsaved changes. They will be lost after deletion. Continue?',
+      continueDelete: 'Continue Delete'
     }
   },
   form: {

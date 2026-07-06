@@ -17,6 +17,12 @@ import SvgIcon from '@/components/custom/svg-icon.vue';
 
 defineOptions({ name: 'FaceRecognitionTab' });
 
+/** 人像上传限制（对齐阿里云 facebody 要求；人脸占比 64×64 由 facebody 校验） */
+const ALLOWED_FACE_PHOTO_EXTS = ['jpg', 'jpeg', 'png'];
+const MAX_FACE_PHOTO_SIZE = 5 * 1024 * 1024; // 5MB
+const MIN_FACE_PHOTO_DIM = 32; // 分辨率下限（>32）
+const MAX_FACE_PHOTO_DIM = 4096; // 分辨率上限（<4096）
+
 const { hasAuth } = useAuth();
 const message = useMessage();
 const appStore = useAppStore();
@@ -58,10 +64,56 @@ async function loadData() {
   }
 }
 
+/** 读取图片宽高，失败返回 null */
+function getImageSize(file: File): Promise<{ width: number; height: number } | null> {
+  return new Promise(resolve => {
+    const url = URL.createObjectURL(file);
+    const img = new Image();
+    img.onload = () => {
+      const result = { width: img.width, height: img.height };
+      URL.revokeObjectURL(url);
+      resolve(result);
+    };
+    img.onerror = () => {
+      URL.revokeObjectURL(url);
+      resolve(null);
+    };
+    img.src = url;
+  });
+}
+
 async function handleUpload({ file }: { file: UploadFileInfo }) {
   if (!file.file) return;
+  const raw = file.file;
+  const ext = raw.name.split('.').pop()?.toLowerCase() || '';
+  if (!ALLOWED_FACE_PHOTO_EXTS.includes(ext)) {
+    message.error('图像格式仅支持 JPG、JPEG、PNG');
+    fileList.value = [];
+    return;
+  }
+  if (raw.size > MAX_FACE_PHOTO_SIZE) {
+    message.error('图像大小不能超过 5MB');
+    fileList.value = [];
+    return;
+  }
+  const dim = await getImageSize(raw);
+  if (!dim) {
+    message.error('无法读取图片，请确认文件未损坏');
+    fileList.value = [];
+    return;
+  }
+  if (dim.width <= MIN_FACE_PHOTO_DIM || dim.height <= MIN_FACE_PHOTO_DIM) {
+    message.error(`图像分辨率需大于 32×32 像素，当前 ${dim.width}×${dim.height}`);
+    fileList.value = [];
+    return;
+  }
+  if (dim.width >= MAX_FACE_PHOTO_DIM || dim.height >= MAX_FACE_PHOTO_DIM) {
+    message.error(`图像分辨率需小于 4096×4096 像素，当前 ${dim.width}×${dim.height}`);
+    fileList.value = [];
+    return;
+  }
   try {
-    const { data, error } = await fetchUploadFacePhoto(file.file);
+    const { data, error } = await fetchUploadFacePhoto(raw);
     if (!error && data) {
       model.photo_url = getPersistentFilePreviewPath(data.id);
       message.success('上传成功');
@@ -209,16 +261,27 @@ onMounted(() => {
               </NFormItemGi>
               <!-- 新建模式：上传人像 -->
               <NFormItemGi v-else label="人像" path="photo_url">
-                <NUpload
-                  v-if="hasAuth('robot:config:edit')"
-                  v-model:file-list="fileList"
-                  :max="1"
-                  accept="image/*"
-                  :custom-request="handleUpload"
-                  :on-remove="handleRemovePhoto"
-                  list-type="image-card"
-                />
-                <span v-if="model.photo_url && !fileList.length" class="text-12px text-gray">已上传: {{ model.photo_url }}</span>
+                <div class="face-upload-wrap">
+                  <div class="face-upload-left">
+                    <NUpload
+                      v-if="hasAuth('robot:config:edit')"
+                      v-model:file-list="fileList"
+                      :max="1"
+                      accept=".jpg,.jpeg,.png,image/jpeg,image/png"
+                      :custom-request="handleUpload"
+                      :on-remove="handleRemovePhoto"
+                      list-type="image-card"
+                    />
+                    <span v-if="model.photo_url && !fileList.length" class="text-12px text-gray">已上传: {{ model.photo_url }}</span>
+                  </div>
+                  <div class="face-upload-tips">
+                    <div>图像格式：JPG、JPEG、PNG</div>
+                    <div>图像大小：不超过 5 MB</div>
+                    <div>图像分辨率：大于 32×32 像素，小于 4096×4096 像素</div>
+                    <div>人脸占比：不低于 64×64 像素</div>
+                    <div>图片中若包含多个人脸，会取最大的人脸进行添加</div>
+                  </div>
+                </div>
               </NFormItemGi>
               <NFormItemGi label="播报内容" path="broadcast_text">
                 <NInput
@@ -273,6 +336,28 @@ onMounted(() => {
 </template>
 
 <style scoped>
+.face-upload-wrap {
+  display: flex;
+  align-items: flex-start;
+  gap: 16px;
+  width: 100%;
+}
+.face-upload-left {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+.face-upload-tips {
+  font-size: 12px;
+  color: #999;
+  line-height: 1.8;
+}
+@media (max-width: 768px) {
+  .face-upload-wrap {
+    flex-direction: column;
+  }
+}
 .h-48px {
   height: 48px;
 }

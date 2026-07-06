@@ -152,6 +152,14 @@ class RoleService:
         """
         logger.info("创建角色，角色名: %s", role_create.name)
 
+        # 检查角色名称是否已存在
+        result = await db.execute(
+            select(SysRole).where(SysRole.name == role_create.name)
+        )
+        if result.scalar_one_or_none():
+            logger.warning("角色名称已存在，角色名: %s", role_create.name)
+            raise ConflictError(msg="角色名称已存在")
+
         # 创建角色对象
         role = SysRole(
             name=role_create.name,
