@@ -55,6 +55,7 @@
 | 403       | 商户已禁用 / 机器人未绑定到当前商户 / 点位不在机器人所在地图                        |
 | 404       | 机器人 / 点位 / 任务 / 可操作的任务执行记录不存在                            |
 | 409       | 状态冲突（例如暂停一个非运行中的任务）                                      |
+| 422       | 参数校验失败：类型不符 / 取值越界 / 枚举非法（如 `task_type` 非 `patrol`·`broadcast`、`volume` 超出 0–100） |
 
 ***
 
@@ -206,6 +207,8 @@
 | volume | int    | 音量 0–100               |
 
 > 未提供 `tts_params` 时，使用机器人在系统中配置的默认 TTS 参数；仍无则使用系统默认（female / 1.0 / 80）。
+>
+> `speed` / `volume` 会做范围校验，超出 0.5–2.0 / 0–100 返回 422。
 
 **请求示例**
 
@@ -297,6 +300,8 @@
 | map\_id    | int    | 否  | 按场景地图过滤                                  |
 | task\_type | string | 否  | 任务类型：`patrol`（巡逻）/ `broadcast`（播报）       |
 | status     | string | 否  | 执行状态：`idle`（空闲）/ `running`（运行中）/ `paused`（已暂停） |
+
+> `task_type` / `status` 传非枚举值（如 `xxx`）会被拦截并返回 422；传空值或缺省视为不过滤。
 
 **响应 data**
 
@@ -456,4 +461,5 @@ call('/openapi/v1/speak', { robot_sn: 'WJ-001', text: '你好' }).then(console.l
 | 2026-06-29 | v1 首版：goto\_point / navigate\_route / execute\_task / pause\_task / resume\_task / stop\_task / speak                                                                         |
 | 2026-07-03 | 导航改为即时指令：`goto_point` / `navigate_route` 不再创建任务，响应移除 `task_id` / `record_id`，文案改为「单点/多点导航已下发」；`execute_task` 的 `action` 统一为 `"started"`（不再区分 created/resumed，不返回 record\_id）。 |
 | 2026-07-06 | 新增查询类接口：`scenes`（场景列表）/ `points`（点位列表）/ `tasks`（任务列表），支持按机器人 / 场景 / 任务类型 / 状态过滤；第 4 节总述拆分为控制类（必须 `robot_sn`）与查询类（`robot_sn` 可选）。 |
+| 2026-07-06 | 补充参数类型校验：`tasks.task_type` 限 `patrol`·`broadcast`、`tasks.status` 限 `idle`·`running`·`paused`（非法值 422）；`speak.tts_params.speed` 限 0.5–2.0、`volume` 限 0–100（越界 422）；错误码表新增 422。 |
 

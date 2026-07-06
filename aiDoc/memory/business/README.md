@@ -71,3 +71,4 @@
 - [2026-07-06 跨模块下拉改调 /all 轻量接口](./2026-07-06_cross-module-dropdown-all-endpoint.md) — 新增 GET /robot/manage/all、GET /scene/group/all（仅登录、返回 SimpleResponse）；前端 6 处下拉（任务/商户/日志/场景地图搜索）由 list 改调 /all，根治跨模块下拉权限不足
 - [2026-07-06 任务类型新增「即时」(instant)](./2026-07-06_task-type-instant.md) — 任务列表筛选下拉与表格列新增 instant（即时）；TaskType 联合类型补 'instant'，NTag 颜色改查表映射；不动新增/编辑抽屉
 - [2026-07-06 视频监控 gRPC 启停控制（对接 middleware）](./2026-07-06_video-monitoring-grpc-control.md) — 新增 config/video.proto（单一 RPC NotifyVideoMonitoringChanged(robot_id, enabled)）+ VideoMonitoringClient（走 middleware）+ POST /robot/config/video-monitoring/{robot_id}；实时控制 fire-and-forget，不入重试不落库；前端 API + 类型
+- [2026-07-06 商户开放 API 接口补类型校验](./2026-07-06_openapi-param-validation.md) — openapi schema 补 task_type/status 枚举（parse_optional_enum）、speed(0.5–2.0)/volume(0–100) 范围、map_id 改 OptionalIntField；接入文档错误码表加 422；voice 枚举与 ID ge=1 不加

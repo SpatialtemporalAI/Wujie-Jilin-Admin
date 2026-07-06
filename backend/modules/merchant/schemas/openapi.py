@@ -3,11 +3,28 @@
 
 """商户开放 API 请求/响应 Schema"""
 
-from typing import Any, Dict, List, Optional
+from typing import Annotated, Any, Dict, List, Optional
 
-from pydantic import Field
+from pydantic import BeforeValidator, Field
 
-from app.models.common.base import BaseEntity, BaseRespEntity
+from app.models.common.base import (
+    BaseEntity,
+    BaseRespEntity,
+    OptionalIntField,
+    parse_optional_enum,
+)
+
+# 任务类型枚举（与 Task.task_type 一致：patrol-巡逻 / broadcast-播报）
+TaskTypeField = Annotated[
+    str | None,
+    BeforeValidator(parse_optional_enum({"patrol", "broadcast"})),
+]
+
+# 任务执行状态枚举（与 Task.status 一致：idle / running / paused）
+TaskStatusField = Annotated[
+    str | None,
+    BeforeValidator(parse_optional_enum({"idle", "running", "paused"})),
+]
 
 
 class GotoPointRequest(BaseEntity):
@@ -41,8 +58,8 @@ class TtsParams(BaseEntity):
     """语音播报参数"""
 
     voice: Optional[str] = Field(None, description="音色，如 male/female")
-    speed: Optional[float] = Field(None, description="语速 0.5-2.0")
-    volume: Optional[int] = Field(None, description="音量 0-100")
+    speed: Optional[float] = Field(None, ge=0.5, le=2.0, description="语速 0.5-2.0")
+    volume: Optional[int] = Field(None, ge=0, le=100, description="音量 0-100")
 
 
 class SpeakRequest(BaseEntity):
@@ -69,9 +86,9 @@ class TasksRequest(BaseEntity):
     """获取任务列表"""
 
     robot_sn: Optional[str] = Field(None, description="可选：仅返回关联该机器人的任务")
-    map_id: Optional[int] = Field(None, description="可选：按场景地图过滤")
-    task_type: Optional[str] = Field(None, description="可选：任务类型 patrol/broadcast")
-    status: Optional[str] = Field(None, description="可选：执行状态 idle/running/paused")
+    map_id: OptionalIntField = Field(None, description="可选：按场景地图过滤")
+    task_type: TaskTypeField = Field(None, description="可选：任务类型 patrol/broadcast")
+    status: TaskStatusField = Field(None, description="可选：执行状态 idle/running/paused")
 
 
 class OpenApiResult(BaseRespEntity):
