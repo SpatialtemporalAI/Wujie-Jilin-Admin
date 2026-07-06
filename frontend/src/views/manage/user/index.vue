@@ -227,7 +227,7 @@ function openPasswordDrawer(id: number) {
         :data="data"
         size="small"
         :flex-height="!appStore.isMobile"
-        :scroll-x="962"
+        :scroll-x="1100"
         :loading="loading"
         remote
         :row-key="row => row.id"
