@@ -324,41 +324,62 @@ function getElementNameAndKind(target: SelectedElement) {
 
 function confirmAndRemoveElement(target: SelectedElement | null) {
   if (!target || isDeleteConfirming) return;
-  isDeleteConfirming = true;
 
+  // 点位：仅当已关联任务时才弹窗确认，未关联任务直接删除
+  if (target.type === 'annotation') {
+    const ann = editor.editorData.value?.annotations.find(a => a.id === target.id);
+    const taskCount = ann?.task_count ?? 0;
+    if (taskCount <= 0) {
+      editor.removeElement(target.type, target.id);
+      return;
+    }
+    isDeleteConfirming = true;
+    const resetFlag = () => {
+      isDeleteConfirming = false;
+    };
+    dialog.warning({
+      title: '提示',
+      content: `当前点位已关联 ${taskCount} 个任务，删除点位后任务自动取消关联该点位，确认是否删除？ 删除后点击右上角保存生效`,
+      positiveText: '确认',
+      negativeText: '取消',
+      draggable: true,
+      onPositiveClick: () => {
+        editor.removeElement(target.type, target.id);
+      },
+      onNegativeClick: resetFlag,
+      onClose: resetFlag,
+    });
+    return;
+  }
+
+  // 障碍物/禁行区域/电子围栏：保持通用确认
+  isDeleteConfirming = true;
   const resetFlag = () => {
     isDeleteConfirming = false;
   };
+  const { name, kind } = getElementNameAndKind(target);
+  const displayName = name || '未命名';
+  dialog.warning({
+    title: '提示',
+    content: `确认删除选中的「${displayName}」(${kind})？ 删除后点击右上角保存生效`,
+    positiveText: '确认',
+    negativeText: '取消',
+    draggable: true,
+    onPositiveClick: () => {
+      editor.removeElement(target.type, target.id);
+    },
+    onNegativeClick: resetFlag,
+    onClose: resetFlag,
+  });
+}
 
-  if (target.type === 'annotation') {
-    dialog.warning({
-      title: '提示',
-      content: '当前点位已有关联任务，删除点位后任务自动取消关联该点位，确认是否删除？ 删除后点击右上角保存生效',
-      positiveText: '确认',
-      negativeText: '取消',
-      draggable: true,
-      onPositiveClick: () => {
-        editor.removeElement(target.type, target.id);
-      },
-      onNegativeClick: resetFlag,
-      onClose: resetFlag,
-    });
-  } else {
-    const { name, kind } = getElementNameAndKind(target);
-    const displayName = name || '未命名';
-    dialog.warning({
-      title: '提示',
-      content: `确认删除选中的「${displayName}」(${kind})？ 删除后点击右上角保存生效`,
-      positiveText: '确认',
-      negativeText: '取消',
-      draggable: true,
-      onPositiveClick: () => {
-        editor.removeElement(target.type, target.id);
-      },
-      onNegativeClick: resetFlag,
-      onClose: resetFlag,
-    });
+function handleRemoveElement(type: 'annotation' | 'path' | 'object', id: number) {
+  // 点位删除统一走确认函数：仅在已关联任务时弹窗，否则直接删除
+  if (type === 'annotation') {
+    confirmAndRemoveElement({ type, id });
+    return;
   }
+  editor.removeElement(type, id);
 }
 
 function handleDeleteKeyDown(e: KeyboardEvent) {
@@ -780,7 +801,7 @@ function handleFocusAnnotation(id: number) {
         :selected-element="editor.selectedElement.value" :resolution="editor.resolution.value"
         :scene-list="editor.sceneList.value" :selected-map-id="editor.selectedMapId.value"
         :map-id="editor.selectedMapId.value" @update-element="handleUpdateElement"
-        @remove-element="editor.removeElement" @select-scene="handleSelectMap" @add-scene="handleOpenAddScene"
+        @remove-element="handleRemoveElement" @select-scene="handleSelectMap" @add-scene="handleOpenAddScene"
         @edit-scene="handleOpenEditScene" @delete-scene="handleDeleteScene" @locate-robot="handleLocateRobot"
         @focus-annotation="handleFocusAnnotation" @select-element="el => (editor.selectedElement.value = el)" />
     </div>

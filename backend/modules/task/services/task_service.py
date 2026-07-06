@@ -6,7 +6,7 @@
 """
 import logging
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy import select, and_, Select
+from sqlalchemy import select, and_, Select, func
 from sqlalchemy.orm import noload, selectinload
 from typing import List
 
@@ -296,6 +296,34 @@ class TaskService:
                     sort_order += 1
 
         await db.flush()
+
+    @staticmethod
+    async def count_tasks_by_annotation_ids(
+        db: AsyncSession, annotation_ids: list[int]
+    ) -> dict[int, int]:
+        """统计每个标注关联的有效任务数（按 task_id 去重）。
+
+        仅统计未删除的任务及其未删除的任务点位，用于地图编辑器判断
+        删除点位时是否需要弹出"已关联任务"的二次确认。
+        返回 {annotation_id: task_count}，未关联任务的标注不在结果中。
+        """
+        if not annotation_ids:
+            return {}
+
+        result = await db.execute(
+            select(
+                TaskPoint.annotation_id,
+                func.count(func.distinct(TaskPoint.task_id)),
+            )
+            .join(Task, TaskPoint.task_id == Task.id)
+            .where(
+                TaskPoint.annotation_id.in_(annotation_ids),
+                TaskPoint.deleted_at.is_(None),
+                Task.deleted_at.is_(None),
+            )
+            .group_by(TaskPoint.annotation_id)
+        )
+        return {annotation_id: count for annotation_id, count in result.all()}
 
     @staticmethod
     async def delete(db: AsyncSession, task_id: int) -> bool:

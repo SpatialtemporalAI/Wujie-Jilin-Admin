@@ -333,14 +333,10 @@ onMounted(() => {
                   X: {{ toWorldX(ann.x) }}m, Y: {{ toWorldY(ann.y) }}m
                 </div>
               </div>
-              <NPopconfirm v-if="hasAuth('scene:map-editor:edit')" @positive-click.stop="emit('remove-element', 'annotation', ann.id)">
-                <template #trigger>
-                  <NButton quaternary size="tiny" type="error" class="opacity-0 group-hover:opacity-100" @click.stop>
-                    <template #icon><icon-ic-round-delete-outline /></template>
-                  </NButton>
-                </template>
-                当前点位已有关联任务，删除点位后任务自动取消关联该点位，再次确认是否删除？
-              </NPopconfirm>
+              <NButton v-if="hasAuth('scene:map-editor:edit')" quaternary size="tiny" type="error"
+                class="opacity-0 group-hover:opacity-100" @click.stop="emit('remove-element', 'annotation', ann.id)">
+                <template #icon><icon-ic-round-delete-outline /></template>
+              </NButton>
             </div>
             <NEmpty v-if="filteredAnnotations.length === 0" description="暂无点位" class="mt-20px" />
           </div>

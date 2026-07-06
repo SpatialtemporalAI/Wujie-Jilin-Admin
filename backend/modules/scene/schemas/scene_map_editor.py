@@ -85,6 +85,7 @@ class EditorMapAnnotationResponse(BaseRespEntity):
     name: str
     angle: float
     type: str
+    task_count: int = Field(0, description="关联该点位的有效任务数（用于删除前提示）")
 
 
 class EditorMapPathResponse(BaseRespEntity):

@@ -13,6 +13,7 @@ from modules.admin.schemas.sys.file import SysFileUploadResponse
 from database.models.sys.user import SysUser
 from modules.scene.services.scene_map_editor_service import SceneMapEditorService
 from modules.scene.services.scene_map_nav_image_service import SceneMapNavImageService
+from modules.task.services.task_service import TaskService
 from modules.scene.schemas.scene_map_editor import (
     EditorSaveRequest,
     EditorSaveResponse,
@@ -53,12 +54,19 @@ async def get_editor_data(
     """获取地图编辑器所需的完整数据（地图元数据 + 标注 + 路径 + 物体）"""
     map_obj = await SceneMapEditorService.get_editor_data(db, map_id)
 
+    # 统计每个标注关联的有效任务数，供前端在删除点位前判断是否需要二次确认
+    annotation_ids = [a.id for a in map_obj.annotations if a.id]
+    task_counts = await TaskService.count_tasks_by_annotation_ids(db, annotation_ids)
+
+    annotations_resp: list[EditorMapAnnotationResponse] = []
+    for a in map_obj.annotations:
+        resp = EditorMapAnnotationResponse.model_validate(a)
+        resp.task_count = task_counts.get(a.id, 0)
+        annotations_resp.append(resp)
+
     data = EditorMapDataResponse(
         map=SceneMapResponseData.model_validate(map_obj).model_dump(),
-        annotations=[
-            EditorMapAnnotationResponse.model_validate(a)
-            for a in map_obj.annotations
-        ],
+        annotations=annotations_resp,
         paths=[
             EditorMapPathResponse.model_validate(p)
             for p in map_obj.paths

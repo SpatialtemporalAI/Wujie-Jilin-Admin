@@ -121,6 +121,8 @@ declare namespace Api {
       angle: number;
       /** type (dict value) */
       type: string;
+      /** number of active tasks referencing this annotation (only populated by editor data endpoint) */
+      task_count?: number;
     }>;
 
     /** scene map annotation list */
