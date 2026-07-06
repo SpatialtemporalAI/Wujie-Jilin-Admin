@@ -12,6 +12,7 @@ ConfigService gRPC 客户端
 - speed.notify_speed_level → middleware
 - battery.notify_battery_threshold → agent
 - face_recognition.notify_changed → agent（广播给所有启用 agent 的 robot）
+- video.notify_video_monitoring → middleware
 
 调用约定：
 - GRPC.ENABLED=false → 返回 success=False 的哨兵响应，不抛异常
@@ -32,6 +33,8 @@ from app.grpc.generated.config import (
     face_recognition_pb2_grpc,
     speed_pb2,
     speed_pb2_grpc,
+    video_pb2,
+    video_pb2_grpc,
     voice_pb2,
     voice_pb2_grpc,
 )
@@ -244,6 +247,53 @@ class SpeedConfigClient:
                 "robot_id": robot_id,
                 "rpc": "notify_speed_level",
                 "speed_level": speed_level,
+            },
+        )
+
+
+# ==================== VideoMonitoringClient ====================
+
+
+class VideoMonitoringClient:
+    """视频监控启停 gRPC 客户端（走 middleware）
+
+    实时控制类 RPC（fire-and-forget）：启动 / 停止视频监控。
+    """
+
+    _stubs_by_addr: Dict[str, video_pb2_grpc.VideoMonitoringServiceStub] = {}
+
+    @classmethod
+    async def _get_stub_for_addr(
+        cls, addr: str
+    ) -> video_pb2_grpc.VideoMonitoringServiceStub:
+        if addr not in cls._stubs_by_addr:
+            channel = await get_config_channel_by_addr(addr)
+            cls._stubs_by_addr[addr] = video_pb2_grpc.VideoMonitoringServiceStub(
+                channel
+            )
+        return cls._stubs_by_addr[addr]
+
+    @classmethod
+    async def notify_video_monitoring_changed(
+        cls, robot_id: int, enabled: bool
+    ) -> video_pb2.VideoMonitoringChangedResponse:
+        request = video_pb2.VideoMonitoringChangedRequest(
+            robot_id=robot_id,
+            enabled=enabled,
+        )
+        return await _dispatch_with_target(
+            robot_id=robot_id,
+            target="middleware",
+            stub_factory=cls._get_stub_for_addr,
+            method_name="NotifyVideoMonitoringChanged",
+            request=request,
+            failure_factory=lambda msg: video_pb2.VideoMonitoringChangedResponse(
+                success=False, message=msg
+            ),
+            log_ctx={
+                "robot_id": robot_id,
+                "rpc": "notify_video_monitoring",
+                "enabled": enabled,
             },
         )
 

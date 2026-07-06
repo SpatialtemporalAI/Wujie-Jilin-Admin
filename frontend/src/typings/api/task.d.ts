@@ -3,7 +3,7 @@ declare namespace Api {
     type CommonSearchParams = Pick<Common.PaginatingCommonParams, 'page' | 'page_size'>;
 
     /** task type */
-    type TaskType = 'patrol' | 'broadcast';
+    type TaskType = 'patrol' | 'broadcast' | 'instant';
 
     /** task execution status */
     type TaskStatus = 'idle' | 'running' | 'paused';

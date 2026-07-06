@@ -154,6 +154,12 @@ class RobotBatteryThresholdUpdate(BaseReqEntity):
     )
 
 
+class RobotVideoMonitoringControl(BaseReqEntity):
+    """视频监控启停请求（robot_id 走 path，body 仅携带开关）"""
+
+    enabled: bool = Field(..., description="true=启动视频监控 / false=停止")
+
+
 class ConfigUpdateResponse(BaseRespEntity):
     """参数配置保存响应（speed/battery 等不返回完整 ORM 的场景，仅携带 grpc_status）"""
 

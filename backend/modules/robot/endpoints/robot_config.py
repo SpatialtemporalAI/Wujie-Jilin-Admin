@@ -33,9 +33,10 @@ from modules.robot.schemas.robot_config import (
     TestTTSRequest,
     RobotSpeedLevelUpdate,
     RobotBatteryThresholdUpdate,
+    RobotVideoMonitoringControl,
     ConfigUpdateResponse,
 )
-from modules.grpc.config_client import VoiceConfigClient
+from modules.grpc.config_client import VoiceConfigClient, VideoMonitoringClient
 from core.storage import validate_file_size, validate_file_extension
 from core.exception.errors import RequestError
 
@@ -400,3 +401,38 @@ async def update_battery_threshold(
     except Exception as e:
         logger.error("更新机器人电量阈值接口失败: %s", str(e), exc_info=True)
         raise
+
+
+# ==================== 视频监控启停 ====================
+
+
+@robot_config_router.post(
+    "/video-monitoring/{robot_id}",
+    response_model=ResponseModel,
+    dependencies=[Depends(require_permission("robot:config:edit"))],
+)
+@log_operation(module="robot", action="update", description="视频监控启停")
+async def control_video_monitoring(
+    request: Request,
+    payload: RobotVideoMonitoringControl,
+    robot_id: int = Path(..., description="机器人ID"),
+    db: AsyncSession = Depends(get_session),
+    user: SysUser = Depends(current_user),
+):
+    """启动/停止视频监控（gRPC NotifyVideoMonitoringChanged → 机器人 middleware）
+
+    实时控制：失败直接返回 fail，不入重试队列（用户等待即时响应）。
+    """
+    action = "启动" if payload.enabled else "停止"
+    logger.info(
+        "视频监控%s接口被调用 robot_id=%d", action, robot_id
+    )
+    resp = await VideoMonitoringClient.notify_video_monitoring_changed(
+        robot_id=robot_id, enabled=payload.enabled
+    )
+    if resp.success:
+        return response_base.success(msg=resp.message or f"{action}指令已下发")
+    logger.warning(
+        "视频监控%s失败 robot_id=%s msg=%s", action, robot_id, resp.message
+    )
+    return response_base.fail(msg=f"{action}失败，请确保机器人在线")
