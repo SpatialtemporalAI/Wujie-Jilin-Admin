@@ -57,6 +57,12 @@ declare namespace Api {
       ros?: GrpcServiceConfig | null;
     };
 
+    /** 视频监控启停请求体（robot_id 走 path） */
+    type VideoMonitoringControl = {
+      /** true=启动视频监控 / false=停止 */
+      enabled: boolean;
+    };
+
     /** robot */
     type Robot = Omit<Common.CommonRecord<object>, 'status'> & {
       /** robot name */

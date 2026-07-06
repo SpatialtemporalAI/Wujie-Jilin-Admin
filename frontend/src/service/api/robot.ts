@@ -131,6 +131,15 @@ export function fetchUpdateRobotMapBinding(id: number, data: { map_id: number | 
   });
 }
 
+/** start/stop video monitoring on a robot's middleware via gRPC (enabled=true 启动 / false 停止) */
+export function fetchSetVideoMonitoring(robotId: number, enabled: boolean) {
+  return request<void>({
+    url: `/robot/config/video-monitoring/${robotId}`,
+    method: 'post',
+    data: { enabled } satisfies Api.Robot.VideoMonitoringControl
+  });
+}
+
 /** ==================== 机器人状态记录 API (只读) ==================== */
 
 /** get robot status records */

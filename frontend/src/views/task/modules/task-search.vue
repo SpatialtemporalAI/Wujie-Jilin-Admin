@@ -15,7 +15,8 @@ const model = defineModel<Api.Task.TaskSearchParams>('model', { required: true }
 
 const taskTypeOptions = [
   { label: '巡逻', value: 'patrol' },
-  { label: '播报', value: 'broadcast' }
+  { label: '播报', value: 'broadcast' },
+  { label: '即时', value: 'instant' }
 ];
 
 const enabledOptions = [

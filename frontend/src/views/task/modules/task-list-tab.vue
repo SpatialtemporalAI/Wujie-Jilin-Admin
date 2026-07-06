@@ -32,7 +32,14 @@ const searchParams: Api.Task.TaskSearchParams = reactive({
 
 const taskTypeLabel: Record<string, string> = {
   patrol: '巡逻',
-  broadcast: '播报'
+  broadcast: '播报',
+  instant: '即时'
+};
+
+const taskTypeTagType: Record<string, import('naive-ui').TagProps['type']> = {
+  patrol: 'info',
+  broadcast: 'success',
+  instant: 'warning'
 };
 
 const scheduleCycleLabel: Record<string, string> = {
@@ -110,7 +117,7 @@ const {
       title: '任务类型',
       align: 'center',
       width: 100,
-      render: row => <NTag size="small" type={row.task_type === 'patrol' ? 'info' : 'success'}>{taskTypeLabel[row.task_type] || row.task_type}</NTag>
+      render: row => <NTag size="small" type={taskTypeTagType[row.task_type] || 'default'}>{taskTypeLabel[row.task_type] || row.task_type}</NTag>
     },
     {
       key: 'point_count',
