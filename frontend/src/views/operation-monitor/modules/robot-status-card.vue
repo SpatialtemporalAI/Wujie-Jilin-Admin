@@ -121,7 +121,7 @@ const robotOptions = computed(() =>
             <div class="status-main">
               <div class="flex items-baseline gap-4px">
                 <span class="text-24px font-bold">{{ statusRecord?.signal ?? '--' }}</span>
-                <span class="text-12px text-gray-400">% 信号</span>
+                <span class="text-12px text-gray-400">dBm 信号</span>
               </div>
             </div>
             <div class="status-extra">
