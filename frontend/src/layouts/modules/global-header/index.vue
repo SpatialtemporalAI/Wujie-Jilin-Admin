@@ -9,6 +9,7 @@ import GlobalSearch from '../global-search/index.vue';
 import ThemeButton from './components/theme-button.vue';
 import UserAvatar from './components/user-avatar.vue';
 import NotificationCenter from './components/notification-center.vue';
+import ExportCenter from './components/export-center.vue';
 import AboutUs from './components/about-us.vue';
 import { getHeaderPlugins } from '@/plugins/plugin-registry';
 
@@ -59,6 +60,7 @@ const headerPlugins = getHeaderPlugins();
         @switch="themeStore.toggleThemeScheme"
       /> -->
       <NotificationCenter />
+      <ExportCenter />
       <component v-for="plugin in headerPlugins" :key="plugin.name || plugin" :is="plugin" />
       <!-- <ThemeButton /> -->
       <UserAvatar />

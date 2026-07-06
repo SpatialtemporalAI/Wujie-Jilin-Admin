@@ -36,4 +36,4 @@ def get_export_config(module_key: str) -> ModuleExportConfig:
 
 
 # 导入各模块导出配置以触发注册
-from . import user_export, role_export, operation_log_export  # noqa: E402, F401
+from . import user_export, role_export, operation_log_export, login_log_export, robot_event_log_export  # noqa: E402, F401

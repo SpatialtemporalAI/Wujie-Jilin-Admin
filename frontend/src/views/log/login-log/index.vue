@@ -5,12 +5,14 @@ import { fetchBatchDeleteLoginLog, fetchClearLoginLog, fetchDeleteLoginLog, fetc
 import { useAppStore } from '@/store/modules/app';
 import { defaultTransform, useNaivePaginatedTable, useTableOperate } from '@/hooks/common/table';
 import { useAuth } from '@/hooks/business/auth';
+import { useExportSubmit } from '@/hooks/business/export-task';
 import { $t } from '@/locales';
 import LoginLogSearch from './modules/login-log-search.vue';
 
 const appStore = useAppStore();
 const message = useMessage();
 const { hasAuth } = useAuth();
+const { submitting, submitExport } = useExportSubmit();
 
 const searchParams: Api.SystemManage.LoginLogSearchParams = reactive({
   page: 1,
@@ -177,6 +179,9 @@ async function handleClear() {
               </NButton>
             </template>
           </NPopconfirm>
+          <NButton type="primary" ghost size="small" :loading="submitting" :disabled="loading" @click="submitExport('login_log', searchParams)">
+            {{ $t('common.export') }}
+          </NButton>
         </template>
       </TableHeaderOperation>
     </div>

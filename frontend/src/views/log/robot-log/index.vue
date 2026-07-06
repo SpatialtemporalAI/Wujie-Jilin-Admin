@@ -10,12 +10,14 @@ import {
 import { useAppStore } from '@/store/modules/app';
 import { defaultTransform, useNaivePaginatedTable, useTableOperate } from '@/hooks/common/table';
 import { useAuth } from '@/hooks/business/auth';
+import { useExportSubmit } from '@/hooks/business/export-task';
 import { $t } from '@/locales';
 import RobotEventLogSearch from './modules/robot-event-log-search.vue';
 
 const appStore = useAppStore();
 const message = useMessage();
 const { hasAuth } = useAuth();
+const { submitting, submitExport } = useExportSubmit();
 
 const searchParams: Api.SystemManage.RobotEventLogSearchParams = reactive({
   page: 1,
@@ -185,6 +187,9 @@ async function handleClear() {
               </NButton>
             </template>
           </NPopconfirm>
+          <NButton type="primary" ghost size="small" :loading="submitting" :disabled="loading" @click="submitExport('robot_event_log', searchParams)">
+            {{ $t('common.export') }}
+          </NButton>
         </template>
       </TableHeaderOperation>
     </div>

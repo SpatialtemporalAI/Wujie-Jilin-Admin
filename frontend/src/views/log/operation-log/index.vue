@@ -10,6 +10,7 @@ import {
 import { useAppStore } from '@/store/modules/app';
 import { defaultTransform, useNaivePaginatedTable, useTableOperate } from '@/hooks/common/table';
 import { useAuth } from '@/hooks/business/auth';
+import { useExportSubmit } from '@/hooks/business/export-task';
 import { $t } from '@/locales';
 import OperationLogSearch from './modules/operation-log-search.vue';
 import OperationLogDetailDrawer from './modules/operation-log-detail-drawer.vue';
@@ -17,6 +18,7 @@ import OperationLogDetailDrawer from './modules/operation-log-detail-drawer.vue'
 const appStore = useAppStore();
 const message = useMessage();
 const { hasAuth } = useAuth();
+const { submitting, submitExport } = useExportSubmit();
 
 const searchParams: Api.SystemManage.OperationLogSearchParams = reactive({
   page: 1,
@@ -232,6 +234,9 @@ async function handleClear() {
               </NButton>
             </template>
           </NPopconfirm>
+          <NButton type="primary" ghost size="small" :loading="submitting" :disabled="loading" @click="submitExport('operation_log', searchParams)">
+            {{ $t('common.export') }}
+          </NButton>
         </template>
       </TableHeaderOperation>
     </div>

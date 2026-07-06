@@ -59,7 +59,11 @@ const local: App.I18n.Schema = {
     yesOrNo: {
       yes: 'Yes',
       no: 'No'
-    }
+    },
+    export: 'Export',
+    exporting: 'Exporting',
+    exportTaskSubmitted: 'Export task submitted, download it from the top bar',
+    exportFailed: 'Export failed, please try again later'
   },
   request: {
     logout: 'Logout user after request failed',
@@ -1019,6 +1023,17 @@ const local: App.I18n.Schema = {
       high: 'High',
       urgent: 'Urgent'
     }
+  },
+  exportCenter: {
+    title: 'Export Records',
+    download: 'Download',
+    noRecords: 'No export records',
+    refresh: 'Refresh',
+    rows: 'rows',
+    statusPending: 'Pending',
+    statusProcessing: 'Processing',
+    statusCompleted: 'Ready',
+    statusFailed: 'Failed'
   }
 };
 

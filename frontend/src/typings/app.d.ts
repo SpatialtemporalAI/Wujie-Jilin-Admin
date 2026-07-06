@@ -371,6 +371,10 @@ declare namespace App {
           yes: string;
           no: string;
         };
+        export: string;
+        exporting: string;
+        exportTaskSubmitted: string;
+        exportFailed: string;
       };
       request: {
         logout: string;
@@ -1119,6 +1123,17 @@ declare namespace App {
           high: string;
           urgent: string;
         };
+      };
+      exportCenter: {
+        title: string;
+        download: string;
+        noRecords: string;
+        refresh: string;
+        rows: string;
+        statusPending: string;
+        statusProcessing: string;
+        statusCompleted: string;
+        statusFailed: string;
       };
     };
 

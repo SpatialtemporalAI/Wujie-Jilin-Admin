@@ -59,7 +59,11 @@ const local: App.I18n.Schema = {
     yesOrNo: {
       yes: '是',
       no: '否'
-    }
+    },
+    export: '导出',
+    exporting: '导出中',
+    exportTaskSubmitted: '导出任务已提交，请到顶部下载箱下载',
+    exportFailed: '导出失败，请稍后重试'
   },
   request: {
     logout: '请求失败后登出用户',
@@ -1014,6 +1018,17 @@ const local: App.I18n.Schema = {
       high: '高',
       urgent: '紧急'
     }
+  },
+  exportCenter: {
+    title: '导出记录',
+    download: '下载',
+    noRecords: '暂无导出记录',
+    refresh: '刷新',
+    rows: '行',
+    statusPending: '排队中',
+    statusProcessing: '导出中',
+    statusCompleted: '可下载',
+    statusFailed: '失败'
   }
 };
 
