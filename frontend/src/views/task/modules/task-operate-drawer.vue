@@ -5,7 +5,7 @@ import { jsonClone } from '@sa/utils';
 import { NText, NTooltip } from 'naive-ui';
 import { useNaiveForm } from '@/hooks/common/form';
 import { $t } from '@/locales';
-import { fetchCreateTask, fetchUpdateTask, fetchGetTask, fetchGetRobotList, fetchGetMapAnnotations, fetchGetSceneMapList } from '@/service/api';
+import { fetchCreateTask, fetchUpdateTask, fetchGetTask, fetchGetAllRobots, fetchGetMapAnnotations, fetchGetSceneMapList } from '@/service/api';
 
 defineOptions({ name: 'TaskOperateDrawer' });
 
@@ -83,20 +83,18 @@ interface RobotOption {
   value: number;
   status: string;
   map_id: number | null;
-  map_name: string | null;
   disabled?: boolean;
 }
 const robotOptions = ref<RobotOption[]>([]);
 
 async function loadRobotOptions() {
-  const { data, error } = await fetchGetRobotList({ page: 1, page_size: 200 });
+  const { data, error } = await fetchGetAllRobots();
   if (!error && data) {
-    robotOptions.value = (data.records || []).map(r => ({
+    robotOptions.value = (data || []).map(r => ({
       label: r.name + (r.status === 'online' ? ' (在线)' : r.status === 'offline' ? ' (离线)' : ' (未激活)'),
       value: r.id,
       status: r.status || 'inactive',
-      map_id: r.map_id ?? null,
-      map_name: r.map_name ?? null
+      map_id: r.map_id ?? null
     }));
   }
 }

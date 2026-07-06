@@ -70,6 +70,7 @@
 - [2026-07-06 日志管理三页面导出 Excel](./business/2026-07-06_log-export-excel.md) — 复用异步导出任务体系；后端注册 login_log/robot_event_log 导出（operation_log 已有）+ 前端首次接入：顶栏「下载箱」图标（仿通知中心 Popover）+ 登录/操作/机器人事件日志三页面导出按钮
 - [2026-07-06 地图编辑器删除点位按任务关联决定确认](./business/2026-07-06_map-editor-point-delete-task-confirm.md) — 编辑器数据接口回填 annotation.task_count；前端删除点位仅在 task_count>0 时弹窗，否则直接删除；点位列表项去掉误导性常驻 Popconfirm
 - [2026-07-06 角色名称与描述长度限制](./business/2026-07-06_role-name-max-length-20.md) — 后端 SysRoleCreate/Update name max_length 100→20、desc 加 max_length=200；前端 role-operate-drawer 名称/描述 NInput 加 maxlength+show-count
+- [2026-07-06 跨模块下拉改调 /all 轻量接口](./business/2026-07-06_cross-module-dropdown-all-endpoint.md) — 新增 GET /robot/manage/all、GET /scene/group/all（仅登录、返回 SimpleResponse）；前端 6 处下拉（任务/商户/日志/场景地图搜索）由 list 改调 /all，根治跨模块下拉权限不足
 
 ## 维护说明
 

@@ -31,6 +31,9 @@ declare namespace Api {
     /** all robot model (for dropdown) */
     type AllRobotModel = Pick<RobotModel, 'id' | 'name' | 'brand' | 'model'>;
 
+    /** all robot (for dropdown) */
+    type AllRobot = Pick<Robot, 'id' | 'name' | 'serial_number' | 'map_id' | 'status'>;
+
     /** robot status enum */
     type RobotStatusEnum = 'online' | 'offline' | 'inactive';
 

@@ -9,6 +9,7 @@ from fastapi import APIRouter, Depends, Path, Request
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select
 from sqlalchemy.orm import noload
+from typing import List
 
 from database.db_manager import get_session
 from core.response.response_schema import (
@@ -32,6 +33,7 @@ from modules.robot.schemas.robot import (
     RobotUpdate,
     RobotQueryParams,
     RobotResponseData,
+    RobotSimpleResponse,
     RobotGrpcConfigUpdate,
     RobotMapBindingUpdate,
 )
@@ -96,6 +98,33 @@ async def get_robot_list(
 
     except Exception as e:
         logger.error("获取机器人列表接口失败: %s", str(e), exc_info=True)
+        raise
+
+
+@robot_router.get(
+    "/all",
+    response_model=ResponseModel[List[RobotSimpleResponse]],
+)
+async def get_all_robots(
+    db: AsyncSession = Depends(get_session),
+):
+    """
+    获取所有未删除的机器人（不分页，用于下拉选择）
+
+    仅需登录认证，无 require_permission，避免跨模块下拉（任务/商户/日志等页面）
+    因缺少 robot:manage:list 权限而报「权限不足」。
+    """
+    try:
+        logger.info("获取所有机器人接口被调用")
+
+        records = await RobotService.get_all(db)
+        response_list = [RobotSimpleResponse.model_validate(r) for r in records]
+
+        logger.info("获取所有机器人接口成功，共 %d 条记录", len(response_list))
+        return response_base.success(data=response_list)
+
+    except Exception as e:
+        logger.error("获取所有机器人接口失败: %s", str(e), exc_info=True)
         raise
 
 

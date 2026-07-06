@@ -2,7 +2,7 @@
 import { computed, ref, watch } from 'vue';
 import { jsonClone } from '@sa/utils';
 import { enableStatusOptions } from '@/constants/business';
-import { fetchCreateMerchant, fetchGetMerchant, fetchGetRobotList, fetchUpdateMerchant } from '@/service/api';
+import { fetchCreateMerchant, fetchGetMerchant, fetchGetAllRobots, fetchUpdateMerchant } from '@/service/api';
 import { useFormRules, useNaiveForm } from '@/hooks/common/form';
 import { $t } from '@/locales';
 import { booleanToEnableStatus } from '@/utils/status';
@@ -83,9 +83,9 @@ const isEdit = computed(() => props.operateType === 'edit');
 const robotOptions = ref<{ label: string; value: number }[]>([]);
 
 async function loadRobotOptions() {
-  const { error, data } = await fetchGetRobotList({ page: 1, page_size: 1000 });
+  const { error, data } = await fetchGetAllRobots();
   if (!error && data) {
-    robotOptions.value = data.records.map(r => ({
+    robotOptions.value = data.map(r => ({
       label: `${r.name}（${r.serial_number}）`,
       value: r.id
     }));

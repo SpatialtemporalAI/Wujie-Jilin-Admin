@@ -71,6 +71,14 @@ export function fetchGetRobotList(params?: Api.Robot.RobotSearchParams) {
   });
 }
 
+/** get all robots (for dropdown) */
+export function fetchGetAllRobots() {
+  return request<Api.Robot.AllRobot[]>({
+    url: '/robot/manage/all',
+    method: 'get'
+  });
+}
+
 /** get robot by id */
 export function fetchGetRobot(id: number) {
   return request<Api.Robot.Robot>({

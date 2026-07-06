@@ -3,7 +3,7 @@ import { computed, onMounted, ref } from 'vue';
 import dayjs from 'dayjs';
 import { $t } from '@/locales';
 import { NDatePicker, NSelect } from 'naive-ui';
-import { fetchGetRobotList } from '@/service/api/robot';
+import { fetchGetAllRobots } from '@/service/api/robot';
 
 defineOptions({
   name: 'RobotEventLogSearch'
@@ -48,9 +48,9 @@ const timeRange = computed<[number, number] | null>({
 
 async function loadRobotOptions() {
   try {
-    const { data } = await fetchGetRobotList({ page: 1, page_size: 999 });
-    if (data?.records) {
-      robotOptions.value = data.records.map((r: any) => ({ label: r.name, value: r.id }));
+    const { data } = await fetchGetAllRobots();
+    if (data) {
+      robotOptions.value = data.map(r => ({ label: r.name, value: r.id }));
     }
   } catch {
     robotOptions.value = [];

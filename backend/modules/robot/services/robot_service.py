@@ -122,6 +122,21 @@ class RobotService:
             raise
 
     @staticmethod
+    async def get_all(db: AsyncSession) -> List[Robot]:
+        """
+        获取所有未删除的机器人（不分页，用于下拉选择）
+
+        与 build_query 保持一致的可见性过滤（deleted_at），但不做 status 过滤——
+        inactive 设备同样可作为有效下拉项。仅登录认证即可访问，无 require_permission。
+        """
+        result = await db.execute(
+            select(Robot)
+            .where(Robot.deleted_at.is_(None))
+            .order_by(Robot.id.desc())
+        )
+        return result.scalars().all()
+
+    @staticmethod
     async def get(db: AsyncSession, robot_id: int) -> Robot:
         """
         获取单个机器人

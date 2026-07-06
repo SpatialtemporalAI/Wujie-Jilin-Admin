@@ -68,3 +68,4 @@
 - [2026-07-03 参数配置·人脸识别TTS 人像上传限制（5MB+格式+分辨率+说明）](./2026-07-03_param-config-face-photo-size-limit.md) — 对齐阿里云 facebody：前后端各校验 JPG/JPEG/PNG、≤5MB、分辨率 32×32~4096×4096；人脸占比 64×64 由 facebody 校验；人像输入框右侧加 5 条说明
 - [2026-07-06 日志管理三页面导出 Excel](./2026-07-06_log-export-excel.md) — 复用异步导出任务体系；后端注册 login_log/robot_event_log 导出（operation_log 已有）+ 前端首次接入：顶栏「下载箱」图标（仿通知中心 Popover）+ 登录/操作/机器人事件日志三页面导出按钮
 - [2026-07-06 全局必填字段非空校验 + 校验信息中文化](./2026-07-06_global-required-validation.md) — BaseEntity 全局 validator 统一必填非空（str 过滤纯空格/集合拒空/自动 trim）+ 校验失败信息中文化；响应类经 BaseRespEntity 或 _skip ClassVar 跳过；约 18 个 BaseModel 请求体迁 BaseReqEntity、约 40 个 BaseEntity 请求类零改动覆盖
+- [2026-07-06 跨模块下拉改调 /all 轻量接口](./2026-07-06_cross-module-dropdown-all-endpoint.md) — 新增 GET /robot/manage/all、GET /scene/group/all（仅登录、返回 SimpleResponse）；前端 6 处下拉（任务/商户/日志/场景地图搜索）由 list 改调 /all，根治跨模块下拉权限不足

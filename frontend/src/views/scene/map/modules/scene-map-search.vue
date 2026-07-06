@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { onMounted, ref } from 'vue';
 import { useDebounceFn } from '@vueuse/core';
-import { fetchGetSceneGroupList } from '@/service/api';
+import { fetchGetAllSceneGroups } from '@/service/api';
 
 defineOptions({
   name: 'SceneMapSearch'
@@ -19,9 +19,9 @@ const model = defineModel<Api.Scene.SceneMapSearchParams>('model', { required: t
 const groupOptions = ref<{ label: string; value: number }[]>([]);
 
 async function loadGroupOptions() {
-  const { data } = await fetchGetSceneGroupList({ page: 1, page_size: 1000 });
-  if (data?.records) {
-    groupOptions.value = data.records.map((item: any) => ({
+  const { data } = await fetchGetAllSceneGroups();
+  if (data) {
+    groupOptions.value = data.map(item => ({
       label: item.name,
       value: item.id
     }));

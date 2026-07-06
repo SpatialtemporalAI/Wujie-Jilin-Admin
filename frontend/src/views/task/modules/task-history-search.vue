@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { computed, onMounted, ref } from 'vue';
-import { fetchGetRobotList, fetchGetSceneMapList } from '@/service/api';
+import { fetchGetAllRobots, fetchGetSceneMapList } from '@/service/api';
 
 defineOptions({ name: 'TaskHistorySearch' });
 
@@ -35,13 +35,13 @@ const filteredRobotOptions = computed(() => {
 async function loadOptions() {
   const [mapResult, robotResult] = await Promise.all([
     fetchGetSceneMapList({ page: 1, page_size: 999, name: null, group_id: undefined, status: null }),
-    fetchGetRobotList({ page: 1, page_size: 999, name: null, serial_number: null, status: null, model_id: undefined })
+    fetchGetAllRobots()
   ]);
   if (!mapResult.error && mapResult.data) {
     mapOptions.value = (mapResult.data.records || []).map(map => ({ label: map.name, value: map.id }));
   }
   if (!robotResult.error && robotResult.data) {
-    robotOptions.value = (robotResult.data.records || []).map(robot => ({
+    robotOptions.value = (robotResult.data || []).map(robot => ({
       label: `${robot.name}`,
       value: robot.id,
       map_id: robot.map_id ?? null

@@ -12,6 +12,14 @@ export function fetchGetSceneGroupList(params?: Api.Scene.SceneGroupSearchParams
   });
 }
 
+/** get all scene groups (for dropdown) */
+export function fetchGetAllSceneGroups() {
+  return request<Api.Scene.AllSceneGroup[]>({
+    url: '/scene/group/all',
+    method: 'get'
+  });
+}
+
 /** get scene group tree */
 export function fetchGetSceneGroupTree() {
   return request<Api.Scene.SceneGroupTreeNode[]>({

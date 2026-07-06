@@ -135,3 +135,23 @@ class RobotResponseData(BaseRespEntity):
     @field_serializer("status")
     def serialize_status_output(self, value):
         return value.value if hasattr(value, "value") else value
+
+
+class RobotSimpleResponse(BaseRespEntity):
+    """
+    机器人简化响应模型
+    用于下拉选择等轻量场景，仅暴露必要字段（不含 grpc_config、battery_threshold 等敏感/无关字段）
+    """
+
+    model_config = ConfigDict(from_attributes=True)
+
+    id: int = Field(..., description="机器人ID")
+    name: str = Field(..., description="机器人名称")
+    serial_number: str = Field(..., description="序列号")
+    map_id: Optional[int] = Field(None, description="绑定场景地图ID")
+    status: str = Field(..., description="状态：online/offline/inactive")
+
+    # 与 RobotResponseData 保持一致的枚举序列化
+    @field_serializer("status")
+    def serialize_status_output(self, value):
+        return value.value if hasattr(value, "value") else value

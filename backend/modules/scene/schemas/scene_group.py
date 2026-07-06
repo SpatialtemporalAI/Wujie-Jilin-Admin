@@ -61,3 +61,15 @@ class SceneGroupTreeResponse(BaseRespEntity):
     sort: int
     status: bool
     children: List["SceneGroupTreeResponse"] = Field(default_factory=list)
+
+
+class SceneGroupSimpleResponse(BaseRespEntity):
+    """
+    场景分组简化响应模型
+    用于下拉选择等轻量场景，仅暴露 id / name
+    """
+
+    model_config = ConfigDict(from_attributes=True)
+
+    id: int
+    name: str

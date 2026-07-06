@@ -52,6 +52,22 @@ class SceneGroupService:
         return items, total
 
     @staticmethod
+    async def get_all(db: AsyncSession) -> List[SceneGroup]:
+        """
+        获取所有未删除的场景分组（不分页，用于下拉选择）
+
+        仅登录认证即可访问，无 require_permission，避免跨页面下拉（如场景地图搜索）
+        因缺少 scene:group:list 权限而报「权限不足」。
+        """
+        stmt = (
+            select(SceneGroup)
+            .where(SceneGroup.deleted_at.is_(None))
+            .order_by(SceneGroup.sort.asc(), SceneGroup.created_at.desc())
+        )
+        result = await db.execute(stmt)
+        return result.unique().scalars().all()
+
+    @staticmethod
     async def get_tree(db: AsyncSession) -> List[dict]:
         """获取分组树形结构"""
         stmt = (

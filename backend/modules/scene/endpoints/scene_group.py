@@ -19,6 +19,7 @@ from modules.scene.schemas.scene_group import (
     SceneGroupQueryParams,
     SceneGroupResponseData,
     SceneGroupTreeResponse,
+    SceneGroupSimpleResponse,
 )
 
 scene_group_router = APIRouter(
@@ -64,6 +65,25 @@ async def get_group_tree(
     """获取场景分组树形结构"""
     tree = await SceneGroupService.get_tree(db)
     return response_base.success(data=tree)
+
+
+@scene_group_router.get(
+    "/all",
+    response_model=ResponseModel[List[SceneGroupSimpleResponse]],
+    summary="获取所有场景分组（下拉选择）",
+)
+async def get_all_groups(
+    db: AsyncSession = Depends(get_session),
+):
+    """
+    获取所有未删除的场景分组（不分页，用于下拉选择）
+
+    仅需登录认证，无 require_permission，避免跨页面下拉（如场景地图搜索）
+    因缺少 scene:group:list 权限而报「权限不足」。
+    """
+    groups = await SceneGroupService.get_all(db)
+    data = [SceneGroupSimpleResponse.model_validate(g) for g in groups]
+    return response_base.success(data=data)
 
 
 @scene_group_router.get(

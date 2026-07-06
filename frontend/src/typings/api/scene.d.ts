@@ -32,6 +32,9 @@ declare namespace Api {
     /** scene group update */
     type SceneGroupUpdate = Partial<SceneGroupCreate>;
 
+    /** all scene group (for dropdown) */
+    type AllSceneGroup = Pick<SceneGroup, 'id' | 'name'>;
+
     /** scene group tree node */
     type SceneGroupTreeNode = {
       id: number;
