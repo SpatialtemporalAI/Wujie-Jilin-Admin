@@ -6,6 +6,7 @@ import type { SelectedElement } from '../composables/useMapEditor';
 import { fetchGetLatestRobotStatus, fetchGetRobotList, fetchUpdateRobotMapBinding } from '@/service/api';
 import { radToDeg, degToRad } from '@/utils/coordinate';
 import { extractRobotPoint } from '../utils/robot-location';
+import { useAuth } from '@/hooks/business/auth';
 
 interface Props {
   editorData: Api.Scene.EditorMapData | null;
@@ -17,6 +18,8 @@ interface Props {
 }
 
 const props = defineProps<Props>();
+
+const { hasAuth } = useAuth();
 
 const emit = defineEmits<{
   (e: 'update-element', data: { type: string; id: number; updates: Record<string, any> }): void;
@@ -192,7 +195,7 @@ onMounted(() => {
         <div class="flex h-full flex-col">
           <div class="border-b border-gray-200 p-12px">
             <div class="mb-8px flex items-center justify-between">
-              <NButton size="tiny" type="primary" @click="emit('add-scene')">
+              <NButton v-if="hasAuth('scene:map-editor:add')" size="tiny" type="primary" @click="emit('add-scene')">
                 <template #icon><icon-ic-round-plus /></template>
                 新增
               </NButton>
@@ -214,11 +217,11 @@ onMounted(() => {
                 </div>
               </div>
               <div class="flex items-center gap-2px">
-                <NButton quaternary size="tiny" type="primary" class="opacity-0 group-hover:opacity-100"
+                <NButton v-if="hasAuth('scene:map-editor:edit')" quaternary size="tiny" type="primary" class="opacity-0 group-hover:opacity-100"
                   @click.stop="emit('edit-scene', map.id)">
                   <template #icon><icon-ic-round-edit /></template>
                 </NButton>
-                <NPopconfirm @positive-click.stop="emit('delete-scene', map.id)">
+                <NPopconfirm v-if="hasAuth('scene:map-editor:delete')" @positive-click.stop="emit('delete-scene', map.id)">
                   <template #trigger>
                     <NButton quaternary size="tiny" type="error" class="opacity-0 group-hover:opacity-100" @click.stop>
                       <template #icon><icon-ic-round-delete-outline /></template>
@@ -272,7 +275,7 @@ onMounted(() => {
                   :format-tooltip="(v: number) => `${v}°`" @update:value="updateAnnotationAngleFromDeg" />
               </NFormItem>
             </NForm>
-            <NButton type="error" size="small" block
+            <NButton v-if="hasAuth('scene:map-editor:edit')" type="error" size="small" block
               @click="emit('remove-element', 'annotation', selectedAnnotation.id)">删除此点位</NButton>
           </template>
 
@@ -295,7 +298,7 @@ onMounted(() => {
                 <NInputNumber :value="selectedObject.height" disabled size="small" class="w-full" />
               </NFormItem>
             </NForm>
-            <NButton type="error" size="small" block @click="emit('remove-element', 'object', selectedObject.id)">删除此物体
+            <NButton v-if="hasAuth('scene:map-editor:edit')" type="error" size="small" block @click="emit('remove-element', 'object', selectedObject.id)">删除此物体
             </NButton>
           </template>
 
@@ -330,7 +333,7 @@ onMounted(() => {
                   X: {{ toWorldX(ann.x) }}m, Y: {{ toWorldY(ann.y) }}m
                 </div>
               </div>
-              <NPopconfirm @positive-click.stop="emit('remove-element', 'annotation', ann.id)">
+              <NPopconfirm v-if="hasAuth('scene:map-editor:edit')" @positive-click.stop="emit('remove-element', 'annotation', ann.id)">
                 <template #trigger>
                   <NButton quaternary size="tiny" type="error" class="opacity-0 group-hover:opacity-100" @click.stop>
                     <template #icon><icon-ic-round-delete-outline /></template>

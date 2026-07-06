@@ -9,6 +9,7 @@ import {
 } from '@/service/api';
 import { useAppStore } from '@/store/modules/app';
 import { $t } from '@/locales';
+import { useAuth } from '@/hooks/business/auth';
 import TableHeaderOperation from '@/components/advanced/table-header-operation.vue';
 import TaskHistorySearch from './task-history-search.vue';
 
@@ -16,6 +17,7 @@ defineOptions({ name: 'TaskExecutionTab' });
 
 const appStore = useAppStore();
 const message = useMessage();
+const { hasAuth } = useAuth();
 
 const loading = ref(false);
 const data = ref<Api.Task.TaskExecutionRecord[]>([]);
@@ -135,13 +137,13 @@ const columns = [
     fixed: 'right' as const,
     render: (row: Api.Task.TaskExecutionRecord) => (
       <div class="flex-center gap-8px">
-        {(row.status === 'running' || row.status === 'pending') && (
+        {hasAuth('task:execution:control') && (row.status === 'running' || row.status === 'pending') && (
           <NButton type="warning" ghost size="small" onClick={() => handlePause(row.id)}>暂停</NButton>
         )}
-        {row.status === 'paused' && (
+        {hasAuth('task:execution:control') && row.status === 'paused' && (
           <NButton type="success" ghost size="small" onClick={() => handleResume(row.id)}>恢复</NButton>
         )}
-        {(row.status === 'running' || row.status === 'paused' || row.status === 'pending') && (
+        {hasAuth('task:execution:control') && (row.status === 'running' || row.status === 'paused' || row.status === 'pending') && (
           <NButton type="error" ghost size="small" onClick={() => handleStop(row.id)}>停止</NButton>
         )}
       </div>

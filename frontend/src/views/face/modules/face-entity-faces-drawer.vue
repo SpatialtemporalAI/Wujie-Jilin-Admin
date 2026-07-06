@@ -3,6 +3,7 @@ import { h, ref, watch } from 'vue';
 import { NButton, NDataTable, NEmpty, NPopconfirm, NSpace, NSpin, NUpload } from 'naive-ui';
 import type { DataTableColumns, UploadCustomRequestOptions } from 'naive-ui';
 import { fetchAddFaceImage, fetchDeleteFaceImage, fetchGetFaceEntityDetail } from '@/service/api';
+import { useAuth } from '@/hooks/business/auth';
 import { $t } from '@/locales';
 
 const props = defineProps<{
@@ -11,6 +12,8 @@ const props = defineProps<{
 }>();
 
 const visible = defineModel<boolean>({ required: true });
+
+const { hasAuth } = useAuth();
 
 const loading = ref(false);
 const uploading = ref(false);
@@ -24,8 +27,9 @@ const columns: DataTableColumns<Api.Face.FaceEntityFace> = [
     title: $t('common.operate'),
     width: 100,
     align: 'center',
-    render: row =>
-      h(
+    render: row => {
+      if (!hasAuth('face:image:delete')) return null;
+      return h(
         NPopconfirm,
         { onPositiveClick: () => handleDelete(row.face_id) },
         {
@@ -33,7 +37,8 @@ const columns: DataTableColumns<Api.Face.FaceEntityFace> = [
           trigger: () =>
             h(NButton, { type: 'error', text: true, size: 'small' }, { default: () => $t('common.delete') })
         }
-      )
+      );
+    }
   }
 ];
 
@@ -85,7 +90,7 @@ watch(visible, v => {
           <div class="text-14px">
             {{ $t('page.manage.face.facesSub') }}: <span class="font-500">{{ entityId }}</span>
           </div>
-          <NUpload :show-file-list="false" :custom-request="handleUpload" accept="image/*">
+          <NUpload v-if="hasAuth('face:image:add')" :show-file-list="false" :custom-request="handleUpload" accept="image/*">
             <NButton type="primary">{{ $t('page.manage.face.uploadFace') }}</NButton>
           </NUpload>
           <NEmpty v-if="!faces.length" :description="$t('page.manage.face.noFaces')" />
