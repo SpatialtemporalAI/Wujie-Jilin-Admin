@@ -106,6 +106,8 @@ class TaskExecutionRecordResponseData(BaseEntity):
     """执行记录响应"""
     model_config = ConfigDict(from_attributes=True)
 
+    # status 为 pending/running/... 字符串枚举，沿用 BaseEntity（不走 BaseRespEntity 序列化），仅跳过非空校验
+    _skip_required_check: ClassVar[bool] = True
     JS_MAX_SAFE_INTEGER: ClassVar[int] = 9007199254740992  # 2^53
 
     id: int = Field(..., description="执行记录ID")

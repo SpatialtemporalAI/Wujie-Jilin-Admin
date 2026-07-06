@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 
-from typing import Optional, List, Annotated
+from typing import Optional, List, Annotated, ClassVar
 from pydantic import Field, ConfigDict, BeforeValidator, field_validator
 from datetime import datetime, date, time
 
@@ -124,6 +124,8 @@ class TaskUpdate(BaseReqEntity):
 
 class TaskResponseData(BaseEntity):
     """任务响应"""
+    # status 为执行状态字符串，不能走 BaseRespEntity 的 bool 序列化，故仅跳过非空校验
+    _skip_required_check: ClassVar[bool] = True
     model_config = ConfigDict(from_attributes=True)
 
     id: int = Field(..., description="任务ID")

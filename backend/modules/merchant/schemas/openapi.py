@@ -7,7 +7,7 @@ from typing import Any, Dict, List, Optional
 
 from pydantic import Field
 
-from app.models.common.base import BaseEntity
+from app.models.common.base import BaseEntity, BaseRespEntity
 
 
 class GotoPointRequest(BaseEntity):
@@ -74,7 +74,7 @@ class TasksRequest(BaseEntity):
     status: Optional[str] = Field(None, description="可选：执行状态 idle/running/paused")
 
 
-class OpenApiResult(BaseEntity):
+class OpenApiResult(BaseRespEntity):
     """开放 API 通用结果"""
 
     success: bool = Field(..., description="是否成功")

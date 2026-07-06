@@ -16,6 +16,9 @@ T = TypeVar("T")
 class BaseEntity(BaseModel):
     """基础实体模型"""
 
+    # 响应模型（BaseRespEntity）置 True 以跳过必填非空校验，避免响应序列化误报错
+    _skip_required_check: ClassVar[bool] = False
+
     model_config = ConfigDict(
         from_attributes=True,
         json_encoders={
@@ -24,6 +27,33 @@ class BaseEntity(BaseModel):
             )
         },
     )
+
+    @model_validator(mode="after")
+    def _check_required_non_empty(self):
+        """
+        统一必填字段非空校验：
+        - 必填 str：去除首尾空格，纯空格视为空；通过后回写 trim 后的值
+        - 必填 list/tuple/dict/set：拒绝空集合
+        - 其他类型（int/float/bool 等）：Pydantic 已保证非 None，跳过
+
+        响应模型通过 ``_skip_required_check=True`` 跳过本校验。
+        """
+        if type(self)._skip_required_check:
+            return self
+        for name, field_info in type(self).model_fields.items():
+            if not field_info.is_required():
+                continue
+            value = getattr(self, name)
+            label = field_info.description or name
+            if isinstance(value, str):
+                stripped = value.strip()
+                if not stripped:
+                    raise ValueError(f"{label}不能为空")
+                if stripped != value:
+                    setattr(self, name, stripped)
+            elif isinstance(value, (list, tuple, dict, set)) and len(value) == 0:
+                raise ValueError(f"{label}不能为空")
+        return self
 
 
 class BaseReqEntity(BaseEntity):
@@ -41,6 +71,9 @@ class BaseReqEntity(BaseEntity):
 
 class BaseRespEntity(BaseEntity):
     """基础响应实体模型"""
+
+    # 响应模型跳过必填非空校验，避免 ORM 数据空值导致序列化失败
+    _skip_required_check: ClassVar[bool] = True
 
     # 处理输出转换：True→"1"，False→"2"
     @field_serializer("status", check_fields=False)

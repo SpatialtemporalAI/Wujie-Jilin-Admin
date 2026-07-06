@@ -2,6 +2,7 @@
 # -*- coding: utf-8 -*-
 
 from datetime import datetime
+from typing import ClassVar
 
 from pydantic import Field
 
@@ -74,7 +75,7 @@ class CronPreviewRequest(BaseEntity):
     cron_expression: str = Field(..., description="Cron 表达式")
 
 
-class CronPreviewResponse(BaseEntity):
+class CronPreviewResponse(BaseRespEntity):
     """Cron 表达式预览响应"""
 
     next_run_times: list[str] = Field(default_factory=list, description="接下来 N 次执行时间")
@@ -82,6 +83,9 @@ class CronPreviewResponse(BaseEntity):
 
 class RegistryTaskResponse(BaseEntity):
     """装饰器注册的任务信息"""
+
+    # is_system 为 bool 但语义非启用/禁用，不能走 BaseRespEntity 序列化，故仅跳过非空校验
+    _skip_required_check: ClassVar[bool] = True
 
     task_key: str
     name: str

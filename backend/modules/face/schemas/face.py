@@ -10,8 +10,10 @@ from typing import List, Optional
 
 from pydantic import BaseModel, Field
 
+from app.models.common.base import BaseReqEntity
 
-class FaceDbCreate(BaseModel):
+
+class FaceDbCreate(BaseReqEntity):
     """创建人脸库请求"""
 
     db_name: str = Field(..., description="人脸库名称", max_length=128)
@@ -23,7 +25,7 @@ class FaceDbListResponse(BaseModel):
     db_list: List[str] = Field(..., description="人脸库名称列表")
 
 
-class FaceEntityCreate(BaseModel):
+class FaceEntityCreate(BaseReqEntity):
     """新增人脸实体请求"""
 
     db_name: Optional[str] = Field(

@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 
 from datetime import datetime
-from typing import Annotated
+from typing import Annotated, ClassVar
 
 from pydantic import Field, BeforeValidator
 
@@ -27,6 +27,9 @@ class TaskLogQueryParams(BaseEntity):
 class TaskLogResponse(BaseEntity):
     """任务执行日志响应"""
 
+    # status 为 running/success/... 字符串状态，不能走 BaseRespEntity 序列化，故仅跳过非空校验
+    _skip_required_check: ClassVar[bool] = True
+
     id: int
     task_id: int
     task_name: str
@@ -44,6 +47,9 @@ class TaskLogResponse(BaseEntity):
 
 class TaskLogDetailResponse(BaseEntity):
     """任务执行日志详情（含完整错误信息和结果）"""
+
+    # 同 TaskLogResponse：status 为字符串状态，仅跳过非空校验
+    _skip_required_check: ClassVar[bool] = True
 
     id: int
     task_id: int

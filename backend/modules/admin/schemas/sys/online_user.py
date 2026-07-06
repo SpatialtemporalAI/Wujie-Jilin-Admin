@@ -3,7 +3,7 @@
 
 from pydantic import Field
 
-from app.models.common.base import BaseEntity
+from app.models.common.base import BaseEntity, BaseRespEntity
 
 
 class OnlineUserQueryParams(BaseEntity):
@@ -13,7 +13,7 @@ class OnlineUserQueryParams(BaseEntity):
     ip: str | None = Field(None, description="IP地址筛选")
 
 
-class OnlineUserResponse(BaseEntity):
+class OnlineUserResponse(BaseRespEntity):
     """在线用户列表响应"""
 
     user_id: int

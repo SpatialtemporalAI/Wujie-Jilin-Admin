@@ -6,8 +6,10 @@ from pydantic import BaseModel, field_validator, Field
 import re
 from core.security.oauth.jwt import Token
 
+from app.models.common.base import BaseReqEntity
 
-class LoginModel(BaseModel):
+
+class LoginModel(BaseReqEntity):
     """登录模型"""
 
     phone: str = Field(..., description="用户手机号")
@@ -28,7 +30,7 @@ class LoginModel(BaseModel):
         return v
 
 
-class RefreshTokenModel(BaseModel):
+class RefreshTokenModel(BaseReqEntity):
     """刷新token的模型"""
 
     refresh_token: str = Field(..., description="刷新令牌")
@@ -41,7 +43,7 @@ class RefreshTokenModel(BaseModel):
         return v
 
 
-class SmsCodeModel(BaseModel):
+class SmsCodeModel(BaseReqEntity):
     """短信验证码模型"""
 
     phone: str = Field(..., description="用户手机号")
@@ -71,15 +73,15 @@ class UserInfoModel(BaseModel):
     bind_wechat: bool = Field(..., description="是否绑定微信")
 
 
-class UserInfoUpdateModel(BaseModel):
+class UserInfoUpdateModel(BaseReqEntity):
     """用户信息更新模型"""
 
-    id: int = (Field(..., description="用户ID"),)
+    id: int = Field(..., description="用户ID")
     name: Optional[str] = Field(None, description="用户名称")
     phone: Optional[str] = Field(None, description="用户手机号")
 
 
-class UserPushSettingModel(BaseModel):
+class UserPushSettingModel(BaseReqEntity):
     """用户推送设置模型"""
 
     sms_alarm: Optional[bool] = Field(None, description="是否开启短信报警")
@@ -94,7 +96,7 @@ class UserLoginResponseModel(Token):
     )
 
 
-class ClientIDModel(BaseModel):
+class ClientIDModel(BaseReqEntity):
     """客户端ID模型"""
 
     client_id: str = Field(..., description="客户端ID")

@@ -5,7 +5,7 @@ from datetime import datetime
 
 from pydantic import Field
 
-from app.models.common.base import BaseEntity
+from app.models.common.base import BaseEntity, BaseRespEntity
 
 
 class OperationLogQueryParams(BaseEntity):
@@ -19,7 +19,7 @@ class OperationLogQueryParams(BaseEntity):
     end_time: str | None = Field(None, description="结束时间")
 
 
-class OperationLogResponse(BaseEntity):
+class OperationLogResponse(BaseRespEntity):
     """操作日志列表响应"""
 
     id: int
@@ -36,7 +36,7 @@ class OperationLogResponse(BaseEntity):
     created_at: datetime | None
 
 
-class OperationLogDetailResponse(BaseEntity):
+class OperationLogDetailResponse(BaseRespEntity):
     """操作日志详情响应（含请求参数和响应结果）"""
 
     id: int

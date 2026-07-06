@@ -6,10 +6,10 @@ from typing import List, Optional
 
 from pydantic import Field, ConfigDict, BaseModel
 
-from app.models.common.base import BaseRespEntity
+from app.models.common.base import BaseReqEntity, BaseRespEntity
 
 
-class EditorAnnotationItem(BaseModel):
+class EditorAnnotationItem(BaseReqEntity):
     """编辑器标注项（支持新建和更新）"""
 
     id: int | None = Field(None, description="标注ID，为空时新建")
@@ -21,7 +21,7 @@ class EditorAnnotationItem(BaseModel):
     type: str = Field(..., description="标注类型(字典值)")
 
 
-class EditorPathItem(BaseModel):
+class EditorPathItem(BaseReqEntity):
     """编辑器路径项（支持新建和更新）"""
 
     id: int | None = Field(None, description="路径ID，为空时新建")
@@ -32,7 +32,7 @@ class EditorPathItem(BaseModel):
     points: str | None = Field(None, description="中间路径点(JSON数组)")
 
 
-class EditorObjectItem(BaseModel):
+class EditorObjectItem(BaseReqEntity):
     """编辑器物体项（支持新建和更新）"""
 
     id: int | None = Field(None, description="物体ID，为空时新建")
@@ -47,7 +47,7 @@ class EditorObjectItem(BaseModel):
     angle: float = Field(0, description="旋转角度(度)")
 
 
-class EditorSaveRequest(BaseModel):
+class EditorSaveRequest(BaseReqEntity):
     """编辑器批量保存请求"""
 
     annotations: List[EditorAnnotationItem] = Field(default_factory=list, description="标注列表")

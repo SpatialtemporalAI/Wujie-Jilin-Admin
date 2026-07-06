@@ -4,8 +4,10 @@
 from typing import Optional, List
 from pydantic import BaseModel, Field
 
+from app.models.common.base import BaseReqEntity
 
-class LoginPwdModel(BaseModel):
+
+class LoginPwdModel(BaseReqEntity):
     """登录密码模型"""
 
     username: str = Field(..., description="用户名")

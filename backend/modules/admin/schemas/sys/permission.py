@@ -6,7 +6,7 @@ from datetime import datetime
 
 from pydantic import BaseModel, ConfigDict, Field
 
-from app.models.common.base import BaseRespEntity, BoolField
+from app.models.common.base import BaseReqEntity, BaseRespEntity, BoolField
 
 
 class SysPermissionQueryParams(BaseModel):
@@ -16,7 +16,7 @@ class SysPermissionQueryParams(BaseModel):
     status: BoolField = Field(None, description="状态：True-启用，False-禁用")
 
 
-class SysPermissionCreate(BaseModel):
+class SysPermissionCreate(BaseReqEntity):
     """创建权限请求"""
 
     name: str = Field(..., description="权限名称")
@@ -30,7 +30,7 @@ class SysPermissionCreate(BaseModel):
     sort: int = Field(default=0, description="排序号")
 
 
-class SysPermissionUpdate(BaseModel):
+class SysPermissionUpdate(BaseReqEntity):
     """更新权限请求"""
 
     name: Optional[str] = Field(None, description="权限名称")

@@ -75,6 +75,23 @@ Base = DataClassBase + LogicMixin + DateTimeMixin
 - `page`：从 1 开始，默认 1，必须 > 0
 - `page_size`：默认 100，最大 200
 
+### 必填字段非空校验（全局）
+
+`BaseEntity` 内置全局 `model_validator(mode="after")`，对所有必填字段（`Field(...)`）统一做非空校验：
+
+- 必填 `str`：去除首尾空格，纯空格/空字符串视为空报错；通过后回写 trim 后的值
+- 必填 `list/tuple/dict/set`：拒绝空集合
+- 错误消息为 `f"{description}不能为空"`（取字段 `description`，缺省取字段名）
+
+跳过规则（响应模型不应被非空校验，避免 ORM 数据空值导致序列化失败）：
+
+- 响应模型优先继承 `BaseRespEntity`（自带 `_skip_required_check: ClassVar[bool] = True`），自动跳过
+- 若响应模型因 `status`/`is_system` 字段语义不能继承 `BaseRespEntity`（如日志的登录成功/失败 bool、执行状态字符串），则在类内显式声明 `_skip_required_check: ClassVar[bool] = True`，保持继承 `BaseEntity` 仅跳过校验、不影响字段序列化
+
+请求模型继承 `BaseReqEntity`（或 `BaseEntity`）即自动启用；原生 `BaseModel` 不启用，故请求体 schema 应继承 `BaseReqEntity`。
+
+校验失败信息中文化见 `core/exception/errors_handler.py`：`validation_exception_handler` 按 Pydantic 错误 `type` 映射中文（`PYDANTIC_ERROR_ZH`），自定义 validator 抛出的中文 `ValueError` 原样透传（如"邮箱格式不正确"）。
+
 ---
 
 ## Service 层

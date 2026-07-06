@@ -4,10 +4,10 @@
 """
 MCP 管理 Schema
 """
-from typing import Optional, List, Any
+from typing import Optional, List, Any, ClassVar
 from pydantic import Field
 
-from app.models.common.base import BaseEntity
+from app.models.common.base import BaseEntity, BaseRespEntity
 
 
 class McpToolParamSchema(BaseEntity):
@@ -36,7 +36,7 @@ class McpToolTestRequest(BaseEntity):
     arguments: dict = Field(default_factory=dict, description="工具调用参数")
 
 
-class McpToolInfo(BaseEntity):
+class McpToolInfo(BaseRespEntity):
     name: str = Field(..., description="工具名称")
     description: str = Field("", description="工具描述")
     params: List[McpToolParamSchema] = Field(default_factory=list, description="参数列表")
@@ -44,6 +44,9 @@ class McpToolInfo(BaseEntity):
 
 
 class McpServerStatusResponse(BaseEntity):
+    # status 为 running/stopped/... 字符串状态，不能走 BaseRespEntity 的 bool 序列化，故仅跳过非空校验
+    _skip_required_check: ClassVar[bool] = True
+
     running: bool = Field(False, description="是否运行中")
     status: str = Field("stopped", description="状态: running/stopped/starting")
     pid: Optional[int] = Field(None, description="进程PID")

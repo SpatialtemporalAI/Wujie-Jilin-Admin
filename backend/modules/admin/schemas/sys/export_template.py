@@ -4,6 +4,8 @@
 from typing import Optional
 from pydantic import BaseModel, Field
 
+from app.models.common.base import BaseReqEntity
+
 
 class TemplateColumnItem(BaseModel):
     """模板中的单列配置"""
@@ -26,7 +28,7 @@ class JoinConfigItem(BaseModel):
     on: list[JoinCondition] = Field(..., description="JOIN 条件")
 
 
-class ExportTemplateCreate(BaseModel):
+class ExportTemplateCreate(BaseReqEntity):
     """创建导出模板"""
     name: str = Field(..., description="模板名称")
     module_key: str = Field(..., description="关联模块")
@@ -35,7 +37,7 @@ class ExportTemplateCreate(BaseModel):
     description: str | None = Field(None, description="模板描述")
 
 
-class ExportTemplateUpdate(BaseModel):
+class ExportTemplateUpdate(BaseReqEntity):
     """更新导出模板"""
     name: str | None = Field(None, description="模板名称")
     columns: list[TemplateColumnItem] | None = Field(None, description="列配置")

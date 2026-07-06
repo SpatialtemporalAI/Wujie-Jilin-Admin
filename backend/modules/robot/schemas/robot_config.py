@@ -117,7 +117,7 @@ class RobotFaceRecognitionResponse(BaseRespEntity):
     )
 
 
-class TestWakeWordRequest(BaseModel):
+class TestWakeWordRequest(BaseReqEntity):
     """
     测试唤醒词请求模型
     """
@@ -126,7 +126,7 @@ class TestWakeWordRequest(BaseModel):
     text: str = Field(..., description="要测试的唤醒词文本")
 
 
-class TestTTSRequest(BaseModel):
+class TestTTSRequest(BaseReqEntity):
     """
     测试TTS请求模型
     """

@@ -6,7 +6,7 @@ from typing import Annotated
 
 from pydantic import Field, BeforeValidator
 
-from app.models.common.base import BaseEntity, OptionalIntField, parse_optional_enum
+from app.models.common.base import BaseEntity, BaseRespEntity, OptionalIntField, parse_optional_enum
 
 EventTypeField = Annotated[str | None, BeforeValidator(parse_optional_enum({"task", "alarm"}))]
 EventStatusField = Annotated[str | None, BeforeValidator(parse_optional_enum({"normal", "abnormal"}))]
@@ -22,7 +22,7 @@ class RobotEventLogQueryParams(BaseEntity):
     end_time: str | None = Field(None, description="结束时间")
 
 
-class RobotEventLogResponse(BaseEntity):
+class RobotEventLogResponse(BaseRespEntity):
     """机器人事件日志列表响应"""
 
     id: int

@@ -3,8 +3,10 @@
 
 from pydantic import BaseModel, Field
 
+from app.models.common.base import BaseReqEntity
 
-class CaptchaVerifyRequest(BaseModel):
+
+class CaptchaVerifyRequest(BaseReqEntity):
     """滑块验证请求"""
 
     captcha_id: str = Field(..., description="验证码ID")

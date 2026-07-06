@@ -6,7 +6,7 @@ from typing import List, Optional
 
 from pydantic import Field, field_validator
 
-from app.models.common.base import BaseEntity
+from app.models.common.base import BaseEntity, BaseRespEntity
 
 
 class IpBlacklistQueryParams(BaseEntity):
@@ -46,7 +46,7 @@ class IpBlacklistBatchDeleteRequest(BaseEntity):
     ids: List[int] = Field(..., description="主键列表")
 
 
-class IpBlacklistResponse(BaseEntity):
+class IpBlacklistResponse(BaseRespEntity):
     """IP 黑名单列表项"""
 
     id: int

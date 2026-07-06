@@ -2,6 +2,7 @@
 # -*- coding: utf-8 -*-
 
 from datetime import datetime
+from typing import ClassVar
 
 from pydantic import Field
 
@@ -20,6 +21,9 @@ class LoginLogQueryParams(BaseEntity):
 
 class LoginLogResponse(BaseEntity):
     """登录日志列表响应"""
+
+    # status 为登录成功/失败 bool，不能走 BaseRespEntity 的 "1"/"2" 序列化，故仅跳过非空校验
+    _skip_required_check: ClassVar[bool] = True
 
     id: int
     username: str

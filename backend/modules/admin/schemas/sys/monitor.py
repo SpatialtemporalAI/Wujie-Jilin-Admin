@@ -9,7 +9,7 @@ from typing import Optional, List
 from pydantic import Field, BaseModel
 from datetime import datetime
 
-from app.models.common.base import BaseEntity
+from app.models.common.base import BaseEntity, BaseRespEntity
 
 
 class MemoryInfo(BaseModel):
@@ -33,7 +33,7 @@ class DiskInfo(BaseModel):
     used_mb: int = Field(..., description="已用磁盘(MB)")
 
 
-class SystemMetricsResponse(BaseEntity):
+class SystemMetricsResponse(BaseRespEntity):
     """系统指标响应模型"""
     cpu_percent: float = Field(..., description="CPU使用率(%)")
     cpu_percent_per_core: list[float] = Field(..., description="每核CPU使用率(%)")
@@ -51,7 +51,7 @@ class ApiStatsQueryParams(BaseEntity):
     minutes: int = Field(default=60, ge=1, le=1440, description="查询最近多少分钟的数据，默认60，最大1440")
 
 
-class ApiStatsResponse(BaseEntity):
+class ApiStatsResponse(BaseRespEntity):
     """API统计响应模型"""
     timestamp: str = Field(..., description="时间窗口(格式: HH:MM)")
     avg_elapsed_ms: float = Field(..., description="平均响应时间(ms)")

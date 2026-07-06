@@ -277,25 +277,69 @@ async def http_exception_handler(
     )
 
 
+# Pydantic v2 错误类型 → 中文片段映射（字段名会拼接在前面）
+PYDANTIC_ERROR_ZH = {
+    "missing": "为必填项，不能为空",
+    "string_too_short": "长度过短",
+    "string_too_long": "长度超出限制",
+    "too_short": "数量过少",
+    "too_long": "数量超出限制",
+    "string_type": "必须为字符串",
+    "int_type": "必须为整数",
+    "int_parsing": "必须为整数",
+    "int_from_float": "必须为整数",
+    "float_type": "必须为数字",
+    "float_parsing": "必须为数字",
+    "bool_type": "必须为布尔值",
+    "bool_parsing": "必须为布尔值",
+    "list_type": "必须为列表",
+    "dict_type": "必须为对象",
+    "tuple_type": "必须为元组",
+    "set_type": "必须为集合",
+    "greater_than": "数值不符合要求",
+    "greater_than_equal": "数值不符合要求",
+    "less_than": "数值不符合要求",
+    "less_than_equal": "数值不符合要求",
+    "multiple_of": "数值不符合要求",
+    "string_pattern_mismatch": "格式不正确",
+    "enum": "取值不合法",
+    "literal_error": "取值不合法",
+    "uuid_type": "必须为 UUID",
+    "uuid_parsing": "UUID 格式不正确",
+    "date_type": "必须为日期",
+    "datetime_type": "必须为日期时间",
+}
+
+
+def _translate_validation_error(error: dict) -> str:
+    """将单个 Pydantic 请求校验错误翻译为中文消息。"""
+    loc = error.get("loc", [])
+    field = str(loc[-1]) if loc else ""
+    etype = error.get("type", "")
+    ctx = error.get("ctx") or {}
+
+    # 自定义 validator 抛出的 ValueError：优先使用其原始消息（项目内通常已是中文）
+    if etype == "value_error" and ctx.get("error") is not None:
+        return str(ctx["error"])
+
+    zh = PYDANTIC_ERROR_ZH.get(etype)
+    if zh:
+        return f"{field}{zh}" if field else zh
+
+    return f"{field}参数不合法" if field else "参数校验失败"
+
+
 async def validation_exception_handler(
     request: Request, exc: RequestValidationError
 ) -> ORJSONResponse:
     """
-    请求参数验证异常处理器
+    请求参数验证异常处理器（统一返回中文消息）
     """
     request_id = get_request_trace_id(request)
-    # 格式化验证错误信息
+    # 只取第一条错误并翻译为中文
     errors = []
     for error in exc.errors():
-        # field = ".".join(str(loc) for loc in error.get("loc", []))
-        # message = error.get("msg", "验证错误")
-        if "ctx" in error and "error" in error["ctx"]:
-            msg = str(error["ctx"]["error"])
-            errors.append(f"{msg}")
-        elif "msg" in error:
-            errors.append(f"{error['msg']}")
-        else:
-            errors.append(f"验证错误")
+        errors.append(_translate_validation_error(error))
         break
     # 记录日志
     logger.warning(
@@ -305,8 +349,7 @@ async def validation_exception_handler(
     # 构建响应
     response = ResponseModel(
         code=StandardResponseCode.HTTP_422,
-        msg=errors[0] or "请求参数验证失败",
-        # data={"errors": errors},
+        msg=errors[0] if errors else "请求参数验证失败",
         request_id=request_id,
     )
     return ORJSONResponse(
