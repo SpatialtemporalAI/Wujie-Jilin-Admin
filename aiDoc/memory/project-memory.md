@@ -80,6 +80,7 @@
 - [2026-07-07 高频轮询接口不写操作日志](./business/2026-07-07_operation-log-skip-polling-endpoints.md) — operation_log_middleware 新增 WHITELIST_SUFFIXES 后缀匹配，排除 robot-locations/status/latest/export/task/list 三个高频轮询接口（前缀匹配会误伤增删改）
 - [2026-07-07 禁用用户不允许登录 + 禁用角色权限](./business/2026-07-07_disable-user-login-and-role-permission.md) — login/current_user 加 user.status 校验 + 新增 USER_DISABLED(10013)；禁用角色核心已实现（菜单树/权限码校验过滤 role.status），未改动
 - [2026-07-07 导出任务弹窗样式优化 + 列表页](./business/2026-07-07_export-center-style-and-list-page.md) — 弹窗状态Tag移标题旁/下载改图标放右侧仅completed；新增 views/log/export-task 列表页(不进菜单)+「查看全部」入口；后端 list 加 status 筛选；顺带修 pre-existing map-editor→scene_map-editor + 放宽 I18nRouteKey(typecheck 全通过)
+- [2026-07-07 地图保存/切换 gRPC 增加 agent 端推送](./business/2026-07-07_map-grpc-agent-push.md) — NotifyMapSaved 广播 + SwitchMap 单发由「只推 middleware」改为「middleware + agent 双推」，复用同一 MapService RPC；client.py / addr_provider.py / proto / 前端零改动，纯调用方路由扩展；agent 端需部署 MapService
 
 ## 维护说明
 

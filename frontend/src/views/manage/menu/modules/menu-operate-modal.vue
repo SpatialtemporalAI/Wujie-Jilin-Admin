@@ -307,19 +307,16 @@ function getSubmitParams() {
 
   const willBeRoot = !model.value.parentId;
 
-  // 移到根目录且路由名含 _：裁成末段（SoybeanAdmin 根路由名不能含 _，否则前端会丢弃该路由）。
-  // 通常 parentId watcher 已同步 model.menuName，此处做兜底。
-  let routeName = model.value.menuName;
-  if (willBeRoot && routeName.includes('_')) {
-    routeName = getLastSegmentByName(routeName);
-  }
+  // 相信用户填写的菜单名称：不再因根路由名含 _ 而自动裁成末段。
+  // 注意：SoybeanAdmin 的 transform.ts 仍按 _ 解析路由层级，含 _ 的根菜单路由可能被前端丢弃（页面 404），
+  // 需由填写者自行保证命名与挂载层级匹配。
 
   // 组件：根路由需 layout.base$view.<page>，嵌套仅 view.<page>。
   // 修复「移到根目录后 component 仍为 view.xxx（无 layout）」导致页面无法访问的问题。
   const effectiveLayout = willBeRoot ? layout || 'base' : '';
   const component = transformLayoutAndPageToComponent(effectiveLayout, page);
 
-  params.menuName = routeName;
+  params.menuName = model.value.menuName;
   params.routePath = composePath(pathPrefix.value, pathSegment);
   params.component = component;
 
@@ -367,17 +364,6 @@ watch(
   newName => {
     if (props.operateType !== 'edit') {
       model.value.pathSegment = newName ? getLastSegmentByName(newName) : '';
-    }
-  }
-);
-
-// 移到根目录：路由名含 _ 时自动裁成末段（SoybeanAdmin 根路由名不能含 _），所见即所得
-watch(
-  () => model.value.parentId,
-  (newPid, oldPid) => {
-    if (!newPid && oldPid && model.value.menuName.includes('_')) {
-      model.value.menuName = getLastSegmentByName(model.value.menuName);
-      model.value.pathSegment = getLastSegmentByName(model.value.menuName);
     }
   }
 );

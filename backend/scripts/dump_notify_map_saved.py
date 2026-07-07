@@ -137,7 +137,7 @@ def load_map_payload(engine, map_id: int) -> dict[str, Any]:
 async def send_via_grpc(
     payload: dict[str, Any], map_id: int, grpc_addr: str | None
 ) -> None:
-    """通过 MapServiceClient 推送（按 robot.middleware 广播）"""
+    """通过 MapServiceClient 推送（与生产一致：按 robot.middleware + agent 合并广播）"""
     from app.grpc.generated.map import map_pb2
     from modules.grpc.addr_provider import get_config_addr_provider
     from modules.grpc.client import MapServiceClient
@@ -168,16 +168,21 @@ async def send_via_grpc(
 
     if grpc_addr:
         # 手动指定地址，跳过 DB 反查（调试用）
-        targets: list[tuple[int, str]] = [(0, grpc_addr)]
+        labeled: list[tuple[int, str, str]] = [(0, grpc_addr, "manual")]
     else:
-        targets = await get_config_addr_provider().find_addrs_by_target_and_map(
-            "middleware", map_id
-        )
+        # 与生产一致：合并 middleware + agent 两个 target 的反查结果
+        labeled = []
+        for target in ("middleware", "agent"):
+            for rid, addr in await get_config_addr_provider().find_addrs_by_target_and_map(
+                target, map_id
+            ):
+                labeled.append((rid, addr, target))
 
-    print(f"---- targets ({len(targets)}) ----")
-    for rid, addr in targets:
-        print(f"robot_id={rid} addr={addr}")
+    print(f"---- targets ({len(labeled)}) ----")
+    for rid, addr, target in labeled:
+        print(f"robot_id={rid} addr={addr} ({target})")
 
+    targets = [(rid, addr) for rid, addr, _ in labeled]
     resp = await MapServiceClient.notify_map_saved(map_info, targets)
     print("---- gRPC response ----")
     print(f"status:  {resp.status}")
@@ -197,7 +202,7 @@ def parse_args() -> argparse.Namespace:
         "--grpc-addr",
         type=str,
         default=None,
-        help="手动指定推送目标地址 host:port，跳过按 robot.middleware 反查（调试用）",
+        help="手动指定推送目标地址 host:port，跳过按 robot.middleware+agent 反查（调试用）",
     )
     return p.parse_args()
 

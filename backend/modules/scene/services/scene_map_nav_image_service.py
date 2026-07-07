@@ -114,8 +114,9 @@ class SceneMapNavImageService:
         """推送 MapInfo 给导览服务（NotifyMapSaved）
 
         在 _regenerate 内部 nav_image_id 已 commit 后调用，确保推送时图片已就绪。
-        按 robot.middleware 广播：遍历 Robot.map_id == map_obj.id 且 middleware 启用的机器人。
-        失败仅记日志，不抛出。
+        按 middleware 与 agent 各广播一次：遍历 Robot.map_id == map_obj.id 且启用对应 target
+        的机器人，两端各自独立判断启停/地址、独立记日志、互不影响；某端未配置则该端无 target，
+        notify_map_saved 内部返回 SKIPPED。失败仅记日志，不抛出。
         """
         import grpc
 
@@ -160,27 +161,39 @@ class SceneMapNavImageService:
 
         map_info = scene_map_to_map_info(fresh, image_url, annotations=annotations)
 
-        # 按 Robot.map_id 反查绑定该地图且启用 middleware 的机器人地址，逐个广播
-        targets = await get_config_addr_provider().find_addrs_by_target_and_map(
-            "middleware", fresh.id
-        )
-        try:
-            resp = await MapServiceClient.notify_map_saved(map_info, targets)
-            logger.info(
-                "notify_map_saved map=%s version=%s targets=%s status=%s msg=%s",
-                fresh.id,
-                fresh.version,
-                len(targets),
-                resp.status,
-                resp.message,
-            )
-        except grpc.aio.AioRpcError as exc:
-            logger.warning(
-                "notify_map_saved rpc failed map=%s code=%s details=%s",
-                fresh.id,
-                exc.code(),
-                exc.details(),
-            )
+        # 按 Robot.map_id 反查绑定该地图的机器人，对 middleware / agent 两个 target 各广播一次。
+        # 两端独立解析地址、独立调用、独立记日志，互不影响（某端未配置则该端 targets 为空，
+        # notify_map_saved 内部返回 SKIPPED）。map_info 只构造一次，两端复用。
+        for target in ("middleware", "agent"):
+            try:
+                targets = await get_config_addr_provider().find_addrs_by_target_and_map(
+                    target, fresh.id
+                )
+                resp = await MapServiceClient.notify_map_saved(map_info, targets)
+                logger.info(
+                    "notify_map_saved map=%s version=%s target=%s targets=%s status=%s msg=%s",
+                    fresh.id,
+                    fresh.version,
+                    target,
+                    len(targets),
+                    resp.status,
+                    resp.message,
+                )
+            except grpc.aio.AioRpcError as exc:
+                logger.warning(
+                    "notify_map_saved rpc failed map=%s target=%s code=%s details=%s",
+                    fresh.id,
+                    target,
+                    exc.code(),
+                    exc.details(),
+                )
+            except Exception as exc:  # noqa: BLE001 - 兜底，保证另一 target 继续推送
+                logger.warning(
+                    "notify_map_saved failed map=%s target=%s: %s",
+                    fresh.id,
+                    target,
+                    exc,
+                )
 
     @staticmethod
     def _render(

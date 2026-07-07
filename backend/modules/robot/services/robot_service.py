@@ -603,53 +603,60 @@ class RobotService:
     async def _switch_map_via_grpc(map_id: int, version: int, robot_id: int) -> None:
         """切换机器人当前地图（SwitchMap）
 
-        下发到该 robot 的 middleware 地址（robot.grpc_config.middleware）。
-        与「广播地图」(NotifyMapSaved) 复用同一套按-addr 缓存的 channel/stub。
-        失败仅记日志，不抛出，因此导览服务不可用不会回滚已成功的绑定。
+        下发到该 robot 的 middleware 与 agent 地址各一次（robot.grpc_config.middleware /
+        robot.grpc_config.agent）。两端各自独立解析地址、独立 skip、独立 try/except 记日志，
+        互不影响；某端未配置则跳过该端。与「广播地图」(NotifyMapSaved) 复用同一套按-addr
+        缓存的 channel/stub。失败仅记日志，不抛出，因此导览/agent 服务不可用不会回滚已成功的绑定。
         """
         import grpc
 
         from modules.grpc.addr_provider import get_config_addr_provider
         from modules.grpc.client import MapServiceClient
 
-        addr = await get_config_addr_provider().get_addr(robot_id, "middleware")
-        if not addr:
-            logger.info(
-                "switch_map skipped: middleware 未配置 robot_id=%s map=%s",
-                robot_id,
-                map_id,
-            )
-            return
+        # 对 middleware / agent 两个 target 各单发一次，互不影响
+        for target in ("middleware", "agent"):
+            addr = await get_config_addr_provider().get_addr(robot_id, target)
+            if not addr:
+                logger.info(
+                    "switch_map skipped: %s 未配置 robot_id=%s map=%s",
+                    target,
+                    robot_id,
+                    map_id,
+                )
+                continue
 
-        try:
-            resp = await MapServiceClient.switch_map(map_id, version, addr)
-            logger.info(
-                "switch_map ok map=%s version=%s robot_id=%s addr=%s status=%s msg=%s current_id=%s current_version=%s",
-                map_id,
-                version,
-                robot_id,
-                addr,
-                resp.status,
-                resp.message,
-                resp.current_id,
-                resp.current_version,
-            )
-        except grpc.aio.AioRpcError as exc:
-            logger.warning(
-                "switch_map rpc failed map=%s version=%s robot_id=%s addr=%s code=%s details=%s",
-                map_id,
-                version,
-                robot_id,
-                addr,
-                exc.code(),
-                exc.details(),
-            )
-        except Exception as exc:
-            logger.warning(
-                "switch_map failed map=%s version=%s robot_id=%s addr=%s: %s",
-                map_id,
-                version,
-                robot_id,
-                addr,
-                exc,
-            )
+            try:
+                resp = await MapServiceClient.switch_map(map_id, version, addr)
+                logger.info(
+                    "switch_map ok target=%s map=%s version=%s robot_id=%s addr=%s status=%s msg=%s current_id=%s current_version=%s",
+                    target,
+                    map_id,
+                    version,
+                    robot_id,
+                    addr,
+                    resp.status,
+                    resp.message,
+                    resp.current_id,
+                    resp.current_version,
+                )
+            except grpc.aio.AioRpcError as exc:
+                logger.warning(
+                    "switch_map rpc failed target=%s map=%s version=%s robot_id=%s addr=%s code=%s details=%s",
+                    target,
+                    map_id,
+                    version,
+                    robot_id,
+                    addr,
+                    exc.code(),
+                    exc.details(),
+                )
+            except Exception as exc:
+                logger.warning(
+                    "switch_map failed target=%s map=%s version=%s robot_id=%s addr=%s: %s",
+                    target,
+                    map_id,
+                    version,
+                    robot_id,
+                    addr,
+                    exc,
+                )
