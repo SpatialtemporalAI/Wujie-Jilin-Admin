@@ -79,6 +79,7 @@
 - [2026-07-07 导出任务卡死修复](./business/2026-07-07_export-task-stuck-recover-and-timeout.md) — asyncio.create_task 在 gunicorn worker 回收时丢失致任务永卡 pending；新增两个每分钟定时任务（兜底补生成 + 超时失效），_execute_task 改原子领取防多 worker 重复；状态同步保留轮询（WebSocket 多 worker 推送会丢）
 - [2026-07-07 高频轮询接口不写操作日志](./business/2026-07-07_operation-log-skip-polling-endpoints.md) — operation_log_middleware 新增 WHITELIST_SUFFIXES 后缀匹配，排除 robot-locations/status/latest/export/task/list 三个高频轮询接口（前缀匹配会误伤增删改）
 - [2026-07-07 禁用用户不允许登录 + 禁用角色权限](./business/2026-07-07_disable-user-login-and-role-permission.md) — login/current_user 加 user.status 校验 + 新增 USER_DISABLED(10013)；禁用角色核心已实现（菜单树/权限码校验过滤 role.status），未改动
+- [2026-07-07 导出任务弹窗样式优化 + 列表页](./business/2026-07-07_export-center-style-and-list-page.md) — 弹窗状态Tag移标题旁/下载改图标放右侧仅completed；新增 views/log/export-task 列表页(不进菜单)+「查看全部」入口；后端 list 加 status 筛选；顺带修 pre-existing map-editor→scene_map-editor + 放宽 I18nRouteKey(typecheck 全通过)
 
 ## 维护说明
 
