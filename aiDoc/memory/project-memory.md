@@ -77,6 +77,7 @@
 - [2026-07-07 分页参数脏值防御性收敛 + OptionalIntField 错误中文化](./business/2026-07-07_pagination-dirty-value-coerce.md) — page/page_size 收到空串/"null"/"NaN" 等脏值不再 422，收敛到默认值；robot_id/map_id 等非数字字符串提示由英文 invalid literal 改中文「必须为整数」
 - [2026-07-07 修复分页 count 恒返回 1](./business/2026-07-07_pagination-count-returns-1.md) — SA 2.0 with_only_columns 默认丢弃实体派生 FROM，纯实体查询页 count 退化为无 FROM 的 SELECT count(*)（PG 恒返回 1）；3 处加 maintain_column_froms=True（共享 get_paginated_results + 场景地图/分组）
 - [2026-07-07 导出任务卡死修复](./business/2026-07-07_export-task-stuck-recover-and-timeout.md) — asyncio.create_task 在 gunicorn worker 回收时丢失致任务永卡 pending；新增两个每分钟定时任务（兜底补生成 + 超时失效），_execute_task 改原子领取防多 worker 重复；状态同步保留轮询（WebSocket 多 worker 推送会丢）
+- [2026-07-07 高频轮询接口不写操作日志](./business/2026-07-07_operation-log-skip-polling-endpoints.md) — operation_log_middleware 新增 WHITELIST_SUFFIXES 后缀匹配，排除 robot-locations/status/latest/export/task/list 三个高频轮询接口（前缀匹配会误伤增删改）
 
 ## 维护说明
 

@@ -34,10 +34,22 @@ WHITELIST_PREFIXES = (
     "/openapi.json",
 )
 
+# 后缀匹配：带动态路径参数的高频轮询接口，不写操作日志。
+# 这些接口不能用前缀匹配，否则会误伤同前缀的增删改等需要记录的接口
+# （例如 /admin/robot/manage/ 下还有机器人的增删改）。
+WHITELIST_SUFFIXES = (
+    "/robot-locations",   # /admin/robot/manage/map/{map_id}/robot-locations —— 地图编辑器轮询机器人位置
+    "/status/latest",     # /admin/robot/manage/{robot_id}/status/latest —— 运行监控轮询机器人状态
+    "/export/task/list",  # /admin/sys/export/task/list —— 导出任务列表轮询
+)
+
 
 def _is_whitelisted(path: str) -> bool:
     for prefix in WHITELIST_PREFIXES:
         if path.startswith(prefix):
+            return True
+    for suffix in WHITELIST_SUFFIXES:
+        if path.endswith(suffix):
             return True
     return False
 
