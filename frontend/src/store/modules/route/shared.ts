@@ -145,6 +145,32 @@ function getGlobalMenuByBaseRoute(route: RouteLocationNormalizedLoaded | Elegant
 }
 
 /**
+ * Get the route key of the first accessible menu
+ *
+ * Recurse into the first child to reach the deepest first leaf (top-level
+ * entries are often categories). Skip the `home` dashboard: some accounts have
+ * no home permission (landing there 404s), and the product wants users to land
+ * directly on the first business menu.
+ *
+ * @param menus Global menus
+ */
+export function getFirstMenuRouteKey(menus: App.Global.Menu[]): RouteKey | null {
+  if (!menus.length) return null;
+
+  function findDeepestFirst(menu: App.Global.Menu): RouteKey {
+    if (!menu.children?.length) {
+      return menu.routeKey;
+    }
+
+    return findDeepestFirst(menu.children[0]);
+  }
+
+  const target = menus.find(m => m.routeKey !== 'home') ?? menus[0];
+
+  return findDeepestFirst(target);
+}
+
+/**
  * Get cache route names
  *
  * @param routes Vue routes (two levels)

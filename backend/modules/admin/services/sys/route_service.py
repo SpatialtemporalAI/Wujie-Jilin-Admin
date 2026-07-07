@@ -111,8 +111,13 @@ class RouteService:
         """按菜单顺序递归查找第一个可访问的叶子路由名（组件含 `view.` 的页面）。
 
         用于动态决定登录后的默认访问页，避免始终硬编码为 "home"。
+        跳过名为 "home" 的首页仪表盘，使登录后落在第一个业务菜单；
+        若除首页外再无其它可访问页面，则回退到 "home"。
         """
         for route in routes:
+            # 跳过首页仪表盘：登录后应进入第一个业务菜单，而非 /home
+            if route.name == "home":
+                continue
             if route.component and "view." in route.component:
                 return route.name
             if route.children:
