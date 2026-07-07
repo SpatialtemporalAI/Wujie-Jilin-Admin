@@ -96,8 +96,8 @@ const { columns, columnChecks, data, getData, loading, mobilePagination } = useN
     return { data: [], pageNum: 1, pageSize: 10, total: 0, totalPages: 1 };
   },
   onPaginationParamsChange: params => {
-    searchParams.page = params.page;
-    searchParams.page_size = params.pageSize;
+    searchParams.page = params.page ?? 1;
+    searchParams.page_size = params.pageSize ?? 10;
   },
   columns: () => [
     {

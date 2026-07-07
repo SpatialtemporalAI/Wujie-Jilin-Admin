@@ -271,7 +271,7 @@ const local: App.I18n.Schema = {
     settings: '参数配置',
     scene_group: '场景分组',
     scene_map: '场景地图',
-    'map-editor': '地图管理',
+    'scene_map-editor': '地图管理',
     task: '任务管理',
     'operation-monitor': '运行监控',
     monitor_view: '查看',

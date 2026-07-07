@@ -302,7 +302,11 @@ declare namespace App {
       key: LangType;
     };
 
-    type I18nRouteKey = Exclude<RouteKey, 'root' | 'not-found'>;
+    // route 段同时承载「路由标题」与「按钮权限文案」(如 manage_menu_list / monitor_view / operation_monitor_list)。
+    // 按钮文案命名不统一(连字符/下划线混合，如 operation-monitor 路由对应 operation_monitor 权限)，
+    // 这里放宽为「含下划线的 key」以兼容按钮文案，避免 typecheck 误报多余属性。
+    // 副作用：route 段按钮文案的类型校验被放宽，后续可把按钮文案迁出 route 段以收紧类型。
+    type I18nRouteKey = Exclude<RouteKey, 'root' | 'not-found'> | `${string}_${string}`;
 
     type FormMsg = {
       required: string;
@@ -1071,6 +1075,20 @@ declare namespace App {
             timeRange: string;
           };
         };
+        exportTask: {
+          title: string;
+          taskName: string;
+          module: string;
+          status: string;
+          totalRows: string;
+          fileSize: string;
+          createdAt: string;
+          finishedAt: string;
+          downloadFailed: string;
+          form: {
+            status: string;
+          };
+        };
       };
       sceneMapEditor: {
         unsavedChangesTitle: string;
@@ -1135,6 +1153,7 @@ declare namespace App {
         statusCompleted: string;
         statusFailed: string;
         statusExpired: string;
+        viewAll: string;
       };
     };
 

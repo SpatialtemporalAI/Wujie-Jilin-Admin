@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { ref, computed, onMounted, onUnmounted } from 'vue';
 import { useRouter } from 'vue-router';
-import { NBadge, NButton, NPopover, NList, NListItem, NEmpty, NTag, NSpin } from 'naive-ui';
+import { NBadge, NButton, NPopover, NTooltip, NList, NListItem, NEmpty, NTag, NSpin } from 'naive-ui';
 import { useAuthStore } from '@/store/modules/auth';
 import { fetchGetExportTaskList, fetchDownloadExportFile } from '@/service/api';
 import { $t } from '@/locales';
@@ -142,11 +142,16 @@ onUnmounted(() => {
     @update:show="onShowChange"
   >
     <template #trigger>
-      <div class="relative cursor-pointer px-8px hover:bg-[#f6f6f6] dark:hover:bg-[#333] rounded-full transition-colors">
-        <NBadge :value="pendingCount" :max="99" :show="pendingCount > 0">
-          <SvgIcon icon="material-symbols:cloud-download-outline" class="text-20px" />
-        </NBadge>
-      </div>
+      <NTooltip trigger="hover" placement="bottom">
+        <template #trigger>
+          <div class="relative cursor-pointer px-8px hover:bg-[#f6f6f6] dark:hover:bg-[#333] rounded-full transition-colors">
+            <NBadge :value="pendingCount" :max="99" :show="pendingCount > 0">
+              <SvgIcon icon="material-symbols:cloud-download-outline" class="text-20px" />
+            </NBadge>
+          </div>
+        </template>
+        {{ $t('exportCenter.title') }}
+      </NTooltip>
     </template>
     <template #header>
       <div class="flex items-center justify-between px-12px py-8px">

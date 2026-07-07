@@ -275,7 +275,7 @@ const local: App.I18n.Schema = {
     settings: 'Parameter Config',
     scene_group: 'Scene Group',
     scene_map: 'Scene Map',
-    'map-editor': 'Map Editor',
+    'scene_map-editor': 'Map Editor',
     task: 'Task Management',
     'operation-monitor': 'Operation Monitor',
     monitor_view: 'View',
