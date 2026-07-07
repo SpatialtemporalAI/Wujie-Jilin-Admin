@@ -33,7 +33,9 @@ const statusLabelMap: Record<string, string> = {
 const sourceLabelMap: Record<string, string> = {
   platform_schedule: '平台定时',
   voice_trigger: '语音触发',
-  manual: '手动'
+  manual: '手动',
+  text_input: '语音输入',
+  resume: '手动恢复'
 };
 
 const actionLabel: Record<string, string> = {

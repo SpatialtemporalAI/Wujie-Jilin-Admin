@@ -84,6 +84,7 @@
 - [2026-07-07 历史任务列表按结束时间倒序](./business/2026-07-07_task-history-sort-by-finish-time.md) — build_history_query 排序由 id.desc() 改为 finish_time.desc().nulls_last()；仅历史任务，活跃任务列表不动；前端零改动
 - [2026-07-07 保存地图默认推送所有机器人](./business/2026-07-07_map-save-push-all-robots.md) — NotifyMapSaved 广播去掉 Robot.map_id 过滤（find_addrs_by_target_and_map → find_addrs_by_target），保存任一地图即向全部启用 middleware/agent 的机器人下发；SwitchMap 单发不动
 - [2026-07-07 任务执行/历史列表与执行详情补齐即时任务类型](./business/2026-07-07_task-type-instant-execution-views.md) — 承接 0706：task-history-tab / task-execution-tab 表格 NTag + task-detail-drawer 文本展示补齐 instant=即时(warning)；统一 taskTypeLabel + taskTypeTagType 查表
+- [2026-07-07 执行详情触发源补充语音输入/手动恢复](./business/2026-07-07_task-execution-source-label-extend.md) — task-detail-drawer sourceLabelMap 加 text_input=语音输入/resume=手动恢复；仅详情展示，表格不加列；后端枚举未动(agent 写库不经 Literal)
 
 ## 维护说明
 
