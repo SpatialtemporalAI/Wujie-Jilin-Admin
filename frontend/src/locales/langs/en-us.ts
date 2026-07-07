@@ -260,6 +260,7 @@ const local: App.I18n.Schema = {
     'log_online-user': 'Online Users',
     'log_operation-log': 'Operation Log',
     'log_robot-log': 'Robot Event Log',
+    'log_export-task': 'Export Tasks',
     monitor: 'Monitor Dashboard',
     demo: 'Example',
     demo_upload: 'Upload Demo',
@@ -944,6 +945,20 @@ const local: App.I18n.Schema = {
           eventStatus: 'Select event status',
           timeRange: 'Time Range'
         }
+      },
+      exportTask: {
+        title: 'Export Task List',
+        taskName: 'Task Name',
+        module: 'Module',
+        status: 'Status',
+        totalRows: 'Rows',
+        fileSize: 'File Size',
+        createdAt: 'Created At',
+        finishedAt: 'Finished At',
+        downloadFailed: 'Download failed',
+        form: {
+          status: 'Filter by status'
+        }
       }
     },
     sceneMapEditor: {
@@ -1034,7 +1049,8 @@ const local: App.I18n.Schema = {
     statusProcessing: 'Processing',
     statusCompleted: 'Ready',
     statusFailed: 'Failed',
-    statusExpired: 'Expired'
+    statusExpired: 'Expired',
+    viewAll: 'View All'
   }
 };
 

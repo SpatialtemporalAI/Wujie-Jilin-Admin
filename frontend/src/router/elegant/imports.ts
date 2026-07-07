@@ -24,6 +24,7 @@ export const views: Record<LastLevelRouteKey, RouteComponent | (() => Promise<Ro
   demo_upload: () => import("@/views/demo/upload/index.vue"),
   face: () => import("@/views/face/index.vue"),
   home: () => import("@/views/home/index.vue"),
+  "log_export-task": () => import("@/views/log/export-task/index.vue"),
   "log_login-log": () => import("@/views/log/login-log/index.vue"),
   "log_online-user": () => import("@/views/log/online-user/index.vue"),
   "log_operation-log": () => import("@/views/log/operation-log/index.vue"),

@@ -27,6 +27,7 @@ declare module "@elegant-router/types" {
     "home": "/home";
     "iframe-page": "/iframe-page/:url";
     "log": "/log";
+    "log_export-task": "/log/export-task";
     "log_login-log": "/log/login-log";
     "log_online-user": "/log/online-user";
     "log_operation-log": "/log/operation-log";
@@ -129,6 +130,7 @@ declare module "@elegant-router/types" {
     | "demo_upload"
     | "face"
     | "home"
+    | "log_export-task"
     | "log_login-log"
     | "log_online-user"
     | "log_operation-log"

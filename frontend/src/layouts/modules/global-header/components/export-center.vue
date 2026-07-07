@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { ref, computed, onMounted, onUnmounted } from 'vue';
+import { useRouter } from 'vue-router';
 import { NBadge, NButton, NPopover, NList, NListItem, NEmpty, NTag, NSpin } from 'naive-ui';
 import { useAuthStore } from '@/store/modules/auth';
 import { fetchGetExportTaskList, fetchDownloadExportFile } from '@/service/api';
@@ -7,6 +8,7 @@ import { $t } from '@/locales';
 import SvgIcon from '@/components/custom/svg-icon.vue';
 
 const authStore = useAuthStore();
+const router = useRouter();
 
 const tasks = ref<Api.Export.ExportTask[]>([]);
 const showPopover = ref(false);
@@ -114,6 +116,12 @@ function onShowChange(show: boolean) {
   }
 }
 
+/** 跳转到完整导出任务列表页 */
+function goAllTasks() {
+  showPopover.value = false;
+  router.push({ name: 'log_export-task' });
+}
+
 onMounted(() => {
   getTaskList();
   window.addEventListener('export:task-submitted', onSubmitted as EventListener);
@@ -143,9 +151,14 @@ onUnmounted(() => {
     <template #header>
       <div class="flex items-center justify-between px-12px py-8px">
         <span class="font-bold">{{ $t('exportCenter.title') }}</span>
-        <NButton text size="small" :loading="loading" @click="getTaskList">
-          {{ $t('exportCenter.refresh') }}
-        </NButton>
+        <div class="flex items-center gap-12px">
+          <NButton text size="small" type="primary" @click="goAllTasks">
+            {{ $t('exportCenter.viewAll') }}
+          </NButton>
+          <NButton text size="small" :loading="loading" @click="getTaskList">
+            {{ $t('exportCenter.refresh') }}
+          </NButton>
+        </div>
       </div>
     </template>
     <div class="max-h-400px overflow-y-auto">
@@ -154,28 +167,32 @@ onUnmounted(() => {
           <NListItem v-for="task in tasks" :key="task.id">
             <div class="flex flex-col gap-4px">
               <div class="flex items-center justify-between gap-8px">
-                <span class="font-medium truncate flex-1">{{ task.task_name }}</span>
-                <NTag :type="getStatusMeta(task.status).type" size="small">
-                  {{ getStatusMeta(task.status).label }}
-                </NTag>
+                <div class="flex min-w-0 flex-1 items-center gap-8px">
+                  <span class="truncate font-medium">{{ task.task_name }}</span>
+                  <NTag :type="getStatusMeta(task.status).type" size="small" class="flex-shrink-0">
+                    {{ getStatusMeta(task.status).label }}
+                  </NTag>
+                </div>
+                <NButton
+                  v-if="task.status === 'completed'"
+                  text
+                  size="small"
+                  type="primary"
+                  :loading="downloadingId === task.id"
+                  class="flex-shrink-0"
+                  @click="handleDownload(task)"
+                >
+                  <template #icon>
+                    <SvgIcon icon="material-symbols:download" class="text-16px" />
+                  </template>
+                </NButton>
               </div>
-              <div class="text-12px text-gray flex items-center gap-8px">
+              <div class="flex items-center gap-8px text-12px text-gray">
                 <span v-if="task.total_rows != null">{{ task.total_rows }} {{ $t('exportCenter.rows') }}</span>
                 <span v-if="task.finished_at">{{ task.finished_at }}</span>
               </div>
-              <div v-if="task.status === 'failed' && task.error_message" class="text-12px text-error truncate">
+              <div v-if="task.status === 'failed' && task.error_message" class="truncate text-12px text-error">
                 {{ task.error_message }}
-              </div>
-              <div v-if="task.status === 'completed'" class="flex justify-end">
-                <NButton
-                  size="small"
-                  type="primary"
-                  ghost
-                  :loading="downloadingId === task.id"
-                  @click="handleDownload(task)"
-                >
-                  {{ $t('exportCenter.download') }}
-                </NButton>
               </div>
             </div>
           </NListItem>

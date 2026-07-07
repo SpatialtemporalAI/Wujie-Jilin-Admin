@@ -117,6 +117,15 @@ export const generatedRoutes: GeneratedRoute[] = [
     },
     children: [
       {
+        name: 'log_export-task',
+        path: '/log/export-task',
+        component: 'view.log_export-task',
+        meta: {
+          title: 'log_export-task',
+          i18nKey: 'route.log_export-task'
+        }
+      },
+      {
         name: 'log_login-log',
         path: '/log/login-log',
         component: 'view.log_login-log',

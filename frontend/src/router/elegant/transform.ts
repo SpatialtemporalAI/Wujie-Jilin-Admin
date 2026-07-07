@@ -173,6 +173,7 @@ const routeMap: RouteMap = {
   "home": "/home",
   "iframe-page": "/iframe-page/:url",
   "log": "/log",
+  "log_export-task": "/log/export-task",
   "log_login-log": "/log/login-log",
   "log_online-user": "/log/online-user",
   "log_operation-log": "/log/operation-log",

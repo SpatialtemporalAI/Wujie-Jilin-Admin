@@ -256,6 +256,7 @@ const local: App.I18n.Schema = {
     'log_online-user': '在线用户',
     'log_operation-log': '操作日志',
     'log_robot-log': '机器人事件日志',
+    'log_export-task': '导出任务',
     monitor: '监控仪表盘',
     demo: '示例',
     demo_upload: '上传演示',
@@ -939,6 +940,20 @@ const local: App.I18n.Schema = {
           eventStatus: '请选择事件状态',
           timeRange: '时间范围'
         }
+      },
+      exportTask: {
+        title: '导出任务列表',
+        taskName: '任务名称',
+        module: '模块',
+        status: '状态',
+        totalRows: '行数',
+        fileSize: '文件大小',
+        createdAt: '创建时间',
+        finishedAt: '完成时间',
+        downloadFailed: '下载失败',
+        form: {
+          status: '按状态筛选'
+        }
       }
     },
     sceneMapEditor: {
@@ -1029,7 +1044,8 @@ const local: App.I18n.Schema = {
     statusProcessing: '导出中',
     statusCompleted: '可下载',
     statusFailed: '失败',
-    statusExpired: '已失效'
+    statusExpired: '已失效',
+    viewAll: '查看全部'
   }
 };
 

@@ -314,10 +314,14 @@ class ExportTaskService:
         user_id: int,
         page: int = 1,
         page_size: int = 10,
+        status: str | None = None,
     ) -> Tuple[List[SysExportTask], int]:
         base_query = select(SysExportTask).where(
             SysExportTask.created_by == user_id
-        ).order_by(SysExportTask.created_at.desc())
+        )
+        if status:
+            base_query = base_query.where(SysExportTask.status == status)
+        base_query = base_query.order_by(SysExportTask.created_at.desc())
 
         count_query = select(func.count()).select_from(base_query.subquery())
         count_result = await db.execute(count_query)
