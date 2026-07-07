@@ -85,6 +85,7 @@
 - [2026-07-07 保存地图默认推送所有机器人](./business/2026-07-07_map-save-push-all-robots.md) — NotifyMapSaved 广播去掉 Robot.map_id 过滤（find_addrs_by_target_and_map → find_addrs_by_target），保存任一地图即向全部启用 middleware/agent 的机器人下发；SwitchMap 单发不动
 - [2026-07-07 任务执行/历史列表与执行详情补齐即时任务类型](./business/2026-07-07_task-type-instant-execution-views.md) — 承接 0706：task-history-tab / task-execution-tab 表格 NTag + task-detail-drawer 文本展示补齐 instant=即时(warning)；统一 taskTypeLabel + taskTypeTagType 查表
 - [2026-07-07 执行详情触发源补充语音输入/手动恢复](./business/2026-07-07_task-execution-source-label-extend.md) — task-detail-drawer sourceLabelMap 加 text_input=语音输入/resume=手动恢复；仅详情展示，表格不加列；后端枚举未动(agent 写库不经 Literal)
+- [2026-07-07 播报任务隐藏场景地图并支持多选机器人](./business/2026-07-07_task-broadcast-no-map-and-multi-robot.md) — 承接 0702：播报任务隐藏场景地图输入框/提示+机器人改多选；巡逻不动；后端 robot_ids 校验改按 task_type 区分（patrol 单选 / broadcast 多选）
 
 ## 维护说明
 

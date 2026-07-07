@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 
 from typing import Optional, List, Annotated, ClassVar
-from pydantic import Field, ConfigDict, BeforeValidator, field_validator
+from pydantic import Field, ConfigDict, BeforeValidator, field_validator, ValidationInfo
 from datetime import datetime, date, time
 
 from app.models.common.base import BaseEntity, BaseRespEntity, BaseReqEntity, BoolField, OptionalIntField
@@ -90,7 +90,7 @@ class TaskCreate(BaseReqEntity):
     points: Optional[List[TaskPointCreate]] = Field(None, description="巡逻点位列表")
     broadcast_text: Optional[str] = Field(None, description="播报文本")
     broadcast_count: Optional[str] = Field(None, description="播报次数: 1/2/3/5/loop")
-    robot_ids: List[int] = Field(..., description="绑定的机器人ID列表（当前仅支持单选）", min_length=1, max_length=1)
+    robot_ids: List[int] = Field(..., description="绑定的机器人ID列表（巡逻任务仅支持单选，播报任务支持多选）", min_length=1)
     schedule_enabled: bool = Field(False, description="是否启用定时调度")
     schedule_date: Optional[date] = Field(None, description="调度日期")
     schedule_start_time: Optional[time] = Field(None, description="调度开始时间")
@@ -101,6 +101,15 @@ class TaskCreate(BaseReqEntity):
     def validate_repeat_cycle(cls, v):
         return _validate_repeat_cycle(v)
 
+    @field_validator('robot_ids')
+    @classmethod
+    def validate_robot_ids(cls, v: List[int], info: ValidationInfo) -> List[int]:
+        """巡逻任务仅支持绑定一台机器人，播报任务支持多选"""
+        task_type = info.data.get('task_type')
+        if task_type == 'patrol' and len(v) > 1:
+            raise ValueError('巡逻任务仅支持绑定一台机器人')
+        return v
+
 
 class TaskUpdate(BaseReqEntity):
     """更新任务"""
@@ -110,7 +119,7 @@ class TaskUpdate(BaseReqEntity):
     points: Optional[List[TaskPointCreate]] = Field(None, description="巡逻点位列表")
     broadcast_text: Optional[str] = Field(None, description="播报文本")
     broadcast_count: Optional[str] = Field(None, description="播报次数")
-    robot_ids: Optional[List[int]] = Field(None, description="绑定的机器人ID列表（当前仅支持单选）", max_length=1)
+    robot_ids: Optional[List[int]] = Field(None, description="绑定的机器人ID列表（巡逻任务仅支持单选，播报任务支持多选）")
     schedule_enabled: Optional[bool] = Field(None, description="是否启用定时调度")
     schedule_date: Optional[date] = Field(None, description="调度日期")
     schedule_start_time: Optional[time] = Field(None, description="调度开始时间")
@@ -120,6 +129,17 @@ class TaskUpdate(BaseReqEntity):
     @classmethod
     def validate_repeat_cycle(cls, v):
         return _validate_repeat_cycle(v)
+
+    @field_validator('robot_ids')
+    @classmethod
+    def validate_robot_ids(cls, v: Optional[List[int]], info: ValidationInfo) -> Optional[List[int]]:
+        """巡逻任务仅支持绑定一台机器人，播报任务支持多选；task_type 缺省时不限制"""
+        if v is None:
+            return v
+        task_type = info.data.get('task_type')
+        if task_type == 'patrol' and len(v) > 1:
+            raise ValueError('巡逻任务仅支持绑定一台机器人')
+        return v
 
 
 class TaskResponseData(BaseEntity):

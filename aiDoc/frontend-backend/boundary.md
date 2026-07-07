@@ -191,11 +191,16 @@
 
 ## 任务管理 · 机器人绑定契约
 
-任务新增/编辑接口（`POST /task/manage/add`、`PUT /task/manage/{task_id}`）中，`robot_ids` 字段**当前仅支持单选**，即数组长度必须为 1。该限制通过后端 Schema 校验（`min_length=1, max_length=1`）实现，数据库表结构与关联表逻辑保持不变，便于后续快速恢复多选。
+任务新增/编辑接口（`POST /task/manage/add`、`PUT /task/manage/{task_id}`）中，`robot_ids` 字段按任务类型差异化约束：
 
-- 后端：`TaskCreate.robot_ids` / `TaskUpdate.robot_ids` 均限制 `max_length=1`
-- 前端：`task-operate-drawer.vue` 中机器人选择器已改为单选 `NSelect`
-- 类型：`robot_ids` 仍为 `number[]`，保持与未来多选扩展的兼容性
+- **巡逻任务（patrol）**：仅支持单选，数组长度必须为 1
+- **播报任务（broadcast）**：支持多选，数组长度 ≥ 1
+
+限制通过后端 Schema 的 `field_validator('robot_ids')` 实现（依据同请求体的 `task_type` 判断；`TaskUpdate` 中 `task_type` 缺省时不限制）。数据库 `task_robot` 关联表与 `Task.robots` relationship 本就是多对多，无需迁移。
+
+- 后端：`TaskCreate.robot_ids` / `TaskUpdate.robot_ids` 仅保留 `min_length=1`，巡逻场景由 validator 校验 `len > 1` 抛错
+- 前端：`task-operate-drawer.vue` 巡逻任务单选 `NSelect`（受场景地图约束），播报任务 `multiple` 多选（不受场景约束，且隐藏场景地图输入框与 NAlert 提示）
+- 类型：`robot_ids` 仍为 `number[]`
 
 ## 机器人与场景绑定契约
 

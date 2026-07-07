@@ -262,13 +262,17 @@ const rules = computed(() => ({
     { min: 2, max: 20, message: '任务名称为 2-20 字', trigger: 'blur' }
   ],
   task_type: { required: true, message: '请选择任务类型', trigger: 'change' },
-  map_id: { required: true, type: 'number' as const, message: '请选择场景地图', trigger: 'change' },
+  // 播报任务不需要场景地图，仅巡逻任务必填
+  map_id: isPatrol.value
+    ? { required: true, type: 'number' as const, message: '请选择场景地图', trigger: 'change' }
+    : { required: false },
   robot_ids: {
     required: true,
     type: 'array' as const,
     min: 1,
-    max: 1,
-    message: '请选择一台机器人',
+    // 巡逻任务仅支持单台机器人，播报任务支持多选
+    max: isPatrol.value ? 1 : undefined,
+    message: isPatrol.value ? '请选择一台机器人' : '请至少选择一台机器人',
     trigger: 'change'
   }
 }));
@@ -354,7 +358,7 @@ async function handleSubmit() {
   await validate();
 
   // Custom validations
-  if (model.value.map_id === null) {
+  if (isPatrol.value && model.value.map_id === null) {
     window.$message?.warning('请选择场景地图');
     return;
   }
@@ -393,9 +397,11 @@ async function handleSubmit() {
   }
   const submitData: Api.Task.TaskCreate = {
     name: model.value.name,
-    map_id: model.value.map_id,
+    // 播报任务不绑定场景地图，强制置空避免脏数据
+    map_id: isPatrol.value ? model.value.map_id : null,
     task_type: model.value.task_type,
-    robot_ids: model.value.robot_ids,
+    // 巡逻任务仅提交单台机器人，播报任务提交全部已选机器人
+    robot_ids: isPatrol.value ? model.value.robot_ids.slice(0, 1) : model.value.robot_ids,
     schedule_enabled: model.value.schedule_enabled,
     // 未启用定时执行时，清空调度相关字段，避免残留脏数据
     schedule_date: model.value.schedule_enabled ? tsToDateStr(model.value.schedule_date) : null,
@@ -467,26 +473,27 @@ onMounted(() => {
             <NRadioButton v-for="opt in taskTypeOptions" :key="opt.value" :value="opt.value" :label="opt.label" />
           </NRadioGroup>
         </NFormItemGi>
-        <!-- 场景约束提示：机器人需位于任务绑定的场景内，任务才可执行 -->
-        <NGi :span="2">
+        <!-- 场景约束提示：仅巡逻任务需绑定场景地图，才展示该约束 -->
+        <NGi v-if="isPatrol" :span="2">
           <NAlert type="warning" class="mb-12px">
             注意：任务绑定机器人后，若机器人不在任务绑定的场景下，该任务无法执行！
           </NAlert>
         </NGi>
       </NGrid>
 
-      <!-- <NDivider style="font-size: 16px;"  title-placement="center">场景地图</NDivider> -->
-      <NFormItem label="场景地图" path="map_id" class="mt-20px">
+      <!-- 场景地图：仅巡逻任务需要选择 -->
+      <NFormItem v-if="isPatrol" label="场景地图" path="map_id" class="mt-20px">
         <NSelect :value="model.map_id" :options="mapOptions" placeholder="请先选择场景地图" filterable clearable
           @update:value="handleMapChange" @focus="() => loadMapOptions()" />
       </NFormItem>
 
-      <!-- 机器人绑定 -->
-      <!-- <NDivider style="font-size: 16px;" title-placement="center">执行机器人</NDivider> -->
+      <!-- 机器人绑定：巡逻单选（需先选场景且受场景约束），播报多选（不受场景约束） -->
       <NFormItem label="绑定机器人" path="robot_ids">
-        <NSelect v-model:value="robotId" :options="filteredRobotOptions"
+        <NSelect v-if="isPatrol" v-model:value="robotId" :options="filteredRobotOptions"
           :placeholder="model.map_id === null ? '请先选择场景地图' : '请选择一台机器人'" filterable clearable
           :disabled="model.map_id === null" :render-label="renderRobotLabel" />
+        <NSelect v-else v-model:value="model.robot_ids" multiple :options="robotOptions"
+          placeholder="请选择机器人（可多选）" filterable clearable max-tag-count="responsive" />
       </NFormItem>
 
       <!-- 巡逻点位配置 -->
