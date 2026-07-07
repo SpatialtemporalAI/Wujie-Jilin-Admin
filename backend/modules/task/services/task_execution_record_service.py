@@ -261,7 +261,8 @@ class TaskExecutionRecordService:
         if conditions:
             base_query = base_query.where(and_(*conditions))
 
-        return base_query.order_by(TaskExecutionRecord.id.desc())
+        # 历史任务按结束时间倒序，空值(未记录结束时间)排最后
+        return base_query.order_by(TaskExecutionRecord.finish_time.desc().nulls_last())
 
     @staticmethod
     async def get_execution_detail(
