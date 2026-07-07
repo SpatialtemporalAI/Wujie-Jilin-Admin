@@ -48,7 +48,7 @@ class SysUserCreate(BaseEntity):
         ..., description="用户名，必须唯一", min_length=4, max_length=20
     )
     password: str = Field(..., description="密码", min_length=6, max_length=20)
-    nickname: str = Field(..., description="用户昵称", max_length=100)
+    nickname: Optional[str] = Field(None, description="用户昵称", max_length=100)
     email: Optional[str] = Field(None, description="邮箱", max_length=100)
     phone: Optional[str] = Field(None, description="手机号", max_length=20)
     avatar: Optional[str] = Field(None, description="头像URL")
