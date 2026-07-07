@@ -17,7 +17,10 @@ from core.response.response_schema import (
 )
 from app.models.common.page import PageRequest, get_page_params, get_paginated_results
 from modules.admin.deps.auth.user_manager import current_user
-from modules.admin.deps.auth.permission import require_permission
+from modules.admin.deps.auth.permission import (
+    require_permission,
+    require_any_permission,
+)
 
 from modules.robot.services.robot_status_record_service import RobotStatusRecordService
 from modules.robot.schemas.robot_status_record import (
@@ -103,7 +106,11 @@ async def get_robot_status_latest(
 @robot_status_record_router.get(
     "/map/{map_id}/robot-locations",
     response_model=ResponseModel[List[RobotLocationItem]],
-    dependencies=[Depends(require_permission("robot:manage:list"))],
+    dependencies=[
+        Depends(
+            require_any_permission("robot:manage:list", "scene:map-editor:edit")
+        )
+    ],
 )
 async def get_map_robot_locations(
     map_id: int = Path(..., description="场景地图ID"),
@@ -113,6 +120,9 @@ async def get_map_robot_locations(
 
     位置数据由外部写入 DB，本接口只读。透传 location_info(JSON) 与
     location(Text 历史字段)，前端按优先级解析坐标。
+
+    权限：该接口为地图编辑器画布专用，与 bind-map 一致，机器人管理与地图编辑器
+    任一权限通过即可，避免地图编辑器用户因缺少 robot:manage:list 而跨权限报错。
     """
     try:
         items = await RobotStatusRecordService.get_map_robot_locations(db, map_id)

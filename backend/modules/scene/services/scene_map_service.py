@@ -60,7 +60,9 @@ class SceneMapService:
         stmt = SceneMapService.build_query(query_params)
 
         # 计算总数
-        count_stmt = stmt.with_only_columns(func.count()).order_by(None)
+        count_stmt = stmt.with_only_columns(
+            func.count(), maintain_column_froms=True
+        ).order_by(None)
         result = await db.execute(count_stmt)
         total = result.scalar() or 0
 

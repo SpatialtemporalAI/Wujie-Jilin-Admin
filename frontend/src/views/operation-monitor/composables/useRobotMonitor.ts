@@ -1,5 +1,5 @@
 import { ref, computed, onMounted, onBeforeUnmount, watch } from 'vue';
-import { fetchGetRobotList, fetchGetLatestRobotStatus } from '@/service/api';
+import { fetchGetAllRobots, fetchGetLatestRobotStatus } from '@/service/api';
 
 export interface ParsedLocation {
   x: number;
@@ -11,7 +11,7 @@ const POLL_INTERVAL = 3000;
 
 export function useRobotMonitor() {
   const selectedRobotId = ref<number | null>(null);
-  const robotList = ref<Api.Robot.Robot[]>([]);
+  const robotList = ref<Api.Robot.AllRobot[]>([]);
   const latestStatus = ref<Api.Robot.RobotStatusRecord | null>(null);
   const loading = ref(false);
 
@@ -36,9 +36,11 @@ export function useRobotMonitor() {
   async function loadRobotList() {
     loading.value = true;
     try {
-      const { data } = await fetchGetRobotList({ page: 1, page_size: 999, name: null, serial_number: null, status: null });
+      // 跨模块下拉用 /robot/manage/all（仅需登录，无 robot:manage:list 权限），
+      // 避免运营监控页面因缺少机器人管理权限而报「权限不足」
+      const { data } = await fetchGetAllRobots();
       if (data) {
-        robotList.value = (data as any).records || data || [];
+        robotList.value = data;
       }
     } catch {
       robotList.value = [];

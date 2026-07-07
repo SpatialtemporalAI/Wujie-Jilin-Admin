@@ -2,7 +2,7 @@
 import { reactive, ref, computed, onMounted } from 'vue';
 import { NText, useMessage } from 'naive-ui';
 import {
-  fetchGetRobotList,
+  fetchGetAllRobots,
   fetchGetVoiceConfig,
   fetchSaveVoiceConfig,
   fetchTestWakeWord,
@@ -24,7 +24,7 @@ const showAlert = ref(false);
 const wakeWordTestText = ref('');
 let wakeWordTestTimer: ReturnType<typeof setTimeout> | null = null;
 
-const robotList = ref<Api.Robot.Robot[]>([]);
+const robotList = ref<Api.Robot.AllRobot[]>([]);
 const selectedRobotId = ref<number | null>(null);
 
 const model = reactive<Api.RobotConfig.VoiceConfig>({
@@ -91,9 +91,11 @@ const selectedRobot = computed(() => robotList.value.find(r => r.id === selected
 async function loadRobots() {
   robotLoading.value = true;
   try {
-    const { data, error } = await fetchGetRobotList({ page: 1, page_size: 200 });
+    // 跨模块下拉用 /robot/manage/all（仅需登录，无 robot:manage:list 权限），
+    // 避免参数配置页面因缺少机器人管理权限而报「权限不足」
+    const { data, error } = await fetchGetAllRobots();
     if (!error && data) {
-      robotList.value = data.records || [];
+      robotList.value = data;
     }
   } catch (err) {
     console.error('加载机器人列表失败:', err);

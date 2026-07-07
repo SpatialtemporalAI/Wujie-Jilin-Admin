@@ -126,10 +126,38 @@ def parse_optional_int(value):
         value = value.strip()
     if value in EMPTY_VALUES:
         return None
-    return int(value)
+    try:
+        return int(value)
+    except (ValueError, TypeError):
+        # 抛中文消息：errors_handler 的 value_error 分支会原样透传为纯中文提示，
+        # 避免 robot_id/map_id 等字段收到非数字字符串时返回英文 "invalid literal for int()..."
+        raise ValueError("必须为整数") from None
 
 
 OptionalIntField = Annotated[Optional[int], BeforeValidator(parse_optional_int)]
+
+
+def parse_positive_int(default: int, *, max_value: Optional[int] = None):
+    """生成分页整数的 BeforeValidator：空值/非法值收敛为 default，<1 取 1，超过 max_value 截断。
+
+    用于 PageRequest 的 page/page_size 字段（BaseModel 字段验证），可收敛前端传入的脏值
+    （空字符串 / "null" / "undefined" / "NaN" / 非数字字符串），避免触发 Pydantic int_parsing 错误。
+    """
+    def parser(value):
+        if isinstance(value, str):
+            value = value.strip()
+        if value in EMPTY_VALUES:
+            return default
+        try:
+            v = int(value)
+        except (ValueError, TypeError):
+            return default
+        if v < 1:
+            return 1
+        if max_value is not None and v > max_value:
+            return max_value
+        return v
+    return parser
 
 
 def parse_optional_enum(allowed):

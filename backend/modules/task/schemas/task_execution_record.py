@@ -30,46 +30,61 @@ ExecutionStatusField = Annotated[
 ]
 ExecutionSourceField = Annotated[
     str | None,
-    BeforeValidator(parse_optional_enum({"platform_schedule", "voice_trigger", "manual"})),
+    BeforeValidator(
+        parse_optional_enum({"platform_schedule", "voice_trigger", "manual"})
+    ),
 ]
 
 
 # ==================== 任务定义快照 Schema ====================
 
+
 class TaskActionSnapshot(BaseReqEntity):
     """动作快照"""
-    action: str = Field(..., description="运控动作")
+
+    action: Optional[str] = Field(None, description="运控动作")
     voice_text: Optional[str] = Field(None, description="语音播报文本")
 
 
 class TaskPointSnapshot(BaseReqEntity):
     """点位快照"""
+
     sort_order: int = Field(0, description="排序")
     point_name: Optional[str] = Field(None, description="点位名称")
     annotation_id: Optional[int] = Field(None, description="关联场景标注ID")
-    actions: List[TaskActionSnapshot] = Field(default_factory=list, description="动作列表")
+    actions: List[TaskActionSnapshot] = Field(
+        default_factory=list, description="动作列表"
+    )
 
 
 class TaskDefinitionSnapshot(BaseReqEntity):
     """任务定义快照"""
+
     task_type: str = Field(..., description="任务类型: patrol/broadcast")
     task_name: Optional[str] = Field(None, description="任务名称")
-    points: List[TaskPointSnapshot] = Field(default_factory=list, description="巡逻点位列表")
+    points: List[TaskPointSnapshot] = Field(
+        default_factory=list, description="巡逻点位列表"
+    )
     broadcast_text: Optional[str] = Field(None, description="播报文本")
 
 
 # ==================== 进度 Schema ====================
 
+
 class PointProgressStatus(BaseReqEntity):
     """单点位进度状态"""
+
     index: int = Field(..., description="点位序号")
-    status: str = Field("pending", description="点位状态: pending/running/completed/failed")
+    status: str = Field(
+        "pending", description="点位状态: pending/running/completed/failed"
+    )
     started_at: Optional[datetime] = Field(None, description="开始时间")
     finished_at: Optional[datetime] = Field(None, description="完成时间")
 
 
 class ProgressDetail(BaseReqEntity):
     """详细进度"""
+
     total_points: int = Field(0, description="总点位数")
     completed_points: int = Field(0, description="已完成点位数")
     current_point_index: int = Field(0, description="当前执行点位序号")
@@ -80,8 +95,10 @@ class ProgressDetail(BaseReqEntity):
 
 # ==================== 查询参数 Schema ====================
 
+
 class TaskExecutionRecordQueryParams(BaseReqEntity):
     """任务执行记录查询参数"""
+
     status: ExecutionStatusField = Field(None, description="执行状态")
     task_id: OptionalIntField = Field(None, description="来源任务ID")
     robot_id: OptionalIntField = Field(None, description="机器人ID")
@@ -94,6 +111,7 @@ class TaskExecutionRecordQueryParams(BaseReqEntity):
 
 class TaskExecutionRecordStartIn(BaseReqEntity):
     """启动执行参数"""
+
     robot_ids: List[int] = Field(..., description="机器人ID列表", min_length=1)
     source: Literal["platform_schedule", "voice_trigger", "manual"] = Field(
         "manual", description="触发源: platform_schedule/voice_trigger/manual"
@@ -102,8 +120,10 @@ class TaskExecutionRecordStartIn(BaseReqEntity):
 
 # ==================== 响应 Schema ====================
 
+
 class TaskExecutionRecordResponseData(BaseEntity):
     """执行记录响应"""
+
     model_config = ConfigDict(from_attributes=True)
 
     # status 为 pending/running/... 字符串枚举，沿用 BaseEntity（不走 BaseRespEntity 序列化），仅跳过非空校验
@@ -111,7 +131,9 @@ class TaskExecutionRecordResponseData(BaseEntity):
     JS_MAX_SAFE_INTEGER: ClassVar[int] = 9007199254740992  # 2^53
 
     id: int = Field(..., description="执行记录ID")
-    task_id: Optional[int] = Field(None, description="来源任务ID（语音触发等无源任务时为空）")
+    task_id: Optional[int] = Field(
+        None, description="来源任务ID（语音触发等无源任务时为空）"
+    )
     robot_id: Optional[int] = Field(None, description="机器人ID")
     robot_name: Optional[str] = Field(None, description="机器人名称")
     scene_id: Optional[int] = Field(None, description="场景地图ID")
@@ -140,4 +162,5 @@ class TaskExecutionRecordResponseData(BaseEntity):
 
 class TaskExecutionRecordDetailResponseData(TaskExecutionRecordResponseData):
     """执行记录详情响应（task_definition 完整展开）"""
+
     pass

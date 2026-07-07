@@ -3,7 +3,7 @@ import { ref, computed, onMounted } from 'vue';
 import { NTag } from 'naive-ui';
 import type { SelectOption } from 'naive-ui';
 import type { SelectedElement } from '../composables/useMapEditor';
-import { fetchGetLatestRobotStatus, fetchGetRobotList, fetchUpdateRobotMapBinding } from '@/service/api';
+import { fetchGetLatestRobotStatus, fetchGetAllRobots, fetchUpdateRobotMapBinding } from '@/service/api';
 import { radToDeg, degToRad } from '@/utils/coordinate';
 import { extractRobotPoint } from '../utils/robot-location';
 import { useAuth } from '@/hooks/business/auth';
@@ -38,7 +38,7 @@ const activeTab = ref('scenes');
 const showPropertiesTab = ref(false);
 const searchText = ref('');
 const pointSearchText = ref('');
-const robotList = ref<Api.Robot.Robot[]>([]);
+const robotList = ref<Api.Robot.AllRobot[]>([]);
 const robotLoading = ref(false);
 const locatingRobotId = ref<number | null>(null);
 const bindingRobotId = ref<number | null>(null);
@@ -119,16 +119,11 @@ function toWorldY(pixelY: number): number {
 async function loadRobotList() {
   robotLoading.value = true;
   try {
-    const { data, error } = await fetchGetRobotList({
-      page: 1,
-      page_size: 200,
-      name: null,
-      serial_number: null,
-      status: null,
-      model_id: undefined
-    });
+    // 跨模块下拉用 /robot/manage/all（仅需登录，无 robot:manage:list 权限），
+    // 避免地图编辑器用户因缺少机器人管理权限而报「权限不足」
+    const { data, error } = await fetchGetAllRobots();
     if (!error && data) {
-      robotList.value = data.records;
+      robotList.value = data;
     } else {
       robotList.value = [];
     }
@@ -139,7 +134,7 @@ async function loadRobotList() {
   }
 }
 
-async function locateRobot(robot: Api.Robot.Robot) {
+async function locateRobot(robot: Api.Robot.AllRobot) {
   if (!robot.map_id) {
     window.$message?.warning('请先绑定场景');
     return;
@@ -164,7 +159,7 @@ async function locateRobot(robot: Api.Robot.Robot) {
   }
 }
 
-async function updateRobotMap(robot: Api.Robot.Robot, mapId: number | null) {
+async function updateRobotMap(robot: Api.Robot.AllRobot, mapId: number | null) {
   bindingRobotId.value = robot.id;
   try {
     const { data, error } = await fetchUpdateRobotMapBinding(robot.id, { map_id: mapId });
@@ -172,7 +167,6 @@ async function updateRobotMap(robot: Api.Robot.Robot, mapId: number | null) {
       const target = robotList.value.find(item => item.id === robot.id);
       if (target) {
         target.map_id = data.map_id;
-        target.map_name = data.map_name;
       }
       window.$message?.success('绑定场景已更新');
     }

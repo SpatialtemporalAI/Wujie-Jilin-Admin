@@ -2,8 +2,8 @@
 import { computed } from 'vue';
 
 interface Props {
-  robotList: Api.Robot.Robot[];
-  selectedRobot: Api.Robot.Robot | null;
+  robotList: Api.Robot.AllRobot[];
+  selectedRobot: Api.Robot.AllRobot | null;
   statusRecord: Api.Robot.RobotStatusRecord | null;
 }
 
