@@ -82,6 +82,8 @@
 - [2026-07-07 导出任务弹窗样式优化 + 列表页](./business/2026-07-07_export-center-style-and-list-page.md) — 弹窗状态Tag移标题旁/下载改图标放右侧仅completed；新增 views/log/export-task 列表页(不进菜单)+「查看全部」入口；后端 list 加 status 筛选；顺带修 pre-existing map-editor→scene_map-editor + 放宽 I18nRouteKey(typecheck 全通过)
 - [2026-07-07 地图保存/切换 gRPC 增加 agent 端推送](./business/2026-07-07_map-grpc-agent-push.md) — NotifyMapSaved 广播 + SwitchMap 单发由「只推 middleware」改为「middleware + agent 双推」，复用同一 MapService RPC；client.py / addr_provider.py / proto / 前端零改动，纯调用方路由扩展；agent 端需部署 MapService
 - [2026-07-07 历史任务列表按结束时间倒序](./business/2026-07-07_task-history-sort-by-finish-time.md) — build_history_query 排序由 id.desc() 改为 finish_time.desc().nulls_last()；仅历史任务，活跃任务列表不动；前端零改动
+- [2026-07-07 保存地图默认推送所有机器人](./business/2026-07-07_map-save-push-all-robots.md) — NotifyMapSaved 广播去掉 Robot.map_id 过滤（find_addrs_by_target_and_map → find_addrs_by_target），保存任一地图即向全部启用 middleware/agent 的机器人下发；SwitchMap 单发不动
+- [2026-07-07 任务执行/历史列表与执行详情补齐即时任务类型](./business/2026-07-07_task-type-instant-execution-views.md) — 承接 0706：task-history-tab / task-execution-tab 表格 NTag + task-detail-drawer 文本展示补齐 instant=即时(warning)；统一 taskTypeLabel + taskTypeTagType 查表
 
 ## 维护说明
 

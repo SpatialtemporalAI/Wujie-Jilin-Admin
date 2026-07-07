@@ -38,7 +38,14 @@ const statusLabelMap: Record<string, string> = {
 
 const taskTypeLabel: Record<string, string> = {
   patrol: '巡逻',
-  broadcast: '播报'
+  broadcast: '播报',
+  instant: '即时'
+};
+
+const taskTypeTagType: Record<string, NaiveUI.ThemeColor> = {
+  patrol: 'info',
+  broadcast: 'success',
+  instant: 'warning'
 };
 
 /** 详情抽屉 */
@@ -100,7 +107,7 @@ const {
       render: (row: Api.Task.TaskExecutionRecord) => {
         const taskType = row.task_definition?.task_type;
         return (
-          <NTag size="small" type={taskType === 'patrol' ? 'info' : 'success'}>
+          <NTag size="small" type={taskTypeTagType[taskType as string] || 'default'}>
             {taskTypeLabel[taskType as string] || taskType || '-'}
           </NTag>
         );
