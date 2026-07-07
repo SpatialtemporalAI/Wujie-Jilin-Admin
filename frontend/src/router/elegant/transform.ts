@@ -190,6 +190,7 @@ const routeMap: RouteMap = {
   "manage_scheduler": "/manage/scheduler",
   "manage_scheduler-log": "/manage/scheduler-log",
   "manage_user": "/manage/user",
+  "map-editor": "/map-editor",
   "merchant": "/merchant",
   "monitor": "/monitor",
   "operation-monitor": "/operation-monitor",
@@ -199,7 +200,6 @@ const routeMap: RouteMap = {
   "scene": "/scene",
   "scene_group": "/scene/group",
   "scene_map": "/scene/map",
-  "scene_map-editor": "/scene/map-editor",
   "settings": "/settings",
   "task": "/task"
 };

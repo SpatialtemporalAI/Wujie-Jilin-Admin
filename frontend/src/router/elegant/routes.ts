@@ -277,6 +277,15 @@ export const generatedRoutes: GeneratedRoute[] = [
     ]
   },
   {
+    name: 'map-editor',
+    path: '/map-editor',
+    component: 'layout.base$view.map-editor',
+    meta: {
+      title: 'map-editor',
+      i18nKey: 'route.map-editor'
+    }
+  },
+  {
     name: 'merchant',
     path: '/merchant',
     component: 'layout.base$view.merchant',
@@ -359,15 +368,6 @@ export const generatedRoutes: GeneratedRoute[] = [
         meta: {
           title: 'scene_map',
           i18nKey: 'route.scene_map'
-        }
-      },
-      {
-        name: 'scene_map-editor',
-        path: '/scene/map-editor',
-        component: 'view.scene_map-editor',
-        meta: {
-          title: 'scene_map-editor',
-          i18nKey: 'route.scene_map-editor'
         }
       }
     ]
