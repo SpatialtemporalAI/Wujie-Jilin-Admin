@@ -6,7 +6,7 @@ declare namespace Api {
    */
   namespace Export {
     /** 导出任务状态 */
-    type ExportTaskStatus = 'pending' | 'processing' | 'completed' | 'failed';
+    type ExportTaskStatus = 'pending' | 'processing' | 'completed' | 'failed' | 'expired';
 
     /** 导出任务 */
     interface ExportTask {

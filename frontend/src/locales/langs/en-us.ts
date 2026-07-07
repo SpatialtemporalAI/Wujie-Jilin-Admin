@@ -1033,7 +1033,8 @@ const local: App.I18n.Schema = {
     statusPending: 'Pending',
     statusProcessing: 'Processing',
     statusCompleted: 'Ready',
-    statusFailed: 'Failed'
+    statusFailed: 'Failed',
+    statusExpired: 'Expired'
   }
 };
 

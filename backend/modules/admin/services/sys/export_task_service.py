@@ -11,7 +11,7 @@ import os
 from datetime import datetime, timezone
 from typing import List, Tuple
 
-from sqlalchemy import select, func
+from sqlalchemy import select, func, update
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from database.models.sys.export_task import SysExportTask
@@ -26,6 +26,11 @@ from modules.admin.schemas.sys.export_task import ExportTaskSubmit
 logger = logging.getLogger(__name__)
 
 EXPORT_DIR = os.path.join(settings.UPLOAD_LOCAL.BASE_DIR, "exports")
+
+# 兜底任务阈值：pending 状态超过该秒数视为孤儿任务（避开与刚提交的即时 asyncio 任务竞争）
+RECOVER_PENDING_AGE_SECONDS = 90
+# 超时阈值：processing 状态超过该秒数视为超时失效（可按实际数据量调整）
+EXPORT_TIMEOUT_SECONDS = 600
 
 
 def _ensure_export_dir():
@@ -105,17 +110,30 @@ class ExportTaskService:
 
         try:
             async with async_db_manager.get_session_cr() as db:
+                # 原子领取：仅当 status 仍为 pending 时才能抢到（rowcount=1）。
+                # 保证多 worker 的兜底任务不会重复生成同一任务；
+                # 即时触发的 asyncio 路径毫秒级领取，与兜底任务不会冲突。
+                now = datetime.now(timezone.utc)
+                claim = await db.execute(
+                    update(SysExportTask)
+                    .where(
+                        SysExportTask.id == task_id,
+                        SysExportTask.status == "pending",
+                    )
+                    .values(status="processing", started_at=now)
+                )
+                await db.commit()
+                if claim.rowcount == 0:
+                    logger.info("导出任务 %s 已被领取或状态已变更，跳过", task_id)
+                    return
+
+                # 领取成功后重新读取任务详情
                 result = await db.execute(
                     select(SysExportTask).where(SysExportTask.id == task_id)
                 )
                 task = result.scalar_one_or_none()
                 if not task:
                     return
-
-                # 更新状态为处理中
-                task.status = "processing"
-                task.started_at = datetime.now(timezone.utc)
-                await db.commit()
 
                 config = get_export_config(task.module_key)
                 template = None
@@ -330,7 +348,7 @@ class ExportTaskService:
         cutoff = datetime.now(timezone.utc) - timedelta(days=days)
         stmt = select(SysExportTask).where(
             SysExportTask.created_at < cutoff,
-            SysExportTask.status.in_(["completed", "failed"]),
+            SysExportTask.status.in_(["completed", "failed", "expired"]),
         )
         result = await db.execute(stmt)
         old_tasks = result.scalars().all()

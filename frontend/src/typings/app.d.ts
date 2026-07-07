@@ -1134,6 +1134,7 @@ declare namespace App {
         statusProcessing: string;
         statusCompleted: string;
         statusFailed: string;
+        statusExpired: string;
       };
     };
 

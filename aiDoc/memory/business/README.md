@@ -77,3 +77,4 @@
 - [2026-07-07 用户新增·昵称改为非必填](./2026-07-07_user-create-nickname-optional.md) — SysUserCreate.nickname 由必填改 Optional（与 Update 对齐）；前端 rules 本就不含 nickname，根因是后端空串触发全局非空校验
 - [2026-07-07 分页参数脏值防御性收敛 + OptionalIntField 错误中文化](./2026-07-07_pagination-dirty-value-coerce.md) — page/page_size 收到空串/"null"/"NaN" 等脏值不再 422，收敛到默认值；robot_id/map_id 等非数字字符串提示由英文 invalid literal 改中文「必须为整数」。BeforeValidator 仅 BaseModel 字段生效（FastAPI 限制）
 - [2026-07-07 修复分页 count 恒返回 1](./2026-07-07_pagination-count-returns-1.md) — SA 2.0 with_only_columns 默认丢弃实体派生 FROM，纯实体查询页 count 退化为无 FROM 的 SELECT count(*)（PG 恒返回 1）；3 处加 maintain_column_froms=True（共享 get_paginated_results + 场景地图/分组）
+- [2026-07-07 导出任务卡死修复](./2026-07-07_export-task-stuck-recover-and-timeout.md) — asyncio.create_task 在 gunicorn worker 回收时丢失致任务永卡 pending；新增两个每分钟定时任务（兜底补生成 pending>90s + 超时失效 processing>600s），_execute_task 改原子领取防多 worker 重复；状态同步经评估保留轮询（FastAPIConnectionManager 进程内存在 4 worker 下推送会丢，WebSocket 需额外 Redis pub/sub 桥接，低频导出不划算）

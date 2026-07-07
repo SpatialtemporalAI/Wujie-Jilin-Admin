@@ -1028,7 +1028,8 @@ const local: App.I18n.Schema = {
     statusPending: '排队中',
     statusProcessing: '导出中',
     statusCompleted: '可下载',
-    statusFailed: '失败'
+    statusFailed: '失败',
+    statusExpired: '已失效'
   }
 };
 

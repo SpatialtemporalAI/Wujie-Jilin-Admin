@@ -69,6 +69,8 @@ function getStatusMeta(status: Api.Export.ExportTaskStatus) {
       return { type: 'info' as const, label: $t('exportCenter.statusProcessing') };
     case 'pending':
       return { type: 'warning' as const, label: $t('exportCenter.statusPending') };
+    case 'expired':
+      return { type: 'error' as const, label: $t('exportCenter.statusExpired') };
     default:
       return { type: 'error' as const, label: $t('exportCenter.statusFailed') };
   }
