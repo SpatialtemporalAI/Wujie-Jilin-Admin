@@ -106,7 +106,9 @@ class ExportTaskService:
 
     @staticmethod
     async def _execute_task(task_id: int):
-        from database.db_manager import async_db_manager
+        # 注意：async_db_manager 定义在 database.manager.async_manager，
+        # 由 database/__init__.py 导出，不能从 database.db_manager 导入（会 ImportError）
+        from database.manager.async_manager import async_db_manager
 
         try:
             async with async_db_manager.get_session_cr() as db:

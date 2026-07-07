@@ -75,6 +75,13 @@ class UserManager(BaseUserManager):
                 error=CustomErrorCode.USER_LOGIN_FAILED,
             )
 
+        # 禁用用户不允许登录
+        if not user.status:
+            raise CustomError(
+                msg="用户已被禁用",
+                error=CustomErrorCode.USER_DISABLED,
+            )
+
         # 自动选择租户
         tenant_id = 0
         tenant_list = []
@@ -176,6 +183,10 @@ class UserManager(BaseUserManager):
                 raise TokenError()
             self.session.expunge(user)
             _cache.set(CacheNamespace.USER, str(user_id), user, ttl=30)
+
+        # 禁用用户：已登录会话也尽快失效（受 USER 缓存 30s TTL 影响，跨 worker 最长约 30s）
+        if not user.status:
+            raise TokenError(msg="用户已被禁用")
 
         if request is not None:
             request.state._cached_current_user = user
