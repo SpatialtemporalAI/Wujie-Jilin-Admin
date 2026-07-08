@@ -9,6 +9,7 @@ from core.middleware.security_middleware import (
     SecurityHeadersMiddleware,
 )
 from core.middleware.operation_log_middleware import OperationLogMiddleware
+from core.middleware.merchant_call_log_middleware import MerchantCallLogMiddleware
 from core.middleware.rate_limit_middleware import RateLimitMiddleware
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.middleware.trustedhost import TrustedHostMiddleware
@@ -36,6 +37,7 @@ def setup_app(app: FastAPI, settings: GlobalSetting):
     app.add_middleware(RequestSizeLimitMiddleware)
     app.add_middleware(SecurityHeadersMiddleware)
     app.add_middleware(RateLimitMiddleware)
+    app.add_middleware(MerchantCallLogMiddleware)
     app.add_middleware(OperationLogMiddleware)
     app.add_middleware(RequestContextMiddleware)
 
