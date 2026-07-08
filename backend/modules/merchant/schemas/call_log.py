@@ -6,15 +6,15 @@ from datetime import datetime
 
 from pydantic import Field
 
-from app.models.common.base import BaseEntity, BaseRespEntity
+from app.models.common.base import BaseEntity, BaseRespEntity, OptionalIntField, BoolField
 
 
 class CallLogQueryParams(BaseEntity):
     """调用日志查询参数"""
 
-    merchant_id: int | None = Field(None, description="商户ID")
+    merchant_id: OptionalIntField = Field(None, description="商户ID")
     action: str | None = Field(None, description="动作（goto_point/speak/...）")
-    success: bool | None = Field(None, description="是否成功")
+    success: BoolField = Field(None, description="是否成功")
     start_time: str | None = Field(None, description="开始时间")
     end_time: str | None = Field(None, description="结束时间")
     api_key: str | None = Field(None, description="API Key（模糊匹配脱敏值）")
