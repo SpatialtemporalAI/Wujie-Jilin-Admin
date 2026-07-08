@@ -21,9 +21,11 @@
 
 - `backend/modules/robot/endpoints/robot_status_record.py`
   - `GET /robot/manage/map/{map_id}/robot-locations` 权限由 `require_permission("robot:manage:list")`
-    改为 `require_any_permission("robot:manage:list", "scene:map-editor:edit")`
-  - 该接口为地图编辑器画布专用（docstring 已注明），与 `bind-map` 端点同一套修法：
+    改为 `require_any_permission("robot:manage:list", "scene:map-editor:list")`
+  - 该接口为地图编辑器画布专用、只读（docstring 已注明），与 `bind-map` 端点同一套修法：
     机器人管理与地图编辑器任一权限通过即可，避免地图编辑器用户跨权限报错
+  - 注：2026-07-08 将叠加权限由 `scene:map-editor:edit` 收窄为 `scene:map-editor:list`，
+    因该接口只读，`edit` 过宽；`bind-map`（写操作）仍保持 `scene:map-editor:edit`
   - import 补 `require_any_permission`（`require_permission` 仍被 `/status/list` 使用，未删）
 
 ### 前端
@@ -52,8 +54,10 @@
 - **跨模块「选择机器人」下拉** → 改调 `/all` 轻量接口（无权限耦合、返回最小字段）。
   本次 5 处均属此类：地图编辑器总览、运营监控选择器、参数配置 3 个 tab 的机器人下拉。
   延续 [[2026-07-06_cross-module-dropdown-all-endpoint]] 建立的 `/all` 模式，补齐其遗漏的 5 处调用方。
-- **地图编辑器专属的机器人读操作** → `require_any_permission` 叠加 `scene:map-editor:edit`。
-  本次 `robot-locations` 属此类，与 `bind-map`（`require_any_permission("robot:manage:edit", "scene:map-editor:edit")`）一致。
+- **地图编辑器专属的机器人读操作** → `require_any_permission` 叠加地图编辑器权限码，
+  权限码按读写区分：读接口用 `scene:map-editor:list`，写接口用 `scene:map-editor:edit`。
+  本次 `robot-locations`（只读）叠加 `scene:map-editor:list`；`bind-map`（写）为
+  `require_any_permission("robot:manage:edit", "scene:map-editor:edit")`。
 
 ### 为何不直接放宽 `/robot/manage/list`
 

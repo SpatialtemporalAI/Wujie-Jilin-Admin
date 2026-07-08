@@ -72,7 +72,7 @@
 - [2026-07-06 角色名称与描述长度限制](./business/2026-07-06_role-name-max-length-20.md) — 后端 SysRoleCreate/Update name max_length 100→20、desc 加 max_length=200；前端 role-operate-drawer 名称/描述 NInput 加 maxlength+show-count
 - [2026-07-06 跨模块下拉改调 /all 轻量接口](./business/2026-07-06_cross-module-dropdown-all-endpoint.md) — 新增 GET /robot/manage/all、GET /scene/group/all（仅登录、返回 SimpleResponse）；前端 6 处下拉（任务/商户/日志/场景地图搜索）由 list 改调 /all，根治跨模块下拉权限不足
 - [2026-07-06 校验错误提示词去中英文混合](./business/2026-07-06_validation-error-message-pure-chinese.md) — errors_handler 用字段 description 反射指代字段（无描述回退「该参数」），消除 page_size必须为整数 这类混合；PYDANTIC_ERROR_ZH 扩充到约 90 项
-- [2026-07-07 修复跨权限调用 robot:manage:list 接口](./business/2026-07-07_cross-permission-robot-list-callers.md) — 5 处下拉（地图编辑器总览/运营监控/参数配置 3 tab）由 /list 改调 /all；robot-locations 端点叠加 scene:map-editor:edit（require_any_permission，对齐 bind-map）
+- [2026-07-07 修复跨权限调用 robot:manage:list 接口](./business/2026-07-07_cross-permission-robot-list-callers.md) — 5 处下拉（地图编辑器总览/运营监控/参数配置 3 tab）由 /list 改调 /all；robot-locations 端点叠加 scene:map-editor:list（只读对齐 list，bind-map 写仍用 edit）
 - [2026-07-07 用户新增·昵称改为非必填](./business/2026-07-07_user-create-nickname-optional.md) — SysUserCreate.nickname 由必填改 Optional（与 Update 对齐）；前端 rules 本就不含 nickname，根因是后端空串触发全局非空校验
 - [2026-07-07 分页参数脏值防御性收敛 + OptionalIntField 错误中文化](./business/2026-07-07_pagination-dirty-value-coerce.md) — page/page_size 收到空串/"null"/"NaN" 等脏值不再 422，收敛到默认值；robot_id/map_id 等非数字字符串提示由英文 invalid literal 改中文「必须为整数」
 - [2026-07-07 修复分页 count 恒返回 1](./business/2026-07-07_pagination-count-returns-1.md) — SA 2.0 with_only_columns 默认丢弃实体派生 FROM，纯实体查询页 count 退化为无 FROM 的 SELECT count(*)（PG 恒返回 1）；3 处加 maintain_column_froms=True（共享 get_paginated_results + 场景地图/分组）

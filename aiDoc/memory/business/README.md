@@ -73,7 +73,7 @@
 - [2026-07-06 任务类型新增「即时」(instant)](./2026-07-06_task-type-instant.md) — 任务列表筛选下拉与表格列新增 instant（即时）；TaskType 联合类型补 'instant'，NTag 颜色改查表映射；不动新增/编辑抽屉
 - [2026-07-06 视频监控 gRPC 启停控制（对接 middleware）](./2026-07-06_video-monitoring-grpc-control.md) — 新增 config/video.proto（单一 RPC NotifyVideoMonitoringChanged(robot_id, enabled)）+ VideoMonitoringClient（走 middleware）+ POST /robot/config/video-monitoring/{robot_id}；实时控制 fire-and-forget，不入重试不落库；前端 API + 类型
 - [2026-07-06 商户开放 API 接口补类型校验](./2026-07-06_openapi-param-validation.md) — openapi schema 补 task_type/status 枚举（parse_optional_enum）、speed(0.5–2.0)/volume(0–100) 范围、map_id 改 OptionalIntField；接入文档错误码表加 422；voice 枚举与 ID ge=1 不加
-- [2026-07-07 修复跨权限调用 robot:manage:list 接口](./2026-07-07_cross-permission-robot-list-callers.md) — 5 处下拉（地图编辑器总览/运营监控/参数配置 3 tab）由 /list 改调 /all；robot-locations 端点叠加 scene:map-editor:edit（require_any_permission，对齐 bind-map）
+- [2026-07-07 修复跨权限调用 robot:manage:list 接口](./2026-07-07_cross-permission-robot-list-callers.md) — 5 处下拉（地图编辑器总览/运营监控/参数配置 3 tab）由 /list 改调 /all；robot-locations 端点叠加 scene:map-editor:list（只读对齐 list，bind-map 写仍用 edit）
 - [2026-07-07 用户新增·昵称改为非必填](./2026-07-07_user-create-nickname-optional.md) — SysUserCreate.nickname 由必填改 Optional（与 Update 对齐）；前端 rules 本就不含 nickname，根因是后端空串触发全局非空校验
 - [2026-07-07 分页参数脏值防御性收敛 + OptionalIntField 错误中文化](./2026-07-07_pagination-dirty-value-coerce.md) — page/page_size 收到空串/"null"/"NaN" 等脏值不再 422，收敛到默认值；robot_id/map_id 等非数字字符串提示由英文 invalid literal 改中文「必须为整数」。BeforeValidator 仅 BaseModel 字段生效（FastAPI 限制）
 - [2026-07-07 修复分页 count 恒返回 1](./2026-07-07_pagination-count-returns-1.md) — SA 2.0 with_only_columns 默认丢弃实体派生 FROM，纯实体查询页 count 退化为无 FROM 的 SELECT count(*)（PG 恒返回 1）；3 处加 maintain_column_froms=True（共享 get_paginated_results + 场景地图/分组）
