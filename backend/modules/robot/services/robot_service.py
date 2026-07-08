@@ -26,6 +26,7 @@ from database.models.business.robot_model import RobotModel
 from database.models.business.scene_map import SceneMap
 from database.models.business.task import task_robot_association
 from database.utils.timezone import timezone
+from core.config import settings
 from core.exception.errors import NotFoundError, ConflictError
 from modules.robot.schemas.robot import (
     RobotCreate,
@@ -615,10 +616,10 @@ class RobotService:
 
             # 绑定/切换到新地图后，通知该 robot 的 middleware 切换当前地图。
             # 与「广播地图」(NotifyMapSaved) 一样走 robot.grpc_config.middleware 地址；
-            # 失败仅记日志，不影响绑定结果。解绑(map_id=None)不下发。
+            # 失败/离线入重试队列，不影响绑定结果。解绑(map_id=None)不下发。
             if map_obj is not None:
                 await RobotService._switch_map_via_grpc(
-                    map_obj.id, map_obj.version, robot_id
+                    map_obj.id, map_obj.version, robot_id, db
                 )
 
             logger.info("更新机器人绑定场景成功，机器人ID: %d", robot_id)
@@ -633,63 +634,104 @@ class RobotService:
             raise
 
     @staticmethod
-    async def _switch_map_via_grpc(map_id: int, version: int, robot_id: int) -> None:
-        """切换机器人当前地图（SwitchMap）
+    async def _switch_map_via_grpc(
+        map_id: int, version: int, robot_id: int, db: AsyncSession
+    ) -> None:
+        """切换机器人当前地图（SwitchMap），失败/离线入 grpc_retry_task 重试
 
-        下发到该 robot 的 middleware 与 agent 地址各一次（robot.grpc_config.middleware /
-        robot.grpc_config.agent）。两端各自独立解析地址、独立 skip、独立 try/except 记日志，
-        互不影响；某端未配置则跳过该端。与「广播地图」(NotifyMapSaved) 复用同一套按-addr
-        缓存的 channel/stub。失败仅记日志，不抛出，因此导览/agent 服务不可用不会回滚已成功的绑定。
+        调 RPC 前先取消同 robot 的旧 SwitchMap pending（覆盖语义，旧 GRPC 不再补推）；
+        离线或任一已配置 target 推送失败则入队，由定时任务在线后重试。
+        下发到该 robot 的 middleware 与 agent 地址各一次，复用「广播地图」同一套按-addr
+        缓存的 channel/stub。外层整体吞异常（fire-and-forget）：重试逻辑的任何异常都不抛出，
+        不影响已成功的绑定结果。
         """
-        import grpc
+        if not settings.GRPC.ENABLED:
+            return
 
-        from modules.grpc.addr_provider import get_config_addr_provider
-        from modules.grpc.client import MapServiceClient
+        try:
+            from modules.grpc.addr_provider import get_config_addr_provider
+            from modules.grpc.client import MapServiceClient
+            from modules.grpc.retry_service import GrpcRetryService
 
-        # 对 middleware / agent 两个 target 各单发一次，互不影响
-        for target in ("middleware", "agent"):
-            addr = await get_config_addr_provider().get_addr(robot_id, target)
-            if not addr:
-                logger.info(
-                    "switch_map skipped: %s 未配置 robot_id=%s map=%s",
-                    target,
-                    robot_id,
-                    map_id,
-                )
-                continue
+            # 覆盖：取消同 robot 的旧 SwitchMap pending（旧 GRPC 不再补推）
+            await GrpcRetryService.cancel_superseded(
+                db,
+                service_name="map",
+                method_name="SwitchMap",
+                robot_id=robot_id,
+            )
 
-            try:
-                resp = await MapServiceClient.switch_map(map_id, version, addr)
-                logger.info(
-                    "switch_map ok target=%s map=%s version=%s robot_id=%s addr=%s status=%s msg=%s current_id=%s current_version=%s",
-                    target,
-                    map_id,
-                    version,
-                    robot_id,
-                    addr,
-                    resp.status,
-                    resp.message,
-                    resp.current_id,
-                    resp.current_version,
+            payload = {"robot_id": robot_id, "map_id": map_id, "version": version}
+
+            # 离线：直接入队，等上线后定时重试
+            if not await GrpcRetryService.is_robot_online(db, robot_id):
+                await GrpcRetryService.save_pending(
+                    db,
+                    service_name="map",
+                    method_name="SwitchMap",
+                    payload=payload,
+                    robot_id=robot_id,
+                    last_error="机器人离线，等待上线后重试",
                 )
-            except grpc.aio.AioRpcError as exc:
-                logger.warning(
-                    "switch_map rpc failed target=%s map=%s version=%s robot_id=%s addr=%s code=%s details=%s",
-                    target,
-                    map_id,
-                    version,
-                    robot_id,
-                    addr,
-                    exc.code(),
-                    exc.details(),
+                return
+
+            # 在线：对 middleware / agent 各下发一次；任一已配置 target 失败则入队
+            failed: List[str] = []
+            for target in ("middleware", "agent"):
+                addr = await get_config_addr_provider().get_addr(robot_id, target)
+                if not addr:
+                    logger.info(
+                        "switch_map skipped: %s 未配置 robot_id=%s map=%s",
+                        target,
+                        robot_id,
+                        map_id,
+                    )
+                    continue
+                try:
+                    resp = await MapServiceClient.switch_map(map_id, version, addr)
+                    status = getattr(resp, "status", "")
+                    if status == "OK":
+                        logger.info(
+                            "switch_map ok target=%s map=%s version=%s robot_id=%s addr=%s msg=%s current_id=%s current_version=%s",
+                            target,
+                            map_id,
+                            version,
+                            robot_id,
+                            addr,
+                            resp.message,
+                            getattr(resp, "current_id", ""),
+                            getattr(resp, "current_version", ""),
+                        )
+                    else:
+                        failed.append(
+                            f"{target}: {getattr(resp, 'message', '') or '设备未响应'}"
+                        )
+                except Exception as exc:  # noqa: BLE001 - 单端失败不影响另一端，最终统一入队
+                    logger.warning(
+                        "switch_map failed target=%s map=%s version=%s robot_id=%s addr=%s: %s",
+                        target,
+                        map_id,
+                        version,
+                        robot_id,
+                        addr,
+                        exc,
+                    )
+                    failed.append(f"{target}: {exc}")
+
+            if failed:
+                await GrpcRetryService.save_pending(
+                    db,
+                    service_name="map",
+                    method_name="SwitchMap",
+                    payload=payload,
+                    robot_id=robot_id,
+                    last_error="; ".join(failed),
                 )
-            except Exception as exc:
-                logger.warning(
-                    "switch_map failed target=%s map=%s version=%s robot_id=%s addr=%s: %s",
-                    target,
-                    map_id,
-                    version,
-                    robot_id,
-                    addr,
-                    exc,
-                )
+        except Exception as exc:  # noqa: BLE001 - fire-and-forget：不破坏已成功的绑定
+            logger.warning(
+                "switch_map overall failed (fire-and-forget) map=%s version=%s robot_id=%s: %s",
+                map_id,
+                version,
+                robot_id,
+                exc,
+            )

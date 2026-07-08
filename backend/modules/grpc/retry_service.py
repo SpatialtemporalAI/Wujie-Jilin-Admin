@@ -2,14 +2,26 @@
 gRPC 推送失败重试服务
 
 职责：
-1. save_pending：业务层 gRPC 推送失败时调用，把任务持久化到 grpc_retry_task 表
-2. run_pending_once：调度任务调用，扫描到期任务并重试
-3. _dispatch_retry：根据 service_name + method_name 路由到对应 client（复用 config_client.py）
+1. cancel_superseded：业务层每次推送前调用，取消同业务键的旧 pending 任务（无论本次成败）
+2. save_pending：业务层推送失败/离线时调用，把任务持久化到 grpc_retry_task 表
+3. run_pending_once：调度任务调用，扫描到期任务并重试
+
+覆盖语义（同机器人同类消息覆盖，旧 GRPC 无需再推）：
+- voice/speed/battery：覆盖键 = (method, robot_id)
+- 保存地图 NotifyMapSaved：覆盖键 = (method, robot_id, map_id)
+- 切换地图 SwitchMap：覆盖键 = (method, robot_id)
+注意：cancel_superseded 由推送入口在「调 RPC 之前」调用，因此新推送即使成功也会取消旧 pending，
+避免旧值被定时任务补推造成设备端数据回退。
+
+在线前置（定时重试先检测在线）：
+- 机器人软删 → 任务置 cancelled（不无限等待）
+- 机器人离线 → next_retry_at 延后 _ONLINE_WAIT_SECONDS，不推进 retry_count、不标 dead，
+  等机器人上线后再推；只有真正的推送失败才消耗退避次数。
 
 指数退避：60s -> 120s -> 240s（共 3 次），超过 max_retries 标记 dead。
 
 调用容错：单次重试用 asyncio.wait_for 加 _CALL_TIMEOUT_SECONDS 硬超时，
-无论 gRPC 不通抛异常 / 超时 / resp.success=False，都视为一次失败并推进 retry_count，
+无论超时 / 抛异常 / resp.success=False，都视为一次失败并推进 retry_count，
 避免对端 hang 或 grpc.aio 未按 deadline 抛错时任务永远停在 pending。
 """
 import asyncio
@@ -27,6 +39,8 @@ from modules.grpc.config_client import (
     SpeedConfigClient,
     VoiceConfigClient,
 )
+from modules.grpc.map_retry_helper import MapRetryHelper
+from modules.grpc.result import RetryCallResult
 
 logger = logging.getLogger(__name__)
 
@@ -34,28 +48,80 @@ logger = logging.getLogger(__name__)
 # 指数退避间隔（秒）：第 1 次 60s、第 2 次 120s、第 3 次 240s
 _BACKOFF_SECONDS: Tuple[int, ...] = (60, 120, 240)
 
+# 离线任务的再扫间隔（秒）：离线不消耗退避，每分钟重试在线状态
+_ONLINE_WAIT_SECONDS: int = 60
+
 # 单次重试的硬超时（秒）：兜底 settings.GRPC.TIMEOUT_SECONDS，
 # 防止 grpc.aio 在某些场景未按 deadline 抛错时把整个扫描卡死
 _CALL_TIMEOUT_SECONDS: float = 30.0
 
-# (service_name, method_name) → (client_method_ref, required_payload_keys)
-# 用于把任务表的 service/method/payload 路由到对应 client 方法
-_ROUTING: Dict[Tuple[str, str], Tuple[Callable[..., Awaitable[Any]], Tuple[str, ...]]] = {
+
+async def _wrap_voice_wake(
+    robot_id: int, wake_word_enabled: bool, wake_word: str
+) -> RetryCallResult:
+    resp = await VoiceConfigClient.notify_wake_word(
+        robot_id, wake_word_enabled, wake_word
+    )
+    return RetryCallResult(
+        success=getattr(resp, "success", False),
+        message=getattr(resp, "message", ""),
+    )
+
+
+async def _wrap_voice_tts(
+    robot_id: int, tts_voice: str, tts_speed: float, tts_volume: int
+) -> RetryCallResult:
+    resp = await VoiceConfigClient.notify_tts(robot_id, tts_voice, tts_speed, tts_volume)
+    return RetryCallResult(
+        success=getattr(resp, "success", False),
+        message=getattr(resp, "message", ""),
+    )
+
+
+async def _wrap_speed(robot_id: int, speed_level: str) -> RetryCallResult:
+    resp = await SpeedConfigClient.notify_speed_level(robot_id, speed_level)
+    return RetryCallResult(
+        success=getattr(resp, "success", False),
+        message=getattr(resp, "message", ""),
+    )
+
+
+async def _wrap_battery(robot_id: int, battery_threshold: int) -> RetryCallResult:
+    resp = await BatteryConfigClient.notify_battery_threshold(
+        robot_id, battery_threshold
+    )
+    return RetryCallResult(
+        success=getattr(resp, "success", False),
+        message=getattr(resp, "message", ""),
+    )
+
+
+# (service_name, method_name) → (retry_callable, required_payload_keys)
+# retry_callable 统一返回 RetryCallResult；kwargs 由 payload 按 required_keys 构造
+_ROUTING: Dict[Tuple[str, str], Tuple[Callable[..., Awaitable[RetryCallResult]], Tuple[str, ...]]] = {
     ("voice", "NotifyWakeWordChanged"): (
-        VoiceConfigClient.notify_wake_word,
+        _wrap_voice_wake,
         ("robot_id", "wake_word_enabled", "wake_word"),
     ),
     ("voice", "NotifyTTSConfigChanged"): (
-        VoiceConfigClient.notify_tts,
+        _wrap_voice_tts,
         ("robot_id", "tts_voice", "tts_speed", "tts_volume"),
     ),
     ("speed", "NotifySpeedLevelChanged"): (
-        SpeedConfigClient.notify_speed_level,
+        _wrap_speed,
         ("robot_id", "speed_level"),
     ),
     ("battery", "NotifyBatteryThresholdChanged"): (
-        BatteryConfigClient.notify_battery_threshold,
+        _wrap_battery,
         ("robot_id", "battery_threshold"),
+    ),
+    ("map", "NotifyMapSaved"): (
+        MapRetryHelper.notify_map_saved,
+        ("robot_id", "map_id", "version"),
+    ),
+    ("map", "SwitchMap"): (
+        MapRetryHelper.switch_map,
+        ("robot_id", "map_id", "version"),
     ),
 }
 
@@ -69,24 +135,31 @@ def _calc_next_retry(retry_count: int) -> timedelta:
 def _superseded_clause(
     service_name: str,
     method_name: str,
-    payload: Dict[str, Any],
+    robot_id: Optional[int],
+    map_id: Optional[int] = None,
 ):
     """构造「同业务键的 pending 任务」WHERE 条件列表
 
-    业务键规则：voice/speed/battery 按 robot_id + method_name（同 robot 的同方法最终值覆盖中间值）。
+    覆盖键规则：
+    - voice/speed/battery/切换地图：method + robot_id（map_id 均为 NULL）
+    - 保存地图：method + robot_id + map_id（不同地图互不覆盖）
+    robot_id 为 None 时不取消（兼容未来无 robot 上下文任务）。
     """
+    if robot_id is None:
+        return None
+
     conditions = [
         GrpcRetryTask.status == "pending",
         GrpcRetryTask.deleted_at.is_(None),
         GrpcRetryTask.service_name == service_name,
         GrpcRetryTask.method_name == method_name,
+        GrpcRetryTask.robot_id == robot_id,
     ]
-
-    robot_id = payload.get("robot_id")
-    if robot_id is None:
-        return None
-    conditions.append(GrpcRetryTask.robot_id == robot_id)
-
+    # NULL-safe：map_id 为空只覆盖 map_id IS NULL 的旧任务；非空只覆盖同 map_id
+    if map_id is None:
+        conditions.append(GrpcRetryTask.map_id.is_(None))
+    else:
+        conditions.append(GrpcRetryTask.map_id == map_id)
     return conditions
 
 
@@ -94,23 +167,23 @@ class GrpcRetryService:
     """gRPC 推送失败重试服务"""
 
     @staticmethod
-    async def _cancel_superseded(
+    async def cancel_superseded(
         db: AsyncSession,
         *,
         service_name: str,
         method_name: str,
-        payload: Dict[str, Any],
+        robot_id: Optional[int],
+        map_id: Optional[int] = None,
     ) -> int:
-        """新任务入队前，取消被覆盖的旧 pending 任务（同业务键）。
+        """取消被新操作覆盖的旧 pending 任务（同业务键）。
 
-        场景示例：用户对同一条 face 记录「先编辑后删除」，编辑推送失败入队后，
-        删除又入队——此时旧 UPDATE 任务已无意义（设备最终应当只见 DELETE），
-        直接取消，避免设备端短时数据来回抖动。
+        由推送入口在「调 RPC 之前」调用：无论本次推送成功或失败，旧同键 pending 都先取消，
+        避免定时任务把旧值补推造成设备端数据回退。内部自带 commit（独立于 save_pending）。
 
         Returns:
             取消条数
         """
-        conditions = _superseded_clause(service_name, method_name, payload)
+        conditions = _superseded_clause(service_name, method_name, robot_id, map_id)
         if conditions is None:
             return 0
 
@@ -122,11 +195,14 @@ class GrpcRetryService:
         )
         cancelled = result.rowcount or 0
         if cancelled:
+            await db.commit()
             logger.info(
-                "grpc retry superseded %s old task(s) service=%s method=%s",
+                "grpc retry superseded %s old task(s) service=%s method=%s robot_id=%s map_id=%s",
                 cancelled,
                 service_name,
                 method_name,
+                robot_id,
+                map_id,
             )
         return cancelled
 
@@ -138,26 +214,21 @@ class GrpcRetryService:
         method_name: str,
         payload: Dict[str, Any],
         robot_id: Optional[int] = None,
+        map_id: Optional[int] = None,
         max_retries: int = 3,
         last_error: Optional[str] = None,
     ) -> GrpcRetryTask:
-        """业务层 gRPC 推送失败时调用：写入待重试任务
+        """业务层 gRPC 推送失败/离线时调用：写入待重试任务
 
-        入队前先按业务键取消旧 pending 任务，避免被新操作覆盖的旧任务继续重试。
-        next_retry_at = now() + 第一次退避（60s）
+        本方法不再取消同键旧任务——调用方需在推送入口先调 cancel_superseded。
+        next_retry_at = now() + 第一次退避（60s）。
         """
-        await GrpcRetryService._cancel_superseded(
-            db,
-            service_name=service_name,
-            method_name=method_name,
-            payload=payload,
-        )
-
         task = GrpcRetryTask(
             service_name=service_name,
             method_name=method_name,
             payload=payload,
             robot_id=robot_id,
+            map_id=map_id,
             status="pending",
             retry_count=0,
             max_retries=max_retries,
@@ -168,22 +239,64 @@ class GrpcRetryService:
         await db.commit()
         await db.refresh(task)
         logger.info(
-            "grpc retry task saved service=%s method=%s robot_id=%s task_id=%s",
+            "grpc retry task saved service=%s method=%s robot_id=%s map_id=%s task_id=%s",
             service_name,
             method_name,
             robot_id,
+            map_id,
             task.id,
         )
         return task
+
+    @staticmethod
+    async def _robot_active(db: AsyncSession, robot_id: Optional[int]) -> bool:
+        """机器人存在且未软删（用于把已删机器人的任务判 cancelled）"""
+        if robot_id is None:
+            return True
+        from database.models.business.robot import Robot
+
+        result = await db.execute(
+            select(Robot.id).where(
+                Robot.id == robot_id, Robot.deleted_at.is_(None)
+            )
+        )
+        return result.scalar_one_or_none() is not None
+
+    @staticmethod
+    async def is_robot_online(db: AsyncSession, robot_id: Optional[int]) -> bool:
+        """机器人是否在线（status == ONLINE 且未软删）；robot_id 为 None 视为在线。
+
+        作为「在线判定」的唯一真源，供推送入口（config / 地图保存 / 切换地图）与定时重试复用。
+        """
+        if robot_id is None:
+            return True
+        from database.models.business.robot import Robot, RobotStatus
+
+        result = await db.execute(
+            select(Robot.status).where(
+                Robot.id == robot_id, Robot.deleted_at.is_(None)
+            )
+        )
+        status = result.scalar_one_or_none()
+        return status == RobotStatus.ONLINE
 
     @staticmethod
     async def run_pending_once(db: AsyncSession, limit: int = 50) -> Dict[str, int]:
         """扫描到期任务并重试
 
         Returns:
-            {"scanned": N, "completed": N, "rescheduled": N, "dead": N, "failed": N}
+            {"scanned": N, "completed": N, "rescheduled": N, "dead": N,
+             "failed": N, "waiting_online": N, "cancelled": N}
         """
-        stats = {"scanned": 0, "completed": 0, "rescheduled": 0, "dead": 0, "failed": 0}
+        stats = {
+            "scanned": 0,
+            "completed": 0,
+            "rescheduled": 0,
+            "dead": 0,
+            "failed": 0,
+            "waiting_online": 0,
+            "cancelled": 0,
+        }
         now = timezone.now()
 
         result = await db.execute(
@@ -205,7 +318,8 @@ class GrpcRetryService:
 
     @staticmethod
     async def _retry_one(db: AsyncSession, task: GrpcRetryTask) -> str:
-        """重试单条任务，返回结果分类: completed / rescheduled / dead"""
+        """重试单条任务，返回结果分类:
+        completed / rescheduled / dead / waiting_online / cancelled"""
         routing = _ROUTING.get((task.service_name, task.method_name))
         if routing is None:
             logger.error(
@@ -235,6 +349,20 @@ class GrpcRetryService:
             await db.commit()
             return "dead"
 
+        # 在线前置：机器人已删 → cancelled；离线 → 等待，不消耗退避
+        if task.robot_id is not None:
+            if not await GrpcRetryService._robot_active(db, task.robot_id):
+                task.status = "cancelled"
+                task.last_error = "机器人已删除"
+                await db.commit()
+                return "cancelled"
+            if not await GrpcRetryService.is_robot_online(db, task.robot_id):
+                task.next_retry_at = timezone.now() + timedelta(
+                    seconds=_ONLINE_WAIT_SECONDS
+                )
+                await db.commit()
+                return "waiting_online"
+
         try:
             kwargs = {k: payload[k] for k in required_keys}
             resp = await asyncio.wait_for(
@@ -263,7 +391,20 @@ class GrpcRetryService:
             await db.commit()
             return "dead" if task.status == "dead" else "rescheduled"
 
-        if getattr(resp, "success", False):
+        # resp 为统一 RetryCallResult
+        if getattr(resp, "cancel", False):
+            task.status = "cancelled"
+            task.last_error = resp.message or "任务取消"
+            await db.commit()
+            logger.info(
+                "grpc retry task cancelled task_id=%s service=%s method=%s",
+                task.id,
+                task.service_name,
+                task.method_name,
+            )
+            return "cancelled"
+
+        if resp.success:
             task.status = "completed"
             task.completed_at = timezone.now()
             task.last_error = None
@@ -276,8 +417,8 @@ class GrpcRetryService:
             )
             return "completed"
 
-        # resp.success=False（client 已吞掉异常并返回失败响应）
-        task.last_error = getattr(resp, "message", "") or "设备未响应"
+        # 推送失败（resp.success=False）
+        task.last_error = resp.message or "设备未响应"
         GrpcRetryService._advance_fields(task)
         await db.commit()
         return "dead" if task.status == "dead" else "rescheduled"

@@ -249,7 +249,9 @@ const local: App.I18n.Schema = {
     manage: 'Manage',
     manage_menu: 'Menu Management',
     manage_role: 'Role Management',
-    merchant: 'Merchant Management',
+    'open-merchant': 'Open Merchant',
+    'open-merchant_merchant': 'Merchant Management',
+    'open-merchant_call-log': 'Call Log',
     manage_user: 'User Management',
     manage_dict: 'Dict Management',
     manage_config: 'System Config',
@@ -552,6 +554,33 @@ const local: App.I18n.Schema = {
           contactEmail: 'Please enter email',
           bindRobot: 'Please select bound robots',
           remark: 'Please enter remark'
+        }
+      },
+      callLog: {
+        merchantName: 'Merchant',
+        apiKey: 'API Key',
+        action: 'Action',
+        method: 'HTTP Method',
+        path: 'Path',
+        ip: 'IP',
+        success: 'Success',
+        successTrue: 'Success',
+        successFalse: 'Failed',
+        responseCode: 'Status Code',
+        elapsedMs: 'Elapsed',
+        callTime: 'Call Time',
+        errorMsg: 'Error',
+        viewDetail: 'Detail',
+        detailTitle: 'Call Log Detail',
+        requestParams: 'Request Params (masked)',
+        responseResult: 'Response Result (masked)',
+        clear: 'Clear >30d',
+        clearConfirm: 'This will clear call logs older than 30 days. Continue?',
+        form: {
+          action: 'Please enter action',
+          apiKey: 'Please enter API Key',
+          startTime: 'Start time',
+          endTime: 'End time'
         }
       },
       face: {

@@ -45,8 +45,10 @@ declare module "@elegant-router/types" {
     "manage_scheduler-log": "/manage/scheduler-log";
     "manage_user": "/manage/user";
     "map-editor": "/map-editor";
-    "merchant": "/merchant";
     "monitor": "/monitor";
+    "open-merchant": "/open-merchant";
+    "open-merchant_call-log": "/open-merchant/call-log";
+    "open-merchant_merchant": "/open-merchant/merchant";
     "operation-monitor": "/operation-monitor";
     "robot": "/robot";
     "robot_model": "/robot/model";
@@ -98,8 +100,8 @@ declare module "@elegant-router/types" {
     | "login"
     | "manage"
     | "map-editor"
-    | "merchant"
     | "monitor"
+    | "open-merchant"
     | "operation-monitor"
     | "robot"
     | "robots"
@@ -147,8 +149,9 @@ declare module "@elegant-router/types" {
     | "manage_scheduler"
     | "manage_user"
     | "map-editor"
-    | "merchant"
     | "monitor"
+    | "open-merchant_call-log"
+    | "open-merchant_merchant"
     | "operation-monitor"
     | "robot_model"
     | "robots"

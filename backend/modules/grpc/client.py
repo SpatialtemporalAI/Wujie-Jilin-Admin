@@ -54,6 +54,74 @@ class MapServiceClient:
         return cls._stubs_by_addr[addr]
 
     @classmethod
+    async def notify_map_saved_one(
+        cls,
+        map_info: map_pb2.MapInfo,
+        robot_id: int,
+        addr: str,
+    ) -> map_pb2.NotifyMapSavedResponse:
+        """单机器人单地址下发 NotifyMapSaved（广播与重试共用）
+
+        addr 为空返回 DISABLED 哨兵；调用方据此判断是否入重试队列。
+        成功返回 status=OK；gRPC 错误/异常被吞，返回 status=ERROR 的响应（不抛）。
+        """
+        if not settings.GRPC.ENABLED:
+            return map_pb2.NotifyMapSavedResponse(
+                status="DISABLED", message="gRPC 未启用"
+            )
+        if not addr:
+            return map_pb2.NotifyMapSavedResponse(
+                status="DISABLED", message="middleware 地址未配置"
+            )
+
+        request = map_pb2.NotifyMapSavedRequest(map_info=map_info)
+        try:
+            stub = await cls._get_stub_for_addr(addr)
+            resp = await stub.NotifyMapSaved(
+                request, timeout=settings.GRPC.TIMEOUT_SECONDS
+            )
+            if getattr(resp, "status", "") == "OK":
+                logger.info(
+                    "notify_map_saved ok map_id=%s version=%s robot_id=%s addr=%s",
+                    map_info.id,
+                    map_info.version,
+                    robot_id,
+                    addr,
+                )
+            else:
+                logger.warning(
+                    "notify_map_saved failed map_id=%s robot_id=%s addr=%s status=%s msg=%s",
+                    map_info.id,
+                    robot_id,
+                    addr,
+                    getattr(resp, "status", ""),
+                    getattr(resp, "message", "") or "设备未响应",
+                )
+            return resp
+        except grpc.aio.AioRpcError as e:
+            logger.warning(
+                "notify_map_saved rpc error map_id=%s robot_id=%s addr=%s code=%s details=%s",
+                map_info.id,
+                robot_id,
+                addr,
+                e.code(),
+                e.details(),
+            )
+            return map_pb2.NotifyMapSavedResponse(
+                status="ERROR", message=f"gRPC 调用失败: {e.code().name}"
+            )
+        except Exception as e:  # noqa: BLE001 - 兜底，不抛
+            logger.exception(
+                "notify_map_saved raised map_id=%s robot_id=%s addr=%s",
+                map_info.id,
+                robot_id,
+                addr,
+            )
+            return map_pb2.NotifyMapSavedResponse(
+                status="ERROR", message=f"gRPC 调用异常: {e}"
+            )
+
+    @classmethod
     async def notify_map_saved(
         cls,
         map_info: map_pb2.MapInfo,
@@ -63,6 +131,7 @@ class MapServiceClient:
 
         targets: [(robot_id, host:port), ...]，由调用方按 Robot.map_id 反查得到。
         任一成功即整体 status="OK"；无 target 返回 SKIPPED；全部失败返回 ERROR。
+        每个目标独立调用 notify_map_saved_one，互不影响。
         """
         if not settings.GRPC.ENABLED:
             return map_pb2.NotifyMapSavedResponse(
@@ -73,52 +142,14 @@ class MapServiceClient:
                 status="SKIPPED", message="无绑定该地图的机器人"
             )
 
-        request = map_pb2.NotifyMapSavedRequest(map_info=map_info)
         success_any = False
         last_msg = "全部失败"
         for robot_id, addr in targets:
-            try:
-                stub = await cls._get_stub_for_addr(addr)
-                resp = await stub.NotifyMapSaved(
-                    request, timeout=settings.GRPC.TIMEOUT_SECONDS
-                )
-                if getattr(resp, "status", "") == "OK":
-                    success_any = True
-                    logger.info(
-                        "notify_map_saved ok map_id=%s version=%s robot_id=%s addr=%s",
-                        map_info.id,
-                        map_info.version,
-                        robot_id,
-                        addr,
-                    )
-                else:
-                    last_msg = getattr(resp, "message", "") or "设备未响应"
-                    logger.warning(
-                        "notify_map_saved failed map_id=%s robot_id=%s addr=%s status=%s msg=%s",
-                        map_info.id,
-                        robot_id,
-                        addr,
-                        getattr(resp, "status", ""),
-                        last_msg,
-                    )
-            except grpc.aio.AioRpcError as e:
-                last_msg = f"gRPC 调用失败: {e.code().name}"
-                logger.warning(
-                    "notify_map_saved rpc error map_id=%s robot_id=%s addr=%s code=%s details=%s",
-                    map_info.id,
-                    robot_id,
-                    addr,
-                    e.code(),
-                    e.details(),
-                )
-            except Exception as e:  # noqa: BLE001 - 兜底，保证广播继续下一个
-                last_msg = f"gRPC 调用异常: {e}"
-                logger.exception(
-                    "notify_map_saved raised map_id=%s robot_id=%s addr=%s",
-                    map_info.id,
-                    robot_id,
-                    addr,
-                )
+            resp = await cls.notify_map_saved_one(map_info, robot_id, addr)
+            if getattr(resp, "status", "") == "OK":
+                success_any = True
+            else:
+                last_msg = getattr(resp, "message", "") or "设备未响应"
 
         if success_any:
             return map_pb2.NotifyMapSavedResponse(status="OK", message="ok")

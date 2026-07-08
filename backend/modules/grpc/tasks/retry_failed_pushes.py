@@ -24,7 +24,7 @@ logger = logging.getLogger(__name__)
 @scheduled_task(
     cron="* * * * *",
     name="重试失败的 gRPC 推送",
-    description="每分钟扫描 grpc_retry_task 表中到期任务，调用对应 gRPC，成功置 completed，失败按指数退避延后或标记 dead",
+    description="每分钟扫描 grpc_retry_task 表中到期任务，先检测机器人在线，在线才推送；成功置 completed，离线等待，失败按指数退避延后或标记 dead",
     task_key="grpc.retry_failed_pushes",
     is_system=True,
     concurrent_policy="skip",
@@ -39,10 +39,12 @@ async def retry_failed_pushes():
     async for db in get_session():
         stats = await GrpcRetryService.run_pending_once(db, limit=50)
         logger.info(
-            "grpc retry scan done scanned=%s completed=%s rescheduled=%s dead=%s",
+            "grpc retry scan done scanned=%s completed=%s rescheduled=%s dead=%s waiting_online=%s cancelled=%s",
             stats.get("scanned", 0),
             stats.get("completed", 0),
             stats.get("rescheduled", 0),
             stats.get("dead", 0),
+            stats.get("waiting_online", 0),
+            stats.get("cancelled", 0),
         )
         return stats

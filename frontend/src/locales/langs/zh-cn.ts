@@ -245,7 +245,9 @@ const local: App.I18n.Schema = {
     manage: '系统管理',
     manage_menu: '菜单管理',
     manage_role: '角色管理',
-    merchant: '商户管理',
+    'open-merchant': '开放商户',
+    'open-merchant_merchant': '商户管理',
+    'open-merchant_call-log': '调用日志',
     manage_user: '用户管理',
     manage_dict: '字典管理',
     manage_config: '系统配置',
@@ -547,6 +549,33 @@ const local: App.I18n.Schema = {
           contactEmail: '请输入邮箱',
           bindRobot: '请选择绑定的机器人',
           remark: '请输入备注'
+        }
+      },
+      callLog: {
+        merchantName: '商户',
+        apiKey: 'API Key',
+        action: '动作',
+        method: 'HTTP方法',
+        path: '请求路径',
+        ip: 'IP地址',
+        success: '是否成功',
+        successTrue: '成功',
+        successFalse: '失败',
+        responseCode: '响应码',
+        elapsedMs: '耗时',
+        callTime: '调用时间',
+        errorMsg: '错误信息',
+        viewDetail: '详情',
+        detailTitle: '调用日志详情',
+        requestParams: '请求参数（已脱敏）',
+        responseResult: '响应结果（已脱敏）',
+        clear: '清理30天前',
+        clearConfirm: '将清理 30 天前的调用日志，确定？',
+        form: {
+          action: '请输入动作',
+          apiKey: '请输入 API Key',
+          startTime: '开始时间',
+          endTime: '结束时间'
         }
       },
       face: {

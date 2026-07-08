@@ -271,9 +271,18 @@
 
 ### 前端
 
-- 页面 `frontend/src/views/manage/merchant/`，样板参考 `manage/role`（NDrawer 表单 + NDataTable + TableHeaderOperation）
+- 页面 `frontend/src/views/open-merchant/merchant/`（已从 `views/merchant/` 迁入「开放商户」一级目录），样板参考 `manage/role`（NDrawer 表单 + NDataTable + TableHeaderOperation）
 - API `frontend/src/service/api/merchant.ts`，类型 `frontend/src/typings/api/merchant.d.ts`
 - 新增/重置成功用 `MerchantApiKeyModal` 展示 `api_key`+`api_secret`（secret 默认掩码、可切换显示、复制按钮），`NAlert` 提示"仅展示一次"
+
+### 商户调用日志（`/merchant/call-log`，JWT + 权限码 `merchant:call-log:list/delete`）
+
+由 `MerchantCallLogMiddleware` 自动捕获所有 `/openapi/v1/*` 调用（含鉴权失败）并落库到 `merchant_call_log` 表，**全程脱敏**：
+
+- 数据模型 `merchant_call_log`：`merchant_id/name/code`(商户快照，api_key 无效时为空)、`api_key_masked`(脱敏)、`method/path/action`、`ip`、`request_params/response_result`(脱敏+截断 2000)、`response_code`、`success`、`elapsed_ms`、`error_msg`、`created_at`
+- **脱敏边界**：`api_key` 经 `mask_api_key`(首6+`****`+尾4) 掩码；`X-Signature/X-Timestamp/X-Nonce` 绝不入库；请求/响应体经 `mask_secret_fields` 把 `secret/sign/password/token/api_key` 等键值替换 `***` 并截断；**保留** `robot_sn/point_ids/task_id/map_id/text` 等业务字段（排查必需、非凭证）。工具在 `core/security/mask.py`
+- 后台接口（仿 operation-log）：`GET /merchant/call-log/list`(分页) / `/{id}`(详情含 params/result) / `/export`(同步 Excel) / `DELETE /batch/delete` / `/clear?days=` / `DELETE /{id}`；导出复用注册表 `merchant_call_log`
+- 前端页面 `frontend/src/views/open-merchant/call-log/`，API `frontend/src/service/api/call-log.ts`，类型 `Api.Merchant.CallLog*`；导出按钮复用异步导出任务 `submitExport('merchant_call_log', ...)`
 
 ## 参数配置 · 人脸识别契约
 

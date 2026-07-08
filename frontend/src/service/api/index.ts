@@ -11,5 +11,6 @@ export * from './scene';
 export * from './task';
 export * from './robot-config';
 export * from './merchant';
+export * from './call-log';
 export * from './face';
 export * from './export';

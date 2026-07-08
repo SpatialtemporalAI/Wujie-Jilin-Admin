@@ -69,13 +69,39 @@ class RobotConfigService:
         payload: dict,
         robot_id: Optional[int] = None,
     ) -> str:
-        """通用推送入口：调用 RPC，失败则入 grpc_retry_task 表。
+        """通用推送入口：先取消同键旧 pending → 检测在线 → 调 RPC，失败/离线则入 grpc_retry_task 表。
+
+        覆盖语义：调 RPC 前先 cancel_superseded，无论本次成败旧同键 pending 都被取消，
+        避免定时任务把旧值补推造成设备端数据回退。
+        在线前置：离线直接入队等待上线（不浪费一次注定失败的 RPC）。
 
         Returns:
             "synced" / "pending_retry" / "disabled"
         """
         if not settings.GRPC.ENABLED:
             return "disabled"
+
+        # 1. 取消同业务键旧 pending（覆盖：旧值不再补推）
+        await GrpcRetryService.cancel_superseded(
+            db,
+            service_name=service_name,
+            method_name=method_name,
+            robot_id=robot_id,
+        )
+
+        # 2. 离线直接入队等待上线
+        if not await GrpcRetryService.is_robot_online(db, robot_id):
+            await GrpcRetryService.save_pending(
+                db,
+                service_name=service_name,
+                method_name=method_name,
+                payload=payload,
+                robot_id=robot_id,
+                last_error="机器人离线，等待上线后重试",
+            )
+            return "pending_retry"
+
+        # 3. 在线则推送
         try:
             resp = await rpc_call()
         except Exception as e:  # noqa: BLE001 - client 已吞，这里是双保险

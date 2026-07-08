@@ -286,15 +286,6 @@ export const generatedRoutes: GeneratedRoute[] = [
     }
   },
   {
-    name: 'merchant',
-    path: '/merchant',
-    component: 'layout.base$view.merchant',
-    meta: {
-      title: 'merchant',
-      i18nKey: 'route.merchant'
-    }
-  },
-  {
     name: 'monitor',
     path: '/monitor',
     component: 'layout.base$view.monitor',
@@ -304,6 +295,35 @@ export const generatedRoutes: GeneratedRoute[] = [
       icon: 'mdi:chart-areaspline-variant',
       order: 4
     }
+  },
+  {
+    name: 'open-merchant',
+    path: '/open-merchant',
+    component: 'layout.base',
+    meta: {
+      title: 'open-merchant',
+      i18nKey: 'route.open-merchant'
+    },
+    children: [
+      {
+        name: 'open-merchant_call-log',
+        path: '/open-merchant/call-log',
+        component: 'view.open-merchant_call-log',
+        meta: {
+          title: 'open-merchant_call-log',
+          i18nKey: 'route.open-merchant_call-log'
+        }
+      },
+      {
+        name: 'open-merchant_merchant',
+        path: '/open-merchant/merchant',
+        component: 'view.open-merchant_merchant',
+        meta: {
+          title: 'open-merchant_merchant',
+          i18nKey: 'route.open-merchant_merchant'
+        }
+      }
+    ]
   },
   {
     name: 'operation-monitor',

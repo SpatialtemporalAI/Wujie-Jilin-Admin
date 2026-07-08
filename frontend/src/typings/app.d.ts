@@ -681,6 +681,33 @@ declare namespace App {
               remark: string;
             };
           };
+          callLog: {
+            merchantName: string;
+            apiKey: string;
+            action: string;
+            method: string;
+            path: string;
+            ip: string;
+            success: string;
+            successTrue: string;
+            successFalse: string;
+            responseCode: string;
+            elapsedMs: string;
+            callTime: string;
+            errorMsg: string;
+            viewDetail: string;
+            detailTitle: string;
+            requestParams: string;
+            responseResult: string;
+            clear: string;
+            clearConfirm: string;
+            form: {
+              action: string;
+              apiKey: string;
+              startTime: string;
+              endTime: string;
+            };
+          };
           face: {
             title: string;
             selectDb: string;

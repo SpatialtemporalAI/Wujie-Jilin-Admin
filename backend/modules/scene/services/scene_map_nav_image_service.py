@@ -13,6 +13,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 
 from database.models.business.scene_map import SceneMap
+from core.config import settings
 from modules.admin.services.sys.file_service import FileService
 
 logger = logging.getLogger(__name__)
@@ -111,20 +112,23 @@ class SceneMapNavImageService:
 
     @staticmethod
     async def _notify_map_saved(db: AsyncSession, map_obj: SceneMap) -> None:
-        """推送 MapInfo 给导览服务（NotifyMapSaved）
+        """推送 MapInfo 给导览服务（NotifyMapSaved），按机器人逐个下发并支持失败重试
 
         在 _regenerate 内部 nav_image_id 已 commit 后调用，确保推送时图片已就绪。
-        按 middleware 与 agent 各广播一次：遍历所有启用对应 target 的机器人（不再判断 robot
-        是否绑定该地图，默认推送给全部已启用该 target 的机器人），两端各自独立判断启停/地址、
-        独立记日志、互不影响；某端未配置则该端无 target，notify_map_saved 内部返回 SKIPPED。
-        失败仅记日志，不抛出。
+        按 middleware 与 agent 各遍历一次所有启用该 target 的机器人（不再判断 robot
+        是否绑定该地图，默认推送给全部已启用该 target 的机器人）。
+        每个目标机器人：先取消同 (robot, map) 的旧 pending（覆盖语义，旧 GRPC 不再补推），
+        离线或推送失败则入 grpc_retry_task 队列，由定时任务在线后重试。
+        单机器人失败不影响其他机器人。
         """
-        import grpc
+        if not settings.GRPC.ENABLED:
+            return
 
         from database.models.business.scene_map_annotation import SceneMapAnnotation
         from modules.grpc.addr_provider import get_config_addr_provider
         from modules.grpc.client import MapServiceClient
         from modules.grpc.converter import scene_map_to_map_info
+        from modules.grpc.retry_service import GrpcRetryService
         from modules.admin.services.sys.file_service import FileService
 
         # 直接查 map 主表，不再用 selectinload(annotations)。
@@ -162,38 +166,80 @@ class SceneMapNavImageService:
 
         map_info = scene_map_to_map_info(fresh, image_url, annotations=annotations)
 
-        # 遍历所有启用对应 target 的机器人（不按 map_id 过滤，默认推送给全部机器人），
-        # 对 middleware / agent 两个 target 各广播一次。两端独立解析地址、独立调用、独立记日志，
-        # 互不影响（某端未配置则该端 targets 为空，notify_map_saved 内部返回 SKIPPED）。
-        # map_info 只构造一次，两端复用。
+        map_id = fresh.id
+        version = fresh.version or 0
+        # 每个目标机器人逐个下发：覆盖旧 pending → 在线判断 → 推送 / 入队
+        # （map_info 只构造一次，所有 target/robot 复用）
         for target in ("middleware", "agent"):
-            try:
-                targets = await get_config_addr_provider().find_addrs_by_target(target)
-                resp = await MapServiceClient.notify_map_saved(map_info, targets)
-                logger.info(
-                    "notify_map_saved map=%s version=%s target=%s targets=%s status=%s msg=%s",
-                    fresh.id,
-                    fresh.version,
-                    target,
-                    len(targets),
-                    resp.status,
-                    resp.message,
-                )
-            except grpc.aio.AioRpcError as exc:
-                logger.warning(
-                    "notify_map_saved rpc failed map=%s target=%s code=%s details=%s",
-                    fresh.id,
-                    target,
-                    exc.code(),
-                    exc.details(),
-                )
-            except Exception as exc:  # noqa: BLE001 - 兜底，保证另一 target 继续推送
-                logger.warning(
-                    "notify_map_saved failed map=%s target=%s: %s",
-                    fresh.id,
-                    target,
-                    exc,
-                )
+            targets = await get_config_addr_provider().find_addrs_by_target(target)
+            for robot_id, addr in targets:
+                try:
+                    # 覆盖：取消同 (robot, map) 的旧 pending（旧 GRPC 不再补推）
+                    await GrpcRetryService.cancel_superseded(
+                        db,
+                        service_name="map",
+                        method_name="NotifyMapSaved",
+                        robot_id=robot_id,
+                        map_id=map_id,
+                    )
+                    # 离线：直接入队，等上线后定时重试
+                    if not await GrpcRetryService.is_robot_online(db, robot_id):
+                        await GrpcRetryService.save_pending(
+                            db,
+                            service_name="map",
+                            method_name="NotifyMapSaved",
+                            payload={
+                                "robot_id": robot_id,
+                                "map_id": map_id,
+                                "version": version,
+                            },
+                            robot_id=robot_id,
+                            map_id=map_id,
+                            last_error="机器人离线，等待上线后重试",
+                        )
+                        continue
+                    # 在线：单发
+                    resp = await MapServiceClient.notify_map_saved_one(
+                        map_info, robot_id, addr
+                    )
+                    status = getattr(resp, "status", "")
+                    if status == "OK":
+                        logger.info(
+                            "notify_map_saved ok map=%s version=%s target=%s robot_id=%s",
+                            map_id,
+                            version,
+                            target,
+                            robot_id,
+                        )
+                    elif status == "DISABLED":
+                        logger.info(
+                            "notify_map_saved skipped(disabled) map=%s target=%s robot_id=%s",
+                            map_id,
+                            target,
+                            robot_id,
+                        )
+                    else:
+                        await GrpcRetryService.save_pending(
+                            db,
+                            service_name="map",
+                            method_name="NotifyMapSaved",
+                            payload={
+                                "robot_id": robot_id,
+                                "map_id": map_id,
+                                "version": version,
+                            },
+                            robot_id=robot_id,
+                            map_id=map_id,
+                            last_error=getattr(resp, "message", "") or "设备未响应",
+                        )
+                except Exception as exc:  # noqa: BLE001 - 单机器人失败不影响其他
+                    logger.warning(
+                        "notify_map_saved handle failed map=%s target=%s robot_id=%s: %s",
+                        map_id,
+                        target,
+                        robot_id,
+                        exc,
+                    )
 
     @staticmethod
     def _render(

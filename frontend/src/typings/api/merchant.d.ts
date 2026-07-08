@@ -61,5 +61,42 @@ declare namespace Api {
       api_key: string;
       api_secret: string;
     };
+
+    /** merchant openapi call log */
+    type CallLog = {
+      id: number;
+      merchant_id: number | null;
+      merchant_name: string | null;
+      merchant_code: string | null;
+      api_key_masked: string | null;
+      method: string | null;
+      path: string | null;
+      action: string | null;
+      ip: string | null;
+      response_code: number | null;
+      success: boolean | null;
+      elapsed_ms: number | null;
+      error_msg: string | null;
+      created_at: string | null;
+    };
+
+    /** merchant call log detail (with sanitized params/result) */
+    type CallLogDetail = CallLog & {
+      request_params: string | null;
+      response_result: string | null;
+    };
+
+    /** merchant call log search params */
+    type CallLogSearchParams = CommonType.RecordNullable<{
+      merchant_id?: number;
+      action?: string;
+      success?: boolean;
+      api_key?: string;
+      start_time?: string;
+      end_time?: string;
+    } & CommonSearchParams>;
+
+    /** merchant call log list */
+    type CallLogList = Common.PaginatingQueryRecord<CallLog>;
   }
 }
