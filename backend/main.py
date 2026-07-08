@@ -17,11 +17,6 @@ from core.redis import RedisPool
 
 from modules.app.router import router as app_app_router
 from modules.admin.router import router as admin_app_router
-from modules.robot.router import router as robot_router
-from modules.scene.router import router as scene_router
-from modules.task.router import router as task_router
-from modules.merchant.router import router as merchant_router
-from modules.face.router import router as face_router
 from core.registry.setup_registry import setup_app
 from core.websocket import FastAPIConnectionManager
 
@@ -46,12 +41,14 @@ async def lifespan(app: FastAPI):
     # 预热 IP 黑名单到 Redis
     try:
         from modules.admin.services.sys.rate_limit_service import RateLimitService
+
         count = await RateLimitService.warmup_blacklist()
         logger.info("IP 黑名单预热数量: %s", count)
     except Exception as exc:
         logger.error("IP 黑名单预热异常: %s", exc)
     try:
         from modules.robot.services.robot_schema_service import RobotSchemaService
+
         async for db_schema in get_session():
             await RobotSchemaService.ensure_robot_map_binding(db_schema)
         logger.info("机器人场景绑定字段检查完成")
@@ -63,6 +60,7 @@ async def lifespan(app: FastAPI):
             RobotConfigAddrProvider,
             set_config_addr_provider,
         )
+
         set_config_addr_provider(RobotConfigAddrProvider())
         logger.info("ConfigService gRPC 地址 Provider 已切换为 RobotConfigAddrProvider")
     except Exception as exc:
@@ -87,6 +85,7 @@ async def lifespan(app: FastAPI):
     # 种子数据：菜单 + 同步装饰器注册的任务
     try:
         from modules.scheduler.seed import seed_scheduler
+
         async for db_seed in get_session():
             await seed_scheduler(db_seed)
     except Exception as exc:
@@ -95,12 +94,14 @@ async def lifespan(app: FastAPI):
     # 停止定时任务调度器
     try:
         from modules.scheduler.core.scheduler import SchedulerManager
+
         SchedulerManager.get_instance().stop()
     except Exception as exc:
         logger.error("定时任务调度器停止异常: %s", exc)
     # 关闭 gRPC channel
     try:
         from modules.grpc.channel import close_channel
+
         await close_channel()
     except Exception as exc:
         logger.error("gRPC channel 关闭异常: %s", exc)
@@ -127,9 +128,21 @@ app = FastAPI(
         "url": "https://opensource.org/licenses/MIT",
     },
     lifespan=lifespan,
-    docs_url=None if settings.ENVIR == "prod" and not settings.SERVICE.OPENAPI_ENABLE_IN_PROD else "/docs",
-    redoc_url=None if settings.ENVIR == "prod" and not settings.SERVICE.OPENAPI_ENABLE_IN_PROD else "/redoc",
-    openapi_url=None if settings.ENVIR == "prod" and not settings.SERVICE.OPENAPI_ENABLE_IN_PROD else "/openapi.json",
+    docs_url=(
+        None
+        if settings.ENVIR == "prod" and not settings.SERVICE.OPENAPI_ENABLE_IN_PROD
+        else "/docs"
+    ),
+    redoc_url=(
+        None
+        if settings.ENVIR == "prod" and not settings.SERVICE.OPENAPI_ENABLE_IN_PROD
+        else "/redoc"
+    ),
+    openapi_url=(
+        None
+        if settings.ENVIR == "prod" and not settings.SERVICE.OPENAPI_ENABLE_IN_PROD
+        else "/openapi.json"
+    ),
 )
 # 配置app
 setup_app(app, settings=settings)
@@ -141,11 +154,6 @@ logger.info("配置文件初始化完成")
 # 挂载认证路由
 app.include_router(app_app_router)
 app.include_router(admin_app_router)
-app.include_router(robot_router)
-app.include_router(scene_router)
-app.include_router(task_router)
-app.include_router(merchant_router)
-app.include_router(face_router)
 
 
 if __name__ == "__main__":
