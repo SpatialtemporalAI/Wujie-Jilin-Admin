@@ -3,7 +3,7 @@ import { request } from '../request';
 /** 人脸库列表 */
 export function fetchGetFaceDbList() {
   return request<Api.Face.FaceDbList>({
-    url: '/face/db/list',
+    url: '/admin/face/db/list',
     method: 'get'
   });
 }
@@ -11,7 +11,7 @@ export function fetchGetFaceDbList() {
 /** 创建人脸库 */
 export function fetchCreateFaceDb(dbName: string) {
   return request<{ db_name: string }>({
-    url: '/face/db',
+    url: '/admin/face/db',
     method: 'post',
     data: { db_name: dbName }
   });
@@ -20,7 +20,7 @@ export function fetchCreateFaceDb(dbName: string) {
 /** 实体分页列表 */
 export function fetchGetFaceEntityList(params: Api.Face.FaceEntitySearchParams) {
   return request<Api.Face.FaceEntityList>({
-    url: '/face/entity/list',
+    url: '/admin/face/entity/list',
     method: 'get',
     params
   });
@@ -29,7 +29,7 @@ export function fetchGetFaceEntityList(params: Api.Face.FaceEntitySearchParams) 
 /** 实体详情（含人脸图片） */
 export function fetchGetFaceEntityDetail(dbName: string, entityId: string) {
   return request<Api.Face.FaceEntityDetail>({
-    url: '/face/entity/detail',
+    url: '/admin/face/entity/detail',
     method: 'get',
     params: { db_name: dbName, entity_id: entityId }
   });
@@ -38,7 +38,7 @@ export function fetchGetFaceEntityDetail(dbName: string, entityId: string) {
 /** 新增实体 */
 export function fetchAddFaceEntity(dbName: string, entityId: string) {
   return request<void>({
-    url: '/face/entity',
+    url: '/admin/face/entity',
     method: 'post',
     data: { db_name: dbName, entity_id: entityId }
   });
@@ -47,7 +47,7 @@ export function fetchAddFaceEntity(dbName: string, entityId: string) {
 /** 删除实体 */
 export function fetchDeleteFaceEntity(dbName: string, entityId: string) {
   return request<void>({
-    url: '/face/entity',
+    url: '/admin/face/entity',
     method: 'delete',
     params: { db_name: dbName, entity_id: entityId }
   });
@@ -60,7 +60,7 @@ export function fetchAddFaceImage(dbName: string, entityId: string, file: File) 
   formData.append('entity_id', entityId);
   formData.append('file', file);
   return request<Api.Face.FaceImageAddResult>({
-    url: '/face/image',
+    url: '/admin/face/image',
     method: 'post',
     data: formData,
     headers: { 'Content-Type': 'multipart/form-data' }
@@ -70,7 +70,7 @@ export function fetchAddFaceImage(dbName: string, entityId: string, file: File) 
 /** 删除人脸图片 */
 export function fetchDeleteFaceImage(dbName: string, faceId: string) {
   return request<void>({
-    url: '/face/image',
+    url: '/admin/face/image',
     method: 'delete',
     params: { db_name: dbName, face_id: faceId }
   });
@@ -83,7 +83,7 @@ export function fetchSearchFace(data: Api.Face.FaceSearchParams) {
   formData.append('limit', String(data.limit));
   formData.append('file', data.file);
   return request<Api.Face.FaceSearchResult>({
-    url: '/face/search',
+    url: '/admin/face/search',
     method: 'post',
     data: formData,
     headers: { 'Content-Type': 'multipart/form-data' }
@@ -96,7 +96,7 @@ export function fetchDetectFace(data: Api.Face.FaceDetectParams) {
   formData.append('max_face_num', String(data.max_face_num));
   formData.append('file', data.file);
   return request<Api.Face.FaceDetectResult>({
-    url: '/face/detect',
+    url: '/admin/face/detect',
     method: 'post',
     data: formData,
     headers: { 'Content-Type': 'multipart/form-data' }

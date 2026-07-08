@@ -6,7 +6,7 @@ import { enableStatusToBoolean } from '@/utils/status';
 /** get robot model list */
 export function fetchGetRobotModelList(params?: Api.Robot.RobotModelSearchParams) {
   return request<Api.Robot.RobotModelList>({
-    url: '/robot/model/list',
+    url: '/admin/robot/model/list',
     method: 'get',
     params
   });
@@ -15,7 +15,7 @@ export function fetchGetRobotModelList(params?: Api.Robot.RobotModelSearchParams
 /** get all robot models (for dropdown) */
 export function fetchGetAllRobotModels() {
   return request<Api.Robot.AllRobotModel[]>({
-    url: '/robot/model/all',
+    url: '/admin/robot/model/all',
     method: 'get'
   });
 }
@@ -23,7 +23,7 @@ export function fetchGetAllRobotModels() {
 /** get robot model by id */
 export function fetchGetRobotModel(id: number) {
   return request<Api.Robot.RobotModel>({
-    url: `/robot/model/${id}`,
+    url: `/admin/robot/model/${id}`,
     method: 'get'
   });
 }
@@ -31,7 +31,7 @@ export function fetchGetRobotModel(id: number) {
 /** create robot model */
 export function fetchCreateRobotModel(data: Api.Robot.RobotModelCreate) {
   return request<Api.Robot.RobotModel>({
-    url: '/robot/model/add',
+    url: '/admin/robot/model/add',
     method: 'post',
     data: {
       ...data,
@@ -43,7 +43,7 @@ export function fetchCreateRobotModel(data: Api.Robot.RobotModelCreate) {
 /** update robot model */
 export function fetchUpdateRobotModel(id: number, data: Api.Robot.RobotModelUpdate) {
   return request<Api.Robot.RobotModel>({
-    url: `/robot/model/${id}`,
+    url: `/admin/robot/model/${id}`,
     method: 'put',
     data: {
       ...data,
@@ -55,7 +55,7 @@ export function fetchUpdateRobotModel(id: number, data: Api.Robot.RobotModelUpda
 /** delete robot model */
 export function fetchDeleteRobotModel(id: number) {
   return request<void>({
-    url: `/robot/model/${id}`,
+    url: `/admin/robot/model/${id}`,
     method: 'delete'
   });
 }
@@ -65,7 +65,7 @@ export function fetchDeleteRobotModel(id: number) {
 /** get robot list */
 export function fetchGetRobotList(params?: Api.Robot.RobotSearchParams) {
   return request<Api.Robot.RobotList>({
-    url: '/robot/manage/list',
+    url: '/admin/robot/manage/list',
     method: 'get',
     params
   });
@@ -74,7 +74,7 @@ export function fetchGetRobotList(params?: Api.Robot.RobotSearchParams) {
 /** get all robots (for dropdown) */
 export function fetchGetAllRobots() {
   return request<Api.Robot.AllRobot[]>({
-    url: '/robot/manage/all',
+    url: '/admin/robot/manage/all',
     method: 'get'
   });
 }
@@ -82,7 +82,7 @@ export function fetchGetAllRobots() {
 /** get robot by id */
 export function fetchGetRobot(id: number) {
   return request<Api.Robot.Robot>({
-    url: `/robot/manage/${id}`,
+    url: `/admin/robot/manage/${id}`,
     method: 'get'
   });
 }
@@ -90,7 +90,7 @@ export function fetchGetRobot(id: number) {
 /** create robot */
 export function fetchCreateRobot(data: Api.Robot.RobotCreate) {
   return request<Api.Robot.Robot>({
-    url: '/robot/manage/add',
+    url: '/admin/robot/manage/add',
     method: 'post',
     data
   });
@@ -99,7 +99,7 @@ export function fetchCreateRobot(data: Api.Robot.RobotCreate) {
 /** update robot */
 export function fetchUpdateRobot(id: number, data: Api.Robot.RobotUpdate) {
   return request<Api.Robot.Robot>({
-    url: `/robot/manage/${id}`,
+    url: `/admin/robot/manage/${id}`,
     method: 'put',
     data
   });
@@ -108,7 +108,7 @@ export function fetchUpdateRobot(id: number, data: Api.Robot.RobotUpdate) {
 /** delete robot */
 export function fetchDeleteRobot(id: number) {
   return request<void>({
-    url: `/robot/manage/${id}`,
+    url: `/admin/robot/manage/${id}`,
     method: 'delete'
   });
 }
@@ -116,7 +116,7 @@ export function fetchDeleteRobot(id: number) {
 /** update robot grpc config (agent + middleware + ros) */
 export function fetchUpdateRobotGrpcConfig(id: number, data: Api.Robot.RobotGrpcConfig) {
   return request<Api.Robot.Robot>({
-    url: `/robot/manage/${id}/grpc-config`,
+    url: `/admin/robot/manage/${id}/grpc-config`,
     method: 'put',
     data: { grpc_config: data }
   });
@@ -125,7 +125,7 @@ export function fetchUpdateRobotGrpcConfig(id: number, data: Api.Robot.RobotGrpc
 /** update robot map binding (scene map editor only — uses scene:map-editor:edit permission) */
 export function fetchUpdateRobotMapBinding(id: number, data: { map_id: number | null }) {
   return request<Api.Robot.Robot>({
-    url: `/robot/manage/${id}/bind-map`,
+    url: `/admin/robot/manage/${id}/bind-map`,
     method: 'put',
     data
   });
@@ -134,7 +134,7 @@ export function fetchUpdateRobotMapBinding(id: number, data: { map_id: number | 
 /** start/stop video monitoring on a robot's middleware via gRPC (enabled=true 启动 / false 停止) */
 export function fetchSetVideoMonitoring(robotId: number, enabled: boolean) {
   return request<void>({
-    url: `/robot/config/video-monitoring/${robotId}`,
+    url: `/admin/robot/config/video-monitoring/${robotId}`,
     method: 'post',
     data: { enabled } satisfies Api.Robot.VideoMonitoringControl
   });
@@ -145,7 +145,7 @@ export function fetchSetVideoMonitoring(robotId: number, enabled: boolean) {
 /** get robot status records */
 export function fetchGetRobotStatusRecords(robotId: number, params?: Api.Robot.CommonSearchParams) {
   return request<Api.Robot.RobotStatusRecordList>({
-    url: `/robot/manage/${robotId}/status/list`,
+    url: `/admin/robot/manage/${robotId}/status/list`,
     method: 'get',
     params
   });
@@ -154,7 +154,7 @@ export function fetchGetRobotStatusRecords(robotId: number, params?: Api.Robot.C
 /** get latest robot status record */
 export function fetchGetLatestRobotStatus(robotId: number) {
   return request<Api.Robot.RobotStatusRecord>({
-    url: `/robot/manage/${robotId}/status/latest`,
+    url: `/admin/robot/manage/${robotId}/status/latest`,
     method: 'get'
   });
 }
@@ -162,7 +162,7 @@ export function fetchGetLatestRobotStatus(robotId: number) {
 /** get robot real-time locations bound to a map (for map editor canvas) */
 export function fetchGetMapRobotLocations(mapId: number) {
   return request<Api.Robot.RobotLocationItem[]>({
-    url: `/robot/manage/map/${mapId}/robot-locations`,
+    url: `/admin/robot/manage/map/${mapId}/robot-locations`,
     method: 'get'
   });
 }

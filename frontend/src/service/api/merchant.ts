@@ -4,7 +4,7 @@ import { enableStatusToBoolean } from '@/utils/status';
 /** get merchant list */
 export function fetchGetMerchantList(params?: Api.Merchant.MerchantSearchParams) {
   return request<Api.Merchant.MerchantList>({
-    url: '/merchant/list',
+    url: '/admin/merchant/list',
     method: 'get',
     params
   });
@@ -13,7 +13,7 @@ export function fetchGetMerchantList(params?: Api.Merchant.MerchantSearchParams)
 /** get merchant detail (with bound robot ids) */
 export function fetchGetMerchant(id: number) {
   return request<Api.Merchant.MerchantDetail>({
-    url: `/merchant/${id}`,
+    url: `/admin/merchant/${id}`,
     method: 'get'
   });
 }
@@ -21,7 +21,7 @@ export function fetchGetMerchant(id: number) {
 /** create merchant (returns api_secret one-time) */
 export function fetchCreateMerchant(data: Api.Merchant.MerchantCreate) {
   return request<Api.Merchant.ApiCredentials>({
-    url: '/merchant/add',
+    url: '/admin/merchant/add',
     method: 'post',
     data: {
       name: data.name,
@@ -39,7 +39,7 @@ export function fetchCreateMerchant(data: Api.Merchant.MerchantCreate) {
 /** update merchant */
 export function fetchUpdateMerchant(id: number, data: Api.Merchant.MerchantUpdate) {
   return request<Api.Merchant.MerchantDetail>({
-    url: `/merchant/${id}`,
+    url: `/admin/merchant/${id}`,
     method: 'put',
     data: {
       name: data.name,
@@ -57,7 +57,7 @@ export function fetchUpdateMerchant(id: number, data: Api.Merchant.MerchantUpdat
 /** delete merchant */
 export function fetchDeleteMerchant(id: number) {
   return request<void>({
-    url: `/merchant/${id}`,
+    url: `/admin/merchant/${id}`,
     method: 'delete'
   });
 }
@@ -65,7 +65,7 @@ export function fetchDeleteMerchant(id: number) {
 /** toggle merchant status */
 export function fetchToggleMerchant(id: number, status: Api.Common.EnableStatus) {
   return request<Api.Merchant.MerchantDetail>({
-    url: `/merchant/${id}/toggle`,
+    url: `/admin/merchant/${id}/toggle`,
     method: 'put',
     data: { status: enableStatusToBoolean(status) }
   });
@@ -74,7 +74,7 @@ export function fetchToggleMerchant(id: number, status: Api.Common.EnableStatus)
 /** reset merchant api key (returns new api_secret one-time) */
 export function fetchResetMerchantApiKey(id: number) {
   return request<Api.Merchant.ApiCredentials>({
-    url: `/merchant/${id}/reset-api-key`,
+    url: `/admin/merchant/${id}/reset-api-key`,
     method: 'post'
   });
 }
@@ -82,7 +82,7 @@ export function fetchResetMerchantApiKey(id: number) {
 /** bind merchant robots (full replace) */
 export function fetchBindMerchantRobots(id: number, robotIds: number[]) {
   return request<Api.Merchant.MerchantDetail>({
-    url: `/merchant/${id}/robots`,
+    url: `/admin/merchant/${id}/robots`,
     method: 'put',
     data: { robot_ids: robotIds }
   });

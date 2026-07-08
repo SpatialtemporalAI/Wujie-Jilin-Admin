@@ -6,7 +6,7 @@ import { enableStatusToBoolean } from '@/utils/status';
 /** get task list */
 export function fetchGetTaskList(params?: Api.Task.TaskSearchParams) {
   return request<Api.Task.TaskList>({
-    url: '/task/manage/list',
+    url: '/admin/task/manage/list',
     method: 'get',
     params: {
       ...params,
@@ -18,7 +18,7 @@ export function fetchGetTaskList(params?: Api.Task.TaskSearchParams) {
 /** get task by id */
 export function fetchGetTask(id: number) {
   return request<Api.Task.Task>({
-    url: `/task/manage/${id}`,
+    url: `/admin/task/manage/${id}`,
     method: 'get'
   });
 }
@@ -26,7 +26,7 @@ export function fetchGetTask(id: number) {
 /** create task */
 export function fetchCreateTask(data: Api.Task.TaskCreate) {
   return request<Api.Task.Task>({
-    url: '/task/manage/add',
+    url: '/admin/task/manage/add',
     method: 'post',
     data
   });
@@ -35,7 +35,7 @@ export function fetchCreateTask(data: Api.Task.TaskCreate) {
 /** update task */
 export function fetchUpdateTask(id: number, data: Api.Task.TaskUpdate) {
   return request<Api.Task.Task>({
-    url: `/task/manage/${id}`,
+    url: `/admin/task/manage/${id}`,
     method: 'put',
     data
   });
@@ -44,7 +44,7 @@ export function fetchUpdateTask(id: number, data: Api.Task.TaskUpdate) {
 /** delete task */
 export function fetchDeleteTask(id: number) {
   return request<void>({
-    url: `/task/manage/${id}`,
+    url: `/admin/task/manage/${id}`,
     method: 'delete'
   });
 }
@@ -52,7 +52,7 @@ export function fetchDeleteTask(id: number) {
 /** toggle task enabled */
 export function fetchToggleTaskEnabled(id: number, enabled: boolean) {
   return request<Api.Task.Task>({
-    url: `/task/manage/${id}/toggle`,
+    url: `/admin/task/manage/${id}/toggle`,
     method: 'put',
     data: { enabled }
   });
@@ -63,7 +63,7 @@ export function fetchToggleTaskEnabled(id: number, enabled: boolean) {
 /** start task execution (new record table) */
 export function fetchStartExecutionRecord(taskId: number, payload: Api.Task.TaskExecutionRecordStartIn) {
   return request<Api.Task.TaskExecutionRecord>({
-    url: `/task/execution-record/${taskId}/start`,
+    url: `/admin/task/execution-record/${taskId}/start`,
     method: 'post',
     data: payload
   });
@@ -74,7 +74,7 @@ export function fetchStartExecutionRecord(taskId: number, payload: Api.Task.Task
  */
 export function fetchStartOrResumeExecution(taskId: number, payload: Api.Task.TaskExecutionRecordStartIn) {
   return request<void>({
-    url: `/task/execution-record/start-or-resume/${taskId}`,
+    url: `/admin/task/execution-record/start-or-resume/${taskId}`,
     method: 'post',
     data: payload
   });
@@ -83,7 +83,7 @@ export function fetchStartOrResumeExecution(taskId: number, payload: Api.Task.Ta
 /** pause execution record */
 export function fetchPauseExecutionRecord(recordId: number) {
   return request<Api.Task.TaskExecutionRecord>({
-    url: `/task/execution-record/${recordId}/pause`,
+    url: `/admin/task/execution-record/${recordId}/pause`,
     method: 'post'
   });
 }
@@ -91,7 +91,7 @@ export function fetchPauseExecutionRecord(recordId: number) {
 /** pause all running/pending executions of a task */
 export function fetchPauseExecutionByTask(taskId: number) {
   return request<void>({
-    url: `/task/execution-record/pause-by-task/${taskId}`,
+    url: `/admin/task/execution-record/pause-by-task/${taskId}`,
     method: 'post'
   });
 }
@@ -99,7 +99,7 @@ export function fetchPauseExecutionByTask(taskId: number) {
 /** resume execution record */
 export function fetchResumeExecutionRecord(recordId: number) {
   return request<Api.Task.TaskExecutionRecord>({
-    url: `/task/execution-record/${recordId}/resume`,
+    url: `/admin/task/execution-record/${recordId}/resume`,
     method: 'post'
   });
 }
@@ -107,7 +107,7 @@ export function fetchResumeExecutionRecord(recordId: number) {
 /** stop execution record */
 export function fetchStopExecutionRecord(recordId: number) {
   return request<Api.Task.TaskExecutionRecord>({
-    url: `/task/execution-record/${recordId}/stop`,
+    url: `/admin/task/execution-record/${recordId}/stop`,
     method: 'post'
   });
 }
@@ -115,7 +115,7 @@ export function fetchStopExecutionRecord(recordId: number) {
 /** get active execution records */
 export function fetchGetActiveExecutionRecords(params?: Api.Task.TaskExecutionRecordSearchParams) {
   return request<Api.Task.TaskExecutionRecordList>({
-    url: '/task/execution-record/active',
+    url: '/admin/task/execution-record/active',
     method: 'get',
     params
   });
@@ -124,7 +124,7 @@ export function fetchGetActiveExecutionRecords(params?: Api.Task.TaskExecutionRe
 /** get execution record history */
 export function fetchGetExecutionRecordHistory(params?: Api.Task.TaskExecutionRecordSearchParams) {
   return request<Api.Task.TaskExecutionRecordList>({
-    url: '/task/execution-record/history',
+    url: '/admin/task/execution-record/history',
     method: 'get',
     params
   });
@@ -133,7 +133,7 @@ export function fetchGetExecutionRecordHistory(params?: Api.Task.TaskExecutionRe
 /** get execution record detail */
 export function fetchGetExecutionRecordDetail(recordId: number) {
   return request<Api.Task.TaskExecutionRecordDetail>({
-    url: `/task/execution-record/detail/${recordId}`,
+    url: `/admin/task/execution-record/detail/${recordId}`,
     method: 'get'
   });
 }

@@ -6,7 +6,7 @@ import { enableStatusToBoolean } from '@/utils/status';
 /** get scene group list */
 export function fetchGetSceneGroupList(params?: Api.Scene.SceneGroupSearchParams) {
   return request<Api.Scene.SceneGroupList>({
-    url: '/scene/group/list',
+    url: '/admin/scene/group/list',
     method: 'get',
     params
   });
@@ -15,7 +15,7 @@ export function fetchGetSceneGroupList(params?: Api.Scene.SceneGroupSearchParams
 /** get all scene groups (for dropdown) */
 export function fetchGetAllSceneGroups() {
   return request<Api.Scene.AllSceneGroup[]>({
-    url: '/scene/group/all',
+    url: '/admin/scene/group/all',
     method: 'get'
   });
 }
@@ -23,7 +23,7 @@ export function fetchGetAllSceneGroups() {
 /** get scene group tree */
 export function fetchGetSceneGroupTree() {
   return request<Api.Scene.SceneGroupTreeNode[]>({
-    url: '/scene/group/tree',
+    url: '/admin/scene/group/tree',
     method: 'get'
   });
 }
@@ -31,7 +31,7 @@ export function fetchGetSceneGroupTree() {
 /** get scene group by id */
 export function fetchGetSceneGroup(id: number) {
   return request<Api.Scene.SceneGroup>({
-    url: `/scene/group/${id}`,
+    url: `/admin/scene/group/${id}`,
     method: 'get'
   });
 }
@@ -39,7 +39,7 @@ export function fetchGetSceneGroup(id: number) {
 /** create scene group */
 export function fetchCreateSceneGroup(data: Api.Scene.SceneGroupCreate) {
   return request<Api.Scene.SceneGroup>({
-    url: '/scene/group/add',
+    url: '/admin/scene/group/add',
     method: 'post',
     data: {
       ...data,
@@ -51,7 +51,7 @@ export function fetchCreateSceneGroup(data: Api.Scene.SceneGroupCreate) {
 /** update scene group */
 export function fetchUpdateSceneGroup(id: number, data: Api.Scene.SceneGroupUpdate) {
   return request<Api.Scene.SceneGroup>({
-    url: `/scene/group/${id}`,
+    url: `/admin/scene/group/${id}`,
     method: 'put',
     data: {
       ...data,
@@ -63,7 +63,7 @@ export function fetchUpdateSceneGroup(id: number, data: Api.Scene.SceneGroupUpda
 /** delete scene group */
 export function fetchDeleteSceneGroup(id: number) {
   return request<void>({
-    url: `/scene/group/${id}`,
+    url: `/admin/scene/group/${id}`,
     method: 'delete'
   });
 }
@@ -73,7 +73,7 @@ export function fetchDeleteSceneGroup(id: number) {
 /** get scene map list */
 export function fetchGetSceneMapList(params?: Api.Scene.SceneMapSearchParams) {
   return request<Api.Scene.SceneMapList>({
-    url: '/scene/map/list',
+    url: '/admin/scene/map/list',
     method: 'get',
     params
   });
@@ -82,7 +82,7 @@ export function fetchGetSceneMapList(params?: Api.Scene.SceneMapSearchParams) {
 /** get scene map by id */
 export function fetchGetSceneMap(id: number) {
   return request<Api.Scene.SceneMap>({
-    url: `/scene/map/${id}`,
+    url: `/admin/scene/map/${id}`,
     method: 'get'
   });
 }
@@ -90,7 +90,7 @@ export function fetchGetSceneMap(id: number) {
 /** create scene map */
 export function fetchCreateSceneMap(data: Api.Scene.SceneMapCreate) {
   return request<Api.Scene.SceneMap>({
-    url: '/scene/map/add',
+    url: '/admin/scene/map/add',
     method: 'post',
     data: {
       ...data,
@@ -108,7 +108,7 @@ export function fetchUploadSceneMapImage(file: File, options?: { includeImageInf
     params.include_image_info = true;
   }
   return request<Api.FileManage.FileInfo>({
-    url: '/scene/map/upload-image',
+    url: '/admin/scene/map/upload-image',
     method: 'post',
     data: formData,
     params,
@@ -125,7 +125,7 @@ export function fetchUploadSceneMapEditorImage(file: File, options?: { includeIm
     params.include_image_info = true;
   }
   return request<Api.FileManage.FileInfo>({
-    url: '/scene/map-editor/upload-image',
+    url: '/admin/scene/map-editor/upload-image',
     method: 'post',
     data: formData,
     params,
@@ -136,7 +136,7 @@ export function fetchUploadSceneMapEditorImage(file: File, options?: { includeIm
 /** update scene map */
 export function fetchUpdateSceneMap(id: number, data: Api.Scene.SceneMapUpdate) {
   return request<Api.Scene.SceneMap>({
-    url: `/scene/map/${id}`,
+    url: `/admin/scene/map/${id}`,
     method: 'put',
     data: {
       ...data,
@@ -148,7 +148,7 @@ export function fetchUpdateSceneMap(id: number, data: Api.Scene.SceneMapUpdate) 
 /** delete scene map */
 export function fetchDeleteSceneMap(id: number) {
   return request<void>({
-    url: `/scene/map/${id}`,
+    url: `/admin/scene/map/${id}`,
     method: 'delete'
   });
 }
@@ -158,7 +158,7 @@ export function fetchDeleteSceneMap(id: number) {
 /** get map annotations */
 export function fetchGetMapAnnotations(mapId: number, params?: Api.Scene.CommonSearchParams) {
   return request<Api.Scene.SceneMapAnnotationList>({
-    url: `/scene/map/${mapId}/annotation/list`,
+    url: `/admin/scene/map/${mapId}/annotation/list`,
     method: 'get',
     params
   });
@@ -167,7 +167,7 @@ export function fetchGetMapAnnotations(mapId: number, params?: Api.Scene.CommonS
 /** create map annotation */
 export function fetchCreateMapAnnotation(data: Api.Scene.SceneMapAnnotationCreate) {
   return request<Api.Scene.SceneMapAnnotation>({
-    url: `/scene/map/${data.map_id}/annotation/add`,
+    url: `/admin/scene/map/${data.map_id}/annotation/add`,
     method: 'post',
     data
   });
@@ -176,7 +176,7 @@ export function fetchCreateMapAnnotation(data: Api.Scene.SceneMapAnnotationCreat
 /** update map annotation */
 export function fetchUpdateMapAnnotation(mapId: number, id: number, data: Api.Scene.SceneMapAnnotationUpdate) {
   return request<Api.Scene.SceneMapAnnotation>({
-    url: `/scene/map/${mapId}/annotation/${id}`,
+    url: `/admin/scene/map/${mapId}/annotation/${id}`,
     method: 'put',
     data
   });
@@ -185,7 +185,7 @@ export function fetchUpdateMapAnnotation(mapId: number, id: number, data: Api.Sc
 /** delete map annotation */
 export function fetchDeleteMapAnnotation(mapId: number, id: number) {
   return request<void>({
-    url: `/scene/map/${mapId}/annotation/${id}`,
+    url: `/admin/scene/map/${mapId}/annotation/${id}`,
     method: 'delete'
   });
 }
@@ -195,7 +195,7 @@ export function fetchDeleteMapAnnotation(mapId: number, id: number) {
 /** get map objects */
 export function fetchGetMapObjects(mapId: number, params?: Api.Scene.CommonSearchParams) {
   return request<Api.Scene.SceneMapObjectList>({
-    url: `/scene/map/${mapId}/object/list`,
+    url: `/admin/scene/map/${mapId}/object/list`,
     method: 'get',
     params
   });
@@ -204,7 +204,7 @@ export function fetchGetMapObjects(mapId: number, params?: Api.Scene.CommonSearc
 /** create map object */
 export function fetchCreateMapObject(data: Api.Scene.SceneMapObjectCreate) {
   return request<Api.Scene.SceneMapObject>({
-    url: `/scene/map/${data.map_id}/object/add`,
+    url: `/admin/scene/map/${data.map_id}/object/add`,
     method: 'post',
     data
   });
@@ -213,7 +213,7 @@ export function fetchCreateMapObject(data: Api.Scene.SceneMapObjectCreate) {
 /** update map object */
 export function fetchUpdateMapObject(mapId: number, id: number, data: Api.Scene.SceneMapObjectUpdate) {
   return request<Api.Scene.SceneMapObject>({
-    url: `/scene/map/${mapId}/object/${id}`,
+    url: `/admin/scene/map/${mapId}/object/${id}`,
     method: 'put',
     data
   });
@@ -222,7 +222,7 @@ export function fetchUpdateMapObject(mapId: number, id: number, data: Api.Scene.
 /** delete map object */
 export function fetchDeleteMapObject(mapId: number, id: number) {
   return request<void>({
-    url: `/scene/map/${mapId}/object/${id}`,
+    url: `/admin/scene/map/${mapId}/object/${id}`,
     method: 'delete'
   });
 }
@@ -232,7 +232,7 @@ export function fetchDeleteMapObject(mapId: number, id: number) {
 /** get map paths */
 export function fetchGetMapPaths(mapId: number, params?: Api.Scene.CommonSearchParams) {
   return request<Api.Scene.SceneMapPath[]>({
-    url: `/scene/map/${mapId}/path/list`,
+    url: `/admin/scene/map/${mapId}/path/list`,
     method: 'get',
     params
   });
@@ -241,7 +241,7 @@ export function fetchGetMapPaths(mapId: number, params?: Api.Scene.CommonSearchP
 /** create map path */
 export function fetchCreateMapPath(data: Api.Scene.SceneMapPathCreate) {
   return request<Api.Scene.SceneMapPath>({
-    url: `/scene/map/${data.map_id}/path/add`,
+    url: `/admin/scene/map/${data.map_id}/path/add`,
     method: 'post',
     data
   });
@@ -250,7 +250,7 @@ export function fetchCreateMapPath(data: Api.Scene.SceneMapPathCreate) {
 /** update map path */
 export function fetchUpdateMapPath(mapId: number, id: number, data: Api.Scene.SceneMapPathUpdate) {
   return request<Api.Scene.SceneMapPath>({
-    url: `/scene/map/${mapId}/path/${id}`,
+    url: `/admin/scene/map/${mapId}/path/${id}`,
     method: 'put',
     data
   });
@@ -259,7 +259,7 @@ export function fetchUpdateMapPath(mapId: number, id: number, data: Api.Scene.Sc
 /** delete map path */
 export function fetchDeleteMapPath(mapId: number, id: number) {
   return request<void>({
-    url: `/scene/map/${mapId}/path/${id}`,
+    url: `/admin/scene/map/${mapId}/path/${id}`,
     method: 'delete'
   });
 }
@@ -269,7 +269,7 @@ export function fetchDeleteMapPath(mapId: number, id: number) {
 /** get editor full data */
 export function fetchGetEditorMapData(mapId: number) {
   return request<Api.Scene.EditorMapData>({
-    url: `/scene/map/${mapId}/editor/data`,
+    url: `/admin/scene/map/${mapId}/editor/data`,
     method: 'get'
   });
 }
@@ -277,7 +277,7 @@ export function fetchGetEditorMapData(mapId: number) {
 /** save editor data */
 export function fetchSaveEditorData(mapId: number, data: Api.Scene.EditorSaveRequest) {
   return request<Api.Scene.EditorSaveResponse>({
-    url: `/scene/map/${mapId}/editor/save`,
+    url: `/admin/scene/map/${mapId}/editor/save`,
     method: 'post',
     data
   });
@@ -288,7 +288,7 @@ export function fetchParseSceneMapConfig(file: File) {
   const formData = new FormData();
   formData.append('file', file);
   return request<Api.Scene.SceneMapConfigParseResult>({
-    url: '/scene/map-editor/parse-map-config',
+    url: '/admin/scene/map-editor/parse-map-config',
     method: 'post',
     data: formData,
     headers: { 'Content-Type': 'multipart/form-data' }

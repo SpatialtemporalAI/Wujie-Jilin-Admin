@@ -5,7 +5,7 @@ import { request } from '../request';
 /** get merchant call log list */
 export function fetchGetMerchantCallLogList(params?: Api.Merchant.CallLogSearchParams) {
   return request<Api.Merchant.CallLogList>({
-    url: '/merchant/call-log/list',
+    url: '/admin/merchant/call-log/list',
     method: 'get',
     params
   });
@@ -14,7 +14,7 @@ export function fetchGetMerchantCallLogList(params?: Api.Merchant.CallLogSearchP
 /** get merchant call log detail */
 export function fetchGetMerchantCallLog(logId: number) {
   return request<Api.Merchant.CallLogDetail>({
-    url: `/merchant/call-log/${logId}`,
+    url: `/admin/merchant/call-log/${logId}`,
     method: 'get'
   });
 }
@@ -22,7 +22,7 @@ export function fetchGetMerchantCallLog(logId: number) {
 /** delete merchant call log */
 export function fetchDeleteMerchantCallLog(logId: number) {
   return request<void>({
-    url: `/merchant/call-log/${logId}`,
+    url: `/admin/merchant/call-log/${logId}`,
     method: 'delete'
   });
 }
@@ -30,7 +30,7 @@ export function fetchDeleteMerchantCallLog(logId: number) {
 /** batch delete merchant call logs */
 export function fetchBatchDeleteMerchantCallLog(logIds: number[]) {
   return request<void>({
-    url: '/merchant/call-log/batch/delete',
+    url: '/admin/merchant/call-log/batch/delete',
     method: 'delete',
     data: logIds
   });
@@ -39,7 +39,7 @@ export function fetchBatchDeleteMerchantCallLog(logIds: number[]) {
 /** clear old merchant call logs */
 export function fetchClearMerchantCallLog(days?: number) {
   return request<void>({
-    url: '/merchant/call-log/clear',
+    url: '/admin/merchant/call-log/clear',
     method: 'delete',
     params: { days }
   });

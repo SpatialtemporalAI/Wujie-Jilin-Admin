@@ -132,7 +132,7 @@ export function fetchGetOnlineUserCount() {
 /** get robot event log list */
 export function fetchGetRobotEventLogList(params?: Api.SystemManage.RobotEventLogSearchParams) {
   return request<Api.SystemManage.RobotEventLogList>({
-    url: '/robot/event-log/list',
+    url: '/admin/robot/event-log/list',
     method: 'get',
     params
   });
@@ -141,7 +141,7 @@ export function fetchGetRobotEventLogList(params?: Api.SystemManage.RobotEventLo
 /** get robot event log detail */
 export function fetchGetRobotEventLogDetail(logId: number) {
   return request<Api.SystemManage.RobotEventLog>({
-    url: `/robot/event-log/${logId}`,
+    url: `/admin/robot/event-log/${logId}`,
     method: 'get'
   });
 }
@@ -149,7 +149,7 @@ export function fetchGetRobotEventLogDetail(logId: number) {
 /** delete robot event log */
 export function fetchDeleteRobotEventLog(logId: number) {
   return request<void>({
-    url: `/robot/event-log/${logId}`,
+    url: `/admin/robot/event-log/${logId}`,
     method: 'delete'
   });
 }
@@ -157,7 +157,7 @@ export function fetchDeleteRobotEventLog(logId: number) {
 /** batch delete robot event logs */
 export function fetchBatchDeleteRobotEventLog(logIds: number[]) {
   return request<void>({
-    url: '/robot/event-log/batch/delete',
+    url: '/admin/robot/event-log/batch/delete',
     method: 'delete',
     data: logIds
   });
@@ -166,7 +166,7 @@ export function fetchBatchDeleteRobotEventLog(logIds: number[]) {
 /** clear old robot event logs */
 export function fetchClearRobotEventLog(days?: number) {
   return request<void>({
-    url: '/robot/event-log/clear',
+    url: '/admin/robot/event-log/clear',
     method: 'delete',
     params: { days }
   });
