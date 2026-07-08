@@ -252,6 +252,8 @@ const local: App.I18n.Schema = {
     'open-merchant': 'Open Merchant',
     'open-merchant_merchant': 'Merchant Management',
     'open-merchant_call-log': 'Call Log',
+    'open-merchant_call-log_list': 'List',
+    'open-merchant_call-log_delete': 'Delete',
     manage_user: 'User Management',
     manage_dict: 'Dict Management',
     manage_config: 'System Config',

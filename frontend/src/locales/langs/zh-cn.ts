@@ -248,6 +248,8 @@ const local: App.I18n.Schema = {
     'open-merchant': '开放商户',
     'open-merchant_merchant': '商户管理',
     'open-merchant_call-log': '调用日志',
+    'open-merchant_call-log_list': '查询',
+    'open-merchant_call-log_delete': '删除',
     manage_user: '用户管理',
     manage_dict: '字典管理',
     manage_config: '系统配置',
