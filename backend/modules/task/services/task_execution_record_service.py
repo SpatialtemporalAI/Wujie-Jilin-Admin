@@ -14,6 +14,7 @@ from database.models.business.task_execution_record import TaskExecutionRecord
 from database.utils.timezone import timezone
 from core.exception.errors import NotFoundError, ConflictError
 from modules.grpc.task_client import TaskConfigClient
+from modules.robot.services.robot_service import RobotService
 from modules.task.schemas.task_execution_record import (
     TaskExecutionRecordQueryParams,
 )
@@ -48,6 +49,9 @@ class TaskExecutionRecordService:
         )
         if task_result.scalar_one_or_none() is None:
             raise NotFoundError(msg=f"任务 {task_id} 不存在")
+
+        # 机器人在线校验：存在非在线机器人时抛 ConflictError，阻止下发
+        await RobotService.ensure_robots_online(db, list(robot_ids))
 
         return await TaskConfigClient.broadcast_task_changed(
             task_id=task_id,

@@ -32,7 +32,8 @@
 
 ### 前端
 
-- 无代码改动（页面/路由/i18n/API 已就绪）。
+- 页面/路由/API 已就绪；菜单级 `route.log_robot-log` 已存在。
+- 遗留缺口：按钮权限 i18n 当时遗漏，`route.log_robot-log_list` / `route.log_robot-log_delete` 未配，菜单管理中按钮节点回退显示原始 key。已于 2026-07-08 在 `zh-cn.ts` / `en-us.ts` 补全（查询/删除，与 `log_login-log`、`log_operation-log` 对齐）。规则：`sys_menu` 中 BUTTON 节点的 i18nKey = `route.{name}`，种子迁移新增按钮后必须同步补 locale。
 
 ## 约束与备注
 

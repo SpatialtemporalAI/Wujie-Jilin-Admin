@@ -319,6 +319,8 @@ const local: App.I18n.Schema = {
     'log_login-log_delete': 'Delete',
     'log_operation-log_list': 'List',
     'log_operation-log_delete': 'Delete',
+    'log_robot-log_list': 'List',
+    'log_robot-log_delete': 'Delete',
     'log_online-user_list': 'List',
     'log_online-user_kick': 'Force Offline',
     manage_scheduler_add: 'Add',

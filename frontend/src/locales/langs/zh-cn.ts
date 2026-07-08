@@ -315,6 +315,8 @@ const local: App.I18n.Schema = {
     'log_login-log_delete': '删除',
     'log_operation-log_list': '查询',
     'log_operation-log_delete': '删除',
+    'log_robot-log_list': '查询',
+    'log_robot-log_delete': '删除',
     'log_online-user_list': '查询',
     'log_online-user_kick': '下线',
     manage_scheduler_add: '新增',

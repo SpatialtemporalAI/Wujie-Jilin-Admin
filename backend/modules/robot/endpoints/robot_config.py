@@ -23,6 +23,7 @@ from modules.admin.services.sys.file_service import FileService
 from modules.admin.schemas.sys.file import SysFileUploadResponse
 
 from modules.robot.services.robot_config_service import RobotConfigService
+from modules.robot.services.robot_service import RobotService
 from modules.robot.schemas.robot_config import (
     RobotVoiceConfigSchema,
     RobotVoiceConfigResponse,
@@ -130,6 +131,7 @@ async def test_wake_word(
     logger.info(
         "测试唤醒词接口被调用，robot_id: %d, 文本: %s", body.robot_id, body.text
     )
+    await RobotService.ensure_robots_online(db, [body.robot_id])
     resp = await VoiceConfigClient.test_wake_word(
         robot_id=body.robot_id, wake_word=body.text
     )
@@ -157,6 +159,7 @@ async def test_tts(
     logger.info(
         "测试TTS接口被调用，robot_id: %d, 音色: %s", body.robot_id, body.voice
     )
+    await RobotService.ensure_robots_online(db, [body.robot_id])
     resp = await VoiceConfigClient.test_tts(
         robot_id=body.robot_id,
         tts_voice=body.voice,

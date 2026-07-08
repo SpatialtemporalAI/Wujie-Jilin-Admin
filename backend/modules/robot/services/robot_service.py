@@ -137,6 +137,39 @@ class RobotService:
         return result.scalars().all()
 
     @staticmethod
+    async def ensure_robots_online(db: AsyncSession, robot_ids: List[int]) -> None:
+        """校验机器人在线状态：存在非 online 的机器人时抛 ConflictError。
+
+        用于唤醒词测试、语音合成测试、启动任务等需要实时下发到机器人的前置校验。
+        在线判定以 Robot.status == RobotStatus.ONLINE 为准；查询不到（已删除/不存在）
+        的机器人不计入，沿用各调用方既有的"不校验存在性"约定。
+
+        Args:
+            db: 数据库会话
+            robot_ids: 待校验的机器人ID列表
+
+        Raises:
+            ConflictError: 存在非在线状态的机器人（消息中列出机器人名称）
+        """
+        if not robot_ids:
+            return
+        result = await db.execute(
+            select(Robot.id, Robot.name, Robot.status).where(
+                Robot.id.in_(robot_ids),
+                Robot.deleted_at.is_(None),
+            )
+        )
+        offline_names = [
+            name
+            for _, name, status in result.all()
+            if status != RobotStatus.ONLINE
+        ]
+        if offline_names:
+            raise ConflictError(
+                msg=f"机器人 {'、'.join(offline_names)} 不在线，请确保机器人已在线"
+            )
+
+    @staticmethod
     async def get(db: AsyncSession, robot_id: int) -> Robot:
         """
         获取单个机器人
