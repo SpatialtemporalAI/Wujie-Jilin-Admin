@@ -10,10 +10,18 @@
 
 已完成（前端 + 后端）。`pnpm typecheck` 通过。
 
+## 2026-07-09 修正：「查看全部」不跳转
+
+- **现象**：点击导出中心弹窗的「查看全部」没有跳转页面。
+- **根因**：项目使用动态路由模式（`VITE_AUTH_ROUTE_MODE=dynamic`），运行时路由由后端 `getPermissions` 返回。由于 `log_export-task` 未建 `sys_menu` 记录，该路由未被注册到运行时路由表，`router.push({ name: 'log_export-task' })` 找不到目标。
+- **修复**：前端自治 —— 在 `frontend/src/store/modules/route/index.ts` 的 `initDynamicAuthRoute` 中，将 `log_export-task` 注入到 `log` 菜单的 children 里（`hideInMenu: true`）。这样无需后端建表即可跳转，同时保持页面只在用户有 `log` 菜单权限时才可达。
+- **验证**：`pnpm typecheck` 通过。
+
 ## 决策（已与用户确认）
 
 - **下载入口**：任务名旁放状态 Tag，整行右侧放下载图标（仅 `completed`），移除原底部独立文字下载按钮。
-- **列表页**：新建 `views/log/export-task/`，**不进菜单**（后端不建 `sys_menu` 记录，与 `map-editor` 同理），仅靠弹窗「查看全部」入口进入。
+- **列表页**：新建 `views/log/export-task/`，**不进菜单**，仅靠弹窗「查看全部」入口进入。
+  - 2026-07-09 更新：不进菜单的方式从「后端不建 `sys_menu`」改为「前端在动态路由返回后注入该路由并标记 `hideInMenu: true`」，避免路由未注册导致无法跳转。
 - **列表页状态筛选**：后端 list 接口加 `status` 可选筛选（endpoint + service），前端 api 适配。
 - **pre-existing typecheck 报错**：本次建 view 触发 elegant-router 重生成 d.ts 后，暴露 route 段 `map-editor` / 按钮权限 key（`monitor_view`/`manage_menu_list`/`operation_monitor_list` 等 ~40 个）不在 `I18nRouteKey`。**用户本次选择保留修复**（推翻 [2026-07-07 导出任务卡死修复](./2026-07-07_export-task-stuck-recover-and-timeout.md) 中「不修 map-editor」的决定）：
   - `route.map-editor` → `route.scene_map-editor`（死 key，无 `$t` 使用，对齐路由名）。
@@ -27,6 +35,7 @@
 - `frontend/src/layouts/modules/global-header/components/export-center.vue`：样式（状态 Tag 移标题旁 / 下载图标放右侧 / 移除底部按钮行）+「查看全部」入口 `router.push({ name: 'log_export-task' })`。
 - `frontend/src/views/log/export-task/index.vue`（新建）：分页表格（`useNaivePaginatedTable` + 自定义 transform 适配 `items→records`）+ 状态筛选（NSelect）+ 下载图标（复用 `fetchDownloadExportFile`）。参考 `views/log/online-user` 模式。
 - `frontend/src/service/api/export.ts`：`fetchGetExportTaskList` 加 `status?: string | null`。
+- `frontend/src/store/modules/route/index.ts`：在 `initDynamicAuthRoute` 中注入 `log_export-task` 路由（`hideInMenu: true`），修复「查看全部」不跳转。
 - `frontend/src/typings/app.d.ts`：手写 Schema `page.log` 加 `exportTask`、`exportCenter` 加 `viewAll`；`I18nRouteKey` 放宽（本项目 I18nKey 基于显式 Schema，新增 key 必须同步，否则 vue-tsc 报 I18nKey 不可赋值）。
 - `frontend/src/locales/langs/{zh-cn,en-us}.ts`：`route.log_export-task`、`page.log.exportTask.*`、`exportCenter.viewAll`；`route.map-editor` → `route.scene_map-editor`。
 - `frontend/src/router/elegant/{routes,imports,transform}.ts` + `typings/elegant-router.d.ts`：elegant-router 插件自动生成（含 `log_export-task`），无需手改。

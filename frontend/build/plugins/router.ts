@@ -19,12 +19,17 @@ export function setupElegantRouter() {
         return `/login/:module(${moduleReg})?`;
       }
 
+      // keep the export-task page under the /log namespace for business semantics
+      if (key === 'export-task') {
+        return '/log/export-task';
+      }
+
       return routePath;
     },
     onRouteMetaGen(routeName) {
       const key = routeName as RouteKey;
 
-      const constantRoutes: RouteKey[] = ['login', '403', '404', '500'];
+      const constantRoutes: RouteKey[] = ['login', '403', '404', '500', 'export-task'];
 
       const meta: Partial<RouteMeta> = {
         title: key,
@@ -33,6 +38,7 @@ export function setupElegantRouter() {
 
       if (constantRoutes.includes(key)) {
         meta.constant = true;
+        meta.hideInMenu = true;
       }
 
       return meta;

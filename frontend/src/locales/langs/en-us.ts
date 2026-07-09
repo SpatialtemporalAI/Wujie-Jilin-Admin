@@ -264,7 +264,7 @@ const local: App.I18n.Schema = {
     'log_online-user': 'Online Users',
     'log_operation-log': 'Operation Log',
     'log_robot-log': 'Robot Event Log',
-    'log_export-task': 'Export Tasks',
+    'export-task': 'Export Tasks',
     monitor: 'Monitor Dashboard',
     demo: 'Example',
     demo_upload: 'Upload Demo',

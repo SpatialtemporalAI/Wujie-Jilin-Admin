@@ -119,7 +119,7 @@ function onShowChange(show: boolean) {
 /** 跳转到完整导出任务列表页 */
 function goAllTasks() {
   showPopover.value = false;
-  router.push({ name: 'log_export-task' });
+  router.push({ name: 'export-task' });
 }
 
 onMounted(() => {

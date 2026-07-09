@@ -23,11 +23,11 @@ declare module "@elegant-router/types" {
     "demo": "/demo";
     "demo_dict": "/demo/dict";
     "demo_upload": "/demo/upload";
+    "export-task": "/log/export-task";
     "face": "/face";
     "home": "/home";
     "iframe-page": "/iframe-page/:url";
     "log": "/log";
-    "log_export-task": "/log/export-task";
     "log_login-log": "/log/login-log";
     "log_online-user": "/log/online-user";
     "log_operation-log": "/log/operation-log";
@@ -93,6 +93,7 @@ declare module "@elegant-router/types" {
     | "404"
     | "500"
     | "demo"
+    | "export-task"
     | "face"
     | "home"
     | "iframe-page"
@@ -131,9 +132,9 @@ declare module "@elegant-router/types" {
     | "login"
     | "demo_dict"
     | "demo_upload"
+    | "export-task"
     | "face"
     | "home"
-    | "log_export-task"
     | "log_login-log"
     | "log_online-user"
     | "log_operation-log"

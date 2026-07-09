@@ -260,7 +260,7 @@ const local: App.I18n.Schema = {
     'log_online-user': '在线用户',
     'log_operation-log': '操作日志',
     'log_robot-log': '机器人事件日志',
-    'log_export-task': '导出任务',
+    'export-task': '导出任务',
     monitor: '监控仪表盘',
     demo: '示例',
     demo_upload: '上传演示',
