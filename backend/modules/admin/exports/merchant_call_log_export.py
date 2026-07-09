@@ -7,7 +7,7 @@ from modules.merchant.services.call_log_service import CallLogService
 from modules.merchant.schemas.call_log import CallLogQueryParams
 
 _merchant_call_log_columns = [
-    ExportColumn("id", "ID", width=20),
+    ExportColumn("id", "ID", width=20, transform=str),
     ExportColumn("merchant_name", "商户名称", width=20),
     ExportColumn("merchant_code", "商户编码", width=15),
     ExportColumn("api_key_masked", "API Key", width=20),

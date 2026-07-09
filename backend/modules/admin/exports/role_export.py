@@ -7,7 +7,7 @@ from modules.admin.services.sys import RoleService
 from modules.admin.schemas.sys.role import SysRoleQueryParams
 
 _role_columns = [
-    ExportColumn("id", "ID", width=20),
+    ExportColumn("id", "ID", width=20, transform=str),
     ExportColumn("name", "角色名", width=20),
     ExportColumn("desc", "描述", width=30),
     ExportColumn("status", "状态", width=10,

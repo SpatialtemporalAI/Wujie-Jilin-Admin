@@ -7,7 +7,7 @@ from modules.admin.services.sys.login_log_service import LoginLogService
 from modules.admin.schemas.sys.login_log import LoginLogQueryParams
 
 _login_log_columns = [
-    ExportColumn("id", "ID", width=20),
+    ExportColumn("id", "ID", width=20, transform=str),
     ExportColumn("username", "用户名", width=20),
     ExportColumn("ip", "IP地址", width=18),
     ExportColumn("status", "状态", width=10,

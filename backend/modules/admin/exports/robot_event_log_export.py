@@ -7,8 +7,8 @@ from modules.robot.services.robot_event_log_service import RobotEventLogService
 from modules.robot.schemas.robot_event_log import RobotEventLogQueryParams
 
 _robot_event_log_columns = [
-    ExportColumn("id", "ID", width=20),
-    ExportColumn("robot_id", "机器人ID", width=15),
+    ExportColumn("id", "ID", width=20, transform=str),
+    ExportColumn("robot_id", "机器人ID", width=15, transform=str),
     ExportColumn("event_type", "事件类型", width=12),
     ExportColumn("event_status", "事件状态", width=12),
     ExportColumn("event_content", "事件内容", width=40),
