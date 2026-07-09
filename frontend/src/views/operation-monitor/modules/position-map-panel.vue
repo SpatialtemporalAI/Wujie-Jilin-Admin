@@ -20,12 +20,16 @@ let fabricCanvas: Canvas | null = null;
 let backgroundImgObj: FabricImage | null = null;
 let robotMarker: { body: Circle; arrow: Triangle; label: Text } | null = null;
 let elementMap: Map<string, any> = new Map();
+// 障碍物/电子围栏/禁行区域的名称标签（与地图编辑器保持一致）
+let objectLabels: Map<number, Text> = new Map();
 let resizeObserver: ResizeObserver | null = null;
 let restrictedPattern: Pattern | null = null;
 
 const OBSTACLE_FILL = 'rgba(59, 130, 246, 0.3)';
 const OBSTACLE_STROKE = '#3b82f6';
 const RESTRICTED_STROKE = '#6b7280';
+const FENCE_FILL = 'rgba(239, 68, 68, 0.15)';
+const FENCE_STROKE = '#ef4444';
 const POINT_FILL = '#22c55e';
 const RETURN_POINT_FILL = '#047857';
 // 点位圆形半径、方向箭头尺寸、名称垂直偏移（与地图编辑器保持一致）
@@ -139,6 +143,10 @@ function clearMapState() {
     fabricCanvas?.remove(obj);
   }
   elementMap.clear();
+  for (const [, label] of objectLabels) {
+    fabricCanvas?.remove(label);
+  }
+  objectLabels.clear();
   if (robotMarker) {
     fabricCanvas?.remove(robotMarker.body, robotMarker.arrow, robotMarker.label);
     robotMarker = null;
@@ -183,10 +191,45 @@ function worldToCanvasPoint(wx: number, wy: number) {
   return { x: px.x, y: h - px.y };
 }
 
+/**
+ * 同步障碍物/电子围栏/禁行区域的名称标签（与地图编辑器一致）。
+ * 标签随图形一起缩放（属于场景对象，不参与 applyMarkerZoom 的反向缩放）。
+ * 无名称时移除已有标签；位置取图形包围盒下沿居中、向下偏移 12px。
+ */
+function syncObjectLabel(objId: number, fabricObj: any, name: string | null | undefined, strokeColor: string) {
+  const trimmed = name?.trim();
+  let label = objectLabels.get(objId);
+  if (!trimmed) {
+    if (label) {
+      fabricCanvas?.remove(label);
+      objectLabels.delete(objId);
+    }
+    return;
+  }
+  if (!label) {
+    label = new Text(trimmed, {
+      fontSize: 10,
+      fill: strokeColor,
+      originX: 'center',
+      originY: 'center',
+      fontFamily: 'sans-serif',
+      fontWeight: 'bold',
+      evented: false,
+      selectable: false
+    });
+    fabricCanvas!.add(label);
+    objectLabels.set(objId, label);
+  } else {
+    label.set({ text: trimmed, fill: strokeColor });
+  }
+  const bounds = fabricObj.getBoundingRect();
+  label.set({ left: bounds.left + bounds.width / 2, top: bounds.top + bounds.height + 12 });
+  label.setCoords();
+}
+
 function renderElements() {
   if (!fabricCanvas || !mapData.value) return;
   const existingKeys = new Set<string>();
-
   for (const path of mapData.value.paths) {
     const key = `path-${path.id}`;
     existingKeys.add(key);
@@ -288,11 +331,15 @@ function renderElements() {
     const key = `obj-${obj.id}`;
     existingKeys.add(key);
     const isRestricted = obj.type === 'restricted' || obj.type === '禁区';
-    const fill = isRestricted ? getRestrictedPattern() : OBSTACLE_FILL;
-    const stroke = isRestricted ? RESTRICTED_STROKE : OBSTACLE_STROKE;
+    const isFence = obj.type === 'fence' || obj.type === '电子围栏';
+    const fill = isRestricted ? getRestrictedPattern() : (isFence ? FENCE_FILL : OBSTACLE_FILL);
+    const stroke = isRestricted ? RESTRICTED_STROKE : (isFence ? FENCE_STROKE : OBSTACLE_STROKE);
+    const strokeWidth = isFence ? 3 : 2;
     if (elementMap.has(key)) {
       const fabricObj = elementMap.get(key);
       fabricObj.set({ left: obj.x, top: obj.y, angle: obj.angle ?? 0 });
+      fabricObj.setCoords();
+      syncObjectLabel(obj.id, fabricObj, obj.name, stroke);
     } else {
       let fabricObj: Rect | Polygon | Triangle | Ellipse | null = null;
       if (obj.points) {
@@ -303,7 +350,7 @@ function renderElements() {
             angle: obj.angle ?? 0,
             fill,
             stroke,
-            strokeWidth: 2
+            strokeWidth
           });
         } catch { /* skip */ }
       } else if (obj.type === 'obstacle-circle') {
@@ -315,7 +362,7 @@ function renderElements() {
           ry: (obj.height || 10) / 2,
           fill,
           stroke,
-          strokeWidth: 2
+          strokeWidth
         });
       } else if (obj.type === 'obstacle-triangle') {
         fabricObj = new Triangle({
@@ -326,7 +373,7 @@ function renderElements() {
           height: obj.height || 10,
           fill,
           stroke,
-          strokeWidth: 2
+          strokeWidth
         });
       } else {
         const isSquare = obj.type === 'obstacle-square';
@@ -338,13 +385,15 @@ function renderElements() {
           height: isSquare ? (obj.width || 10) : (obj.height || 10),
           fill,
           stroke,
-          strokeWidth: 2
+          strokeWidth
         });
       }
       if (fabricObj) {
         fabricObj.set({ selectable: false, evented: false });
         fabricCanvas.add(fabricObj);
+        fabricObj.setCoords();
         elementMap.set(key, fabricObj);
+        syncObjectLabel(obj.id, fabricObj, obj.name, stroke);
       }
     }
   }
@@ -354,6 +403,15 @@ function renderElements() {
     if (!existingKeys.has(key)) {
       fabricCanvas.remove(obj);
       elementMap.delete(key);
+      // 同步移除已删除对象的名称标签
+      if (key.startsWith('obj-')) {
+        const objId = Number(key.substring(4));
+        const label = objectLabels.get(objId);
+        if (label) {
+          fabricCanvas.remove(label);
+          objectLabels.delete(objId);
+        }
+      }
     }
   }
 
