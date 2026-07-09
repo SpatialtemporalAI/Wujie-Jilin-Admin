@@ -16,7 +16,7 @@ const loading = ref(false);
 const downloadingId = ref<number | null>(null);
 
 const POLL_INTERVAL = 3000;
-const PAGE_SIZE = 20;
+const PAGE_SIZE = 5;
 
 /** 进行中任务数（角标） */
 const pendingCount = computed(() => {
