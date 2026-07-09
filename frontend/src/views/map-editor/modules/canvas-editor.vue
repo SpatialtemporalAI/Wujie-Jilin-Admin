@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { ref, computed, onMounted, onBeforeUnmount, watch, nextTick } from 'vue';
-import { Canvas, Circle, Rect, Polygon, Line, Group, Text, FabricImage, Triangle, Ellipse, Pattern, Point } from 'fabric';
+import { Canvas, Circle, Rect, Polygon, Line, Text, FabricImage, Triangle, Ellipse, Pattern, Point } from 'fabric';
 import { getFilePreviewUrl } from '@/service/api/file';
 import { pixelToWorld, worldToPixel, radToDeg, degToRad } from '@/utils/coordinate';
 import type { SelectedElement } from '../composables/useMapEditor';
@@ -9,7 +9,6 @@ import { fetchGetSceneMapList } from '@/service/api';
 interface Props {
   editorData: Api.Scene.EditorMapData | null;
   selectedElement: SelectedElement | null;
-  gridSpacing: number;
   resolution: number;
   loading?: boolean;
   /** 当前地图绑定机器人的实时位置（画布展示用，纯视觉，不落库/不导出/不选中） */
@@ -38,7 +37,6 @@ const canvasContainer = ref<HTMLDivElement>();
 const canvasEl = ref<HTMLCanvasElement>();
 const minimapEl = ref<HTMLDivElement>();
 let fabricCanvas: Canvas | null = null;
-let gridGroup: Group | null = null;
 let backgroundImgObj: FabricImage | null = null;
 let elementMap: Map<string, any> = new Map();
 let annotationDecorations: Map<number, { text: Text; angleIndicator: Triangle }> = new Map();
@@ -47,7 +45,6 @@ let objectLabels: Map<number, Text> = new Map();
 // 用独立对象、各自绝对坐标定位，避免 Group bbox 重算导致圆点与名称错位/坐标偏移
 let robotMarkers: Map<number, { circle: Circle; arrow: Triangle | null; label: Text }> = new Map();
 let resizeObserver: ResizeObserver | null = null;
-let lastGridSpacingM = 0;
 
 const minimapImageUrl = ref('');
 const minimapRect = ref({ x: 0, y: 0, w: 0, h: 0 });
@@ -841,147 +838,6 @@ function updateSelection() {
   fabricCanvas.renderAll();
 }
 
-function formatDist(m: number): string {
-  if (m === 0) return '0';
-  if (Number.isInteger(m)) return `${m}`;
-  if (m >= 1) return m.toFixed(1);
-  if (m >= 0.1) return m.toFixed(1);
-  return m.toFixed(2);
-}
-
-function renderGrid() {
-  if (!fabricCanvas) return;
-
-  const w = canvasWidth.value;
-  const h = canvasHeight.value;
-  const zoom = currentZoom;
-  const res = props.resolution;
-
-  // 自动缩放：目标屏幕距离 ~60px，吸附到 nice step
-  const TARGET_SCREEN_PX = 60;
-  const niceSteps = [0.1, 0.2, 0.5, 1, 2, 5, 10, 20];
-  const rawSpacingM = (TARGET_SCREEN_PX / zoom) * res;
-  const candidate = niceSteps.find(s => s >= rawSpacingM) ?? niceSteps[niceSteps.length - 1];
-
-  // 15% 缓冲防抖：相邻档位且 raw 在缓冲区内则保持不变
-  const last = lastGridSpacingM;
-  const lastIdx = niceSteps.indexOf(last);
-  const candIdx = niceSteps.indexOf(candidate);
-  const isAdjacent = lastIdx >= 0 && candIdx >= 0 && Math.abs(lastIdx - candIdx) === 1;
-  const inBuffer = isAdjacent && rawSpacingM > last * 0.85 && rawSpacingM < last * 1.15;
-  const spacingM = inBuffer ? last : candidate;
-
-  // Skip re-render if spacing hasn't changed
-  if (Math.abs(spacingM - lastGridSpacingM) < 1e-6 && gridGroup) return;
-  lastGridSpacingM = spacingM;
-
-  if (gridGroup) fabricCanvas.remove(gridGroup);
-
-  const spacingPx = spacingM / res;
-  if (spacingPx <= 0) return;
-
-  // 屏幕距离用于决定是否显示次网格
-  const majorScreenPx = spacingPx * zoom;
-  const showMinor = majorScreenPx > 100;
-  const minorSpacingPx = spacingPx / 5;
-
-  const allObjects: any[] = [];
-  const GRID_MAJOR_COLOR = 'rgba(0,0,0,0.08)';
-  const GRID_MAJOR_OUT_COLOR = 'rgba(0,0,0,0.03)';
-  const GRID_MINOR_COLOR = 'rgba(0,0,0,0.04)';
-
-  // Grid extends beyond image to fill visible area
-  const margin = Math.max(w, h, 1000);
-  const startX = Math.floor(-margin / spacingPx) * spacingPx;
-  const startY = Math.floor(-margin / spacingPx) * spacingPx;
-  const endX = Math.ceil((w + margin) / spacingPx) * spacingPx;
-  const endY = Math.ceil((h + margin) / spacingPx) * spacingPx;
-
-  // 次网格（更浅，无标签）
-  if (showMinor) {
-    for (let x = startX; x <= endX; x += minorSpacingPx) {
-      // 主网格位置跳过
-      if (Math.abs(x / spacingPx - Math.round(x / spacingPx)) < 1e-6) continue;
-      allObjects.push(new Line([x, startY, x, endY], {
-        stroke: GRID_MINOR_COLOR,
-        strokeWidth: 1,
-        selectable: false,
-        evented: false,
-      }));
-    }
-    for (let y = startY; y <= endY; y += minorSpacingPx) {
-      if (Math.abs(y / spacingPx - Math.round(y / spacingPx)) < 1e-6) continue;
-      allObjects.push(new Line([startX, y, endX, y], {
-        stroke: GRID_MINOR_COLOR,
-        strokeWidth: 1,
-        selectable: false,
-        evented: false,
-      }));
-    }
-  }
-
-  // Vertical lines（主网格）
-  for (let x = startX; x <= endX; x += spacingPx) {
-    const inBounds = x >= 0 && x <= w;
-    allObjects.push(new Line([x, startY, x, endY], {
-      stroke: inBounds ? GRID_MAJOR_COLOR : GRID_MAJOR_OUT_COLOR,
-      strokeWidth: 1,
-      selectable: false,
-      evented: false,
-    }));
-  }
-  // Horizontal lines（主网格）
-  for (let y = startY; y <= endY; y += spacingPx) {
-    const inBounds = y >= 0 && y <= h;
-    allObjects.push(new Line([startX, y, endX, y], {
-      stroke: inBounds ? GRID_MAJOR_COLOR : GRID_MAJOR_OUT_COLOR,
-      strokeWidth: 1,
-      selectable: false,
-      evented: false,
-    }));
-  }
-
-  // Labels: font size adjusts inversely with zoom so it stays readable on screen
-  const fontSize = Math.max(8, Math.min(14, 11 / zoom));
-  const labelStyle = {
-    fontSize,
-    fill: 'rgba(0,0,0,0.4)',
-    fontFamily: 'sans-serif',
-    selectable: false,
-    evented: false,
-  };
-
-  // X-axis labels along top edge (米 = pixel × resolution，从左上角 0 递增)
-  for (let x = 0; x <= endX; x += spacingPx) {
-    const meters = Math.round(x * res * 1000) / 1000;
-    allObjects.push(new Text(formatDist(meters), {
-      ...labelStyle,
-      left: x,
-      top: -4,
-      originX: 'center',
-      originY: 'bottom',
-    }));
-  }
-  // Y-axis labels along left edge (米 = pixel × resolution，从左上角 0 向下递增)
-  for (let y = 0; y <= endY; y += spacingPx) {
-    const meters = Math.round(y * res * 1000) / 1000;
-    allObjects.push(new Text(formatDist(meters), {
-      ...labelStyle,
-      left: -4,
-      top: y,
-      originX: 'right',
-      originY: 'center',
-    }));
-  }
-
-  gridGroup = new Group(allObjects, { selectable: false, evented: false, objectCaching: false });
-  fabricCanvas.add(gridGroup);
-  // Grid at the very bottom; image and other elements render above it
-  fabricCanvas.sendObjectToBack(gridGroup);
-  fabricCanvas.renderAll();
-  updateMinimap();
-}
-
 async function loadBackgroundImage(imageId: number) {
   if (!fabricCanvas) return;
   const url = getFilePreviewUrl(imageId);
@@ -1010,7 +866,6 @@ async function loadBackgroundImage(imageId: number) {
     fabricCanvas.setZoom(1);
     centerContent();
     fabricCanvas.renderAll();
-    renderGrid();
     renderElements(); // 图片加载完成后渲染元素
     currentZoom = 1;
     sliderZoomValue.value = sliderValueToZoom(1);
@@ -1329,7 +1184,6 @@ function handleMouseWheel(opt: any) {
     if (typeof o.setCoords === 'function') o.setCoords();
   });
   applyMarkerZoom();
-  renderGrid();
   updateMinimap();
   emit('zoom-change', zoom);
 }
@@ -1476,7 +1330,6 @@ function disposeCanvas() {
   annotationDecorations.clear();
   objectLabels.clear();
   robotMarkers.clear();
-  lastGridSpacingM = 0;
   isDraggingObject = false;
   justDragged = false;
 }
@@ -1507,7 +1360,6 @@ watch(() => props.editorData, async (newData) => {
   }
   objectLabels.clear();
   clearRobotMarkers();
-  lastGridSpacingM = 0;
 
   if (newData.map.image_id) {
     await loadBackgroundImage(newData.map.image_id);
@@ -1574,7 +1426,6 @@ watch(() => props.selectedElement, () => {
 
   fabricCanvas.renderAll();
 });
-watch(() => props.gridSpacing, () => renderGrid());
 
 onMounted(async () => {
   await loadSceneList();
@@ -1591,11 +1442,7 @@ onBeforeUnmount(() => {
 
 function exportCanvas(format: 'png' | 'jpeg' | 'webp') {
   if (!fabricCanvas) return;
-  if (gridGroup) gridGroup.set('visible', false);
-  fabricCanvas.renderAll();
   const dataUrl = fabricCanvas.toDataURL({ format, quality: 1, multiplier: 2 });
-  if (gridGroup) gridGroup.set('visible', true);
-  fabricCanvas.renderAll();
   const link = document.createElement('a');
   link.download = `map-export.${format === 'jpeg' ? 'jpg' : format}`;
   link.href = dataUrl;
@@ -1610,7 +1457,6 @@ function zoomIn() {
   currentZoom = newZoom;
   sliderZoomValue.value = sliderValueToZoom(newZoom);
   applyMarkerZoom();
-  renderGrid();
   emit('zoom-change', newZoom);
 }
 
@@ -1622,7 +1468,6 @@ function zoomOut() {
   currentZoom = newZoom;
   sliderZoomValue.value = sliderValueToZoom(newZoom);
   applyMarkerZoom();
-  renderGrid();
   emit('zoom-change', newZoom);
 }
 
@@ -1632,7 +1477,6 @@ function zoomReset() {
   sliderZoomValue.value = sliderValueToZoom(1);
   centerContent();
   applyMarkerZoom();
-  renderGrid();
   emit('zoom-change', 1);
 }
 
@@ -1653,7 +1497,6 @@ function handleSliderZoom(val: number) {
   fabricCanvas.zoomToPoint(center, newZoom);
   currentZoom = newZoom;
   applyMarkerZoom();
-  renderGrid();
   emit('zoom-change', newZoom);
 }
 

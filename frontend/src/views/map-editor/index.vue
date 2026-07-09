@@ -787,7 +787,7 @@ function handleFocusAnnotation(id: number) {
       <div class="relative min-w-0 flex-1">
         <CanvasEditor ref="canvasRef" :editor-data="editor.editorData.value"
           :selected-element="editor.selectedElement.value"
-          :grid-spacing="editor.gridSpacing.value" :resolution="editor.resolution.value" :loading="editor.loading.value"
+          :resolution="editor.resolution.value" :loading="editor.loading.value"
           :robot-locations="robotLocations"
           @select-element="el => (editor.selectedElement.value = el)" @update-element="handleUpdateElement"
           @zoom-change="handleZoomChange" @cursor-position="handleCursorPosition" @undo="editor.undo()"

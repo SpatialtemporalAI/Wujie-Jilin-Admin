@@ -32,7 +32,6 @@ export function useMapEditor() {
   const selectedMapId = ref<number | null>(null);
   const selectedElement = ref<SelectedElement | null>(null);
   const drawingMode = ref<DrawingMode>('select');
-  const gridSpacing = ref(5);
   const isDirty = ref(false);
   const loading = ref(false);
   const saving = ref(false);
@@ -451,7 +450,6 @@ export function useMapEditor() {
     selectedMapId,
     selectedElement,
     drawingMode,
-    gridSpacing,
     isDirty,
     loading,
     saving,
