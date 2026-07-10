@@ -29,6 +29,7 @@ from modules.scene.services.scene_map_annotation_service import (
 )
 from modules.grpc.config_client import VoiceConfigClient
 from modules.grpc.navigation_client import NavigationClient
+from modules.robot.services.robot_service import RobotService
 from modules.merchant.schemas.openapi import OpenApiResult, TtsParams
 
 logger = logging.getLogger(__name__)
@@ -147,6 +148,7 @@ class OpenApiService:
         db: AsyncSession, merchant: Merchant, robot_sn: str, point_id: int
     ) -> OpenApiResult:
         robot = await OpenApiService.resolve_robot(db, merchant, robot_sn)
+        await RobotService.ensure_robots_online(db, [robot.id])
         annotations = await OpenApiService._load_annotations(db, [point_id])
         OpenApiService._assert_points_on_robot_map(robot, annotations)
         resp = await NavigationClient.navigate_to_point(
@@ -161,6 +163,7 @@ class OpenApiService:
         db: AsyncSession, merchant: Merchant, robot_sn: str, point_ids: List[int]
     ) -> OpenApiResult:
         robot = await OpenApiService.resolve_robot(db, merchant, robot_sn)
+        await RobotService.ensure_robots_online(db, [robot.id])
         annotations = await OpenApiService._load_annotations(db, point_ids)
         OpenApiService._assert_points_on_robot_map(robot, annotations)
         points = [OpenApiService._annotation_to_point(a) for a in annotations]
@@ -177,6 +180,7 @@ class OpenApiService:
         db: AsyncSession, merchant: Merchant, robot_sn: str, task_id: int
     ) -> OpenApiResult:
         robot = await OpenApiService.resolve_robot(db, merchant, robot_sn)
+        await RobotService.ensure_robots_online(db, [robot.id])
         await TaskService.get(db, task_id)  # 校验任务存在
         await TaskExecutionRecordService.start_execution(db, task_id, [robot.id])
         return OpenApiResult(
@@ -209,6 +213,7 @@ class OpenApiService:
         db: AsyncSession, merchant: Merchant, robot_sn: str
     ) -> OpenApiResult:
         robot = await OpenApiService.resolve_robot(db, merchant, robot_sn)
+        await RobotService.ensure_robots_online(db, [robot.id])
         record = await OpenApiService._get_active_record(db, robot.id, ["running", "pending"])
         await TaskExecutionRecordService.pause_execution(db, record.id)
         return OpenApiResult(success=True, message="任务已暂停", data={"record_id": record.id})
@@ -218,6 +223,7 @@ class OpenApiService:
         db: AsyncSession, merchant: Merchant, robot_sn: str
     ) -> OpenApiResult:
         robot = await OpenApiService.resolve_robot(db, merchant, robot_sn)
+        await RobotService.ensure_robots_online(db, [robot.id])
         record = await OpenApiService._get_active_record(db, robot.id, ["paused"])
         await TaskExecutionRecordService.resume_execution(db, record.id)
         return OpenApiResult(success=True, message="任务已恢复", data={"record_id": record.id})
@@ -227,6 +233,7 @@ class OpenApiService:
         db: AsyncSession, merchant: Merchant, robot_sn: str
     ) -> OpenApiResult:
         robot = await OpenApiService.resolve_robot(db, merchant, robot_sn)
+        await RobotService.ensure_robots_online(db, [robot.id])
         record = await OpenApiService._get_active_record(
             db, robot.id, ["running", "paused", "pending"]
         )
@@ -242,6 +249,7 @@ class OpenApiService:
         tts_params: Optional[TtsParams],
     ) -> OpenApiResult:
         robot = await OpenApiService.resolve_robot(db, merchant, robot_sn)
+        await RobotService.ensure_robots_online(db, [robot.id])
         if not text or not text.strip():
             raise NotFoundError(msg="播报文本不能为空")
 

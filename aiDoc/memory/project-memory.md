@@ -90,6 +90,7 @@
 - [2026-07-10 运行监控实时视频接入 LiveKit](./business/2026-07-10_operation-monitor-livekit-video.md) — 运行监控页视频监控 Tab 通过 LiveKit 实时显示机器人摄像头，Redis 观众计数保证多用户共享时摄像头只在最后一人离开时关闭
 - [2026-07-10 取消任务执行记录 task_id 外键约束](./business/2026-07-10_drop-task-execution-record-task-id-fk.md) — 删除 task_execution_record.task_id 的 ForeignKey，保留字段与索引，避免任务删除时清空执行记录来源任务 ID
 - [2026-07-10 商户开放 API 路径取消 /admin 前缀](./business/2026-07-10_openapi-remove-admin-prefix.md) — openapi_router 改由主应用直接挂载到 /openapi/v1，旧 /admin/openapi/v1 路径失效
+- [2026-07-10 商户开放 API 动作类接口增加机器人在线校验](./business/2026-07-10_openapi-robot-online-check.md) — goto_point / navigate_route / execute_task / pause_task / resume_task / stop_task / speak 7 个接口调用前统一校验 Robot.status==ONLINE
 
 ## 维护说明
 
