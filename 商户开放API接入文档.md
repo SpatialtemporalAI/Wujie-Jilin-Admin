@@ -271,7 +271,7 @@
   "message": "共 2 个场景",
   "data": {
     "scenes": [
-      { "id": 1, "name": "一楼大厅", "width": 1000, "height": 800, "status": "1", "version": 3 }
+      { "id": 1, "name": "一楼大厅", "width": 1000, "height": 800, "status": true, "version": 3 }
     ]
   }
 }
@@ -283,7 +283,7 @@
 | name     | string | 场景名称                        |
 | width    | int    | 地图宽度（像素）                    |
 | height   | int    | 地图高度（像素）                    |
-| status   | string | 地图状态（与前端约定：`"1"` 启用 / `"2"` 停用） |
+| status   | boolean | 地图状态：`true` 启用 / `false` 停用 |
 | version  | int    | 地图版本号                       |
 
 ### 4.10 点位列表 — `POST /openapi/v1/points`

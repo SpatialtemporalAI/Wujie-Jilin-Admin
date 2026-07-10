@@ -167,8 +167,9 @@ class MerchantOpenApiTester:
         return resp.get("code") == 200 and resp.get("data", {}).get("success") is True
 
     def test_scenes(self) -> None:
-        """测试 /openapi/v1/scenes，获取商户可访问场景。"""
-        resp = self._call("/openapi/v1/scenes", {})
+        """测试 /openapi/v1/scenes，获取商户可访问场景；若配置了 robot_sn 则仅查询该机器人绑定的场景。"""
+        payload = {"robot_sn": self.robot_sn} if self.robot_sn else {}
+        resp = self._call("/openapi/v1/scenes", payload)
         if self._ok(resp):
             scenes = resp.get("data", {}).get("data", {}).get("scenes", [])
             if scenes:
