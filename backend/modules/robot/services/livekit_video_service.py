@@ -216,8 +216,8 @@ class LiveKitVideoService:
                 "关闭视频监控时观众不存在 robot_id=%s viewer=%s", robot_id, viewer_id
             )
 
-        # 最后一个观众离开：通知机器人关闭摄像头
-        if count == 0:
+        # 最后一个观众离开（关闭前 count 为 1）：通知机器人关闭摄像头
+        if removed == 1 and count == 0:
             try:
                 resp = await VideoMonitoringClient.notify_video_monitoring_changed(
                     robot_id=robot_id, enabled=False
