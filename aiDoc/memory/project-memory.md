@@ -89,6 +89,7 @@
 - [2026-07-08 实时下发接口增加机器人在线前置校验](./business/2026-07-08_robot-online-check-before-dispatch.md) — 唤醒词测试/语音合成测试/启动任务下发前经 `RobotService.ensure_robots_online` 校验 `Robot.status==online`，离线抛 ConflictError「机器人 X 不在线」由前端 onError 自动 toast；三处复用同一 helper，前端零改动
 - [2026-07-10 运行监控实时视频接入 LiveKit](./business/2026-07-10_operation-monitor-livekit-video.md) — 运行监控页视频监控 Tab 通过 LiveKit 实时显示机器人摄像头，Redis 观众计数保证多用户共享时摄像头只在最后一人离开时关闭
 - [2026-07-10 取消任务执行记录 task_id 外键约束](./business/2026-07-10_drop-task-execution-record-task-id-fk.md) — 删除 task_execution_record.task_id 的 ForeignKey，保留字段与索引，避免任务删除时清空执行记录来源任务 ID
+- [2026-07-10 商户开放 API 路径取消 /admin 前缀](./business/2026-07-10_openapi-remove-admin-prefix.md) — openapi_router 改由主应用直接挂载到 /openapi/v1，旧 /admin/openapi/v1 路径失效
 
 ## 维护说明
 

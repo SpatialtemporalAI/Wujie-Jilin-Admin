@@ -9,7 +9,7 @@
 ## 1. 概述
 
 - **Base URL**：`{API_BASE}`（由平台分配，例如 `https://your-domain.com`，下文以 `{API_BASE}` 代指）
-- **接口前缀**：所有开放接口均位于 `/openapi/v1` 下
+- **接口前缀**：所有开放接口均位于 `{API_BASE}/openapi/v1` 下，即完整路径以 `/openapi/v1` 开头
 - **请求方法**：全部为 `POST`，请求体使用 `application/json`
 - **鉴权方式**：每个请求需携带 4 个签名请求头（见 [第 2 节](#2-鉴权机制)）
 - **数据范围**：商户只能操作/查询**已绑定到本商户**的机器人及其关联的场景、任务、点位
@@ -375,12 +375,12 @@ curl -X POST "$API_BASE$PATH_" \
 ## 5. 典型调用流程
 
 ```
-1. GET 场景      POST /scenes                     → 拿到 map_id
-2. GET 点位      POST /points   {map_id}          → 拿到 point_id 列表
-3. 导航          POST /goto_point {robot_sn, point_id}
-   或            POST /navigate_route {robot_sn, point_ids}
-4. (可选) 控制   POST /pause_task / resume_task / stop_task {robot_sn}
-5. (可选) 任务   POST /tasks {robot_sn} → 拿到 task_id → POST /execute_task
+1. GET 场景      POST /openapi/v1/scenes                     → 拿到 map_id
+2. GET 点位      POST /openapi/v1/points   {map_id}          → 拿到 point_id 列表
+3. 导航          POST /openapi/v1/goto_point {robot_sn, point_id}
+   或            POST /openapi/v1/navigate_route {robot_sn, point_ids}
+4. (可选) 控制   POST /openapi/v1/pause_task / resume_task / stop_task {robot_sn}
+5. (可选) 任务   POST /openapi/v1/tasks {robot_sn} → 拿到 task_id → POST /openapi/v1/execute_task
 ```
 
 ---

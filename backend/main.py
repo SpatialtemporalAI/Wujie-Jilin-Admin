@@ -17,6 +17,7 @@ from core.redis import RedisPool
 
 from modules.app.router import router as app_app_router
 from modules.admin.router import router as admin_app_router
+from modules.merchant.endpoints import openapi_router
 from core.registry.setup_registry import setup_app
 from core.websocket import FastAPIConnectionManager
 
@@ -155,6 +156,8 @@ logger.info("配置文件初始化完成")
 # 挂载认证路由
 app.include_router(app_app_router)
 app.include_router(admin_app_router)
+# 商户开放 API 直接挂在根路径 /openapi/v1，不经过 /admin
+app.include_router(openapi_router)
 
 
 if __name__ == "__main__":
