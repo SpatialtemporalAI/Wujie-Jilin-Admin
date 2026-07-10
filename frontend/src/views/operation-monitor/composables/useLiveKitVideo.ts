@@ -16,6 +16,7 @@ const HEARTBEAT_INTERVAL = 15000;
 export interface UseLiveKitVideoOptions {
   robotId: number;
   serialNumber: string;
+  status: Api.Robot.RobotStatusEnum;
 }
 
 export function useLiveKitVideo(options: UseLiveKitVideoOptions) {
@@ -58,6 +59,13 @@ export function useLiveKitVideo(options: UseLiveKitVideoOptions) {
   async function connect() {
     if (!options.robotId || !options.serialNumber) {
       error.value = '未选择机器人';
+      return;
+    }
+
+    if (options.status !== 'online') {
+      loading.value = false;
+      connected.value = false;
+      error.value = null;
       return;
     }
 
@@ -137,10 +145,17 @@ export function useLiveKitVideo(options: UseLiveKitVideoOptions) {
     disconnect();
   });
 
-  // robotId/serialNumber 变化时（如切换机器人），重新连接
+  // robotId/serialNumber/status 变化时重新处理：离线则断开，在线则重新连接
   watch(
-    () => [options.robotId, options.serialNumber],
+    () => [options.robotId, options.serialNumber, options.status],
     () => {
+      if (options.status !== 'online') {
+        disconnect();
+        loading.value = false;
+        connected.value = false;
+        error.value = null;
+        return;
+      }
       connect();
     }
   );

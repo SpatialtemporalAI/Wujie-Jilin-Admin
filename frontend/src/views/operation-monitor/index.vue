@@ -68,6 +68,7 @@ const {
               <VideoPlayer
                 :robot-id="selectedRobot?.id ?? 0"
                 :serial-number="selectedRobot?.serial_number ?? ''"
+                :status="selectedRobot?.status ?? 'offline'"
               />
             </NTabPane>
           </NTabs>

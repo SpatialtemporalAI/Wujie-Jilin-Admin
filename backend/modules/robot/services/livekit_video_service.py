@@ -29,13 +29,25 @@ _VIEWERS_SET_KEY = "wj:livekit:viewers:{serial_number}"
 _VIEWER_TTL_KEY = "wj:livekit:viewer_ttl:{serial_number}:{viewer_id}"
 _ROOM_HASH_KEY = "wj:livekit:room:{serial_number}"
 
-# Lua 脚本：打开视频时原子地 SADD 观众、设置 TTL、刷新集合过期时间，并返回当前集合大小
+# Lua 脚本：打开视频时原子地清理过期观众、SADD 观众、设置 TTL、刷新集合过期时间，并返回当前集合大小
 _OPEN_VIEWER_LUA = """
 local viewers_key = KEYS[1]
 local ttl_key = KEYS[2]
 local viewer_id = ARGV[1]
 local ttl_seconds = tonumber(ARGV[2])
 local set_ttl_seconds = tonumber(ARGV[3])
+
+-- 从当前 viewer 的 ttl_key 推导出 viewer_ttl 前缀，用于校验其他观众是否过期
+local prefix = ttl_key:sub(1, -#viewer_id - 1)
+
+-- 清理集合中已过期的观众（对应的 ttl_key 已不存在）
+local members = redis.call('SMEMBERS', viewers_key)
+for _, member in ipairs(members) do
+    local member_ttl_key = prefix .. member
+    if redis.call('EXISTS', member_ttl_key) == 0 then
+        redis.call('SREM', viewers_key, member)
+    end
+end
 
 local added = redis.call('SADD', viewers_key, viewer_id)
 redis.call('SETEX', ttl_key, ttl_seconds, 1)
@@ -138,8 +150,18 @@ class LiveKitVideoService:
             logger.error("Redis 打开观众失败 robot_id=%s: %s", robot_id, exc)
             raise ServerError(msg="打开视频监控失败，请稍后重试") from exc
 
-        # 第一个观众：通知机器人开启摄像头
-        if count == 1 and added == 1:
+        # 需要开启摄像头：首个观众，或摄像头未处于开启状态（兼容 Redis 中残留过期观众）
+        camera_on = await client.hget(_room_key(serial_number), "camera_on")
+        should_turn_on = added == 1 and (count == 1 or camera_on != "1")
+        logger.info(
+            "视频监控观众状态 robot_id=%s added=%s count=%s camera_on=%s turn_on=%s",
+            robot_id,
+            added,
+            count,
+            camera_on,
+            should_turn_on,
+        )
+        if should_turn_on:
             try:
                 resp = await VideoMonitoringClient.notify_video_monitoring_changed(
                     robot_id=robot_id, enabled=True
