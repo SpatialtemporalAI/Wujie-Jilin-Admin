@@ -38,7 +38,7 @@
 - **任务可见范围 = 按机器人归属**：经 `task_robot` 关联到该商户机器人的任务（与 `execute_task(robot_sn+task_id)` 的 robot 驱动语义一致）；可选 `map_id/task_type/status` 过滤。
 - **点位可见性校验**：`map_id` 必须在商户可访问场景集合内，否则 `ForbiddenError`。
 - **场景/任务过滤软删除**（`deleted_at is null`）；点位沿用 `SceneMapAnnotationService.get_list`（不过滤 `deleted_at`，与后台列表行为一致）。
-- 时间字段（`last_run_at`/`next_run_at`）在 service 内转 ISO 字符串后再放入 `data`。
+- 时间字段（`last_run_at`/`next_run_at`）统一格式化为 `yyyy-MM-dd HH:mm:ss`（上海时区）后放入 `data`，与项目 `BaseEntity` 的 `json_encoders` 保持一致。
 
 ## 相关文件
 

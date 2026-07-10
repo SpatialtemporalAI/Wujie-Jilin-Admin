@@ -93,6 +93,7 @@
 - [2026-07-10 商户开放 API 动作类接口增加机器人在线校验](./business/2026-07-10_openapi-robot-online-check.md) — goto_point / navigate_route / execute_task / pause_task / resume_task / stop_task / speak 7 个接口调用前统一校验 Robot.status==ONLINE
 - [2026-07-10 商户开放 API 新增机器人列表查询接口](./business/2026-07-10_openapi-robots-list.md) — 新增 POST /openapi/v1/robots，返回当前商户绑定机器人的 id/name/sn
 - [2026-07-10 机器人事件日志状态标签与实时告警调整](./business/2026-07-10_robot-event-log-status-labels.md) — 事件日志去掉事件类型列，状态改为严重故障/告警提示/正常恢复三色标签；实时告警仅展示选中机器人最新 10 条
+- [2026-07-10 本地 .log 日志按日期滚动](./business/2026-07-10_log-date-rolling.md) — start_prod.sh 的 Gunicorn 日志通过 logrotate + copytruncate 按天滚动，归档文件名为 smilex-cloud-YYYY-MM-DD.log
 
 ## 维护说明
 

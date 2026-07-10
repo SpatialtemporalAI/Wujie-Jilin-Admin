@@ -77,8 +77,8 @@ export function useLiveKitVideo(options: UseLiveKitVideoOptions) {
     connected.value = false;
 
     try {
-      const { data: ticket } = await fetchOpenVideoMonitoring(options.robotId);
-      if (!ticket) {
+      const { data: ticket, error } = await fetchOpenVideoMonitoring(options.robotId);
+      if (error || !ticket) {
         throw new Error('打开视频监控失败');
       }
 
@@ -99,11 +99,17 @@ export function useLiveKitVideo(options: UseLiveKitVideoOptions) {
         connected.value = false;
       });
 
-      room.on(RoomEvent.Disconnected, () => {
+      room.on(RoomEvent.Disconnected, (reason) => {
         connected.value = false;
+        console.warn('LiveKit 已断开连接', reason);
+      });
+
+      room.on(RoomEvent.ConnectionStateChanged, (state) => {
+        console.log('LiveKit 连接状态变化', state);
       });
 
       await room.connect(ticket.server_url, ticket.token);
+      console.log('LiveKit 连接成功', ticket.room, ticket.viewer_id);
       startHeartbeat(options.robotId, ticket.viewer_id);
     } catch (err) {
       loading.value = false;

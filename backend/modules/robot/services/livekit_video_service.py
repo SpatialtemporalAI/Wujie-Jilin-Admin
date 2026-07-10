@@ -10,6 +10,7 @@
 """
 
 import logging
+import re
 import uuid
 from datetime import timedelta
 from typing import Optional
@@ -96,6 +97,10 @@ def _viewer_ttl_key(serial_number: str, viewer_id: str) -> str:
 
 def _room_key(serial_number: str) -> str:
     return _ROOM_HASH_KEY.format(serial_number=serial_number)
+
+
+# LiveKit 房间名限制：字母、数字、下划线、连字符，长度 1-64
+_ROOM_NAME_PATTERN = re.compile(r"^[a-zA-Z0-9_-]{1,64}$")
 
 
 class LiveKitVideoService:
@@ -421,11 +426,17 @@ class LiveKitVideoService:
     @staticmethod
     def _generate_token(serial_number: str, user_id: int, viewer_id: str) -> str:
         """生成 LiveKit subscriber-only Token。"""
+        if not _ROOM_NAME_PATTERN.match(serial_number):
+            raise ServerError(
+                msg=f"机器人序列号 '{serial_number}' 不符合 LiveKit 房间名规则，"
+                f"只能包含字母、数字、下划线、连字符，长度 1-64"
+            )
         try:
             from livekit import api
 
             identity = f"viewer:{user_id}:{viewer_id}"
-            token = (
+            ttl = settings.LIVEKIT.TOKEN_TTL_SECONDS
+            token_builder = (
                 api.AccessToken(
                     settings.LIVEKIT.API_KEY, settings.LIVEKIT.API_SECRET
                 )
@@ -441,10 +452,18 @@ class LiveKitVideoService:
                     )
                 )
             )
-            ttl = settings.LIVEKIT.TOKEN_TTL_SECONDS
             if ttl > 0:
-                token = token.with_ttl(timedelta(seconds=ttl))
-            return token.to_jwt()
+                token_builder = token_builder.with_ttl(timedelta(seconds=ttl))
+            token = token_builder.to_jwt()
+            logger.info(
+                "生成 LiveKit Token serial=%s user_id=%s viewer=%s ttl=%s key=%s...",
+                serial_number,
+                user_id,
+                viewer_id,
+                ttl,
+                settings.LIVEKIT.API_KEY[:4] if settings.LIVEKIT.API_KEY else None,
+            )
+            return token
         except Exception as exc:
             logger.error("生成 LiveKit Token 失败: %s", exc)
             raise ServerError(msg="生成视频连接凭证失败") from exc

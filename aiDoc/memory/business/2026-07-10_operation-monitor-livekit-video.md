@@ -61,3 +61,36 @@ LIVEKIT__WS_URL=wss://...
 
 - 机器人 middleware 需自行配置 LiveKit 发布者凭据，并以机器人 `serial_number` 作为房间名加入房间。
 - 如需按钮级细粒度权限，可新增 `robot:monitor:video`。
+
+## 问题排查：Token 返回但无法打开视频
+
+> 用户反馈：`POST /admin/robot/config/video-monitoring/{robot_id}` 已返回 token，但前端无法正确打开视频。
+
+### 已修复/已增强
+
+1. **前端错误处理**：`useLiveKitVideo.ts` 打开票据时增加 `error` 判断，避免请求失败时仍尝试连接；并补充 `ConnectionStateChanged / Disconnected` 日志。
+   - 文件：`frontend/src/views/operation-monitor/composables/useLiveKitVideo.ts`
+2. **前端视频元素保持挂载**：`video-player.vue` 改为始终渲染 `<video>`（通过 `opacity-0` 隐藏），避免连接过程中 `videoRef` 被 `v-if` 卸载，导致 LiveKit 轨道订阅成功却无法 `attach` 到 DOM。
+   - 文件：`frontend/src/views/operation-monitor/modules/video-player.vue`
+3. **后端房间名校验**：生成 Token 前校验 `serial_number` 是否符合 LiveKit 房间名规则（字母、数字、下划线、连字符，长度 1-64），不符合直接返回明确错误。
+   - 文件：`backend/modules/robot/services/livekit_video_service.py`
+4. **后端生成日志**：Token 生成时记录 `serial_number / user_id / viewer_id / ttl / api_key 前缀`，便于排查。
+
+### 仍需确认
+
+若上述修复后仍无法打开，请提供以下信息进一步定位：
+
+1. 浏览器控制台 `LiveKit 连接失败 / LiveKit 已断开连接 / LiveKit 连接状态变化` 的完整日志。
+2. 后端日志中本次调用的 `生成 LiveKit Token` 行。
+3. 机器人 `serial_number` 的具体值。
+4. LiveKit 服务端是否已运行、是否可达、`LIVEKIT__WS_URL` 配置是否与服务端一致。
+5. 机器人 middleware 是否已按 `serial_number` 作为房间名加入房间并发布视频轨道。
+
+### 常见根因
+
+- **房间名不合法**：`serial_number` 含 `.`、`:`、空格、中文等字符会导致 LiveKit 拒连。
+- **middleware 未进房推流**：Token 有效但房间内无视频轨道，前端会连接成功却黑屏。
+- **网络 / CORS / 协议不匹配**：前端无法访问 `LIVEKIT__WS_URL`，或 `ws://` 与 `https` 页面混用被浏览器拦截。
+- **API Key/Secret 不匹配**：服务端校验 Token 失败。
+
+状态：**前端视频挂载 + 错误处理 + 后端校验已修复；等待用户反馈控制台/后端日志**
