@@ -1086,18 +1086,15 @@ declare namespace App {
         robotEventLog: {
           title: string;
           robotName: string;
-          eventType: string;
           eventStatus: string;
           eventContent: string;
-          typeTask: string;
-          typeAlarm: string;
-          statusNormal: string;
-          statusAbnormal: string;
+          statusCritical: string;
+          statusWarning: string;
+          statusInfo: string;
           clear: string;
           clearConfirm: string;
           form: {
             robotName: string;
-            eventType: string;
             eventStatus: string;
             timeRange: string;
           };

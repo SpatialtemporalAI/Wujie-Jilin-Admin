@@ -963,18 +963,15 @@ const local: App.I18n.Schema = {
       robotEventLog: {
         title: 'Robot Event Log',
         robotName: 'Robot Name',
-        eventType: 'Event Type',
         eventStatus: 'Event Status',
         eventContent: 'Event Content',
-        typeTask: 'Task',
-        typeAlarm: 'Alarm',
-        statusNormal: 'Normal',
-        statusAbnormal: 'Abnormal',
+        statusCritical: 'Critical',
+        statusWarning: 'Warning',
+        statusInfo: 'Info',
         clear: 'Clear Logs',
         clearConfirm: 'Confirm to clear robot event logs older than 30 days?',
         form: {
           robotName: 'Select robot',
-          eventType: 'Select event type',
           eventStatus: 'Select event status',
           timeRange: 'Time Range'
         }

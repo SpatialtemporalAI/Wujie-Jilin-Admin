@@ -19,14 +19,10 @@ const emit = defineEmits<Emits>();
 
 const robotOptions = ref<{ label: string; value: number }[]>([]);
 
-const eventTypeOptions = [
-  { label: $t('page.log.robotEventLog.typeTask'), value: 'task' },
-  { label: $t('page.log.robotEventLog.typeAlarm'), value: 'alarm' }
-];
-
 const eventStatusOptions = [
-  { label: $t('page.log.robotEventLog.statusNormal'), value: 'normal' },
-  { label: $t('page.log.robotEventLog.statusAbnormal'), value: 'abnormal' }
+  { label: $t('page.log.robotEventLog.statusCritical'), value: 'abnormal' },
+  { label: $t('page.log.robotEventLog.statusWarning'), value: 'warning' },
+  { label: $t('page.log.robotEventLog.statusInfo'), value: 'normal' }
 ];
 
 const timeRange = computed<[number, number] | null>({
@@ -76,14 +72,6 @@ onMounted(() => {
       clearable
       filterable
       :style="{ width: '160px' }"
-      @update:value="handleSearch"
-    />
-    <NSelect
-      v-model:value="model.event_type as any"
-      :options="eventTypeOptions"
-      :placeholder="$t('page.log.robotEventLog.form.eventType')"
-      clearable
-      :style="{ width: '140px' }"
       @update:value="handleSearch"
     />
     <NSelect

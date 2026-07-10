@@ -23,7 +23,6 @@ const searchParams: Api.SystemManage.RobotEventLogSearchParams = reactive({
   page: 1,
   page_size: 10,
   robot_id: null,
-  event_type: null,
   event_status: null,
   start_time: null,
   end_time: null
@@ -66,28 +65,15 @@ const {
       minWidth: 120
     },
     {
-      key: 'event_type',
-      title: $t('page.log.robotEventLog.eventType'),
-      align: 'center',
-      width: 100,
-      render: row => {
-        const typeMap: Record<string, { type: 'info' | 'warning'; label: string }> = {
-          task: { type: 'info', label: $t('page.log.robotEventLog.typeTask') },
-          alarm: { type: 'warning', label: $t('page.log.robotEventLog.typeAlarm') }
-        };
-        const config = typeMap[row.event_type] || { type: 'default' as const, label: row.event_type };
-        return <NTag type={config.type}>{config.label}</NTag>;
-      }
-    },
-    {
       key: 'event_status',
       title: $t('page.log.robotEventLog.eventStatus'),
       align: 'center',
-      width: 100,
+      width: 120,
       render: row => {
-        const statusMap: Record<string, { type: 'success' | 'error'; label: string }> = {
-          normal: { type: 'success', label: $t('page.log.robotEventLog.statusNormal') },
-          abnormal: { type: 'error', label: $t('page.log.robotEventLog.statusAbnormal') }
+        const statusMap: Record<string, { type: 'error' | 'warning' | 'info'; label: string }> = {
+          abnormal: { type: 'error', label: $t('page.log.robotEventLog.statusCritical') },
+          warning: { type: 'warning', label: $t('page.log.robotEventLog.statusWarning') },
+          normal: { type: 'info', label: $t('page.log.robotEventLog.statusInfo') }
         };
         const config = statusMap[row.event_status] || { type: 'default' as const, label: row.event_status };
         return <NTag type={config.type}>{config.label}</NTag>;

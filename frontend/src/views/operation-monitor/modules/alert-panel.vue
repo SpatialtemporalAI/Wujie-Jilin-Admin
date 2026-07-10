@@ -23,7 +23,8 @@ let refreshTimer: ReturnType<typeof setInterval> | null = null;
 
 function mapAlertSeverity(eventStatus: string): 'error' | 'warning' | 'info' {
   if (eventStatus === 'abnormal') return 'error';
-  return 'warning';
+  if (eventStatus === 'warning') return 'warning';
+  return 'info';
 }
 
 function getAlertIcon(severity: string): string {
@@ -49,7 +50,7 @@ async function loadAlerts() {
       robot_id: props.robotId,
       event_type: 'alarm',
       page: 1,
-      page_size: 20,
+      page_size: 10,
       event_status: null,
       start_time: null,
       end_time: null

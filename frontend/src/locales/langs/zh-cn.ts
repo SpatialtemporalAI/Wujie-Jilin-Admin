@@ -958,18 +958,15 @@ const local: App.I18n.Schema = {
       robotEventLog: {
         title: '机器人事件日志列表',
         robotName: '机器人名称',
-        eventType: '事件类型',
         eventStatus: '事件状态',
         eventContent: '事件内容',
-        typeTask: '任务',
-        typeAlarm: '告警',
-        statusNormal: '正常',
-        statusAbnormal: '异常',
+        statusCritical: '严重故障',
+        statusWarning: '告警提示',
+        statusInfo: '正常恢复',
         clear: '清理日志',
         clearConfirm: '确认清理30天前的机器人事件日志？',
         form: {
           robotName: '请选择机器人',
-          eventType: '请选择事件类型',
           eventStatus: '请选择事件状态',
           timeRange: '时间范围'
         }
