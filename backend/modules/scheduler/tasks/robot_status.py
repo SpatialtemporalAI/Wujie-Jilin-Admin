@@ -8,7 +8,7 @@
 import logging
 from datetime import timedelta
 
-from sqlalchemy import select, update
+from sqlalchemy import select
 
 from database.db_manager import get_session
 from database.models.business.robot import Robot, RobotStatus
@@ -25,17 +25,20 @@ ROBOT_OFFLINE_TIMEOUT_SECONDS = 60
 @scheduled_task(
     interval=30,
     name="机器人自动离线检测",
-    description="扫描长时间未上报状态的在线机器人，自动标记为离线并清理视频监控观众",
+    description="扫描长时间未上报状态的在线机器人，自动清理视频监控观众（不修改机器人状态）",
     task_key="robot.auto_offline_detection",
     is_system=True,
 )
 async def auto_offline_detection():
     """
-    自动离线检测。
+    自动离线检测（只读状态，不修改 Robot.status）。
 
     对 status=online 的机器人，检查其一对一 status_record 的 updated_at：
-    - updated_at 为空，或距今超过 ROBOT_OFFLINE_TIMEOUT_SECONDS，则视为离线。
-    - 将 Robot.status 改为 OFFLINE，并调用 LiveKitVideoService.reset_room 清空视频观众。
+    - updated_at 为空，或距今超过 ROBOT_OFFLINE_TIMEOUT_SECONDS，则视为已离线。
+    - 调用 LiveKitVideoService.reset_room 清空该机器人的视频观众与房间状态。
+
+    本任务不修改数据库中的机器人状态，仅负责在“心跳已超时但数据库仍是在线”时
+    兜底清理视频监控资源。
     """
     from database.utils.timezone import timezone as tz
 
@@ -64,13 +67,6 @@ async def auto_offline_detection():
         robot_ids = [robot.id for robot, _ in rows]
         serial_numbers = [robot.serial_number for robot, _ in rows]
 
-        await db.execute(
-            update(Robot)
-            .where(Robot.id.in_(robot_ids))
-            .values(status=RobotStatus.OFFLINE)
-        )
-        await db.commit()
-
         for serial_number in serial_numbers:
             try:
                 await LiveKitVideoService.reset_room(serial_number)
@@ -80,7 +76,7 @@ async def auto_offline_detection():
                 )
 
         logger.info(
-            "自动离线检测完成，共 %d 个机器人离线: %s",
+            "自动离线检测完成，共 %d 个机器人心跳超时并清理视频观众: %s",
             len(robot_ids),
             robot_ids,
         )
