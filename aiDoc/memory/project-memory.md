@@ -87,6 +87,7 @@
 - [2026-07-07 执行详情触发源补充语音输入/手动恢复](./business/2026-07-07_task-execution-source-label-extend.md) — task-detail-drawer sourceLabelMap 加 text_input=语音输入/resume=手动恢复；仅详情展示，表格不加列；后端枚举未动(agent 写库不经 Literal)
 - [2026-07-07 播报任务隐藏场景地图并支持多选机器人](./business/2026-07-07_task-broadcast-no-map-and-multi-robot.md) — 承接 0702：播报任务隐藏场景地图输入框/提示+机器人改多选；巡逻不动；后端 robot_ids 校验改按 task_type 区分（patrol 单选 / broadcast 多选）
 - [2026-07-08 实时下发接口增加机器人在线前置校验](./business/2026-07-08_robot-online-check-before-dispatch.md) — 唤醒词测试/语音合成测试/启动任务下发前经 `RobotService.ensure_robots_online` 校验 `Robot.status==online`，离线抛 ConflictError「机器人 X 不在线」由前端 onError 自动 toast；三处复用同一 helper，前端零改动
+- [2026-07-10 运行监控实时视频接入 LiveKit](./business/2026-07-10_operation-monitor-livekit-video.md) — 运行监控页视频监控 Tab 通过 LiveKit 实时显示机器人摄像头，Redis 观众计数保证多用户共享时摄像头只在最后一人离开时关闭
 
 ## 维护说明
 

@@ -26,6 +26,7 @@ from .settings_model import (
     GrpcModel,
     MerchantModel,
     FaceRecognitionModel,
+    LiveKitModel,
 )
 
 
@@ -73,3 +74,5 @@ class GlobalSetting(BaseSettings):
     MERCHANT: MerchantModel = MerchantModel()
     # 阿里云人脸识别配置
     FACE: FaceRecognitionModel = FaceRecognitionModel()
+    # LiveKit 实时音视频配置
+    LIVEKIT: LiveKitModel = LiveKitModel()

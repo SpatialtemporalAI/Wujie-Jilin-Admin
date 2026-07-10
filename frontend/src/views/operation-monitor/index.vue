@@ -65,7 +65,10 @@ const {
               </NGrid>
             </NTabPane>
             <NTabPane name="video" tab="视频监控">
-              <VideoPlayer :stream-url="null" />
+              <VideoPlayer
+                :robot-id="selectedRobot?.id ?? 0"
+                :serial-number="selectedRobot?.serial_number ?? ''"
+              />
             </NTabPane>
           </NTabs>
         </NCard>

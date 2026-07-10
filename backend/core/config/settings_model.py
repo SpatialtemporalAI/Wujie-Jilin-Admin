@@ -245,3 +245,24 @@ class FaceRecognitionModel(BaseModel):
     )
     REGION_ID: str = Field("cn-shanghai", description="阿里云区域 ID")
     DEFAULT_DB_NAME: str = Field("default", description="默认人脸库名称")
+
+
+class LiveKitModel(BaseModel):
+    """LiveKit 实时音视频配置模型"""
+
+    ENABLED: bool = Field(False, description="是否启用 LiveKit 视频流")
+    API_KEY: str = Field("", description="LiveKit API Key")
+    API_SECRET: str = Field("", description="LiveKit API Secret")
+    WS_URL: str = Field("", description="LiveKit WebSocket URL（wss://...）")
+    TOKEN_TTL_SECONDS: int = Field(
+        3600, description="观众 Token 有效期（秒）"
+    )
+    VIEWER_HEARTBEAT_TTL_SECONDS: int = Field(
+        60, description="观众心跳租约 TTL（秒）"
+    )
+    VIEWER_HEARTBEAT_INTERVAL_SECONDS: int = Field(
+        15, description="观众心跳间隔（秒）"
+    )
+    VIEWERS_SET_TTL_SECONDS: int = Field(
+        7200, description="观众集合兜底过期时间（秒）"
+    )

@@ -35,9 +35,12 @@ from modules.robot.schemas.robot_config import (
     RobotSpeedLevelUpdate,
     RobotBatteryThresholdUpdate,
     RobotVideoMonitoringControl,
+    RobotVideoMonitoringTicket,
+    RobotVideoMonitoringHeartbeat,
     ConfigUpdateResponse,
 )
-from modules.grpc.config_client import VoiceConfigClient, VideoMonitoringClient
+from modules.robot.services.livekit_video_service import LiveKitVideoService
+from modules.grpc.config_client import VoiceConfigClient
 from core.storage import validate_file_size, validate_file_extension
 from core.exception.errors import RequestError
 
@@ -411,8 +414,8 @@ async def update_battery_threshold(
 
 @robot_config_router.post(
     "/video-monitoring/{robot_id}",
-    response_model=ResponseModel,
-    dependencies=[Depends(require_permission("robot:config:edit"))],
+    response_model=ResponseModel[RobotVideoMonitoringTicket],
+    dependencies=[Depends(require_permission("robot:monitor:list"))],
 )
 @log_operation(module="robot", action="update", description="视频监控启停")
 async def control_video_monitoring(
@@ -422,20 +425,40 @@ async def control_video_monitoring(
     db: AsyncSession = Depends(get_session),
     user: SysUser = Depends(current_user),
 ):
-    """启动/停止视频监控（gRPC NotifyVideoMonitoringChanged → 机器人 middleware）
+    """启动/停止视频监控
 
-    实时控制：失败直接返回 fail，不入重试队列（用户等待即时响应）。
+    - enabled=true：返回 LiveKit 连接票据，首次观众会通知机器人开启摄像头
+    - enabled=false：携带 viewer_id 关闭当前观众，最后一个观众离开时通知机器人关闭摄像头
     """
-    action = "启动" if payload.enabled else "停止"
-    logger.info(
-        "视频监控%s接口被调用 robot_id=%d", action, robot_id
+    if payload.enabled:
+        ticket = await LiveKitVideoService.open_viewer(
+            db=db, robot_id=robot_id, user_id=user.id
+        )
+        return response_base.success(data=ticket)
+
+    if not payload.viewer_id:
+        raise RequestError(msg="停止视频监控时需要提供 viewer_id")
+
+    await LiveKitVideoService.close_viewer(
+        db=db, robot_id=robot_id, viewer_id=payload.viewer_id
     )
-    resp = await VideoMonitoringClient.notify_video_monitoring_changed(
-        robot_id=robot_id, enabled=payload.enabled
+    return response_base.success(msg="视频监控已关闭")
+
+
+@robot_config_router.post(
+    "/video-monitoring/{robot_id}/heartbeat",
+    response_model=ResponseModel,
+    dependencies=[Depends(require_permission("robot:monitor:list"))],
+)
+async def video_monitoring_heartbeat(
+    payload: RobotVideoMonitoringHeartbeat,
+    robot_id: int = Path(..., description="机器人ID"),
+    db: AsyncSession = Depends(get_session),
+):
+    """视频监控观众心跳"""
+    ok = await LiveKitVideoService.heartbeat(
+        db=db, robot_id=robot_id, viewer_id=payload.viewer_id
     )
-    if resp.success:
-        return response_base.success(msg=resp.message or f"{action}指令已下发")
-    logger.warning(
-        "视频监控%s失败 robot_id=%s msg=%s", action, robot_id, resp.message
-    )
-    return response_base.fail(msg=f"{action}失败，请确保机器人在线")
+    if not ok:
+        return response_base.fail(msg="观众会话已过期，请重新打开视频监控")
+    return response_base.success(msg="心跳成功")

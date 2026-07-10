@@ -140,6 +140,33 @@ export function fetchSetVideoMonitoring(robotId: number, enabled: boolean) {
   });
 }
 
+/** open robot video monitoring and get LiveKit connection ticket */
+export function fetchOpenVideoMonitoring(robotId: number) {
+  return request<Api.Robot.VideoMonitoringTicket>({
+    url: `/admin/robot/config/video-monitoring/${robotId}`,
+    method: 'post',
+    data: { enabled: true } satisfies Api.Robot.VideoMonitoringControl
+  });
+}
+
+/** close robot video monitoring for the given viewer session */
+export function fetchCloseVideoMonitoring(robotId: number, viewerId: string) {
+  return request<void>({
+    url: `/admin/robot/config/video-monitoring/${robotId}`,
+    method: 'post',
+    data: { enabled: false, viewer_id: viewerId } satisfies Api.Robot.VideoMonitoringControl
+  });
+}
+
+/** refresh viewer heartbeat TTL */
+export function fetchVideoMonitoringHeartbeat(robotId: number, viewerId: string) {
+  return request<void>({
+    url: `/admin/robot/config/video-monitoring/${robotId}/heartbeat`,
+    method: 'post',
+    data: { viewer_id: viewerId } satisfies Api.Robot.VideoMonitoringHeartbeat
+  });
+}
+
 /** ==================== 机器人状态记录 API (只读) ==================== */
 
 /** get robot status records */

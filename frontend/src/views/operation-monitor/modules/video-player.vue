@@ -1,20 +1,43 @@
 <script setup lang="ts">
+import { useLiveKitVideo } from '../composables/useLiveKitVideo';
+
 interface Props {
-  streamUrl: string | null;
+  robotId: number;
+  serialNumber: string;
 }
 
-defineProps<Props>();
+const props = defineProps<Props>();
+
+const { videoRef, loading, connected, error } = useLiveKitVideo({
+  robotId: props.robotId,
+  serialNumber: props.serialNumber
+});
 </script>
 
 <template>
   <NCard :bordered="true" size="small">
     <template #header>视频监控</template>
     <div class="flex h-400px items-center justify-center rounded bg-gray-100">
-      <NEmpty description="暂无视频源，请配置视频流地址">
+      <NSpin v-if="loading" :show="loading" description="正在连接视频..." />
+      <NEmpty
+        v-else-if="error"
+        :description="error"
+      >
         <template #icon>
           <icon-ic-round-videocam-off class="text-48px text-gray-300" />
         </template>
       </NEmpty>
+      <video
+        v-else
+        ref="videoRef"
+        class="h-full w-full rounded object-contain"
+        autoplay
+        playsinline
+        muted
+      />
+    </div>
+    <div v-if="connected" class="mt-8px text-center text-12px text-success">
+      直播中
     </div>
   </NCard>
 </template>

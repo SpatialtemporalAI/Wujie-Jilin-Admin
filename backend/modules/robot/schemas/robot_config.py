@@ -8,7 +8,7 @@ from urllib.parse import urlsplit
 
 from pydantic import BaseModel
 
-from app.models.common.base import BaseRespEntity, BaseReqEntity
+from app.models.common.base import BaseEntity, BaseRespEntity, BaseReqEntity
 
 
 def normalize_file_preview_path(value: str | None) -> str | None:
@@ -155,9 +155,28 @@ class RobotBatteryThresholdUpdate(BaseReqEntity):
 
 
 class RobotVideoMonitoringControl(BaseReqEntity):
-    """视频监控启停请求（robot_id 走 path，body 仅携带开关）"""
+    """视频监控启停请求（robot_id 走 path）"""
 
     enabled: bool = Field(..., description="true=启动视频监控 / false=停止")
+    viewer_id: Optional[str] = Field(
+        default=None, description="观众会话 ID，停止/心跳时必填"
+    )
+
+
+class RobotVideoMonitoringTicket(BaseEntity):
+    """视频监控打开成功后返回的 LiveKit 连接票据"""
+
+    room: str = Field(..., description="LiveKit 房间名，等于机器人 serial_number")
+    token: str = Field(..., description="LiveKit 观众 Token")
+    server_url: str = Field(..., description="LiveKit WebSocket 连接地址")
+    viewer_id: str = Field(..., description="观众会话 ID，关闭/心跳时回传")
+    robot_serial_number: str = Field(..., description="机器人序列号")
+
+
+class RobotVideoMonitoringHeartbeat(BaseReqEntity):
+    """视频监控观众心跳请求"""
+
+    viewer_id: str = Field(..., description="观众会话 ID")
 
 
 class ConfigUpdateResponse(BaseRespEntity):

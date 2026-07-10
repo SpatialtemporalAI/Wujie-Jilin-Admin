@@ -61,6 +61,28 @@ declare namespace Api {
     type VideoMonitoringControl = {
       /** true=启动视频监控 / false=停止 */
       enabled: boolean;
+      /** 观众会话 ID，停止/心跳时必填 */
+      viewer_id?: string;
+    };
+
+    /** 视频监控打开后返回的 LiveKit 票据 */
+    type VideoMonitoringTicket = {
+      /** LiveKit 房间名，等于机器人 serial_number */
+      room: string;
+      /** LiveKit 观众 Token */
+      token: string;
+      /** LiveKit WebSocket 连接地址 */
+      server_url: string;
+      /** 观众会话 ID */
+      viewer_id: string;
+      /** 机器人序列号 */
+      robot_serial_number: string;
+    };
+
+    /** 视频监控心跳请求体 */
+    type VideoMonitoringHeartbeat = {
+      /** 观众会话 ID */
+      viewer_id: string;
     };
 
     /** robot */
