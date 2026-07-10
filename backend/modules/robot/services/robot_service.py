@@ -379,6 +379,7 @@ class RobotService:
                     )
 
             # 如果更新状态，转换枚举
+            old_status = existing.status
             if "status" in update_data and update_data["status"] is not None:
                 update_data["status"] = RobotStatus(update_data["status"])
 
@@ -387,6 +388,18 @@ class RobotService:
 
             await db.commit()
             await db.refresh(existing)
+
+            # 机器人从在线变为非在线时，清空视频监控观众与房间状态
+            if (
+                "status" in update_data
+                and old_status == RobotStatus.ONLINE
+                and existing.status != RobotStatus.ONLINE
+            ):
+                from modules.robot.services.livekit_video_service import (
+                    LiveKitVideoService,
+                )
+
+                await LiveKitVideoService.reset_room(existing.serial_number)
 
             logger.info("更新机器人成功，机器人ID: %d", robot_id)
             return existing

@@ -386,6 +386,24 @@ class LiveKitVideoService:
                     break
 
     @staticmethod
+    async def reset_room(serial_number: str) -> None:
+        """强制清空某机器人的视频监控房间状态（机器人离线/删除时调用）。"""
+        client = RedisPool.get_client()
+        viewers_key = _viewers_key(serial_number)
+        room_key = _room_key(serial_number)
+
+        try:
+            viewer_ids = await client.smembers(viewers_key)
+            if viewer_ids:
+                ttl_keys = [_viewer_ttl_key(serial_number, vid) for vid in viewer_ids]
+                await client.delete(*ttl_keys)
+            await client.delete(viewers_key)
+            await client.delete(room_key)
+            logger.info("视频监控房间已重置 serial=%s", serial_number)
+        except Exception as exc:
+            logger.error("重置视频监控房间失败 serial=%s: %s", serial_number, exc)
+
+    @staticmethod
     async def _rollback_open(serial_number: str, viewer_id: str) -> None:
         """打开失败时回滚 Redis 计数。"""
         client = RedisPool.get_client()
