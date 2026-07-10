@@ -1,0 +1,22 @@
+# smilex-cloud Gunicorn 日志滚动配置
+# 部署时由 deploy.sh 根据 deploy.env 替换实际路径
+
+# start_prod.sh 方式：Gunicorn stdout/stderr 重定向到的单一日志
+/opt/smilex-cloud/backend/logs/smilex-cloud.log
+
+# systemd 方式：Gunicorn 直接写入的 access/error 日志
+/var/log/smilex_cloud/access.log
+/var/log/smilex_cloud/error.log
+
+{
+    daily
+    rotate 30
+    missingok
+    notifempty
+    compress
+    delaycompress
+    copytruncate
+    dateext
+    dateformat -%Y-%m-%d
+    dateyesterday
+}

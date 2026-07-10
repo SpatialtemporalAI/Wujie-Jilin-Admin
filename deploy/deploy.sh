@@ -142,6 +142,22 @@ cmd_setup() {
         "${SCRIPT_DIR}/smilex-cloud.service" \
         > /etc/systemd/system/"${APP_NAME}.service"
 
+    # 安装 logrotate 配置
+    info "安装 logrotate 配置"
+    mkdir -p /etc/logrotate.d
+    sed \
+        -e "s|/opt/smilex-cloud/backend|${BACKEND_DIR}|g" \
+        -e "s|/var/log/smilex_cloud|${LOG_DIR}|g" \
+        "${SCRIPT_DIR}/logrotate/smilex-cloud" \
+        > /etc/logrotate.d/"${APP_NAME}"
+    chmod 0644 /etc/logrotate.d/"${APP_NAME}"
+
+    if ! command -v logrotate &>/dev/null; then
+        warn "未检测到 logrotate，请手动安装"
+        warn "  Debian/Ubuntu: sudo apt-get install logrotate"
+        warn "  RHEL/CentOS:   sudo yum install logrotate"
+    fi
+
     systemctl daemon-reload
     systemctl enable "${APP_NAME}"
 

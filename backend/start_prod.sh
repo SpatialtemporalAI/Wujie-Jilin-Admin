@@ -18,6 +18,8 @@ MAX_REQUESTS_JITTER="${MAX_REQUESTS_JITTER:-500}"
 LOG_LEVEL="${LOG_LEVEL:-info}"
 
 PID_DIR="${SCRIPT_DIR}/run"
+# 日志目录/文件保持固定名称，由 logrotate（deploy/logrotate/smilex-cloud）按天滚动。
+# 归档文件名为：smilex-cloud-YYYY-MM-DD.log
 LOG_DIR="${SCRIPT_DIR}/logs"
 
 PID_FILE="${PID_DIR}/${APP_NAME}.pid"
@@ -50,6 +52,10 @@ start() {
     fi
 
     echo "[INFO] 启动 ${APP_NAME}"
+
+    if [[ ! -f "/etc/logrotate.d/${APP_NAME}" ]]; then
+        echo "[WARN] 未检测到 logrotate 配置 /etc/logrotate.d/${APP_NAME}，日志不会自动按天滚动"
+    fi
 
     nohup "${GUNICORN}" main:app \
         -w "${WORKERS}" \
