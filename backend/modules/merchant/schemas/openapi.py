@@ -76,6 +76,12 @@ class ScenesRequest(BaseEntity):
     robot_sn: Optional[str] = Field(None, description="可选：仅返回该机器人绑定的场景")
 
 
+class RobotsRequest(BaseEntity):
+    """获取商户关联机器人列表（当前无过滤参数，请求体可传 {}）"""
+
+    pass
+
+
 class PointsRequest(BaseEntity):
     """获取点位列表"""
 

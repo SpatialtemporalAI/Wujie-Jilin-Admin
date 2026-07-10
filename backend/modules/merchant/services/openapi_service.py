@@ -281,6 +281,32 @@ class OpenApiService:
         return OpenApiResult(success=success, message=message)
 
     @staticmethod
+    async def list_robots(
+        db: AsyncSession, merchant: Merchant
+    ) -> OpenApiResult:
+        """获取商户关联的机器人列表（id、名称、序列号）"""
+        robot_ids = await OpenApiService._merchant_robot_ids(db, merchant)
+        robots: List[dict] = []
+        if robot_ids:
+            result = await db.execute(
+                select(Robot.id, Robot.name, Robot.serial_number)
+                .where(
+                    Robot.id.in_(robot_ids),
+                    Robot.deleted_at.is_(None),
+                )
+                .order_by(Robot.id.desc())
+            )
+            robots = [
+                {"id": rid, "name": name, "sn": serial_number}
+                for rid, name, serial_number in result.all()
+            ]
+        return OpenApiResult(
+            success=True,
+            message=f"共 {len(robots)} 个机器人",
+            data={"robots": robots},
+        )
+
+    @staticmethod
     async def list_scenes(
         db: AsyncSession, merchant: Merchant, robot_sn: Optional[str] = None
     ) -> OpenApiResult:

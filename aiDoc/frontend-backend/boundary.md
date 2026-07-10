@@ -255,10 +255,11 @@
 
 请求头：`X-Api-Key` / `X-Timestamp`(秒) / `X-Nonce` / `X-Signature`
 待签名串：`{METHOD}\n{path}\n{timestamp}\n{nonce}\n{sha256(raw_body 十六进制)}`
-签名：`HMAC-SHA256(api_secret, 待签名串)` → 十六进制；时间戳容差 `MERCHANT__SIGN_TTL_SECONDS`；nonce 经 Redis `SET NX EX` 防重放。所有请求体带 `robot_sn`，按 `Robot.serial_number` 解析并校验该机器人已绑定到当前商户。
+签名：`HMAC-SHA256(api_secret, 待签名串)` → 十六进制；时间戳容差 `MERCHANT__SIGN_TTL_SECONDS`；nonce 经 Redis `SET NX EX` 防重放。控制类接口请求体必须带 `robot_sn`，按 `Robot.serial_number` 解析并校验该机器人已绑定到当前商户；查询类接口 `robot_sn` 可选（`robots` 接口无参数）。
 
 | 方法 | 路径 | 入参 | 复用实现 |
 |------|------|------|----------|
+| POST | `/openapi/v1/robots` | `{}` | `OpenApiService.list_robots`（返回 `id/name/sn`） |
 | POST | `/openapi/v1/goto_point` | `robot_sn, point_id` | `NavigationClient.navigate_to_point`（gRPC `NavigationService.NavigateToPoint`，下发到 robot.agent；不落 Task） |
 | POST | `/openapi/v1/navigate_route` | `robot_sn, point_ids[]` | `NavigationClient.navigate_route`（gRPC `NavigationService.NavigateRoute`，多点按序） |
 | POST | `/openapi/v1/execute_task` | `robot_sn, task_id` | `start_execution`（仅下发 gRPC `run_now`，不写执行记录；响应 `data.action="started"`，不再返回 `record_id`/区分 resumed） |

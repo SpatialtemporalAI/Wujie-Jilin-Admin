@@ -22,6 +22,7 @@ from modules.merchant.schemas.openapi import (
     RobotSnRequest,
     SpeakRequest,
     ScenesRequest,
+    RobotsRequest,
     PointsRequest,
     TasksRequest,
     OpenApiResult,
@@ -115,6 +116,17 @@ async def speak(
     result = await OpenApiService.speak(
         db, merchant, body.robot_sn, body.text, body.tts_params
     )
+    return ResponseModel(data=result)
+
+
+@openapi_router.post("/robots", response_model=ResponseModel[OpenApiResult])
+async def list_robots(
+    body: RobotsRequest,
+    db: AsyncSession = Depends(get_session),
+    merchant: Merchant = Depends(get_current_merchant),
+):
+    """获取当前商户关联的机器人列表（id、名称、序列号）"""
+    result = await OpenApiService.list_robots(db, merchant)
     return ResponseModel(data=result)
 
 

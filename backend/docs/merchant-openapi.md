@@ -182,6 +182,35 @@ curl -X POST "$API_BASE$PATH_" \
 
 ### 4.1 资源查询
 
+#### `POST /openapi/v1/robots` — 获取商户关联机器人列表
+
+返回当前商户**已绑定的机器人**列表（含 `id`、`name`、`sn`）。
+
+**请求体**
+
+```json
+{}
+```
+
+**响应 `data.data`**
+
+```json
+{
+  "robots": [
+    { "id": 1, "name": "机器人-A", "sn": "R001" },
+    { "id": 2, "name": "机器人-B", "sn": "R002" }
+  ]
+}
+```
+
+| 字段 | 说明 |
+|---|---|
+| `id` | 机器人 ID |
+| `name` | 机器人名称 |
+| `sn` | 机器人序列号（后续控制类接口的 `robot_sn`） |
+
+---
+
 #### `POST /openapi/v1/scenes` — 获取场景列表
 
 返回当前商户**可访问的场景地图**（即其机器人所绑定的地图，去重）。
@@ -375,12 +404,13 @@ curl -X POST "$API_BASE$PATH_" \
 ## 5. 典型调用流程
 
 ```
-1. GET 场景      POST /openapi/v1/scenes                     → 拿到 map_id
-2. GET 点位      POST /openapi/v1/points   {map_id}          → 拿到 point_id 列表
-3. 导航          POST /openapi/v1/goto_point {robot_sn, point_id}
+1. 获取机器人    POST /openapi/v1/robots                        → 拿到 robot_sn
+2. GET 场景      POST /openapi/v1/scenes                        → 拿到 map_id
+3. GET 点位      POST /openapi/v1/points   {map_id}             → 拿到 point_id 列表
+4. 导航          POST /openapi/v1/goto_point {robot_sn, point_id}
    或            POST /openapi/v1/navigate_route {robot_sn, point_ids}
-4. (可选) 控制   POST /openapi/v1/pause_task / resume_task / stop_task {robot_sn}
-5. (可选) 任务   POST /openapi/v1/tasks {robot_sn} → 拿到 task_id → POST /openapi/v1/execute_task
+5. (可选) 控制   POST /openapi/v1/pause_task / resume_task / stop_task {robot_sn}
+6. (可选) 任务   POST /openapi/v1/tasks {robot_sn} → 拿到 task_id → POST /openapi/v1/execute_task
 ```
 
 ---

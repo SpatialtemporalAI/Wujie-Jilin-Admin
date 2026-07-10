@@ -222,7 +222,38 @@
 
 **响应 data**：`{ "success": true, "message": "播报成功" }`（`success` 反映设备是否真正响应）
 
-### 4.8 场景列表 — `POST /openapi/v1/scenes`
+### 4.8 机器人列表 — `POST /openapi/v1/robots`
+
+获取当前商户已绑定的机器人列表。
+
+**请求体**
+
+```json
+{}
+```
+
+**响应 data**
+
+```json
+{
+  "success": true,
+  "message": "共 2 个机器人",
+  "data": {
+    "robots": [
+      { "id": 1, "name": "机器人-A", "sn": "WJ-001" },
+      { "id": 2, "name": "机器人-B", "sn": "WJ-002" }
+    ]
+  }
+}
+```
+
+| 字段   | 类型     | 说明                       |
+| ------ | -------- | -------------------------- |
+| id     | int      | 机器人 ID                  |
+| name   | string   | 机器人名称                 |
+| sn     | string   | 机器人序列号（控制类接口的 `robot_sn`） |
+
+### 4.9 场景列表 — `POST /openapi/v1/scenes`
 
 获取当前商户可访问的场景地图列表（即其绑定的机器人所在的场景地图）。
 
@@ -255,7 +286,7 @@
 | status   | string | 地图状态（与前端约定：`"1"` 启用 / `"2"` 停用） |
 | version  | int    | 地图版本号                       |
 
-### 4.9 点位列表 — `POST /openapi/v1/points`
+### 4.10 点位列表 — `POST /openapi/v1/points`
 
 获取指定场景下的全部点位（地图标注点），用于 `goto_point` / `navigate_route` 的 `point_id` 取值。
 
@@ -288,7 +319,7 @@
 | y      | number | Y 坐标                     |
 | angle  | number | 朝向角度（度）                  |
 
-### 4.10 任务列表 — `POST /openapi/v1/tasks`
+### 4.11 任务列表 — `POST /openapi/v1/tasks`
 
 获取关联到当前商户机器人的任务列表，可按机器人 / 场景 / 类型 / 状态过滤。返回的 `id` 可用于 `execute_task`。
 
@@ -398,7 +429,8 @@ print(call("/openapi/v1/pause_task", {"robot_sn": "WJ-001"}))
 print(call("/openapi/v1/resume_task", {"robot_sn": "WJ-001"}))
 print(call("/openapi/v1/stop_task", {"robot_sn": "WJ-001"}))
 
-# 查询场景 / 点位 / 任务
+# 查询机器人 / 场景 / 点位 / 任务
+print(call("/openapi/v1/robots", {}))                         # 商户全部机器人
 print(call("/openapi/v1/scenes", {}))                         # 商户全部可访问场景
 print(call("/openapi/v1/scenes", {"robot_sn": "WJ-001"}))     # 仅某机器人绑定的场景
 print(call("/openapi/v1/points", {"map_id": 1}))             # 该场景下的点位

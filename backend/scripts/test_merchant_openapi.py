@@ -291,8 +291,13 @@ class MerchantOpenApiTester:
             return
         self._call("/openapi/v1/speak", payload)
 
+    def test_robots(self) -> None:
+        """测试 /openapi/v1/robots，获取当前商户关联的机器人列表。"""
+        self._call("/openapi/v1/robots", {})
+
     # 接口名 -> 测试方法（顺序即执行顺序）
     TEST_CASES: dict[str, tuple[str, callable]] = {
+        "robots": ("获取机器人列表", lambda self, dry: self.test_robots()),
         "scenes": ("获取场景列表", lambda self, dry: self.test_scenes()),
         "points": ("获取点位列表", lambda self, dry: self.test_points()),
         "tasks": ("获取任务列表", lambda self, dry: self.test_tasks()),
@@ -375,6 +380,7 @@ def main() -> None:
 
     # 每个接口独立开关；未指定任何开关时默认运行全部
     test_group = parser.add_argument_group("接口独立控制（未指定则运行全部）")
+    test_group.add_argument("--test-robots", action="store_true", help="测试 /openapi/v1/robots")
     test_group.add_argument("--test-scenes", action="store_true", help="测试 /openapi/v1/scenes")
     test_group.add_argument("--test-points", action="store_true", help="测试 /openapi/v1/points")
     test_group.add_argument("--test-tasks", action="store_true", help="测试 /openapi/v1/tasks")
