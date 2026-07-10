@@ -6,7 +6,9 @@
 在现有任务/语音 service 之上封装：机器人授权校验 + 一次性导航任务构建 + 控制转发。
 """
 import logging
+from datetime import datetime
 from typing import List, Optional
+from zoneinfo import ZoneInfo
 
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -38,6 +40,17 @@ logger = logging.getLogger(__name__)
 _DEFAULT_TTS_VOICE = "female"
 _DEFAULT_TTS_SPEED = 1.0
 _DEFAULT_TTS_VOLUME = 80
+
+# OpenAPI 统一时间输出格式
+_OPENAPI_TIMEZONE = ZoneInfo("Asia/Shanghai")
+_OPENAPI_DATETIME_FORMAT = "%Y-%m-%d %H:%M:%S"
+
+
+def _format_openapi_datetime(value: Optional[datetime]) -> Optional[str]:
+    """将 datetime 统一转换为 OpenAPI 输出格式（上海时区 yyyy-MM-dd HH:mm:ss）。"""
+    if value is None:
+        return None
+    return value.astimezone(_OPENAPI_TIMEZONE).strftime(_OPENAPI_DATETIME_FORMAT)
 
 
 class OpenApiService:
@@ -414,8 +427,8 @@ class OpenApiService:
                     "status": t.status,
                     "enabled": t.enabled,
                     "map_id": t.map_id,
-                    "last_run_at": t.last_run_at.isoformat() if t.last_run_at else None,
-                    "next_run_at": t.next_run_at.isoformat() if t.next_run_at else None,
+                    "last_run_at": _format_openapi_datetime(t.last_run_at),
+                    "next_run_at": _format_openapi_datetime(t.next_run_at),
                 }
                 for t in result.scalars().all()
             ]
