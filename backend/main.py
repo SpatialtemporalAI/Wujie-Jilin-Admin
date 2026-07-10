@@ -72,6 +72,7 @@ async def lifespan(app: FastAPI):
         import modules.scheduler.tasks.builtin  # noqa: F401
         import modules.scheduler.tasks.rate_limit_config  # noqa: F401
         import modules.scheduler.tasks.robot_video  # noqa: F401
+        import modules.scheduler.tasks.robot_status  # noqa: F401
         import modules.scene.tasks.sync_map_version  # noqa: F401
         import modules.grpc.tasks.retry_failed_pushes  # noqa: F401
         import modules.admin.tasks.export_task  # noqa: F401
