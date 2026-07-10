@@ -11,6 +11,7 @@
 
 import logging
 import uuid
+from datetime import timedelta
 from typing import Optional
 
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -402,7 +403,7 @@ class LiveKitVideoService:
             )
             ttl = settings.LIVEKIT.TOKEN_TTL_SECONDS
             if ttl > 0:
-                token = token.with_ttl(ttl)
+                token = token.with_ttl(timedelta(seconds=ttl))
             return token.to_jwt()
         except Exception as exc:
             logger.error("生成 LiveKit Token 失败: %s", exc)
