@@ -95,4 +95,15 @@ LIVEKIT__WS_URL=wss://...
 - **网络 / CORS / 协议不匹配**：前端无法访问 `LIVEKIT__WS_URL`，或 `ws://` 与 `https` 页面混用被浏览器拦截。
 - **API Key/Secret 不匹配**：服务端校验 Token 失败。
 
-状态：**前端视频挂载 + 全屏按钮 + 错误处理 + 后端校验已修复；等待用户反馈控制台/后端日志**
+### 已修复/已增强：切换机器人或关闭视频流时偶发异常
+
+1. **前端会话绑定**：`useLiveKitVideo.ts` 使用 `sessionRobotId` / `sessionViewerId` 绑定本次打开时实际使用的机器人，切换机器人时关闭旧机器人、再打开新机器人，避免用新 `robotId` 去关闭旧会话。
+2. **心跳竞态保护**：关闭视频前先 `await` 正在飞行中的心跳请求，防止“先关闭会话、后心跳返回”导致的 `观众会话已过期` 错误提示。
+3. **状态轮询去抖**：`watch` 仅在 `robotId` / `serialNumber` 变化或 `online/offline` 状态变化时才重新连接，避免机器人状态轮询触发无意义的重复开关视频。
+
+### 涉及变更文件
+
+- `frontend/src/views/operation-monitor/composables/useLiveKitVideo.ts`
+- `frontend/src/views/operation-monitor/modules/video-player.vue`
+
+状态：**切换机器人/关闭视频流竞态已修复**
