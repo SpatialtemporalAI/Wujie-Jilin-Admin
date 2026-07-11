@@ -8,6 +8,8 @@
 
 ## 业务需求记忆
 
+- [2026-07-11 巡逻任务启动校验任务地图与机器人地图一致](./business/2026-07-11_task-patrol-map-consistency.md) — `TaskExecutionRecordService.start_execution` 对 patrol 任务校验 `task.map_id` 与 `robot.map_id` 一致
+- [2026-07-11 地图编辑器机器人切换绑定地图时检查进行中任务](./business/2026-07-11_map-editor-robot-map-switch-guard.md) — `PUT /robot/manage/{id}/bind-map` 在机器人有 pending/running/paused 执行记录时返回 409
 - [2026-06-11 机器人配置迁移修复](./business/2026-06-11_robot-config-migration-fix.md) — 修复 robot_voice_config 存量表缺少 robot_id 导致语音配置接口 500
 - [2026-06-11 人脸识别人像预览路径修复](./business/2026-06-11_face-photo-preview-path.md) — 避免持久化带 token 的完整预览 URL 导致 photo_url 超长 422
 - [2026-06-11 人脸识别删除修复](./business/2026-06-11_face-delete-fix.md) — 修复删除配置时错误调用 soft_delete，并补齐移除人像清空字段

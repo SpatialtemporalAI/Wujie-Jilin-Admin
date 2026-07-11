@@ -72,9 +72,11 @@ LIVEKIT__WS_URL=wss://...
    - 文件：`frontend/src/views/operation-monitor/composables/useLiveKitVideo.ts`
 2. **前端视频元素保持挂载**：`video-player.vue` 改为始终渲染 `<video>`（通过 `opacity-0` 隐藏），避免连接过程中 `videoRef` 被 `v-if` 卸载，导致 LiveKit 轨道订阅成功却无法 `attach` 到 DOM。
    - 文件：`frontend/src/views/operation-monitor/modules/video-player.vue`
-3. **后端房间名校验**：生成 Token 前校验 `serial_number` 是否符合 LiveKit 房间名规则（字母、数字、下划线、连字符，长度 1-64），不符合直接返回明确错误。
+3. **前端全屏按钮**：视频连接成功后，播放器右上角显示全屏切换按钮，点击可将播放器容器切换为浏览器全屏；组件卸载时自动退出全屏。
+   - 文件：`frontend/src/views/operation-monitor/modules/video-player.vue`
+4. **后端房间名校验**：生成 Token 前校验 `serial_number` 是否符合 LiveKit 房间名规则（字母、数字、下划线、连字符，长度 1-64），不符合直接返回明确错误。
    - 文件：`backend/modules/robot/services/livekit_video_service.py`
-4. **后端生成日志**：Token 生成时记录 `serial_number / user_id / viewer_id / ttl / api_key 前缀`，便于排查。
+5. **后端生成日志**：Token 生成时记录 `serial_number / user_id / viewer_id / ttl / api_key 前缀`，便于排查。
 
 ### 仍需确认
 
@@ -93,4 +95,4 @@ LIVEKIT__WS_URL=wss://...
 - **网络 / CORS / 协议不匹配**：前端无法访问 `LIVEKIT__WS_URL`，或 `ws://` 与 `https` 页面混用被浏览器拦截。
 - **API Key/Secret 不匹配**：服务端校验 Token 失败。
 
-状态：**前端视频挂载 + 错误处理 + 后端校验已修复；等待用户反馈控制台/后端日志**
+状态：**前端视频挂载 + 全屏按钮 + 错误处理 + 后端校验已修复；等待用户反馈控制台/后端日志**

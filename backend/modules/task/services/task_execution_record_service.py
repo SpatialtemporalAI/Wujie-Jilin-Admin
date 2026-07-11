@@ -47,8 +47,15 @@ class TaskExecutionRecordService:
                 Task.deleted_at.is_(None),
             )
         )
-        if task_result.scalar_one_or_none() is None:
+        task = task_result.scalar_one_or_none()
+        if task is None:
             raise NotFoundError(msg=f"任务 {task_id} 不存在")
+
+        # 巡逻任务校验：执行机器人必须与任务在同一场景地图
+        if task.task_type == "patrol":
+            await RobotService.ensure_robots_match_map(
+                db, list(robot_ids), task.map_id
+            )
 
         # 机器人在线校验：存在非在线机器人时抛 ConflictError，阻止下发
         await RobotService.ensure_robots_online(db, list(robot_ids))

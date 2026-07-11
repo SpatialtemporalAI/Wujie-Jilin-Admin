@@ -9,7 +9,7 @@ import logging
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select, and_, func, Select, update
 from sqlalchemy.orm import noload
-from typing import List, Tuple
+from typing import List, Tuple, Optional
 
 from database.models.business.robot import Robot, RobotStatus
 from database.models.business.robot_status_record import RobotStatusRecord
@@ -25,6 +25,10 @@ from database.models.business.robot_event_log import RobotEventLog
 from database.models.business.robot_model import RobotModel
 from database.models.business.scene_map import SceneMap
 from database.models.business.task import task_robot_association
+from database.models.business.task_execution_record import (
+    TaskExecutionRecord,
+    ACTIVE_EXECUTION_STATUSES,
+)
 from database.utils.timezone import timezone
 from core.config import settings
 from core.exception.errors import NotFoundError, ConflictError
@@ -168,6 +172,44 @@ class RobotService:
         if offline_names:
             raise ConflictError(
                 msg=f"机器人 {'、'.join(offline_names)} 不在线，请确保机器人已在线"
+            )
+
+    @staticmethod
+    async def ensure_robots_match_map(
+        db: AsyncSession, robot_ids: List[int], map_id: Optional[int]
+    ) -> None:
+        """巡逻任务启动前校验：传入机器人的 map_id 必须与任务 map_id 相同。
+
+        用于启动巡逻任务时，确保执行机器人和任务定义在相同的场景地图上。
+        task.map_id 与 robot.map_id 均为 None 时视为一致。
+
+        Args:
+            db: 数据库会话
+            robot_ids: 待校验的机器人ID列表
+            map_id: 任务关联的场景地图ID
+
+        Raises:
+            ConflictError: 存在绑定地图不一致的机器人
+        """
+        if not robot_ids:
+            return
+
+        result = await db.execute(
+            select(Robot.id, Robot.name, Robot.map_id).where(
+                Robot.id.in_(robot_ids),
+                Robot.deleted_at.is_(None),
+            )
+        )
+
+        mismatched_names = [
+            name or f"机器人 {robot_id}"
+            for robot_id, name, robot_map_id in result.all()
+            if robot_map_id != map_id
+        ]
+
+        if mismatched_names:
+            raise ConflictError(
+                msg=f"巡逻任务要求机器人与任务场景地图一致，以下机器人绑定地图不一致：{'、'.join(mismatched_names)}"
             )
 
     @staticmethod
@@ -590,6 +632,7 @@ class RobotService:
 
         Raises:
             NotFoundError: 机器人不存在 / 场景地图不存在
+            ConflictError: 机器人存在进行中的任务执行
         """
         try:
             logger.info(
@@ -608,6 +651,25 @@ class RobotService:
             if not existing:
                 logger.warning("机器人不存在，机器人ID: %d", robot_id)
                 raise NotFoundError(msg=f"机器人 {robot_id} 不存在")
+
+            # 无实际变更时直接返回，避免无意义校验与 gRPC 调用
+            if existing.map_id == payload.map_id:
+                return existing
+
+            # 存在进行中执行记录时禁止切换地图
+            active_result = await db.execute(
+                select(func.count())
+                .select_from(TaskExecutionRecord)
+                .where(
+                    TaskExecutionRecord.robot_id == robot_id,
+                    TaskExecutionRecord.status.in_(ACTIVE_EXECUTION_STATUSES),
+                    TaskExecutionRecord.deleted_at.is_(None),
+                )
+            )
+            if active_result.scalar():
+                raise ConflictError(
+                    msg=f"机器人 {existing.name} 存在进行中的任务执行，请先停止或完成后再切换地图"
+                )
 
             map_obj = None
             if payload.map_id is not None:
@@ -638,7 +700,7 @@ class RobotService:
             logger.info("更新机器人绑定场景成功，机器人ID: %d", robot_id)
             return existing
 
-        except NotFoundError:
+        except (NotFoundError, ConflictError):
             await db.rollback()
             raise
         except Exception as e:
