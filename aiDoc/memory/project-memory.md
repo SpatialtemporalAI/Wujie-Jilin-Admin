@@ -8,6 +8,7 @@
 
 ## 业务需求记忆
 
+- [2026-07-11 视频监控 Tab 切换机器人时先关旧再开新](./business/2026-07-11_operation-monitor-video-switch-robot.md) — `useLiveKitVideo` 维护旧会话 `sessionRobotId/sessionViewerId`，切换机器人时先 `disconnect` 旧视频再 `connect` 新视频
 - [2026-07-11 巡逻任务启动校验任务地图与机器人地图一致](./business/2026-07-11_task-patrol-map-consistency.md) — `TaskExecutionRecordService.start_execution` 对 patrol 任务校验 `task.map_id` 与 `robot.map_id` 一致
 - [2026-07-11 地图编辑器机器人切换绑定地图时检查进行中任务](./business/2026-07-11_map-editor-robot-map-switch-guard.md) — `PUT /robot/manage/{id}/bind-map` 在机器人有 pending/running/paused 执行记录时返回 409
 - [2026-06-11 机器人配置迁移修复](./business/2026-06-11_robot-config-migration-fix.md) — 修复 robot_voice_config 存量表缺少 robot_id 导致语音配置接口 500

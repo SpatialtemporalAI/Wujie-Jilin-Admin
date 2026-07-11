@@ -1,22 +1,14 @@
 <script setup lang="ts">
 import { computed, onBeforeUnmount, onMounted, ref } from 'vue';
-import { useLiveKitVideo } from '../composables/useLiveKitVideo';
+import { useLiveKitVideo, type UseLiveKitVideoOptions } from '../composables/useLiveKitVideo';
 
-interface Props {
-  robotId: number;
-  serialNumber: string;
-  status: Api.Robot.RobotStatusEnum;
-}
+interface Props extends UseLiveKitVideoOptions {}
 
 const props = defineProps<Props>();
 
 const isOnline = computed(() => props.status === 'online');
 
-const { videoRef, loading, connected, error } = useLiveKitVideo({
-  robotId: props.robotId,
-  serialNumber: props.serialNumber,
-  status: props.status
-});
+const { videoRef, loading, connected, error } = useLiveKitVideo(props);
 
 const containerRef = ref<HTMLDivElement | null>(null);
 const isFullscreen = ref(false);

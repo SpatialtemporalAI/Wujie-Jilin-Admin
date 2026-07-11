@@ -26,8 +26,11 @@ export function useLiveKitVideo(options: UseLiveKitVideoOptions) {
   const error = ref<string | null>(null);
 
   let room: Room | null = null;
-  let viewerId: string | null = null;
+  // 当前已连接会话的机器人 ID / 观众 ID，切换机器人时用于正确关闭旧视频
+  let sessionRobotId: number | null = null;
+  let sessionViewerId: string | null = null;
   let heartbeatTimer: ReturnType<typeof setInterval> | null = null;
+  let pendingHeartbeat: Promise<void> | null = null;
 
   function stopHeartbeat() {
     if (heartbeatTimer) {
@@ -36,15 +39,38 @@ export function useLiveKitVideo(options: UseLiveKitVideoOptions) {
     }
   }
 
-  function startHeartbeat(robotId: number, vid: string) {
-    stopHeartbeat();
-    heartbeatTimer = setInterval(async () => {
+  async function waitPendingHeartbeat() {
+    if (pendingHeartbeat) {
       try {
-        await fetchVideoMonitoringHeartbeat(robotId, vid);
-      } catch (err) {
-        console.error('视频监控心跳失败', err);
+        await pendingHeartbeat;
+      } catch {
+        // 忽略心跳本身的错误，避免关闭时弹出过期提示
       }
+      pendingHeartbeat = null;
+    }
+  }
+
+  function startHeartbeat() {
+    stopHeartbeat();
+    const robotId = sessionRobotId;
+    const viewerId = sessionViewerId;
+    if (!robotId || !viewerId) return;
+    heartbeatTimer = setInterval(async () => {
+      if (pendingHeartbeat) return;
+      pendingHeartbeat = fetchVideoMonitoringHeartbeat(robotId, viewerId)
+        .then(() => {
+          pendingHeartbeat = null;
+        })
+        .catch((err) => {
+          pendingHeartbeat = null;
+          console.error('视频监控心跳失败', err);
+        });
     }, HEARTBEAT_INTERVAL);
+  }
+
+  function resetSession() {
+    sessionRobotId = null;
+    sessionViewerId = null;
   }
 
   async function attachVideoTrack(publication: RemoteTrackPublication) {
@@ -63,26 +89,38 @@ export function useLiveKitVideo(options: UseLiveKitVideoOptions) {
     }
 
     if (options.status !== 'online') {
+      await disconnect();
       loading.value = false;
       connected.value = false;
       error.value = null;
       return;
     }
 
-    // 如果已经连接，先断开
+    // 如果已经连接，先断开，确保同一时刻只有一个会话
     await disconnect();
+
+    const expectedRobotId = options.robotId;
 
     loading.value = true;
     error.value = null;
     connected.value = false;
 
     try {
-      const { data: ticket, error } = await fetchOpenVideoMonitoring(options.robotId);
-      if (error || !ticket) {
+      const { data: ticket, error: openErr } = await fetchOpenVideoMonitoring(expectedRobotId);
+      if (openErr || !ticket) {
         throw new Error('打开视频监控失败');
       }
 
-      viewerId = ticket.viewer_id;
+      sessionRobotId = expectedRobotId;
+      sessionViewerId = ticket.viewer_id;
+
+      // 打开期间如果机器人已切换，关闭刚创建的票据，避免遗留观众
+      if (options.robotId !== expectedRobotId) {
+        await fetchCloseVideoMonitoring(sessionRobotId, sessionViewerId).catch(() => {});
+        resetSession();
+        loading.value = false;
+        return;
+      }
 
       room = new Room({
         adaptiveStream: true,
@@ -110,7 +148,7 @@ export function useLiveKitVideo(options: UseLiveKitVideoOptions) {
 
       await room.connect(ticket.server_url, ticket.token);
       console.log('LiveKit 连接成功', ticket.room, ticket.viewer_id);
-      startHeartbeat(options.robotId, ticket.viewer_id);
+      startHeartbeat();
     } catch (err) {
       loading.value = false;
       connected.value = false;
@@ -121,6 +159,7 @@ export function useLiveKitVideo(options: UseLiveKitVideoOptions) {
 
   async function disconnect() {
     stopHeartbeat();
+    await waitPendingHeartbeat();
 
     if (room) {
       try {
@@ -132,13 +171,15 @@ export function useLiveKitVideo(options: UseLiveKitVideoOptions) {
       }
     }
 
-    if (viewerId && options.robotId) {
+    const robotId = sessionRobotId;
+    const viewerId = sessionViewerId;
+    resetSession();
+
+    if (robotId && viewerId) {
       try {
-        await fetchCloseVideoMonitoring(options.robotId, viewerId);
+        await fetchCloseVideoMonitoring(robotId, viewerId);
       } catch (err) {
         console.error('关闭视频监控失败', err);
-      } finally {
-        viewerId = null;
       }
     }
   }
@@ -151,17 +192,26 @@ export function useLiveKitVideo(options: UseLiveKitVideoOptions) {
     disconnect();
   });
 
-  // robotId/serialNumber/status 变化时重新处理：离线则断开，在线则重新连接
+  // robotId/serialNumber/status 变化时重新处理：
+  // - 机器人/序列号变化：在线则重新连接，离线则断开
+  // - 状态变化：离线→在线则连接，在线→离线则断开
+  // - 避免状态轮询导致无意义的重复连接
   watch(
-    () => [options.robotId, options.serialNumber, options.status],
-    () => {
-      if (options.status !== 'online') {
+    () => [options.robotId, options.serialNumber, options.status] as const,
+    (newVal, oldVal) => {
+      const [newRobotId, newSerial, newStatus] = newVal;
+      const [oldRobotId, oldSerial, oldStatus] = oldVal ?? [null, null, null];
+
+      const robotChanged = newRobotId !== oldRobotId || newSerial !== oldSerial;
+      const statusChanged = newStatus !== oldStatus;
+
+      if (!robotChanged && !statusChanged) return;
+
+      if (newStatus !== 'online') {
         disconnect();
-        loading.value = false;
-        connected.value = false;
-        error.value = null;
         return;
       }
+
       connect();
     }
   );
