@@ -123,7 +123,7 @@ onBeforeUnmount(() => {
 </script>
 
 <template>
-  <NCard :bordered="true" size="small" class="h-full" content-class="h-full min-h-0">
+  <NCard :bordered="true" size="small" class="h-full flex flex-col" content-class="flex-1 min-h-0 overflow-y-auto">
     <template #header>
       <NSpace align="center" :size="8">
         <span>实时告警</span>
@@ -134,25 +134,19 @@ onBeforeUnmount(() => {
     </template>
 
     <NSpin :show="loading" class="h-full">
-      <div class="h-full">
-        <div v-if="!robotId" class="py-32px">
+      <div class="h-full flex flex-col">
+        <div v-if="!robotId" class="flex-1 flex-center py-32px">
           <NEmpty description="请先选择机器人" />
         </div>
-        <div v-else-if="alerts.length === 0" class="py-32px">
+        <div v-else-if="alerts.length === 0" class="flex-1 flex-center py-32px">
           <NEmpty description="暂无告警" />
         </div>
-        <div v-else class="h-full overflow-y-auto pr-8px">
-          <div
-            v-for="alert in alerts"
-            :key="alert.id"
-            class="mb-8px rounded-lg border p-12px last:mb-0"
-            :style="{ borderColor: getAlertColor(alert.severity) + '40', backgroundColor: getAlertColor(alert.severity) + '08' }"
-          >
+        <div v-else class="min-h-0 flex-1 overflow-y-auto pr-8px pb-12px">
+          <div v-for="alert in alerts" :key="alert.id" class="mb-8px rounded-lg border p-12px last:mb-0"
+            :style="{ borderColor: getAlertColor(alert.severity) + '40', backgroundColor: getAlertColor(alert.severity) + '08' }">
             <div class="flex items-start gap-8px">
-              <icon-ic-round-error-outline
-                class="mt-2px flex-shrink-0 text-18px"
-                :style="{ color: getAlertColor(alert.severity) }"
-              />
+              <icon-ic-round-error-outline class="mt-2px flex-shrink-0 text-18px"
+                :style="{ color: getAlertColor(alert.severity) }" />
               <div class="min-w-0 flex-1">
                 <div class="text-13px font-medium" :style="{ color: getAlertColor(alert.severity) }">
                   {{ alert.title }}
