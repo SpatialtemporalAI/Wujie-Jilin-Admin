@@ -429,7 +429,9 @@ class GrpcRetryService:
         task.retry_count += 1
         if task.retry_count >= task.max_retries:
             task.status = "dead"
-            task.next_retry_at = None  # dead 不再调度，但记录保留以便审计
+            # next_retry_at 保持原值：该列 NOT NULL 不能置 None；
+            # dead 任务不会再被调度（run_pending_once 的 status=='pending' 过滤已排除），
+            # 记录保留以便审计。
             logger.warning(
                 "grpc retry task dead task_id=%s retries=%s last_error=%s",
                 task.id,
