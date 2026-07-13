@@ -20,12 +20,6 @@ TaskTypeField = Annotated[
     BeforeValidator(parse_optional_enum({"patrol", "broadcast"})),
 ]
 
-# 任务执行状态枚举（与 Task.status 一致：idle / running / paused）
-TaskStatusField = Annotated[
-    str | None,
-    BeforeValidator(parse_optional_enum({"idle", "running", "paused"})),
-]
-
 
 class GotoPointRequest(BaseEntity):
     """单点导航"""
@@ -94,7 +88,6 @@ class TasksRequest(BaseEntity):
     robot_sn: Optional[str] = Field(None, description="可选：仅返回关联该机器人的任务")
     map_id: OptionalIntField = Field(None, description="可选：按场景地图过滤")
     task_type: TaskTypeField = Field(None, description="可选：任务类型 patrol/broadcast")
-    status: TaskStatusField = Field(None, description="可选：执行状态 idle/running/paused")
 
 
 class OpenApiResult(BaseRespEntity):

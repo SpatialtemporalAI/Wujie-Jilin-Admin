@@ -43,7 +43,25 @@ def setup_logging():
                 "log_dir": str(log_dir),
             },
         )
-        logging.info(f"日志系统初始化完成，当前环境: {env}")
+        # 启动时收集各文件 handler 的实际落盘路径（baseFilename），
+        # 直接读 handler 而非硬编码文件名，ini 改了这里自动跟着对
+        file_paths = []
+        for handler in logging.getLogger().handlers:
+            base = getattr(handler, "baseFilename", None)
+            if base and base not in file_paths:
+                file_paths.append(base)
+        files_text = (
+            "\n".join(f"  - {p}" for p in file_paths)
+            if file_paths
+            else "  (无文件 handler，仅控制台输出)"
+        )
+        # print 保证 dev/prod 控制台均可见（prod 控制台 handler 为 WARNING，INFO 不会显示）；
+        # 同时 logging.info 写入文件留档
+        print(
+            f"[OK] 日志系统初始化完成 | 环境: {env} | 日志目录: {log_dir}\n"
+            f"日志文件:\n{files_text}"
+        )
+        logging.info(f"日志系统初始化完成，当前环境: {env}, 日志目录: {log_dir}")
     except Exception as e:
         logging.basicConfig(level=logging.DEBUG if env == "dev" else logging.INFO)
         logging.error(f"日志配置加载失败: {str(e)}，已启用基础配置")

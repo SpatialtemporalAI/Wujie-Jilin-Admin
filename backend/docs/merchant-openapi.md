@@ -266,7 +266,7 @@ curl -X POST "$API_BASE$PATH_" \
 {
   "points": [
     { "id": 101, "name": "前台", "type": "charger", "x": 120.5, "y": 88.0, "angle": 0 },
-    { "id": 102, "name": "会议室A", "type": "target", "x": 300.0, "y": 210.5, "angle": 90 }
+    { "id": 102, "name": "会议室A", "type": "target", "x": 300.0, "y": 210.5, "angle": 1.5708 }
   ]
 }
 ```
@@ -276,7 +276,7 @@ curl -X POST "$API_BASE$PATH_" \
 | `id` | 点位 ID（`goto_point` / `navigate_route` 的 `point_id(s)` 即取此值） |
 | `name` | 点位名称 |
 | `type` | 标注类型（字典值） |
-| `x` / `y` / `angle` | 坐标与角度（度） |
+| `x` / `y` / `angle` | 坐标与角度（弧度）；数据层以弧度存储，前端展示时通常转换为度数（0–359°） |
 
 ---
 
@@ -291,7 +291,6 @@ curl -X POST "$API_BASE$PATH_" \
 | `robot_sn` | string | 否 | 传入时仅返回关联该机器人的任务 |
 | `map_id` | int | 否 | 按场景地图过滤 |
 | `task_type` | string | 否 | 任务类型：`patrol` 巡逻 / `broadcast` 播报 |
-| `status` | string | 否 | 执行状态：`idle` 空闲 / `running` 运行中 / `paused` 已暂停 |
 
 ```json
 { "robot_sn": "R001" }
@@ -309,8 +308,8 @@ curl -X POST "$API_BASE$PATH_" \
       "status": "idle",
       "enabled": true,
       "map_id": 1,
-      "last_run_at": "2026-06-30T08:00:00+00:00",
-      "next_run_at": "2026-07-01T08:00:00+00:00"
+      "last_run_at": "2026-06-30 08:00:00",
+      "next_run_at": "2026-07-01 08:00:00"
     }
   ]
 }
@@ -324,7 +323,7 @@ curl -X POST "$API_BASE$PATH_" \
 | `status` | `idle` / `running` / `paused` |
 | `enabled` | 是否启用 |
 | `map_id` | 关联场景地图（可能为 `null`） |
-| `last_run_at` / `next_run_at` | 最近/下次执行时间（ISO 8601，可能为 `null`） |
+| `last_run_at` / `next_run_at` | 最近/下次执行时间（`yyyy-MM-dd HH:mm:ss`，上海时区，可能为 `null`） |
 
 ---
 
@@ -336,7 +335,7 @@ curl -X POST "$API_BASE$PATH_" \
 { "robot_sn": "R001", "point_id": 101 }
 ```
 
-前往指定点位。响应 `data.data`：`{ "task_id": 6001 }`（已下发的导航任务 ID）。
+前往指定点位。成功时响应 `data.message` 为 `"单点导航已下发"`，`data.success` 为 `true`。
 
 > 点位须位于机器人当前绑定的场景地图内，否则返回 `403`。
 
@@ -348,7 +347,7 @@ curl -X POST "$API_BASE$PATH_" \
 { "robot_sn": "R001", "point_ids": [101, 102, 103] }
 ```
 
-按数组顺序依次途经各点位。响应 `data.data`：`{ "task_id": 6002 }`。
+按数组顺序依次途经各点位。成功时响应 `data.message` 为 `"多点导航已下发（N 个点位）"`，`data.success` 为 `true`。
 
 ---
 
@@ -405,8 +404,8 @@ curl -X POST "$API_BASE$PATH_" \
 
 ```
 1. 获取机器人    POST /openapi/v1/robots                        → 拿到 robot_sn
-2. GET 场景      POST /openapi/v1/scenes                        → 拿到 map_id
-3. GET 点位      POST /openapi/v1/points   {map_id}             → 拿到 point_id 列表
+2. 获取场景      POST /openapi/v1/scenes                        → 拿到 map_id
+3. 获取点位      POST /openapi/v1/points   {map_id}             → 拿到 point_id 列表
 4. 导航          POST /openapi/v1/goto_point {robot_sn, point_id}
    或            POST /openapi/v1/navigate_route {robot_sn, point_ids}
 5. (可选) 控制   POST /openapi/v1/pause_task / resume_task / stop_task {robot_sn}
@@ -432,4 +431,5 @@ curl -X POST "$API_BASE$PATH_" \
 
 | 日期 | 内容 |
 |---|---|
+| 2026-07-13 | `/openapi/v1/tasks` 移除 `status` 执行状态过滤条件；修正导航接口响应说明与时间字段格式说明 |
 | 2026-07-01 | 新增场景/点位/任务列表接口（`/scenes`、`/points`、`/tasks`） |
