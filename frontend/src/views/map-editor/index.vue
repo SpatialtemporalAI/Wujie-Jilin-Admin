@@ -345,6 +345,7 @@ function confirmAndRemoveElement(target: SelectedElement | null) {
       draggable: true,
       onPositiveClick: () => {
         editor.removeElement(target.type, target.id);
+        resetFlag();
       },
       onNegativeClick: resetFlag,
       onClose: resetFlag,
@@ -367,6 +368,7 @@ function confirmAndRemoveElement(target: SelectedElement | null) {
     draggable: true,
     onPositiveClick: () => {
       editor.removeElement(target.type, target.id);
+      resetFlag();
     },
     onNegativeClick: resetFlag,
     onClose: resetFlag,
