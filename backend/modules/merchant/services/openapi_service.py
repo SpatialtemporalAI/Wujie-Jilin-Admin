@@ -387,7 +387,6 @@ class OpenApiService:
         robot_sn: Optional[str] = None,
         map_id: Optional[int] = None,
         task_type: Optional[str] = None,
-        status: Optional[str] = None,
     ) -> OpenApiResult:
         """获取关联到商户机器人的任务列表"""
         if robot_sn:
@@ -415,8 +414,6 @@ class OpenApiService:
                 stmt = stmt.where(Task.map_id == map_id)
             if task_type:
                 stmt = stmt.where(Task.task_type == task_type)
-            if status:
-                stmt = stmt.where(Task.status == status)
             stmt = stmt.order_by(Task.id.desc())
             result = await db.execute(stmt)
             tasks = [

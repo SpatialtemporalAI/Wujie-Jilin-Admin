@@ -165,6 +165,5 @@ async def list_tasks(
         robot_sn=body.robot_sn,
         map_id=body.map_id,
         task_type=body.task_type,
-        status=body.status,
     )
     return ResponseModel(data=result)
