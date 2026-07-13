@@ -317,11 +317,11 @@
 | type   | string | 标注类型                     |
 | x      | number | X 坐标                     |
 | y      | number | Y 坐标                     |
-| angle  | number | 朝向角度（度）                  |
+| angle  | number | 朝向角度（弧度）；数据层以弧度存储，前端展示时通常转换为度数（0–359°） |
 
 ### 4.11 任务列表 — `POST /openapi/v1/tasks`
 
-获取关联到当前商户机器人的任务列表，可按机器人 / 场景 / 类型 / 状态过滤。返回的 `id` 可用于 `execute_task`。
+获取关联到当前商户机器人的任务列表，可按机器人 / 场景 / 类型过滤。返回的 `id` 可用于 `execute_task`。
 
 **请求体**
 
@@ -330,9 +330,8 @@
 | robot\_sn  | string | 否  | 仅返回关联该机器人的任务；不传则返回商户全部机器人关联的任务           |
 | map\_id    | int    | 否  | 按场景地图过滤                                  |
 | task\_type | string | 否  | 任务类型：`patrol`（巡逻）/ `broadcast`（播报）       |
-| status     | string | 否  | 执行状态：`idle`（空闲）/ `running`（运行中）/ `paused`（已暂停） |
 
-> `task_type` / `status` 传非枚举值（如 `xxx`）会被拦截并返回 422；传空值或缺省视为不过滤。
+> `task_type` 传非枚举值（如 `xxx`）会被拦截并返回 422；传空值或缺省视为不过滤。
 
 **响应 data**
 
@@ -349,8 +348,8 @@
         "status": "idle",
         "enabled": true,
         "map_id": 1,
-        "last_run_at": "2026-07-06T09:30:00+08:00",
-        "next_run_at": "2026-07-06T15:00:00+08:00"
+        "last_run_at": "2026-07-06 09:30:00",
+        "next_run_at": "2026-07-06 15:00:00"
       }
     ]
   }
@@ -365,8 +364,8 @@
 | status       | string  | `idle` / `running` / `paused` |
 | enabled      | boolean | 是否启用                        |
 | map\_id      | int     | 关联场景地图 ID                   |
-| last\_run\_at | string  | 最近一次开始执行时间（ISO 8601，可能为 null） |
-| next\_run\_at | string  | 下次计划执行时间（ISO 8601，可能为 null） |
+| last\_run\_at | string  | 最近一次开始执行时间（`yyyy-MM-dd HH:mm:ss`，上海时区，可能为 null） |
+| next\_run\_at | string  | 下次计划执行时间（`yyyy-MM-dd HH:mm:ss`，上海时区，可能为 null） |
 
 > 仅返回 `enabled` 状态可由商户控制的任务；查询结果只包含已绑定到当前商户机器人的任务，不会泄露其他商户数据。
 
@@ -492,6 +491,7 @@ call('/openapi/v1/speak', { robot_sn: 'WJ-001', text: '你好' }).then(console.l
 | ---------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | 2026-06-29 | v1 首版：goto\_point / navigate\_route / execute\_task / pause\_task / resume\_task / stop\_task / speak                                                                         |
 | 2026-07-03 | 导航改为即时指令：`goto_point` / `navigate_route` 不再创建任务，响应移除 `task_id` / `record_id`，文案改为「单点/多点导航已下发」；`execute_task` 的 `action` 统一为 `"started"`（不再区分 created/resumed，不返回 record\_id）。 |
-| 2026-07-06 | 新增查询类接口：`scenes`（场景列表）/ `points`（点位列表）/ `tasks`（任务列表），支持按机器人 / 场景 / 任务类型 / 状态过滤；第 4 节总述拆分为控制类（必须 `robot_sn`）与查询类（`robot_sn` 可选）。 |
-| 2026-07-06 | 补充参数类型校验：`tasks.task_type` 限 `patrol`·`broadcast`、`tasks.status` 限 `idle`·`running`·`paused`（非法值 422）；`speak.tts_params.speed` 限 0.5–2.0、`volume` 限 0–100（越界 422）；错误码表新增 422。 |
+| 2026-07-06 | 新增查询类接口：`scenes`（场景列表）/ `points`（点位列表）/ `tasks`（任务列表），支持按机器人 / 场景 / 任务类型过滤；第 4 节总述拆分为控制类（必须 `robot_sn`）与查询类（`robot_sn` 可选）。 |
+| 2026-07-06 | 补充参数类型校验：`tasks.task_type` 限 `patrol`·`broadcast`（非法值 422）；`speak.tts_params.speed` 限 0.5–2.0、`volume` 限 0–100（越界 422）；错误码表新增 422。 |
+| 2026-07-13 | `points.angle` 明确为弧度制；`tasks` 移除 `status` 过滤条件；`last_run_at` / `next_run_at` 时间格式统一为 `yyyy-MM-dd HH:mm:ss`（上海时区）。 |
 

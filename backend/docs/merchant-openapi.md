@@ -266,7 +266,7 @@ curl -X POST "$API_BASE$PATH_" \
 {
   "points": [
     { "id": 101, "name": "前台", "type": "charger", "x": 120.5, "y": 88.0, "angle": 0 },
-    { "id": 102, "name": "会议室A", "type": "target", "x": 300.0, "y": 210.5, "angle": 90 }
+    { "id": 102, "name": "会议室A", "type": "target", "x": 300.0, "y": 210.5, "angle": 1.5708 }
   ]
 }
 ```
@@ -276,7 +276,7 @@ curl -X POST "$API_BASE$PATH_" \
 | `id` | 点位 ID（`goto_point` / `navigate_route` 的 `point_id(s)` 即取此值） |
 | `name` | 点位名称 |
 | `type` | 标注类型（字典值） |
-| `x` / `y` / `angle` | 坐标与角度（度） |
+| `x` / `y` / `angle` | 坐标与角度（弧度）；数据层以弧度存储，前端展示时通常转换为度数（0–359°） |
 
 ---
 
