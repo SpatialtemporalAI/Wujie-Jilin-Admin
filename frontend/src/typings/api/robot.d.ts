@@ -149,7 +149,7 @@ declare namespace Api {
     };
 
     /** robot status record */
-    type RobotStatusRecord = Common.CommonRecord<{
+    type RobotStatusRecord = Omit<Common.CommonRecord<object>, 'status'> & {
       /** robot id */
       robot_id: number;
       /** battery percentage */
@@ -162,7 +162,9 @@ declare namespace Api {
       location: string | null;
       /** location info */
       location_info: LocationInfo | null;
-    }>;
+      /** 根据状态记录刷新后的机器人实时在线状态 */
+      status: RobotStatusEnum;
+    };
 
     /** robot status record list */
     type RobotStatusRecordList = Common.PaginatingQueryRecord<RobotStatusRecord>;

@@ -414,7 +414,7 @@ async def update_battery_threshold(
 
 @robot_config_router.post(
     "/video-monitoring/{robot_id}",
-    response_model=ResponseModel[RobotVideoMonitoringTicket],
+    response_model=ResponseModel[RobotVideoMonitoringTicket | None],
     dependencies=[Depends(require_permission("robot:monitor:list"))],
 )
 @log_operation(module="robot", action="update", description="视频监控启停")

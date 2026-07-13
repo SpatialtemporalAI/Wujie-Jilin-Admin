@@ -55,6 +55,12 @@ export function useRobotMonitor() {
       const { data } = await fetchGetLatestRobotStatus(selectedRobotId.value);
       if (!data) return;
       latestStatus.value = data as unknown as Api.Robot.RobotStatusRecord;
+      // 把 status/latest 返回的实时在线状态同步到机器人列表，
+      // 让下拉框、视频监控等依赖 robot.status 的展示实时刷新
+      const robot = robotList.value.find(r => r.id === selectedRobotId.value);
+      if (robot) {
+        robot.status = data.status;
+      }
     } catch { /* ignore */ }
   }
 

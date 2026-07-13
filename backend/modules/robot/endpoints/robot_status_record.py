@@ -83,15 +83,24 @@ async def get_robot_status_latest(
     db: AsyncSession = Depends(get_session),
 ):
     """
-    获取机器人最新状态记录
+    获取机器人最新状态记录，并同步刷新机器人 online/offline 状态
     """
     try:
         logger.info("获取机器人最新状态记录接口被调用，机器人ID: %d", robot_id)
 
-        record = await RobotStatusRecordService.get_latest(db, robot_id)
+        record, status = await RobotStatusRecordService.get_latest_with_online_status(
+            db, robot_id
+        )
 
         if record:
-            response_data = RobotStatusRecordResponseData.model_validate(record)
+            response_data = RobotStatusRecordResponseData.model_validate(
+                {
+                    field: getattr(record, field)
+                    for field in RobotStatusRecordResponseData.model_fields
+                    if field != "status"
+                }
+                | {"status": status}
+            )
             logger.info("获取机器人最新状态记录接口成功，机器人ID: %d", robot_id)
             return response_base.success(data=response_data)
         else:

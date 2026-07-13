@@ -6,9 +6,10 @@ from typing import Optional, Any
 from pydantic import Field, ConfigDict, field_validator
 from datetime import datetime, timezone
 
-from pydantic import BaseModel
+from pydantic import BaseModel, field_serializer
 
 from app.models.common.base import BaseRespEntity
+from database.models.business.robot import RobotStatus
 
 
 class RobotStatusRecordQueryParams(BaseModel):
@@ -68,6 +69,7 @@ class RobotStatusRecordResponseData(BaseRespEntity):
     location_info: Optional[LocationInfoData] = Field(
         None, description="位置信息：{x, y, angle, update_at}"
     )
+    status: RobotStatus = Field(..., description="机器人当前在线状态")
     created_at: datetime = Field(..., description="创建时间")
     updated_at: Optional[datetime] = Field(None, description="更新时间")
 
@@ -83,6 +85,12 @@ class RobotStatusRecordResponseData(BaseRespEntity):
                 return None
             return parsed if isinstance(parsed, dict) else None
         return v
+
+    # 覆盖 BaseRespEntity 的 status 序列化器（后者将 status 当作布尔值转 "1"/"2"），
+    # 机器人状态是 online/offline/inactive 字符串枚举，需保持原值。
+    @field_serializer("status")
+    def serialize_status_output(self, value: RobotStatus) -> str:
+        return value.value if hasattr(value, "value") else str(value)
 
 
 class RobotLocationItem(BaseModel):

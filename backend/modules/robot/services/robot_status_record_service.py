@@ -6,13 +6,15 @@
 处理机器人状态记录相关的业务逻辑
 """
 import logging
+from datetime import timedelta
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select, and_, func, Select
 from sqlalchemy.orm import noload, selectinload
 from typing import List, Tuple, Optional
 
 from database.models.business.robot_status_record import RobotStatusRecord
-from database.models.business.robot import Robot
+from database.models.business.robot import Robot, RobotStatus
+from database.utils.timezone import timezone
 from core.exception.errors import NotFoundError
 from modules.robot.schemas.robot_status_record import (
     RobotStatusRecordQueryParams,
@@ -20,6 +22,9 @@ from modules.robot.schemas.robot_status_record import (
 )
 
 logger = logging.getLogger(__name__)
+
+# 状态记录最新更新时间在该阈值内视为在线（秒）
+STATUS_ONLINE_THRESHOLD_SECONDS = 60
 
 
 class RobotStatusRecordService:
@@ -160,6 +165,71 @@ class RobotStatusRecordService:
                 "获取机器人最新状态记录失败: %s", str(e), exc_info=True
             )
             raise
+
+    @staticmethod
+    async def get_latest_with_online_status(
+        db: AsyncSession, robot_id: int
+    ) -> Tuple[Optional[RobotStatusRecord], RobotStatus]:
+        """
+        获取机器人最新状态记录，并根据记录更新时间刷新机器人 online/offline 状态。
+
+        判定规则：
+        - 最新状态记录存在且更新时间（无更新时间则取创建时间）在
+          ``STATUS_ONLINE_THRESHOLD_SECONDS`` 秒内，判定为 online；
+        - 无记录或记录超时，判定为 offline；
+        - 机器人状态为 inactive 时，仅在记录满足在线条件时才升级为 online，
+          否则保持 inactive 不变，避免覆盖管理员手动设置的未激活状态。
+
+        Args:
+            db: 数据库会话
+            robot_id: 机器人ID
+
+        Returns:
+            (最新状态记录, 刷新后的机器人状态)
+
+        Raises:
+            NotFoundError: 机器人不存在
+        """
+        record = await RobotStatusRecordService.get_latest(db, robot_id)
+
+        robot_result = await db.execute(
+            select(Robot)
+            .where(Robot.id == robot_id)
+            .where(Robot.deleted_at.is_(None))
+        )
+        robot = robot_result.scalar_one_or_none()
+        if not robot:
+            raise NotFoundError(msg=f"机器人 {robot_id} 不存在")
+
+        now = timezone.now()
+        if record:
+            last_seen = record.updated_at or record.created_at
+            elapsed = (
+                (now - last_seen).total_seconds()
+                if last_seen
+                else float("inf")
+            )
+            new_status = (
+                RobotStatus.ONLINE
+                if elapsed <= STATUS_ONLINE_THRESHOLD_SECONDS
+                else RobotStatus.OFFLINE
+            )
+        else:
+            new_status = RobotStatus.OFFLINE
+
+        if robot.status != new_status and (
+            robot.status != RobotStatus.INACTIVE or new_status == RobotStatus.ONLINE
+        ):
+            robot.status = new_status
+            await db.commit()
+            await db.refresh(robot)
+            logger.info(
+                "机器人状态已刷新，机器人ID: %d，状态: %s",
+                robot_id,
+                robot.status.value,
+            )
+
+        return record, robot.status
 
     @staticmethod
     async def get_map_robot_locations(

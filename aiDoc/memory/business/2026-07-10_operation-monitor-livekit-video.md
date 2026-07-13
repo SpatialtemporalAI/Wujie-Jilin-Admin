@@ -101,9 +101,13 @@ LIVEKIT__WS_URL=wss://...
 2. **心跳竞态保护**：关闭视频前先 `await` 正在飞行中的心跳请求，防止“先关闭会话、后心跳返回”导致的 `观众会话已过期` 错误提示。
 3. **状态轮询去抖**：`watch` 仅在 `robotId` / `serialNumber` 变化或 `online/offline` 状态变化时才重新连接，避免机器人状态轮询触发无意义的重复开关视频。
 
+4. **后端响应模型修复**：关闭视频时 `POST /admin/robot/config/video-monitoring/{robot_id}` 返回的 `data` 为 `None`，但 `response_model=ResponseModel[RobotVideoMonitoringTicket]` 在 FastAPI 响应校验阶段会拒绝 `None`，导致 `ResponseValidationError` 和 500。已将响应模型改为 `ResponseModel[RobotVideoMonitoringTicket | None]`，关闭分支正常返回 `data: null`。
+   - 文件：`backend/modules/robot/endpoints/robot_config.py`
+
 ### 涉及变更文件
 
 - `frontend/src/views/operation-monitor/composables/useLiveKitVideo.ts`
 - `frontend/src/views/operation-monitor/modules/video-player.vue`
+- `backend/modules/robot/endpoints/robot_config.py`
 
-状态：**切换机器人/关闭视频流竞态已修复**
+状态：**切换机器人/关闭视频流竞态 + 后端响应校验已修复**
