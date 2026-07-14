@@ -172,6 +172,18 @@ class SceneMapService:
         )
         db.add(map_obj)
         await db.flush()
+
+        # 创建固定的「扫图起始点」返回点（世界坐标 (0,0)，与 start_point 无关），
+        # 并将内容版本号置 1（等价于已保存一次内容）。原由前端新增地图后调用
+        # /editor/save 完成，现下沉到创建接口，省去一次 HTTP 往返与「空地图」中间态。
+        db.add(SceneMapAnnotation(
+            map_id=map_obj.id,
+            x=0,
+            y=0,
+            name="扫图起始点",
+            type="navigation",
+        ))
+        map_obj.version = 1
         return map_obj
 
     @staticmethod

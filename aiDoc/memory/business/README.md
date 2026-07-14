@@ -90,3 +90,4 @@
 - [2026-07-14 用户密码长度统一限定 6-20 字符](./2026-07-14_user-password-length-6-20.md) — 改密 `new_password` max_length 100→20 修复 422；前端改密规则补 max:20 + 4 个密码 NInput 加 :maxlength=20；登录密码字段不动（兼容历史长密码）
 - [2026-07-14 get_user_routes 改 selectinload 修复权限并集丢失](./2026-07-14_getuserroutes-joinedload-to-selectinload.md) — joinedload 把关系加载并入主 SELECT，全局软删/租户过滤（is_relationship_load=False 时生效）会裁掉全局角色（sys_role 严格隔离）；改 selectinload 走独立关系查询绕过过滤，拿完整并集
 - [2026-07-14 角色编辑重名校验](./2026-07-14_role-edit-duplicate-name-check.md) — `update_role` 改名重名原靠 DB unique 兜底，IntegrityError 无处理器→500"服务器错误"；补 commit 前重名查询（排除自身）抛 ConflictError 409"角色名称已存在"，前端无需改；补齐新增场景（create_role）的编辑侧缺口
+- [2026-07-14 新增地图返回点创建下沉到后端](./2026-07-14_scene-map-create-builtin-return-point.md) — 新增地图后前端原需再调 /editor/save 写「扫图起始点」返回点（世界0,0）+version+1；改为后端 `SceneMapService.create` 直接建返回点并置 version=1，前端删 addAnnotation+saveMap，省一次往返、消除空地图中间态；annotation 存世界坐标故写死 (0,0) 等价，且 save 不触发 NotifyMapSaved 故不影响广播

@@ -544,17 +544,8 @@ async function confirmSceneSubmit() {
         const switched = await switchMap(data.id);
         if (!switched) return false;
 
-        // 返回点固定在世界坐标 (0,0)，与场景 start_point 无关
-        const origin = editor.worldToPixelCoords(0, 0);
-        editor.addAnnotation({
-          x: origin.x,
-          y: origin.y,
-          name: '扫图起始点',
-          angle: 0,
-          type: 'navigation',
-        });
-        await editor.saveMap({ silent: true });
-
+        // 「扫图起始点」返回点（世界坐标 0,0）已由后端 scene/map/add 创建，
+        // switchMap→loadMap 会自动载入，前端无需再调用 /editor/save
         window.$message?.success('创建成功');
       }
     } catch (e: any) {
