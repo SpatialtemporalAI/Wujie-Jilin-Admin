@@ -374,7 +374,7 @@
       "source_file": "app/models/common/base.py",
       "source_location": "L1",
       "id": "app_models_common_base_py",
-      "community": 21,
+      "community": 525,
       "norm_label": "base.py"
     },
     {
@@ -401,7 +401,7 @@
       "source_file": "app/models/common/base.py",
       "source_location": "L32",
       "id": "common_base_check_required_non_empty",
-      "community": 21,
+      "community": 525,
       "norm_label": "_check_required_non_empty()"
     },
     {
@@ -428,7 +428,7 @@
       "source_file": "app/models/common/base.py",
       "source_location": "L80",
       "id": "common_base_serialize_status_output",
-      "community": 21,
+      "community": 525,
       "norm_label": "serialize_status_output()"
     },
     {
@@ -437,7 +437,7 @@
       "source_file": "app/models/common/base.py",
       "source_location": "L80",
       "id": "app_models_common_base_py_bool",
-      "community": 21,
+      "community": 525,
       "norm_label": "bool"
     },
     {
@@ -446,7 +446,7 @@
       "source_file": "app/models/common/base.py",
       "source_location": "L84",
       "id": "common_base_serialize_is_system_output",
-      "community": 21,
+      "community": 525,
       "norm_label": "serialize_is_system_output()"
     },
     {
@@ -455,7 +455,7 @@
       "source_file": "app/models/common/base.py",
       "source_location": "L90",
       "id": "common_base_serialize_id_output",
-      "community": 21,
+      "community": 525,
       "norm_label": "serialize_id_output()"
     },
     {
@@ -464,7 +464,7 @@
       "source_file": "app/models/common/base.py",
       "source_location": "L90",
       "id": "app_models_common_base_py_int",
-      "community": 21,
+      "community": 525,
       "norm_label": "int"
     },
     {
@@ -473,7 +473,7 @@
       "source_file": "app/models/common/base.py",
       "source_location": "L99",
       "id": "common_base_parse_bool",
-      "community": 21,
+      "community": 525,
       "norm_label": "parse_bool()"
     },
     {
@@ -482,7 +482,7 @@
       "source_file": "app/models/common/base.py",
       "source_location": "L124",
       "id": "common_base_parse_optional_int",
-      "community": 21,
+      "community": 525,
       "norm_label": "parse_optional_int()"
     },
     {
@@ -491,7 +491,7 @@
       "source_file": "app/models/common/base.py",
       "source_location": "L140",
       "id": "common_base_parse_positive_int",
-      "community": 21,
+      "community": 525,
       "norm_label": "parse_positive_int()"
     },
     {
@@ -518,7 +518,7 @@
       "source_file": "app/models/common/base.py",
       "source_location": "L141",
       "id": "common_base_rationale_141",
-      "community": 21,
+      "community": 525,
       "norm_label": "\u751f\u6210\u5206\u9875\u6574\u6570\u7684 beforevalidator:\u7a7a\u503c/\u975e\u6cd5\u503c\u6536\u655b\u4e3a default,<1 \u53d6 1,\u8d85\u8fc7 max_value \u622a\u65ad\u3002      \u7528\u4e8e page"
     },
     {
@@ -608,7 +608,7 @@
       "source_file": "app/models/common/page.py",
       "source_location": "L1",
       "id": "app_models_common_page_py",
-      "community": 21,
+      "community": 525,
       "norm_label": "page.py"
     },
     {
@@ -626,7 +626,7 @@
       "source_file": "app/models/common/page.py",
       "source_location": "L37",
       "id": "common_page_get_paginated_results",
-      "community": 442,
+      "community": 447,
       "norm_label": "get_paginated_results()"
     },
     {
@@ -635,7 +635,7 @@
       "source_file": "app/models/common/page.py",
       "source_location": "L37",
       "id": "app_models_common_page_py_asyncsession",
-      "community": 442,
+      "community": 447,
       "norm_label": "asyncsession"
     },
     {
@@ -644,7 +644,7 @@
       "source_file": "app/models/common/page.py",
       "source_location": "L37",
       "id": "app_models_common_page_py_select",
-      "community": 442,
+      "community": 447,
       "norm_label": "select"
     },
     {
@@ -653,7 +653,7 @@
       "source_file": "app/models/common/page.py",
       "source_location": "L37",
       "id": "responsepagemodel",
-      "community": 442,
+      "community": 447,
       "norm_label": "responsepagemodel"
     },
     {
@@ -662,7 +662,7 @@
       "source_file": "app/models/common/page.py",
       "source_location": "L83",
       "id": "common_page_get_page_params",
-      "community": 447,
+      "community": 442,
       "norm_label": "get_page_params()"
     },
     {
@@ -671,7 +671,7 @@
       "source_file": "app/models/common/page.py",
       "source_location": "L83",
       "id": "app_models_common_page_py_str",
-      "community": 447,
+      "community": 442,
       "norm_label": "str"
     },
     {
@@ -680,7 +680,7 @@
       "source_file": "app/models/common/page.py",
       "source_location": "L43",
       "id": "common_page_rationale_43",
-      "community": 442,
+      "community": 447,
       "norm_label": "\u83b7\u53d6\u5206\u9875\u67e5\u8be2\u7ed3\u679c     \u53c2\u6570:         db: \u6570\u636e\u5e93\u5f02\u6b65\u4f1a\u8bdd         page_params: \u5206\u9875\u53c2\u6570\u5bf9\u8c61         que"
     },
     {
@@ -689,7 +689,7 @@
       "source_file": "app/models/common/page.py",
       "source_location": "L87",
       "id": "common_page_rationale_87",
-      "community": 447,
+      "community": 442,
       "norm_label": "\u83b7\u53d6\u5206\u9875\u67e5\u8be2\u53c2\u6570\u7684\u4f9d\u8d56\u9879\u3002      page/page_size \u4ee5\u5b57\u7b26\u4e32\u63a5\u6536(\u5bb9\u5fcd\u7a7a\u5b57\u7b26\u4e32 / \"null\" / \"undefined\" / \"nan\""
     },
     {
@@ -3893,7 +3893,7 @@
       "source_file": "core/response/response_schema.py",
       "source_location": "L50",
       "id": "response_response_schema_responsepagedatamodel",
-      "community": 20,
+      "community": 83,
       "norm_label": "responsepagedatamodel"
     },
     {
@@ -12236,7 +12236,7 @@
       "source_file": "modules/admin/endpoints/sys/config.py",
       "source_location": "L1",
       "id": "modules_admin_endpoints_sys_config_py",
-      "community": 20,
+      "community": 83,
       "norm_label": "config.py"
     },
     {
@@ -12245,7 +12245,7 @@
       "source_file": "modules/admin/endpoints/sys/config.py",
       "source_location": "L48",
       "id": "sys_config_get_config_list",
-      "community": 20,
+      "community": 83,
       "norm_label": "get_config_list()"
     },
     {
@@ -12254,7 +12254,7 @@
       "source_file": "modules/admin/endpoints/sys/config.py",
       "source_location": "L48",
       "id": "modules_admin_endpoints_sys_config_py_sysconfigqueryparams",
-      "community": 20,
+      "community": 83,
       "norm_label": "sysconfigqueryparams"
     },
     {
@@ -12263,7 +12263,7 @@
       "source_file": "modules/admin/endpoints/sys/config.py",
       "source_location": "L48",
       "id": "modules_admin_endpoints_sys_config_py_pagerequest",
-      "community": 20,
+      "community": 83,
       "norm_label": "pagerequest"
     },
     {
@@ -12272,7 +12272,7 @@
       "source_file": "modules/admin/endpoints/sys/config.py",
       "source_location": "L48",
       "id": "modules_admin_endpoints_sys_config_py_asyncsession",
-      "community": 20,
+      "community": 83,
       "norm_label": "asyncsession"
     },
     {
@@ -12281,7 +12281,7 @@
       "source_file": "modules/admin/endpoints/sys/config.py",
       "source_location": "L83",
       "id": "sys_config_get_all_configs",
-      "community": 20,
+      "community": 83,
       "norm_label": "get_all_configs()"
     },
     {
@@ -12290,7 +12290,7 @@
       "source_file": "modules/admin/endpoints/sys/config.py",
       "source_location": "L83",
       "id": "configgroup",
-      "community": 20,
+      "community": 83,
       "norm_label": "configgroup"
     },
     {
@@ -12299,7 +12299,7 @@
       "source_file": "modules/admin/endpoints/sys/config.py",
       "source_location": "L117",
       "id": "sys_config_get_configs_by_group",
-      "community": 20,
+      "community": 83,
       "norm_label": "get_configs_by_group()"
     },
     {
@@ -12308,7 +12308,7 @@
       "source_file": "modules/admin/endpoints/sys/config.py",
       "source_location": "L149",
       "id": "sys_config_get_config_by_id",
-      "community": 20,
+      "community": 83,
       "norm_label": "get_config_by_id()"
     },
     {
@@ -12317,7 +12317,7 @@
       "source_file": "modules/admin/endpoints/sys/config.py",
       "source_location": "L149",
       "id": "modules_admin_endpoints_sys_config_py_int",
-      "community": 20,
+      "community": 83,
       "norm_label": "int"
     },
     {
@@ -12326,7 +12326,7 @@
       "source_file": "modules/admin/endpoints/sys/config.py",
       "source_location": "L173",
       "id": "sys_config_get_config_by_key",
-      "community": 20,
+      "community": 83,
       "norm_label": "get_config_by_key()"
     },
     {
@@ -12335,7 +12335,7 @@
       "source_file": "modules/admin/endpoints/sys/config.py",
       "source_location": "L173",
       "id": "modules_admin_endpoints_sys_config_py_str",
-      "community": 20,
+      "community": 83,
       "norm_label": "str"
     },
     {
@@ -12344,7 +12344,7 @@
       "source_file": "modules/admin/endpoints/sys/config.py",
       "source_location": "L195",
       "id": "sys_config_get_config_value",
-      "community": 20,
+      "community": 83,
       "norm_label": "get_config_value()"
     },
     {
@@ -12353,7 +12353,7 @@
       "source_file": "modules/admin/endpoints/sys/config.py",
       "source_location": "L218",
       "id": "sys_config_create_config",
-      "community": 20,
+      "community": 83,
       "norm_label": "create_config()"
     },
     {
@@ -12362,7 +12362,7 @@
       "source_file": "modules/admin/endpoints/sys/config.py",
       "source_location": "L218",
       "id": "modules_admin_endpoints_sys_config_py_request",
-      "community": 20,
+      "community": 83,
       "norm_label": "request"
     },
     {
@@ -12371,7 +12371,7 @@
       "source_file": "modules/admin/endpoints/sys/config.py",
       "source_location": "L218",
       "id": "modules_admin_endpoints_sys_config_py_sysconfigcreate",
-      "community": 20,
+      "community": 83,
       "norm_label": "sysconfigcreate"
     },
     {
@@ -12380,7 +12380,7 @@
       "source_file": "modules/admin/endpoints/sys/config.py",
       "source_location": "L218",
       "id": "modules_admin_endpoints_sys_config_py_sysuser",
-      "community": 20,
+      "community": 83,
       "norm_label": "sysuser"
     },
     {
@@ -12389,7 +12389,7 @@
       "source_file": "modules/admin/endpoints/sys/config.py",
       "source_location": "L245",
       "id": "sys_config_update_config",
-      "community": 20,
+      "community": 83,
       "norm_label": "update_config()"
     },
     {
@@ -12398,7 +12398,7 @@
       "source_file": "modules/admin/endpoints/sys/config.py",
       "source_location": "L245",
       "id": "modules_admin_endpoints_sys_config_py_sysconfigupdate",
-      "community": 20,
+      "community": 83,
       "norm_label": "sysconfigupdate"
     },
     {
@@ -12407,7 +12407,7 @@
       "source_file": "modules/admin/endpoints/sys/config.py",
       "source_location": "L273",
       "id": "sys_config_batch_update_configs",
-      "community": 20,
+      "community": 83,
       "norm_label": "batch_update_configs()"
     },
     {
@@ -12416,7 +12416,7 @@
       "source_file": "modules/admin/endpoints/sys/config.py",
       "source_location": "L273",
       "id": "modules_admin_endpoints_sys_config_py_sysconfigbatchupdate",
-      "community": 20,
+      "community": 83,
       "norm_label": "sysconfigbatchupdate"
     },
     {
@@ -12425,7 +12425,7 @@
       "source_file": "modules/admin/endpoints/sys/config.py",
       "source_location": "L299",
       "id": "sys_config_reset_configs",
-      "community": 20,
+      "community": 83,
       "norm_label": "reset_configs()"
     },
     {
@@ -12434,7 +12434,7 @@
       "source_file": "modules/admin/endpoints/sys/config.py",
       "source_location": "L299",
       "id": "modules_admin_endpoints_sys_config_py_sysconfigreset",
-      "community": 20,
+      "community": 83,
       "norm_label": "sysconfigreset"
     },
     {
@@ -12443,7 +12443,7 @@
       "source_file": "modules/admin/endpoints/sys/config.py",
       "source_location": "L325",
       "id": "sys_config_batch_delete_configs",
-      "community": 20,
+      "community": 83,
       "norm_label": "batch_delete_configs()"
     },
     {
@@ -12452,7 +12452,7 @@
       "source_file": "modules/admin/endpoints/sys/config.py",
       "source_location": "L351",
       "id": "sys_config_delete_config",
-      "community": 20,
+      "community": 83,
       "norm_label": "delete_config()"
     },
     {
@@ -13712,7 +13712,7 @@
       "source_file": "modules/admin/endpoints/sys/monitor.py",
       "source_location": "L1",
       "id": "modules_admin_endpoints_sys_monitor_py",
-      "community": 83,
+      "community": 5,
       "norm_label": "monitor.py"
     },
     {
@@ -13721,7 +13721,7 @@
       "source_file": "modules/admin/endpoints/sys/monitor.py",
       "source_location": "L34",
       "id": "sys_monitor_get_system_metrics",
-      "community": 83,
+      "community": 5,
       "norm_label": "get_system_metrics()"
     },
     {
@@ -13730,7 +13730,7 @@
       "source_file": "modules/admin/endpoints/sys/monitor.py",
       "source_location": "L48",
       "id": "sys_monitor_get_api_stats",
-      "community": 83,
+      "community": 5,
       "norm_label": "get_api_stats()"
     },
     {
@@ -13739,7 +13739,7 @@
       "source_file": "modules/admin/endpoints/sys/monitor.py",
       "source_location": "L48",
       "id": "apistatsqueryparams",
-      "community": 83,
+      "community": 5,
       "norm_label": "apistatsqueryparams"
     },
     {
@@ -13748,7 +13748,7 @@
       "source_file": "modules/admin/endpoints/sys/monitor.py",
       "source_location": "L48",
       "id": "modules_admin_endpoints_sys_monitor_py_asyncsession",
-      "community": 83,
+      "community": 5,
       "norm_label": "asyncsession"
     },
     {
@@ -13757,7 +13757,7 @@
       "source_file": "modules/admin/endpoints/sys/monitor.py",
       "source_location": "L53",
       "id": "sys_monitor_rationale_53",
-      "community": 83,
+      "community": 5,
       "norm_label": "\u4ece\u64cd\u4f5c\u65e5\u5fd7\u4e2d\u6309\u65f6\u95f4\u7a97\u53e3\u805a\u5408api\u54cd\u5e94\u65f6\u95f4\u548c\u9519\u8bef\u7387"
     },
     {
@@ -14594,7 +14594,7 @@
       "source_file": "modules/admin/endpoints/sys/user.py",
       "source_location": "L50",
       "id": "modules_admin_endpoints_sys_user_py_pagerequest",
-      "community": 20,
+      "community": 83,
       "norm_label": "pagerequest"
     },
     {
@@ -14675,7 +14675,7 @@
       "source_file": "modules/admin/endpoints/sys/user.py",
       "source_location": "L119",
       "id": "modules_admin_endpoints_sys_user_py_sysusercreate",
-      "community": 20,
+      "community": 83,
       "norm_label": "sysusercreate"
     },
     {
@@ -14693,7 +14693,7 @@
       "source_file": "modules/admin/endpoints/sys/user.py",
       "source_location": "L139",
       "id": "modules_admin_endpoints_sys_user_py_sysuserupdate",
-      "community": 20,
+      "community": 83,
       "norm_label": "sysuserupdate"
     },
     {
@@ -14729,7 +14729,7 @@
       "source_file": "modules/admin/endpoints/sys/user.py",
       "source_location": "L201",
       "id": "sysuserbatchupdatestatus",
-      "community": 20,
+      "community": 83,
       "norm_label": "sysuserbatchupdatestatus"
     },
     {
@@ -14756,7 +14756,7 @@
       "source_file": "modules/admin/endpoints/sys/user.py",
       "source_location": "L247",
       "id": "modules_admin_endpoints_sys_user_py_sysuserpasswordupdate",
-      "community": 20,
+      "community": 83,
       "norm_label": "sysuserpasswordupdate"
     },
     {
@@ -16007,7 +16007,7 @@
       "source_file": "modules/admin/schemas/sys/monitor.py",
       "source_location": "L1",
       "id": "modules_admin_schemas_sys_monitor_py",
-      "community": 83,
+      "community": 5,
       "norm_label": "monitor.py"
     },
     {
@@ -16016,7 +16016,7 @@
       "source_file": "modules/admin/schemas/sys/monitor.py",
       "source_location": "L15",
       "id": "sys_monitor_memoryinfo",
-      "community": 83,
+      "community": 5,
       "norm_label": "memoryinfo"
     },
     {
@@ -16025,7 +16025,7 @@
       "source_file": "modules/admin/schemas/sys/monitor.py",
       "source_location": "L26",
       "id": "sys_monitor_diskinfo",
-      "community": 83,
+      "community": 5,
       "norm_label": "diskinfo"
     },
     {
@@ -16034,7 +16034,7 @@
       "source_file": "modules/admin/schemas/sys/monitor.py",
       "source_location": "L36",
       "id": "sys_monitor_systemmetricsresponse",
-      "community": 83,
+      "community": 5,
       "norm_label": "systemmetricsresponse"
     },
     {
@@ -16043,7 +16043,7 @@
       "source_file": "modules/admin/schemas/sys/monitor.py",
       "source_location": "L49",
       "id": "sys_monitor_apistatsqueryparams",
-      "community": 83,
+      "community": 5,
       "norm_label": "apistatsqueryparams"
     },
     {
@@ -16052,7 +16052,7 @@
       "source_file": "modules/admin/schemas/sys/monitor.py",
       "source_location": "L54",
       "id": "sys_monitor_apistatsresponse",
-      "community": 83,
+      "community": 5,
       "norm_label": "apistatsresponse"
     },
     {
@@ -18761,7 +18761,7 @@
       "source_file": "modules/admin/services/sys/menu_service.py",
       "source_location": "L613",
       "id": "modules_admin_services_sys_menu_service_py_sysuser",
-      "community": 32,
+      "community": 22,
       "norm_label": "sysuser"
     },
     {
@@ -18959,7 +18959,7 @@
       "source_file": "modules/admin/services/sys/monitor_service.py",
       "source_location": "L21",
       "id": "sys_monitor_service_monitorservice",
-      "community": 83,
+      "community": 5,
       "norm_label": "monitorservice"
     },
     {
@@ -19911,7 +19911,7 @@
       "label": "assign_menu_to_role()",
       "file_type": "code",
       "source_file": "modules/admin/services/sys/role_service.py",
-      "source_location": "L275",
+      "source_location": "L289",
       "id": "sys_role_service_assign_menu_to_role",
       "community": 14,
       "norm_label": "assign_menu_to_role()"
@@ -19920,7 +19920,7 @@
       "label": "delete_role()",
       "file_type": "code",
       "source_file": "modules/admin/services/sys/role_service.py",
-      "source_location": "L347",
+      "source_location": "L361",
       "id": "sys_role_service_delete_role",
       "community": 14,
       "norm_label": "delete_role()"
@@ -19929,7 +19929,7 @@
       "label": "batch_delete_roles()",
       "file_type": "code",
       "source_file": "modules/admin/services/sys/role_service.py",
-      "source_location": "L386",
+      "source_location": "L400",
       "id": "sys_role_service_batch_delete_roles",
       "community": 14,
       "norm_label": "batch_delete_roles()"
@@ -19938,7 +19938,7 @@
       "label": "batch_update_roles_status()",
       "file_type": "code",
       "source_file": "modules/admin/services/sys/role_service.py",
-      "source_location": "L414",
+      "source_location": "L428",
       "id": "sys_role_service_batch_update_roles_status",
       "community": 14,
       "norm_label": "batch_update_roles_status()"
@@ -19947,7 +19947,7 @@
       "label": "get_all_roles()",
       "file_type": "code",
       "source_file": "modules/admin/services/sys/role_service.py",
-      "source_location": "L456",
+      "source_location": "L470",
       "id": "sys_role_service_get_all_roles",
       "community": 14,
       "norm_label": "get_all_roles()"
@@ -20001,45 +20001,45 @@
       "label": "\u4e3a\u89d2\u8272\u5206\u914d\u83dc\u5355\u6743\u9650          Args:             db: \u6570\u636e\u5e93\u4f1a\u8bdd             role_id: \u89d2\u8272ID",
       "file_type": "rationale",
       "source_file": "modules/admin/services/sys/role_service.py",
-      "source_location": "L283",
-      "id": "sys_role_service_rationale_283",
-      "community": 288,
+      "source_location": "L297",
+      "id": "sys_role_service_rationale_297",
+      "community": 527,
       "norm_label": "\u4e3a\u89d2\u8272\u5206\u914d\u83dc\u5355\u6743\u9650          args:             db: \u6570\u636e\u5e93\u4f1a\u8bdd             role_id: \u89d2\u8272id"
     },
     {
       "label": "\u5220\u9664\u89d2\u8272          Args:             db: \u6570\u636e\u5e93\u4f1a\u8bdd             role_id: \u89d2\u8272ID",
       "file_type": "rationale",
       "source_file": "modules/admin/services/sys/role_service.py",
-      "source_location": "L350",
-      "id": "sys_role_service_rationale_350",
-      "community": 289,
+      "source_location": "L364",
+      "id": "sys_role_service_rationale_364",
+      "community": 528,
       "norm_label": "\u5220\u9664\u89d2\u8272          args:             db: \u6570\u636e\u5e93\u4f1a\u8bdd             role_id: \u89d2\u8272id"
     },
     {
       "label": "\u6279\u91cf\u5220\u9664\u89d2\u8272          Args:             db: \u6570\u636e\u5e93\u4f1a\u8bdd             role_ids: \u89d2\u8272ID\u5217\u8868",
       "file_type": "rationale",
       "source_file": "modules/admin/services/sys/role_service.py",
-      "source_location": "L389",
-      "id": "sys_role_service_rationale_389",
-      "community": 290,
+      "source_location": "L403",
+      "id": "sys_role_service_rationale_403",
+      "community": 529,
       "norm_label": "\u6279\u91cf\u5220\u9664\u89d2\u8272          args:             db: \u6570\u636e\u5e93\u4f1a\u8bdd             role_ids: \u89d2\u8272id\u5217\u8868"
     },
     {
       "label": "\u6279\u91cf\u66f4\u65b0\u89d2\u8272\u72b6\u6001          Args:             db: \u6570\u636e\u5e93\u4f1a\u8bdd             role_ids: \u89d2\u8272ID\u5217\u8868",
       "file_type": "rationale",
       "source_file": "modules/admin/services/sys/role_service.py",
-      "source_location": "L421",
-      "id": "sys_role_service_rationale_421",
-      "community": 291,
+      "source_location": "L435",
+      "id": "sys_role_service_rationale_435",
+      "community": 530,
       "norm_label": "\u6279\u91cf\u66f4\u65b0\u89d2\u8272\u72b6\u6001          args:             db: \u6570\u636e\u5e93\u4f1a\u8bdd             role_ids: \u89d2\u8272id\u5217\u8868"
     },
     {
       "label": "\u83b7\u53d6\u6240\u6709\u542f\u7528\u7684\u89d2\u8272          Args:             db: \u6570\u636e\u5e93\u4f1a\u8bdd          Returns:",
       "file_type": "rationale",
       "source_file": "modules/admin/services/sys/role_service.py",
-      "source_location": "L457",
-      "id": "sys_role_service_rationale_457",
-      "community": 292,
+      "source_location": "L471",
+      "id": "sys_role_service_rationale_471",
+      "community": 531,
       "norm_label": "\u83b7\u53d6\u6240\u6709\u542f\u7528\u7684\u89d2\u8272          args:             db: \u6570\u636e\u5e93\u4f1a\u8bdd          returns:"
     },
     {
@@ -20145,7 +20145,7 @@
       "label": "get_constant_routes()",
       "file_type": "code",
       "source_file": "modules/admin/services/sys/route_service.py",
-      "source_location": "L267",
+      "source_location": "L270",
       "id": "sys_route_service_get_constant_routes",
       "community": 40,
       "norm_label": "get_constant_routes()"
@@ -20154,7 +20154,7 @@
       "label": "is_route_exist()",
       "file_type": "code",
       "source_file": "modules/admin/services/sys/route_service.py",
-      "source_location": "L302",
+      "source_location": "L305",
       "id": "sys_route_service_is_route_exist",
       "community": 40,
       "norm_label": "is_route_exist()"
@@ -20163,7 +20163,7 @@
       "label": "bool",
       "file_type": "code",
       "source_file": "modules/admin/services/sys/route_service.py",
-      "source_location": "L302",
+      "source_location": "L305",
       "id": "modules_admin_services_sys_route_service_py_bool",
       "community": 40,
       "norm_label": "bool"
@@ -20199,9 +20199,9 @@
       "label": "\u8fd4\u56de\u5e38\u91cf\u8def\u7531\uff08\u767b\u5f55\u9875\u3001\u9519\u8bef\u9875\u7b49\uff09\uff0c\u8fd9\u4e9b\u8def\u7531\u4e0d\u9700\u8981\u6743\u9650\u63a7\u5236",
       "file_type": "rationale",
       "source_file": "modules/admin/services/sys/route_service.py",
-      "source_location": "L268",
-      "id": "sys_route_service_rationale_268",
-      "community": 526,
+      "source_location": "L271",
+      "id": "sys_route_service_rationale_271",
+      "community": 532,
       "norm_label": "\u8fd4\u56de\u5e38\u91cf\u8def\u7531(\u767b\u5f55\u9875\u3001\u9519\u8bef\u9875\u7b49),\u8fd9\u4e9b\u8def\u7531\u4e0d\u9700\u8981\u6743\u9650\u63a7\u5236"
     },
     {
@@ -24026,7 +24026,7 @@
       "source_file": "modules/merchant/endpoints/merchant.py",
       "source_location": "L1",
       "id": "modules_merchant_endpoints_merchant_py",
-      "community": 83,
+      "community": 20,
       "norm_label": "merchant.py"
     },
     {
@@ -24494,7 +24494,7 @@
       "source_file": "modules/merchant/schemas/merchant.py",
       "source_location": "L1",
       "id": "modules_merchant_schemas_merchant_py",
-      "community": 83,
+      "community": 20,
       "norm_label": "merchant.py"
     },
     {
@@ -24512,7 +24512,7 @@
       "source_file": "modules/merchant/schemas/merchant.py",
       "source_location": "L21",
       "id": "schemas_merchant_merchantcreate",
-      "community": 83,
+      "community": 20,
       "norm_label": "merchantcreate"
     },
     {
@@ -24521,7 +24521,7 @@
       "source_file": "modules/merchant/schemas/merchant.py",
       "source_location": "L34",
       "id": "schemas_merchant_merchantupdate",
-      "community": 83,
+      "community": 20,
       "norm_label": "merchantupdate"
     },
     {
@@ -24530,7 +24530,7 @@
       "source_file": "modules/merchant/schemas/merchant.py",
       "source_location": "L47",
       "id": "schemas_merchant_merchantrobotbind",
-      "community": 83,
+      "community": 20,
       "norm_label": "merchantrobotbind"
     },
     {
@@ -24539,7 +24539,7 @@
       "source_file": "modules/merchant/schemas/merchant.py",
       "source_location": "L53",
       "id": "schemas_merchant_merchantstatusupdate",
-      "community": 83,
+      "community": 20,
       "norm_label": "merchantstatusupdate"
     },
     {
@@ -24548,7 +24548,7 @@
       "source_file": "modules/merchant/schemas/merchant.py",
       "source_location": "L59",
       "id": "schemas_merchant_merchantlistresponse",
-      "community": 83,
+      "community": 20,
       "norm_label": "merchantlistresponse"
     },
     {
@@ -24557,7 +24557,7 @@
       "source_file": "modules/merchant/schemas/merchant.py",
       "source_location": "L77",
       "id": "schemas_merchant_merchantdetailresponse",
-      "community": 83,
+      "community": 20,
       "norm_label": "merchantdetailresponse"
     },
     {
@@ -24566,7 +24566,7 @@
       "source_file": "modules/merchant/schemas/merchant.py",
       "source_location": "L96",
       "id": "schemas_merchant_merchantcreateresponse",
-      "community": 83,
+      "community": 20,
       "norm_label": "merchantcreateresponse"
     },
     {
@@ -24575,7 +24575,7 @@
       "source_file": "modules/merchant/schemas/merchant.py",
       "source_location": "L110",
       "id": "schemas_merchant_merchantapikeyresetresponse",
-      "community": 83,
+      "community": 20,
       "norm_label": "merchantapikeyresetresponse"
     },
     {
@@ -24584,7 +24584,7 @@
       "source_file": "modules/merchant/schemas/merchant.py",
       "source_location": "L35",
       "id": "schemas_merchant_rationale_35",
-      "community": 83,
+      "community": 20,
       "norm_label": "\u66f4\u65b0\u5546\u6237\u8bf7\u6c42(\u4e0d\u5141\u8bb8\u76f4\u63a5\u6539 api_key/api_secret,\u8d70\u91cd\u7f6e\u63a5\u53e3)"
     },
     {
@@ -24593,7 +24593,7 @@
       "source_file": "modules/merchant/schemas/merchant.py",
       "source_location": "L78",
       "id": "schemas_merchant_rationale_78",
-      "community": 83,
+      "community": 20,
       "norm_label": "\u5546\u6237\u8be6\u60c5\u54cd\u5e94(\u542b\u7ed1\u5b9a\u7684\u673a\u5668\u4ebaid,\u7528\u4e8e\u7f16\u8f91\u56de\u663e)"
     },
     {
@@ -24602,7 +24602,7 @@
       "source_file": "modules/merchant/schemas/merchant.py",
       "source_location": "L97",
       "id": "schemas_merchant_rationale_97",
-      "community": 83,
+      "community": 20,
       "norm_label": "\u521b\u5efa\u5546\u6237\u54cd\u5e94(api_secret \u660e\u6587\u4ec5\u6b64\u5904\u8fd4\u56de\u4e00\u6b21)"
     },
     {
@@ -24611,7 +24611,7 @@
       "source_file": "modules/merchant/schemas/merchant.py",
       "source_location": "L111",
       "id": "schemas_merchant_rationale_111",
-      "community": 83,
+      "community": 20,
       "norm_label": "\u91cd\u7f6e api \u5bc6\u94a5\u54cd\u5e94(api_secret \u660e\u6587\u4ec5\u6b64\u5904\u8fd4\u56de\u4e00\u6b21)"
     },
     {
@@ -30839,7 +30839,7 @@
       "source_file": "modules/scheduler/core/scheduler.py",
       "source_location": "L29",
       "id": "core_scheduler_schedulermanager",
-      "community": 11,
+      "community": 441,
       "norm_label": "schedulermanager"
     },
     {
@@ -30848,7 +30848,7 @@
       "source_file": "modules/scheduler/core/scheduler.py",
       "source_location": "L34",
       "id": "core_scheduler_schedulermanager_init",
-      "community": 11,
+      "community": 441,
       "norm_label": ".__init__()"
     },
     {
@@ -30884,7 +30884,7 @@
       "source_file": "modules/scheduler/core/scheduler.py",
       "source_location": "L53",
       "id": "core_scheduler_schedulermanager_start",
-      "community": 11,
+      "community": 441,
       "norm_label": ".start()"
     },
     {
@@ -30893,7 +30893,7 @@
       "source_file": "modules/scheduler/core/scheduler.py",
       "source_location": "L58",
       "id": "core_scheduler_schedulermanager_stop",
-      "community": 11,
+      "community": 441,
       "norm_label": ".stop()"
     },
     {
@@ -31811,7 +31811,7 @@
       "source_file": "modules/scheduler/tasks/builtin.py",
       "source_location": "L1",
       "id": "modules_scheduler_tasks_builtin_py",
-      "community": 525,
+      "community": 66,
       "norm_label": "builtin.py"
     },
     {
@@ -31820,7 +31820,7 @@
       "source_file": "modules/scheduler/tasks/builtin.py",
       "source_location": "L22",
       "id": "tasks_builtin_cleanup_operation_logs",
-      "community": 525,
+      "community": 66,
       "norm_label": "cleanup_operation_logs()"
     },
     {
@@ -31829,7 +31829,7 @@
       "source_file": "modules/scheduler/tasks/builtin.py",
       "source_location": "L44",
       "id": "tasks_builtin_cleanup_login_logs",
-      "community": 525,
+      "community": 66,
       "norm_label": "cleanup_login_logs()"
     },
     {
@@ -38545,6 +38545,60 @@
       "id": "grpc_readme_codeblock_31",
       "community": 89,
       "norm_label": "code:powershell (# 1. \u62c9\u53d6\u4e3b\u4ed3\u5e93\u548c\u5b50\u6a21\u5757)"
+    },
+    {
+      "label": "\u4e3a\u89d2\u8272\u5206\u914d\u83dc\u5355\u6743\u9650          Args:             db: \u6570\u636e\u5e93\u4f1a\u8bdd             role_id: \u89d2\u8272ID",
+      "file_type": "rationale",
+      "source_file": "modules/admin/services/sys/role_service.py",
+      "source_location": "L283",
+      "community": 288,
+      "norm_label": "\u4e3a\u89d2\u8272\u5206\u914d\u83dc\u5355\u6743\u9650          args:             db: \u6570\u636e\u5e93\u4f1a\u8bdd             role_id: \u89d2\u8272id",
+      "id": "sys_role_service_rationale_283"
+    },
+    {
+      "label": "\u5220\u9664\u89d2\u8272          Args:             db: \u6570\u636e\u5e93\u4f1a\u8bdd             role_id: \u89d2\u8272ID",
+      "file_type": "rationale",
+      "source_file": "modules/admin/services/sys/role_service.py",
+      "source_location": "L350",
+      "community": 289,
+      "norm_label": "\u5220\u9664\u89d2\u8272          args:             db: \u6570\u636e\u5e93\u4f1a\u8bdd             role_id: \u89d2\u8272id",
+      "id": "sys_role_service_rationale_350"
+    },
+    {
+      "label": "\u6279\u91cf\u5220\u9664\u89d2\u8272          Args:             db: \u6570\u636e\u5e93\u4f1a\u8bdd             role_ids: \u89d2\u8272ID\u5217\u8868",
+      "file_type": "rationale",
+      "source_file": "modules/admin/services/sys/role_service.py",
+      "source_location": "L389",
+      "community": 290,
+      "norm_label": "\u6279\u91cf\u5220\u9664\u89d2\u8272          args:             db: \u6570\u636e\u5e93\u4f1a\u8bdd             role_ids: \u89d2\u8272id\u5217\u8868",
+      "id": "sys_role_service_rationale_389"
+    },
+    {
+      "label": "\u6279\u91cf\u66f4\u65b0\u89d2\u8272\u72b6\u6001          Args:             db: \u6570\u636e\u5e93\u4f1a\u8bdd             role_ids: \u89d2\u8272ID\u5217\u8868",
+      "file_type": "rationale",
+      "source_file": "modules/admin/services/sys/role_service.py",
+      "source_location": "L421",
+      "community": 291,
+      "norm_label": "\u6279\u91cf\u66f4\u65b0\u89d2\u8272\u72b6\u6001          args:             db: \u6570\u636e\u5e93\u4f1a\u8bdd             role_ids: \u89d2\u8272id\u5217\u8868",
+      "id": "sys_role_service_rationale_421"
+    },
+    {
+      "label": "\u83b7\u53d6\u6240\u6709\u542f\u7528\u7684\u89d2\u8272          Args:             db: \u6570\u636e\u5e93\u4f1a\u8bdd          Returns:",
+      "file_type": "rationale",
+      "source_file": "modules/admin/services/sys/role_service.py",
+      "source_location": "L457",
+      "community": 292,
+      "norm_label": "\u83b7\u53d6\u6240\u6709\u542f\u7528\u7684\u89d2\u8272          args:             db: \u6570\u636e\u5e93\u4f1a\u8bdd          returns:",
+      "id": "sys_role_service_rationale_457"
+    },
+    {
+      "label": "\u8fd4\u56de\u5e38\u91cf\u8def\u7531\uff08\u767b\u5f55\u9875\u3001\u9519\u8bef\u9875\u7b49\uff09\uff0c\u8fd9\u4e9b\u8def\u7531\u4e0d\u9700\u8981\u6743\u9650\u63a7\u5236",
+      "file_type": "rationale",
+      "source_file": "modules/admin/services/sys/route_service.py",
+      "source_location": "L268",
+      "community": 526,
+      "norm_label": "\u8fd4\u56de\u5e38\u91cf\u8def\u7531(\u767b\u5f55\u9875\u3001\u9519\u8bef\u9875\u7b49),\u8fd9\u4e9b\u8def\u7531\u4e0d\u9700\u8981\u6743\u9650\u63a7\u5236",
+      "id": "sys_route_service_rationale_268"
     },
     {
       "label": "\u8fd4\u56de\u5e38\u91cf\u8def\u7531\uff08\u767b\u5f55\u9875\u3001\u9519\u8bef\u9875\u7b49\uff09\uff0c\u8fd9\u4e9b\u8def\u7531\u4e0d\u9700\u8981\u6743\u9650\u63a7\u5236",
@@ -188411,5 +188465,5 @@
     }
   ],
   "hyperedges": [],
-  "built_at_commit": "6aab4a9dd9ee066e537d6ced92d21412428bd936"
+  "built_at_commit": "eb16ac5b02c83f9f3e8c684c843bec663be46f05"
 }

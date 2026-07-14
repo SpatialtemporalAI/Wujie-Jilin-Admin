@@ -8,7 +8,7 @@
 import logging
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select
-from sqlalchemy.orm import joinedload, selectinload, noload
+from sqlalchemy.orm import selectinload, noload
 from typing import List, Optional
 
 from database.models.sys.user import SysUser
@@ -173,18 +173,21 @@ class RouteService:
             home = RouteService._find_first_leaf_route_name(routes) or "home"
             return UserRouteResponse(routes=routes, home=home, buttons=buttons)
         else:
-            # 预加载 user.roles.menus
+            # 用 selectinload 分两步加载 user.roles 与 role.menus：
+            # joinedload 会把关系加载并入主 SELECT，导致全局软删/租户过滤（do_orm_execute
+            # 在 is_relationship_load=False 时生效）作用到 roles/menus 上，可能裁掉
+            # 全局角色（sys_role 严格租户隔离）或同行软删菜单，造成权限并集丢失。
+            # selectinload 走独立关系查询，这两个过滤对关系查询会跳过，拿到完整并集；
+            # 软删由下方循环 menu.deleted_at 判断兜底。
             stmt = (
                 select(SysUser)
                 .options(
-                    joinedload(SysUser.roles).options(
-                        joinedload(SysRole.menus)
-                    )
+                    selectinload(SysUser.roles).selectinload(SysRole.menus)
                 )
                 .where(SysUser.id == user.id)
             )
             result = await db.execute(stmt)
-            user_with_relations = result.unique().scalar_one()
+            user_with_relations = result.scalar_one()
 
             # 收集所有启用的非 BUTTON 菜单 ID 以及 BUTTON 权限标识
             # 注意：分配了按钮 → 其父菜单必须可见（否则按钮无页面承载）

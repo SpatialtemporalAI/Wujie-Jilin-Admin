@@ -1,16 +1,16 @@
 # Graph Report - backend  (2026-07-14)
 
 ## Corpus Check
-- 423 files · ~129,303 words
+- 423 files · ~129,362 words
 - Verdict: corpus is large enough that graph structure adds value.
 
 ## Summary
-- 4354 nodes · 14367 edges · 527 communities (225 shown, 302 thin omitted)
+- 4360 nodes · 14367 edges · 533 communities (225 shown, 308 thin omitted)
 - Extraction: 59% EXTRACTED · 41% INFERRED · 0% AMBIGUOUS · INFERRED: 5937 edges (avg confidence: 0.5)
 - Token cost: 0 input · 0 output
 
 ## Graph Freshness
-- Built from commit: `6aab4a9d`
+- Built from commit: `eb16ac5b`
 - Run `git rev-parse HEAD` and compare to check if the graph is stale.
 - Run `graphify update .` after code changes (no API cost).
 
@@ -454,7 +454,14 @@
 - [[_COMMUNITY_Community 522|Community 522]]
 - [[_COMMUNITY_Community 523|Community 523]]
 - [[_COMMUNITY_Community 524|Community 524]]
+- [[_COMMUNITY_Community 525|Community 525]]
 - [[_COMMUNITY_Community 526|Community 526]]
+- [[_COMMUNITY_Community 527|Community 527]]
+- [[_COMMUNITY_Community 528|Community 528]]
+- [[_COMMUNITY_Community 529|Community 529]]
+- [[_COMMUNITY_Community 530|Community 530]]
+- [[_COMMUNITY_Community 531|Community 531]]
+- [[_COMMUNITY_Community 532|Community 532]]
 
 ## God Nodes (most connected - your core abstractions)
 1. `ResponseModel` - 354 edges
@@ -480,7 +487,7 @@
 - `AsyncSession` --uses--> `datetime`  [INFERRED]
   modules/admin/services/sys/monitor_service.py → database/utils/timezone.py
 
-## Communities (527 total, 302 thin omitted)
+## Communities (533 total, 308 thin omitted)
 
 ### Community 0 - "Community 0"
 Cohesion: 0.16
@@ -503,8 +510,8 @@ Cohesion: 0.06
 Nodes (81): Any, bytes, str, ExportColumn, get_export_config(), ModuleExportConfig, register_export(), ExportTemplateCreate (+73 more)
 
 ### Community 5 - "Community 5"
-Cohesion: 0.05
-Nodes (103): BaseEntity, BaseReqEntity, BaseRespEntity, str, str, str, int, int (+95 more)
+Cohesion: 0.04
+Nodes (113): ApiStatsQueryParams, BaseEntity, BaseReqEntity, BaseRespEntity, AsyncSession, str, str, str (+105 more)
 
 ### Community 6 - "Community 6"
 Cohesion: 0.05
@@ -527,8 +534,8 @@ Cohesion: 0.12
 Nodes (65): RobotEventLog, GrpcServiceConfigTD, RobotModel, 单套 gRPC 服务配置结构（agent / middleware / ros 共用）, 机器人 gRPC 配置 JSON 结构：agent / middleware / ros 三套可选, Robot, RobotGrpcConfigTD, RobotStatus (+57 more)
 
 ### Community 11 - "Community 11"
-Cohesion: 0.24
-Nodes (21): SchedulerManager, AsyncSession, bool, int, ScheduledTaskCreate, ScheduledTaskQueryParams, ScheduledTaskUpdate, str (+13 more)
+Cohesion: 0.28
+Nodes (20): AsyncSession, bool, int, ScheduledTaskCreate, ScheduledTaskQueryParams, ScheduledTaskUpdate, str, SysScheduledTask (+12 more)
 
 ### Community 12 - "Community 12"
 Cohesion: 0.15
@@ -564,15 +571,15 @@ Nodes (79): select_tenant(), assign_user_to_tenant(), create_tenant(), delete_te
 
 ### Community 20 - "Community 20"
 Cohesion: 0.06
-Nodes (76): PageRequest, ConfigGroup, AsyncSession, int, PageRequest, Request, str, SysConfigBatchUpdate (+68 more)
+Nodes (58): PageRequest, 系统用户查询参数模型     用于用户列表分页查询时的筛选条件, PageRequest, MerchantApiKeyResetResponse, MerchantCreate, MerchantCreateResponse, MerchantDetailResponse, MerchantListResponse (+50 more)
 
 ### Community 21 - "Community 21"
-Cohesion: 0.05
-Nodes (40): bool, int, parse_optional_enum(), parse_optional_int(), parse_positive_int(), 生成分页整数的 BeforeValidator：空值/非法值收敛为 default，<1 取 1，超过 max_value 截断。      用于 Page, 生成可选枚举校验器：空值收敛为 None，合法值原样返回，非法值抛错。      与 OptionalIntField 同款 BeforeValidator, serialize_id_output() (+32 more)
+Cohesion: 0.07
+Nodes (32): parse_optional_enum(), 生成可选枚举校验器：空值收敛为 None，合法值原样返回，非法值抛错。      与 OptionalIntField 同款 BeforeValidator, Any, RobotEventLogDetailResponse, RobotEventLogQueryParams, RobotEventLogResponse, GrpcServiceConfig, 机器人型号查询参数模型     用于型号列表分页查询时的筛选条件 (+24 more)
 
 ### Community 22 - "Community 22"
-Cohesion: 0.23
-Nodes (24): AsyncSession, bool, int, SysMenu, batch_delete_menus(), batch_update_menus_status(), build_menu_query(), build_menu_tree_list() (+16 more)
+Cohesion: 0.22
+Nodes (25): AsyncSession, bool, int, SysMenu, SysUser, batch_delete_menus(), batch_update_menus_status(), build_menu_query() (+17 more)
 
 ### Community 23 - "Community 23"
 Cohesion: 0.16
@@ -612,7 +619,7 @@ Nodes (47): control_video_monitoring(), create_face(), delete_face(), get_face_l
 
 ### Community 32 - "Community 32"
 Cohesion: 0.16
-Nodes (47): MenuType, AsyncSession, int, PageRequest, Request, SysMenuCreate, SysMenuQueryParams, SysMenuUpdate (+39 more)
+Nodes (46): MenuType, AsyncSession, int, PageRequest, Request, SysMenuCreate, SysMenuQueryParams, SysMenuUpdate (+38 more)
 
 ### Community 33 - "Community 33"
 Cohesion: 0.08
@@ -747,7 +754,7 @@ Cohesion: 0.15
 Nodes (19): bool, float, int, Request, Response, str, _capture_request_body(), _decode_jwt_sync() (+11 more)
 
 ### Community 66 - "Community 66"
-Cohesion: 0.20
+Cohesion: 0.17
 Nodes (27): AsyncSession, int, LoginLogQueryParams, PageRequest, SysUser, AsyncSession, bool, int (+19 more)
 
 ### Community 67 - "Community 67"
@@ -815,8 +822,8 @@ Cohesion: 0.18
 Nodes (33): GrpcRetryTask, MapRetryHelper, 地图类 gRPC 推送重试 helper（类方法风格，无需实例化）, gRPC 重试路由统一返回类型  重试服务（retry_service._retry_one）通过 _ROUTING 调用各配置 client / 地图 hel, 单次重试调用的统一结果      Attributes:         success: True → 本次推送成功，任务置 completed, RetryCallResult, _advance_fields(), _calc_next_retry() (+25 more)
 
 ### Community 83 - "Community 83"
-Cohesion: 0.12
-Nodes (22): ApiStatsQueryParams, AsyncSession, MerchantApiKeyResetResponse, MerchantCreate, MerchantCreateResponse, MerchantDetailResponse, MerchantListResponse, MerchantRobotBind (+14 more)
+Cohesion: 0.17
+Nodes (30): ConfigGroup, AsyncSession, int, PageRequest, Request, str, SysConfigBatchUpdate, SysConfigCreate (+22 more)
 
 ### Community 84 - "Community 84"
 Cohesion: 0.27
@@ -975,12 +982,12 @@ Cohesion: 0.26
 Nodes (26): AsyncSession, bool, int, str, 系统字典数据表     存储字典的具体数据项, batch_update_dict_item_status(), batch_update_dict_status(), build_dict_item_query() (+18 more)
 
 ### Community 441 - "Community 441"
-Cohesion: 0.17
-Nodes (15): _execute_task(), get_instance(), _load_function(), preview_cron(), 从数据库任务记录创建 APScheduler job, 根据 trigger_type 构建对应的 APScheduler trigger, APScheduler 调用的 job 入口, 执行单个任务：创建日志 -> 执行 -> 更新状态 (+7 more)
+Cohesion: 0.16
+Nodes (16): _execute_task(), get_instance(), _load_function(), preview_cron(), 从数据库任务记录创建 APScheduler job, 根据 trigger_type 构建对应的 APScheduler trigger, APScheduler 调用的 job 入口, 执行单个任务：创建日志 -> 执行 -> 更新状态 (+8 more)
 
 ### Community 442 - "Community 442"
-Cohesion: 0.17
-Nodes (17): AsyncSession, Select, get_paginated_results(), 获取分页查询结果     参数:         db: 数据库异步会话         page_params: 分页参数对象         que, batch_delete_logs(), clear_logs(), get_log(), get_log_list() (+9 more)
+Cohesion: 0.19
+Nodes (15): str, get_page_params(), 获取分页查询参数的依赖项。      page/page_size 以字符串接收（容忍空字符串 / "null" / "undefined" / "NaN", batch_delete_logs(), clear_logs(), get_log(), get_log_list(), AsyncSession (+7 more)
 
 ### Community 443 - "Community 443"
 Cohesion: 0.19
@@ -999,8 +1006,8 @@ Cohesion: 0.26
 Nodes (16): create_robot_model(), delete_robot_model(), get_all_robot_models(), get_robot_model(), get_robot_model_list(), 获取所有已启用的机器人型号（不分页，用于下拉选择）, update_robot_model(), AsyncSession (+8 more)
 
 ### Community 447 - "Community 447"
-Cohesion: 0.28
-Nodes (15): str, get_page_params(), 获取分页查询参数的依赖项。      page/page_size 以字符串接收（容忍空字符串 / "null" / "undefined" / "NaN", batch_delete_logs(), clear_logs(), delete_log(), _fill_robot_names(), get_event_log_detail() (+7 more)
+Cohesion: 0.24
+Nodes (17): AsyncSession, Select, get_paginated_results(), 获取分页查询结果     参数:         db: 数据库异步会话         page_params: 分页参数对象         que, batch_delete_logs(), clear_logs(), delete_log(), _fill_robot_names() (+9 more)
 
 ### Community 448 - "Community 448"
 Cohesion: 0.18
@@ -1034,19 +1041,23 @@ Nodes (8): MerchantCallLog, AsyncSession, CallLogQueryParams, int, batch_delete_
 Cohesion: 0.38
 Nodes (6): int, str, generate_session_id(), parse_session_info(), 基于用户ID和当前时间生成会话ID     参数:         user_id: 用户唯一标识         secret_salt: 用于增强安全, 验证会话ID并解析其中的时间信息（仅用于演示，实际中哈希值无法反向解析）     注意：哈希是单向的，此函数仅用于说明生成逻辑，实际中无法从session_i
 
+### Community 525 - "Community 525"
+Cohesion: 0.21
+Nodes (8): bool, int, parse_optional_int(), parse_positive_int(), 生成分页整数的 BeforeValidator：空值/非法值收敛为 default，<1 取 1，超过 max_value 截断。      用于 Page, serialize_id_output(), serialize_is_system_output(), serialize_status_output()
+
 ## Knowledge Gaps
 - **253 isolated node(s):** `python.languageServer`, `editor.formatOnSave`, `python.formatting.provider`, `python.linting.enabled`, `python.linting.pylintEnabled` (+248 more)
   These have ≤1 connection - possible missing edges or undocumented components.
-- **302 thin communities (<3 nodes) omitted from report** — run `graphify query` to explore isolated nodes.
+- **308 thin communities (<3 nodes) omitted from report** — run `graphify query` to explore isolated nodes.
 
 ## Suggested Questions
 _Questions this graph is uniquely positioned to answer:_
 
 - **Why does `NotFoundError` connect `Community 55` to `Community 0`, `Community 2`, `Community 3`, `Community 4`, `Community 7`, `Community 9`, `Community 10`, `Community 11`, `Community 12`, `Community 14`, `Community 15`, `Community 16`, `Community 17`, `Community 19`, `Community 22`, `Community 28`, `Community 31`, `Community 32`, `Community 34`, `Community 37`, `Community 41`, `Community 44`, `Community 50`, `Community 52`, `Community 439`, `Community 440`, `Community 56`, `Community 61`, `Community 445`, `Community 63`, `Community 447`, `Community 446`, `Community 66`, `Community 68`, `Community 453`, `Community 454`, `Community 71`, `Community 80`, `Community 88`, `Community 90`, `Community 94`?**
   _High betweenness centrality (0.096) - this node is a cross-community bridge._
-- **Why does `ResponseModel` connect `Community 1` to `Community 0`, `Community 2`, `Community 3`, `Community 4`, `Community 7`, `Community 8`, `Community 9`, `Community 10`, `Community 14`, `Community 16`, `Community 19`, `Community 20`, `Community 28`, `Community 31`, `Community 32`, `Community 37`, `Community 40`, `Community 48`, `Community 51`, `Community 52`, `Community 53`, `Community 439`, `Community 56`, `Community 442`, `Community 60`, `Community 445`, `Community 446`, `Community 447`, `Community 64`, `Community 63`, `Community 66`, `Community 71`, `Community 83`, `Community 87`, `Community 88`?**
+- **Why does `ResponseModel` connect `Community 1` to `Community 0`, `Community 2`, `Community 3`, `Community 4`, `Community 5`, `Community 7`, `Community 8`, `Community 9`, `Community 10`, `Community 14`, `Community 16`, `Community 19`, `Community 20`, `Community 28`, `Community 31`, `Community 32`, `Community 37`, `Community 40`, `Community 48`, `Community 51`, `Community 52`, `Community 53`, `Community 439`, `Community 56`, `Community 442`, `Community 60`, `Community 445`, `Community 446`, `Community 447`, `Community 64`, `Community 63`, `Community 66`, `Community 71`, `Community 83`, `Community 87`, `Community 88`?**
   _High betweenness centrality (0.060) - this node is a cross-community bridge._
-- **Why does `PageRequest` connect `Community 20` to `Community 0`, `Community 1`, `Community 2`, `Community 3`, `Community 4`, `Community 5`, `Community 7`, `Community 8`, `Community 9`, `Community 10`, `Community 14`, `Community 16`, `Community 19`, `Community 21`, `Community 31`, `Community 32`, `Community 48`, `Community 52`, `Community 56`, `Community 442`, `Community 445`, `Community 446`, `Community 447`, `Community 64`, `Community 63`, `Community 66`, `Community 80`, `Community 83`?**
+- **Why does `PageRequest` connect `Community 20` to `Community 0`, `Community 1`, `Community 2`, `Community 3`, `Community 4`, `Community 5`, `Community 7`, `Community 8`, `Community 9`, `Community 10`, `Community 525`, `Community 14`, `Community 16`, `Community 19`, `Community 31`, `Community 32`, `Community 48`, `Community 52`, `Community 56`, `Community 442`, `Community 445`, `Community 446`, `Community 447`, `Community 64`, `Community 63`, `Community 66`, `Community 80`, `Community 83`?**
   _High betweenness centrality (0.056) - this node is a cross-community bridge._
 - **Are the 205 inferred relationships involving `ResponseModel` (e.g. with `FastAPI` and `Request`) actually correct?**
   _`ResponseModel` has 205 INFERRED edges - model-reasoned connections that need verification._

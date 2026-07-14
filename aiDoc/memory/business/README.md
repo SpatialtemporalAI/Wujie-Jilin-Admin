@@ -88,4 +88,5 @@
 - [2026-07-13 gRPC 重试任务置 dead 时 next_retry_at 不能置 NULL](./2026-07-13_grpc-retry-dead-next-retry-not-null.md) — `_advance_fields` dead 分支删 `next_retry_at = None`（列为 NOT NULL，置空致 commit 抛 IntegrityError、任务每分钟卡死）；dead 行靠 status 过滤排除，无需改 schema/迁移
 - [2026-07-14 getPermissions 路由/按钮查询补软删除过滤](./2026-07-14_route-getpermissions-soft-delete-filter.md) — `get_user_routes` 5 处补 `deleted_at.is_(None)`（超管路由/按钮、role.menus 遍历、parent_map、menu_ids 查询），软删菜单/按钮不再进权限；按钮「缺失」多为 sys_role_menu 未显式分配（不继承父菜单），属数据问题
 - [2026-07-14 用户密码长度统一限定 6-20 字符](./2026-07-14_user-password-length-6-20.md) — 改密 `new_password` max_length 100→20 修复 422；前端改密规则补 max:20 + 4 个密码 NInput 加 :maxlength=20；登录密码字段不动（兼容历史长密码）
+- [2026-07-14 get_user_routes 改 selectinload 修复权限并集丢失](./2026-07-14_getuserroutes-joinedload-to-selectinload.md) — joinedload 把关系加载并入主 SELECT，全局软删/租户过滤（is_relationship_load=False 时生效）会裁掉全局角色（sys_role 严格隔离）；改 selectinload 走独立关系查询绕过过滤，拿完整并集
 - [2026-07-14 角色编辑重名校验](./2026-07-14_role-edit-duplicate-name-check.md) — `update_role` 改名重名原靠 DB unique 兜底，IntegrityError 无处理器→500"服务器错误"；补 commit 前重名查询（排除自身）抛 ConflictError 409"角色名称已存在"，前端无需改；补齐新增场景（create_role）的编辑侧缺口
