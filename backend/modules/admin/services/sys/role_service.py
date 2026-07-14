@@ -220,6 +220,7 @@ class RoleService:
         Raises:
             NotFoundError: 角色不存在
             ForbiddenError: 不能修改系统内置角色
+            ConflictError: 角色名称已存在
         """
         logger.info("更新角色信息，角色ID: %s", role_id)
 
@@ -233,6 +234,19 @@ class RoleService:
 
         # 更新角色信息
         update_data = role_update.model_dump(exclude_unset=True)
+
+        # 检查角色名称是否与其他角色重复（数据库 name 为唯一约束）
+        new_name = update_data.get("name")
+        if new_name is not None and new_name != role.name:
+            result = await db.execute(
+                select(SysRole).where(
+                    SysRole.name == new_name,
+                    SysRole.id != role_id,
+                )
+            )
+            if result.scalar_one_or_none():
+                logger.warning("更新角色失败，角色名称已存在，角色名: %s", new_name)
+                raise ConflictError(msg="角色名称已存在")
 
         # 处理菜单分配
         if "menu_ids" in update_data:
