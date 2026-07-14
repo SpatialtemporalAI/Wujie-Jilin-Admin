@@ -25,7 +25,7 @@
 - `backend/modules/admin/exports/__init__.py` 末尾 import 追加 `login_log_export, robot_event_log_export`。
 - 操作日志（operation_log）后端导出早已注册，零改动。
 
-约束：机器人事件日志导出列用 `robot_id`（非 robot_name）——`build_event_log_query` 只查单表不含 JOIN，普通导出路径（`result.unique().scalars().all()`）取不到 robot_name；为最小侵入未改通用导出服务。
+约束：机器人事件日志导出列用 `robot_id`（非 robot_name）——`build_event_log_query` 只查单表不含 JOIN，普通导出路径（`result.unique().scalars().all()`）取不到 robot_name；为最小侵入未改通用导出服务。（注：该约束已于 2026-07-14 通过通用 `enrich_fn` 回调补齐 `robot_name` 列解除，见 [[2026-07-14_robot-event-log-search-export-fix]]）
 
 ### 前端
 

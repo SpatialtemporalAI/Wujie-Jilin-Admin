@@ -14,6 +14,7 @@ EVENT_STATUS_MAP = {"abnormal": "严重故障", "warning": "告警提示", "norm
 _robot_event_log_columns = [
     ExportColumn("id", "ID", width=20, transform=str),
     ExportColumn("robot_id", "机器人ID", width=15, transform=str),
+    ExportColumn("robot_name", "机器人名称", width=20),
     ExportColumn("event_status", "事件状态", width=12,
                  transform=lambda v: EVENT_STATUS_MAP.get(v, v)),
     ExportColumn("event_content", "事件内容", width=40),
@@ -27,4 +28,5 @@ register_export(ModuleExportConfig(
     columns=_robot_event_log_columns,
     build_query_fn=RobotEventLogService.build_event_log_query,
     query_params_class=RobotEventLogQueryParams,
+    enrich_fn=RobotEventLogService.fill_robot_names,
 ))

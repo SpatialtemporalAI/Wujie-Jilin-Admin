@@ -11,6 +11,7 @@ from typing import List
 from datetime import datetime, timezone, timedelta
 
 from database.models.business.robot_event_log import RobotEventLog
+from database.models.business.robot import Robot
 from core.exception.errors import NotFoundError
 from modules.robot.schemas.robot_event_log import RobotEventLogQueryParams
 
@@ -52,6 +53,21 @@ class RobotEventLogService:
 
         base_query = base_query.order_by(RobotEventLog.created_at.desc())
         return base_query
+
+    @staticmethod
+    async def fill_robot_names(db: AsyncSession, records: list) -> None:
+        """批量填充机器人名称到 records（每条需有 robot_id 属性）。
+
+        单表查询（列表/导出）取不到 robot_name，统一在此按 robot_id 批量回填；
+        列表端点与导出 enrich_fn 复用同一实现。
+        """
+        if not records:
+            return
+        robot_ids = {record.robot_id for record in records}
+        result = await db.execute(select(Robot).where(Robot.id.in_(robot_ids)))
+        robot_map = {r.id: r.name for r in result.scalars().all()}
+        for record in records:
+            record.robot_name = robot_map.get(record.robot_id)
 
     @staticmethod
     async def get_log(db: AsyncSession, log_id: int) -> RobotEventLog:
