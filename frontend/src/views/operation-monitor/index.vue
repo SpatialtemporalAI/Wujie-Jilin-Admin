@@ -26,12 +26,8 @@ const {
     <NSpin :show="loading">
       <div class="flex flex-col gap-16px">
         <!-- 机器人选择 + 状态卡片 -->
-        <RobotStatusCard
-          :robot-list="robotList"
-          :selected-robot="selectedRobot"
-          :status-record="latestStatus"
-          @select="selectRobot"
-        />
+        <RobotStatusCard :robot-list="robotList" :selected-robot="selectedRobot" :status-record="latestStatus"
+          @select="selectRobot" />
 
         <!-- Tab 切换 -->
         <NCard :bordered="false" size="small" class="card-wrapper">
@@ -49,11 +45,8 @@ const {
                       </NSpace>
                     </template>
                     <div class="h-520px">
-                      <PositionMapPanel
-                        :map-id="selectedRobot?.map_id ?? null"
-                        :location="parsedLocation"
-                        :robot-name="selectedRobot?.name ?? ''"
-                      />
+                      <PositionMapPanel :map-id="selectedRobot?.map_id ?? null" :location="parsedLocation"
+                        :robot-name="selectedRobot?.name ?? ''" />
                     </div>
                   </NCard>
                 </NGi>
@@ -65,11 +58,8 @@ const {
               </NGrid>
             </NTabPane>
             <NTabPane name="video" tab="视频监控">
-              <VideoPlayer
-                :robot-id="selectedRobot?.id ?? 0"
-                :serial-number="selectedRobot?.serial_number ?? ''"
-                :status="selectedRobot?.status ?? 'offline'"
-              />
+              <VideoPlayer :robot-id="selectedRobot?.id ?? 0" :serial-number="selectedRobot?.serial_number ?? ''"
+                :status="selectedRobot?.status ?? 'offline'" />
             </NTabPane>
           </NTabs>
         </NCard>
