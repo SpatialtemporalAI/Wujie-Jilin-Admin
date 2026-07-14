@@ -142,7 +142,7 @@
 
 | 模块 | 字段 | 取值 |
 |------|------|------|
-| 机器人事件日志 | `event_type` / `event_status` | `task,alarm` / `normal,abnormal` |
+| 机器人事件日志 | `event_type` / `event_status` | `task,alarm` / `normal,abnormal,warning` |
 | 任务执行记录 | `status` / `source` | `pending,running,paused,cancelled,completed,failed` / `platform_schedule,voice_trigger,manual` |
 | 调度任务日志 | `status` | `running,success,timeout,failed` |
 
@@ -159,6 +159,8 @@
 | 前端接收 | `string` | `YYYY-MM-DD HH:mm:ss` |
 
 序列化由 `BaseEntity` 的 `json_encoders` 自动处理（`app/models/common/base.py`）。
+
+> **Excel 导出**不走 Pydantic 序列化，时间列须用 `database.utils.timezone.timezone.ftime`（同样转 `Asia/Shanghai` 再 strftime；naive 视为 UTC 兜底）。直接对 ORM datetime 调 `strftime` 会输出 UTC，比页面慢 8 小时。
 
 ### 前端 → 后端（请求参数）
 

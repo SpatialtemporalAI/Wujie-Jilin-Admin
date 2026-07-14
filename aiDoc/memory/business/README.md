@@ -92,3 +92,4 @@
 - [2026-07-14 角色编辑重名校验](./2026-07-14_role-edit-duplicate-name-check.md) — `update_role` 改名重名原靠 DB unique 兜底，IntegrityError 无处理器→500"服务器错误"；补 commit 前重名查询（排除自身）抛 ConflictError 409"角色名称已存在"，前端无需改；补齐新增场景（create_role）的编辑侧缺口
 - [2026-07-14 新增地图返回点创建下沉到后端](./2026-07-14_scene-map-create-builtin-return-point.md) — 新增地图后前端原需再调 /editor/save 写「扫图起始点」返回点（世界0,0）+version+1；改为后端 `SceneMapService.create` 直接建返回点并置 version=1，前端删 addAnnotation+saveMap，省一次往返、消除空地图中间态；annotation 存世界坐标故写死 (0,0) 等价，且 save 不触发 NotifyMapSaved 故不影响广播
 - [2026-07-14 地图编辑器无编辑权限时只读](./2026-07-14_map-editor-read-only-without-edit-permission.md) — 无 `scene:map-editor:edit` 时机器人总览切换地图 NSelect disabled；画布右键菜单入口拦截，提示「无编辑权限」不弹菜单；统一用 useAuth().hasAuth，与保存/删除按钮只读控制一致
+- [2026-07-14 机器人事件日志搜索 warning 非法值 + 导出时间东八区](./2026-07-14_robot-event-log-search-export-fix.md) — 后端 EventStatusField 枚举加 warning 统一前后端；导出去事件类型列、状态文案对齐三色标签；`TimeZone.ftime` 统一 6 个导出时间列为 Asia/Shanghai（原 strftime 直接输出 UTC）

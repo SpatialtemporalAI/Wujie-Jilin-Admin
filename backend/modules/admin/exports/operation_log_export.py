@@ -5,6 +5,7 @@ from core.utils.excel_export import ExportColumn
 from modules.admin.exports import ModuleExportConfig, register_export
 from modules.admin.services.sys.operation_log_service import OperationLogService
 from modules.admin.schemas.sys.operation_log import OperationLogQueryParams
+from database.utils.timezone import timezone
 
 _operation_log_columns = [
     ExportColumn("id", "ID", width=20, transform=str),
@@ -19,7 +20,7 @@ _operation_log_columns = [
     ExportColumn("response_code", "响应码", width=10),
     ExportColumn("elapsed_ms", "耗时(ms)", width=10),
     ExportColumn("created_at", "操作时间", width=22,
-                 transform=lambda v: v.strftime("%Y-%m-%d %H:%M:%S") if v else ""),
+                 transform=timezone.ftime),
 ]
 
 register_export(ModuleExportConfig(

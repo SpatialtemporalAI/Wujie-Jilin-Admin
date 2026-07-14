@@ -5,6 +5,7 @@ from core.utils.excel_export import ExportColumn
 from modules.admin.exports import ModuleExportConfig, register_export
 from modules.merchant.services.call_log_service import CallLogService
 from modules.merchant.schemas.call_log import CallLogQueryParams
+from database.utils.timezone import timezone
 
 _merchant_call_log_columns = [
     ExportColumn("id", "ID", width=20, transform=str),
@@ -28,7 +29,7 @@ _merchant_call_log_columns = [
         "created_at",
         "调用时间",
         width=22,
-        transform=lambda v: v.strftime("%Y-%m-%d %H:%M:%S") if v else "",
+        transform=timezone.ftime,
     ),
 ]
 
