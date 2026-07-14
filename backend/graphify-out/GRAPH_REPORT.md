@@ -1,16 +1,16 @@
-# Graph Report - backend  (2026-07-13)
+# Graph Report - backend  (2026-07-14)
 
 ## Corpus Check
-- 423 files · ~129,179 words
+- 423 files · ~129,303 words
 - Verdict: corpus is large enough that graph structure adds value.
 
 ## Summary
-- 4353 nodes · 14367 edges · 525 communities (224 shown, 301 thin omitted)
+- 4354 nodes · 14367 edges · 527 communities (225 shown, 302 thin omitted)
 - Extraction: 59% EXTRACTED · 41% INFERRED · 0% AMBIGUOUS · INFERRED: 5937 edges (avg confidence: 0.5)
 - Token cost: 0 input · 0 output
 
 ## Graph Freshness
-- Built from commit: `5af50d3f`
+- Built from commit: `6aab4a9d`
 - Run `git rev-parse HEAD` and compare to check if the graph is stale.
 - Run `graphify update .` after code changes (no API cost).
 
@@ -454,6 +454,7 @@
 - [[_COMMUNITY_Community 522|Community 522]]
 - [[_COMMUNITY_Community 523|Community 523]]
 - [[_COMMUNITY_Community 524|Community 524]]
+- [[_COMMUNITY_Community 526|Community 526]]
 
 ## God Nodes (most connected - your core abstractions)
 1. `ResponseModel` - 354 edges
@@ -479,7 +480,7 @@
 - `AsyncSession` --uses--> `datetime`  [INFERRED]
   modules/admin/services/sys/monitor_service.py → database/utils/timezone.py
 
-## Communities (525 total, 301 thin omitted)
+## Communities (527 total, 302 thin omitted)
 
 ### Community 0 - "Community 0"
 Cohesion: 0.16
@@ -746,7 +747,7 @@ Cohesion: 0.15
 Nodes (19): bool, float, int, Request, Response, str, _capture_request_body(), _decode_jwt_sync() (+11 more)
 
 ### Community 66 - "Community 66"
-Cohesion: 0.17
+Cohesion: 0.20
 Nodes (27): AsyncSession, int, LoginLogQueryParams, PageRequest, SysUser, AsyncSession, bool, int (+19 more)
 
 ### Community 67 - "Community 67"
@@ -758,8 +759,8 @@ Cohesion: 0.34
 Nodes (3): Any, int, str
 
 ### Community 69 - "Community 69"
-Cohesion: 0.21
-Nodes (11): float, int, str, Request, str, log_operation(), 操作日志装饰器      用法:         @log_operation(module="user", action="create", descr, _write_log() (+3 more)
+Cohesion: 0.18
+Nodes (13): float, int, str, Request, str, log_operation(), 操作日志装饰器      用法:         @log_operation(module="user", action="create", descr, _write_log() (+5 more)
 
 ### Community 70 - "Community 70"
 Cohesion: 0.26
@@ -842,8 +843,8 @@ Cohesion: 0.17
 Nodes (11): code:text (.), code:text (protos/user/user.proto), code:python (modules = ["map", "user"]), code:powershell (uv run python .\main.py), code:toml (dependencies = [), code:powershell (# 1. 拉取主仓库和子模块), Wujie-Jilin-Grpc, 推荐工作流 (+3 more)
 
 ### Community 90 - "Community 90"
-Cohesion: 0.13
-Nodes (28): MerchantCallLog, bool, bytes, float, int, Request, Response, str (+20 more)
+Cohesion: 0.15
+Nodes (26): MerchantCallLog, bool, bytes, float, int, Request, Response, str (+18 more)
 
 ### Community 91 - "Community 91"
 Cohesion: 0.29
@@ -1036,7 +1037,7 @@ Nodes (6): int, str, generate_session_id(), parse_session_info(), 基于用户ID
 ## Knowledge Gaps
 - **253 isolated node(s):** `python.languageServer`, `editor.formatOnSave`, `python.formatting.provider`, `python.linting.enabled`, `python.linting.pylintEnabled` (+248 more)
   These have ≤1 connection - possible missing edges or undocumented components.
-- **301 thin communities (<3 nodes) omitted from report** — run `graphify query` to explore isolated nodes.
+- **302 thin communities (<3 nodes) omitted from report** — run `graphify query` to explore isolated nodes.
 
 ## Suggested Questions
 _Questions this graph is uniquely positioned to answer:_

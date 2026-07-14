@@ -134,6 +134,7 @@ class RouteService:
         获取当前用户可用的路由树以及按钮权限标识列表
         - 超级用户返回所有非 BUTTON 类型的启用菜单 + 所有 BUTTON 权限
         - 普通用户通过 user.roles → role.menus 获取
+        - 所有查询/遍历均过滤 deleted_at IS NULL：软删的菜单/按钮不计入路由与按钮权限
         """
         buttons: list[str] = []
         if user.is_superuser:
@@ -143,6 +144,7 @@ class RouteService:
                     SysMenu.type != MenuType.BUTTON,
                     SysMenu.status == True,
                     SysMenu.parent_id.is_(None),
+                    SysMenu.deleted_at.is_(None),
                 )
                 .options(
                     selectinload(SysMenu.children).selectinload(SysMenu.children),
@@ -161,6 +163,7 @@ class RouteService:
             ).where(
                 SysMenu.type == MenuType.BUTTON,
                 SysMenu.status == True,
+                SysMenu.deleted_at.is_(None),
             )
             btn_result = await db.execute(btn_stmt)
             buttons = [
@@ -193,7 +196,7 @@ class RouteService:
                 if not role.status:
                     continue
                 for menu in role.menus:
-                    if not menu.status:
+                    if not menu.status or menu.deleted_at is not None:
                         continue
                     if menu.type == MenuType.BUTTON:
                         if menu.permission and menu.permission not in seen_perms:
@@ -207,7 +210,9 @@ class RouteService:
             # 一次性加载 id->parent_id 映射，在内存中解析祖先
             if menu_ids:
                 parent_result = await db.execute(
-                    select(SysMenu.id, SysMenu.parent_id)
+                    select(SysMenu.id, SysMenu.parent_id).where(
+                        SysMenu.deleted_at.is_(None)
+                    )
                 )
                 parent_map = dict(parent_result.all())
                 queue = list(menu_ids)
@@ -227,6 +232,7 @@ class RouteService:
                 .where(
                     SysMenu.id.in_(menu_ids),
                     SysMenu.status == True,
+                    SysMenu.deleted_at.is_(None),
                 )
                 .options(
                     noload(SysMenu.children),
