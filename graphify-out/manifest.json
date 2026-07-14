@@ -2510,8 +2510,8 @@
     "semantic_hash": ""
   },
   "D:\\project\\SpatialtemporalAi\\Wujie-Jilin-Admin\\aiDoc\\memory\\business\\README.md": {
-    "mtime": 1784003103.5630736,
-    "ast_hash": "0b1f9da352cd8d6ead948bb10138b77a",
+    "mtime": 1784009700.9750054,
+    "ast_hash": "01994a85cb74bffa137361bcc12b489f",
     "semantic_hash": ""
   },
   "D:\\project\\SpatialtemporalAi\\Wujie-Jilin-Admin\\aiDoc\\memory\\business\\TEMPLATE.md": {
@@ -5185,8 +5185,8 @@
     "semantic_hash": ""
   },
   "D:\\project\\SpatialtemporalAi\\Wujie-Jilin-Admin\\frontend\\src\\views\\map-editor\\index.vue": {
-    "mtime": 1784002871.4002306,
-    "ast_hash": "1a5f9acdd0bd419cb4fae00f7cf47ecf",
+    "mtime": 1784003637.0200863,
+    "ast_hash": "08edc3ad210ef7de900cfa8b78bef2cc",
     "semantic_hash": ""
   },
   "D:\\project\\SpatialtemporalAi\\Wujie-Jilin-Admin\\frontend\\src\\views\\map-editor\\composables\\useMapEditor.ts": {
@@ -5205,8 +5205,8 @@
     "semantic_hash": ""
   },
   "D:\\project\\SpatialtemporalAi\\Wujie-Jilin-Admin\\frontend\\src\\views\\map-editor\\modules\\property-panel.vue": {
-    "mtime": 1783392520.2849874,
-    "ast_hash": "3117c325c8cd3a727d9041e4c2c627a8",
+    "mtime": 1784003549.10428,
+    "ast_hash": "17654beaee84b27f744c5d76fc73fb34",
     "semantic_hash": ""
   },
   "D:\\project\\SpatialtemporalAi\\Wujie-Jilin-Admin\\frontend\\src\\views\\map-editor\\utils\\robot-location.ts": {
@@ -5457,6 +5457,11 @@
   "D:\\project\\SpatialtemporalAi\\Wujie-Jilin-Admin\\aiDoc\\memory\\business\\2026-07-14_scene-map-create-builtin-return-point.md": {
     "mtime": 1784003081.353979,
     "ast_hash": "529a230bd49e4f25a69fa5ff9490121c",
+    "semantic_hash": ""
+  },
+  "D:\\project\\SpatialtemporalAi\\Wujie-Jilin-Admin\\aiDoc\\memory\\business\\2026-07-14_map-editor-read-only-without-edit-permission.md": {
+    "mtime": 1784009674.4162278,
+    "ast_hash": "c595515952efc638fcf0c07cf8693a33",
     "semantic_hash": ""
   }
 }
