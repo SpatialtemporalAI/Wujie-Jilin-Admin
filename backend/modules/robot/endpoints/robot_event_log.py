@@ -32,19 +32,6 @@ robot_event_log_router = APIRouter(
 )
 
 
-async def _fill_robot_names(db: AsyncSession, records: list) -> None:
-    """批量填充机器人名称"""
-    if not records:
-        return
-
-    robot_ids = {record.robot_id for record in records}
-    result = await db.execute(select(Robot).where(Robot.id.in_(robot_ids)))
-    robot_map = {r.id: r.name for r in result.scalars().all()}
-
-    for record in records:
-        record.robot_name = robot_map.get(record.robot_id)
-
-
 @robot_event_log_router.get(
     "/list",
     response_model=ResponsePageModel[RobotEventLogResponse],
@@ -66,7 +53,7 @@ async def get_event_log_list(
         schema=RobotEventLogResponse,
     )
     if page_data.records:
-        await _fill_robot_names(db, page_data.records)
+        await RobotEventLogService.fill_robot_names(db, page_data.records)
     return response_base.page(data=page_data)
 
 

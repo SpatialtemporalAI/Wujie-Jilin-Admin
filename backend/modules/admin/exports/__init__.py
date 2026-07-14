@@ -6,9 +6,10 @@
 每个可导出的业务模块通过 register_export 注册列配置和查询函数
 """
 from dataclasses import dataclass
-from typing import Callable, Dict, Sequence, Type
+from typing import Any, Awaitable, Callable, Dict, Sequence, Type
 
 from pydantic import BaseModel
+from sqlalchemy.ext.asyncio import AsyncSession
 
 from core.utils.excel_export import ExportColumn
 
@@ -20,6 +21,8 @@ class ModuleExportConfig:
     columns: Sequence[ExportColumn]
     build_query_fn: Callable
     query_params_class: Type[BaseModel] | None = None
+    # 可选：单表导出拉取 ORM 行后，补充跨表字段（如机器人名称）的异步回调
+    enrich_fn: Callable[[AsyncSession, list[Any]], Awaitable[None]] | None = None
 
 
 EXPORT_REGISTRY: Dict[str, ModuleExportConfig] = {}

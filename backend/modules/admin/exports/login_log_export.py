@@ -5,6 +5,7 @@ from core.utils.excel_export import ExportColumn
 from modules.admin.exports import ModuleExportConfig, register_export
 from modules.admin.services.sys.login_log_service import LoginLogService
 from modules.admin.schemas.sys.login_log import LoginLogQueryParams
+from database.utils.timezone import timezone
 
 _login_log_columns = [
     ExportColumn("id", "ID", width=20, transform=str),
@@ -15,7 +16,7 @@ _login_log_columns = [
     ExportColumn("detail", "详情", width=30),
     ExportColumn("user_agent", "登录设备", width=30),
     ExportColumn("login_time", "登录时间", width=22,
-                 transform=lambda v: v.strftime("%Y-%m-%d %H:%M:%S") if v else ""),
+                 transform=timezone.ftime),
 ]
 
 register_export(ModuleExportConfig(

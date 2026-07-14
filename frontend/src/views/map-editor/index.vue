@@ -3,6 +3,7 @@ import { computed, h, nextTick, onMounted, onBeforeUnmount, ref, watch } from 'v
 import type { DialogReactive, UploadFileInfo } from 'naive-ui';
 import { NButton, NSpace, useDialog, useMessage } from 'naive-ui';
 import { $t } from '@/locales';
+import { useAuth } from '@/hooks/business/auth';
 import { useMapEditor } from './composables/useMapEditor';
 import type { SelectedElement } from './composables/useMapEditor';
 import EditorToolbar from './modules/editor-toolbar.vue';
@@ -19,6 +20,7 @@ const message = useMessage()
 const dialog = useDialog()
 
 const editor = useMapEditor();
+const { hasAuth } = useAuth();
 const canvasRef = ref<InstanceType<typeof CanvasEditor>>();
 
 const zoomLevel = ref(1);
@@ -544,17 +546,8 @@ async function confirmSceneSubmit() {
         const switched = await switchMap(data.id);
         if (!switched) return false;
 
-        // 返回点固定在世界坐标 (0,0)，与场景 start_point 无关
-        const origin = editor.worldToPixelCoords(0, 0);
-        editor.addAnnotation({
-          x: origin.x,
-          y: origin.y,
-          name: '扫图起始点',
-          angle: 0,
-          type: 'navigation',
-        });
-        await editor.saveMap({ silent: true });
-
+        // 「扫图起始点」返回点（世界坐标 0,0）已由后端 scene/map/add 创建，
+        // switchMap→loadMap 会自动载入，前端无需再调用 /editor/save
         window.$message?.success('创建成功');
       }
     } catch (e: any) {
@@ -609,6 +602,11 @@ async function handleDeleteScene(mapId: number) {
 }
 
 function handleContextMenu(data: { x: number; y: number; clientX: number; clientY: number; target: { type: 'annotation' | 'object'; id: number } | null }) {
+  // 无编辑权限时禁用整个右键菜单（添加点位/障碍物/禁区/删除等均为编辑操作）
+  if (!hasAuth('scene:map-editor:edit')) {
+    window.$message?.warning('无编辑权限');
+    return;
+  }
   contextMenuScenePoint.value = { x: data.x, y: data.y };
   contextMenuX.value = data.clientX;
   contextMenuY.value = data.clientY;

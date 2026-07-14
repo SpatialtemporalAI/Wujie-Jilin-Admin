@@ -8,7 +8,7 @@
 import logging
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select
-from sqlalchemy.orm import joinedload, selectinload, noload
+from sqlalchemy.orm import selectinload, noload
 from typing import List, Optional
 
 from database.models.sys.user import SysUser
@@ -134,6 +134,7 @@ class RouteService:
         获取当前用户可用的路由树以及按钮权限标识列表
         - 超级用户返回所有非 BUTTON 类型的启用菜单 + 所有 BUTTON 权限
         - 普通用户通过 user.roles → role.menus 获取
+        - 所有查询/遍历均过滤 deleted_at IS NULL：软删的菜单/按钮不计入路由与按钮权限
         """
         buttons: list[str] = []
         if user.is_superuser:
@@ -143,6 +144,7 @@ class RouteService:
                     SysMenu.type != MenuType.BUTTON,
                     SysMenu.status == True,
                     SysMenu.parent_id.is_(None),
+                    SysMenu.deleted_at.is_(None),
                 )
                 .options(
                     selectinload(SysMenu.children).selectinload(SysMenu.children),
@@ -161,6 +163,7 @@ class RouteService:
             ).where(
                 SysMenu.type == MenuType.BUTTON,
                 SysMenu.status == True,
+                SysMenu.deleted_at.is_(None),
             )
             btn_result = await db.execute(btn_stmt)
             buttons = [
@@ -170,18 +173,21 @@ class RouteService:
             home = RouteService._find_first_leaf_route_name(routes) or "home"
             return UserRouteResponse(routes=routes, home=home, buttons=buttons)
         else:
-            # 预加载 user.roles.menus
+            # 用 selectinload 分两步加载 user.roles 与 role.menus：
+            # joinedload 会把关系加载并入主 SELECT，导致全局软删/租户过滤（do_orm_execute
+            # 在 is_relationship_load=False 时生效）作用到 roles/menus 上，可能裁掉
+            # 全局角色（sys_role 严格租户隔离）或同行软删菜单，造成权限并集丢失。
+            # selectinload 走独立关系查询，这两个过滤对关系查询会跳过，拿到完整并集；
+            # 软删由下方循环 menu.deleted_at 判断兜底。
             stmt = (
                 select(SysUser)
                 .options(
-                    joinedload(SysUser.roles).options(
-                        joinedload(SysRole.menus)
-                    )
+                    selectinload(SysUser.roles).selectinload(SysRole.menus)
                 )
                 .where(SysUser.id == user.id)
             )
             result = await db.execute(stmt)
-            user_with_relations = result.unique().scalar_one()
+            user_with_relations = result.scalar_one()
 
             # 收集所有启用的非 BUTTON 菜单 ID 以及 BUTTON 权限标识
             # 注意：分配了按钮 → 其父菜单必须可见（否则按钮无页面承载）
@@ -193,7 +199,7 @@ class RouteService:
                 if not role.status:
                     continue
                 for menu in role.menus:
-                    if not menu.status:
+                    if not menu.status or menu.deleted_at is not None:
                         continue
                     if menu.type == MenuType.BUTTON:
                         if menu.permission and menu.permission not in seen_perms:
@@ -207,7 +213,9 @@ class RouteService:
             # 一次性加载 id->parent_id 映射，在内存中解析祖先
             if menu_ids:
                 parent_result = await db.execute(
-                    select(SysMenu.id, SysMenu.parent_id)
+                    select(SysMenu.id, SysMenu.parent_id).where(
+                        SysMenu.deleted_at.is_(None)
+                    )
                 )
                 parent_map = dict(parent_result.all())
                 queue = list(menu_ids)
@@ -227,6 +235,7 @@ class RouteService:
                 .where(
                     SysMenu.id.in_(menu_ids),
                     SysMenu.status == True,
+                    SysMenu.deleted_at.is_(None),
                 )
                 .options(
                     noload(SysMenu.children),

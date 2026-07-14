@@ -353,6 +353,7 @@ onMounted(() => {
                 <div class="mt-8px flex items-center gap-8px">
                   <NSelect :value="robot.map_id ?? null" :options="sceneOptions" size="tiny" clearable
                     placeholder="绑定场景" class="min-w-0 flex-1" :loading="bindingRobotId === robot.id"
+                    :disabled="!hasAuth('scene:map-editor:edit')"
                     @update:value="value => updateRobotMap(robot, value as number | null)" />
                   <NButton size="tiny" type="primary" ghost :loading="locatingRobotId === robot.id"
                     @click="locateRobot(robot)">

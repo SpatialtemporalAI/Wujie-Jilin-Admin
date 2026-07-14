@@ -77,7 +77,9 @@ start() {
 
     if kill -0 "${PID}" 2>/dev/null; then
         echo "[SUCCESS] 启动成功 PID=${PID}"
-        echo "[INFO] 日志文件: ${LOG_FILE}"
+        echo "[INFO] 日志文件(gunicorn): ${LOG_FILE}"
+        # info.log / error.log 由 logging_prod.ini 的 file handler 写入（同名约定，改 ini 需同步此行）
+        echo "[INFO] 日志文件(logging): ${LOG_DIR}/info.log, ${LOG_DIR}/error.log"
     else
         echo "[ERROR] 启动失败"
         exit 1

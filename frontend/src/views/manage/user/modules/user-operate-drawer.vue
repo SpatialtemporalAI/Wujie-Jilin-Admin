@@ -242,6 +242,7 @@ watch(visible, () => {
           <NInput
             v-model:value="model.password"
             type="password"
+            :maxlength="20"
             :placeholder="$t('page.manage.user.form.newPassword')"
           />
         </NFormItem>
@@ -253,6 +254,7 @@ watch(visible, () => {
           <NInput
             v-model:value="model.confirmPassword"
             type="password"
+            :maxlength="20"
             :placeholder="$t('page.manage.user.form.confirmPassword')"
           />
         </NFormItem>

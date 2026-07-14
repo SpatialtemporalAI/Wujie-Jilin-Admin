@@ -170,6 +170,10 @@ class ExportTaskService:
                     result = await db.execute(query)
                     rows = result.unique().scalars().all()
 
+                    # 单表导出可注册 enrich_fn 补充跨表字段（如机器人名称）
+                    if config.enrich_fn:
+                        await config.enrich_fn(db, rows)
+
                 # 生成 Excel
                 excel_bytes = build_excel_bytes(columns, rows, sheet_name=config.name)
 

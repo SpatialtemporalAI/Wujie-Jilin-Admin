@@ -5,6 +5,7 @@ from core.utils.excel_export import ExportColumn
 from modules.admin.exports import ModuleExportConfig, register_export
 from modules.admin.services.sys import UserService
 from modules.admin.schemas.sys.user import SysUserQueryParams
+from database.utils.timezone import timezone
 
 _user_columns = [
     ExportColumn("id", "ID", width=20, transform=str),
@@ -19,12 +20,12 @@ _user_columns = [
     ExportColumn("roles", "角色", width=30,
                  transform=lambda roles: ", ".join(r.name for r in roles) if roles else ""),
     ExportColumn("last_login_at", "最后登录", width=22,
-                 transform=lambda v: v.strftime("%Y-%m-%d %H:%M:%S") if v else ""),
+                 transform=timezone.ftime),
     ExportColumn("last_login_ip", "最后登录IP", width=18),
     ExportColumn("created_at", "创建时间", width=22,
-                 transform=lambda v: v.strftime("%Y-%m-%d %H:%M:%S") if v else ""),
+                 transform=timezone.ftime),
     ExportColumn("updated_at", "更新时间", width=22,
-                 transform=lambda v: v.strftime("%Y-%m-%d %H:%M:%S") if v else ""),
+                 transform=timezone.ftime),
 ]
 
 register_export(ModuleExportConfig(
