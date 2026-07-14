@@ -41,8 +41,9 @@ const rules: Record<keyof Model, App.Global.FormRule[]> = {
     defaultRequiredRule,
     {
       min: 6,
-      message: $t('page.manage.user.form.passwordMinLength'),
-      trigger: 'blur'
+      max: 20,
+      trigger: 'blur',
+      message: $t('page.manage.user.form.passwordLength')
     }
   ],
   confirmPassword: [
@@ -95,6 +96,7 @@ async function handleSubmit() {
           <NInput
             v-model:value="model.newPassword"
             type="password"
+            :maxlength="20"
             :placeholder="$t('page.manage.user.form.newPassword')"
           />
         </NFormItem>
@@ -102,6 +104,7 @@ async function handleSubmit() {
           <NInput
             v-model:value="model.confirmPassword"
             type="password"
+            :maxlength="20"
             :placeholder="$t('page.manage.user.form.confirmPassword')"
           />
         </NFormItem>

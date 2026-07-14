@@ -128,7 +128,7 @@ class SysUserPasswordUpdate(BaseEntity):
     """
 
     old_password: Optional[str] = Field(None, description="旧密码")
-    new_password: str = Field(..., description="新密码", min_length=6, max_length=100)
+    new_password: str = Field(..., description="新密码", min_length=6, max_length=20)
 
 
 class SysUserSimpleResponse(BaseRespEntity):
