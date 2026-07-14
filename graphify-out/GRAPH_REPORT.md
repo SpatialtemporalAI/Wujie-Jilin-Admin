@@ -1,16 +1,16 @@
 # Graph Report - Wujie-Jilin-Admin  (2026-07-14)
 
 ## Corpus Check
-- 1042 files · ~533,256 words
+- 1042 files · ~533,301 words
 - Verdict: corpus is large enough that graph structure adds value.
 
 ## Summary
-- 10710 nodes · 21140 edges · 1470 communities (848 shown, 622 thin omitted)
+- 10710 nodes · 21140 edges · 1471 communities (849 shown, 622 thin omitted)
 - Extraction: 66% EXTRACTED · 34% INFERRED · 0% AMBIGUOUS · INFERRED: 7262 edges (avg confidence: 0.52)
 - Token cost: 0 input · 0 output
 
 ## Graph Freshness
-- Built from commit: `dbfbea48`
+- Built from commit: `78077b53`
 - Run `git rev-parse HEAD` and compare to check if the graph is stale.
 - Run `graphify update .` after code changes (no API cost).
 
@@ -1202,6 +1202,7 @@
 - [[_COMMUNITY_Community 1467|Community 1467]]
 - [[_COMMUNITY_Community 1468|Community 1468]]
 - [[_COMMUNITY_Community 1469|Community 1469]]
+- [[_COMMUNITY_Community 1470|Community 1470]]
 
 ## God Nodes (most connected - your core abstractions)
 1. `NotFoundError` - 326 edges
@@ -1241,7 +1242,7 @@
 - **App Branding and Identity Assets** — favicon_app_brand_icon, logo_sidebar_brand, banner_dashboard_hero, soybean_mascot [INFERRED 0.80]
 - **Feather-style Action Icons** — activity_heartbeat_icon, copy_clipboard_icon, cast_screencast_icon, heart_favorite_icon, wind_airflow_icon, at_sign_email_icon [INFERRED 0.85]
 
-## Communities (1470 total, 622 thin omitted)
+## Communities (1471 total, 622 thin omitted)
 
 ### Community 0 - "Community 0"
 Cohesion: 0.16
@@ -1288,8 +1289,8 @@ Cohesion: 0.17
 Nodes (29): AutoMcpToolCreate, McpToolTestRequest, SysUser, AutoMcpToolCreate, McpToolTestRequest, str, McpServerStatusResponse, McpToolInfo (+21 more)
 
 ### Community 11 - "Community 11"
-Cohesion: 0.07
-Nodes (46): str, BaseReqEntity, ClientIDModel, code_validator(), CurrentRobotModel, LoginModel, phone_validator(), refresh_token_validator() (+38 more)
+Cohesion: 0.24
+Nodes (13): ClientIDModel, code_validator(), CurrentRobotModel, LoginModel, phone_validator(), refresh_token_validator(), RefreshTokenModel, SmsCodeModel (+5 more)
 
 ### Community 13 - "Community 13"
 Cohesion: 0.10
@@ -1321,7 +1322,7 @@ Nodes (67): AsyncSession, int, PageRequest, Request, SysRoleCreate, SysRoleQuery
 
 ### Community 20 - "Community 20"
 Cohesion: 0.04
-Nodes (68): str, int, int, str, BaseEntity, MerchantApiKeyResetResponse, MerchantCreate, MerchantCreateResponse (+60 more)
+Nodes (103): str, str, str, int, str, BaseEntity, BaseRespEntity, CallLogDetailResponse (+95 more)
 
 ### Community 21 - "Community 21"
 Cohesion: 0.06
@@ -1345,7 +1346,7 @@ Nodes (42): async_sessionmaker, AsyncEngine, DatabaseModel, str, Any, AsyncSessi
 
 ### Community 26 - "Community 26"
 Cohesion: 0.06
-Nodes (49): str, BaseRespEntity, CallLogDetailResponse, CallLogQueryParams, CallLogResponse, 调用日志列表响应（不含请求参数/响应结果，详情接口提供）, 调用日志详情响应（含脱敏后的请求参数/响应结果）, 场景分组简化响应模型     用于下拉选择等轻量场景，仅暴露 id / name (+41 more)
+Nodes (47): int, BaseReqEntity, FaceDbCreate, FaceDbListResponse, FaceDetectItem, FaceDetectResponse, FaceEntityCreate, FaceEntityDetail (+39 more)
 
 ### Community 27 - "Community 27"
 Cohesion: 0.24
@@ -1472,8 +1473,8 @@ Cohesion: 0.09
 Nodes (81): AsyncSession, int, PageRequest, Request, SysMenuCreate, SysMenuQueryParams, SysMenuUpdate, SysUser (+73 more)
 
 ### Community 60 - "Community 60"
-Cohesion: 0.18
-Nodes (10): str, McpContext, str, TextContent, ToolParam, McpHttpClient, QueryDictionaries, tool_description() (+2 more)
+Cohesion: 0.24
+Nodes (8): McpContext, str, TextContent, ToolParam, QueryDictionaries, tool_description(), tool_name(), tool_params()
 
 ### Community 61 - "Community 61"
 Cohesion: 0.12
@@ -1516,8 +1517,8 @@ Cohesion: 0.12
 Nodes (17): compilerOptions, allowSyntheticDefaultImports, baseUrl, esModuleInterop, forceConsistentCasingInFileNames, jsx, lib, module (+9 more)
 
 ### Community 71 - "Community 71"
-Cohesion: 0.16
-Nodes (13): McpContext, TextContent, McpContext, str, TextContent, ToolParam, McpContext, McpTool (+5 more)
+Cohesion: 0.18
+Nodes (10): str, McpContext, str, TextContent, ToolParam, McpHttpClient, CreateMenu, tool_description() (+2 more)
 
 ### Community 72 - "Community 72"
 Cohesion: 0.12
@@ -1568,8 +1569,8 @@ Cohesion: 0.20
 Nodes (9): 任务场景筛选显示与地图编辑器场景名, 前端, 后端, 涉及范围, 状态, 相关文件, 约束与备注, 记录日期 (+1 more)
 
 ### Community 84 - "Community 84"
-Cohesion: 0.17
-Nodes (13): str, TextContent, McpContext, str, TextContent, ToolParam, text_result(), text_result_error() (+5 more)
+Cohesion: 0.16
+Nodes (13): McpContext, TextContent, McpContext, str, TextContent, ToolParam, McpContext, McpTool (+5 more)
 
 ### Community 85 - "Community 85"
 Cohesion: 0.26
@@ -1708,8 +1709,8 @@ Cohesion: 0.13
 Nodes (11): ASGIApp, FastAPI, int, str, 从 JWT Authorization header 中提取 tenant_id 并设置到 contextvars。     在 RequestContext, TenantContextMiddleware, _import_model(), MultiTenantPlugin (+3 more)
 
 ### Community 119 - "Community 119"
-Cohesion: 0.24
-Nodes (8): McpContext, str, TextContent, ToolParam, CodeExecute, tool_description(), tool_name(), tool_params()
+Cohesion: 0.17
+Nodes (13): str, TextContent, McpContext, str, TextContent, ToolParam, text_result(), text_result_error() (+5 more)
 
 ### Community 120 - "Community 120"
 Cohesion: 0.24
@@ -1820,8 +1821,8 @@ Cohesion: 0.29
 Nodes (7): sider, collapsedWidth, inverted, mixChildMenuWidth, mixCollapsedWidth, mixWidth, width
 
 ### Community 147 - "Community 147"
-Cohesion: 0.09
-Nodes (74): AsyncSession, int, PageRequest, Request, RobotCreate, RobotMapBindingUpdate, RobotQueryParams, RobotUpdate (+66 more)
+Cohesion: 0.14
+Nodes (44): AsyncSession, bool, int, Robot, RobotCreate, RobotMapBindingUpdate, RobotQueryParams, RobotUpdate (+36 more)
 
 ### Community 148 - "Community 148"
 Cohesion: 0.15
@@ -3503,6 +3504,10 @@ Nodes (3): handleOpenAddScene(), handleOpenEditScene(), resetSceneForm()
 Cohesion: 0.67
 Nodes (3): 🌟 功能特点, 技术特性, 核心功能
 
+### Community 1470 - "Community 1470"
+Cohesion: 0.19
+Nodes (30): AsyncSession, int, PageRequest, Request, RobotCreate, RobotMapBindingUpdate, RobotQueryParams, RobotUpdate (+22 more)
+
 ## Knowledge Gaps
 - **3309 isolated node(s):** `allow`, `PreToolUse`, `allow`, `additionalDirectories`, `recommendations` (+3304 more)
   These have ≤1 connection - possible missing edges or undocumented components.
@@ -3513,7 +3518,7 @@ _Questions this graph is uniquely positioned to answer:_
 
 - **Why does `Client` connect `Community 1` to `Community 41`, `Community 1451`, `Community 28`, `Community 863`?**
   _High betweenness centrality (0.072) - this node is a cross-community bridge._
-- **Why does `ResponseModel` connect `Community 1229` to `Community 1`, `Community 3`, `Community 6`, `Community 9`, `Community 10`, `Community 19`, `Community 147`, `Community 21`, `Community 150`, `Community 34`, `Community 676`, `Community 38`, `Community 41`, `Community 177`, `Community 178`, `Community 59`, `Community 1226`, `Community 488`, `Community 509`?**
+- **Why does `ResponseModel` connect `Community 1229` to `Community 1`, `Community 3`, `Community 6`, `Community 9`, `Community 10`, `Community 19`, `Community 21`, `Community 150`, `Community 34`, `Community 676`, `Community 38`, `Community 41`, `Community 177`, `Community 178`, `Community 59`, `Community 1470`, `Community 1226`, `Community 488`, `Community 509`?**
   _High betweenness centrality (0.043) - this node is a cross-community bridge._
 - **Why does `RequestError` connect `Community 41` to `Community 1`, `Community 1444`, `Community 4`, `Community 5`, `Community 543`, `Community 17`, `Community 886`, `Community 863`?**
   _High betweenness centrality (0.043) - this node is a cross-community bridge._
