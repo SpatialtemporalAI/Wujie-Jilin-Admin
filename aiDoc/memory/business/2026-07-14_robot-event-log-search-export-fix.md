@@ -18,6 +18,7 @@
 - 6 个导出配置的时间列 transform 由 `lambda v: v.strftime(...) if v else ""` 统一换为 `timezone.ftime`：
   - `robot_event_log_export.py`：另去掉 `event_type` 列与 `EVENT_TYPE_MAP`；`EVENT_STATUS_MAP` 改为 `{abnormal:严重故障, warning:告警提示, normal:正常恢复}` 与列表三色标签一致。
   - `operation_log_export.py`（created_at）、`login_log_export.py`（login_time）、`merchant_call_log_export.py`（created_at）、`role_export.py`（created_at/updated_at）、`user_export.py`（last_login_at/created_at/updated_at）。
+- **导出记录弹窗/列表时间错误**（同一根因）：`ExportTaskResponse` / `ExportTemplateResponse` 的 `from_orm_with_format` 内 `fmt(dt)=dt.strftime(...)` 直接格式化 UTC datetime（弹窗「下载箱」显示 `finished_at` 比实际慢 8 小时）。改 `fmt` 为 `if not dt: return None; return timezone.ftime(dt)`，三处端点（detail/list/submit）共用同一方法一并修复；`export_template.py` 同症同修。
 
 ## 约束与备注
 

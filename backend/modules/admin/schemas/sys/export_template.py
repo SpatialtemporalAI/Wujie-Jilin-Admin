@@ -5,6 +5,7 @@ from typing import Optional
 from pydantic import BaseModel, Field
 
 from app.models.common.base import BaseReqEntity
+from database.utils.timezone import timezone
 
 
 class TemplateColumnItem(BaseModel):
@@ -69,7 +70,9 @@ class ExportTemplateResponse(BaseModel):
             joins_config = [JoinConfigItem(**j) for j in json.loads(obj.joins_config)]
 
         def fmt(dt):
-            return dt.strftime("%Y-%m-%d %H:%M:%S") if dt else None
+            if not dt:
+                return None
+            return timezone.ftime(dt)
 
         return cls(
             id=obj.id,

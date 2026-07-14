@@ -160,7 +160,7 @@
 
 序列化由 `BaseEntity` 的 `json_encoders` 自动处理（`app/models/common/base.py`）。
 
-> **Excel 导出**不走 Pydantic 序列化，时间列须用 `database.utils.timezone.timezone.ftime`（同样转 `Asia/Shanghai` 再 strftime；naive 视为 UTC 兜底）。直接对 ORM datetime 调 `strftime` 会输出 UTC，比页面慢 8 小时。
+> **Excel 导出列**与**手动 `from_orm_with_format` 响应**（如 `ExportTaskResponse`/`ExportTemplateResponse`）都不走 Pydantic 的 `json_encoders`，时间须用 `database.utils.timezone.timezone.ftime`（同样转 `Asia/Shanghai` 再 strftime；naive 视为 UTC 兜底）。直接对 ORM datetime 调 `strftime` 会输出 UTC，比页面慢 8 小时。
 
 ### 前端 → 后端（请求参数）
 

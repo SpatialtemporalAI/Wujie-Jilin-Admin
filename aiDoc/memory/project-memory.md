@@ -102,7 +102,7 @@
 - [2026-07-14 getPermissions 路由/按钮查询补软删除过滤](./business/2026-07-14_route-getpermissions-soft-delete-filter.md) — `get_user_routes` 5 处补 `deleted_at.is_(None)`；软删菜单/按钮不再进权限；按钮缺失多为 sys_role_menu 未显式分配（不继承父菜单）
 - [2026-07-14 用户密码长度统一限定 6-20 字符](./business/2026-07-14_user-password-length-6-20.md) — 改密 new_password max_length 100→20 修复 422；前端改密规则补 max:20 + 4 个密码 NInput 加 :maxlength=20；登录密码字段不动
 - [2026-07-14 get_user_routes 改 selectinload 修复权限并集丢失](./business/2026-07-14_getuserroutes-joinedload-to-selectinload.md) — joinedload 关系加载并入主 SELECT 会被全局软删/租户过滤裁掉全局角色；改 selectinload 绕过过滤拿完整并集
-- [2026-07-14 机器人事件日志搜索 warning 非法值 + 导出时间东八区](./business/2026-07-14_robot-event-log-search-export-fix.md) — 后端 EventStatusField 枚举加 warning 统一前后端；导出去事件类型列、状态文案对齐三色标签；`TimeZone.ftime` 统一 6 个导出时间列为 Asia/Shanghai（原 strftime 直接输出 UTC）
+- [2026-07-14 机器人事件日志搜索 warning 非法值 + 导出时间东八区](./business/2026-07-14_robot-event-log-search-export-fix.md) — 后端 EventStatusField 枚举加 warning 统一前后端；导出去事件类型列、状态文案对齐三色标签；`TimeZone.ftime` 统一 6 个导出时间列为 Asia/Shanghai；导出记录弹窗/列表时间同根因修复（ExportTask/Template 响应 fmt 改 ftime）（原 strftime 直接输出 UTC）
 
 ## 维护说明
 

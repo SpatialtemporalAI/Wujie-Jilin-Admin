@@ -7,6 +7,7 @@ from datetime import datetime
 from pydantic import BaseModel, Field
 
 from app.models.common.base import BaseReqEntity
+from database.utils.timezone import timezone
 
 
 class ExportTaskSubmit(BaseReqEntity):
@@ -35,7 +36,9 @@ class ExportTaskResponse(BaseModel):
     @classmethod
     def from_orm_with_format(cls, obj) -> "ExportTaskResponse":
         def fmt(dt):
-            return dt.strftime("%Y-%m-%d %H:%M:%S") if dt else None
+            if not dt:
+                return None
+            return timezone.ftime(dt)
 
         return cls(
             id=obj.id,
