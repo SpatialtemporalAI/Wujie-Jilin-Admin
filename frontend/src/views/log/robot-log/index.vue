@@ -1,5 +1,5 @@
 <script setup lang="tsx">
-import { reactive } from 'vue';
+import { reactive, ref } from 'vue';
 import { NButton, NCard, NDataTable, NPopconfirm, NTag, useMessage } from 'naive-ui';
 import {
   fetchBatchDeleteRobotEventLog,
@@ -13,11 +13,20 @@ import { useAuth } from '@/hooks/business/auth';
 import { useExportSubmit } from '@/hooks/business/export-task';
 import { $t } from '@/locales';
 import RobotEventLogSearch from './modules/robot-event-log-search.vue';
+import EventContentModal from './modules/event-content-modal.vue';
 
 const appStore = useAppStore();
 const message = useMessage();
 const { hasAuth } = useAuth();
 const { submitting, submitExport } = useExportSubmit();
+
+const eventContentModalVisible = ref(false);
+const eventContentModalContent = ref('');
+
+function openEventContentModal(content: string | null | undefined) {
+  eventContentModalContent.value = content || '';
+  eventContentModalVisible.value = true;
+}
 
 const searchParams: Api.SystemManage.RobotEventLogSearchParams = reactive({
   page: 1,
@@ -82,9 +91,22 @@ const {
     {
       key: 'event_content',
       title: $t('page.log.robotEventLog.eventContent'),
-      align: 'center',
+      align: 'left',
       minWidth: 200,
-      ellipsis: { tooltip: true }
+      render: row => (
+        <div
+          class="w-full cursor-pointer"
+          style={{
+            overflow: 'hidden',
+            whiteSpace: 'nowrap',
+            textOverflow: 'ellipsis',
+            userSelect: 'none'
+          }}
+          onClick={() => openEventContentModal(row.event_content)}
+        >
+          {row.event_content}
+        </div>
+      )
     },
     {
       key: 'created_at',
@@ -194,5 +216,6 @@ async function handleClear() {
         class="sm:h-full"
       />
     </NCard>
+    <EventContentModal v-model:visible="eventContentModalVisible" :content="eventContentModalContent" />
   </div>
 </template>
