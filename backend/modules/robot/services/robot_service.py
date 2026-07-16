@@ -175,6 +175,34 @@ class RobotService:
             )
 
     @staticmethod
+    async def get_online_robot_ids(
+        db: AsyncSession, robot_ids: List[int]
+    ) -> List[int]:
+        """返回 robot_ids 中处于在线状态( Robot.status == ONLINE )的子集，不抛异常。
+
+        用于启动任务等"尽力下发"场景：仅向在线机器人下发 gRPC，离线机器人跳过，
+        避免对离线机器人发起无谓的 gRPC 超时等待。
+        在线判定与 ensure_robots_online 一致，以 Robot.status == RobotStatus.ONLINE 为准。
+
+        Args:
+            db: 数据库会话
+            robot_ids: 待筛选的机器人ID列表
+
+        Returns:
+            在线机器人的 ID 列表（保留入参顺序中的命中项）
+        """
+        if not robot_ids:
+            return []
+        result = await db.execute(
+            select(Robot.id).where(
+                Robot.id.in_(robot_ids),
+                Robot.status == RobotStatus.ONLINE,
+                Robot.deleted_at.is_(None),
+            )
+        )
+        return [row[0] for row in result.all()]
+
+    @staticmethod
     async def ensure_robots_match_map(
         db: AsyncSession, robot_ids: List[int], map_id: Optional[int]
     ) -> None:

@@ -71,19 +71,26 @@ class TaskConfigClient:
     @classmethod
     async def broadcast_task_changed(
         cls, task_id: int, operation: str, robot_ids: List[int]
-    ) -> Dict[str, int]:
-        """按 robot_ids 逐个推送，聚合结果。
+    ) -> Dict[str, object]:
+        """按 robot_ids 逐个推送，聚合结果（含成功/失败的 robot_id 列表）。
 
         Returns:
-            {"total": N, "success_count": N, "failed_count": N}
+            {"total": N, "success_count": N, "failed_count": N,
+             "success_robot_ids": [...], "failed_robot_ids": [...]}
             任一 robot 推送成功即业务层提示成功；全部失败仅日志，不抛异常。
         """
         total = len(robot_ids)
         if total == 0:
-            return {"total": 0, "success_count": 0, "failed_count": 0}
+            return {
+                "total": 0,
+                "success_count": 0,
+                "failed_count": 0,
+                "success_robot_ids": [],
+                "failed_robot_ids": [],
+            }
 
-        success_count = 0
-        failed_count = 0
+        success_robot_ids: List[int] = []
+        failed_robot_ids: List[int] = []
         for robot_id in robot_ids:
             try:
                 resp = await cls.notify_task_changed(robot_id, task_id, operation)
@@ -94,11 +101,11 @@ class TaskConfigClient:
                     robot_id,
                     operation,
                 )
-                failed_count += 1
+                failed_robot_ids.append(robot_id)
                 continue
 
             if getattr(resp, "success", False):
-                success_count += 1
+                success_robot_ids.append(robot_id)
                 logger.info(
                     "grpc task notify ok task_id=%s robot_id=%s operation=%s",
                     task_id,
@@ -106,7 +113,7 @@ class TaskConfigClient:
                     operation,
                 )
             else:
-                failed_count += 1
+                failed_robot_ids.append(robot_id)
                 logger.warning(
                     "grpc task notify failed task_id=%s robot_id=%s operation=%s msg=%s",
                     task_id,
@@ -117,6 +124,8 @@ class TaskConfigClient:
 
         return {
             "total": total,
-            "success_count": success_count,
-            "failed_count": failed_count,
+            "success_count": len(success_robot_ids),
+            "failed_count": len(failed_robot_ids),
+            "success_robot_ids": success_robot_ids,
+            "failed_robot_ids": failed_robot_ids,
         }

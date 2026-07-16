@@ -31,14 +31,17 @@ class TaskExecutionRecordService:
         task_id: int,
         robot_ids: List[int],
     ) -> dict:
-        """启动任务：仅下发 gRPC run_now 通知到机器人 agent，不再写 task_execution_record。
+        """启动任务：按机器人逐个下发 gRPC run_now，无需所有机器人都在线。
 
-        定时调度已移交外部程序负责，本服务的"启动"只做实时信号下发；
-        执行记录由机器人 agent 侧维护，平台不再落库。
+        - 播报任务关联多台机器人时，无需全部在线：仅向在线机器人下发，离线机器人跳过。
+        - 巡逻任务仍校验执行机器人与任务在同一场景地图（配置正确性硬校验）。
+        - 逐台调用 gRPC，聚合成功/失败的 robot_id；若无一成功，抛 ConflictError。
+        - 定时调度已移交外部程序负责，本服务只做实时信号下发，不写执行记录。
 
         Returns:
-            {"total": N, "success_count": N, "failed_count": N}
-            推送失败仅日志，不抛异常（与 broadcast_task_changed 约定一致）。
+            {"total": N, "success_count": N, "failed_count": N,
+             "success_robot_ids": [...], "failed_robot_ids": [...]}
+            failed 含离线与 gRPC 下发失败的机器人。
         """
         # 任务存在性校验（保持原 404 行为）
         task_result = await db.execute(
@@ -57,14 +60,38 @@ class TaskExecutionRecordService:
                 db, list(robot_ids), task.map_id
             )
 
-        # 机器人在线校验：存在非在线机器人时抛 ConflictError，阻止下发
-        await RobotService.ensure_robots_online(db, list(robot_ids))
+        # 尽力下发：仅向在线机器人发起 gRPC，离线机器人跳过（避免无谓的超时等待）
+        online_robot_ids = await RobotService.get_online_robot_ids(
+            db, list(robot_ids)
+        )
+        online_id_set = set(online_robot_ids)
+        offline_robot_ids = [rid for rid in robot_ids if rid not in online_id_set]
 
-        return await TaskConfigClient.broadcast_task_changed(
+        result = await TaskConfigClient.broadcast_task_changed(
             task_id=task_id,
             operation="run_now",
-            robot_ids=list(robot_ids),
+            robot_ids=online_robot_ids,
         )
+
+        success_robot_ids: List[int] = list(result.get("success_robot_ids", []))
+        # 失败 = gRPC 下发失败 + 离线未下发
+        failed_robot_ids: List[int] = list(
+            result.get("failed_robot_ids", [])
+        ) + offline_robot_ids
+
+        # 无一成功 → 提示任务执行失败
+        if not success_robot_ids:
+            if online_robot_ids:
+                raise ConflictError(msg="任务执行失败：未能成功启动任何机器人")
+            raise ConflictError(msg="任务执行失败：关联的机器人均不在线")
+
+        return {
+            "total": len(robot_ids),
+            "success_count": len(success_robot_ids),
+            "failed_count": len(failed_robot_ids),
+            "success_robot_ids": success_robot_ids,
+            "failed_robot_ids": failed_robot_ids,
+        }
 
     @staticmethod
     async def _get_record(db: AsyncSession, record_id: int) -> TaskExecutionRecord:
