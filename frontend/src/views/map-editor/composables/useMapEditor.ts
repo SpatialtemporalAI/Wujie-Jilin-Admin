@@ -41,9 +41,12 @@ export function useMapEditor() {
   const historyTimeline = ref<HistorySnapshot[]>([]);
   const currentStep = ref(-1);
 
-  const deletedAnnotationIds: Set<number> = new Set();
+  // 最近一次加载/保存后，服务端实际存在的真实 id 集合。
+  // 保存时按 diff 计算删除列表、并据此判定新建/更新，使 undo/redo 还原的结果能正确落库。
+  const serverAnnotationIds: Set<number> = new Set();
+  const serverObjectIds: Set<number> = new Set();
+  // 路径暂沿用显式删除集合（前端无路径新建入口）
   const deletedPathIds: Set<number> = new Set();
-  const deletedObjectIds: Set<number> = new Set();
 
   const resolution = computed(() => editorData.value?.map.resolution ?? 0.2);
 
@@ -102,9 +105,15 @@ export function useMapEditor() {
         timestamp: Date.now(),
       }];
       currentStep.value = 0;
-      deletedAnnotationIds.clear();
+      serverAnnotationIds.clear();
+      serverObjectIds.clear();
       deletedPathIds.clear();
-      deletedObjectIds.clear();
+      for (const ann of data.annotations) {
+        if (ann.id > 0) serverAnnotationIds.add(ann.id);
+      }
+      for (const obj of data.objects) {
+        if (obj.id > 0) serverObjectIds.add(obj.id);
+      }
       return true;
     } catch (e: unknown) {
       const msg = e instanceof Error ? e.message : '';
@@ -157,6 +166,42 @@ export function useMapEditor() {
       currentStep.value--;
     }
     isDirty.value = true;
+  }
+
+  /**
+   * 保存回填真实 id 后，把历史快照里的临时 id 同步替换为真实 id。
+   * 否则 undo/redo 会重新引入临时 id，再次保存时被当作新建 → 产生重复点位。
+   */
+  function remapHistoryIds(tempToReal: Map<number, number>) {
+    if (tempToReal.size === 0) return;
+    for (const entry of historyTimeline.value) {
+      let parsed: any;
+      try {
+        parsed = JSON.parse(entry.snapshot);
+      } catch {
+        continue;
+      }
+      let changed = false;
+      const mapIds = (list: any[] | undefined) => {
+        if (!Array.isArray(list)) return list;
+        return list.map((it: any) => {
+          if (it && typeof it.id === 'number' && tempToReal.has(it.id)) {
+            changed = true;
+            return { ...it, id: tempToReal.get(it.id) };
+          }
+          return it;
+        });
+      };
+      const annotations = mapIds(parsed.annotations);
+      const objects = mapIds(parsed.objects);
+      if (changed) {
+        entry.snapshot = JSON.stringify({
+          annotations,
+          paths: parsed.paths ?? [],
+          objects,
+        });
+      }
+    }
   }
 
   function undo() {
@@ -237,23 +282,26 @@ export function useMapEditor() {
     }
     saving.value = true;
     try {
-      const resp = await fetchSaveEditorData(selectedMapId.value, {
-        annotations: editorData.value.annotations.map(a => {
-          const w = pixelToWorldCoords(a.x, a.y);
-          return {
-            id: a.id > 0 ? a.id : null,
-            client_temp_id: a.id > 0 ? null : a.id,
-            x: w.x,
-            y: w.y,
-            name: a.name,
-            angle: a.angle,
-            type: a.type,
-          };
-        }),
-        paths: [],
-        objects: editorData.value.objects.map(o => ({
-          id: o.id > 0 ? o.id : null,
-          client_temp_id: o.id > 0 ? null : o.id,
+      // 以"服务端已知真实 id"为基准判定新建/更新：id 在集合内 → 更新，否则 → 新建。
+      // 这样被 undo 还原（已从服务端删除）或 redo 重新引入的元素都会被正确重建，而非静默丢失。
+      const annotationPayload = editorData.value.annotations.map(a => {
+        const w = pixelToWorldCoords(a.x, a.y);
+        const isExisting = a.id > 0 && serverAnnotationIds.has(a.id);
+        return {
+          id: isExisting ? a.id : null,
+          client_temp_id: isExisting ? null : a.id,
+          x: w.x,
+          y: w.y,
+          name: a.name,
+          angle: a.angle,
+          type: a.type,
+        };
+      });
+      const objectPayload = editorData.value.objects.map(o => {
+        const isExisting = o.id > 0 && serverObjectIds.has(o.id);
+        return {
+          id: isExisting ? o.id : null,
+          client_temp_id: isExisting ? null : o.id,
           type: o.type,
           name: o.name,
           x: o.x,
@@ -262,17 +310,31 @@ export function useMapEditor() {
           height: o.height,
           points: o.points,
           angle: o.angle ?? 0,
-        })),
-        deleted_annotation_ids: [...deletedAnnotationIds],
+        };
+      });
+      // 删除按 diff 计算：服务端有、当前编辑数据中没有的即视为删除。
+      // 这样 undo（从编辑数据移除点位）后再次保存，才能真正把点位从服务端删除。
+      const deletedAnnotationIds = [...serverAnnotationIds].filter(
+        id => !editorData.value!.annotations.some(a => a.id === id)
+      );
+      const deletedObjectIds = [...serverObjectIds].filter(
+        id => !editorData.value!.objects.some(o => o.id === id)
+      );
+
+      const resp = await fetchSaveEditorData(selectedMapId.value, {
+        annotations: annotationPayload,
+        paths: [],
+        objects: objectPayload,
+        deleted_annotation_ids: deletedAnnotationIds,
         deleted_path_ids: [...deletedPathIds],
-        deleted_object_ids: [...deletedObjectIds],
+        deleted_object_ids: deletedObjectIds,
       });
 
       // 回填新建元素的真实 id，避免再次保存时被当作新建导致重复插入
       const data = resp.data;
+      const tempToReal = new Map<number, number>();
       if (data && editorData.value) {
         const selTempId = selectedElement.value?.id ?? null;
-        const tempToReal = new Map<number, number>();
         const backfill = <T extends { id: number }>(list: T[], mappings: Api.Scene.CreatedIdMapping[]) => {
           const m = new Map(mappings.map(x => [x.temp_id, x.id]));
           for (const item of list) {
@@ -295,9 +357,20 @@ export function useMapEditor() {
         }
       }
 
-      deletedAnnotationIds.clear();
+      // 刷新"服务端已知真实 id"集合为当前（回填后）的真实 id，并把历史快照里的临时 id
+      // 同步替换为真实 id，保证后续 undo/redo 使用的都是真实 id，再次保存不会重复新建或漏删。
+      serverAnnotationIds.clear();
+      serverObjectIds.clear();
       deletedPathIds.clear();
-      deletedObjectIds.clear();
+      if (editorData.value) {
+        for (const a of editorData.value.annotations) {
+          if (a.id > 0) serverAnnotationIds.add(a.id);
+        }
+        for (const o of editorData.value.objects) {
+          if (o.id > 0) serverObjectIds.add(o.id);
+        }
+      }
+      remapHistoryIds(tempToReal);
 
       isDirty.value = false;
       if (!options?.silent) {
@@ -322,9 +395,9 @@ export function useMapEditor() {
       isDirty.value = false;
       historyTimeline.value = [];
       currentStep.value = -1;
-      deletedAnnotationIds.clear();
+      serverAnnotationIds.clear();
+      serverObjectIds.clear();
       deletedPathIds.clear();
-      deletedObjectIds.clear();
     }
     await loadSceneList();
     window.$message?.success($t('common.deleteSuccess'));
@@ -394,7 +467,7 @@ export function useMapEditor() {
     if (!editorData.value) return;
     const typeLabel = type === 'annotation' ? '点位' : type === 'path' ? '路径' : '物体';
     if (type === 'annotation') {
-      if (id > 0) deletedAnnotationIds.add(id);
+      // 点位的删除由保存时按 diff 计算（serverAnnotationIds - 当前），无需在此显式记录
       const removedPaths = editorData.value.paths.filter(
         p => p.start_annotation_id === id || p.end_annotation_id === id
       );
@@ -407,7 +480,7 @@ export function useMapEditor() {
       if (id > 0) deletedPathIds.add(id);
       editorData.value.paths = editorData.value.paths.filter(p => p.id !== id);
     } else if (type === 'object') {
-      if (id > 0) deletedObjectIds.add(id);
+      // 物体的删除同样由保存时按 diff 计算
       editorData.value.objects = editorData.value.objects.filter(o => o.id !== id);
     }
     if (selectedElement.value?.id === id) {
