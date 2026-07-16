@@ -138,7 +138,7 @@ const {
   ]
 });
 const showContentMsg = (content: string | null | undefined) => {
-  if (!content) return '';
+  if (!content) return '--';
   const obj = JSON.parse(content);
   if (obj.message) {
     return obj.message;
