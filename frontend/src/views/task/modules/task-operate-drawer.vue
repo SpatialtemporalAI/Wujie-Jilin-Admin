@@ -350,6 +350,22 @@ function handleMapChange(mapId: number | null) {
   model.value.points = [];
 }
 
+/** 任务类型切换：播报 → 巡逻时清空地图与机器人选择。
+ * 巡逻需先选场景地图再按场景选机器人，播报阶段选的机器人/地图不适用，一并清空（点位随地图失效）。 */
+function handleTaskTypeChange(val: Api.Task.TaskType) {
+  const previous = model.value.task_type;
+  model.value.task_type = val;
+  if (previous === 'broadcast' && val === 'patrol') {
+    model.value.map_id = null;
+    model.value.robot_ids = [];
+    model.value.points = [];
+    annotationOptions.value = [];
+    annotationMap.value = new Map();
+    mapOptions.value = [];
+    mapOptionsLoaded = false;
+  }
+}
+
 function closeDrawer() {
   visible.value = false;
 }
@@ -469,7 +485,7 @@ onMounted(() => {
           <NInput v-model:value="model.name" placeholder="请输入任务名称（2-20字）" :maxlength="20" show-count />
         </NFormItemGi>
         <NFormItemGi :span="2" label="任务类型" path="task_type">
-          <NRadioGroup v-model:value="model.task_type">
+          <NRadioGroup :value="model.task_type" @update:value="handleTaskTypeChange">
             <NRadioButton v-for="opt in taskTypeOptions" :key="opt.value" :value="opt.value" :label="opt.label" />
           </NRadioGroup>
         </NFormItemGi>
