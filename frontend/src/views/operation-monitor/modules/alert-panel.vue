@@ -14,6 +14,7 @@ interface AlertItem {
   title: string;
   time: string;
   severity: 'error' | 'warning' | 'info';
+  statusLabel: string;
   icon: string;
 }
 
@@ -25,6 +26,14 @@ function mapAlertSeverity(eventStatus: string): 'error' | 'warning' | 'info' {
   if (eventStatus === 'abnormal') return 'error';
   if (eventStatus === 'warning') return 'warning';
   return 'info';
+}
+
+// 事件状态文案（与机器人事件日志 robot-log 的 statusMap 保持一致）
+function getEventStatusLabel(eventStatus: string): string {
+  if (eventStatus === 'abnormal') return '严重故障';
+  if (eventStatus === 'warning') return '告警提示';
+  if (eventStatus === 'normal') return '正常恢复';
+  return eventStatus || '告警';
 }
 
 function getAlertIcon(severity: string): string {
@@ -64,6 +73,7 @@ async function loadAlerts() {
           title: parseEventContentMessage(log.event_content) || '告警',
           time: log.created_at || '',
           severity,
+          statusLabel: getEventStatusLabel(log.event_status),
           icon: getAlertIcon(severity)
         };
       });
@@ -147,7 +157,10 @@ onBeforeUnmount(() => {
               <icon-ic-round-error-outline class="mt-2px flex-shrink-0 text-18px"
                 :style="{ color: getAlertColor(alert.severity) }" />
               <div class="min-w-0 flex-1">
-                <div class="text-13px font-medium" :style="{ color: getAlertColor(alert.severity) }">
+                <NTag :type="alert.severity" size="small" :bordered="false">
+                  {{ alert.statusLabel }}
+                </NTag>
+                <div class="mt-4px break-all text-13px font-medium" :style="{ color: getAlertColor(alert.severity) }">
                   {{ alert.title }}
                 </div>
                 <div class="mt-4px text-11px text-gray-400">
