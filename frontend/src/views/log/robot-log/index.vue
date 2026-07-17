@@ -14,6 +14,7 @@ import { useExportSubmit } from '@/hooks/business/export-task';
 import { $t } from '@/locales';
 import RobotEventLogSearch from './modules/robot-event-log-search.vue';
 import EventContentModal from './modules/event-content-modal.vue';
+import { parseEventContentMessage } from '@/utils/robot-event';
 
 const appStore = useAppStore();
 const message = useMessage();
@@ -137,14 +138,7 @@ const {
     }
   ]
 });
-const showContentMsg = (content: string | null | undefined) => {
-  if (!content) return '--';
-  const obj = JSON.parse(content);
-  if (obj.message) {
-    return obj.message;
-  }
-  return content
-}
+const showContentMsg = (content: string | null | undefined) => parseEventContentMessage(content) || '--';
 
 const { checkedRowKeys, onBatchDeleted, onDeleted } = useTableOperate(data, 'id', getData);
 

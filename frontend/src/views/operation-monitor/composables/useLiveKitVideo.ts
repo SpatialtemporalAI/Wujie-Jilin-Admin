@@ -24,6 +24,9 @@ export function useLiveKitVideo(options: UseLiveKitVideoOptions) {
   const loading = ref(false);
   const connected = ref(false);
   const error = ref<string | null>(null);
+  // 视频轨实时指标，供监控界面展示
+  const resolution = ref('');
+  const frameRate = ref('');
 
   let room: Room | null = null;
   // 当前已连接会话的机器人 ID / 观众 ID，切换机器人时用于正确关闭旧视频
@@ -31,6 +34,9 @@ export function useLiveKitVideo(options: UseLiveKitVideoOptions) {
   let sessionViewerId: string | null = null;
   let heartbeatTimer: ReturnType<typeof setInterval> | null = null;
   let pendingHeartbeat: Promise<void> | null = null;
+  // 当前已附加的视频轨，用于读取分辨率/帧率
+  let currentTrack: Track | null = null;
+  let metricsTimer: ReturnType<typeof setInterval> | null = null;
 
   function stopHeartbeat() {
     if (heartbeatTimer) {
@@ -73,11 +79,49 @@ export function useLiveKitVideo(options: UseLiveKitVideoOptions) {
     sessionViewerId = null;
   }
 
+  function readTrackMetrics() {
+    if (!currentTrack) return;
+    try {
+      const settings = currentTrack.mediaStreamTrack?.getSettings?.() || {};
+      if (settings.width && settings.height) {
+        resolution.value = `${settings.width}×${settings.height}`;
+      }
+      if (settings.frameRate) {
+        frameRate.value = `${Math.round(settings.frameRate)}`;
+      }
+    } catch {
+      // 读取失败时保留上次值
+    }
+  }
+
+  function startMetricsPolling() {
+    stopMetricsPolling();
+    // 自适应流（adaptiveStream）会动态调整分辨率，定时读取以反映变化
+    metricsTimer = setInterval(readTrackMetrics, 1000);
+  }
+
+  function stopMetricsPolling() {
+    if (metricsTimer) {
+      clearInterval(metricsTimer);
+      metricsTimer = null;
+    }
+  }
+
+  function resetMetrics() {
+    stopMetricsPolling();
+    currentTrack = null;
+    resolution.value = '';
+    frameRate.value = '';
+  }
+
   async function attachVideoTrack(publication: RemoteTrackPublication) {
     const track = publication.track;
     if (!track || !videoRef.value) return;
 
     track.attach(videoRef.value);
+    currentTrack = track;
+    readTrackMetrics();
+    startMetricsPolling();
     connected.value = true;
     loading.value = false;
   }
@@ -135,10 +179,12 @@ export function useLiveKitVideo(options: UseLiveKitVideoOptions) {
 
       room.on(RoomEvent.TrackUnpublished, () => {
         connected.value = false;
+        resetMetrics();
       });
 
       room.on(RoomEvent.Disconnected, (reason) => {
         connected.value = false;
+        resetMetrics();
         console.warn('LiveKit 已断开连接', reason);
       });
 
@@ -159,6 +205,7 @@ export function useLiveKitVideo(options: UseLiveKitVideoOptions) {
 
   async function disconnect() {
     stopHeartbeat();
+    resetMetrics();
     await waitPendingHeartbeat();
 
     if (room) {
@@ -221,6 +268,8 @@ export function useLiveKitVideo(options: UseLiveKitVideoOptions) {
     loading,
     connected,
     error,
+    resolution,
+    frameRate,
     connect,
     disconnect
   };

@@ -258,9 +258,16 @@ async function handleStart(row: Api.Task.Task) {
   startingTaskId.value = row.id;
   try {
     const robotIds = row.robots?.map((r: Api.Task.TaskRobot) => r.id) || [];
-    const { error } = await fetchStartOrResumeExecution(row.id, { robot_ids: robotIds, source: 'manual' });
+    const { data, error } = await fetchStartOrResumeExecution(row.id, { robot_ids: robotIds, source: 'manual' });
     if (!error) {
-      message.success('操作成功');
+      // 多机器人逐个下发：成功 N 台，失败时附带失败数（失败明细由后端返回的 robot_id 列表体现）
+      const successCount = data?.success_count ?? 0;
+      const failedCount = data?.failed_count ?? 0;
+      if (failedCount > 0) {
+        message.warning(`任务已启动，成功 ${successCount} 台，失败 ${failedCount} 台`);
+      } else {
+        message.success(`任务已启动，成功 ${successCount} 台`);
+      }
       await getData();
     }
   } catch (error) {

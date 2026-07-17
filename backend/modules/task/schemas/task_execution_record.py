@@ -118,6 +118,24 @@ class TaskExecutionRecordStartIn(BaseReqEntity):
     )
 
 
+class TaskStartResultData(BaseReqEntity):
+    """启动任务结果（多机器人逐个下发 gRPC 后的聚合）
+
+    播报任务关联多台机器人时，无需全部在线：在线机器人逐个下发，
+    离线/gRPC 失败的机器人计入 failed。若无成功启动的，接口直接抛错。
+    """
+
+    total: int = Field(0, description="关联机器人总数")
+    success_count: int = Field(0, description="成功启动数量")
+    failed_count: int = Field(0, description="失败数量(含离线/gRPC下发失败)")
+    success_robot_ids: List[int] = Field(
+        default_factory=list, description="成功启动的机器人ID列表"
+    )
+    failed_robot_ids: List[int] = Field(
+        default_factory=list, description="失败/离线的机器人ID列表"
+    )
+
+
 # ==================== 响应 Schema ====================
 
 

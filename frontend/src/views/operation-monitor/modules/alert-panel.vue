@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { ref, watch, onMounted, onBeforeUnmount } from 'vue';
 import { fetchGetRobotEventLogList } from '@/service/api/log';
+import { parseEventContentMessage } from '@/utils/robot-event';
 
 interface Props {
   robotId: number | null;
@@ -11,7 +12,6 @@ const props = defineProps<Props>();
 interface AlertItem {
   id: number;
   title: string;
-  description: string;
   time: string;
   severity: 'error' | 'warning' | 'info';
   icon: string;
@@ -61,8 +61,7 @@ async function loadAlerts() {
         const severity = mapAlertSeverity(log.event_status);
         return {
           id: log.id,
-          title: log.event_content ? log.event_content.split('\n')[0] || '告警' : '告警',
-          description: log.event_content ? log.event_content.split('\n').slice(1).join('\n') || '' : '',
+          title: parseEventContentMessage(log.event_content) || '告警',
           time: log.created_at || '',
           severity,
           icon: getAlertIcon(severity)
@@ -150,9 +149,6 @@ onBeforeUnmount(() => {
               <div class="min-w-0 flex-1">
                 <div class="text-13px font-medium" :style="{ color: getAlertColor(alert.severity) }">
                   {{ alert.title }}
-                </div>
-                <div v-if="alert.description" class="mt-4px text-12px text-gray-500">
-                  {{ alert.description }}
                 </div>
                 <div class="mt-4px text-11px text-gray-400">
                   {{ formatTime(alert.time) }}

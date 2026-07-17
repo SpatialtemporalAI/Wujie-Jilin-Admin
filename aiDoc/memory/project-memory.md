@@ -8,6 +8,7 @@
 
 ## 业务需求记忆
 
+- [2026-07-16 视频监控叠加状态信息](./business/2026-07-16_operation-monitor-video-overlay-stats.md) — 去掉底部「直播中」，视频 `object-position:left` 居左，顶部叠加实时时间/分辨率/帧率/全屏；指标取自 `track.mediaStreamTrack.getSettings()` 1s 轮询
 - [2026-07-11 实时监控机器人在线状态刷新](./business/2026-07-11_operation-monitor-status-latest-online.md) — `status/latest` 根据状态记录更新时间刷新 `Robot.status` 并返回，前端同步更新 `robotList`
 - [2026-07-11 视频监控 Tab 切换机器人时先关旧再开新](./business/2026-07-11_operation-monitor-video-switch-robot.md) — `useLiveKitVideo` 维护旧会话 `sessionRobotId/sessionViewerId`，切换机器人时先 `disconnect` 旧视频再 `connect` 新视频
 - [2026-07-11 巡逻任务启动校验任务地图与机器人地图一致](./business/2026-07-11_task-patrol-map-consistency.md) — `TaskExecutionRecordService.start_execution` 对 patrol 任务校验 `task.map_id` 与 `robot.map_id` 一致

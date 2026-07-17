@@ -189,5 +189,19 @@ declare namespace Api {
       robot_ids: number[];
       source?: TaskExecutionSource;
     };
+
+    /** 启动任务结果：多机器人逐个下发 gRPC 后的聚合（在线才下发，离线计入 failed） */
+    type TaskStartResult = {
+      /** 关联机器人总数 */
+      total: number;
+      /** 成功启动数量 */
+      success_count: number;
+      /** 失败数量（含离线 / gRPC 下发失败） */
+      failed_count: number;
+      /** 成功启动的机器人ID列表 */
+      success_robot_ids: number[];
+      /** 失败 / 离线的机器人ID列表 */
+      failed_robot_ids: number[];
+    };
   }
 }

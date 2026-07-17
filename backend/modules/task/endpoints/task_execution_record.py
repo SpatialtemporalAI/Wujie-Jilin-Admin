@@ -32,6 +32,7 @@ from modules.task.schemas.task_execution_record import (
     TaskExecutionRecordStartIn,
     TaskExecutionRecordResponseData,
     TaskExecutionRecordDetailResponseData,
+    TaskStartResultData,
 )
 
 logger = logging.getLogger(__name__)
@@ -68,9 +69,18 @@ async def _fill_relations(record: TaskExecutionRecordResponseData, db: AsyncSess
         record.user_name = user_result.scalar_one_or_none()
 
 
+def _build_start_msg(result: dict) -> str:
+    """根据启动结果拼装提示文案：成功 N 台，失败时附带失败数。"""
+    success = result.get("success_count", 0)
+    failed = result.get("failed_count", 0)
+    if failed > 0:
+        return f"任务已启动，成功 {success} 台，失败 {failed} 台"
+    return f"任务已启动，成功 {success} 台"
+
+
 @task_execution_record_router.post(
     "/{task_id}/start",
-    response_model=ResponseModel,
+    response_model=ResponseModel[TaskStartResultData],
     dependencies=[Depends(require_permission("task:execution:start"))],
 )
 @log_operation(module="task", action="start", description="启动任务（gRPC 通知）")
@@ -79,14 +89,15 @@ async def start_task_execution_record(
     task_id: int = Path(..., description="任务ID"),
     db: AsyncSession = Depends(get_session),
 ):
-    """启动任务：下发 gRPC run_now 到机器人 agent，不写执行记录"""
+    """启动任务：逐个下发 gRPC run_now 到在线机器人，返回成功/失败明细；无一成功则抛错"""
     try:
-        await TaskExecutionRecordService.start_execution(
+        result = await TaskExecutionRecordService.start_execution(
             db=db,
             task_id=task_id,
             robot_ids=payload.robot_ids,
         )
-        return response_base.success(msg="任务已启动")
+        data = TaskStartResultData(**result)
+        return response_base.success(data=data, msg=_build_start_msg(result))
     except Exception as e:
         logger.error("启动任务执行失败: %s", str(e), exc_info=True)
         raise
@@ -94,7 +105,7 @@ async def start_task_execution_record(
 
 @task_execution_record_router.post(
     "/start-or-resume/{task_id}",
-    response_model=ResponseModel,
+    response_model=ResponseModel[TaskStartResultData],
     dependencies=[Depends(require_permission("task:execution:start"))],
 )
 @log_operation(module="task", action="start", description="启动任务（gRPC 通知）")
@@ -104,14 +115,15 @@ async def start_or_resume_task_execution_record(
     task_id: int = Path(..., description="任务ID"),
     db: AsyncSession = Depends(get_session),
 ):
-    """启动任务：下发 gRPC run_now 到机器人 agent，不写执行记录"""
+    """启动任务：逐个下发 gRPC run_now 到在线机器人，返回成功/失败明细；无一成功则抛错"""
     try:
-        await TaskExecutionRecordService.start_execution(
+        result = await TaskExecutionRecordService.start_execution(
             db=db,
             task_id=task_id,
             robot_ids=payload.robot_ids,
         )
-        return response_base.success(msg="任务已启动")
+        data = TaskStartResultData(**result)
+        return response_base.success(data=data, msg=_build_start_msg(result))
     except Exception as e:
         logger.error("启动任务失败: %s", str(e), exc_info=True)
         raise

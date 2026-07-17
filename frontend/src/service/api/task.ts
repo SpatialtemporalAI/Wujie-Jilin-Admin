@@ -62,7 +62,7 @@ export function fetchToggleTaskEnabled(id: number, enabled: boolean) {
 
 /** start task execution (new record table) */
 export function fetchStartExecutionRecord(taskId: number, payload: Api.Task.TaskExecutionRecordStartIn) {
-  return request<Api.Task.TaskExecutionRecord>({
+  return request<Api.Task.TaskStartResult>({
     url: `/admin/task/execution-record/${taskId}/start`,
     method: 'post',
     data: payload
@@ -73,7 +73,7 @@ export function fetchStartExecutionRecord(taskId: number, payload: Api.Task.Task
  * 若任务有 paused 记录则恢复，否则创建新执行记录
  */
 export function fetchStartOrResumeExecution(taskId: number, payload: Api.Task.TaskExecutionRecordStartIn) {
-  return request<void>({
+  return request<Api.Task.TaskStartResult>({
     url: `/admin/task/execution-record/start-or-resume/${taskId}`,
     method: 'post',
     data: payload
