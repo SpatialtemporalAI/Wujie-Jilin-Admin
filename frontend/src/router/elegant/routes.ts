@@ -47,7 +47,7 @@ export const generatedRoutes: GeneratedRoute[] = [
       title: 'demo',
       i18nKey: 'route.demo',
       order: 5,
-      icon: 'arcticons:example'
+      localIcon: 'example'
     },
     children: [
       {
@@ -57,7 +57,7 @@ export const generatedRoutes: GeneratedRoute[] = [
         meta: {
           title: 'demo_dict',
           i18nKey: 'route.demo_dict',
-          icon: 'mdi:book-alphabet'
+          localIcon: 'book-alphabet'
         }
       },
       {
@@ -67,7 +67,7 @@ export const generatedRoutes: GeneratedRoute[] = [
         meta: {
           title: 'demo_upload',
           i18nKey: 'route.demo_upload',
-          icon: 'mdi:upload'
+          localIcon: 'upload'
         }
       }
     ]
@@ -99,7 +99,7 @@ export const generatedRoutes: GeneratedRoute[] = [
     meta: {
       title: 'home',
       i18nKey: 'route.home',
-      icon: 'mdi:monitor-dashboard',
+      localIcon: 'monitor-dashboard',
       order: 1
     }
   },
@@ -123,7 +123,7 @@ export const generatedRoutes: GeneratedRoute[] = [
     meta: {
       title: 'log',
       i18nKey: 'route.log',
-      icon: 'mdi:file-document-outline',
+      localIcon: 'file-document-outline',
       order: 3
     },
     children: [
@@ -294,7 +294,7 @@ export const generatedRoutes: GeneratedRoute[] = [
     meta: {
       title: 'monitor',
       i18nKey: 'route.monitor',
-      icon: 'mdi:chart-areaspline-variant',
+      localIcon: 'chart-areaspline-variant',
       order: 4
     }
   },
@@ -401,7 +401,7 @@ export const generatedRoutes: GeneratedRoute[] = [
     meta: {
       title: 'settings',
       i18nKey: 'route.settings',
-      icon: 'mdi:cog'
+      localIcon: 'cog'
     }
   },
   {
