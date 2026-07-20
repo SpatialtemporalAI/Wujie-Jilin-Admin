@@ -20,9 +20,9 @@ const emit = defineEmits<Emits>();
 const robotOptions = ref<{ label: string; value: number }[]>([]);
 
 const eventStatusOptions = [
-  { label: $t('page.log.robotEventLog.statusCritical'), value: 'abnormal' },
+  { label: $t('page.log.robotEventLog.statusCritical'), value: 'critical' },
   { label: $t('page.log.robotEventLog.statusWarning'), value: 'warning' },
-  { label: $t('page.log.robotEventLog.statusInfo'), value: 'normal' }
+  { label: $t('page.log.robotEventLog.statusInfo'), value: 'info' }
 ];
 
 const timeRange = computed<[number, number] | null>({

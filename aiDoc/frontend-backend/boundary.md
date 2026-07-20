@@ -142,7 +142,7 @@
 
 | 模块 | 字段 | 取值 |
 |------|------|------|
-| 机器人事件日志 | `event_type` / `event_status` | `task,alarm` / `normal,abnormal,warning` |
+| 机器人事件日志 | `event_type` / `event_status` | `task,alarm` / `info,warning,critical` |
 | 任务执行记录 | `status` / `source` | `pending,running,paused,cancelled,completed,failed` / `platform_schedule,voice_trigger,manual` |
 | 调度任务日志 | `status` | `running,success,timeout,failed` |
 

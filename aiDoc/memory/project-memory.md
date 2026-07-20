@@ -8,6 +8,7 @@
 
 ## 业务需求记忆
 
+- [2026-07-20 机器人事件日志 event_status 枚举值重命名](./business/2026-07-20_robot-event-log-status-rename.md) — normal→info、abnormal→critical、warning 不变；全栈字面值替换，不写迁移、不兼容旧值，外部写入源同步改
 - [2026-07-17 实时告警事件状态前置显示](./business/2026-07-17_operation-monitor-alert-event-status-prefix.md) — alert-panel 在每条事件标题前加事件状态 `NTag`（严重故障/告警提示/正常恢复），文案与 robot-log statusMap 一致
 - [2026-07-16 视频监控叠加状态信息](./business/2026-07-16_operation-monitor-video-overlay-stats.md) — 去掉底部「直播中」，视频 `object-position:left` 居左，顶部叠加实时时间/分辨率/帧率/全屏；指标取自 `track.mediaStreamTrack.getSettings()` 1s 轮询
 - [2026-07-11 实时监控机器人在线状态刷新](./business/2026-07-11_operation-monitor-status-latest-online.md) — `status/latest` 根据状态记录更新时间刷新 `Robot.status` 并返回，前端同步更新 `robotList`

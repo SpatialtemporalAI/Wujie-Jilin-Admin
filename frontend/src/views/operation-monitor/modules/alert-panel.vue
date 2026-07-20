@@ -23,16 +23,16 @@ const loading = ref(false);
 let refreshTimer: ReturnType<typeof setInterval> | null = null;
 
 function mapAlertSeverity(eventStatus: string): 'error' | 'warning' | 'info' {
-  if (eventStatus === 'abnormal') return 'error';
+  if (eventStatus === 'critical') return 'error';
   if (eventStatus === 'warning') return 'warning';
   return 'info';
 }
 
 // 事件状态文案（与机器人事件日志 robot-log 的 statusMap 保持一致）
 function getEventStatusLabel(eventStatus: string): string {
-  if (eventStatus === 'abnormal') return '严重故障';
+  if (eventStatus === 'critical') return '严重故障';
   if (eventStatus === 'warning') return '告警提示';
-  if (eventStatus === 'normal') return '正常恢复';
+  if (eventStatus === 'info') return '正常恢复';
   return eventStatus || '告警';
 }
 

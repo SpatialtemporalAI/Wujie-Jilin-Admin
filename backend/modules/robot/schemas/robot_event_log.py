@@ -9,7 +9,7 @@ from pydantic import Field, BeforeValidator
 from app.models.common.base import BaseEntity, BaseRespEntity, OptionalIntField, parse_optional_enum
 
 EventTypeField = Annotated[str | None, BeforeValidator(parse_optional_enum({"task", "alarm"}))]
-EventStatusField = Annotated[str | None, BeforeValidator(parse_optional_enum({"normal", "abnormal", "warning"}))]
+EventStatusField = Annotated[str | None, BeforeValidator(parse_optional_enum({"info", "warning", "critical"}))]
 
 
 class RobotEventLogQueryParams(BaseEntity):
@@ -17,7 +17,7 @@ class RobotEventLogQueryParams(BaseEntity):
 
     robot_id: OptionalIntField = Field(None, description="机器人ID")
     event_type: EventTypeField = Field(None, description="事件类型：task/alarm")
-    event_status: EventStatusField = Field(None, description="事件状态：normal/abnormal/warning")
+    event_status: EventStatusField = Field(None, description="事件状态：info/warning/critical")
     start_time: str | None = Field(None, description="开始时间")
     end_time: str | None = Field(None, description="结束时间")
 

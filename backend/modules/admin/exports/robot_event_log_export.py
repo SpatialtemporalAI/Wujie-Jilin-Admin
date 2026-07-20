@@ -8,7 +8,7 @@ from modules.robot.schemas.robot_event_log import RobotEventLogQueryParams
 from database.utils.timezone import timezone
 
 # 与列表三色标签一致：严重故障 / 告警提示 / 正常恢复
-EVENT_STATUS_MAP = {"abnormal": "严重故障", "warning": "告警提示", "normal": "正常恢复"}
+EVENT_STATUS_MAP = {"critical": "严重故障", "warning": "告警提示", "info": "正常恢复"}
 
 
 _robot_event_log_columns = [

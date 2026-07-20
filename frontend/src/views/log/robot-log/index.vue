@@ -81,9 +81,9 @@ const {
       width: 120,
       render: row => {
         const statusMap: Record<string, { type: 'error' | 'warning' | 'info'; label: string }> = {
-          abnormal: { type: 'error', label: $t('page.log.robotEventLog.statusCritical') },
+          critical: { type: 'error', label: $t('page.log.robotEventLog.statusCritical') },
           warning: { type: 'warning', label: $t('page.log.robotEventLog.statusWarning') },
-          normal: { type: 'info', label: $t('page.log.robotEventLog.statusInfo') }
+          info: { type: 'info', label: $t('page.log.robotEventLog.statusInfo') }
         };
         const config = statusMap[row.event_status] || { type: 'default' as const, label: row.event_status };
         return <NTag type={config.type}>{config.label}</NTag>;
