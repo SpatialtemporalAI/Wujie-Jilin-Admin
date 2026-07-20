@@ -341,51 +341,43 @@ function renderElements() {
       fabricObj.setCoords();
       syncObjectLabel(obj.id, fabricObj, obj.name, stroke);
     } else {
+      // 与地图编辑器一致：以左上角 (left/top) 作为定位锚点。
+      // fabric v7 把 originX/originY 默认值从 'left'/'top' 改成了 'center'，
+      // 若不显式指定，禁行区域/障碍物/围栏会按中心定位，相对编辑器整体偏移宽高的一半，
+      // 旋转物体的旋转中心也会不同。
+      const commonOpts = {
+        left: obj.x,
+        top: obj.y,
+        originX: 'left' as const,
+        originY: 'top' as const,
+        angle: obj.angle ?? 0,
+        fill,
+        stroke,
+        strokeWidth
+      };
       let fabricObj: Rect | Polygon | Triangle | Ellipse | null = null;
       if (obj.points) {
         try {
-          fabricObj = new Polygon(JSON.parse(obj.points), {
-            left: obj.x,
-            top: obj.y,
-            angle: obj.angle ?? 0,
-            fill,
-            stroke,
-            strokeWidth
-          });
+          fabricObj = new Polygon(JSON.parse(obj.points), commonOpts);
         } catch { /* skip */ }
       } else if (obj.type === 'obstacle-circle') {
         fabricObj = new Ellipse({
-          left: obj.x,
-          top: obj.y,
-          angle: obj.angle ?? 0,
+          ...commonOpts,
           rx: (obj.width || 10) / 2,
-          ry: (obj.height || 10) / 2,
-          fill,
-          stroke,
-          strokeWidth
+          ry: (obj.height || 10) / 2
         });
       } else if (obj.type === 'obstacle-triangle') {
         fabricObj = new Triangle({
-          left: obj.x,
-          top: obj.y,
-          angle: obj.angle ?? 0,
+          ...commonOpts,
           width: obj.width || 10,
-          height: obj.height || 10,
-          fill,
-          stroke,
-          strokeWidth
+          height: obj.height || 10
         });
       } else {
         const isSquare = obj.type === 'obstacle-square';
         fabricObj = new Rect({
-          left: obj.x,
-          top: obj.y,
-          angle: obj.angle ?? 0,
+          ...commonOpts,
           width: obj.width || 10,
-          height: isSquare ? (obj.width || 10) : (obj.height || 10),
-          fill,
-          stroke,
-          strokeWidth
+          height: isSquare ? (obj.width || 10) : (obj.height || 10)
         });
       }
       if (fabricObj) {
