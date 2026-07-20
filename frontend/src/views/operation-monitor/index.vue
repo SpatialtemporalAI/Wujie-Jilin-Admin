@@ -51,7 +51,7 @@ const {
                   </NCard>
                 </NGi>
                 <NGi span="24 m:8">
-                  <div class="h-520px">
+                  <div class="h-571px">
                     <AlertPanel class="h-full" :robot-id="selectedRobotId" />
                   </div>
                 </NGi>
