@@ -1,6 +1,6 @@
 <script setup lang="tsx">
 import { reactive, ref, onMounted, nextTick } from 'vue';
-import { NButton, NCard, NDataTable, NForm, NFormItem, NInput, NPopconfirm, NSpace, NUpload, useMessage, type UploadFileInfo } from 'naive-ui';
+import { NButton, NCard, NDataTable, NForm, NFormItem, NInput, NModal, NPopconfirm, NSpace, NUpload, useMessage, type UploadFileInfo } from 'naive-ui';
 import {
   fetchGetFaceRecognitionList,
   fetchCreateFaceRecognition,
@@ -43,6 +43,14 @@ const model = reactive<Api.RobotConfig.FaceRecognitionCreate>({
 const fileList = ref<UploadFileInfo[]>([]);
 
 const faceList = ref<Api.RobotConfig.FaceRecognition[]>([]);
+
+const previewVisible = ref(false);
+const previewUrl = ref('');
+
+function openPreview(url: string) {
+  previewUrl.value = url;
+  previewVisible.value = true;
+}
 
 const rules = {
   person_name: [{ required: true, message: '请输入人员名称', trigger: 'blur' }],
@@ -198,9 +206,17 @@ const columns = [
     title: '人像',
     align: 'center' as const,
     width: 100,
-    render: (row: Api.RobotConfig.FaceRecognition) => (
-      <img src={resolveFilePreviewUrl(row.photo_url)} class="h-48px w-48px rounded object-cover" alt="人像" />
-    )
+    render: (row: Api.RobotConfig.FaceRecognition) => {
+      const url = resolveFilePreviewUrl(row.photo_url);
+      return (
+        <img
+          src={url}
+          class="h-48px w-48px rounded object-cover cursor-pointer"
+          alt="人像"
+          onClick={() => openPreview(url)}
+        />
+      );
+    }
   },
   { key: 'broadcast_text', title: '播报内容', align: 'center' as const, minWidth: 200, ellipsis: { tooltip: true } },
   {
@@ -332,6 +348,10 @@ onMounted(() => {
         class="sm:h-full"
       />
     </NCard>
+
+    <NModal v-model:show="previewVisible" preset="card" title="人像预览" class="max-w-700px">
+      <img :src="previewUrl" class="max-h-70vh w-full object-contain" alt="人像预览" />
+    </NModal>
   </div>
 </template>
 
