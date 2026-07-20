@@ -136,7 +136,7 @@ onBeforeUnmount(() => {
     <template #header>
       <NSpace align="center" :size="8">
         <span>实时告警</span>
-        <NTag v-if="alerts.length > 0" type="error" size="small" round>
+        <NTag v-if="alerts.length > 0" type="default" size="small" round>
           {{ alerts.length }}
         </NTag>
       </NSpace>
