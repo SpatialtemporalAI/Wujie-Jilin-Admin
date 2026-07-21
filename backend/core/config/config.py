@@ -108,17 +108,14 @@ def load_config() -> BaseSettings:
     """
     # 步骤1：获取当前环境
     current_env = get_current_env()
-    # 步骤2：动态导入配置类
-    # config_class = import_config_class(current_env)
-    # 步骤3：获取 .env 文件路径
-    # env_file = get_env_file_path(current_env)
-    # 步骤4：实例化配置类（根据是否有 .env 文件调整参数）
-    # if current_env:
-    # 若有 .env 文件，传递 env_file 参数（适配 pydantic-settings v2+）
-    # return GlobalSetting(_env_file=env_file, _env_file_encoding="utf-8")
-    # else:
-    # 若无 .env 文件，直接实例化（仅从系统环境变量加载）
-    return GlobalSetting(_env_file=f".env.{current_env}", _env_file_encoding="utf-8")
+    # 步骤2：确定 .env 文件加载顺序
+    # 先加载公共基础 .env（所有环境共享的默认值），再用环境特定 .env.{env} 覆盖。
+    # pydantic-settings v2：env_file 为元组时，靠后的文件优先级更高（后者覆盖前者），
+    # 这样 UPLOAD_LOCAL/STORAGE 等公共配置只需在 .env 写一份，无需在每个环境文件重复。
+    env_files = (".env", f".env.{current_env}")
+    print(f"[config] 加载配置文件（按顺序，后者覆盖前者）：{list(env_files)}")
+    # 步骤3：实例化配置类
+    return GlobalSetting(_env_file=env_files, _env_file_encoding="utf-8")
 # ------------------------------
 # 单例配置对象：全局唯一，项目中直接导入使用
 # ------------------------------
