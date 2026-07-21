@@ -8,6 +8,7 @@
 
 ## 业务需求记忆
 
+- [2026-07-21 语音配置 gRPC target 统一回归 middleware](./business/2026-07-21_voice-grpc-target-to-middleware.md) — 语音合成保存/测试(notify_tts/test_tts)+ 唤醒词测试(test_wake_word)的 target 由 agent 改为 middleware（config_client.py）
 - [2026-07-20 实时告警数量标签改灰色](./business/2026-07-20_operation-monitor-alert-count-gray.md) — alert-panel 标题旁告警数量 NTag 由 error(红) 改 default(灰)，弱化视觉权重
 - [2026-07-20 机器人事件日志 event_status 枚举值重命名](./business/2026-07-20_robot-event-log-status-rename.md) — normal→info、abnormal→critical、warning 不变；全栈字面值替换，不写迁移、不兼容旧值，外部写入源同步改
 - [2026-07-17 实时告警事件状态前置显示](./business/2026-07-17_operation-monitor-alert-event-status-prefix.md) — alert-panel 在每条事件标题前加事件状态 `NTag`（严重故障/告警提示/正常恢复），文案与 robot-log statusMap 一致

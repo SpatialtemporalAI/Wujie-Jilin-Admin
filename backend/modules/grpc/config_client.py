@@ -6,9 +6,7 @@ ConfigService gRPC 客户端
 - 每个业务一个 Client 类（类方法风格，无需实例化），方法签名强类型
 
 地址解析规则（target 对应 robot.grpc_config 的子键）：
-- voice.notify_wake_word → middleware
-- voice.test_wake_word → agent
-- voice.notify_tts / voice.test_tts → agent
+- voice.notify_wake_word / voice.test_wake_word / voice.notify_tts / voice.test_tts → middleware
 - speed.notify_speed_level → middleware
 - battery.notify_battery_threshold → agent
 - face_recognition.notify_changed → agent（广播给所有启用 agent 的 robot）
@@ -110,7 +108,7 @@ async def _dispatch_with_target(
 class VoiceConfigClient:
     """语音配置 gRPC 客户端（唤醒词 + TTS 音色/语速/音量）
 
-    唤醒词保存(NotifyWakeWordChanged)走 middleware；唤醒词测试(TestWakeWord)走 agent；TTS 走 agent。
+    语音合成保存/测试与唤醒词测试统一走 middleware。
     """
 
     _stubs_by_addr: Dict[str, voice_pb2_grpc.VoiceConfigServiceStub] = {}
@@ -157,7 +155,7 @@ class VoiceConfigClient:
         )
         return await _dispatch_with_target(
             robot_id=robot_id,
-            target="agent",
+            target="middleware",
             stub_factory=cls._get_stub_for_addr,
             method_name="NotifyTTSConfigChanged",
             request=request,
@@ -176,7 +174,7 @@ class VoiceConfigClient:
         )
         return await _dispatch_with_target(
             robot_id=robot_id,
-            target="agent",
+            target="middleware",
             stub_factory=cls._get_stub_for_addr,
             method_name="TestWakeWord",
             request=request,
@@ -199,7 +197,7 @@ class VoiceConfigClient:
         )
         return await _dispatch_with_target(
             robot_id=robot_id,
-            target="agent",
+            target="middleware",
             stub_factory=cls._get_stub_for_addr,
             method_name="TestTTSConfig",
             request=request,
