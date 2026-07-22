@@ -1,7 +1,7 @@
 <script setup lang="tsx">
 import { reactive } from 'vue';
 import { NButton, NCard, NDataTable, NPopconfirm, NTag, useMessage } from 'naive-ui';
-import { fetchBatchDeleteLoginLog, fetchClearLoginLog, fetchDeleteLoginLog, fetchGetLoginLogList } from '@/service/api';
+import { fetchBatchDeleteLoginLog, fetchDeleteLoginLog, fetchGetLoginLogList } from '@/service/api';
 import { useAppStore } from '@/store/modules/app';
 import { defaultTransform, useNaivePaginatedTable, useTableOperate } from '@/hooks/common/table';
 import { useAuth } from '@/hooks/business/auth';
@@ -145,16 +145,6 @@ async function handleBatchDelete() {
     message.error($t('common.deleteFailed'));
   }
 }
-
-async function handleClear() {
-  try {
-    await fetchClearLoginLog(30);
-    message.success($t('common.deleteSuccess'));
-    getData();
-  } catch (error) {
-    message.error($t('common.deleteFailed'));
-  }
-}
 </script>
 
 <template>
@@ -171,14 +161,6 @@ async function handleClear() {
         @refresh="getData"
       >
         <template #prefix>
-          <NPopconfirm v-if="hasAuth('sys:log:delete')" @positive-click="handleClear">
-            {{ $t('page.log.loginLog.clearConfirm') }}
-            <template #trigger>
-              <NButton type="warning" ghost size="small" :disabled="loading">
-                {{ $t('page.log.loginLog.clear') }}
-              </NButton>
-            </template>
-          </NPopconfirm>
           <NButton type="primary" ghost size="small" :loading="submitting" :disabled="loading" @click="submitExport('login_log', searchParams)">
             {{ $t('common.export') }}
           </NButton>

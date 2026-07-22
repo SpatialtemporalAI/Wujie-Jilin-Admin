@@ -3,7 +3,6 @@ import { reactive, ref } from 'vue';
 import { NButton, NCard, NDataTable, NPopconfirm, NTag, useMessage } from 'naive-ui';
 import {
   fetchBatchDeleteOperationLog,
-  fetchClearOperationLog,
   fetchDeleteOperationLog,
   fetchGetOperationLogList
 } from '@/service/api';
@@ -201,15 +200,6 @@ async function handleBatchDelete() {
   }
 }
 
-async function handleClear() {
-  try {
-    await fetchClearOperationLog(30);
-    message.success($t('common.deleteSuccess'));
-    getData();
-  } catch (error) {
-    message.error($t('common.deleteFailed'));
-  }
-}
 </script>
 
 <template>
@@ -226,14 +216,6 @@ async function handleClear() {
         @refresh="getData"
       >
         <template #prefix>
-          <NPopconfirm v-if="hasAuth('sys:oplog:delete')" @positive-click="handleClear">
-            {{ $t('page.log.operationLog.clearConfirm') }}
-            <template #trigger>
-              <NButton type="warning" ghost size="small" :disabled="loading">
-                {{ $t('page.log.operationLog.clear') }}
-              </NButton>
-            </template>
-          </NPopconfirm>
           <NButton type="primary" ghost size="small" :loading="submitting" :disabled="loading" @click="submitExport('operation_log', searchParams)">
             {{ $t('common.export') }}
           </NButton>
