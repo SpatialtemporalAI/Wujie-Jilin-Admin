@@ -16,10 +16,15 @@ const robotLoading = ref(false);
 const configLoading = ref(false);
 const saving = ref(false);
 
+// const speedOptions = [
+//   { label: '正常速度 1m/s', value: 'normal' },
+//   { label: '慢速 ≤0.8m/s', value: 'slow' },
+//   { label: '低速 0.5m/s', value: 'low' }
+// ];
+
 const speedOptions = [
-  { label: '正常速度 1m/s', value: 'normal' },
-  { label: '慢速 ≤0.8m/s', value: 'slow' },
-  { label: '低速 0.5m/s', value: 'low' }
+  { label: '快速 ≤0.5m/s', value: 'normal' },
+  { label: '慢速 ≤0.25m/s', value: 'slow' }
 ];
 
 const robotOptions = computed(() =>
@@ -97,15 +102,8 @@ onMounted(() => {
 <template>
   <div class="flex-col gap-16px">
     <NCard title="选择机器人" size="small">
-      <NSelect
-        :value="selectedRobotId"
-        :options="robotOptions"
-        :loading="robotLoading"
-        placeholder="请选择机器人"
-        filterable
-        clearable
-        @update:value="handleSelectRobot"
-      />
+      <NSelect :value="selectedRobotId" :options="robotOptions" :loading="robotLoading" placeholder="请选择机器人" filterable
+        clearable @update:value="handleSelectRobot" />
     </NCard>
 
     <NCard title="行走速度设置" size="small">
@@ -136,15 +134,19 @@ onMounted(() => {
   display: flex;
   flex-direction: column;
 }
+
 .gap-16px {
   gap: 16px;
 }
+
 .text-14px {
   font-size: 14px;
 }
+
 .font-medium {
   font-weight: 500;
 }
+
 .empty-tip {
   display: flex;
   align-items: center;
