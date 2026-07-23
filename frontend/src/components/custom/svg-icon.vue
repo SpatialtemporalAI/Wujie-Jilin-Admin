@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, onMounted, ref, useAttrs, watch } from 'vue';
+import { computed, useAttrs } from 'vue';
 import { Icon } from '@iconify/vue';
 
 defineOptions({ name: 'SvgIcon', inheritAttrs: false });
@@ -46,6 +46,23 @@ const iconToLocalIconMap: Record<string, string> = {
   'mdi:robot': 'robot'
 };
 
+/** All local SVG icons available (filenames without .svg extension) */
+const localIcons = new Set([
+  'activity', 'api', 'application-cog-outline', 'at-sign', 'avatar', 'banner',
+  'bar-chart-outlined', 'book-alphabet', 'cast', 'chart-areaspline-variant',
+  'chevron-down', 'chevron-up', 'chip', 'chrome', 'clipboard-check-outline',
+  'clipboard-list-outline', 'clock-outline', 'cog', 'config', 'copy',
+  'custom-icon', 'dashboadr', 'demo', 'document-download', 'download',
+  'empty-data', 'example', 'expectation', 'face-recognition',
+  'file-document-outline', 'hdr-auto', 'heart', 'history', 'information-outline',
+  'language', 'language-python', 'logo', 'map-outline', 'menu', 'menu-fold-left',
+  'menu-fold-right', 'money-collect-outlined', 'monitor-dashboard', 'monitor-eye',
+  'network-error', 'nightlight-rounded', 'no-icon', 'no-permission', 'not-found',
+  'ph-caret-double-left-bold', 'ph-caret-double-right-bold', 'pin', 'pin-off',
+  'robot', 'schedule-outline', 'service-error', 'set', 'store-outline', 'sunny',
+  'task-alt-outline', 'trademark-circle-outlined', 'upload', 'volume-high', 'wind'
+]);
+
 const bindAttrs = computed<{ class: string; style: string }>(() => ({
   class: (attrs.class as string) || '',
   style: (attrs.style as string) || ''
@@ -54,10 +71,6 @@ const bindAttrs = computed<{ class: string; style: string }>(() => ({
 /**
  * Auto-detect local icon name from Iconify icon name
  * Priority: explicit mapping > icon name after ':'
- * Examples:
- *   'mdi:information-outline' -> 'information-outline'
- *   'heroicons:language' -> 'language'
- *   'ph-caret-double-left-bold' -> 'ph-caret-double-left-bold' (no colon, use full)
  */
 function getLocalIconName(icon: string): string | null {
   if (!icon) return null;
@@ -82,27 +95,18 @@ const { VITE_ICON_LOCAL_PREFIX: prefix } = import.meta.env;
 
 const symbolId = computed(() => `#${prefix}-${localIconName.value || 'no-icon'}`);
 
-const localIconExists = ref(false);
-
-function checkLocalIconExists() {
-  if (!localIconName.value) {
-    localIconExists.value = false;
-    return;
-  }
-
-  const id = `${prefix}-${localIconName.value}`;
-  localIconExists.value = !!document.getElementById(id);
-}
-
-onMounted(checkLocalIconExists);
-watch(localIconName, checkLocalIconExists);
+/** Check if local icon file exists (compile-time check, no DOM needed) */
+const localIconExists = computed(() => {
+  if (!localIconName.value) return false;
+  return localIcons.has(localIconName.value);
+});
 
 const renderLocalIcon = computed(() => {
-  // If we have a local icon name, check if it exists in DOM
-  if (localIconName.value) {
-    return localIconExists.value;
+  // If we have a local icon name and it exists in our local set, render local
+  if (localIconName.value && localIconExists.value) {
+    return true;
   }
-  // No local icon: render Iconify if icon prop provided, else fallback to no-icon
+  // No local icon available: render Iconify if icon prop provided, else fallback to no-icon
   return !props.icon;
 });
 </script>
