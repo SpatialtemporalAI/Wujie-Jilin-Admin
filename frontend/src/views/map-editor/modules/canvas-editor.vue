@@ -420,9 +420,9 @@ function syncStructure() {
       fabricCanvas.add(fabricObj);
       elementMap.set(key, fabricObj);
 
-      // 名称标签（不可交互，跟随图形位置）
+      // 名称标签（不可交互，跟随图形位置，字体大小与接待点保持一致）
       const labelText = new Text(obj.name || '', {
-        fontSize: 10,
+        fontSize: ANN_LABEL_FONT_SIZE,
         fill: strokeColor,
         originX: 'center',
         originY: 'center',
@@ -589,9 +589,7 @@ function updatePositions() {
     fabricObj.setCoords();
     const label = objectLabels.get(obj.id);
     if (label) {
-      const bounds = fabricObj.getBoundingRect();
-      label.set({ left: bounds.left + bounds.width / 2, top: bounds.top + bounds.height + 12 });
-      label.setCoords();
+      syncObjectLabelTransform(label, fabricObj);
     }
   }
   applyMarkerZoom();
@@ -771,6 +769,14 @@ function applyMarkerZoom() {
     }
     m.label.set({ left: px, top: py + (ROBOT_RADIUS + 8) * inv, scaleX: inv, scaleY: inv });
     m.label.setCoords();
+  }
+  // 障碍物/电子围栏/禁行区域名称标签：与点位名称保持相同的屏幕大小
+  for (const [objId, label] of objectLabels) {
+    const objKey = getElementKey('object', objId);
+    const fabricObj = elementMap.get(objKey);
+    if (fabricObj) {
+      syncObjectLabelTransform(label, fabricObj);
+    }
   }
   fabricCanvas.renderAll();
 }
@@ -1007,16 +1013,24 @@ function handleDoubleClick(opt: any) {
   }
 }
 
+function syncObjectLabelTransform(label: Text, fabricObj: any) {
+  if (!fabricCanvas) return;
+  const zoom = fabricCanvas.getZoom() || 1;
+  const inv = zoom > 0 ? 1 / zoom : 1;
+  const bounds = fabricObj.getBoundingRect();
+  label.set({
+    left: bounds.left + bounds.width / 2,
+    top: bounds.top + bounds.height + 12 * inv,
+    scaleX: inv,
+    scaleY: inv
+  });
+  label.setCoords();
+}
+
 function updateObjectLabelPosition(obj: any, id: number) {
   const label = objectLabels.get(id);
   if (!label) return;
-  // 用 getBoundingRect 拿到旋转/缩放后的真实边界，label 跟随 bbox 底部中点
-  const bounds = obj.getBoundingRect();
-  label.set({
-    left: bounds.left + bounds.width / 2,
-    top: bounds.top + bounds.height + 12,
-  });
-  label.setCoords();
+  syncObjectLabelTransform(label, obj);
 }
 
 function handleObjectMoved(opt: any) {

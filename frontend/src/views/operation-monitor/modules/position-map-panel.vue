@@ -87,6 +87,19 @@ function applyMarkerZoom() {
     robotMarker.arrow.set({ left: t.x, top: t.y, angle: t.angle, scaleX: inv, scaleY: inv });
     robotMarker.label.set({ left: px, top: py + ANN_LABEL_OFFSET * inv, scaleX: inv, scaleY: inv });
   }
+  // 障碍物/电子围栏/禁行区域名称标签：与接待点名称保持相同的屏幕大小
+  for (const [objId, label] of objectLabels) {
+    const fabricObj = elementMap.get(`obj-${objId}`);
+    if (!fabricObj) continue;
+    const bounds = fabricObj.getBoundingRect();
+    label.set({
+      left: bounds.left + bounds.width / 2,
+      top: bounds.top + bounds.height + 12 * inv,
+      scaleX: inv,
+      scaleY: inv
+    });
+    label.setCoords();
+  }
   fabricCanvas.renderAll();
 }
 
@@ -193,8 +206,8 @@ function worldToCanvasPoint(wx: number, wy: number) {
 
 /**
  * 同步障碍物/电子围栏/禁行区域的名称标签（与地图编辑器一致）。
- * 标签随图形一起缩放（属于场景对象，不参与 applyMarkerZoom 的反向缩放）。
  * 无名称时移除已有标签；位置取图形包围盒下沿居中、向下偏移 12px。
+ * 标签参与 applyMarkerZoom 的反向缩放，保证与接待点名称的屏幕字体大小一致。
  */
 function syncObjectLabel(objId: number, fabricObj: any, name: string | null | undefined, strokeColor: string) {
   const trimmed = name?.trim();
@@ -206,6 +219,8 @@ function syncObjectLabel(objId: number, fabricObj: any, name: string | null | un
     }
     return;
   }
+  const zoom = fabricCanvas?.getZoom() || 1;
+  const inv = zoom > 0 ? 1 / zoom : 1;
   if (!label) {
     label = new Text(trimmed, {
       fontSize: 10,
@@ -215,7 +230,9 @@ function syncObjectLabel(objId: number, fabricObj: any, name: string | null | un
       fontFamily: 'sans-serif',
       fontWeight: 'bold',
       evented: false,
-      selectable: false
+      selectable: false,
+      scaleX: inv,
+      scaleY: inv
     });
     fabricCanvas!.add(label);
     objectLabels.set(objId, label);
@@ -223,7 +240,12 @@ function syncObjectLabel(objId: number, fabricObj: any, name: string | null | un
     label.set({ text: trimmed, fill: strokeColor });
   }
   const bounds = fabricObj.getBoundingRect();
-  label.set({ left: bounds.left + bounds.width / 2, top: bounds.top + bounds.height + 12 });
+  label.set({
+    left: bounds.left + bounds.width / 2,
+    top: bounds.top + bounds.height + 12 * inv,
+    scaleX: inv,
+    scaleY: inv
+  });
   label.setCoords();
 }
 
