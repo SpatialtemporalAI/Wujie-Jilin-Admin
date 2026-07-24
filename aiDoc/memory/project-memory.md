@@ -8,6 +8,7 @@
 
 ## 业务需求记忆
 
+- [2026-07-24 运行监控 obstacle-square 高度被强制等于宽度（3×0.5→3×3）](./business/2026-07-24_operation-monitor-obstacle-size-sync-editor.md) — 运行监控创建分支对 obstacle-square 强制 height=width 且无 updatePositions 二次覆盖（编辑器有覆盖），真实 height 丢失；去掉 isSquare 强制改用真实 obj.height，配套对齐默认值/更新分支/编辑器兜底
 - [2026-07-21 语音配置 gRPC target 统一回归 middleware](./business/2026-07-21_voice-grpc-target-to-middleware.md) — 语音合成保存/测试(notify_tts/test_tts)+ 唤醒词测试(test_wake_word)的 target 由 agent 改为 middleware（config_client.py）
 - [2026-07-20 实时告警数量标签改灰色](./business/2026-07-20_operation-monitor-alert-count-gray.md) — alert-panel 标题旁告警数量 NTag 由 error(红) 改 default(灰)，弱化视觉权重
 - [2026-07-20 机器人事件日志 event_status 枚举值重命名](./business/2026-07-20_robot-event-log-status-rename.md) — normal→info、abnormal→critical、warning 不变；全栈字面值替换，不写迁移、不兼容旧值，外部写入源同步改

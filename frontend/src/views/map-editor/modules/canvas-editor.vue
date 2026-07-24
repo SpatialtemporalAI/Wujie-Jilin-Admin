@@ -584,7 +584,9 @@ function updatePositions() {
     if (fabricObj instanceof Ellipse) {
       fabricObj.set({ rx: (obj.width || 10) / 2, ry: (obj.height || 10) / 2 });
     } else if (fabricObj instanceof Rect || fabricObj instanceof Triangle) {
-      fabricObj.set({ width: obj.width, height: obj.height });
+      // 与 syncStructure 创建时的兜底口径一致，避免 obj.width/height 缺失（为 0）时
+      // 图形塌缩成细线；同时与运行监控 position-map-panel 的渲染保持一致。
+      fabricObj.set({ width: obj.width || 5, height: obj.height || 5 });
     }
     fabricObj.setCoords();
     const label = objectLabels.get(obj.id);

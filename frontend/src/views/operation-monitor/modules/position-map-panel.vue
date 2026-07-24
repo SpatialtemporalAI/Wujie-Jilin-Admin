@@ -360,6 +360,13 @@ function renderElements() {
     if (elementMap.has(key)) {
       const fabricObj = elementMap.get(key);
       fabricObj.set({ left: obj.x, top: obj.y, angle: obj.angle ?? 0 });
+      // 尺寸同步与地图编辑器 updatePositions 一致（含兜底口径），
+      // 确保增量重渲染时障碍物宽高仍与编辑器相同。
+      if (fabricObj instanceof Ellipse) {
+        fabricObj.set({ rx: (obj.width || 10) / 2, ry: (obj.height || 10) / 2 });
+      } else if (fabricObj instanceof Rect || fabricObj instanceof Triangle) {
+        fabricObj.set({ width: obj.width || 5, height: obj.height || 5 });
+      }
       fabricObj.setCoords();
       syncObjectLabel(obj.id, fabricObj, obj.name, stroke);
     } else {
@@ -377,6 +384,8 @@ function renderElements() {
         stroke,
         strokeWidth
       };
+      // 兜底默认值对齐地图编辑器 syncStructure；但矩形 height 一律用真实 obj.height，
+      // 不照搬 obstacle-square 的 height=width 强制（见下方 else 注释）。
       let fabricObj: Rect | Polygon | Triangle | Ellipse | null = null;
       if (obj.points) {
         try {
@@ -391,15 +400,24 @@ function renderElements() {
       } else if (obj.type === 'obstacle-triangle') {
         fabricObj = new Triangle({
           ...commonOpts,
+          width: obj.width || 5,
+          height: obj.height || 5
+        });
+      } else if (isFence) {
+        fabricObj = new Rect({
+          ...commonOpts,
           width: obj.width || 10,
           height: obj.height || 10
         });
       } else {
-        const isSquare = obj.type === 'obstacle-square';
+        // 直接使用真实 width/height，与编辑器 updatePositions 的最终渲染口径一致。
+        // 运行监控只渲染一次、没有编辑器 updatePositions 的二次覆盖；若在此处按
+        // obstacle-square 强制 height=width，会丢失真实 height，导致编辑器里 3×0.5
+        // 的矩形在运行监控里被显示成 3×3 的正方形。
         fabricObj = new Rect({
           ...commonOpts,
-          width: obj.width || 10,
-          height: isSquare ? (obj.width || 10) : (obj.height || 10)
+          width: obj.width || 5,
+          height: obj.height || 5
         });
       }
       if (fabricObj) {
