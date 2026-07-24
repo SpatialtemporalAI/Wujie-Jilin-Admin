@@ -37,6 +37,10 @@ const iconToLocalIconMap: Record<string, string> = {
   'material-symbols:schedule-outline': 'schedule-outline',
   'material-symbols:task-alt-outline': 'task-alt-outline',
   'material-symbols:history': 'history',
+  'material-symbols:notifications-outline': 'notifications-outline',
+  'material-symbols:cloud-download-outline': 'cloud-download-outline',
+  'ph:user-circle': 'user-circle',
+  'ph:sign-out': 'sign-out',
   'mdi:book-alphabet': 'book-alphabet',
   'mdi:upload': 'upload',
   'arcticons:example': 'example',
@@ -51,7 +55,7 @@ const localIcons = new Set([
   'activity', 'api', 'application-cog-outline', 'at-sign', 'avatar', 'banner',
   'bar-chart-outlined', 'book-alphabet', 'cast', 'chart-areaspline-variant',
   'chevron-down', 'chevron-up', 'chip', 'chrome', 'clipboard-check-outline',
-  'clipboard-list-outline', 'clock-outline', 'cog', 'config', 'copy',
+  'clipboard-list-outline', 'clock-outline', 'cloud-download-outline', 'cog', 'config', 'copy',
   'custom-icon', 'dashboadr', 'demo', 'document-download', 'download',
   'empty-data', 'example', 'expectation', 'face-recognition',
   'file-document-outline', 'hdr-auto', 'heart', 'history', 'information-outline',
@@ -59,7 +63,8 @@ const localIcons = new Set([
   'menu-fold-right', 'money-collect-outlined', 'monitor-dashboard', 'monitor-eye',
   'network-error', 'nightlight-rounded', 'no-icon', 'no-permission', 'not-found',
   'ph-caret-double-left-bold', 'ph-caret-double-right-bold', 'pin', 'pin-off',
-  'robot', 'schedule-outline', 'service-error', 'set', 'store-outline', 'sunny',
+  'notifications-outline', 'robot', 'schedule-outline', 'service-error', 'set', 'sign-out', 'store-outline', 'sunny',
+  'user-circle',
   'task-alt-outline', 'trademark-circle-outlined', 'upload', 'volume-high', 'wind'
 ]);
 
