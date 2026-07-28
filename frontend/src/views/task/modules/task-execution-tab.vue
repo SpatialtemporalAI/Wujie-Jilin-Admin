@@ -165,7 +165,7 @@ const columns = [
 
 let pollTimer: ReturnType<typeof setInterval> | null = null;
 
-const POLL_INTERVAL_MS = 60_000;
+const POLL_INTERVAL_MS = 10000;
 
 function startPolling() {
   stopPolling();
