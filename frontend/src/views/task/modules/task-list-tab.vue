@@ -1,5 +1,5 @@
 <script setup lang="tsx">
-import { reactive, ref } from 'vue';
+import { reactive, ref, onMounted, onUnmounted, onActivated, onDeactivated } from 'vue';
 import { NButton, NDataTable, NPopconfirm, NTag, useMessage } from 'naive-ui';
 import {
   fetchGetTaskList,
@@ -55,6 +55,21 @@ const scheduleCycleLabel: Record<string, string> = {
 
 const startingTaskId = ref<number | null>(null);
 const pausingTaskId = ref<number | null>(null);
+
+let pollTimer: ReturnType<typeof setInterval> | null = null;
+const POLL_INTERVAL_MS = 15_000;
+
+function startPolling() {
+  stopPolling();
+  pollTimer = setInterval(getData, POLL_INTERVAL_MS);
+}
+
+function stopPolling() {
+  if (pollTimer) {
+    clearInterval(pollTimer);
+    pollTimer = null;
+  }
+}
 
 function formatSchedule(row: Api.Task.Task): string {
   if (!row.schedule_enabled) return '未配置';
@@ -293,6 +308,11 @@ async function handlePauseTask(taskId: number) {
     pausingTaskId.value = null;
   }
 }
+
+onMounted(startPolling);
+onActivated(startPolling);
+onDeactivated(stopPolling);
+onUnmounted(stopPolling);
 </script>
 
 <template>
