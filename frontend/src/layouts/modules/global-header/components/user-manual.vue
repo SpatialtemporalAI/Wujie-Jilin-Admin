@@ -19,6 +19,8 @@ interface HeadingItem {
 const showModal = ref(false);
 const activeDoc = ref('main');
 const contentRef = ref<HTMLElement | null>(null);
+const mainScrollTop = ref(0);
+const activeHeadingId = ref('');
 
 const docContents: Record<string, string> = {
   main: manualContent,
@@ -50,11 +52,10 @@ function getHeadingLevel(text: string): number {
   return 1;
 }
 
-/** 从主手册提取标题树 */
+/** 从主手册提取标题树（mammoth 转换的 <a id="heading_X"></a>__标题__ 格式） */
 function extractHeadings(): HeadingItem[] {
   const headings: HeadingItem[] = [];
   const lines = manualContent.split('\n');
-  // 匹配 <a id="heading_X"></a>__标题__
   const regex = /<a id="heading_(\d+)"><\/a>__(.+)__/;
   for (const line of lines) {
     const match = line.match(regex);
@@ -71,7 +72,7 @@ function extractHeadings(): HeadingItem[] {
 function renderContent(docKey: string): string {
   let content = docContents[docKey] || '';
 
-  // 删除主手册顶部标题行 "__机器人管理系统用户手册 __"
+  // 删除主手册顶部标题行
   if (docKey === 'main') {
     content = content.replace(/^__机器人管理系统用户手册 __\n/, '');
   }
@@ -118,7 +119,7 @@ function scrollToHeading(id: string) {
 function backToMain() {
   activeDoc.value = 'main';
   nextTick(() => {
-    contentRef.value?.scrollTo({ top: 0, behavior: 'instant' });
+    contentRef.value?.scrollTo({ top: mainScrollTop.value, behavior: 'instant' });
   });
 }
 
@@ -128,6 +129,8 @@ function handleContentClick(e: MouseEvent) {
   if (link) {
     const docKey = link.dataset.doc;
     if (docKey && docContents[docKey]) {
+      // 进入 md 详情前记录主手册滚动位置
+      mainScrollTop.value = contentRef.value?.scrollTop || 0;
       activeDoc.value = docKey;
       nextTick(() => {
         contentRef.value?.scrollTo({ top: 0, behavior: 'instant' });
@@ -136,19 +139,65 @@ function handleContentClick(e: MouseEvent) {
   }
 }
 
+/** 滚动时高亮目录 */
+function updateActiveHeadingOnScroll() {
+  if (!contentRef.value || activeDoc.value !== 'main') return;
+
+  const container = contentRef.value;
+  const containerRect = container.getBoundingClientRect();
+  const threshold = containerRect.top + 120;
+
+  let currentId = '';
+
+  for (const heading of headings.value) {
+    const el = document.getElementById(heading.id);
+    if (!el) continue;
+
+    const elRect = el.getBoundingClientRect();
+    if (elRect.top <= threshold) {
+      currentId = heading.id;
+    } else {
+      break;
+    }
+  }
+
+  if (currentId) {
+    activeHeadingId.value = currentId;
+  }
+}
+
 watch(showModal, visible => {
   if (visible) {
     activeDoc.value = 'main';
+    mainScrollTop.value = 0;
+    activeHeadingId.value = '';
   }
 });
+
+watch(
+  () => [contentRef.value, activeDoc.value, showModal.value],
+  () => {
+    if (contentRef.value && activeDoc.value === 'main' && showModal.value) {
+      contentRef.value.addEventListener('scroll', updateActiveHeadingOnScroll);
+    }
+  },
+  { immediate: true }
+);
 </script>
 
 <template>
   <div>
     <ButtonIcon icon="mdi:book-open-outline" tooltip-content="用户手册" @click="showModal = true" />
 
-    <NModal v-model:show="showModal" preset="card" title="用户手册" style="width: 90vw; max-width: 1200px"
-      body-style="padding: 0;" :bordered="false" :segmented="{ content: true }">
+    <NModal
+      v-model:show="showModal"
+      preset="card"
+      title="用户手册"
+      style="width: 90vw; max-width: 1200px"
+      body-style="padding: 0;"
+      :bordered="false"
+      :segmented="{ content: true }"
+    >
       <div class="manual-container">
         <div class="manual-sidebar">
           <NScrollbar class="sidebar-scroll">
@@ -156,8 +205,13 @@ watch(showModal, visible => {
               <div class="sidebar-title">机器人管理系统用户手册</div>
               <div class="toc-divider"></div>
               <div class="toc-list">
-                <div v-for="heading in headings" :key="heading.id" class="toc-item"
-                  :class="`toc-level-${heading.level}`" @click="scrollToHeading(heading.id)">
+                <div
+                  v-for="heading in headings"
+                  :key="heading.id"
+                  class="toc-item"
+                  :class="[`toc-level-${heading.level}`, { 'toc-active': activeHeadingId === heading.id }]"
+                  @click="scrollToHeading(heading.id)"
+                >
                   {{ heading.text }}
                 </div>
               </div>
@@ -176,7 +230,7 @@ watch(showModal, visible => {
 <style scoped>
 .manual-container {
   display: flex;
-  height: 77vh;
+  height: 70vh;
   overflow: hidden;
 }
 
@@ -254,6 +308,17 @@ watch(showModal, visible => {
 
 .dark .toc-item:hover {
   background-color: #374151;
+  color: #60a5fa;
+}
+
+.toc-item.toc-active {
+  background-color: #eff6ff;
+  color: #2563eb;
+  font-weight: 500;
+}
+
+.dark .toc-item.toc-active {
+  background-color: rgba(37, 99, 235, 0.15);
   color: #60a5fa;
 }
 
