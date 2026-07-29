@@ -1,11 +1,7 @@
 <script setup lang="tsx">
 import { reactive, ref } from 'vue';
 import { NButton, NCard, NDataTable, NPopconfirm, NTag, useMessage } from 'naive-ui';
-import {
-  fetchBatchDeleteOperationLog,
-  fetchDeleteOperationLog,
-  fetchGetOperationLogList
-} from '@/service/api';
+import { fetchBatchDeleteOperationLog, fetchDeleteOperationLog, fetchGetOperationLogList } from '@/service/api';
 import { useAppStore } from '@/store/modules/app';
 import { defaultTransform, useNaivePaginatedTable, useTableOperate } from '@/hooks/common/table';
 import { useAuth } from '@/hooks/business/auth';
@@ -29,15 +25,7 @@ const searchParams: Api.SystemManage.OperationLogSearchParams = reactive({
   end_time: null
 });
 
-const {
-  columns,
-  columnChecks,
-  data,
-  getData,
-  getDataByPage,
-  loading,
-  mobilePagination
-} = useNaivePaginatedTable({
+const { columns, columnChecks, data, getData, getDataByPage, loading, mobilePagination } = useNaivePaginatedTable({
   api: () => fetchGetOperationLogList(searchParams),
   transform: response => {
     return defaultTransform(response);
@@ -118,7 +106,11 @@ const {
       render: row => {
         if (!row.response_code) return '-';
         const type: NaiveUI.ThemeColor = row.response_code < 400 ? 'success' : 'error';
-        return <NTag type={type} size="small">{row.response_code}</NTag>;
+        return (
+          <NTag type={type} size="small">
+            {row.response_code}
+          </NTag>
+        );
       }
     },
     {
@@ -199,7 +191,6 @@ async function handleBatchDelete() {
     message.error($t('common.deleteFailed'));
   }
 }
-
 </script>
 
 <template>
@@ -216,7 +207,14 @@ async function handleBatchDelete() {
         @refresh="getData"
       >
         <template #prefix>
-          <NButton type="primary" ghost size="small" :loading="submitting" :disabled="loading" @click="submitExport('operation_log', searchParams)">
+          <NButton
+            type="primary"
+            ghost
+            size="small"
+            :loading="submitting"
+            :disabled="loading"
+            @click="submitExport('operation_log', searchParams)"
+          >
             {{ $t('common.export') }}
           </NButton>
         </template>
@@ -236,10 +234,7 @@ async function handleBatchDelete() {
         :pagination="mobilePagination"
         class="sm:h-full"
       />
-      <OperationLogDetailDrawer
-        v-model:visible="detailDrawerVisible"
-        :log-id="detailLogId"
-      />
+      <OperationLogDetailDrawer v-model:visible="detailDrawerVisible" :log-id="detailLogId" />
     </NCard>
   </div>
 </template>

@@ -1,9 +1,9 @@
 <script setup lang="ts">
 import { computed, ref, watch } from 'vue';
 import { jsonClone } from '@sa/utils';
+import { fetchCreateScheduledTask, fetchCronPreview, fetchUpdateScheduledTask } from '@/service/api';
 import { useNaiveForm } from '@/hooks/common/form';
 import { $t } from '@/locales';
-import { fetchCreateScheduledTask, fetchUpdateScheduledTask, fetchCronPreview } from '@/service/api';
 
 defineOptions({ name: 'TaskOperateDrawer' });
 
@@ -145,20 +145,39 @@ watch(visible, () => {
     <NDrawerContent :title="title" :native-scrollbar="false" closable>
       <NForm ref="formRef" :model="model" :rules="rules">
         <NFormItem :label="$t('page.manage.scheduler.taskName')" path="name">
-          <NInput v-model:value="model.name" :placeholder="$t('page.manage.scheduler.form.taskName')" maxlength="100" show-count />
+          <NInput
+            v-model:value="model.name"
+            :placeholder="$t('page.manage.scheduler.form.taskName')"
+            maxlength="100"
+            show-count
+          />
         </NFormItem>
         <NFormItem :label="$t('page.manage.scheduler.taskKey')" path="task_key">
-          <NInput v-model:value="model.task_key" :placeholder="$t('page.manage.scheduler.form.taskKey')" maxlength="200" :disabled="isEdit" />
+          <NInput
+            v-model:value="model.task_key"
+            :placeholder="$t('page.manage.scheduler.form.taskKey')"
+            maxlength="200"
+            :disabled="isEdit"
+          />
         </NFormItem>
         <NFormItem :label="$t('page.manage.scheduler.description')" path="description">
-          <NInput v-model:value="model.description" type="textarea" :placeholder="$t('page.manage.scheduler.form.description')" :rows="3" maxlength="500" />
+          <NInput
+            v-model:value="model.description"
+            type="textarea"
+            :placeholder="$t('page.manage.scheduler.form.description')"
+            :rows="3"
+            maxlength="500"
+          />
         </NFormItem>
         <NFormItem :label="$t('page.manage.scheduler.triggerType')" path="trigger_type">
           <NSelect v-model:value="model.trigger_type" :options="triggerTypeOptions" />
         </NFormItem>
         <NFormItem :label="$t('page.manage.scheduler.cronExpression')" path="cron_expression">
           <NSpace vertical class="w-full">
-            <NInput v-model:value="model.cron_expression" :placeholder="$t('page.manage.scheduler.form.cronExpression')" />
+            <NInput
+              v-model:value="model.cron_expression"
+              :placeholder="$t('page.manage.scheduler.form.cronExpression')"
+            />
             <NButton size="small" :loading="cronPreviewLoading" @click="handleCronPreview">
               {{ $t('page.manage.scheduler.cronPreview') }}
             </NButton>
@@ -170,8 +189,21 @@ watch(visible, () => {
             </div>
           </NSpace>
         </NFormItem>
-        <NFormItem v-if="model.trigger_type !== 'cron'" :label="$t('page.manage.scheduler.triggerParams')" path="trigger_params">
-          <NInput v-model:value="model.trigger_params" type="textarea" :placeholder="model.trigger_type === 'interval' ? '{&quot;seconds&quot;: 60}' : '{&quot;run_date&quot;: &quot;2026-01-01 00:00:00&quot;}'" :rows="2" />
+        <NFormItem
+          v-if="model.trigger_type !== 'cron'"
+          :label="$t('page.manage.scheduler.triggerParams')"
+          path="trigger_params"
+        >
+          <NInput
+            v-model:value="model.trigger_params"
+            type="textarea"
+            :placeholder="
+              model.trigger_type === 'interval'
+                ? '{&quot;seconds&quot;: 60}'
+                : '{&quot;run_date&quot;: &quot;2026-01-01 00:00:00&quot;}'
+            "
+            :rows="2"
+          />
         </NFormItem>
         <NFormItem :label="$t('page.manage.scheduler.timeout')" path="timeout">
           <NInputNumber v-model:value="model.timeout" :min="0" :step="60" class="w-full" />
@@ -186,7 +218,9 @@ watch(visible, () => {
       <template #footer>
         <NSpace :size="16">
           <NButton @click="closeDrawer">{{ $t('common.cancel') }}</NButton>
-          <NButton type="primary" :loading="submitting" :disabled="submitting" @click="handleSubmit">{{ $t('common.confirm') }}</NButton>
+          <NButton type="primary" :loading="submitting" :disabled="submitting" @click="handleSubmit">
+            {{ $t('common.confirm') }}
+          </NButton>
         </NSpace>
       </template>
     </NDrawerContent>

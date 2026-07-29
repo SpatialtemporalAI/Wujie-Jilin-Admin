@@ -2,10 +2,10 @@
 import { computed, ref, watch } from 'vue';
 import { jsonClone } from '@sa/utils';
 import { enableStatusOptions } from '@/constants/business';
-import { fetchCreateMerchant, fetchGetMerchant, fetchGetAllRobots, fetchUpdateMerchant } from '@/service/api';
+import { fetchCreateMerchant, fetchGetAllRobots, fetchGetMerchant, fetchUpdateMerchant } from '@/service/api';
 import { useFormRules, useNaiveForm } from '@/hooks/common/form';
-import { $t } from '@/locales';
 import { booleanToEnableStatus } from '@/utils/status';
+import { $t } from '@/locales';
 
 defineOptions({
   name: 'MerchantOperateDrawer'

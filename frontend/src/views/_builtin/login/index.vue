@@ -52,16 +52,17 @@ const bgColor = computed(() => {
 
 <template>
   <div class="relative size-full flex-center overflow-hidden" :style="{ backgroundColor: bgColor }">
-    <img src="@/assets/imgs/login-bg.png" alt="" class="w-full h-full object-cover absolute l-0 r-0 t-0 b-0" />
-    <NCard :bordered="false" class="absolute z-4 w-auto rd-12px  logo-glass">
+    <img src="@/assets/imgs/login-bg.png" alt="" class="l-0 r-0 t-0 absolute h-full w-full b-0 object-cover" />
+    <NCard :bordered="false" class="logo-glass absolute z-4 w-auto rd-12px">
       <div class="w-324px lt-sm:w-300px">
-        <div class="flex justify-center items-center mb-14px">
-          <img src="@/assets/imgs/logo.png" alt="" class="w-24px h-24px object-contain mr-10px" />
+        <div class="mb-14px flex items-center justify-center">
+          <img src="@/assets/imgs/logo.png" alt="" class="mr-10px h-24px w-24px object-contain" />
           <img src="@/assets/imgs/lvyaText.png" alt="" class="h-24px object-contain" />
         </div>
         <header class="flex-y-center justify-center">
-          <h3 class="text-28px  font-500 lt-sm:text-24px">{{ $t('system.title') }}</h3>
-          <!-- <div class="i-flex-col">
+          <h3 class="text-28px font-500 lt-sm:text-24px">{{ $t('system.title') }}</h3>
+          <!--
+ <div class="i-flex-col">
             <ThemeSchemaSwitch
               :theme-schema="themeStore.themeScheme"
               :show-tooltip="false"
@@ -75,7 +76,8 @@ const bgColor = computed(() => {
               :show-tooltip="false"
               @change-lang="appStore.changeLocale"
             />
-          </div> -->
+          </div> 
+-->
         </header>
         <main class="pt-20px">
           <!-- <h3 class="text-18px text-primary font-medium">{{ $t(activeModule.label) }}</h3> -->
@@ -90,7 +92,7 @@ const bgColor = computed(() => {
   </div>
 </template>
 
-<style scoped lang=scss>
+<style scoped lang="scss">
 .logo-glass {
   backdrop-filter: blur(10px);
   -webkit-backdrop-filter: blur(10px); /* 兼容Safari */
@@ -98,9 +100,9 @@ const bgColor = computed(() => {
   right: 10%;
   transition: all 0.3s;
   transform: scale(1.08);
-  &:hover{
-      background-color: rgba(255, 255, 255, 0.39);
-      backdrop-filter: blur(18px);
+  &:hover {
+    background-color: rgba(255, 255, 255, 0.39);
+    backdrop-filter: blur(18px);
   }
 }
 </style>

@@ -1,6 +1,6 @@
-@import "./reset.css";
-@import "./nprogress.css";
-@import "./transition.css";
+@import './reset.css';
+@import './nprogress.css';
+@import './transition.css';
 
 html,
 body,
@@ -15,13 +15,13 @@ html {
 }
 
 /* 表格容器卡片去除多余白边和层级 */
-.card-wrapper[class*="flex-1-hidden"] {
+.card-wrapper[class*='flex-1-hidden'] {
   background: transparent !important;
   box-shadow: none !important;
   border-radius: 0 !important;
 }
 
-.card-wrapper[class*="flex-1-hidden"] .n-card__content {
+.card-wrapper[class*='flex-1-hidden'] .n-card__content {
   padding: 0 !important;
 }
 

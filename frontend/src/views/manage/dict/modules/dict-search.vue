@@ -1,15 +1,6 @@
 <script setup lang="ts">
 import { toRaw } from 'vue';
-import {
-  NButton,
-  NForm,
-  NFormItem,
-  NFormItemGi,
-  NGrid,
-  NInput,
-  NSelect,
-  NSpace
-} from 'naive-ui';
+import { NButton, NForm, NFormItem, NFormItemGi, NGrid, NInput, NSelect, NSpace } from 'naive-ui';
 import { jsonClone } from '@sa/utils';
 import { enableStatusOptions, yesOrNoOptions } from '@/constants/business';
 import { $t } from '@/locales';

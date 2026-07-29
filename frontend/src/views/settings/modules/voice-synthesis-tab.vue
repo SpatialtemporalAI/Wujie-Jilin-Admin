@@ -1,12 +1,12 @@
 <script setup lang="ts">
-import { reactive, ref, computed, onMounted } from 'vue';
+import { computed, onMounted, reactive, ref } from 'vue';
 import { NText, useMessage } from 'naive-ui';
 import {
   fetchGetAllRobots,
   fetchGetVoiceConfig,
   fetchSaveVoiceConfig,
-  fetchTestWakeWord,
-  fetchTestTTS
+  fetchTestTTS,
+  fetchTestWakeWord
 } from '@/service/api';
 import { useNaiveForm } from '@/hooks/common/form';
 import { useAuth } from '@/hooks/business/auth';
@@ -43,7 +43,7 @@ const rules = computed(() => ({
         {
           validator: (_rule: unknown, value: string) => {
             if (!value) return true;
-            if (!/^[\u4e00-\u9fa5]{4,6}$/.test(value)) {
+            if (!/^[\u4E00-\u9FA5]{4,6}$/.test(value)) {
               return new Error('唤醒词必须为 4-6 个中文汉字，不能包含字母、数字、符号或空格');
             }
             return true;
@@ -83,7 +83,7 @@ const faceWakeEnabled = computed<boolean>({
 const canSaveWakeWord = computed(() => {
   // 唤醒词模式下才校验
   if (faceWakeEnabled.value) return true;
-  return /^[\u4e00-\u9fa5]{4,6}$/.test(model.wake_word);
+  return /^[\u4E00-\u9FA5]{4,6}$/.test(model.wake_word);
 });
 
 const selectedRobot = computed(() => robotList.value.find(r => r.id === selectedRobotId.value) || null);
@@ -229,9 +229,7 @@ onMounted(() => {
       <div v-if="!selectedRobotId" class="empty-tip">请先选择机器人</div>
       <NSpin v-else :show="loading">
         <div class="flex-col gap-16px">
-          <NAlert v-if="showAlert" type="info" closable>
-            唤醒词设置成功，预计 1 分钟后生效
-          </NAlert>
+          <NAlert v-if="showAlert" type="info" closable>唤醒词设置成功，预计 1 分钟后生效</NAlert>
 
           <div class="text-14px font-medium">
             当前机器人：{{ selectedRobot?.name }}（{{ selectedRobot?.serial_number }}）
@@ -293,7 +291,7 @@ onMounted(() => {
                     <NSelect v-model:value="model.tts_voice" :options="voiceOptions" placeholder="请选择音色" />
                   </NFormItemGi>
                   <NFormItemGi label="语速">
-                    <div class="flex-col gap-8px w-full">
+                    <div class="w-full flex-col gap-8px">
                       <NSlider
                         v-model:value="model.tts_speed"
                         :min="0.5"
@@ -306,7 +304,7 @@ onMounted(() => {
                     </div>
                   </NFormItemGi>
                   <NFormItemGi label="音量">
-                    <div class="flex-col gap-8px w-full">
+                    <div class="w-full flex-col gap-8px">
                       <NSlider
                         v-model:value="model.tts_volume"
                         :min="0"

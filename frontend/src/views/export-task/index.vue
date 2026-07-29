@@ -119,7 +119,11 @@ const { columns, columnChecks, data, getData, loading, mobilePagination } = useN
       minWidth: 100,
       render: row => {
         const meta = getStatusMeta(row.status);
-        return <NTag type={meta.type} size="small">{meta.label}</NTag>;
+        return (
+          <NTag type={meta.type} size="small">
+            {meta.label}
+          </NTag>
+        );
       }
     },
     {

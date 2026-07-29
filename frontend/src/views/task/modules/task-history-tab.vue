@@ -57,15 +57,7 @@ function handleViewDetail(row: Api.Task.TaskExecutionRecord) {
   detailDrawerVisible.value = true;
 }
 
-const {
-  columns,
-  columnChecks,
-  data,
-  getData,
-  getDataByPage,
-  loading,
-  mobilePagination
-} = useNaivePaginatedTable({
+const { columns, columnChecks, data, getData, getDataByPage, loading, mobilePagination } = useNaivePaginatedTable({
   api: () => fetchGetExecutionRecordHistory(searchParams),
   transform: response => defaultTransform(response),
   onPaginationParamsChange: params => {
@@ -86,9 +78,7 @@ const {
       align: 'center',
       minWidth: 140,
       ellipsis: { tooltip: true },
-      render: (row: Api.Task.TaskExecutionRecord) => (
-        <span>{row.task_definition?.task_name || '-'}</span>
-      )
+      render: (row: Api.Task.TaskExecutionRecord) => <span>{row.task_definition?.task_name || '-'}</span>
     },
     // {
     //   key: 'task_id',
@@ -172,12 +162,26 @@ const {
   <div class="h-full flex-col-stretch gap-12px overflow-hidden lt-sm:overflow-auto">
     <div class="flex-y-center justify-between gap-12px">
       <TaskHistorySearch v-model:model="searchParams" @search="getDataByPage" />
-      <TableHeaderOperation v-model:columns="columnChecks" :loading="loading" :show-add="false" :show-delete="false"
-        @refresh="getData" />
+      <TableHeaderOperation
+        v-model:columns="columnChecks"
+        :loading="loading"
+        :show-add="false"
+        :show-delete="false"
+        @refresh="getData"
+      />
     </div>
-    <NDataTable :columns="columns" :data="data" size="small" :flex-height="!appStore.isMobile" :scroll-x="1320"
-      :loading="loading" remote :row-key="(row: Api.Task.TaskExecutionRecord) => row.id" :pagination="mobilePagination"
-      class="sm:flex-1-hidden" />
+    <NDataTable
+      :columns="columns"
+      :data="data"
+      size="small"
+      :flex-height="!appStore.isMobile"
+      :scroll-x="1320"
+      :loading="loading"
+      remote
+      :row-key="(row: Api.Task.TaskExecutionRecord) => row.id"
+      :pagination="mobilePagination"
+      class="sm:flex-1-hidden"
+    />
     <TaskDetailDrawer v-model:visible="detailDrawerVisible" :exec-id="detailExecId" />
   </div>
 </template>

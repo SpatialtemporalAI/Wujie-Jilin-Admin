@@ -1,6 +1,6 @@
 <script setup lang="ts">
-import { NInput, NSelect } from 'naive-ui';
 import { useDebounceFn } from '@vueuse/core';
+import { NInput, NSelect } from 'naive-ui';
 import { $t } from '@/locales';
 
 defineOptions({

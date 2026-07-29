@@ -1,4 +1,4 @@
-import { ref, computed, onMounted, onBeforeUnmount, watch } from 'vue';
+import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue';
 import { fetchGetAllRobots, fetchGetLatestRobotStatus } from '@/service/api';
 
 export interface ParsedLocation {
@@ -17,9 +17,7 @@ export function useRobotMonitor() {
 
   let pollingTimer: ReturnType<typeof setInterval> | null = null;
 
-  const selectedRobot = computed(() =>
-    robotList.value.find(r => r.id === selectedRobotId.value) ?? null
-  );
+  const selectedRobot = computed(() => robotList.value.find(r => r.id === selectedRobotId.value) ?? null);
 
   const parsedLocation = computed<ParsedLocation | null>(() => {
     const loc = latestStatus.value?.location_info ?? latestStatus.value?.location;
@@ -29,7 +27,9 @@ export function useRobotMonitor() {
       if (typeof obj.x === 'number' && typeof obj.y === 'number') {
         return { x: obj.x, y: obj.y, angle: obj.angle ?? 0 };
       }
-    } catch { /* ignore */ }
+    } catch {
+      /* ignore */
+    }
     return null;
   });
 
@@ -61,7 +61,9 @@ export function useRobotMonitor() {
       if (robot) {
         robot.status = data.status;
       }
-    } catch { /* ignore */ }
+    } catch {
+      /* ignore */
+    }
   }
 
   function startPolling() {

@@ -1,9 +1,9 @@
 <script setup lang="ts">
 import { computed, ref, watch } from 'vue';
 import type { FormRules } from 'naive-ui';
+import { fetchGetRobot, fetchUpdateRobotGrpcConfig } from '@/service/api';
 import { useNaiveForm } from '@/hooks/common/form';
 import { $t } from '@/locales';
-import { fetchGetRobot, fetchUpdateRobotGrpcConfig } from '@/service/api';
 
 defineOptions({
   name: 'RobotGrpcConfigDrawer'

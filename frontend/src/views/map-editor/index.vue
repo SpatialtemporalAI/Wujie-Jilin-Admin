@@ -1,23 +1,29 @@
 <script setup lang="ts">
-import { computed, h, nextTick, onMounted, onBeforeUnmount, ref, watch } from 'vue';
+import { computed, h, nextTick, onBeforeUnmount, onMounted, ref, watch } from 'vue';
 import type { DialogReactive, UploadFileInfo } from 'naive-ui';
 import { NButton, NSpace, useDialog, useMessage } from 'naive-ui';
-import { $t } from '@/locales';
+import {
+  fetchCreateSceneMap,
+  fetchGetSceneMap,
+  fetchParseSceneMapConfig,
+  fetchUpdateSceneMap,
+  fetchUploadSceneMapEditorImage
+} from '@/service/api/scene';
+import { fetchGetMapRobotLocations } from '@/service/api';
+import { getFilePreviewUrl } from '@/service/api/file';
 import { useAuth } from '@/hooks/business/auth';
+import { radToDeg } from '@/utils/coordinate';
+import { $t } from '@/locales';
 import { useMapEditor } from './composables/useMapEditor';
 import type { SelectedElement } from './composables/useMapEditor';
 import EditorToolbar from './modules/editor-toolbar.vue';
 import CanvasEditor from './modules/canvas-editor.vue';
 import PropertyPanel from './modules/property-panel.vue';
-import { fetchCreateSceneMap, fetchUpdateSceneMap, fetchGetSceneMap, fetchUploadSceneMapEditorImage, fetchParseSceneMapConfig } from '@/service/api/scene';
-import { fetchGetMapRobotLocations } from '@/service/api';
-import { getFilePreviewUrl } from '@/service/api/file';
 import { extractRobotPoint } from './utils/robot-location';
-import { radToDeg } from '@/utils/coordinate';
 
 defineOptions({ name: 'SceneMapEditor' });
-const message = useMessage()
-const dialog = useDialog()
+const message = useMessage();
+const dialog = useDialog();
 
 const editor = useMapEditor();
 const { hasAuth } = useAuth();
@@ -74,24 +80,25 @@ const baseContextMenuOptions = [
     children: [
       { label: '圆形', key: 'add-obstacle-circle' },
       { label: '三角形', key: 'add-obstacle-triangle' },
-      { label: '正方形', key: 'add-obstacle-square' },
-    ],
+      { label: '正方形', key: 'add-obstacle-square' }
+    ]
   },
   { label: '禁行区域/虚拟墙', key: 'add-restricted' },
-  { label: '电子围栏', key: 'add-fence' },
+  { label: '电子围栏', key: 'add-fence' }
 ];
 
 const contextMenuOptions = computed(() => {
   if (!contextMenuTarget.value) return baseContextMenuOptions;
   const target = contextMenuTarget.value;
-  const item = target.type === 'annotation'
-    ? editor.editorData.value?.annotations.find(a => a.id === target.id)
-    : editor.editorData.value?.objects.find(o => o.id === target.id);
+  const item =
+    target.type === 'annotation'
+      ? editor.editorData.value?.annotations.find(a => a.id === target.id)
+      : editor.editorData.value?.objects.find(o => o.id === target.id);
   const name = (item as any)?.name || (target.type === 'annotation' ? '点位' : '对象');
   return [
     ...baseContextMenuOptions,
     { type: 'divider', key: 'divider' },
-    { label: `删除「${name}」`, key: 'delete-target', props: { style: 'color: #ef4444' } },
+    { label: `删除「${name}」`, key: 'delete-target', props: { style: 'color: #ef4444' } }
   ];
 });
 
@@ -130,7 +137,7 @@ const hoverInfo = computed(() => {
       y: pt.y.toFixed(2),
       size: null as string | null,
       // 朝向角(ROS 弧度) → 度并归一到 [0,360)
-      angle: pt.angle !== undefined ? `${Math.round(((radToDeg(pt.angle) % 360) + 360) % 360)}°` : '-',
+      angle: pt.angle !== undefined ? `${Math.round(((radToDeg(pt.angle) % 360) + 360) % 360)}°` : '-'
     };
   }
   if (!editor.editorData.value) return null;
@@ -138,7 +145,7 @@ const hoverInfo = computed(() => {
     const ann = editor.editorData.value.annotations.find(a => a.id === t.id);
     if (!ann) return null;
     const typeName = ann.type === 'navigation' || ann.type === '返回点' ? '返回点' : '接待点';
-    const angleDeg = Math.round(((ann.angle || 0) * 180 / Math.PI + 360) % 360);
+    const angleDeg = Math.round((((ann.angle || 0) * 180) / Math.PI + 360) % 360);
     const w = editor.pixelToWorldCoords(ann.x, ann.y);
     return {
       kind: '点位',
@@ -147,7 +154,7 @@ const hoverInfo = computed(() => {
       x: w.x.toFixed(2),
       y: w.y.toFixed(2),
       size: null as string | null,
-      angle: `${angleDeg}°`,
+      angle: `${angleDeg}°`
     };
   }
   const obj = editor.editorData.value.objects.find(o => o.id === t.id);
@@ -157,10 +164,10 @@ const hoverInfo = computed(() => {
   const shapeMap: Record<string, string> = {
     'obstacle-circle': '圆形',
     'obstacle-triangle': '三角形',
-    'obstacle-square': '正方形',
+    'obstacle-square': '正方形'
   };
-  const kind = isFence ? '电子围栏' : (isRestricted ? '禁行区域/虚拟墙' : '障碍物');
-  const typeName = isFence ? '围栏' : (isRestricted ? '禁区' : (shapeMap[obj.type] || '障碍物'));
+  const kind = isFence ? '电子围栏' : isRestricted ? '禁行区域/虚拟墙' : '障碍物';
+  const typeName = isFence ? '围栏' : isRestricted ? '禁区' : shapeMap[obj.type] || '障碍物';
   const w = editor.pixelToWorldCoords(obj.x, obj.y);
   return {
     kind,
@@ -169,11 +176,13 @@ const hoverInfo = computed(() => {
     x: w.x.toFixed(2),
     y: w.y.toFixed(2),
     size: `${(obj.width * editor.resolution.value).toFixed(2)} × ${(obj.height * editor.resolution.value).toFixed(2)} m`,
-    angle: `${Math.round(obj.angle || 0)}°`,
+    angle: `${Math.round(obj.angle || 0)}°`
   };
 });
 
-function handleHoverElement(data: { type: 'annotation' | 'object' | 'robot'; id: number; clientX: number; clientY: number } | null) {
+function handleHoverElement(
+  data: { type: 'annotation' | 'object' | 'robot'; id: number; clientX: number; clientY: number } | null
+) {
   if (!data) {
     hoverInfoShow.value = false;
     hoverInfoTarget.value = null;
@@ -225,11 +234,7 @@ function showDirtySwitchDialog(): Promise<SwitchAction> {
       content: $t('page.sceneMapEditor.unsavedChangesTip'),
       action: () =>
         h(NSpace, { justify: 'end' }, () => [
-          h(
-            NButton,
-            { size: 'small', onClick: () => close('cancel') },
-            { default: () => $t('common.cancel') }
-          ),
+          h(NButton, { size: 'small', onClick: () => close('cancel') }, { default: () => $t('common.cancel') }),
           h(
             NButton,
             { size: 'small', onClick: () => close('discard') },
@@ -314,11 +319,11 @@ function getElementNameAndKind(target: SelectedElement) {
     const shapeMap: Record<string, string> = {
       'obstacle-circle': '圆形',
       'obstacle-triangle': '三角形',
-      'obstacle-square': '正方形',
+      'obstacle-square': '正方形'
     };
     const isRestricted = obj.type === 'restricted' || obj.type === '禁区';
     const isFence = obj.type === 'fence' || obj.type === '电子围栏';
-    const kind = isFence ? '电子围栏' : (isRestricted ? '禁行区域/虚拟墙' : (shapeMap[obj.type] || '障碍物'));
+    const kind = isFence ? '电子围栏' : isRestricted ? '禁行区域/虚拟墙' : shapeMap[obj.type] || '障碍物';
     return { name: obj.name || '', kind };
   }
   return { name: '', kind: '路径' };
@@ -350,7 +355,7 @@ function confirmAndRemoveElement(target: SelectedElement | null) {
         resetFlag();
       },
       onNegativeClick: resetFlag,
-      onClose: resetFlag,
+      onClose: resetFlag
     });
     return;
   }
@@ -373,7 +378,7 @@ function confirmAndRemoveElement(target: SelectedElement | null) {
       resetFlag();
     },
     onNegativeClick: resetFlag,
-    onClose: resetFlag,
+    onClose: resetFlag
   });
 }
 
@@ -601,7 +606,13 @@ async function handleDeleteScene(mapId: number) {
   }
 }
 
-function handleContextMenu(data: { x: number; y: number; clientX: number; clientY: number; target: { type: 'annotation' | 'object'; id: number } | null }) {
+function handleContextMenu(data: {
+  x: number;
+  y: number;
+  clientX: number;
+  clientY: number;
+  target: { type: 'annotation' | 'object'; id: number } | null;
+}) {
   // 无编辑权限时禁用整个右键菜单（添加点位/障碍物/禁区/删除等均为编辑操作）
   if (!hasAuth('scene:map-editor:edit')) {
     window.$message?.warning('无编辑权限');
@@ -640,7 +651,7 @@ function handleContextMenuSelect(key: string) {
       y,
       name: `点位${count}`,
       angle: 0,
-      type: 'reception',
+      type: 'reception'
     });
     // 保持无选中状态
     editor.selectedElement.value = null;
@@ -659,7 +670,7 @@ function handleContextMenuSelect(key: string) {
       y: y - 5,
       width: 10,
       height: 10,
-      points: null,
+      points: null
     });
     window.$message?.success('已添加障碍物');
     return;
@@ -674,7 +685,7 @@ function handleContextMenuSelect(key: string) {
       y: y - 5,
       width: 10,
       height: 10,
-      points: null,
+      points: null
     });
     window.$message?.success('已添加禁行区域');
     return;
@@ -689,7 +700,7 @@ function handleContextMenuSelect(key: string) {
       y: y - 5,
       width: 10,
       height: 10,
-      points: null,
+      points: null
     });
     window.$message?.success('已添加电子围栏');
     return;
@@ -703,7 +714,7 @@ function handleRequestTypeSwitch(data: { id: number; clientX: number; clientY: n
   const ann = editor.editorData.value.annotations.find(a => a.id === data.id);
   if (!ann) return;
   typeSwitchTargetId.value = data.id;
-  typeSwitchCurrentType.value = (ann.type === 'navigation' ? 'navigation' : 'reception');
+  typeSwitchCurrentType.value = ann.type === 'navigation' ? 'navigation' : 'reception';
   typeSwitchX.value = data.clientX;
   typeSwitchY.value = data.clientY;
   typeSwitchShow.value = true;
@@ -776,80 +787,148 @@ function handleFocusAnnotation(id: number) {
 </script>
 
 <template>
-  <div class="flex h-full min-h-0 flex-col">
-    <EditorToolbar :can-undo="editor.canUndo.value"
-      :can-redo="editor.canRedo.value" :is-dirty="editor.isDirty.value" :saving="editor.saving.value"
-      :has-history="editor.hasHistory.value" :history-list="editor.historyList.value"
-      @undo="editor.undo()" @redo="editor.redo()"
-      @jump-to-step="(step: number) => editor.jumpToStep(step)" @save="editor.saveMap()" @export="handleExport" />
+  <div class="h-full min-h-0 flex flex-col">
+    <EditorToolbar
+      :can-undo="editor.canUndo.value"
+      :can-redo="editor.canRedo.value"
+      :is-dirty="editor.isDirty.value"
+      :saving="editor.saving.value"
+      :has-history="editor.hasHistory.value"
+      :history-list="editor.historyList.value"
+      @undo="editor.undo()"
+      @redo="editor.redo()"
+      @jump-to-step="(step: number) => editor.jumpToStep(step)"
+      @save="editor.saveMap()"
+      @export="handleExport"
+    />
 
-    <div class="flex min-h-0 flex-1 overflow-hidden">
+    <div class="min-h-0 flex flex-1 overflow-hidden">
       <div class="relative min-w-0 flex-1">
-        <CanvasEditor ref="canvasRef" :editor-data="editor.editorData.value"
+        <CanvasEditor
+          ref="canvasRef"
+          :editor-data="editor.editorData.value"
           :selected-element="editor.selectedElement.value"
-          :resolution="editor.resolution.value" :loading="editor.loading.value"
+          :resolution="editor.resolution.value"
+          :loading="editor.loading.value"
           :robot-locations="robotLocations"
-          @select-element="el => (editor.selectedElement.value = el)" @update-element="handleUpdateElement"
-          @zoom-change="handleZoomChange" @cursor-position="handleCursorPosition" @undo="editor.undo()"
-          @redo="editor.redo()" @context-menu="handleContextMenu"
-          @request-type-switch="handleRequestTypeSwitch" @rename-element="handleRequestRename"
+          @select-element="el => (editor.selectedElement.value = el)"
+          @update-element="handleUpdateElement"
+          @zoom-change="handleZoomChange"
+          @cursor-position="handleCursorPosition"
+          @undo="editor.undo()"
+          @redo="editor.redo()"
+          @context-menu="handleContextMenu"
+          @request-type-switch="handleRequestTypeSwitch"
+          @rename-element="handleRequestRename"
           @blank-click="typeSwitchShow = false"
-          @hover-element="handleHoverElement" />
+          @hover-element="handleHoverElement"
+        />
       </div>
 
-      <PropertyPanel class="w-380px flex-shrink-0" :editor-data="editor.editorData.value"
-        :selected-element="editor.selectedElement.value" :resolution="editor.resolution.value"
-        :scene-list="editor.sceneList.value" :selected-map-id="editor.selectedMapId.value"
-        :map-id="editor.selectedMapId.value" @update-element="handleUpdateElement"
-        @remove-element="handleRemoveElement" @select-scene="handleSelectMap" @add-scene="handleOpenAddScene"
-        @edit-scene="handleOpenEditScene" @delete-scene="handleDeleteScene" @locate-robot="handleLocateRobot"
-        @focus-annotation="handleFocusAnnotation" @select-element="el => (editor.selectedElement.value = el)" />
+      <PropertyPanel
+        class="w-380px flex-shrink-0"
+        :editor-data="editor.editorData.value"
+        :selected-element="editor.selectedElement.value"
+        :resolution="editor.resolution.value"
+        :scene-list="editor.sceneList.value"
+        :selected-map-id="editor.selectedMapId.value"
+        :map-id="editor.selectedMapId.value"
+        @update-element="handleUpdateElement"
+        @remove-element="handleRemoveElement"
+        @select-scene="handleSelectMap"
+        @add-scene="handleOpenAddScene"
+        @edit-scene="handleOpenEditScene"
+        @delete-scene="handleDeleteScene"
+        @locate-robot="handleLocateRobot"
+        @focus-annotation="handleFocusAnnotation"
+        @select-element="el => (editor.selectedElement.value = el)"
+      />
     </div>
 
     <!-- 右键上下文菜单 -->
-    <NDropdown placement="bottom-start" trigger="manual" :x="contextMenuX" :y="contextMenuY"
-      :show="contextMenuShow" :options="contextMenuOptions" @select="handleContextMenuSelect"
-      @clickoutside="() => (contextMenuShow = false)" />
+    <NDropdown
+      placement="bottom-start"
+      trigger="manual"
+      :x="contextMenuX"
+      :y="contextMenuY"
+      :show="contextMenuShow"
+      :options="contextMenuOptions"
+      @select="handleContextMenuSelect"
+      @clickoutside="() => (contextMenuShow = false)"
+    />
 
     <!-- 元素信息浮窗（hover） -->
-    <div v-if="hoverInfoShow && hoverInfo" class="pointer-events-none fixed z-50 rounded-md bg-black/80 px-10px py-8px text-xs text-white shadow-lg"
-      :style="{ left: hoverInfoX + 'px', top: hoverInfoY + 'px' }">
+    <div
+      v-if="hoverInfoShow && hoverInfo"
+      class="pointer-events-none fixed z-50 rounded-md bg-black/80 px-10px py-8px text-xs text-white shadow-lg"
+      :style="{ left: hoverInfoX + 'px', top: hoverInfoY + 'px' }"
+    >
       <div class="mb-4px font-medium">{{ hoverInfo.kind }}</div>
       <div class="grid grid-cols-[auto_1fr] gap-x-8px gap-y-2px">
-        <span class="text-white/60">名称</span><span>{{ hoverInfo.name }}</span>
-        <span class="text-white/60">类型</span><span>{{ hoverInfo.type }}</span>
-        <span class="text-white/60">坐标</span><span>{{ hoverInfo.x }}, {{ hoverInfo.y }} m</span>
+        <span class="text-white/60">名称</span>
+        <span>{{ hoverInfo.name }}</span>
+        <span class="text-white/60">类型</span>
+        <span>{{ hoverInfo.type }}</span>
+        <span class="text-white/60">坐标</span>
+        <span>{{ hoverInfo.x }}, {{ hoverInfo.y }} m</span>
         <template v-if="hoverInfo.size">
-          <span class="text-white/60">大小</span><span>{{ hoverInfo.size }}</span>
+          <span class="text-white/60">大小</span>
+          <span>{{ hoverInfo.size }}</span>
         </template>
-        <span class="text-white/60">角度</span><span>{{ hoverInfo.angle }}</span>
+        <span class="text-white/60">角度</span>
+        <span>{{ hoverInfo.angle }}</span>
       </div>
     </div>
 
     <!-- 点位类型切换 tooltip -->
-    <NPopover v-model:show="typeSwitchShow" trigger="manual" placement="top" :x="typeSwitchX" :y="typeSwitchY"
-      :show-arrow="true" @clickoutside="() => (typeSwitchShow = false)">
+    <NPopover
+      v-model:show="typeSwitchShow"
+      trigger="manual"
+      placement="top"
+      :x="typeSwitchX"
+      :y="typeSwitchY"
+      :show-arrow="true"
+      @clickoutside="() => (typeSwitchShow = false)"
+    >
       <div class="flex gap-6px py-2px">
-        <NButton size="tiny" :type="typeSwitchCurrentType === 'navigation' ? 'primary' : 'default'"
-          @click="switchAnnotationType('navigation')">
+        <NButton
+          size="tiny"
+          :type="typeSwitchCurrentType === 'navigation' ? 'primary' : 'default'"
+          @click="switchAnnotationType('navigation')"
+        >
           返回点
         </NButton>
-        <NButton size="tiny" :type="typeSwitchCurrentType === 'reception' ? 'primary' : 'default'"
-          @click="switchAnnotationType('reception')">
+        <NButton
+          size="tiny"
+          :type="typeSwitchCurrentType === 'reception' ? 'primary' : 'default'"
+          @click="switchAnnotationType('reception')"
+        >
           接待点
         </NButton>
       </div>
     </NPopover>
 
     <!-- 重命名弹窗 -->
-    <NModal v-model:show="renameDialogVisible" preset="dialog" title="重命名" positive-text="确定" negative-text="取消"
-      @positive-click="confirmRename">
+    <NModal
+      v-model:show="renameDialogVisible"
+      preset="dialog"
+      title="重命名"
+      positive-text="确定"
+      negative-text="取消"
+      @positive-click="confirmRename"
+    >
       <NInput v-model:value="renameValue" placeholder="请输入名称" @keydown.enter="confirmRename" />
     </NModal>
 
     <!-- Scene dialog (add/edit) -->
-    <NModal v-model:show="sceneDialogVisible" preset="dialog" :title="sceneDialogMode === 'edit' ? '编辑场景' : '新增场景'"
-      positive-text="确定" negative-text="取消" @positive-click="confirmSceneSubmit">
+    <NModal
+      v-model:show="sceneDialogVisible"
+      preset="dialog"
+      :title="sceneDialogMode === 'edit' ? '编辑场景' : '新增场景'"
+      positive-text="确定"
+      negative-text="取消"
+      @positive-click="confirmSceneSubmit"
+    >
       <NForm label-placement="left" label-width="92">
         <NFormItem label="场景名称">
           <NInput v-model:value="sceneFormName" placeholder="请输入场景名称" />
@@ -878,7 +957,7 @@ function handleFocusAnnotation(id: number) {
           </div>
         </NFormItem>
         <NFormItem v-else label="场景图片">
-          <div v-if="sceneFormImageUrl" class="flex w-full items-center gap-8px">
+          <div v-if="sceneFormImageUrl" class="w-full flex items-center gap-8px">
             <img :src="sceneFormImageUrl" class="max-h-160px max-w-260px object-contain" />
             <div class="text-xs text-gray-500">
               原图：{{ sceneFormOriginalWidth ?? '-' }} × {{ sceneFormOriginalHeight ?? '-' }} px
@@ -910,15 +989,23 @@ function handleFocusAnnotation(id: number) {
           </div>
         </NFormItem>
         <NFormItem label="扫图起始点">
-          <div class="grid w-full grid-cols-2 gap-8px">
-            <NInputNumber v-model:value="sceneFormPointX" :placeholder="sceneDialogMode === 'edit' ? 'X' : '原始X'"
-              :disabled="sceneDialogMode === 'add'" class="w-full">
+          <div class="grid grid-cols-2 w-full gap-8px">
+            <NInputNumber
+              v-model:value="sceneFormPointX"
+              :placeholder="sceneDialogMode === 'edit' ? 'X' : '原始X'"
+              :disabled="sceneDialogMode === 'add'"
+              class="w-full"
+            >
               <template #suffix>
                 <span class="text-xs text-gray-400">米</span>
               </template>
             </NInputNumber>
-            <NInputNumber v-model:value="sceneFormPointY" :placeholder="sceneDialogMode === 'edit' ? 'Y' : '原始Y'"
-              :disabled="sceneDialogMode === 'add'" class="w-full">
+            <NInputNumber
+              v-model:value="sceneFormPointY"
+              :placeholder="sceneDialogMode === 'edit' ? 'Y' : '原始Y'"
+              :disabled="sceneDialogMode === 'add'"
+              class="w-full"
+            >
               <template #suffix>
                 <span class="text-xs text-gray-400">米</span>
               </template>
@@ -926,8 +1013,14 @@ function handleFocusAnnotation(id: number) {
           </div>
         </NFormItem>
         <NFormItem label="分辨率">
-          <NInputNumber v-model:value="sceneFormResolution" placeholder="m/px" :step="0.01" :min="0.01"
-            :disabled="sceneDialogMode === 'add'" class="w-full">
+          <NInputNumber
+            v-model:value="sceneFormResolution"
+            placeholder="m/px"
+            :step="0.01"
+            :min="0.01"
+            :disabled="sceneDialogMode === 'add'"
+            class="w-full"
+          >
             <template #suffix>
               <span class="text-xs text-gray-400">m/px</span>
             </template>

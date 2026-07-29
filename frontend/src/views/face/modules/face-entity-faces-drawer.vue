@@ -88,9 +88,15 @@ watch(visible, v => {
       <NSpin :show="loading || uploading">
         <NSpace vertical :size="12">
           <div class="text-14px">
-            {{ $t('page.manage.face.facesSub') }}: <span class="font-500">{{ entityId }}</span>
+            {{ $t('page.manage.face.facesSub') }}:
+            <span class="font-500">{{ entityId }}</span>
           </div>
-          <NUpload v-if="hasAuth('face:image:add')" :show-file-list="false" :custom-request="handleUpload" accept="image/*">
+          <NUpload
+            v-if="hasAuth('face:image:add')"
+            :show-file-list="false"
+            :custom-request="handleUpload"
+            accept="image/*"
+          >
             <NButton type="primary">{{ $t('page.manage.face.uploadFace') }}</NButton>
           </NUpload>
           <NEmpty v-if="!faces.length" :description="$t('page.manage.face.noFaces')" />

@@ -1,9 +1,9 @@
 <script setup lang="ts">
 import { computed, ref, watch } from 'vue';
 import { jsonClone } from '@sa/utils';
+import { fetchCreateRobotModel, fetchUpdateRobotModel } from '@/service/api';
 import { useNaiveForm } from '@/hooks/common/form';
 import { $t } from '@/locales';
-import { fetchCreateRobotModel, fetchUpdateRobotModel } from '@/service/api';
 
 defineOptions({
   name: 'RobotModelOperateDrawer'

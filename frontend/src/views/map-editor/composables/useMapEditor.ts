@@ -1,7 +1,12 @@
-import { reactive, ref, computed } from 'vue';
+import { computed, reactive, ref } from 'vue';
+import {
+  fetchDeleteSceneMap,
+  fetchGetEditorMapData,
+  fetchGetSceneMapList,
+  fetchSaveEditorData
+} from '@/service/api/scene';
+import { metersDeltaToPixels, pixelToWorld, pixelsDeltaToMeters, worldToPixel } from '@/utils/coordinate';
 import { $t } from '@/locales';
-import { fetchGetEditorMapData, fetchSaveEditorData, fetchGetSceneMapList, fetchDeleteSceneMap } from '@/service/api/scene';
-import { pixelToWorld, worldToPixel, pixelsDeltaToMeters, metersDeltaToPixels } from '@/utils/coordinate';
 
 export type DrawingMode = 'select';
 
@@ -73,7 +78,13 @@ export function useMapEditor() {
 
   async function loadSceneList() {
     try {
-      const { data } = await fetchGetSceneMapList({ page: 1, page_size: 999, status: null, name: null, group_id: undefined });
+      const { data } = await fetchGetSceneMapList({
+        page: 1,
+        page_size: 999,
+        status: null,
+        name: null,
+        group_id: undefined
+      });
       if (data) {
         sceneList.value = (data as any).records || data || [];
       }
@@ -99,11 +110,13 @@ export function useMapEditor() {
       selectedMapId.value = mapId;
       selectedElement.value = null;
       isDirty.value = false;
-      historyTimeline.value = [{
-        snapshot: snapshotCurrent(),
-        description: '初始状态',
-        timestamp: Date.now(),
-      }];
+      historyTimeline.value = [
+        {
+          snapshot: snapshotCurrent(),
+          description: '初始状态',
+          timestamp: Date.now()
+        }
+      ];
       currentStep.value = 0;
       serverAnnotationIds.clear();
       serverObjectIds.clear();
@@ -128,7 +141,7 @@ export function useMapEditor() {
     return JSON.stringify({
       annotations: editorData.value?.annotations ?? [],
       paths: editorData.value?.paths ?? [],
-      objects: editorData.value?.objects ?? [],
+      objects: editorData.value?.objects ?? []
     });
   }
 
@@ -140,9 +153,12 @@ export function useMapEditor() {
     editorData.value.objects = parsed.objects;
     const sel = selectedElement.value;
     if (sel) {
-      const list = sel.type === 'annotation' ? editorData.value.annotations
-        : sel.type === 'path' ? editorData.value.paths
-        : editorData.value.objects;
+      const list =
+        sel.type === 'annotation'
+          ? editorData.value.annotations
+          : sel.type === 'path'
+            ? editorData.value.paths
+            : editorData.value.objects;
       if (!list.some((i: any) => i.id === sel.id)) {
         selectedElement.value = null;
       }
@@ -158,7 +174,7 @@ export function useMapEditor() {
     historyTimeline.value.push({
       snapshot: snapshotCurrent(),
       description,
-      timestamp: Date.now(),
+      timestamp: Date.now()
     });
     currentStep.value = historyTimeline.value.length - 1;
     while (historyTimeline.value.length > MAX_HISTORY_LEVELS + 1) {
@@ -198,7 +214,7 @@ export function useMapEditor() {
         entry.snapshot = JSON.stringify({
           annotations,
           paths: parsed.paths ?? [],
-          objects,
+          objects
         });
       }
     }
@@ -234,7 +250,7 @@ export function useMapEditor() {
       description: entry.description,
       timestamp: entry.timestamp,
       isCurrent: index === currentStep.value,
-      isFuture: index > currentStep.value,
+      isFuture: index > currentStep.value
     }))
   );
 
@@ -294,7 +310,7 @@ export function useMapEditor() {
           y: w.y,
           name: a.name,
           angle: a.angle,
-          type: a.type,
+          type: a.type
         };
       });
       const objectPayload = editorData.value.objects.map(o => {
@@ -309,7 +325,7 @@ export function useMapEditor() {
           width: o.width,
           height: o.height,
           points: o.points,
-          angle: o.angle ?? 0,
+          angle: o.angle ?? 0
         };
       });
       // 删除按 diff 计算：服务端有、当前编辑数据中没有的即视为删除。
@@ -317,9 +333,7 @@ export function useMapEditor() {
       const deletedAnnotationIds = [...serverAnnotationIds].filter(
         id => !editorData.value!.annotations.some(a => a.id === id)
       );
-      const deletedObjectIds = [...serverObjectIds].filter(
-        id => !editorData.value!.objects.some(o => o.id === id)
-      );
+      const deletedObjectIds = [...serverObjectIds].filter(id => !editorData.value!.objects.some(o => o.id === id));
 
       const resp = await fetchSaveEditorData(selectedMapId.value, {
         annotations: annotationPayload,
@@ -327,7 +341,7 @@ export function useMapEditor() {
         objects: objectPayload,
         deleted_annotation_ids: deletedAnnotationIds,
         deleted_path_ids: [...deletedPathIds],
-        deleted_object_ids: deletedObjectIds,
+        deleted_object_ids: deletedObjectIds
       });
 
       // 回填新建元素的真实 id，避免再次保存时被当作新建导致重复插入
@@ -352,7 +366,7 @@ export function useMapEditor() {
         if (selTempId !== null && selTempId < 0 && selectedElement.value && tempToReal.has(selTempId)) {
           selectedElement.value = {
             type: selectedElement.value.type,
-            id: tempToReal.get(selTempId)!,
+            id: tempToReal.get(selTempId)!
           };
         }
       }
@@ -404,7 +418,10 @@ export function useMapEditor() {
     return { wasSelected };
   }
 
-  function createAnnotation(annotation: { x: number; y: number; name: string; angle: number; type: string }, id: number) {
+  function createAnnotation(
+    annotation: { x: number; y: number; name: string; angle: number; type: string },
+    id: number
+  ) {
     return {
       id,
       map_id: selectedMapId.value!,
@@ -417,13 +434,13 @@ export function useMapEditor() {
       updated_by: '',
       status: null,
       created_at: null,
-      updated_at: null,
+      updated_at: null
     } as unknown as Api.Scene.SceneMapAnnotation;
   }
 
   function addAnnotation(annotation: { x: number; y: number; name: string; angle: number; type: string }) {
     if (!editorData.value) return;
-    const newId = -(Date.now());
+    const newId = -Date.now();
     editorData.value.annotations.push(createAnnotation(annotation, newId));
     const label = annotation.type === 'navigation' ? '导航点' : '接待点';
     recordHistory(`添加${label}「${annotation.name}」`);
@@ -433,13 +450,24 @@ export function useMapEditor() {
   function addAnnotations(annotations: { x: number; y: number; name: string; angle: number; type: string }[]) {
     if (!editorData.value || annotations.length === 0) return;
     const baseId = Date.now();
-    editorData.value.annotations.push(...annotations.map((annotation, index) => createAnnotation(annotation, -(baseId + index))));
+    editorData.value.annotations.push(
+      ...annotations.map((annotation, index) => createAnnotation(annotation, -(baseId + index)))
+    );
     recordHistory(`批量添加${annotations.length}个点位`);
   }
 
-  function addObject(obj: { type: string; name?: string | null; x: number; y: number; width: number; height: number; points: string | null; angle?: number }) {
+  function addObject(obj: {
+    type: string;
+    name?: string | null;
+    x: number;
+    y: number;
+    width: number;
+    height: number;
+    points: string | null;
+    angle?: number;
+  }) {
     if (!editorData.value) return;
-    const newId = -(Date.now());
+    const newId = -Date.now();
     const newItem = {
       id: newId,
       map_id: selectedMapId.value!,
@@ -455,7 +483,7 @@ export function useMapEditor() {
       updated_by: '',
       status: null,
       created_at: null,
-      updated_at: null,
+      updated_at: null
     } as unknown as Api.Scene.SceneMapObject;
     editorData.value.objects.push(newItem);
     const label = obj.type === 'restricted' ? '禁区' : '障碍物';
@@ -471,7 +499,9 @@ export function useMapEditor() {
       const removedPaths = editorData.value.paths.filter(
         p => p.start_annotation_id === id || p.end_annotation_id === id
       );
-      removedPaths.forEach(p => { if (p.id > 0) deletedPathIds.add(p.id); });
+      removedPaths.forEach(p => {
+        if (p.id > 0) deletedPathIds.add(p.id);
+      });
       editorData.value.annotations = editorData.value.annotations.filter(a => a.id !== id);
       editorData.value.paths = editorData.value.paths.filter(
         p => p.start_annotation_id !== id && p.end_annotation_id !== id
@@ -550,6 +580,6 @@ export function useMapEditor() {
     removeElement,
     updateElement,
     recordHistory,
-    validateBeforeSave,
+    validateBeforeSave
   };
 }

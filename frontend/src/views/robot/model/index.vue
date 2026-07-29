@@ -1,12 +1,12 @@
 <script setup lang="tsx">
 import { reactive } from 'vue';
 import { NButton, NCard, NDataTable, NPopconfirm, NTag, useMessage } from 'naive-ui';
-import { fetchGetRobotModelList, fetchDeleteRobotModel } from '@/service/api';
+import { fetchDeleteRobotModel, fetchGetRobotModelList } from '@/service/api';
 import { useAppStore } from '@/store/modules/app';
 import { defaultTransform, useNaivePaginatedTable, useTableOperate } from '@/hooks/common/table';
 import { useAuth } from '@/hooks/business/auth';
-import { $t } from '@/locales';
 import { booleanToEnableStatus } from '@/utils/status';
+import { $t } from '@/locales';
 import RobotModelOperateDrawer from './modules/robot-model-operate-drawer.vue';
 import RobotModelSearch from './modules/robot-model-search.vue';
 
@@ -94,7 +94,11 @@ const {
           '2': 'warning'
         };
         const label = row.status === '1' ? '启用' : '禁用';
-        return <NTag type={tagMap[row.status]} size="small">{label}</NTag>;
+        return (
+          <NTag type={tagMap[row.status]} size="small">
+            {label}
+          </NTag>
+        );
       }
     },
     {
@@ -179,16 +183,37 @@ async function handleBatchDelete() {
   <div class="min-h-500px flex-col-stretch gap-16px overflow-hidden lt-sm:overflow-auto">
     <div class="flex-y-center justify-between gap-12px">
       <RobotModelSearch v-model:model="searchParams" @search="getModelDataByPage" />
-      <TableHeaderOperation v-model:columns="modelColumnChecks" :disabled-delete="checkedModelRowKeys.length === 0"
-        :loading="modelLoading" add-auth="robot:model:add" delete-auth="robot:model:delete" @add="handleAddModel"
-        @delete="handleBatchDelete" @refresh="getModelData" />
+      <TableHeaderOperation
+        v-model:columns="modelColumnChecks"
+        :disabled-delete="checkedModelRowKeys.length === 0"
+        :loading="modelLoading"
+        add-auth="robot:model:add"
+        delete-auth="robot:model:delete"
+        @add="handleAddModel"
+        @delete="handleBatchDelete"
+        @refresh="getModelData"
+      />
     </div>
     <NCard :bordered="false" size="small" class="card-wrapper sm:flex-1-hidden">
-      <NDataTable v-model:checked-row-keys="checkedModelRowKeys" :columns="modelColumns" :data="modelData" size="small"
-        :flex-height="!appStore.isMobile" :scroll-x="900" :loading="modelLoading" remote :row-key="row => row.id"
-        :pagination="modelMobilePagination" class="sm:h-full" />
-      <RobotModelOperateDrawer v-model:visible="modelDrawerVisible" :operate-type="modelOperateType"
-        :row-data="editingModelData" @submitted="getModelDataByPage" />
+      <NDataTable
+        v-model:checked-row-keys="checkedModelRowKeys"
+        :columns="modelColumns"
+        :data="modelData"
+        size="small"
+        :flex-height="!appStore.isMobile"
+        :scroll-x="900"
+        :loading="modelLoading"
+        remote
+        :row-key="row => row.id"
+        :pagination="modelMobilePagination"
+        class="sm:h-full"
+      />
+      <RobotModelOperateDrawer
+        v-model:visible="modelDrawerVisible"
+        :operate-type="modelOperateType"
+        :row-data="editingModelData"
+        @submitted="getModelDataByPage"
+      />
     </NCard>
   </div>
 </template>

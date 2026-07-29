@@ -1,11 +1,24 @@
 <script setup lang="tsx">
-import { reactive, ref, onMounted, nextTick } from 'vue';
-import { NButton, NCard, NDataTable, NForm, NFormItem, NInput, NModal, NPopconfirm, NSpace, NUpload, useMessage, type UploadFileInfo } from 'naive-ui';
+import { nextTick, onMounted, reactive, ref } from 'vue';
 import {
-  fetchGetFaceRecognitionList,
+  NButton,
+  NCard,
+  NDataTable,
+  NForm,
+  NFormItem,
+  NInput,
+  NModal,
+  NPopconfirm,
+  NSpace,
+  NUpload,
+  type UploadFileInfo,
+  useMessage
+} from 'naive-ui';
+import {
   fetchCreateFaceRecognition,
-  fetchUpdateFaceRecognition,
   fetchDeleteFaceRecognition,
+  fetchGetFaceRecognitionList,
+  fetchUpdateFaceRecognition,
   fetchUploadFacePhoto,
   getPersistentFilePreviewPath,
   resolveFilePreviewUrl
@@ -211,7 +224,7 @@ const columns = [
       return (
         <img
           src={url}
-          class="h-48px w-48px rounded object-cover cursor-pointer"
+          class="h-48px w-48px cursor-pointer rounded object-cover"
           alt="人像"
           onClick={() => openPreview(url)}
         />
@@ -235,14 +248,18 @@ const columns = [
     render: (row: Api.RobotConfig.FaceRecognition) => (
       <div class="flex-center gap-8px">
         {hasAuth('robot:config:edit') && (
-          <NButton type="primary" ghost size="small" onClick={() => handleEdit(row)}>编辑</NButton>
+          <NButton type="primary" ghost size="small" onClick={() => handleEdit(row)}>
+            编辑
+          </NButton>
         )}
         {hasAuth('robot:config:edit') && (
           <NPopconfirm onPositiveClick={() => handleDelete(row.id)}>
             {{
               default: () => '确认删除吗？',
               trigger: () => (
-                <NButton type="error" ghost size="small">删除</NButton>
+                <NButton type="error" ghost size="small">
+                  删除
+                </NButton>
               )
             }}
           </NPopconfirm>
@@ -271,7 +288,11 @@ onMounted(() => {
               <!-- 编辑模式：人像只读不可修改，仅可改名称与播报文字 -->
               <NFormItemGi v-if="editingId" label="人像">
                 <div class="flex items-center gap-8px">
-                  <img :src="resolveFilePreviewUrl(model.photo_url)" class="h-48px w-48px rounded object-cover" alt="人像" />
+                  <img
+                    :src="resolveFilePreviewUrl(model.photo_url)"
+                    class="h-48px w-48px rounded object-cover"
+                    alt="人像"
+                  />
                   <span class="text-12px text-gray">编辑时不支持修改人像</span>
                 </div>
               </NFormItemGi>
@@ -288,7 +309,9 @@ onMounted(() => {
                       :on-remove="handleRemovePhoto"
                       list-type="image-card"
                     />
-                    <span v-if="model.photo_url && !fileList.length" class="text-12px text-gray">已上传: {{ model.photo_url }}</span>
+                    <span v-if="model.photo_url && !fileList.length" class="text-12px text-gray">
+                      已上传: {{ model.photo_url }}
+                    </span>
                   </div>
                   <div class="face-upload-tips">
                     <div>图像格式：JPG、JPEG、PNG</div>
@@ -310,7 +333,7 @@ onMounted(() => {
               </NFormItemGi>
             </template>
             <NFormItemGi>
-              <div class="flex-center justify-between w-full">
+              <div class="w-full flex-center justify-between">
                 <NSpace>
                   <NButton
                     v-if="hasAuth('robot:config:edit')"

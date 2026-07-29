@@ -4,9 +4,9 @@ import {
   NButton,
   NDescriptions,
   NDescriptionsItem,
+  NDivider,
   NDrawer,
   NDrawerContent,
-  NDivider,
   NScrollbar,
   NSpin,
   NTag
@@ -117,12 +117,16 @@ function formatJson(str: string | null): string {
 
           <NDivider>{{ $t('page.manage.callLog.requestParams') }}</NDivider>
           <NScrollbar x-scrollable style="max-height: 200px">
-            <pre class="whitespace-pre-wrap break-all rounded bg-gray-100 p-12px text-13px dark:bg-dark-800">{{ formatJson(detail.request_params) }}</pre>
+            <pre class="whitespace-pre-wrap break-all rounded bg-gray-100 p-12px text-13px dark:bg-dark-800">{{
+              formatJson(detail.request_params)
+            }}</pre>
           </NScrollbar>
 
           <NDivider>{{ $t('page.manage.callLog.responseResult') }}</NDivider>
           <NScrollbar x-scrollable style="max-height: 200px">
-            <pre class="whitespace-pre-wrap break-all rounded bg-gray-100 p-12px text-13px dark:bg-dark-800">{{ formatJson(detail.response_result) }}</pre>
+            <pre class="whitespace-pre-wrap break-all rounded bg-gray-100 p-12px text-13px dark:bg-dark-800">{{
+              formatJson(detail.response_result)
+            }}</pre>
           </NScrollbar>
         </template>
       </NSpin>

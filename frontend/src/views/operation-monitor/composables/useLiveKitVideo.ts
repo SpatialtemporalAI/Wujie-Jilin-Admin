@@ -1,15 +1,6 @@
-import { ref, watch, onMounted, onBeforeUnmount } from 'vue';
-import {
-  Room,
-  RoomEvent,
-  Track,
-  type RemoteTrackPublication
-} from 'livekit-client';
-import {
-  fetchOpenVideoMonitoring,
-  fetchCloseVideoMonitoring,
-  fetchVideoMonitoringHeartbeat
-} from '@/service/api';
+import { onBeforeUnmount, onMounted, ref, watch } from 'vue';
+import { type RemoteTrackPublication, Room, RoomEvent, Track } from 'livekit-client';
+import { fetchCloseVideoMonitoring, fetchOpenVideoMonitoring, fetchVideoMonitoringHeartbeat } from '@/service/api';
 
 const HEARTBEAT_INTERVAL = 15000;
 
@@ -67,7 +58,7 @@ export function useLiveKitVideo(options: UseLiveKitVideoOptions) {
         .then(() => {
           pendingHeartbeat = null;
         })
-        .catch((err) => {
+        .catch(err => {
           pendingHeartbeat = null;
           console.error('视频监控心跳失败', err);
         });
@@ -182,13 +173,13 @@ export function useLiveKitVideo(options: UseLiveKitVideoOptions) {
         resetMetrics();
       });
 
-      room.on(RoomEvent.Disconnected, (reason) => {
+      room.on(RoomEvent.Disconnected, reason => {
         connected.value = false;
         resetMetrics();
         console.warn('LiveKit 已断开连接', reason);
       });
 
-      room.on(RoomEvent.ConnectionStateChanged, (state) => {
+      room.on(RoomEvent.ConnectionStateChanged, state => {
         console.log('LiveKit 连接状态变化', state);
       });
 

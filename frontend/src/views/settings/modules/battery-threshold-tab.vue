@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { computed, onMounted, ref } from 'vue';
 import { NText, useMessage } from 'naive-ui';
-import { fetchGetRobot, fetchGetAllRobots, fetchUpdateBatteryThreshold } from '@/service/api';
+import { fetchGetAllRobots, fetchGetRobot, fetchUpdateBatteryThreshold } from '@/service/api';
 import { useAuth } from '@/hooks/business/auth';
 
 defineOptions({ name: 'BatteryThresholdTab' });
@@ -111,12 +111,14 @@ onMounted(() => {
           </div>
           <NForm label-placement="left" :label-width="120">
             <NFormItem label="电量报警阈值">
-              <div class="flex-col w-full gap-4px">
+              <div class="w-full flex-col gap-4px">
                 <div class="slider-row">
                   <NSlider v-model:value="batteryThreshold" :min="5" :max="50" :step="5" />
                   <span class="threshold-value">{{ batteryThreshold }}%</span>
                 </div>
-                <NText depth="3" class="text-12px">拖动滑块调整阈值（范围 5% - 50%），电量低于该值时将触发低电量告警。</NText>
+                <NText depth="3" class="text-12px">
+                  拖动滑块调整阈值（范围 5% - 50%），电量低于该值时将触发低电量告警。
+                </NText>
               </div>
             </NFormItem>
             <NFormItem>

@@ -15,9 +15,7 @@ declare namespace Api {
     }>;
 
     /** scene group search params */
-    type SceneGroupSearchParams = CommonType.RecordNullable<
-      Pick<SceneGroup, 'name' | 'status'> & CommonSearchParams
-    >;
+    type SceneGroupSearchParams = CommonType.RecordNullable<Pick<SceneGroup, 'name' | 'status'> & CommonSearchParams>;
 
     /** scene group list */
     type SceneGroupList = Common.PaginatingQueryRecord<SceneGroup>;

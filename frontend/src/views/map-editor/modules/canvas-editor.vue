@@ -1,11 +1,11 @@
 <script setup lang="ts">
-import { ref, computed, onMounted, onBeforeUnmount, watch, nextTick } from 'vue';
-import { Canvas, Circle, Rect, Polygon, Line, Text, FabricImage, Triangle, Ellipse, Pattern, Point } from 'fabric';
+import { computed, nextTick, onBeforeUnmount, onMounted, ref, watch } from 'vue';
+import { Canvas, Circle, Ellipse, FabricImage, Line, Pattern, Point, Polygon, Rect, Text, Triangle } from 'fabric';
 import { getFilePreviewUrl } from '@/service/api/file';
-import { pixelToWorld, worldToPixel, radToDeg, degToRad } from '@/utils/coordinate';
+import { fetchGetSceneMapList } from '@/service/api';
+import { degToRad, pixelToWorld, radToDeg, worldToPixel } from '@/utils/coordinate';
 import type { SelectedElement } from '../composables/useMapEditor';
 import { extractRobotPoint } from '../utils/robot-location';
-import { fetchGetSceneMapList } from '@/service/api';
 interface Props {
   editorData: Api.Scene.EditorMapData | null;
   selectedElement: SelectedElement | null;
@@ -16,7 +16,7 @@ interface Props {
 }
 
 const props = withDefaults(defineProps<Props>(), {
-  loading: false,
+  loading: false
 });
 
 const emit = defineEmits<{
@@ -26,11 +26,23 @@ const emit = defineEmits<{
   (e: 'cursor-position', x: number, y: number): void;
   (e: 'undo'): void;
   (e: 'redo'): void;
-  (e: 'context-menu', data: { x: number; y: number; clientX: number; clientY: number; target: { type: 'annotation' | 'object'; id: number } | null }): void;
+  (
+    e: 'context-menu',
+    data: {
+      x: number;
+      y: number;
+      clientX: number;
+      clientY: number;
+      target: { type: 'annotation' | 'object'; id: number } | null;
+    }
+  ): void;
   (e: 'request-type-switch', data: { id: number; clientX: number; clientY: number }): void;
   (e: 'rename-element', data: { type: 'annotation' | 'object'; id: number }): void;
   (e: 'blank-click'): void;
-  (e: 'hover-element', data: { type: 'annotation' | 'object' | 'robot'; id: number; clientX: number; clientY: number } | null): void;
+  (
+    e: 'hover-element',
+    data: { type: 'annotation' | 'object' | 'robot'; id: number; clientX: number; clientY: number } | null
+  ): void;
 }>();
 
 const canvasContainer = ref<HTMLDivElement>();
@@ -38,12 +50,12 @@ const canvasEl = ref<HTMLCanvasElement>();
 const minimapEl = ref<HTMLDivElement>();
 let fabricCanvas: Canvas | null = null;
 let backgroundImgObj: FabricImage | null = null;
-let elementMap: Map<string, any> = new Map();
-let annotationDecorations: Map<number, { text: Text; angleIndicator: Triangle }> = new Map();
-let objectLabels: Map<number, Text> = new Map();
+const elementMap: Map<string, any> = new Map();
+const annotationDecorations: Map<number, { text: Text; angleIndicator: Triangle }> = new Map();
+const objectLabels: Map<number, Text> = new Map();
 // 机器人位置标记：robotId -> { circle, arrow, label }（装饰层，不进 elementMap）
 // 用独立对象、各自绝对坐标定位，避免 Group bbox 重算导致圆点与名称错位/坐标偏移
-let robotMarkers: Map<number, { circle: Circle; arrow: Triangle | null; label: Text }> = new Map();
+const robotMarkers: Map<number, { circle: Circle; arrow: Triangle | null; label: Text }> = new Map();
 let resizeObserver: ResizeObserver | null = null;
 
 const minimapImageUrl = ref('');
@@ -65,17 +77,22 @@ const minimapScale = computed(() => {
   const oy = (MINIMAP_SIZE - h) / 2;
   return { s, w, h, ox, oy };
 });
-let start_point_x = 0
-let start_point_y = 0
+let start_point_x = 0;
+let start_point_y = 0;
 async function loadSceneList() {
   try {
-    const { data } = await fetchGetSceneMapList({ page: 1, page_size: 999, status: null, name: null, group_id: undefined });
+    const { data } = await fetchGetSceneMapList({
+      page: 1,
+      page_size: 999,
+      status: null,
+      name: null,
+      group_id: undefined
+    });
     if (data?.records) {
-      start_point_x = data?.records[0]?.start_point_x
-      start_point_y = data?.records[0]?.start_point_y
+      start_point_x = data?.records[0]?.start_point_x;
+      start_point_y = data?.records[0]?.start_point_y;
     }
-  } catch {
-  }
+  } catch {}
 }
 function updateMinimap() {
   if (!fabricCanvas) return;
@@ -104,7 +121,7 @@ function updateMinimap() {
     x: ox + visibleLeft * s,
     y: oy + visibleTop * s,
     w: (visibleRight - visibleLeft) * s,
-    h: (visibleBottom - visibleTop) * s,
+    h: (visibleBottom - visibleTop) * s
   };
 }
 
@@ -199,7 +216,7 @@ function getAnnotationArrowTransform(annX: number, annY: number, rosRad: number,
   return {
     x: annX + sceneDist * Math.cos(rosRad),
     y: annY - sceneDist * Math.sin(rosRad),
-    angle: -radToDeg(rosRad) + 90,
+    angle: -radToDeg(rosRad) + 90
   };
 }
 
@@ -266,7 +283,7 @@ const sliderThemeOverrides = {
   fillColorHover: '#2563eb',
   dotColor: '#3b82f6',
   dotBorder: '2px solid #fff',
-  dotBoxShadow: '0 1px 4px rgba(0,0,0,0.2)',
+  dotBoxShadow: '0 1px 4px rgba(0,0,0,0.2)'
 };
 
 function zoomToSliderValue(sliderVal: number): number {
@@ -302,8 +319,8 @@ function getEffectiveOrigin() {
   const sx = canvasWidth.value / storedW;
   const sy = canvasHeight.value / storedH;
   return {
-    x: (map.start_point_x ?? 0),
-    y: (map.start_point_y ?? 0),
+    x: map.start_point_x ?? 0,
+    y: map.start_point_y ?? 0
   };
 }
 
@@ -328,11 +345,7 @@ function centerContent() {
   const offsetX = (cw - canvasWidth.value * zoom) / 2;
   const offsetY = (ch - canvasHeight.value * zoom) / 2;
 
-  fabricCanvas.setViewportTransform([
-    zoom, 0, 0, zoom,
-    Math.max(0, offsetX),
-    Math.max(0, offsetY),
-  ]);
+  fabricCanvas.setViewportTransform([zoom, 0, 0, zoom, Math.max(0, offsetX), Math.max(0, offsetY)]);
   updateMinimap();
 }
 
@@ -353,7 +366,7 @@ function syncStructure() {
       stroke: '#f97316',
       strokeWidth: 3,
       selectable: false,
-      evented: false,
+      evented: false
     });
     setElementData(line, { type: 'path', id: path.id });
     fabricCanvas.add(line);
@@ -369,15 +382,19 @@ function syncStructure() {
 
     const isRestricted = obj.type === 'restricted' || obj.type === '禁区';
     const isFence = obj.type === 'fence' || obj.type === '电子围栏';
-    const fillColor: any = isRestricted ? getRestrictedPattern() : (isFence ? FENCE_FILL : OBSTACLE_FILL);
-    const strokeColor = isRestricted ? RESTRICTED_STROKE : (isFence ? FENCE_STROKE : OBSTACLE_STROKE);
+    const fillColor: any = isRestricted ? getRestrictedPattern() : isFence ? FENCE_FILL : OBSTACLE_FILL;
+    const strokeColor = isRestricted ? RESTRICTED_STROKE : isFence ? FENCE_STROKE : OBSTACLE_STROKE;
     const strokeWidth = isFence ? 3 : 2;
     const commonOpts = {
-      left: obj.x, top: obj.y,
-      originX: 'left' as const, originY: 'top' as const,
+      left: obj.x,
+      top: obj.y,
+      originX: 'left' as const,
+      originY: 'top' as const,
       angle: obj.angle ?? 0,
-      fill: fillColor, stroke: strokeColor, strokeWidth,
-      hasControls: true,
+      fill: fillColor,
+      stroke: strokeColor,
+      strokeWidth,
+      hasControls: true
     };
 
     let fabricObj: any = null;
@@ -386,32 +403,35 @@ function syncStructure() {
       try {
         const pts = JSON.parse(obj.points);
         fabricObj = new Polygon(pts, commonOpts);
-      } catch { /* skip invalid polygon */ }
+      } catch {
+        /* skip invalid polygon */
+      }
     } else if (obj.type === 'obstacle-circle') {
       const w = obj.width || 10;
       const h = obj.height || 10;
       fabricObj = new Ellipse({
         ...commonOpts,
         rx: w / 2,
-        ry: h / 2,
+        ry: h / 2
       });
     } else if (obj.type === 'obstacle-triangle') {
       fabricObj = new Triangle({
         ...commonOpts,
-        width: obj.width || 5, height: obj.height || 5,
+        width: obj.width || 5,
+        height: obj.height || 5
       });
     } else if (isFence) {
       fabricObj = new Rect({
         ...commonOpts,
         width: obj.width || 10,
-        height: obj.height || 10,
+        height: obj.height || 10
       });
     } else {
       const isSquare = obj.type === 'obstacle-square';
       fabricObj = new Rect({
         ...commonOpts,
         width: obj.width || 5,
-        height: isSquare ? (obj.width || 5) : (obj.height || 5),
+        height: isSquare ? obj.width || 5 : obj.height || 5
       });
     }
 
@@ -431,7 +451,7 @@ function syncStructure() {
         evented: false,
         selectable: false,
         hasControls: false,
-        hoverCursor: 'default',
+        hoverCursor: 'default'
       });
       fabricCanvas.add(labelText);
       objectLabels.set(obj.id, labelText);
@@ -447,8 +467,12 @@ function syncStructure() {
     const isSelected = props.selectedElement?.type === 'annotation' && props.selectedElement?.id === ann.id;
     const isReturnPoint = ann.type === 'navigation' || ann.type === '返回点';
     const annColor = isReturnPoint
-      ? (isSelected ? RETURN_POINT_SELECTED_FILL : RETURN_POINT_FILL)
-      : (isSelected ? POINT_SELECTED_FILL : POINT_FILL);
+      ? isSelected
+        ? RETURN_POINT_SELECTED_FILL
+        : RETURN_POINT_FILL
+      : isSelected
+        ? POINT_SELECTED_FILL
+        : POINT_FILL;
 
     // 可交互的 circle（拖动 + 旋转入口）
     const circle = new Circle({
@@ -462,13 +486,19 @@ function syncStructure() {
       hasRotatingPoint: true,
       lockScalingX: true,
       lockScalingY: true,
-      lockUniScaling: true,
+      lockUniScaling: true
     });
     // 只保留旋转控制点，禁用所有缩放控制点
     circle.setControlsVisibility({
-      ml: false, mr: false, mt: false, mb: false,
-      tl: false, tr: false, bl: false, br: false,
-      mtr: true,
+      ml: false,
+      mr: false,
+      mt: false,
+      mb: false,
+      tl: false,
+      tr: false,
+      bl: false,
+      br: false,
+      mtr: true
     });
     setElementData(circle, { type: 'annotation', id: ann.id });
     fabricCanvas.add(circle);
@@ -490,7 +520,7 @@ function syncStructure() {
       evented: false,
       selectable: false,
       hasControls: false,
-      hoverCursor: 'default',
+      hoverCursor: 'default'
     });
     fabricCanvas.add(angleIndicator);
 
@@ -505,7 +535,7 @@ function syncStructure() {
       evented: false,
       selectable: false,
       hasControls: false,
-      hoverCursor: 'default',
+      hoverCursor: 'default'
     });
     fabricCanvas.add(text);
 
@@ -555,11 +585,16 @@ function updatePositions() {
       deco.text.set({ left: ann.x, top: ann.y + ANN_LABEL_OFFSET });
       deco.text.setCoords();
       const isSelected = props.selectedElement?.type === 'annotation' && props.selectedElement?.id === ann.id;
-      const arrowTransform = getAnnotationArrowTransform(ann.x, ann.y, ann.angle || 0, isSelected ? ANN_RADIUS_SELECTED : ANN_RADIUS);
+      const arrowTransform = getAnnotationArrowTransform(
+        ann.x,
+        ann.y,
+        ann.angle || 0,
+        isSelected ? ANN_RADIUS_SELECTED : ANN_RADIUS
+      );
       deco.angleIndicator.set({
         left: arrowTransform.x,
         top: arrowTransform.y,
-        angle: arrowTransform.angle,
+        angle: arrowTransform.angle
       });
       deco.angleIndicator.setCoords();
     }
@@ -628,9 +663,7 @@ function renderRobots() {
     const labelText = robot.name || `#${robot.id}`;
     // 朝向角(ROS 弧度)：与点位同约定（0 朝东，π/2 朝北，逆时针为正）
     const hasAngle = pt.angle !== undefined;
-    const arrowTransform = hasAngle
-      ? getAnnotationArrowTransform(px, py, pt.angle as number, radius)
-      : null;
+    const arrowTransform = hasAngle ? getAnnotationArrowTransform(px, py, pt.angle as number, radius) : null;
 
     const existing = robotMarkers.get(robot.id);
     if (existing) {
@@ -640,7 +673,12 @@ function renderRobots() {
       existing.label.setCoords();
       if (existing.arrow) {
         if (arrowTransform) {
-          existing.arrow.set({ left: arrowTransform.x, top: arrowTransform.y, angle: arrowTransform.angle, visible: true });
+          existing.arrow.set({
+            left: arrowTransform.x,
+            top: arrowTransform.y,
+            angle: arrowTransform.angle,
+            visible: true
+          });
         } else {
           existing.arrow.set({ visible: false });
         }
@@ -662,24 +700,24 @@ function renderRobots() {
       selectable: false,
       evented: false,
       hoverCursor: 'default',
-      excludeFromExport: true,
+      excludeFromExport: true
     });
     // 方向箭头（与点位同一 ROS 弧度 → Fabric 变换）；无角度时不渲染
     const arrow = arrowTransform
       ? new Triangle({
-        width: ARROW_WIDTH,
-        height: ARROW_HEIGHT,
-        fill: ROBOT_FILL,
-        originX: 'center',
-        originY: 'center',
-        left: arrowTransform.x,
-        top: arrowTransform.y,
-        angle: arrowTransform.angle,
-        selectable: false,
-        evented: false,
-        hoverCursor: 'default',
-        excludeFromExport: true,
-      })
+          width: ARROW_WIDTH,
+          height: ARROW_HEIGHT,
+          fill: ROBOT_FILL,
+          originX: 'center',
+          originY: 'center',
+          left: arrowTransform.x,
+          top: arrowTransform.y,
+          angle: arrowTransform.angle,
+          selectable: false,
+          evented: false,
+          hoverCursor: 'default',
+          excludeFromExport: true
+        })
       : null;
     const label = new Text(labelText, {
       fontSize: ROBOT_LABEL_FONT_SIZE,
@@ -693,7 +731,7 @@ function renderRobots() {
       selectable: false,
       evented: false,
       hoverCursor: 'default',
-      excludeFromExport: true,
+      excludeFromExport: true
     });
     if (arrow) {
       fabricCanvas.add(circle, arrow, label);
@@ -764,7 +802,7 @@ function applyMarkerZoom() {
     m.circle.setCoords();
     if (m.arrow) {
       // 由箭头当前角度反推 ROS 弧度：arrow.angle = -radToDeg(rosRad) + 90
-      const rosRad = (90 - (m.arrow.angle ?? 0)) * Math.PI / 180;
+      const rosRad = ((90 - (m.arrow.angle ?? 0)) * Math.PI) / 180;
       const t = getAnnotationArrowTransform(px, py, rosRad, ROBOT_RADIUS, zoom);
       m.arrow.set({ left: t.x, top: t.y, angle: t.angle, scaleX: inv, scaleY: inv });
       m.arrow.setCoords();
@@ -795,8 +833,12 @@ function updateSelectionStyle() {
     const isSelected = sel?.type === 'annotation' && sel?.id === ann.id;
     const isReturnPoint = ann.type === 'navigation' || ann.type === '返回点';
     const annColor = isReturnPoint
-      ? (isSelected ? RETURN_POINT_SELECTED_FILL : RETURN_POINT_FILL)
-      : (isSelected ? POINT_SELECTED_FILL : POINT_FILL);
+      ? isSelected
+        ? RETURN_POINT_SELECTED_FILL
+        : RETURN_POINT_FILL
+      : isSelected
+        ? POINT_SELECTED_FILL
+        : POINT_FILL;
     circle.set('fill', annColor);
     circle.set('radius', isSelected ? ANN_RADIUS_SELECTED : ANN_RADIUS);
     circle.setCoords();
@@ -868,7 +910,7 @@ async function loadBackgroundImage(imageId: number) {
 
     fabricCanvas.setDimensions({
       width: containerWidth.value || canvasContainer.value!.clientWidth,
-      height: containerHeight.value || canvasContainer.value!.clientHeight,
+      height: containerHeight.value || canvasContainer.value!.clientHeight
     });
     // 切换地图时重置视口缩放为 1（与 currentZoom/slider 状态同步），避免标记大小跳变
     fabricCanvas.setZoom(1);
@@ -968,11 +1010,7 @@ function handleMouseUp(opt: any) {
   // 点位单击切换类型：用按下/抬起的屏幕距离判定是否为"点击"
   // （fabric 的 object:moving 在 1-2px 抖动时也会触发，单靠 justDragged 不可靠）
   const evt = opt.e as MouseEvent;
-  if (
-    mouseDownClientPos &&
-    evt &&
-    Date.now() - lastDblClickTime > 350
-  ) {
+  if (mouseDownClientPos && evt && Date.now() - lastDblClickTime > 350) {
     const dx = evt.clientX - mouseDownClientPos.x;
     const dy = evt.clientY - mouseDownClientPos.y;
     const isClick = Math.sqrt(dx * dx + dy * dy) < CLICK_MOVE_THRESHOLD;
@@ -1055,12 +1093,12 @@ function handleObjectMoved(opt: any) {
         obj.top ?? 0,
         ann?.angle ?? 0,
         isSelected ? ANN_RADIUS_SELECTED : ANN_RADIUS,
-        zoom,
+        zoom
       );
       deco.angleIndicator.set({
         left: arrowTransform.x,
         top: arrowTransform.y,
-        angle: arrowTransform.angle,
+        angle: arrowTransform.angle
       });
     }
   } else if (data.type === 'object') {
@@ -1098,12 +1136,12 @@ function handleObjectRotating(opt: any) {
         obj.top ?? 0,
         rad,
         isSelected ? ANN_RADIUS_SELECTED : ANN_RADIUS,
-        zoom,
+        zoom
       );
       deco.angleIndicator.set({
         left: transform.x,
         top: transform.y,
-        angle: transform.angle,
+        angle: transform.angle
       });
     }
   }
@@ -1125,7 +1163,7 @@ function handleObjectModifiedied(opt: any) {
 
   if (data.type === 'annotation') {
     // 点位旋转：把 Fabric 角度（度）转回 ROS 弧度；只在确有旋转时更新
-    if (Math.abs((obj.angle ?? 0)) > 0.01) {
+    if (Math.abs(obj.angle ?? 0) > 0.01) {
       const rad = fabricAngleToAnnotationRad(obj.angle ?? 0);
       updates.angle = rad;
       // 重置 circle 的 fabric angle 为 0，避免下次旋转累积（点位圆旋转对称，重置无视觉影响）
@@ -1167,7 +1205,9 @@ function handleObjectModifiedied(opt: any) {
     updateObjectLabelPosition(obj, data.id);
     if (fabricCanvas) fabricCanvas.renderAll();
   }
-  nextTick(() => { isLocalUpdate = false; });
+  nextTick(() => {
+    isLocalUpdate = false;
+  });
 }
 
 function handleObjectSelected(opt: any) {
@@ -1219,7 +1259,7 @@ function findElementAtScenePoint(x: number, y: number): { type: 'annotation' | '
   // annotation 在视觉顶层，优先匹配；其次 object
   for (const layer of ['annotation', 'object'] as const) {
     for (const [key, obj] of elementMap) {
-      if (!key.startsWith(layer + '-')) continue;
+      if (!key.startsWith(`${layer}-`)) continue;
       if (typeof obj.containsPoint === 'function' && obj.containsPoint(point)) {
         const data = getElementData(obj);
         if (data) return { type: layer, id: data.id };
@@ -1251,7 +1291,7 @@ function handleContextMenu(evt: MouseEvent) {
     y: pointer.y,
     clientX: evt.clientX,
     clientY: evt.clientY,
-    target,
+    target
   });
 }
 
@@ -1291,7 +1331,7 @@ function setupCanvas() {
     width: cw,
     height: ch,
     targetFindTolerance: 8,
-    perPixelTargetFind: false,
+    perPixelTargetFind: false
   });
   fabricCanvas.on('mouse:down', handleMouseDown);
   fabricCanvas.on('mouse:move', handleMouseMove);
@@ -1312,7 +1352,7 @@ function setupCanvas() {
     upperCanvas.addEventListener('contextmenu', handleContextMenu as EventListener);
   }
 
-  resizeObserver = new ResizeObserver((entries) => {
+  resizeObserver = new ResizeObserver(entries => {
     for (const entry of entries) {
       containerWidth.value = entry.contentRect.width;
       containerHeight.value = entry.contentRect.height;
@@ -1358,90 +1398,113 @@ watch([containerWidth, containerHeight], () => {
 
 let loadSeq = 0;
 
-watch(() => props.editorData, async (newData) => {
-  if (!newData) return;
-  const seq = ++loadSeq;
+watch(
+  () => props.editorData,
+  async newData => {
+    if (!newData) return;
+    const seq = ++loadSeq;
 
-  for (const [, obj] of elementMap) {
-    fabricCanvas?.remove(obj);
-  }
-  elementMap.clear();
-  for (const { text, angleIndicator } of annotationDecorations.values()) {
-    fabricCanvas?.remove(text);
-    fabricCanvas?.remove(angleIndicator);
-  }
-  annotationDecorations.clear();
-  for (const label of objectLabels.values()) {
-    fabricCanvas?.remove(label);
-  }
-  objectLabels.clear();
-  clearRobotMarkers();
-
-  if (newData.map.image_id) {
-    await loadBackgroundImage(newData.map.image_id);
-    // renderElements 会在 loadBackgroundImage 完成后调用
-  } else {
-    canvasWidth.value = newData.map.width || 800;
-    canvasHeight.value = newData.map.height || 600;
-    if (fabricCanvas) {
-      fabricCanvas.setDimensions({
-        width: containerWidth.value || canvasContainer.value!.clientWidth,
-        height: containerHeight.value || canvasContainer.value!.clientHeight,
-      });
-      centerContent();
+    for (const [, obj] of elementMap) {
+      fabricCanvas?.remove(obj);
     }
-    nextTick(() => renderElements());
-  }
-
-  // if (seq !== loadSeq) return;
-  // renderElements();
-}, { deep: false });
-
-watch(() => props.editorData?.annotations, () => {
-  if (isLocalUpdate || isDraggingObject || !fabricCanvas) return;
-  syncStructure();
-  updatePositions();
-  updateSelectionStyle();
-  fabricCanvas.renderAll();
-}, { deep: true });
-watch(() => props.editorData?.paths, () => {
-  if (isLocalUpdate || isDraggingObject || !fabricCanvas) return;
-  syncStructure();
-  updatePositions();
-  updateSelectionStyle();
-  fabricCanvas.renderAll();
-}, { deep: true });
-watch(() => props.editorData?.objects, () => {
-  if (isLocalUpdate || isDraggingObject || !fabricCanvas) return;
-  syncStructure();
-  updatePositions();
-  updateSelectionStyle();
-  fabricCanvas.renderAll();
-}, { deep: true });
-watch(() => props.robotLocations, () => {
-  if (!fabricCanvas) return;
-  renderRobots();
-}, { deep: true });
-watch(() => props.selectedElement, () => {
-  if (!fabricCanvas) return;
-  updateSelectionStyle();
-  updateSelection();
-
-  // 选中点位时把它拉到顶层，避免被其他点位遮盖
-  const sel = props.selectedElement;
-  if (sel?.type === 'annotation') {
-    const key = getElementKey('annotation', sel.id);
-    const circle = elementMap.get(key);
-    const deco = annotationDecorations.get(sel.id);
-    if (circle) fabricCanvas.bringObjectToFront(circle);
-    if (deco) {
-      fabricCanvas.bringObjectToFront(deco.angleIndicator);
-      fabricCanvas.bringObjectToFront(deco.text);
+    elementMap.clear();
+    for (const { text, angleIndicator } of annotationDecorations.values()) {
+      fabricCanvas?.remove(text);
+      fabricCanvas?.remove(angleIndicator);
     }
-  }
+    annotationDecorations.clear();
+    for (const label of objectLabels.values()) {
+      fabricCanvas?.remove(label);
+    }
+    objectLabels.clear();
+    clearRobotMarkers();
 
-  fabricCanvas.renderAll();
-});
+    if (newData.map.image_id) {
+      await loadBackgroundImage(newData.map.image_id);
+      // renderElements 会在 loadBackgroundImage 完成后调用
+    } else {
+      canvasWidth.value = newData.map.width || 800;
+      canvasHeight.value = newData.map.height || 600;
+      if (fabricCanvas) {
+        fabricCanvas.setDimensions({
+          width: containerWidth.value || canvasContainer.value!.clientWidth,
+          height: containerHeight.value || canvasContainer.value!.clientHeight
+        });
+        centerContent();
+      }
+      nextTick(() => renderElements());
+    }
+
+    // if (seq !== loadSeq) return;
+    // renderElements();
+  },
+  { deep: false }
+);
+
+watch(
+  () => props.editorData?.annotations,
+  () => {
+    if (isLocalUpdate || isDraggingObject || !fabricCanvas) return;
+    syncStructure();
+    updatePositions();
+    updateSelectionStyle();
+    fabricCanvas.renderAll();
+  },
+  { deep: true }
+);
+watch(
+  () => props.editorData?.paths,
+  () => {
+    if (isLocalUpdate || isDraggingObject || !fabricCanvas) return;
+    syncStructure();
+    updatePositions();
+    updateSelectionStyle();
+    fabricCanvas.renderAll();
+  },
+  { deep: true }
+);
+watch(
+  () => props.editorData?.objects,
+  () => {
+    if (isLocalUpdate || isDraggingObject || !fabricCanvas) return;
+    syncStructure();
+    updatePositions();
+    updateSelectionStyle();
+    fabricCanvas.renderAll();
+  },
+  { deep: true }
+);
+watch(
+  () => props.robotLocations,
+  () => {
+    if (!fabricCanvas) return;
+    renderRobots();
+  },
+  { deep: true }
+);
+watch(
+  () => props.selectedElement,
+  () => {
+    if (!fabricCanvas) return;
+    updateSelectionStyle();
+    updateSelection();
+
+    // 选中点位时把它拉到顶层，避免被其他点位遮盖
+    const sel = props.selectedElement;
+    if (sel?.type === 'annotation') {
+      const key = getElementKey('annotation', sel.id);
+      const circle = elementMap.get(key);
+      const deco = annotationDecorations.get(sel.id);
+      if (circle) fabricCanvas.bringObjectToFront(circle);
+      if (deco) {
+        fabricCanvas.bringObjectToFront(deco.angleIndicator);
+        fabricCanvas.bringObjectToFront(deco.text);
+      }
+    }
+
+    fabricCanvas.renderAll();
+  }
+);
 
 onMounted(async () => {
   await loadSceneList();
@@ -1524,9 +1587,11 @@ defineExpose({ exportCanvas, zoomIn, zoomOut, zoomReset, locatePixelPoint });
     <canvas ref="canvasEl" />
 
     <!-- Legend -->
-    <div v-if="editorData"
-      class="absolute left-12px top-12px z-10 flex flex-col gap-6px rounded-lg bg-white/90 px-12px py-8px text-xs shadow-md">
-      <div class="max-w-180px truncate text-sm font-medium text-gray-700">{{ editorData.map.name }}</div>
+    <div
+      v-if="editorData"
+      class="absolute left-12px top-12px z-10 flex flex-col gap-6px rounded-lg bg-white/90 px-12px py-8px text-xs shadow-md"
+    >
+      <div class="max-w-180px truncate text-sm text-gray-700 font-medium">{{ editorData.map.name }}</div>
       <div class="my-2px h-1px bg-gray-200"></div>
       <div class="flex items-center gap-6px">
         <span class="inline-block h-10px w-10px" style="background-color: #ffffff; border: 1px solid #d1d5db"></span>
@@ -1546,22 +1611,32 @@ defineExpose({ exportCanvas, zoomIn, zoomOut, zoomReset, locatePixelPoint });
         <span>返回点</span>
       </div>
       <div class="flex items-center gap-6px">
-        <span class="inline-block h-10px w-10px rounded-full" style="background-color: #ef4444;"></span>
+        <span class="inline-block h-10px w-10px rounded-full" style="background-color: #ef4444"></span>
         <span>机器人位置</span>
       </div>
       <div class="flex items-center gap-6px">
-        <span class="inline-block h-10px w-10px"
-          style="background-color: rgba(59, 130, 246, 0.3); border: 1px solid #3b82f6"></span>
+        <span
+          class="inline-block h-10px w-10px"
+          style="background-color: rgba(59, 130, 246, 0.3); border: 1px solid #3b82f6"
+        ></span>
         <span>障碍物</span>
       </div>
       <div class="flex items-center gap-6px">
-        <span class="inline-block h-10px w-10px"
-          style="background-image: linear-gradient(135deg, transparent 45%, #6b7280 45%, #6b7280 55%, transparent 55%); background-color: rgba(107, 114, 128, 0.12); border: 1px solid #6b7280"></span>
+        <span
+          class="inline-block h-10px w-10px"
+          style="
+            background-image: linear-gradient(135deg, transparent 45%, #6b7280 45%, #6b7280 55%, transparent 55%);
+            background-color: rgba(107, 114, 128, 0.12);
+            border: 1px solid #6b7280;
+          "
+        ></span>
         <span>禁行区域/虚拟墙</span>
       </div>
       <div class="flex items-center gap-6px">
-        <span class="inline-block h-10px w-10px"
-          style="background-color: rgba(239, 68, 68, 0.15); border: 2px solid #ef4444"></span>
+        <span
+          class="inline-block h-10px w-10px"
+          style="background-color: rgba(239, 68, 68, 0.15); border: 2px solid #ef4444"
+        ></span>
         <span>电子围栏</span>
       </div>
     </div>
@@ -1573,55 +1648,82 @@ defineExpose({ exportCanvas, zoomIn, zoomOut, zoomReset, locatePixelPoint });
     </div>
 
     <!-- Zoom slider control -->
-    <div v-if="editorData"
-      class="absolute right-12px top-12px z-10 flex flex-col items-center gap-4px rounded-lg bg-white/90 px-6px py-8px shadow-md">
+    <div
+      v-if="editorData"
+      class="absolute right-12px top-12px z-10 flex flex-col items-center gap-4px rounded-lg bg-white/90 px-6px py-8px shadow-md"
+    >
       <button
-        class="flex h-24px w-24px items-center justify-center rounded-full text-sm font-bold text-blue-500 transition-colors hover:bg-blue-50"
-        @click="zoomIn">
+        class="h-24px w-24px flex items-center justify-center rounded-full text-sm text-blue-500 font-bold transition-colors hover:bg-blue-50"
+        @click="zoomIn"
+      >
         +
       </button>
-      <NSlider v-model:value="sliderZoomValue" vertical :min="0" :max="100" :step="1" :tooltip="false"
-        :theme-overrides="sliderThemeOverrides" class="!h-160px" @update:value="handleSliderZoom" />
+      <NSlider
+        v-model:value="sliderZoomValue"
+        vertical
+        :min="0"
+        :max="100"
+        :step="1"
+        :tooltip="false"
+        :theme-overrides="sliderThemeOverrides"
+        class="!h-160px"
+        @update:value="handleSliderZoom"
+      />
       <button
-        class="flex h-24px w-24px items-center justify-center rounded-full text-sm font-bold text-blue-500 transition-colors hover:bg-blue-50"
-        @click="zoomOut">
+        class="h-24px w-24px flex items-center justify-center rounded-full text-sm text-blue-500 font-bold transition-colors hover:bg-blue-50"
+        @click="zoomOut"
+      >
         -
       </button>
       <div class="text-xs text-gray-500">{{ Math.round(currentZoom * 100) }}%</div>
     </div>
 
     <!-- Cursor coordinates (placed above minimap) -->
-    <div v-if="editorData" class="absolute left-12px z-10 rounded bg-black/50 px-8px py-4px text-xs text-white"
-      :style="{ bottom: minimapImageUrl ? `${MINIMAP_SIZE + 24}px` : '12px' }">
+    <div
+      v-if="editorData"
+      class="absolute left-12px z-10 rounded bg-black/50 px-8px py-4px text-xs text-white"
+      :style="{ bottom: minimapImageUrl ? `${MINIMAP_SIZE + 24}px` : '12px' }"
+    >
       坐标: {{ cursorWorldX.toFixed(2) }}m, {{ cursorWorldY.toFixed(2) }}m
     </div>
 
     <!-- Minimap navigator -->
-    <div v-if="editorData && minimapImageUrl" ref="minimapEl"
-      class="absolute bottom-12px left-12px z-10 cursor-pointer overflow-hidden rounded-lg border border-gray-300 bg-white shadow-md"
-      :style="{ width: `${MINIMAP_SIZE}px`, height: `${MINIMAP_SIZE}px` }" @mousedown="handleMinimapDown"
-      @mousemove="handleMinimapMove" @mouseup="handleMinimapUp" @mouseleave="handleMinimapUp">
-      <img :src="minimapImageUrl" :style="{
-        position: 'absolute',
-        left: `${minimapScale.ox}px`,
-        top: `${minimapScale.oy}px`,
-        width: `${minimapScale.w}px`,
-        height: `${minimapScale.h}px`,
-        objectFit: 'fill',
-        pointerEvents: 'none',
-      }" />
+    <div
+      v-if="editorData && minimapImageUrl"
+      ref="minimapEl"
+      class="absolute bottom-12px left-12px z-10 cursor-pointer overflow-hidden border border-gray-300 rounded-lg bg-white shadow-md"
+      :style="{ width: `${MINIMAP_SIZE}px`, height: `${MINIMAP_SIZE}px` }"
+      @mousedown="handleMinimapDown"
+      @mousemove="handleMinimapMove"
+      @mouseup="handleMinimapUp"
+      @mouseleave="handleMinimapUp"
+    >
+      <img
+        :src="minimapImageUrl"
+        :style="{
+          position: 'absolute',
+          left: `${minimapScale.ox}px`,
+          top: `${minimapScale.oy}px`,
+          width: `${minimapScale.w}px`,
+          height: `${minimapScale.h}px`,
+          objectFit: 'fill',
+          pointerEvents: 'none'
+        }"
+      />
       <!-- Viewport rect: blue border + massive box-shadow as outer mask -->
-      <div :style="{
-        position: 'absolute',
-        left: `${minimapRect.x}px`,
-        top: `${minimapRect.y}px`,
-        width: `${minimapRect.w}px`,
-        height: `${minimapRect.h}px`,
-        border: '2px solid #3b82f6',
-        backgroundColor: 'transparent',
-        boxShadow: '0 0 0 9999px rgba(0, 0, 0, 0.45)',
-        pointerEvents: 'none',
-      }" />
+      <div
+        :style="{
+          position: 'absolute',
+          left: `${minimapRect.x}px`,
+          top: `${minimapRect.y}px`,
+          width: `${minimapRect.w}px`,
+          height: `${minimapRect.h}px`,
+          border: '2px solid #3b82f6',
+          backgroundColor: 'transparent',
+          boxShadow: '0 0 0 9999px rgba(0, 0, 0, 0.45)',
+          pointerEvents: 'none'
+        }"
+      />
     </div>
   </div>
 </template>

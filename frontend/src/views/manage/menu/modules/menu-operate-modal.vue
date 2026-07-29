@@ -9,9 +9,9 @@ import { $t } from '@/locales';
 import SvgIcon from '@/components/custom/svg-icon.vue';
 import {
   composePath,
-  getLayoutAndPage,
   getLastPathSegment,
   getLastSegmentByName,
+  getLayoutAndPage,
   transformLayoutAndPageToComponent
 } from './shared';
 
@@ -121,10 +121,7 @@ function collectDescendantIds(trees: Api.SystemManage.MenuTree[], excludeId: num
   return ids;
 }
 
-function filterTree(
-  trees: Api.SystemManage.MenuTree[],
-  excludeIds: Set<number>
-): Api.SystemManage.MenuTree[] {
+function filterTree(trees: Api.SystemManage.MenuTree[], excludeIds: Set<number>): Api.SystemManage.MenuTree[] {
   return trees
     .filter(t => !excludeIds.has(t.id))
     .map(t => ({
@@ -389,18 +386,18 @@ watch(
           </NFormItemGi>
           <NFormItemGi span="24 m:12" :label="$t('page.manage.menu.menuType')" path="menuType">
             <NRadioGroup v-model:value="model.menuType" :disabled="disabledMenuType">
-              <NRadio v-for="item in availableMenuTypeOptions" :key="item.value" :value="item.value" :label="item.label" />
+              <NRadio
+                v-for="item in availableMenuTypeOptions"
+                :key="item.value"
+                :value="item.value"
+                :label="item.label"
+              />
             </NRadioGroup>
           </NFormItemGi>
           <NFormItemGi span="24 m:12" :label="$t('page.manage.menu.menuName')" path="menuName">
             <NInput v-model:value="model.menuName" :placeholder="$t('page.manage.menu.form.menuName')" />
           </NFormItemGi>
-          <NFormItemGi
-            v-if="isButton"
-            span="24 m:12"
-            :label="$t('page.manage.menu.permission')"
-            path="permission"
-          >
+          <NFormItemGi v-if="isButton" span="24 m:12" :label="$t('page.manage.menu.permission')" path="permission">
             <NInput v-model:value="model.permission" :placeholder="$t('page.manage.menu.form.permission')" />
           </NFormItemGi>
           <NFormItemGi v-if="!isButton" span="24 m:12" :label="$t('page.manage.menu.routePath')" path="pathSegment">
@@ -415,7 +412,12 @@ watch(
               <NInput v-model:value="model.pathSegment" :placeholder="$t('page.manage.menu.form.routePath')" />
             </NInputGroup>
           </NFormItemGi>
-          <NFormItemGi v-if="!isButton && showLayout" span="24 m:12" :label="$t('page.manage.menu.layout')" path="layout">
+          <NFormItemGi
+            v-if="!isButton && showLayout"
+            span="24 m:12"
+            :label="$t('page.manage.menu.layout')"
+            path="layout"
+          >
             <NSelect
               v-model:value="model.layout"
               :options="layoutOptions"
@@ -440,7 +442,7 @@ watch(
           </NFormItemGi>
           <NFormItemGi v-if="!isButton" span="24 m:12" :label="$t('page.manage.menu.icon')" path="icon">
             <template v-if="model.iconType === '1'">
-              <div class="flex-y-center gap-8px w-full">
+              <div class="w-full flex-y-center gap-8px">
                 <NInput v-model:value="model.icon" :placeholder="$t('page.manage.menu.form.icon')" class="flex-1">
                   <template #suffix>
                     <SvgIcon v-if="model.icon" :icon="model.icon" class="text-icon" />

@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, watch, onMounted, onBeforeUnmount } from 'vue';
+import { onBeforeUnmount, onMounted, ref, watch } from 'vue';
 import { fetchGetRobotEventLogList } from '@/service/api/log';
 import { parseEventContentMessage } from '@/utils/robot-event';
 
@@ -114,10 +114,13 @@ function formatTime(timeStr: string): string {
   }
 }
 
-watch(() => props.robotId, () => {
-  loadAlerts();
-  startRefresh();
-});
+watch(
+  () => props.robotId,
+  () => {
+    loadAlerts();
+    startRefresh();
+  }
+);
 
 onMounted(() => {
   if (props.robotId) {
@@ -144,18 +147,27 @@ onBeforeUnmount(() => {
 
     <NSpin :show="loading" class="h-full">
       <div class="h-full flex flex-col">
-        <div v-if="!robotId" class="flex-1 flex-center py-32px">
+        <div v-if="!robotId" class="flex-center flex-1 py-32px">
           <NEmpty description="请先选择机器人" />
         </div>
-        <div v-else-if="alerts.length === 0" class="flex-1 flex-center py-32px">
+        <div v-else-if="alerts.length === 0" class="flex-center flex-1 py-32px">
           <NEmpty description="暂无告警" />
         </div>
-        <div v-else class="min-h-0 flex-1 overflow-y-auto pr-8px pb-12px">
-          <div v-for="alert in alerts" :key="alert.id" class="mb-8px rounded-lg border p-12px last:mb-0"
-            :style="{ borderColor: getAlertColor(alert.severity) + '40', backgroundColor: getAlertColor(alert.severity) + '08' }">
+        <div v-else class="min-h-0 flex-1 overflow-y-auto pb-12px pr-8px">
+          <div
+            v-for="alert in alerts"
+            :key="alert.id"
+            class="mb-8px border rounded-lg p-12px last:mb-0"
+            :style="{
+              borderColor: getAlertColor(alert.severity) + '40',
+              backgroundColor: getAlertColor(alert.severity) + '08'
+            }"
+          >
             <div class="flex items-start gap-8px">
-              <icon-ic-round-error-outline class="mt-2px flex-shrink-0 text-18px"
-                :style="{ color: getAlertColor(alert.severity) }" />
+              <icon-ic-round-error-outline
+                class="mt-2px flex-shrink-0 text-18px"
+                :style="{ color: getAlertColor(alert.severity) }"
+              />
               <div class="min-w-0 flex-1">
                 <NTag :type="alert.severity" size="small" :bordered="false">
                   {{ alert.statusLabel }}

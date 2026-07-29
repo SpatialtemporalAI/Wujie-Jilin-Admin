@@ -24,15 +24,7 @@ const searchParams: Api.SystemManage.LoginLogSearchParams = reactive({
   end_time: null
 });
 
-const {
-  columns,
-  columnChecks,
-  data,
-  getData,
-  getDataByPage,
-  loading,
-  mobilePagination
-} = useNaivePaginatedTable({
+const { columns, columnChecks, data, getData, getDataByPage, loading, mobilePagination } = useNaivePaginatedTable({
   api: () => fetchGetLoginLogList(searchParams),
   transform: response => {
     return defaultTransform(response);
@@ -161,7 +153,14 @@ async function handleBatchDelete() {
         @refresh="getData"
       >
         <template #prefix>
-          <NButton type="primary" ghost size="small" :loading="submitting" :disabled="loading" @click="submitExport('login_log', searchParams)">
+          <NButton
+            type="primary"
+            ghost
+            size="small"
+            :loading="submitting"
+            :disabled="loading"
+            @click="submitExport('login_log', searchParams)"
+          >
             {{ $t('common.export') }}
           </NButton>
         </template>

@@ -87,14 +87,16 @@ declare namespace Api {
     };
 
     /** merchant call log search params */
-    type CallLogSearchParams = CommonType.RecordNullable<{
-      merchant_id?: number;
-      action?: string;
-      success?: boolean;
-      api_key?: string;
-      start_time?: string;
-      end_time?: string;
-    } & CommonSearchParams>;
+    type CallLogSearchParams = CommonType.RecordNullable<
+      {
+        merchant_id?: number;
+        action?: string;
+        success?: boolean;
+        api_key?: string;
+        start_time?: string;
+        end_time?: string;
+      } & CommonSearchParams
+    >;
 
     /** merchant call log list */
     type CallLogList = Common.PaginatingQueryRecord<CallLog>;

@@ -1,15 +1,15 @@
 <script setup lang="tsx">
 import { ref, watch } from 'vue';
 import { NButton, NDataTable, NPopconfirm, NSpace, NTab, NTabs } from 'naive-ui';
-import { useNaivePaginatedTable } from '@/hooks/common/table';
 import {
-  fetchGetMapAnnotations,
   fetchDeleteMapAnnotation,
-  fetchGetMapObjects,
-  fetchDeleteMapObject
+  fetchDeleteMapObject,
+  fetchGetMapAnnotations,
+  fetchGetMapObjects
 } from '@/service/api';
 import { fetchSaveEditorData } from '@/service/api/scene';
 import { getFilePreviewUrl } from '@/service/api/file';
+import { useNaivePaginatedTable } from '@/hooks/common/table';
 import SceneMapAnnotationModal from './scene-map-annotation-modal.vue';
 import SceneMapObjectModal from './scene-map-object-modal.vue';
 
@@ -50,7 +50,7 @@ const {
     if (error) {
       return { data: [], pageNum: 1, pageSize: 10, total: 0, totalPages: 1 };
     }
-    const list = Array.isArray(data) ? data : data?.records ?? [];
+    const list = Array.isArray(data) ? data : (data?.records ?? []);
     return { data: list, pageNum: 1, pageSize: list.length || 10, total: list.length, totalPages: 1 };
   },
   onPaginationParamsChange: params => {
@@ -162,7 +162,7 @@ const {
     if (error) {
       return { data: [], pageNum: 1, pageSize: 10, total: 0, totalPages: 1 };
     }
-    const list = Array.isArray(data) ? data : data?.records ?? [];
+    const list = Array.isArray(data) ? data : (data?.records ?? []);
     return { data: list, pageNum: 1, pageSize: list.length || 10, total: list.length, totalPages: 1 };
   },
   onPaginationParamsChange: params => {
@@ -299,7 +299,7 @@ async function confirmImportJson() {
         y: rwY,
         angle,
         name: point.label.trim(),
-        type: index === 0 ? 'navigation' : 'reception',
+        type: index === 0 ? 'navigation' : 'reception'
       };
     });
 
@@ -309,7 +309,7 @@ async function confirmImportJson() {
       objects: [],
       deleted_annotation_ids: [],
       deleted_path_ids: [],
-      deleted_object_ids: [],
+      deleted_object_ids: []
     });
 
     if (error) {
@@ -345,10 +345,10 @@ function closeDrawer() {
 </script>
 
 <template>
-  <NDrawer v-model:show="visible" display-directive="show" :width="'80%'">
+  <NDrawer v-model:show="visible" display-directive="show" width="80%">
     <NDrawerContent title="场景地图详情" :native-scrollbar="false" closable>
       <!-- 地图图片预览 -->
-      <div class="mb-16px grid grid-cols-1 gap-12px lg:grid-cols-2">
+      <div class="grid grid-cols-1 mb-16px gap-12px lg:grid-cols-2">
         <div>
           <div class="mb-8px text-sm font-medium">地图图片</div>
           <NImage
@@ -379,7 +379,9 @@ function closeDrawer() {
       <NDescriptions bordered :column="3" label-placement="left" size="small" class="mb-16px">
         <NDescriptionsItem label="地图名称">{{ mapData?.name || '-' }}</NDescriptionsItem>
         <NDescriptionsItem label="所属分组">{{ mapData?.group_name || '-' }}</NDescriptionsItem>
-        <NDescriptionsItem label="尺寸">{{ mapData?.width && mapData?.height ? `${mapData.width} x ${mapData.height}` : '-' }}</NDescriptionsItem>
+        <NDescriptionsItem label="尺寸">
+          {{ mapData?.width && mapData?.height ? `${mapData.width} x ${mapData.height}` : '-' }}
+        </NDescriptionsItem>
       </NDescriptions>
 
       <!-- 标签页 -->
@@ -461,14 +463,23 @@ function closeDrawer() {
   />
 
   <!-- 导入JSON点位弹窗 -->
-  <NModal v-model:show="importDialogVisible" preset="dialog" title="导入JSON点位" positive-text="导入" negative-text="取消" @positive-click="confirmImportJson">
+  <NModal
+    v-model:show="importDialogVisible"
+    preset="dialog"
+    title="导入JSON点位"
+    positive-text="导入"
+    negative-text="取消"
+    @positive-click="confirmImportJson"
+  >
     <NInput
       v-model:value="importJsonText"
       type="textarea"
       :autosize="{ minRows: 12, maxRows: 18 }"
-      placeholder="请粘贴包含 label、position 的 JSON 数组，例: [{&quot;label&quot;: &quot;点1&quot;, &quot;position&quot;: [1.0, 2.0, 90]}]"
+      placeholder='请粘贴包含 label、position 的 JSON 数组，例: [{"label": "点1", "position": [1.0, 2.0, 90]}]'
     />
-    <div class="mt-8px text-xs text-gray-500">position 按 [x, y, angle] 导入，坐标使用 ROS 世界坐标系，将按地图分辨率和扫图起始点自动转换。</div>
+    <div class="mt-8px text-xs text-gray-500">
+      position 按 [x, y, angle] 导入，坐标使用 ROS 世界坐标系，将按地图分辨率和扫图起始点自动转换。
+    </div>
   </NModal>
 </template>
 

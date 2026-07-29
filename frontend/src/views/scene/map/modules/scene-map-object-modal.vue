@@ -1,8 +1,8 @@
 <script setup lang="ts">
 import { computed, ref, watch } from 'vue';
+import { fetchCreateMapObject, fetchUpdateMapObject } from '@/service/api';
 import { useNaiveForm } from '@/hooks/common/form';
 import { useDict } from '@/hooks/business/dict';
-import { fetchCreateMapObject, fetchUpdateMapObject } from '@/service/api';
 
 defineOptions({
   name: 'SceneMapObjectModal'
@@ -62,7 +62,7 @@ const rules: NaiveUI.FormRules = {
 /** 字典选项 */
 const { options: typeOptions } = useDict('map_object_type');
 
-const isEdit = computed(() => !!props.editData);
+const isEdit = computed(() => Boolean(props.editData));
 
 function handleInitModel() {
   model.value = createDefaultModel();
@@ -124,11 +124,7 @@ watch(visible, () => {
     <NScrollbar class="max-h-500px pr-20px">
       <NForm ref="formRef" :model="model" :rules="rules" label-placement="left" :label-width="80">
         <NFormItem label="物体类型" path="type">
-          <NSelect
-            v-model:value="model.type"
-            :options="typeOptions"
-            placeholder="请选择物体类型"
-          />
+          <NSelect v-model:value="model.type" :options="typeOptions" placeholder="请选择物体类型" />
         </NFormItem>
         <NFormItem label="X坐标" path="x">
           <NInputNumber v-model:value="model.x" placeholder="请输入X坐标" class="w-full" />

@@ -1,9 +1,9 @@
 <script setup lang="ts">
 import { computed, onMounted, ref } from 'vue';
-import dayjs from 'dayjs';
-import { $t } from '@/locales';
 import { NDatePicker, NSelect } from 'naive-ui';
+import dayjs from 'dayjs';
 import { fetchGetAllRobots } from '@/service/api/robot';
+import { $t } from '@/locales';
 
 defineOptions({
   name: 'RobotEventLogSearch'

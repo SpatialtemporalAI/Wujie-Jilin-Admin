@@ -60,12 +60,20 @@ const robotOptions = computed(() =>
       <NSpace align="center" :size="16">
         <div class="flex items-center gap-8px">
           <img src="@/assets/imgs/monitor-title.png" class="h-60px w-60px object-contain" />
-          <NSelect :value="selectedRobot?.id ?? null" :options="robotOptions" placeholder="选择机器人" style="width: 320px"
-            size="small" @update:value="val => val && emit('select', val)" />
+          <NSelect
+            :value="selectedRobot?.id ?? null"
+            :options="robotOptions"
+            placeholder="选择机器人"
+            style="width: 320px"
+            size="small"
+            @update:value="val => val && emit('select', val)"
+          />
         </div>
         <NSpace v-if="selectedRobot" align="center" :size="6">
-          <span class="inline-block h-8px w-8px rounded-full"
-            :style="{ backgroundColor: statusColorMap[selectedRobot.status]?.color ?? '#999' }" />
+          <span
+            class="inline-block h-8px w-8px rounded-full"
+            :style="{ backgroundColor: statusColorMap[selectedRobot.status]?.color ?? '#999' }"
+          />
           <span class="text-13px" :style="{ color: statusColorMap[selectedRobot.status]?.color ?? '#999' }">
             {{ statusColorMap[selectedRobot.status]?.label ?? selectedRobot.status }}
           </span>
@@ -84,7 +92,8 @@ const robotOptions = computed(() =>
                 <span class="text-24px font-bold">{{ statusRecord?.battery ?? '--' }}</span>
                 <span class="text-12px text-gray-400">% 电池</span>
               </div>
-              <!-- <NProgress
+              <!--
+ <NProgress
                 v-if="statusRecord"
                 type="line"
                 :percentage="statusRecord.battery"
@@ -92,11 +101,15 @@ const robotOptions = computed(() =>
                 :show-indicator="false"
                 :height="6"
                 class="mt-4px"
-              /> -->
+              /> 
+-->
             </div>
             <div class="status-extra">
-              <span v-if="statusRecord" class="text-14px font-medium"
-                :style="{ color: getBatteryLabel(statusRecord.battery).color }">
+              <span
+                v-if="statusRecord"
+                class="text-14px font-medium"
+                :style="{ color: getBatteryLabel(statusRecord.battery).color }"
+              >
                 {{ getBatteryLabel(statusRecord.battery).text }}
               </span>
             </div>
@@ -116,8 +129,11 @@ const robotOptions = computed(() =>
               </div>
             </div>
             <div class="status-extra">
-              <span v-if="statusRecord" class="text-14px font-medium"
-                :style="{ color: getSignalLabel(statusRecord.signal).color }">
+              <span
+                v-if="statusRecord"
+                class="text-14px font-medium"
+                :style="{ color: getSignalLabel(statusRecord.signal).color }"
+              >
                 {{ getSignalLabel(statusRecord.signal).text }}
               </span>
             </div>
@@ -137,8 +153,11 @@ const robotOptions = computed(() =>
               </div>
             </div>
             <div class="status-extra">
-              <span v-if="statusRecord" class="text-14px font-medium"
-                :style="{ color: getSpeedLabel(statusRecord.speed).color }">
+              <span
+                v-if="statusRecord"
+                class="text-14px font-medium"
+                :style="{ color: getSpeedLabel(statusRecord.speed).color }"
+              >
                 {{ getSpeedLabel(statusRecord.speed).text }}
               </span>
             </div>

@@ -90,7 +90,10 @@ export function getPersistentFilePreviewPath(fileId: number): string {
 export function resolveFilePreviewUrl(path: string): string {
   if (!path) return '';
 
-  const pathWithoutToken = path.replace(/[?&]token=[^&]*/, '').replace('?&', '?').replace(/[?&]$/, '');
+  const pathWithoutToken = path
+    .replace(/[?&]token=[^&]*/, '')
+    .replace('?&', '?')
+    .replace(/[?&]$/, '');
   const previewPath = pathWithoutToken.startsWith('http') ? pathWithoutToken : `${baseURL}${pathWithoutToken}`;
   return appendPreviewToken(previewPath);
 }

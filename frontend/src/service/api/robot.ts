@@ -1,5 +1,5 @@
-import { request } from '../request';
 import { enableStatusToBoolean } from '@/utils/status';
+import { request } from '../request';
 
 /** ==================== 机器人型号管理 API ==================== */
 

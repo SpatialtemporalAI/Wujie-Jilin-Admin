@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { computed } from 'vue';
-import { NModal, NImage } from 'naive-ui';
+import { NImage, NModal } from 'naive-ui';
 import { getFilePreviewUrl } from '@/service/api/file';
 
 defineOptions({
@@ -54,12 +54,7 @@ const previewUrl = computed(() => {
         object-fit="contain"
         style="max-height: 75vh"
       />
-      <video
-        v-else-if="isVideo"
-        :src="previewUrl"
-        controls
-        style="max-width: 100%; max-height: 75vh"
-      >
+      <video v-else-if="isVideo" :src="previewUrl" controls style="max-width: 100%; max-height: 75vh">
         您的浏览器不支持视频播放
       </video>
       <span v-else style="color: #999">该文件类型暂不支持在线预览</span>

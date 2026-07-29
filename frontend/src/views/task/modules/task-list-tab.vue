@@ -1,18 +1,18 @@
 <script setup lang="tsx">
-import { reactive, ref, onMounted, onUnmounted, onActivated, onDeactivated } from 'vue';
+import { onActivated, onDeactivated, onMounted, onUnmounted, reactive, ref } from 'vue';
 import { NButton, NDataTable, NPopconfirm, NTag, useMessage } from 'naive-ui';
 import {
-  fetchGetTaskList,
   fetchDeleteTask,
-  fetchToggleTaskEnabled,
+  fetchGetTaskList,
+  fetchPauseExecutionByTask,
   fetchStartOrResumeExecution,
-  fetchPauseExecutionByTask
+  fetchToggleTaskEnabled
 } from '@/service/api';
 import { useAppStore } from '@/store/modules/app';
 import { defaultTransform, useNaivePaginatedTable, useTableOperate } from '@/hooks/common/table';
 import { useAuth } from '@/hooks/business/auth';
-import { $t } from '@/locales';
 import { enableStatusToBoolean } from '@/utils/status';
+import { $t } from '@/locales';
 import TaskSearch from './task-search.vue';
 import TaskOperateDrawer from './task-operate-drawer.vue';
 
@@ -86,15 +86,7 @@ function formatSchedule(row: Api.Task.Task): string {
   return parts.length > 0 ? parts.join(' ') : '已启用';
 }
 
-const {
-  columns,
-  columnChecks,
-  data,
-  getData,
-  getDataByPage,
-  loading,
-  mobilePagination
-} = useNaivePaginatedTable({
+const { columns, columnChecks, data, getData, getDataByPage, loading, mobilePagination } = useNaivePaginatedTable({
   api: () => fetchGetTaskList(searchParams),
   transform: response => {
     const result = defaultTransform(response);
@@ -133,14 +125,18 @@ const {
       title: '任务类型',
       align: 'center',
       width: 100,
-      render: row => <NTag size="small" type={taskTypeTagType[row.task_type] || 'default'}>{taskTypeLabel[row.task_type] || row.task_type}</NTag>
+      render: row => (
+        <NTag size="small" type={taskTypeTagType[row.task_type] || 'default'}>
+          {taskTypeLabel[row.task_type] || row.task_type}
+        </NTag>
+      )
     },
     {
       key: 'point_count',
       title: '点位数量',
       align: 'center',
       width: 90,
-      render: row => row.task_type === 'patrol' ? <span>{row.point_count}</span> : <span>-</span>
+      render: row => (row.task_type === 'patrol' ? <span>{row.point_count}</span> : <span>-</span>)
     },
     {
       key: 'schedule',
@@ -154,7 +150,11 @@ const {
       title: '启用状态',
       align: 'center',
       width: 100,
-      render: row => <NTag size="small" type={row.enabled ? 'success' : 'default'}>{row.enabled ? '启用' : '禁用'}</NTag>
+      render: row => (
+        <NTag size="small" type={row.enabled ? 'success' : 'default'}>
+          {row.enabled ? '启用' : '禁用'}
+        </NTag>
+      )
     },
     {
       key: 'scene',
@@ -223,7 +223,11 @@ const {
               <NPopconfirm onPositiveClick={() => handleDelete(row.id)}>
                 {{
                   default: () => $t('common.confirmDelete'),
-                  trigger: () => <NButton type="error" ghost size="small">{$t('common.delete')}</NButton>
+                  trigger: () => (
+                    <NButton type="error" ghost size="small">
+                      {$t('common.delete')}
+                    </NButton>
+                  )
                 }}
               </NPopconfirm>
             )}
@@ -234,15 +238,11 @@ const {
   ]
 });
 
-const {
-  drawerVisible,
-  operateType,
-  editingData,
-  handleAdd,
-  handleEdit,
-  checkedRowKeys,
-  onDeleted
-} = useTableOperate(data, 'id', getData);
+const { drawerVisible, operateType, editingData, handleAdd, handleEdit, checkedRowKeys, onDeleted } = useTableOperate(
+  data,
+  'id',
+  getData
+);
 
 async function handleDelete(id: number) {
   try {
@@ -319,14 +319,35 @@ onUnmounted(stopPolling);
   <div class="h-full flex-col-stretch gap-12px overflow-hidden lt-sm:overflow-auto">
     <div class="flex-y-center justify-between gap-12px">
       <TaskSearch v-model:model="searchParams" @search="getDataByPage" />
-      <TableHeaderOperation v-model:columns="columnChecks" :disabled-delete="checkedRowKeys.length === 0"
-        :loading="loading" add-auth="task:add" :show-delete="false" @add="handleAdd" @refresh="getData" />
+      <TableHeaderOperation
+        v-model:columns="columnChecks"
+        :disabled-delete="checkedRowKeys.length === 0"
+        :loading="loading"
+        add-auth="task:add"
+        :show-delete="false"
+        @add="handleAdd"
+        @refresh="getData"
+      />
     </div>
-    <NDataTable v-model:checked-row-keys="checkedRowKeys" :columns="columns" :data="data" size="small"
-      :flex-height="!appStore.isMobile" :scroll-x="1300" :loading="loading" remote
-      :row-key="(row: Api.Task.Task) => row.id" :pagination="mobilePagination" class="sm:flex-1-hidden" />
-    <TaskOperateDrawer v-model:visible="drawerVisible" :operate-type="operateType" :row-data="editingData"
-      @submitted="getDataByPage" />
+    <NDataTable
+      v-model:checked-row-keys="checkedRowKeys"
+      :columns="columns"
+      :data="data"
+      size="small"
+      :flex-height="!appStore.isMobile"
+      :scroll-x="1300"
+      :loading="loading"
+      remote
+      :row-key="(row: Api.Task.Task) => row.id"
+      :pagination="mobilePagination"
+      class="sm:flex-1-hidden"
+    />
+    <TaskOperateDrawer
+      v-model:visible="drawerVisible"
+      :operate-type="operateType"
+      :row-data="editingData"
+      @submitted="getDataByPage"
+    />
   </div>
 </template>
 

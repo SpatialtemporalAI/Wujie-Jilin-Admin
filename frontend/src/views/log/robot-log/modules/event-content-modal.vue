@@ -53,7 +53,7 @@ watch(
     :show="visible"
     preset="card"
     title="事件内容详情"
-    class="w-800px max-w-90vw"
+    class="max-w-90vw w-800px"
     :block-scroll="false"
     @update:show="close"
   >
@@ -65,9 +65,7 @@ watch(
       </NSwitch>
       <span v-if="!isJson" class="text-12px text-gray-400">（当前内容非 JSON 格式）</span>
     </div>
-    <div
-      class="max-h-60vh overflow-auto rounded-lg bg-#f5f5f5 p-16px dark:bg-#1a1a1a"
-    >
+    <div class="max-h-60vh overflow-auto rounded-lg bg-#f5f5f5 p-16px dark:bg-#1a1a1a">
       <pre class="whitespace-pre-wrap break-all text-13px text-#333 dark:text-#eee">{{ displayContent }}</pre>
     </div>
   </NModal>

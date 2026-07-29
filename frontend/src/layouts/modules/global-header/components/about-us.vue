@@ -11,8 +11,14 @@ const showModal = ref(false);
   <div>
     <ButtonIcon icon="mdi:information-outline" tooltip-content="关于我们" @click="showModal = true" />
 
-    <NModal v-model:show="showModal" preset="card" title="关于我们" style="width: 660px; max-width: 90vw;" :bordered="false">
-      <div class="flex-col gap-16px mt-12px">
+    <NModal
+      v-model:show="showModal"
+      preset="card"
+      title="关于我们"
+      style="width: 660px; max-width: 90vw"
+      :bordered="false"
+    >
+      <div class="mt-12px flex-col gap-16px">
         <div class="about-banner">
           <img :src="logoPng" alt="logo" class="about-logo" />
           <div class="flex-col gap-4px">
@@ -22,11 +28,11 @@ const showModal = ref(false);
           </div>
         </div>
 
-        <div class="about-desc bg-[#f3f4f6] dark:bg-[#1f2937] text-[#6b7280] dark:text-[#9ca3af]">
+        <div class="about-desc bg-[#f3f4f6] text-[#6b7280] dark:bg-[#1f2937] dark:text-[#9ca3af]">
           本平台为医院场景下的人形具身智能机器人提供全面的后台管理与控制能力，集成地图管理、任务调度、参数配置、运行监控等核心模块，实现机器人集群的高效协同与可视化运维。
         </div>
-        <n-divider></n-divider>
-        <div class="text-#999 text-center mb-12px">技术支持:无界智慧(珠海)科技有限公司</div>
+        <NDivider></NDivider>
+        <div class="mb-12px text-center text-#999">技术支持:无界智慧(珠海)科技有限公司</div>
       </div>
     </NModal>
   </div>
