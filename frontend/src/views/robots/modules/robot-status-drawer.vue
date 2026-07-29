@@ -1,9 +1,9 @@
 <script setup lang="tsx">
 import { computed, reactive, ref, watch } from 'vue';
 import { NDataTable, NProgress, NTag } from 'naive-ui';
-import { $t } from '@/locales';
-import { fetchGetRobotStatusRecords, fetchGetLatestRobotStatus } from '@/service/api';
+import { fetchGetLatestRobotStatus, fetchGetRobotStatusRecords } from '@/service/api';
 import { defaultTransform } from '@/hooks/common/table';
+import { $t } from '@/locales';
 
 defineOptions({
   name: 'RobotStatusDrawer'
@@ -187,13 +187,7 @@ watch(
   <NDrawer v-model:show="visible" display-directive="show" :width="720">
     <NDrawerContent title="机器人状态" :native-scrollbar="false" closable>
       <!-- 最新状态卡片 -->
-      <NCard
-        v-if="latestStatus"
-        title="最新状态"
-        size="small"
-        :bordered="true"
-        class="mb-16px"
-      >
+      <NCard v-if="latestStatus" title="最新状态" size="small" :bordered="true" class="mb-16px">
         <NDescriptions label-placement="left" :column="3" bordered size="small">
           <NDescriptionsItem label="电量">
             <NProgress
@@ -203,12 +197,8 @@ watch(
               indicator-placement="inside"
             />
           </NDescriptionsItem>
-          <NDescriptionsItem label="信号强度">
-            {{ latestStatus.signal }}%
-          </NDescriptionsItem>
-          <NDescriptionsItem label="速度">
-            {{ latestStatus.speed }} m/s
-          </NDescriptionsItem>
+          <NDescriptionsItem label="信号强度">{{ latestStatus.signal }}%</NDescriptionsItem>
+          <NDescriptionsItem label="速度">{{ latestStatus.speed }} m/s</NDescriptionsItem>
           <NDescriptionsItem label="位置" :span="2">
             {{ latestStatus.location || '-' }}
           </NDescriptionsItem>

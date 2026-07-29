@@ -1,5 +1,5 @@
-import { request } from '../request';
 import { enableStatusToBoolean } from '@/utils/status';
+import { request } from '../request';
 
 /** get merchant list */
 export function fetchGetMerchantList(params?: Api.Merchant.MerchantSearchParams) {

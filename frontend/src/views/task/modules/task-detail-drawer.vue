@@ -109,7 +109,10 @@ function pointStatusType(index: number): 'success' | 'default' | 'error' {
             {{ taskTypeLabel[detail.task_definition?.task_type || ''] || detail.task_definition?.task_type || '-' }}
           </NDescriptionsItem>
           <NDescriptionsItem label="执行状态">
-            <NTag size="small" :type="detail.status === 'completed' ? 'success' : detail.status === 'failed' ? 'error' : 'default'">
+            <NTag
+              size="small"
+              :type="detail.status === 'completed' ? 'success' : detail.status === 'failed' ? 'error' : 'default'"
+            >
               {{ statusLabelMap[detail.status] || detail.status }}
             </NTag>
           </NDescriptionsItem>
@@ -142,14 +145,11 @@ function pointStatusType(index: number): 'success' | 'default' | 'error' {
               <template v-if="point.actions && point.actions.length > 0">
                 <div v-for="(actionItem, actionIdx) in point.actions" :key="actionIdx" class="mb-4px">
                   <NText depth="3">
-                    动作{{ point.actions.length > 1 ? ` ${actionIdx + 1}` : '' }}: {{
-                      actionLabel[actionItem.action] || actionItem.action
-                    }}
+                    动作{{ point.actions.length > 1 ? ` ${actionIdx + 1}` : '' }}:
+                    {{ actionLabel[actionItem.action] || actionItem.action }}
                   </NText>
                   <br v-if="actionItem.voice_text" />
-                  <NText v-if="actionItem.voice_text" depth="3">
-                    语音: {{ actionItem.voice_text }}
-                  </NText>
+                  <NText v-if="actionItem.voice_text" depth="3">语音: {{ actionItem.voice_text }}</NText>
                 </div>
               </template>
             </NTimelineItem>

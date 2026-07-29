@@ -1,9 +1,9 @@
 <script setup lang="ts">
-import { ref, computed, onMounted, onUnmounted } from 'vue';
+import { computed, onMounted, onUnmounted, ref } from 'vue';
 import { useRouter } from 'vue-router';
-import { NBadge, NButton, NPopover, NTooltip, NList, NListItem, NEmpty, NTag, NSpin } from 'naive-ui';
+import { NBadge, NButton, NEmpty, NList, NListItem, NPopover, NSpin, NTag, NTooltip } from 'naive-ui';
+import { fetchDownloadExportFile, fetchGetExportTaskList } from '@/service/api';
 import { useAuthStore } from '@/store/modules/auth';
-import { fetchGetExportTaskList, fetchDownloadExportFile } from '@/service/api';
 import { $t } from '@/locales';
 import SvgIcon from '@/components/custom/svg-icon.vue';
 
@@ -134,17 +134,13 @@ onUnmounted(() => {
 </script>
 
 <template>
-  <NPopover
-    v-model:show="showPopover"
-    trigger="click"
-    placement="bottom"
-    :width="380"
-    @update:show="onShowChange"
-  >
+  <NPopover v-model:show="showPopover" trigger="click" placement="bottom" :width="380" @update:show="onShowChange">
     <template #trigger>
       <NTooltip trigger="hover" placement="bottom">
         <template #trigger>
-          <div class="relative cursor-pointer px-8px hover:bg-[#f6f6f6] dark:hover:bg-[#333] rounded-full transition-colors">
+          <div
+            class="relative cursor-pointer rounded-full px-8px transition-colors hover:bg-[#f6f6f6] dark:hover:bg-[#333]"
+          >
             <NBadge :value="pendingCount" :max="99" :show="pendingCount > 0">
               <SvgIcon icon="material-symbols:cloud-download-outline" class="text-20px" />
             </NBadge>
@@ -172,7 +168,7 @@ onUnmounted(() => {
           <NListItem v-for="task in tasks" :key="task.id">
             <div class="flex flex-col gap-4px">
               <div class="flex items-center justify-between gap-8px">
-                <div class="flex min-w-0 flex-1 items-center gap-8px">
+                <div class="min-w-0 flex flex-1 items-center gap-8px">
                   <span class="truncate font-medium">{{ task.task_name }}</span>
                   <NTag :type="getStatusMeta(task.status).type" size="small" class="flex-shrink-0">
                     {{ getStatusMeta(task.status).label }}

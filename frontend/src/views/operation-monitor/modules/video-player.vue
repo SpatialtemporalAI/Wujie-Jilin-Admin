@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { computed, onBeforeUnmount, onMounted, ref } from 'vue';
-import { useLiveKitVideo, type UseLiveKitVideoOptions } from '../composables/useLiveKitVideo';
+import { type UseLiveKitVideoOptions, useLiveKitVideo } from '../composables/useLiveKitVideo';
 
 interface Props extends UseLiveKitVideoOptions {}
 
@@ -24,7 +24,7 @@ function formatClock(date = new Date()) {
 }
 
 function updateFullscreenState() {
-  isFullscreen.value = !!document.fullscreenElement;
+  isFullscreen.value = Boolean(document.fullscreenElement);
 }
 
 async function toggleFullscreen() {
@@ -62,14 +62,11 @@ onBeforeUnmount(() => {
 
 <template>
   <NCard :bordered="true" size="small">
-    <div
-      ref="containerRef"
-      class="relative flex h-400px items-center justify-start overflow-hidden rounded"
-    >
+    <div ref="containerRef" class="relative h-400px flex items-center justify-start overflow-hidden rounded">
       <div class="relative h-full max-w-full">
         <video
           ref="videoRef"
-          class="h-full w-auto max-w-full rounded object-contain"
+          class="h-full max-w-full w-auto rounded object-contain"
           style="object-position: left center"
           :class="{ 'opacity-0': loading || error || !isOnline }"
           autoplay
@@ -86,7 +83,7 @@ onBeforeUnmount(() => {
             <span v-if="frameRate" class="font-mono">{{ frameRate }} fps</span>
             <button
               type="button"
-              class="flex h-20px w-20px cursor-pointer items-center justify-center rounded text-16px text-white opacity-80 transition hover:opacity-100"
+              class="h-20px w-20px flex cursor-pointer items-center justify-center rounded text-16px text-white opacity-80 transition hover:opacity-100"
               :title="isFullscreen ? '退出全屏' : '全屏'"
               @click="toggleFullscreen"
             >

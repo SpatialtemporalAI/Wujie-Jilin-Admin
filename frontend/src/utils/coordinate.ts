@@ -2,7 +2,7 @@
 export function pixelToWorld(pixelX: number, pixelY: number, originX: number, originY: number, resolution: number) {
   return {
     x: pixelX * resolution + originX,
-    y: pixelY * resolution + originY,
+    y: pixelY * resolution + originY
   };
 }
 
@@ -10,7 +10,7 @@ export function pixelToWorld(pixelX: number, pixelY: number, originX: number, or
 export function worldToPixel(worldX: number, worldY: number, originX: number, originY: number, resolution: number) {
   return {
     x: (worldX - originX) / resolution,
-    y: (worldY - originY) / resolution,
+    y: (worldY - originY) / resolution
   };
 }
 
@@ -26,10 +26,10 @@ export function metersDeltaToPixels(deltaM: number, resolution: number): number 
 
 /** 弧度 → 角度（度） */
 export function radToDeg(rad: number): number {
-  return rad * 180 / Math.PI;
+  return (rad * 180) / Math.PI;
 }
 
 /** 角度（度） → 弧度 */
 export function degToRad(deg: number): number {
-  return deg * Math.PI / 180;
+  return (deg * Math.PI) / 180;
 }

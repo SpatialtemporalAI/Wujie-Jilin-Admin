@@ -180,14 +180,23 @@ onMounted(() => {
                 </template>
                 {{ $t('common.refresh') }}
               </NButton>
-              <NInput v-model:value="newDbName" :placeholder="$t('page.manage.face.dbNamePlaceholder')" style="width: 220px" />
+              <NInput
+                v-model:value="newDbName"
+                :placeholder="$t('page.manage.face.dbNamePlaceholder')"
+                style="width: 220px"
+              />
               <NButton v-if="hasAuth('face:db:create')" type="primary" @click="handleCreateDb">
                 {{ $t('page.manage.face.createDb') }}
               </NButton>
             </NSpace>
           </NCard>
 
-          <NCard :title="$t('page.manage.face.title')" :bordered="false" size="small" class="card-wrapper min-h-0 sm:flex-1-hidden">
+          <NCard
+            :title="$t('page.manage.face.title')"
+            :bordered="false"
+            size="small"
+            class="min-h-0 card-wrapper sm:flex-1-hidden"
+          >
             <template #header-extra>
               <NSpace align="center" :size="8">
                 <NInput

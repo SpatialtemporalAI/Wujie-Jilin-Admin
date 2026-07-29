@@ -254,7 +254,7 @@ export function getNaiveTheme(
       textColorBase: '#1a4355',
       textColor1: '#1a4355',
       textColor2: '#1a4355',
-      textColor3: '#1a4355',
+      textColor3: '#1a4355'
     },
     LoadingBar: {
       colorLoading
@@ -275,8 +275,8 @@ export function getNaiveTheme(
       itemTextColorChildActive: '#fff',
       itemIconColorChildActive: '#fff',
       arrowColorChildActive: '#fff',
-      itemIconColorCollapsed: '#fff',
-    },
+      itemIconColorCollapsed: '#fff'
+    }
   };
 
   // If there are overrides, merge them with priority

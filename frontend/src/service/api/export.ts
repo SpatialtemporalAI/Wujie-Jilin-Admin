@@ -21,11 +21,7 @@ export function fetchSubmitExportTask(data: Api.Export.ExportTaskSubmit) {
 }
 
 /** 获取当前用户的导出任务列表 */
-export function fetchGetExportTaskList(params: {
-  page: number;
-  page_size: number;
-  status?: string | null;
-}) {
+export function fetchGetExportTaskList(params: { page: number; page_size: number; status?: string | null }) {
   return request<Api.Export.ExportTaskList>({
     url: '/admin/sys/export/task/list',
     method: 'get',

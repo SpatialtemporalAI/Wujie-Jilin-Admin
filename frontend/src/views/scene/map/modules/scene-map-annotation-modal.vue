@@ -1,8 +1,8 @@
 <script setup lang="ts">
 import { computed, ref, watch } from 'vue';
+import { fetchCreateMapAnnotation, fetchUpdateMapAnnotation } from '@/service/api';
 import { useNaiveForm } from '@/hooks/common/form';
 import { useDict } from '@/hooks/business/dict';
-import { fetchCreateMapAnnotation, fetchUpdateMapAnnotation } from '@/service/api';
 
 defineOptions({
   name: 'SceneMapAnnotationModal'
@@ -61,7 +61,7 @@ const rules: NaiveUI.FormRules = {
 /** 字典选项 */
 const { options: typeOptions } = useDict('map_annotation_type');
 
-const isEdit = computed(() => !!props.editData);
+const isEdit = computed(() => Boolean(props.editData));
 
 function handleInitModel() {
   model.value = createDefaultModel();
@@ -124,11 +124,7 @@ watch(visible, () => {
           <NInput v-model:value="model.name" placeholder="请输入标注名称" />
         </NFormItem>
         <NFormItem label="类型" path="type">
-          <NSelect
-            v-model:value="model.type"
-            :options="typeOptions"
-            placeholder="请选择标注类型"
-          />
+          <NSelect v-model:value="model.type" :options="typeOptions" placeholder="请选择标注类型" />
         </NFormItem>
         <NFormItem label="X坐标" path="x">
           <NInputNumber v-model:value="model.x" placeholder="请输入X坐标" class="w-full" />

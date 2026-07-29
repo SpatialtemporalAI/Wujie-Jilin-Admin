@@ -71,7 +71,11 @@ declare namespace Api {
 
     /** task search params */
     type TaskSearchParams = CommonType.RecordNullable<
-      Pick<Task, 'name' | 'task_type'> & { enabled: string | null; robot_id?: number; map_id?: number } & CommonSearchParams
+      Pick<Task, 'name' | 'task_type'> & {
+        enabled: string | null;
+        robot_id?: number;
+        map_id?: number;
+      } & CommonSearchParams
     >;
 
     /** task list */

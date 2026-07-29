@@ -2,9 +2,9 @@
 import { computed, onMounted, ref, watch } from 'vue';
 import type { FormRules } from 'naive-ui';
 import { jsonClone } from '@sa/utils';
+import { fetchCreateRobot, fetchGetAllRobotModels, fetchUpdateRobot } from '@/service/api';
 import { useNaiveForm } from '@/hooks/common/form';
 import { $t } from '@/locales';
-import { fetchCreateRobot, fetchUpdateRobot, fetchGetAllRobotModels } from '@/service/api';
 
 defineOptions({
   name: 'RobotOperateDrawer'
@@ -152,11 +152,7 @@ onMounted(() => {
           <NInput v-model:value="model.serial_number" placeholder="请输入序列号" />
         </NFormItem>
         <NFormItem :label="$t('common.status')" path="status">
-          <NSelect
-            v-model:value="model.status"
-            :options="statusOptions"
-            placeholder="请选择状态"
-          />
+          <NSelect v-model:value="model.status" :options="statusOptions" placeholder="请选择状态" />
         </NFormItem>
       </NForm>
       <template #footer>

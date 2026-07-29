@@ -1,9 +1,9 @@
 <script setup lang="ts">
 import { computed, ref, watch } from 'vue';
 import { jsonClone } from '@sa/utils';
+import { fetchCreateNotice, fetchUpdateNotice } from '@/service/api';
 import { useNaiveForm } from '@/hooks/common/form';
 import { $t } from '@/locales';
-import { fetchCreateNotice, fetchUpdateNotice } from '@/service/api';
 
 defineOptions({
   name: 'NoticeOperateDrawer'
@@ -116,12 +116,7 @@ watch(visible, () => {
           <NInput v-model:value="model.title" placeholder="请输入通知标题" maxlength="200" show-count />
         </NFormItem>
         <NFormItem label="通知内容" path="content">
-          <NInput
-            v-model:value="model.content"
-            type="textarea"
-            placeholder="请输入通知内容"
-            :rows="6"
-          />
+          <NInput v-model:value="model.content" type="textarea" placeholder="请输入通知内容" :rows="6" />
         </NFormItem>
         <NFormItem label="通知类型" path="type">
           <NRadioGroup v-model:value="model.type">

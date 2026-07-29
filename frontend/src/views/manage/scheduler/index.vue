@@ -1,14 +1,14 @@
 <script setup lang="tsx">
 import { reactive } from 'vue';
-import { NButton, NCard, NDataTable, NPopconfirm, NTag, useMessage } from 'naive-ui';
 import { useRouter } from 'vue-router';
+import { NButton, NCard, NDataTable, NPopconfirm, NTag, useMessage } from 'naive-ui';
 import {
-  fetchGetScheduledTaskList,
-  fetchDeleteScheduledTask,
   fetchBatchDeleteScheduledTask,
-  fetchToggleScheduledTaskStatus,
+  fetchDeleteScheduledTask,
+  fetchGetScheduledTaskList,
   fetchManualTriggerTask,
-  fetchSyncRegistry
+  fetchSyncRegistry,
+  fetchToggleScheduledTaskStatus
 } from '@/service/api';
 import { useAppStore } from '@/store/modules/app';
 import { defaultTransform, useNaivePaginatedTable, useTableOperate } from '@/hooks/common/table';
@@ -46,15 +46,7 @@ const lastStatusMap: Record<string, NaiveUI.ThemeColor> = {
   running: 'info'
 };
 
-const {
-  columns,
-  columnChecks,
-  data,
-  getData,
-  getDataByPage,
-  loading,
-  mobilePagination
-} = useNaivePaginatedTable({
+const { columns, columnChecks, data, getData, getDataByPage, loading, mobilePagination } = useNaivePaginatedTable({
   api: () => fetchGetScheduledTaskList(searchParams),
   transform: response => {
     const result = defaultTransform(response);
@@ -109,7 +101,11 @@ const {
       width: 100,
       render: row => {
         const opt = triggerTypeOptions.find(o => o.value === row.trigger_type);
-        return <NTag type="info" size="small">{opt?.label || row.trigger_type}</NTag>;
+        return (
+          <NTag type="info" size="small">
+            {opt?.label || row.trigger_type}
+          </NTag>
+        );
       }
     },
     {
@@ -120,10 +116,13 @@ const {
       render: row => {
         if (!row.status) return null;
         const tagMap: Record<string, NaiveUI.ThemeColor> = { '1': 'success', '2': 'warning' };
-        const label = row.status === '1'
-          ? $t('page.manage.scheduler.statusEnabled')
-          : $t('page.manage.scheduler.statusDisabled');
-        return <NTag type={tagMap[row.status] || 'default'} size="small">{label}</NTag>;
+        const label =
+          row.status === '1' ? $t('page.manage.scheduler.statusEnabled') : $t('page.manage.scheduler.statusDisabled');
+        return (
+          <NTag type={tagMap[row.status] || 'default'} size="small">
+            {label}
+          </NTag>
+        );
       }
     },
     {
@@ -139,7 +138,11 @@ const {
           running: $t('page.manage.scheduler.lastStatuses.running'),
           timeout: $t('page.manage.scheduler.lastStatuses.timeout')
         };
-        return <NTag type={lastStatusMap[row.last_status] || 'default'} size="small">{labels[row.last_status] || row.last_status}</NTag>;
+        return (
+          <NTag type={lastStatusMap[row.last_status] || 'default'} size="small">
+            {labels[row.last_status] || row.last_status}
+          </NTag>
+        );
       }
     },
     {
@@ -213,16 +216,8 @@ const {
   ]
 });
 
-const {
-  drawerVisible,
-  operateType,
-  editingData,
-  handleAdd,
-  handleEdit,
-  checkedRowKeys,
-  onBatchDeleted,
-  onDeleted
-} = useTableOperate(data, 'id', getData);
+const { drawerVisible, operateType, editingData, handleAdd, handleEdit, checkedRowKeys, onBatchDeleted, onDeleted } =
+  useTableOperate(data, 'id', getData);
 
 async function handleToggleStatus(taskId: number, currentStatus: string) {
   const newStatus = currentStatus !== '1';

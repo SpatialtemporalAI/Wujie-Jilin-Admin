@@ -1,9 +1,9 @@
 <script setup lang="ts">
-import { ref, onMounted, onBeforeUnmount, watch, nextTick } from 'vue';
-import { Canvas, Circle, Rect, Polygon, Line, Text, FabricImage, Triangle, Ellipse, Pattern, Point } from 'fabric';
+import { nextTick, onBeforeUnmount, onMounted, ref, watch } from 'vue';
+import { Canvas, Circle, Ellipse, FabricImage, Line, Pattern, Point, Polygon, Rect, Text, Triangle } from 'fabric';
 import { fetchGetEditorMapData } from '@/service/api/scene';
 import { getFilePreviewUrl } from '@/service/api/file';
-import { worldToPixel, radToDeg } from '@/utils/coordinate';
+import { radToDeg, worldToPixel } from '@/utils/coordinate';
 import type { ParsedLocation } from '../composables/useRobotMonitor';
 
 interface Props {
@@ -19,9 +19,9 @@ const canvasEl = ref<HTMLCanvasElement>();
 let fabricCanvas: Canvas | null = null;
 let backgroundImgObj: FabricImage | null = null;
 let robotMarker: { body: Circle; arrow: Triangle; label: Text } | null = null;
-let elementMap: Map<string, any> = new Map();
+const elementMap: Map<string, any> = new Map();
 // 障碍物/电子围栏/禁行区域的名称标签（与地图编辑器保持一致）
-let objectLabels: Map<number, Text> = new Map();
+const objectLabels: Map<number, Text> = new Map();
 let resizeObserver: ResizeObserver | null = null;
 let restrictedPattern: Pattern | null = null;
 
@@ -54,7 +54,7 @@ function getAnnotationArrowTransform(annX: number, annY: number, rosRad: number,
   return {
     x: annX + sceneDist * Math.cos(rosRad),
     y: annY - sceneDist * Math.sin(rosRad),
-    angle: -radToDeg(rosRad) + 90,
+    angle: -radToDeg(rosRad) + 90
   };
 }
 
@@ -121,7 +121,7 @@ const sliderThemeOverrides = {
   fillColorHover: '#2563eb',
   dotColor: '#3b82f6',
   dotBorder: '2px solid #fff',
-  dotBoxShadow: '0 1px 4px rgba(0,0,0,0.2)',
+  dotBoxShadow: '0 1px 4px rgba(0,0,0,0.2)'
 };
 
 /** 滑块值（0-100，对数刻度）→ 实际缩放倍率 */
@@ -354,8 +354,8 @@ function renderElements() {
     existingKeys.add(key);
     const isRestricted = obj.type === 'restricted' || obj.type === '禁区';
     const isFence = obj.type === 'fence' || obj.type === '电子围栏';
-    const fill = isRestricted ? getRestrictedPattern() : (isFence ? FENCE_FILL : OBSTACLE_FILL);
-    const stroke = isRestricted ? RESTRICTED_STROKE : (isFence ? FENCE_STROKE : OBSTACLE_STROKE);
+    const fill = isRestricted ? getRestrictedPattern() : isFence ? FENCE_FILL : OBSTACLE_FILL;
+    const stroke = isRestricted ? RESTRICTED_STROKE : isFence ? FENCE_STROKE : OBSTACLE_STROKE;
     const strokeWidth = isFence ? 3 : 2;
     if (elementMap.has(key)) {
       const fabricObj = elementMap.get(key);
@@ -390,7 +390,9 @@ function renderElements() {
       if (obj.points) {
         try {
           fabricObj = new Polygon(JSON.parse(obj.points), commonOpts);
-        } catch { /* skip */ }
+        } catch {
+          /* skip */
+        }
       } else if (obj.type === 'obstacle-circle') {
         fabricObj = new Ellipse({
           ...commonOpts,
@@ -559,7 +561,13 @@ async function loadMapData(mapId: number) {
       return;
     }
     for (const ann of data.annotations) {
-      const p = worldToPixel(ann.x, ann.y, data.map.start_point_x ?? 0, data.map.start_point_y ?? 0, data.map.resolution ?? 0.2);
+      const p = worldToPixel(
+        ann.x,
+        ann.y,
+        data.map.start_point_x ?? 0,
+        data.map.start_point_y ?? 0,
+        data.map.resolution ?? 0.2
+      );
       ann.x = p.x;
       ann.y = (data.map.height ?? canvasHeight.value) - p.y;
     }
@@ -658,8 +666,14 @@ function setupCanvas() {
 }
 
 function disposeCanvas() {
-  if (resizeObserver) { resizeObserver.disconnect(); resizeObserver = null; }
-  if (fabricCanvas) { fabricCanvas.dispose(); fabricCanvas = null; }
+  if (resizeObserver) {
+    resizeObserver.disconnect();
+    resizeObserver = null;
+  }
+  if (fabricCanvas) {
+    fabricCanvas.dispose();
+    fabricCanvas = null;
+  }
   elementMap.clear();
   robotMarker = null;
   backgroundImgObj = null;
@@ -709,17 +723,24 @@ watch([containerWidth, containerHeight], () => {
   fabricCanvas.renderAll();
 });
 
-watch(() => props.mapId, (newMapId) => {
-  if (newMapId) {
-    loadMapData(newMapId);
-  } else {
-    clearMapState();
+watch(
+  () => props.mapId,
+  newMapId => {
+    if (newMapId) {
+      loadMapData(newMapId);
+    } else {
+      clearMapState();
+    }
   }
-});
+);
 
-watch(() => props.location, () => {
-  renderRobotMarker();
-}, { deep: true });
+watch(
+  () => props.location,
+  () => {
+    renderRobotMarker();
+  },
+  { deep: true }
+);
 
 onMounted(() => {
   setupCanvas();
@@ -745,9 +766,11 @@ onBeforeUnmount(() => {
     </NSpin>
 
     <!-- 图例（与地图编辑器保持一致） -->
-    <div v-if="mapData"
-      class="absolute left-12px top-12px z-10 flex flex-col gap-6px rounded-lg bg-white/90 px-12px py-8px text-xs shadow-md">
-      <div class="max-w-180px truncate text-sm font-medium text-gray-700">{{ mapData.map.name }}</div>
+    <div
+      v-if="mapData"
+      class="absolute left-12px top-12px z-10 flex flex-col gap-6px rounded-lg bg-white/90 px-12px py-8px text-xs shadow-md"
+    >
+      <div class="max-w-180px truncate text-sm text-gray-700 font-medium">{{ mapData.map.name }}</div>
       <div class="my-2px h-1px bg-gray-200"></div>
       <div class="flex items-center gap-6px">
         <span class="inline-block h-10px w-10px" style="background-color: #ffffff; border: 1px solid #d1d5db"></span>
@@ -771,35 +794,58 @@ onBeforeUnmount(() => {
         <span>机器人位置</span>
       </div>
       <div class="flex items-center gap-6px">
-        <span class="inline-block h-10px w-10px"
-          style="background-color: rgba(59, 130, 246, 0.3); border: 1px solid #3b82f6"></span>
+        <span
+          class="inline-block h-10px w-10px"
+          style="background-color: rgba(59, 130, 246, 0.3); border: 1px solid #3b82f6"
+        ></span>
         <span>障碍物</span>
       </div>
       <div class="flex items-center gap-6px">
-        <span class="inline-block h-10px w-10px"
-          style="background-image: linear-gradient(135deg, transparent 45%, #6b7280 45%, #6b7280 55%, transparent 55%); background-color: rgba(107, 114, 128, 0.12); border: 1px solid #6b7280"></span>
+        <span
+          class="inline-block h-10px w-10px"
+          style="
+            background-image: linear-gradient(135deg, transparent 45%, #6b7280 45%, #6b7280 55%, transparent 55%);
+            background-color: rgba(107, 114, 128, 0.12);
+            border: 1px solid #6b7280;
+          "
+        ></span>
         <span>禁行区域/虚拟墙</span>
       </div>
       <div class="flex items-center gap-6px">
-        <span class="inline-block h-10px w-10px"
-          style="background-color: rgba(239, 68, 68, 0.15); border: 2px solid #ef4444"></span>
+        <span
+          class="inline-block h-10px w-10px"
+          style="background-color: rgba(239, 68, 68, 0.15); border: 2px solid #ef4444"
+        ></span>
         <span>电子围栏</span>
       </div>
     </div>
 
     <!-- 缩放控制（与地图编辑器保持一致） -->
-    <div v-if="mapData"
-      class="absolute right-12px top-12px z-10 flex flex-col items-center gap-4px rounded-lg bg-white/90 px-6px py-8px shadow-md">
+    <div
+      v-if="mapData"
+      class="absolute right-12px top-12px z-10 flex flex-col items-center gap-4px rounded-lg bg-white/90 px-6px py-8px shadow-md"
+    >
       <button
-        class="flex h-24px w-24px items-center justify-center rounded-full text-sm font-bold text-blue-500 transition-colors hover:bg-blue-50"
-        @click="zoomIn">
+        class="h-24px w-24px flex items-center justify-center rounded-full text-sm text-blue-500 font-bold transition-colors hover:bg-blue-50"
+        @click="zoomIn"
+      >
         +
       </button>
-      <NSlider v-model:value="sliderZoomValue" vertical :min="0" :max="100" :step="1" :tooltip="false"
-        :theme-overrides="sliderThemeOverrides" class="!h-160px" @update:value="handleSliderZoom" />
+      <NSlider
+        v-model:value="sliderZoomValue"
+        vertical
+        :min="0"
+        :max="100"
+        :step="1"
+        :tooltip="false"
+        :theme-overrides="sliderThemeOverrides"
+        class="!h-160px"
+        @update:value="handleSliderZoom"
+      />
       <button
-        class="flex h-24px w-24px items-center justify-center rounded-full text-sm font-bold text-blue-500 transition-colors hover:bg-blue-50"
-        @click="zoomOut">
+        class="h-24px w-24px flex items-center justify-center rounded-full text-sm text-blue-500 font-bold transition-colors hover:bg-blue-50"
+        @click="zoomOut"
+      >
         -
       </button>
       <div class="cursor-pointer text-xs text-gray-500" title="点击重置缩放" @click="zoomReset">

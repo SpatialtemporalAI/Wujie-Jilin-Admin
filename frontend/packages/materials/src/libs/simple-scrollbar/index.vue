@@ -26,7 +26,7 @@ const scrollbarStyle = computed(() => {
 
 <template>
   <div class="h-full flex-1-hidden">
-    <Simplebar class="h-full" :style="scrollbarStyle" :class="{'light': props.blueBg, 'dark': props.darkMode}">
+    <Simplebar class="h-full" :style="scrollbarStyle" :class="{ light: props.blueBg, dark: props.darkMode }">
       <slot />
     </Simplebar>
   </div>

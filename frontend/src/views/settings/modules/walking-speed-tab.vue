@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { computed, onMounted, ref } from 'vue';
 import { useMessage } from 'naive-ui';
-import { fetchGetRobot, fetchGetAllRobots, fetchUpdateSpeedLevel } from '@/service/api';
+import { fetchGetAllRobots, fetchGetRobot, fetchUpdateSpeedLevel } from '@/service/api';
 import { useAuth } from '@/hooks/business/auth';
 
 defineOptions({ name: 'WalkingSpeedTab' });
@@ -102,8 +102,15 @@ onMounted(() => {
 <template>
   <div class="flex-col gap-16px">
     <NCard title="选择机器人" size="small">
-      <NSelect :value="selectedRobotId" :options="robotOptions" :loading="robotLoading" placeholder="请选择机器人" filterable
-        clearable @update:value="handleSelectRobot" />
+      <NSelect
+        :value="selectedRobotId"
+        :options="robotOptions"
+        :loading="robotLoading"
+        placeholder="请选择机器人"
+        filterable
+        clearable
+        @update:value="handleSelectRobot"
+      />
     </NCard>
 
     <NCard title="行走速度设置" size="small">

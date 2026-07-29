@@ -1,12 +1,12 @@
 <script setup lang="ts">
-import { ref, computed, onMounted } from 'vue';
+import { computed, onMounted, ref } from 'vue';
 import { NTag } from 'naive-ui';
 import type { SelectOption } from 'naive-ui';
-import type { SelectedElement } from '../composables/useMapEditor';
-import { fetchGetLatestRobotStatus, fetchGetAllRobots, fetchUpdateRobotMapBinding } from '@/service/api';
-import { radToDeg, degToRad } from '@/utils/coordinate';
-import { extractRobotPoint } from '../utils/robot-location';
+import { fetchGetAllRobots, fetchGetLatestRobotStatus, fetchUpdateRobotMapBinding } from '@/service/api';
 import { useAuth } from '@/hooks/business/auth';
+import { degToRad, radToDeg } from '@/utils/coordinate';
+import type { SelectedElement } from '../composables/useMapEditor';
+import { extractRobotPoint } from '../utils/robot-location';
 
 interface Props {
   editorData: Api.Scene.EditorMapData | null;
@@ -78,7 +78,7 @@ const filteredAnnotations = computed(() => {
 
 const pointTypeOptions = [
   { label: '返回点', value: 'navigation' },
-  { label: '接待点', value: 'reception' },
+  { label: '接待点', value: 'reception' }
 ];
 
 function updateAnnotation(field: string, value: any) {
@@ -181,12 +181,17 @@ onMounted(() => {
 </script>
 
 <template>
-  <div class="flex h-full min-h-0 flex-col border-l border-gray-200 bg-white">
-    <NTabs v-model:value="activeTab" type="line" size="small" class="property-panel-tabs h-full min-h-0 flex flex-col"
-      pane-wrapper-class="min-h-0 flex-1 overflow-auto" pane-class="h-full">
-     
+  <div class="h-full min-h-0 flex flex-col border-l border-gray-200 bg-white">
+    <NTabs
+      v-model:value="activeTab"
+      type="line"
+      size="small"
+      class="property-panel-tabs h-full min-h-0 flex flex-col"
+      pane-wrapper-class="min-h-0 flex-1 overflow-auto"
+      pane-class="h-full"
+    >
       <NTabPane name="scenes" tab="场景列表">
-        <div class="flex h-full flex-col">
+        <div class="h-full flex flex-col">
           <div class="border-b border-gray-200 p-12px">
             <div class="mb-8px flex items-center justify-between">
               <NButton v-if="hasAuth('scene:map-editor:add')" size="tiny" type="primary" @click="emit('add-scene')">
@@ -200,10 +205,13 @@ onMounted(() => {
           </div>
 
           <div class="flex-1 overflow-auto p-8px">
-            <div v-for="map in filteredList" :key="map.id"
+            <div
+              v-for="map in filteredList"
+              :key="map.id"
               class="group flex cursor-pointer items-center justify-between rounded-md px-8px py-6px text-sm transition-colors"
               :class="map.id === selectedMapId ? 'bg-blue-50 text-blue-600' : 'hover:bg-gray-50'"
-              @click="emit('select-scene', map.id)">
+              @click="emit('select-scene', map.id)"
+            >
               <div class="min-w-0 flex-1">
                 <div class="truncate">{{ map.name }}</div>
                 <div class="text-xs text-gray-400">
@@ -211,11 +219,20 @@ onMounted(() => {
                 </div>
               </div>
               <div class="flex items-center gap-2px">
-                <NButton v-if="hasAuth('scene:map-editor:edit')" quaternary size="tiny" type="primary" class="opacity-0 group-hover:opacity-100"
-                  @click.stop="emit('edit-scene', map.id)">
+                <NButton
+                  v-if="hasAuth('scene:map-editor:edit')"
+                  quaternary
+                  size="tiny"
+                  type="primary"
+                  class="opacity-0 group-hover:opacity-100"
+                  @click.stop="emit('edit-scene', map.id)"
+                >
                   <template #icon><icon-ic-round-edit /></template>
                 </NButton>
-                <NPopconfirm v-if="hasAuth('scene:map-editor:delete')" @positive-click.stop="emit('delete-scene', map.id)">
+                <NPopconfirm
+                  v-if="hasAuth('scene:map-editor:delete')"
+                  @positive-click.stop="emit('delete-scene', map.id)"
+                >
                   <template #trigger>
                     <NButton quaternary size="tiny" type="error" class="opacity-0 group-hover:opacity-100" @click.stop>
                       <template #icon><icon-ic-round-delete-outline /></template>
@@ -238,8 +255,12 @@ onMounted(() => {
               <NDescriptionsItem label="地图名称">{{ editorData.map.name }}</NDescriptionsItem>
               <NDescriptionsItem label="分辨率">{{ editorData.map.resolution }} m/px</NDescriptionsItem>
               <NDescriptionsItem label="尺寸">
-                {{ editorData.map.width && editorData.map.height ? `${editorData.map.width} × ${editorData.map.height}
-                px` : '-' }}
+                {{
+                  editorData.map.width && editorData.map.height
+                    ? `${editorData.map.width} × ${editorData.map.height}
+                px`
+                    : '-'
+                }}
               </NDescriptionsItem>
               <NDescriptionsItem label="点位数">{{ editorData.annotations.length }}</NDescriptionsItem>
               <NDescriptionsItem label="物体数">{{ editorData.objects.length }}</NDescriptionsItem>
@@ -253,24 +274,50 @@ onMounted(() => {
                 <NInput :value="selectedAnnotation.name" @update:value="v => updateAnnotation('name', v)" />
               </NFormItem>
               <NFormItem label="类型">
-                <NSelect :value="selectedAnnotation.type" :options="pointTypeOptions"
-                  @update:value="v => updateAnnotation('type', v)" />
+                <NSelect
+                  :value="selectedAnnotation.type"
+                  :options="pointTypeOptions"
+                  @update:value="v => updateAnnotation('type', v)"
+                />
               </NFormItem>
               <NFormItem label="X (m)">
-                <NInputNumber :value="toWorldX(selectedAnnotation.x)" :step="0.1" disabled size="small"
-                  class="w-full" />
+                <NInputNumber
+                  :value="toWorldX(selectedAnnotation.x)"
+                  :step="0.1"
+                  disabled
+                  size="small"
+                  class="w-full"
+                />
               </NFormItem>
               <NFormItem label="Y (m)">
-                <NInputNumber :value="toWorldY(selectedAnnotation.y)" :step="0.1" disabled size="small"
-                  class="w-full" />
+                <NInputNumber
+                  :value="toWorldY(selectedAnnotation.y)"
+                  :step="0.1"
+                  disabled
+                  size="small"
+                  class="w-full"
+                />
               </NFormItem>
               <NFormItem label="角度">
-                <NSlider :value="annotationAngleDeg" :min="0" :max="359" :step="1"
-                  :format-tooltip="(v: number) => `${v}°`" @update:value="updateAnnotationAngleFromDeg" />
+                <NSlider
+                  :value="annotationAngleDeg"
+                  :min="0"
+                  :max="359"
+                  :step="1"
+                  :format-tooltip="(v: number) => `${v}°`"
+                  @update:value="updateAnnotationAngleFromDeg"
+                />
               </NFormItem>
             </NForm>
-            <NButton v-if="hasAuth('scene:map-editor:edit')" type="error" size="small" block
-              @click="emit('remove-element', 'annotation', selectedAnnotation.id)">删除此点位</NButton>
+            <NButton
+              v-if="hasAuth('scene:map-editor:edit')"
+              type="error"
+              size="small"
+              block
+              @click="emit('remove-element', 'annotation', selectedAnnotation.id)"
+            >
+              删除此点位
+            </NButton>
           </template>
 
           <!-- Object selected -->
@@ -292,7 +339,14 @@ onMounted(() => {
                 <NInputNumber :value="selectedObject.height" disabled size="small" class="w-full" />
               </NFormItem>
             </NForm>
-            <NButton v-if="hasAuth('scene:map-editor:edit')" type="error" size="small" block @click="emit('remove-element', 'object', selectedObject.id)">删除此物体
+            <NButton
+              v-if="hasAuth('scene:map-editor:edit')"
+              type="error"
+              size="small"
+              block
+              @click="emit('remove-element', 'object', selectedObject.id)"
+            >
+              删除此物体
             </NButton>
           </template>
 
@@ -301,21 +355,29 @@ onMounted(() => {
       </NTabPane>
 
       <NTabPane name="points" tab="点位列表">
-        <div class="flex h-full flex-col">
+        <div class="h-full flex flex-col">
           <div class="border-b border-gray-200 p-12px">
             <NInput v-model:value="pointSearchText" placeholder="搜索点位名称或类型" size="small" clearable>
               <template #prefix><icon-ic-round-search /></template>
             </NInput>
-            <div class="mt-8px text-xs text-gray-400">
-              共 {{ filteredAnnotations.length }} 个点位
-            </div>
+            <div class="mt-8px text-xs text-gray-400">共 {{ filteredAnnotations.length }} 个点位</div>
           </div>
 
           <div class="flex-1 overflow-auto p-8px">
-            <div v-for="ann in filteredAnnotations" :key="ann.id"
+            <div
+              v-for="ann in filteredAnnotations"
+              :key="ann.id"
               class="group flex cursor-pointer items-center justify-between rounded-md px-8px py-6px text-sm transition-colors"
-              :class="selectedElement?.type === 'annotation' && selectedElement?.id === ann.id ? 'bg-red-50 text-red-600' : 'hover:bg-gray-50'"
-              @click="emit('select-element', { type: 'annotation', id: ann.id }); emit('focus-annotation', ann.id)">
+              :class="
+                selectedElement?.type === 'annotation' && selectedElement?.id === ann.id
+                  ? 'bg-red-50 text-red-600'
+                  : 'hover:bg-gray-50'
+              "
+              @click="
+                emit('select-element', { type: 'annotation', id: ann.id });
+                emit('focus-annotation', ann.id);
+              "
+            >
               <div class="min-w-0 flex-1">
                 <div class="flex items-center gap-6px">
                   <span class="truncate font-medium">{{ ann.name }}</span>
@@ -323,12 +385,16 @@ onMounted(() => {
                     {{ ann.type === 'navigation' || ann.type === '返回点' ? '返回点' : '接待点' }}
                   </NTag>
                 </div>
-                <div class="mt-2px text-xs text-gray-400">
-                  X: {{ toWorldX(ann.x) }}m, Y: {{ toWorldY(ann.y) }}m
-                </div>
+                <div class="mt-2px text-xs text-gray-400">X: {{ toWorldX(ann.x) }}m, Y: {{ toWorldY(ann.y) }}m</div>
               </div>
-              <NButton v-if="hasAuth('scene:map-editor:edit')" quaternary size="tiny" type="error"
-                class="opacity-0 group-hover:opacity-100" @click.stop="emit('remove-element', 'annotation', ann.id)">
+              <NButton
+                v-if="hasAuth('scene:map-editor:edit')"
+                quaternary
+                size="tiny"
+                type="error"
+                class="opacity-0 group-hover:opacity-100"
+                @click.stop="emit('remove-element', 'annotation', ann.id)"
+              >
                 <template #icon><icon-ic-round-delete-outline /></template>
               </NButton>
             </div>
@@ -336,7 +402,7 @@ onMounted(() => {
           </div>
         </div>
       </NTabPane>
-       <NTabPane name="overview" tab="机器人总览">
+      <NTabPane name="overview" tab="机器人总览">
         <div class="h-full overflow-auto p-12px">
           <NSpin :show="robotLoading">
             <div class="flex items-center justify-between">
@@ -351,12 +417,24 @@ onMounted(() => {
               <NCard v-for="robot in robotList" :key="robot.id" size="small" embedded>
                 <div class="truncate text-sm font-medium">{{ robot.name }}</div>
                 <div class="mt-8px flex items-center gap-8px">
-                  <NSelect :value="robot.map_id ?? null" :options="sceneOptions" size="tiny" clearable
-                    placeholder="绑定场景" class="min-w-0 flex-1" :loading="bindingRobotId === robot.id"
+                  <NSelect
+                    :value="robot.map_id ?? null"
+                    :options="sceneOptions"
+                    size="tiny"
+                    clearable
+                    placeholder="绑定场景"
+                    class="min-w-0 flex-1"
+                    :loading="bindingRobotId === robot.id"
                     :disabled="!hasAuth('scene:map-editor:edit')"
-                    @update:value="value => updateRobotMap(robot, value as number | null)" />
-                  <NButton size="tiny" type="primary" ghost :loading="locatingRobotId === robot.id"
-                    @click="locateRobot(robot)">
+                    @update:value="value => updateRobotMap(robot, value as number | null)"
+                  />
+                  <NButton
+                    size="tiny"
+                    type="primary"
+                    ghost
+                    :loading="locatingRobotId === robot.id"
+                    @click="locateRobot(robot)"
+                  >
                     定位
                   </NButton>
                 </div>
@@ -366,7 +444,6 @@ onMounted(() => {
           </NSpin>
         </div>
       </NTabPane>
-
     </NTabs>
   </div>
 </template>

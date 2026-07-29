@@ -1,14 +1,9 @@
 <script setup lang="ts">
 import { computed, ref, watch } from 'vue';
-import type { UploadFileInfo, FormRules, UploadCustomRequestOptions } from 'naive-ui';
+import type { FormRules, UploadCustomRequestOptions, UploadFileInfo } from 'naive-ui';
 import { jsonClone } from '@sa/utils';
+import { fetchCreateSceneMap, fetchUpdateSceneMap, fetchUploadSceneMapImage, getFilePreviewUrl } from '@/service/api';
 import { useNaiveForm } from '@/hooks/common/form';
-import {
-  fetchCreateSceneMap,
-  fetchUpdateSceneMap,
-  fetchUploadSceneMapImage,
-  getFilePreviewUrl
-} from '@/service/api';
 
 defineOptions({
   name: 'SceneMapOperateDrawer'
@@ -203,27 +198,15 @@ watch(visible, () => {
             </NUpload>
             <div v-if="imageUrl" class="mt-8px flex items-center gap-8px">
               <NImage :src="imageUrl" width="120" object-fit="contain" />
-              <NButton text type="error" @click="handleRemoveImage">
-                移除
-              </NButton>
+              <NButton text type="error" @click="handleRemoveImage">移除</NButton>
             </div>
           </div>
         </NFormItem>
         <NFormItem v-show="false" label="宽度" path="width">
-          <NInputNumber
-            v-model:value="model.width"
-            placeholder="请输入地图宽度"
-            :min="0"
-            class="w-full"
-          />
+          <NInputNumber v-model:value="model.width" placeholder="请输入地图宽度" :min="0" class="w-full" />
         </NFormItem>
         <NFormItem v-show="false" label="高度" path="height">
-          <NInputNumber
-            v-model:value="model.height"
-            placeholder="请输入地图高度"
-            :min="0"
-            class="w-full"
-          />
+          <NInputNumber v-model:value="model.height" placeholder="请输入地图高度" :min="0" class="w-full" />
         </NFormItem>
         <NFormItem label="映射比例" path="resolution">
           <NInputNumber

@@ -11,10 +11,10 @@ import { useAppStore } from '@/store/modules/app';
 import { defaultTransform, useNaivePaginatedTable, useTableOperate } from '@/hooks/common/table';
 import { useAuth } from '@/hooks/business/auth';
 import { useExportSubmit } from '@/hooks/business/export-task';
+import { parseEventContentMessage } from '@/utils/robot-event';
 import { $t } from '@/locales';
 import RobotEventLogSearch from './modules/robot-event-log-search.vue';
 import EventContentModal from './modules/event-content-modal.vue';
-import { parseEventContentMessage } from '@/utils/robot-event';
 
 const appStore = useAppStore();
 const message = useMessage();
@@ -38,15 +38,7 @@ const searchParams: Api.SystemManage.RobotEventLogSearchParams = reactive({
   end_time: null
 });
 
-const {
-  columns,
-  columnChecks,
-  data,
-  getData,
-  getDataByPage,
-  loading,
-  mobilePagination
-} = useNaivePaginatedTable({
+const { columns, columnChecks, data, getData, getDataByPage, loading, mobilePagination } = useNaivePaginatedTable({
   api: () => fetchGetRobotEventLogList(searchParams),
   transform: response => {
     return defaultTransform(response);
@@ -179,9 +171,15 @@ async function handleClear() {
   <div class="min-h-500px flex-col-stretch gap-12px overflow-hidden lt-sm:overflow-auto">
     <div class="flex-y-center justify-between gap-12px">
       <RobotEventLogSearch v-model:model="searchParams" @search="getDataByPage" />
-      <TableHeaderOperation v-model:columns="columnChecks" :disabled-delete="checkedRowKeys.length === 0"
-        :loading="loading" :show-add="false" delete-auth="robot:event-log:delete" @delete="handleBatchDelete"
-        @refresh="getData">
+      <TableHeaderOperation
+        v-model:columns="columnChecks"
+        :disabled-delete="checkedRowKeys.length === 0"
+        :loading="loading"
+        :show-add="false"
+        delete-auth="robot:event-log:delete"
+        @delete="handleBatchDelete"
+        @refresh="getData"
+      >
         <template #prefix>
           <NPopconfirm v-if="hasAuth('robot:event-log:delete')" @positive-click="handleClear">
             {{ $t('page.log.robotEventLog.clearConfirm') }}
@@ -191,17 +189,33 @@ async function handleClear() {
               </NButton>
             </template>
           </NPopconfirm>
-          <NButton type="primary" ghost size="small" :loading="submitting" :disabled="loading"
-            @click="submitExport('robot_event_log', searchParams)">
+          <NButton
+            type="primary"
+            ghost
+            size="small"
+            :loading="submitting"
+            :disabled="loading"
+            @click="submitExport('robot_event_log', searchParams)"
+          >
             {{ $t('common.export') }}
           </NButton>
         </template>
       </TableHeaderOperation>
     </div>
     <NCard :bordered="false" size="small" class="flex-1-hidden card-wrapper">
-      <NDataTable v-model:checked-row-keys="checkedRowKeys" :columns="columns" :data="data" size="small"
-        :flex-height="!appStore.isMobile" :scroll-x="1000" :loading="loading" remote :row-key="row => row.id"
-        :pagination="mobilePagination" class="sm:h-full" />
+      <NDataTable
+        v-model:checked-row-keys="checkedRowKeys"
+        :columns="columns"
+        :data="data"
+        size="small"
+        :flex-height="!appStore.isMobile"
+        :scroll-x="1000"
+        :loading="loading"
+        remote
+        :row-key="row => row.id"
+        :pagination="mobilePagination"
+        class="sm:h-full"
+      />
     </NCard>
     <EventContentModal v-model:visible="eventContentModalVisible" :content="eventContentModalContent" />
   </div>

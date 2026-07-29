@@ -1016,113 +1016,113 @@ declare namespace App {
             };
           };
         };
-      log: {
-        loginLog: {
-          title: string;
-          username: string;
-          ip: string;
-          status: string;
-          detail: string;
-          userAgent: string;
-          loginTime: string;
-          success: string;
-          failed: string;
-          clear: string;
-          clearConfirm: string;
-          form: {
+        log: {
+          loginLog: {
+            title: string;
             username: string;
             ip: string;
             status: string;
-            timeRange: string;
-            startTime: string;
-            endTime: string;
+            detail: string;
+            userAgent: string;
+            loginTime: string;
+            success: string;
+            failed: string;
+            clear: string;
+            clearConfirm: string;
+            form: {
+              username: string;
+              ip: string;
+              status: string;
+              timeRange: string;
+              startTime: string;
+              endTime: string;
+            };
           };
-        };
-        operationLog: {
-          title: string;
-          username: string;
-          module: string;
-          action: string;
-          description: string;
-          method: string;
-          path: string;
-          ip: string;
-          responseCode: string;
-          responseResult: string;
-          elapsedMs: string;
-          requestParams: string;
-          operateTime: string;
-          viewDetail: string;
-          detailTitle: string;
-          clear: string;
-          clearConfirm: string;
-          form: {
+          operationLog: {
+            title: string;
             username: string;
             module: string;
             action: string;
-            timeRange: string;
-            startTime: string;
-            endTime: string;
-          };
-        };
-        onlineUser: {
-          title: string;
-          username: string;
-          nickname: string;
-          ip: string;
-          userAgent: string;
-          loginTime: string;
-          kick: string;
-          kickAll: string;
-          kickConfirm: string;
-          kickAllConfirm: string;
-          kickSuccess: string;
-          kickAllSuccess: string;
-          form: {
-            username: string;
+            description: string;
+            method: string;
+            path: string;
             ip: string;
+            responseCode: string;
+            responseResult: string;
+            elapsedMs: string;
+            requestParams: string;
+            operateTime: string;
+            viewDetail: string;
+            detailTitle: string;
+            clear: string;
+            clearConfirm: string;
+            form: {
+              username: string;
+              module: string;
+              action: string;
+              timeRange: string;
+              startTime: string;
+              endTime: string;
+            };
           };
-        };
-        robotEventLog: {
-          title: string;
-          robotName: string;
-          eventStatus: string;
-          eventContent: string;
-          statusCritical: string;
-          statusWarning: string;
-          statusInfo: string;
-          clear: string;
-          clearConfirm: string;
-          form: {
+          onlineUser: {
+            title: string;
+            username: string;
+            nickname: string;
+            ip: string;
+            userAgent: string;
+            loginTime: string;
+            kick: string;
+            kickAll: string;
+            kickConfirm: string;
+            kickAllConfirm: string;
+            kickSuccess: string;
+            kickAllSuccess: string;
+            form: {
+              username: string;
+              ip: string;
+            };
+          };
+          robotEventLog: {
+            title: string;
             robotName: string;
             eventStatus: string;
-            timeRange: string;
+            eventContent: string;
+            statusCritical: string;
+            statusWarning: string;
+            statusInfo: string;
+            clear: string;
+            clearConfirm: string;
+            form: {
+              robotName: string;
+              eventStatus: string;
+              timeRange: string;
+            };
           };
-        };
-        exportTask: {
-          title: string;
-          taskName: string;
-          module: string;
-          status: string;
-          totalRows: string;
-          fileSize: string;
-          createdAt: string;
-          finishedAt: string;
-          downloadFailed: string;
-          form: {
+          exportTask: {
+            title: string;
+            taskName: string;
+            module: string;
             status: string;
+            totalRows: string;
+            fileSize: string;
+            createdAt: string;
+            finishedAt: string;
+            downloadFailed: string;
+            form: {
+              status: string;
+            };
           };
         };
-      };
-      sceneMapEditor: {
-        unsavedChangesTitle: string;
-        unsavedChangesTip: string;
-        saveAndSwitch: string;
-        discardAndSwitch: string;
-        loadMapFailed: string;
-        deleteUnsavedTip: string;
-        continueDelete: string;
-      };
+        sceneMapEditor: {
+          unsavedChangesTitle: string;
+          unsavedChangesTip: string;
+          saveAndSwitch: string;
+          discardAndSwitch: string;
+          loadMapFailed: string;
+          deleteUnsavedTip: string;
+          continueDelete: string;
+        };
       };
       form: {
         required: string;
@@ -1269,7 +1269,7 @@ declare namespace App {
           };
         };
       };
-    }
+    };
 
     type GetI18nKey<T extends Record<string, unknown>, K extends keyof T = keyof T> = K extends string
       ? T[K] extends Record<string, unknown>

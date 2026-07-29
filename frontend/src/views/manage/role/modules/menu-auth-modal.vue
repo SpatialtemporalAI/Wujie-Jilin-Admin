@@ -1,8 +1,8 @@
 <script setup lang="ts">
 import { computed, h, shallowRef, watch } from 'vue';
 import { NTag } from 'naive-ui';
-import { fetchAssignMenuToRole, fetchGetAllPages, fetchGetAssignMenuTree, fetchGetRole } from '@/service/api';
 import { menuTypeRecord } from '@/constants/business';
+import { fetchAssignMenuToRole, fetchGetAllPages, fetchGetAssignMenuTree, fetchGetRole } from '@/service/api';
 import { $t } from '@/locales';
 
 defineOptions({
@@ -135,7 +135,11 @@ function renderLabel({ option }: { option: Record<string, unknown> }) {
       { class: 'flex items-center gap-8px' },
       {
         default: () => [
-          h(NTag, { type: tagType, size: 'small', bordered: false }, { default: () => $t(menuTypeRecord[node.menuType]) }),
+          h(
+            NTag,
+            { type: tagType, size: 'small', bordered: false },
+            { default: () => $t(menuTypeRecord[node.menuType]) }
+          ),
           displayLabel
         ]
       }

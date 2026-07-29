@@ -6,8 +6,8 @@ import { fetchBatchDeleteRole, fetchDeleteRole, fetchGetRoleList } from '@/servi
 import { useAppStore } from '@/store/modules/app';
 import { defaultTransform, useNaivePaginatedTable, useTableOperate } from '@/hooks/common/table';
 import { useAuth } from '@/hooks/business/auth';
-import { $t } from '@/locales';
 import { booleanToEnableStatus } from '@/utils/status';
+import { $t } from '@/locales';
 import RoleOperateDrawer from './modules/role-operate-drawer.vue';
 import RoleSearch from './modules/role-search.vue';
 

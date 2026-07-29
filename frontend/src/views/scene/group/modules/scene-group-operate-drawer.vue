@@ -2,8 +2,8 @@
 import { computed, ref, watch } from 'vue';
 import { jsonClone } from '@sa/utils';
 import { enableStatusOptions } from '@/constants/business';
+import { fetchCreateSceneGroup, fetchGetSceneGroupTree, fetchUpdateSceneGroup } from '@/service/api';
 import { useNaiveForm } from '@/hooks/common/form';
-import { fetchCreateSceneGroup, fetchUpdateSceneGroup, fetchGetSceneGroupTree } from '@/service/api';
 
 defineOptions({
   name: 'SceneGroupOperateDrawer'

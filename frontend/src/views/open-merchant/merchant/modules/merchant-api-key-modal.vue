@@ -18,7 +18,9 @@ const showSecret = ref(false);
 
 const apiKey = computed(() => props.credentials?.api_key ?? '');
 const apiSecret = computed(() => props.credentials?.api_secret ?? '');
-const maskedSecret = computed(() => (showSecret.value ? apiSecret.value : '*'.repeat(Math.min(apiSecret.value.length, 40))));
+const maskedSecret = computed(() =>
+  showSecret.value ? apiSecret.value : '*'.repeat(Math.min(apiSecret.value.length, 40))
+);
 
 watch(visible, v => {
   if (!v) {

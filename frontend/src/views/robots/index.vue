@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { ref } from 'vue';
 import { NButton, NCard, NEmpty, NPopconfirm, NSpace, NSpin, NTag, useMessage } from 'naive-ui';
-import { fetchGetRobotList, fetchDeleteRobot } from '@/service/api';
+import { fetchDeleteRobot, fetchGetRobotList } from '@/service/api';
 import { useAuth } from '@/hooks/business/auth';
 import { $t } from '@/locales';
 import SvgIcon from '@/components/custom/svg-icon.vue';
@@ -159,16 +159,31 @@ loadData();
 
             <div class="robot-card-footer">
               <NSpace>
-                <NButton v-if="hasAuth('robot:manage:edit')" type="primary" ghost size="small"
-                  @click="handleEditRobot(robot)">
+                <NButton
+                  v-if="hasAuth('robot:manage:edit')"
+                  type="primary"
+                  ghost
+                  size="small"
+                  @click="handleEditRobot(robot)"
+                >
                   {{ $t('common.edit') }}
                 </NButton>
-                <NButton v-if="hasAuth('robot:manage:grpc_config')" type="info" ghost size="small"
-                  @click="handleEditGrpc(robot)">
+                <NButton
+                  v-if="hasAuth('robot:manage:grpc_config')"
+                  type="info"
+                  ghost
+                  size="small"
+                  @click="handleEditGrpc(robot)"
+                >
                   gRPC配置
                 </NButton>
-                <NButton class="hidden" v-if="hasAuth('robot:manage:list')" ghost size="small"
-                  @click="handleViewStatus(robot)">
+                <NButton
+                  v-if="hasAuth('robot:manage:list')"
+                  class="hidden"
+                  ghost
+                  size="small"
+                  @click="handleViewStatus(robot)"
+                >
                   状态
                 </NButton>
                 <NPopconfirm v-if="hasAuth('robot:manage:delete')" @positive-click="handleDelete(robot.id)">
@@ -185,8 +200,12 @@ loadData();
         </div>
       </NSpin>
 
-      <RobotOperateDrawer v-model:visible="robotDrawerVisible" :operate-type="robotOperateType"
-        :row-data="editingRobotData" @submitted="loadData" />
+      <RobotOperateDrawer
+        v-model:visible="robotDrawerVisible"
+        :operate-type="robotOperateType"
+        :row-data="editingRobotData"
+        @submitted="loadData"
+      />
       <RobotStatusDrawer v-model:visible="statusDrawerVisible" :robot-id="statusDrawerRobotId" />
       <RobotGrpcConfigDrawer v-model:visible="grpcDrawerVisible" :robot-id="grpcDrawerRobotId" @submitted="loadData" />
     </NCard>

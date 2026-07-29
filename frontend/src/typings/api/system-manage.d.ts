@@ -333,13 +333,15 @@ declare namespace Api {
     };
 
     /** 登录日志搜索参数 */
-    type LoginLogSearchParams = CommonType.RecordNullable<{
-      username?: string;
-      ip?: string;
-      status?: boolean | null;
-      start_time?: string;
-      end_time?: string;
-    } & CommonSearchParams>;
+    type LoginLogSearchParams = CommonType.RecordNullable<
+      {
+        username?: string;
+        ip?: string;
+        status?: boolean | null;
+        start_time?: string;
+        end_time?: string;
+      } & CommonSearchParams
+    >;
 
     /** 登录日志 */
     type LoginLog = {
@@ -357,13 +359,15 @@ declare namespace Api {
     type LoginLogList = Common.PaginatingQueryRecord<LoginLog>;
 
     /** 操作日志搜索参数 */
-    type OperationLogSearchParams = CommonType.RecordNullable<{
-      username?: string;
-      module?: string;
-      action?: string;
-      start_time?: string;
-      end_time?: string;
-    } & CommonSearchParams>;
+    type OperationLogSearchParams = CommonType.RecordNullable<
+      {
+        username?: string;
+        module?: string;
+        action?: string;
+        start_time?: string;
+        end_time?: string;
+      } & CommonSearchParams
+    >;
 
     /** 操作日志 */
     type OperationLog = {
@@ -391,10 +395,12 @@ declare namespace Api {
     type OperationLogList = Common.PaginatingQueryRecord<OperationLog>;
 
     /** 在线用户搜索参数 */
-    type OnlineUserSearchParams = CommonType.RecordNullable<{
-      username?: string;
-      ip?: string;
-    } & CommonSearchParams>;
+    type OnlineUserSearchParams = CommonType.RecordNullable<
+      {
+        username?: string;
+        ip?: string;
+      } & CommonSearchParams
+    >;
 
     /** 在线用户 */
     type OnlineUser = {
@@ -424,12 +430,14 @@ declare namespace Api {
     };
 
     /** IP 黑名单搜索参数 */
-    type IpBlacklistSearchParams = CommonType.RecordNullable<{
-      ip?: string;
-      type?: string;
-      start_date?: string;
-      end_date?: string;
-    } & CommonSearchParams>;
+    type IpBlacklistSearchParams = CommonType.RecordNullable<
+      {
+        ip?: string;
+        type?: string;
+        start_date?: string;
+        end_date?: string;
+      } & CommonSearchParams
+    >;
 
     /** IP 黑名单列表 */
     type IpBlacklistList = Common.PaginatingQueryRecord<IpBlacklist>;
@@ -448,13 +456,15 @@ declare namespace Api {
     };
 
     /** 机器人事件日志搜索参数 */
-    type RobotEventLogSearchParams = CommonType.RecordNullable<{
-      robot_id?: number | null;
-      event_type?: string | null;
-      event_status?: string | null;
-      start_time?: string;
-      end_time?: string;
-    } & CommonSearchParams>;
+    type RobotEventLogSearchParams = CommonType.RecordNullable<
+      {
+        robot_id?: number | null;
+        event_type?: string | null;
+        event_status?: string | null;
+        start_time?: string;
+        end_time?: string;
+      } & CommonSearchParams
+    >;
 
     /** 机器人事件日志 */
     type RobotEventLog = {

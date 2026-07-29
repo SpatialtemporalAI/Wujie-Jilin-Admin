@@ -1,7 +1,7 @@
 <script setup lang="tsx">
 import { reactive } from 'vue';
 import { NButton, NCard, NDataTable, NPopconfirm, NTag } from 'naive-ui';
-import { fetchGetSceneGroupList, fetchDeleteSceneGroup } from '@/service/api';
+import { fetchDeleteSceneGroup, fetchGetSceneGroupList } from '@/service/api';
 import { useAppStore } from '@/store/modules/app';
 import { defaultTransform, useNaivePaginatedTable, useTableOperate } from '@/hooks/common/table';
 import { useAuth } from '@/hooks/business/auth';
@@ -92,7 +92,11 @@ const {
           '2': 'warning'
         };
         const label = row.status === '1' ? '启用' : '禁用';
-        return <NTag type={tagMap[row.status]} size="small">{label}</NTag>;
+        return (
+          <NTag type={tagMap[row.status]} size="small">
+            {label}
+          </NTag>
+        );
       }
     },
     {

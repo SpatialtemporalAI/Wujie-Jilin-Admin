@@ -15,7 +15,8 @@ const gap = computed(() => (appStore.isMobile ? 0 : 16));
 
 <template>
   <NSpace vertical :size="16">
-    <!-- <NAlert :title="$t('common.tip')" type="warning">
+    <!--
+ <NAlert :title="$t('common.tip')" type="warning">
       {{ $t('page.home.branchDesc') }}
     </NAlert>
     <HeaderBanner />
@@ -39,7 +40,8 @@ const gap = computed(() => (appStore.isMobile ? 0 : 16));
       <NGi span="24 s:24 m:10">
         <CreativityBanner />
       </NGi>
-    </NGrid> -->
+    </NGrid> 
+-->
   </NSpace>
 </template>
 

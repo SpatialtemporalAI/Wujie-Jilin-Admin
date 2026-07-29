@@ -2,16 +2,12 @@
 import { reactive, ref } from 'vue';
 import { NButton, NPopconfirm, NTag } from 'naive-ui';
 import { enableStatusRecord } from '@/constants/business';
-import {
-  fetchDeleteMerchant,
-  fetchGetMerchantList,
-  fetchResetMerchantApiKey
-} from '@/service/api';
+import { fetchDeleteMerchant, fetchGetMerchantList, fetchResetMerchantApiKey } from '@/service/api';
 import { useAppStore } from '@/store/modules/app';
 import { defaultTransform, useNaivePaginatedTable, useTableOperate } from '@/hooks/common/table';
 import { useAuth } from '@/hooks/business/auth';
-import { $t } from '@/locales';
 import { booleanToEnableStatus } from '@/utils/status';
+import { $t } from '@/locales';
 import MerchantOperateDrawer from './modules/merchant-operate-drawer.vue';
 import MerchantSearch from './modules/merchant-search.vue';
 import MerchantApiKeyModal from './modules/merchant-api-key-modal.vue';
@@ -148,9 +144,8 @@ const { columns, columnChecks, data, loading, getData, getDataByPage, mobilePagi
   ]
 });
 
-const { drawerVisible, operateType, editingData, handleAdd, handleEdit, checkedRowKeys, onDeleted } = useTableOperate<
-  Api.Merchant.Merchant
->(data, 'id', getData);
+const { drawerVisible, operateType, editingData, handleAdd, handleEdit, checkedRowKeys, onDeleted } =
+  useTableOperate<Api.Merchant.Merchant>(data, 'id', getData);
 
 // API 凭证弹窗（新增/重置时展示，secret 仅一次）
 const keyModalVisible = ref(false);

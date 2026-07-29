@@ -1,7 +1,7 @@
 <script setup lang="tsx">
 import { reactive, ref, shallowRef } from 'vue';
 import { NButton, NCard, NDataTable, NPopconfirm, NTag } from 'naive-ui';
-import { fetchGetSceneMapList, fetchDeleteSceneMap } from '@/service/api';
+import { fetchDeleteSceneMap, fetchGetSceneMapList } from '@/service/api';
 import { getFilePreviewUrl } from '@/service/api/file';
 import { useAppStore } from '@/store/modules/app';
 import { defaultTransform, useNaivePaginatedTable, useTableOperate } from '@/hooks/common/table';
@@ -84,7 +84,11 @@ const {
       width: 100,
       render: row => {
         if (row.image_id) {
-          return <NButton text type="primary" size="small" onClick={() => handlePreviewImage(row.image_id!)}>查看图片</NButton>;
+          return (
+            <NButton text type="primary" size="small" onClick={() => handlePreviewImage(row.image_id!)}>
+              查看图片
+            </NButton>
+          );
         }
         return <span>-</span>;
       }
@@ -110,7 +114,11 @@ const {
       width: 140,
       render: row => {
         if (row.start_point_x || row.start_point_y) {
-          return <span>({row.start_point_x}, {row.start_point_y})</span>;
+          return (
+            <span>
+              ({row.start_point_x}, {row.start_point_y})
+            </span>
+          );
         }
         return <span>-</span>;
       }
@@ -132,7 +140,11 @@ const {
         const synced = target != null && target === row.version;
         const type: NaiveUI.ThemeColor = target == null ? 'default' : synced ? 'success' : 'warning';
         const text = target == null ? '未推送' : synced ? '已同步' : '待同步';
-        return <NTag type={type} size="small">{text}</NTag>;
+        return (
+          <NTag type={type} size="small">
+            {text}
+          </NTag>
+        );
       }
     },
     {
@@ -147,7 +159,11 @@ const {
           '2': 'warning'
         };
         const label = row.status === '1' ? '启用' : '禁用';
-        return <NTag type={tagMap[row.status]} size="small">{label}</NTag>;
+        return (
+          <NTag type={tagMap[row.status]} size="small">
+            {label}
+          </NTag>
+        );
       }
     },
     {
@@ -271,10 +287,7 @@ function handleViewDetail(row: Api.Scene.SceneMap) {
         :row-data="editingMapData"
         @submitted="getMapDataByPage"
       />
-      <SceneMapDetailDrawer
-        v-model:visible="detailDrawerVisible"
-        :map-data="detailMapData"
-      />
+      <SceneMapDetailDrawer v-model:visible="detailDrawerVisible" :map-data="detailMapData" />
       <NModal v-model:show="previewImageVisible" preset="card" title="地图图片" class="max-w-900px">
         <img :src="previewImageUrl" class="max-h-70vh w-full object-contain" />
       </NModal>

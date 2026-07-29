@@ -1,5 +1,5 @@
 <script setup lang="tsx">
-import { reactive, onMounted, onUnmounted, onActivated, onDeactivated, ref } from 'vue';
+import { onActivated, onDeactivated, onMounted, onUnmounted, reactive, ref } from 'vue';
 import { NButton, NDataTable, NProgress, NTag, useMessage } from 'naive-ui';
 import {
   fetchGetActiveExecutionRecords,
@@ -8,8 +8,8 @@ import {
   fetchStopExecutionRecord
 } from '@/service/api';
 import { useAppStore } from '@/store/modules/app';
-import { $t } from '@/locales';
 import { useAuth } from '@/hooks/business/auth';
+import { $t } from '@/locales';
 import TableHeaderOperation from '@/components/advanced/table-header-operation.vue';
 import TaskHistorySearch from './task-history-search.vue';
 
@@ -73,9 +73,7 @@ const columns = [
     align: 'center' as const,
     minWidth: 140,
     ellipsis: { tooltip: true },
-    render: (row: Api.Task.TaskExecutionRecord) => (
-      <span>{row.task_definition?.task_name || '-'}</span>
-    )
+    render: (row: Api.Task.TaskExecutionRecord) => <span>{row.task_definition?.task_name || '-'}</span>
   },
   // {
   //   key: 'task_id',
@@ -150,14 +148,21 @@ const columns = [
     render: (row: Api.Task.TaskExecutionRecord) => (
       <div class="flex-center gap-8px">
         {hasAuth('task:execution:control') && (row.status === 'running' || row.status === 'pending') && (
-          <NButton type="warning" ghost size="small" onClick={() => handlePause(row.id)}>暂停</NButton>
+          <NButton type="warning" ghost size="small" onClick={() => handlePause(row.id)}>
+            暂停
+          </NButton>
         )}
         {hasAuth('task:execution:control') && row.status === 'paused' && (
-          <NButton type="success" ghost size="small" onClick={() => handleResume(row.id)}>恢复</NButton>
+          <NButton type="success" ghost size="small" onClick={() => handleResume(row.id)}>
+            恢复
+          </NButton>
         )}
-        {hasAuth('task:execution:control') && (row.status === 'running' || row.status === 'paused' || row.status === 'pending') && (
-          <NButton type="error" ghost size="small" onClick={() => handleStop(row.id)}>停止</NButton>
-        )}
+        {hasAuth('task:execution:control') &&
+          (row.status === 'running' || row.status === 'paused' || row.status === 'pending') && (
+            <NButton type="error" ghost size="small" onClick={() => handleStop(row.id)}>
+              停止
+            </NButton>
+          )}
       </div>
     )
   }
@@ -249,8 +254,16 @@ onUnmounted(stopPolling);
       <TaskHistorySearch v-model:model="searchParams" :status-options="statusOptions" @search="handleSearch" />
       <TableHeaderOperation :loading="loading" :show-add="false" :show-delete="false" @refresh="getData" />
     </div>
-    <NDataTable :columns="columns" :data="data" size="small" :flex-height="!appStore.isMobile" :scroll-x="1320"
-      :loading="loading" remote :row-key="(row: Api.Task.TaskExecutionRecord) => row.id" :pagination="{
+    <NDataTable
+      :columns="columns"
+      :data="data"
+      size="small"
+      :flex-height="!appStore.isMobile"
+      :scroll-x="1320"
+      :loading="loading"
+      remote
+      :row-key="(row: Api.Task.TaskExecutionRecord) => row.id"
+      :pagination="{
         page: page,
         pageSize: pageSize,
         itemCount: total,
@@ -258,7 +271,9 @@ onUnmounted(stopPolling);
         pageSizes: [10, 20, 50],
         onChange: handlePageChange,
         onUpdatePageSize: handlePageSizeChange
-      }" class="sm:flex-1-hidden" />
+      }"
+      class="sm:flex-1-hidden"
+    />
   </div>
 </template>
 

@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { useFullscreen } from '@vueuse/core';
 import { GLOBAL_HEADER_MENU_ID } from '@/constants/app';
+import { getHeaderPlugins } from '@/plugins/plugin-registry';
 import { useAppStore } from '@/store/modules/app';
 import { useThemeStore } from '@/store/modules/theme';
 import GlobalLogo from '../global-logo/index.vue';
@@ -11,7 +12,7 @@ import UserAvatar from './components/user-avatar.vue';
 import NotificationCenter from './components/notification-center.vue';
 import ExportCenter from './components/export-center.vue';
 import AboutUs from './components/about-us.vue';
-import { getHeaderPlugins } from '@/plugins/plugin-registry';
+import UserManual from './components/user-manual.vue';
 
 defineOptions({
   name: 'GlobalHeader'
@@ -47,8 +48,10 @@ const headerPlugins = getHeaderPlugins();
     <div class="h-full flex-y-center justify-end">
       <!-- <GlobalSearch v-if="themeStore.header.globalSearch.visible" /> -->
       <FullScreen v-if="!appStore.isMobile" :full="isFullscreen" @click="toggle" />
+      <UserManual />
       <AboutUs />
-      <!-- <LangSwitch
+      <!--
+ <LangSwitch
         v-if="themeStore.header.multilingual.visible"
         :lang="appStore.locale"
         :lang-options="appStore.localeOptions"
@@ -58,10 +61,11 @@ const headerPlugins = getHeaderPlugins();
         :theme-schema="themeStore.themeScheme"
         :is-dark="themeStore.darkMode"
         @switch="themeStore.toggleThemeScheme"
-      /> -->
+      /> 
+-->
       <NotificationCenter />
       <ExportCenter />
-      <component v-for="plugin in headerPlugins" :key="plugin.name || plugin" :is="plugin" />
+      <component :is="plugin" v-for="plugin in headerPlugins" :key="plugin.name || plugin" />
       <!-- <ThemeButton /> -->
       <UserAvatar />
     </div>
