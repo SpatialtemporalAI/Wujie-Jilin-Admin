@@ -2,11 +2,11 @@
 import { computed, nextTick, ref, watch } from 'vue';
 import { NModal, NScrollbar } from 'naive-ui';
 import { marked } from 'marked';
-import manualContent from '@/assets/files/机器人管理系统用户手册.md?raw';
-import wifiGuide from '@/assets/files/机器人WIFI配网指南.md?raw';
-import apiDoc from '@/assets/files/商户开放API接入文档.md?raw';
-import backpackWifiGuide from '@/assets/files/语音背包wifi配网操作指南.md?raw';
 import ButtonIcon from '@/components/custom/button-icon.vue';
+import manualContent from '@/assets/manual-files/机器人管理系统用户手册.md?raw';
+import wifiGuide from '@/assets/manual-files/机器人WIFI配网指南.md?raw';
+import apiDoc from '@/assets/manual-files/商户开放API接入文档.md?raw';
+import backpackWifiGuide from '@/assets/manual-files/语音背包wifi配网操作指南.md?raw';
 
 defineOptions({ name: 'UserManual' });
 
@@ -36,68 +36,102 @@ const docTitles: Record<string, string> = {
   backpack: '语音背包 WiFi 配网操作指南'
 };
 
-// md 文件名 -> doc key 映射
 const mdLinkMap: Record<string, string> = {
   '机器人WIFI配网指南.md': 'wifi',
   '语音背包wifi配网操作指南.md': 'backpack',
   '商户开放API接入文档.md': 'api'
 };
 
-/** 根据标题文本推断层级 */
-function getHeadingLevel(text: string): number {
-  if (/^[一二三四五六七八九十]+、/.test(text)) return 1;
-  if (text.startsWith('附录')) return 1;
-  if (/^\d+\.\d+\.\d+/.test(text)) return 3;
-  if (/^\d+\.\d+/.test(text)) return 2;
-  return 1;
+/** 预处理 Markdown 内容，修复转义和列表问题 */
+function preprocessMarkdown(content: string): string {
+  let processed = content;
+
+  // 1. 处理标题行中的转义点号（如 ### 3\.2\.1 → ### 3.2.1）
+  processed = processed.replace(/^(#{1,6}\s+)([\d\.\\]+)(\s.*)$/gm, (_match, prefix, numbers, suffix) => {
+    return prefix + numbers.replace(/\\\./g, '.') + suffix;
+  });
+
+  // 2. 处理图片和链接中的转义（alt text 和 href 都要处理）
+  processed = processed.replace(/(!?\[)([^\]]*?)(\]\()([^)]+)(\))/g, (_match, bang, alt, mid, href, end) => {
+    const cleanAlt = alt.replace(/\\\./g, '.');
+    const cleanHref = href.replace(/\\\./g, '.');
+    return bang + cleanAlt + mid + cleanHref + end;
+  });
+
+  return processed;
 }
 
-/** 从主手册提取标题树（mammoth 转换的 <a id="heading_X"></a>__标题__ 格式） */
-function extractHeadings(): HeadingItem[] {
-  const headings: HeadingItem[] = [];
-  const lines = manualContent.split('\n');
-  const regex = /<a id="heading_(\d+)"><\/a>__(.+)__/;
-  for (const line of lines) {
-    const match = line.match(regex);
-    if (match) {
-      const id = `heading_${match[1]}`;
-      const text = match[2].replace(/\\\./g, '.').trim();
-      headings.push({ level: getHeadingLevel(text), text, id });
-    }
-  }
-  return headings;
-}
-
-/** 渲染内容 */
+/** 渲染 markdown，生成带 id 的标题 */
 function renderContent(docKey: string): string {
-  let content = docContents[docKey] || '';
+  const content = preprocessMarkdown(docContents[docKey] || '');
+  let headingIndex = 0;
+  const renderer = new marked.Renderer();
 
-  // 删除主手册顶部标题行
-  if (docKey === 'main') {
-    content = content.replace(/^__机器人管理系统用户手册 __\n/, '');
-  }
+  renderer.heading = ({ text, depth }) => {
+    const id = `heading-${headingIndex++}`;
+    const cleanText = text.replace(/\\\./g, '.');
+    return `<h${depth} id="${id}">${cleanText}</h${depth}>`;
+  };
 
-  let html = marked.parse(content, { gfm: true, breaks: false }) as string;
+  renderer.link = ({ href, title, text }) => {
+    // 检查是否为 md 文件链接（href 可能是 "图片和附件/机器人WIFI配网指南.md"）
+    if (href.endsWith('.md')) {
+      // 从路径中提取文件名
+      const filename = href.split('/').pop() || '';
+      const mdKey = mdLinkMap[filename];
+      if (mdKey) {
+        return `<span class="md-view-link" data-doc="${mdKey}" title="${title || ''}">📄 ${text}</span>`;
+      }
+    }
+    if (href.endsWith('.mp4')) {
+      return `<video controls style="max-width:100%;border-radius:8px;margin:12px 0;"><source src="/manual-files/${href}" type="video/mp4">您的浏览器不支持视频播放</video>`;
+    }
+    return `<a href="${href}" title="${title || ''}" target="_blank" rel="noopener noreferrer">${text}</a>`;
+  };
 
-  // 图片路径修正
-  html = html.replace(/src="manual-images\//g, 'src="/manual-images/');
+  renderer.image = ({ href, title, text }) => {
+    return `<img src="/manual-files/${href}" alt="${text}" title="${title || ''}" style="max-width:100%;border-radius:6px;margin:12px 0;" />`;
+  };
 
-  // 替换 md 文件引用为可点击链接
+  let html = marked.parse(content, { renderer, gfm: true, breaks: true }) as string;
+
+  // 后处理：确保粗体和斜体语法被正确转换（防止 marked 遗漏）
+  // 粗体：**text** 或 __text__
+  html = html.replace(/\*\*([^*_\n]+?)\*\*/g, '<strong>$1</strong>');
+  html = html.replace(/__([^*_\n]+?)__/g, '<strong>$1</strong>');
+  // 斜体：*text* 或 _text_（排除已处理的情况）
+  html = html.replace(/(?<!\*)\*(?!\*)([^*\n]+?)\*(?!\*)/g, '<em>$1</em>');
+  html = html.replace(/(?<!_)_(?!_)([^_\n]+?)_(?!_)/g, '<em>$1</em>');
+
+  // 兼容旧版 md 中直接出现的文件名
   html = html.replace(/<strong>\[([^\]]+\.md)\]<\/strong>/g, (_match, filename: string) => {
     const key = mdLinkMap[filename];
     if (key) {
-      return `<span class="md-view-link" data-doc="${key}" style="display:inline-block;padding:6px 12px;margin:8px 0;border-radius:6px;font-size:13px;font-weight:500;color:#2563eb;background-color:#eff6ff;border:1px solid #bfdbfe;cursor:pointer;">📄 查看详情：${docTitles[key]}</span>`;
+      return `<span class="md-view-link" data-doc="${key}">📄 ${docTitles[key]}</span>`;
     }
     return `<strong>[${filename}]</strong>`;
   });
 
-  // 替换视频引用为 HTML video 标签
-  html = html.replace(
-    /<p>唤醒词唤醒\\?\+多轮对话\\?\.mp4<\/p>/g,
-    '<video controls style="max-width:100%;border-radius:8px;margin:12px 0;"><source src="/videos/demo.mp4" type="video/mp4">您的浏览器不支持视频播放</video>'
-  );
-
   return html;
+}
+
+/** 从主手册提取标题树 */
+function extractHeadings(): HeadingItem[] {
+  const headings: HeadingItem[] = [];
+  const processed = preprocessMarkdown(manualContent);
+  const lines = processed.split('\n');
+  const regex = /^(#{1,6})\s+(.+)$/;
+  let index = 0;
+
+  for (const line of lines) {
+    const match = line.match(regex);
+    if (match) {
+      const level = match[1].length;
+      const text = match[2].trim().replace(/\*\*/g, '');
+      headings.push({ level, text, id: `heading-${index++}` });
+    }
+  }
+  return headings;
 }
 
 const headings = computed(() => extractHeadings());
@@ -129,7 +163,6 @@ function handleContentClick(e: MouseEvent) {
   if (link) {
     const docKey = link.dataset.doc;
     if (docKey && docContents[docKey]) {
-      // 进入 md 详情前记录主手册滚动位置
       mainScrollTop.value = contentRef.value?.scrollTop || 0;
       activeDoc.value = docKey;
       nextTick(() => {
@@ -148,7 +181,6 @@ function updateActiveHeadingOnScroll() {
   const threshold = containerRect.top + 120;
 
   let currentId = '';
-
   for (const heading of headings.value) {
     const el = document.getElementById(heading.id);
     if (!el) continue;
@@ -189,15 +221,8 @@ watch(
   <div>
     <ButtonIcon icon="mdi:book-open-outline" tooltip-content="用户手册" @click="showModal = true" />
 
-    <NModal
-      v-model:show="showModal"
-      preset="card"
-      title="用户手册"
-      style="width: 90vw; max-width: 1200px"
-      body-style="padding: 0;"
-      :bordered="false"
-      :segmented="{ content: true }"
-    >
+    <NModal v-model:show="showModal" preset="card" title="用户手册" style="width: 90vw; max-width: 1200px;"
+      body-style="padding: 0;" :bordered="false" :segmented="{ content: true }">
       <div class="manual-container">
         <div class="manual-sidebar">
           <NScrollbar class="sidebar-scroll">
@@ -205,13 +230,9 @@ watch(
               <div class="sidebar-title">机器人管理系统用户手册</div>
               <div class="toc-divider"></div>
               <div class="toc-list">
-                <div
-                  v-for="heading in headings"
-                  :key="heading.id"
-                  class="toc-item"
+                <div v-for="heading in headings" :key="heading.id" class="toc-item"
                   :class="[`toc-level-${heading.level}`, { 'toc-active': activeHeadingId === heading.id }]"
-                  @click="scrollToHeading(heading.id)"
-                >
+                  @click="scrollToHeading(heading.id)">
                   {{ heading.text }}
                 </div>
               </div>
@@ -288,9 +309,7 @@ watch(
   font-size: 13px;
   color: #4b5563;
   cursor: pointer;
-  transition:
-    background-color 0.2s,
-    color 0.2s;
+  transition: background-color 0.2s, color 0.2s;
   line-height: 1.5;
   white-space: nowrap;
   overflow: hidden;
@@ -345,6 +364,14 @@ watch(
   font-size: 12px;
 }
 
+.toc-level-4,
+.toc-level-5,
+.toc-level-6 {
+  padding-left: 44px;
+  font-size: 12px;
+  color: #6b7280;
+}
+
 .manual-body {
   flex: 1;
   overflow-y: auto;
@@ -381,6 +408,58 @@ watch(
   background-color: rgba(37, 99, 235, 0.2);
 }
 
+.markdown-body :deep(.md-view-link) {
+  display: inline-block;
+  padding: 6px 12px;
+  margin: 8px 0;
+  border-radius: 6px;
+  font-size: 13px;
+  font-weight: 500;
+  color: #2563eb;
+  background-color: #eff6ff;
+  border: 1px solid #bfdbfe;
+  cursor: pointer;
+}
+
+.dark .markdown-body :deep(.md-view-link) {
+  color: #60a5fa;
+  background-color: rgba(37, 99, 235, 0.15);
+  border-color: rgba(96, 165, 250, 0.3);
+}
+
+.markdown-body :deep(.md-view-link:hover) {
+  background-color: #dbeafe;
+}
+
+.markdown-body :deep(h1) {
+  font-size: 24px;
+  font-weight: 700;
+  margin-bottom: 20px;
+  padding-bottom: 10px;
+  border-bottom: 1px solid rgba(156, 163, 175, 0.25);
+}
+
+.markdown-body :deep(h2) {
+  font-size: 20px;
+  font-weight: 600;
+  margin-top: 28px;
+  margin-bottom: 14px;
+}
+
+.markdown-body :deep(h3) {
+  font-size: 17px;
+  font-weight: 600;
+  margin-top: 22px;
+  margin-bottom: 12px;
+}
+
+.markdown-body :deep(h4) {
+  font-size: 15px;
+  font-weight: 600;
+  margin-top: 18px;
+  margin-bottom: 10px;
+}
+
 .markdown-body :deep(p) {
   margin-bottom: 12px;
   line-height: 1.8;
@@ -392,9 +471,22 @@ watch(
   margin-bottom: 14px;
 }
 
+.markdown-body :deep(ol) {
+  list-style-type: decimal;
+}
+
+.markdown-body :deep(ul) {
+  list-style-type: disc;
+}
+
 .markdown-body :deep(li) {
+  display: list-item;
   margin-bottom: 6px;
   line-height: 1.7;
+}
+
+.markdown-body :deep(li > p) {
+  margin-bottom: 4px;
 }
 
 .markdown-body :deep(table) {
