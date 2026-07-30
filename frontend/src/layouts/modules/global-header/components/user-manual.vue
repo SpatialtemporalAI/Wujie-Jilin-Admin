@@ -42,98 +42,60 @@ const mdLinkMap: Record<string, string> = {
   '商户开放API接入文档.md': 'api'
 };
 
-/** 预处理 Markdown 内容，修复转义和列表问题 */
-function preprocessMarkdown(content: string): string {
-  let processed = content;
+/** 飞书导出 md 中的冗余转义清理 */
+function cleanFeishuEscapes(content: string): string {
+  // 1. 清理飞书导出中的冗余转义符
+  let processed = content.replace(/\\([\.\-|\+\*\~\!\[\]\(\)])/g, '$1');
 
-  // 1. 处理标题行中的转义点号（如 ### 3\.2\.1 → ### 3.2.1）
-  processed = processed.replace(/^(#{1,6}\s+)([\d\.\\]+)(\s.*)$/gm, (_match, prefix, numbers, suffix) => {
-    return prefix + numbers.replace(/\\\./g, '.') + suffix;
-  });
-
-  // 2. 处理图片和链接中的转义（alt text 和 href 都要处理）
-  processed = processed.replace(/(!?\[)([^\]]*?)(\]\()([^)]+)(\))/g, (_match, bang, alt, mid, href, end) => {
-    const cleanAlt = alt.replace(/\\\./g, '.');
-    const cleanHref = href.replace(/\\\./g, '.');
-    return bang + cleanAlt + mid + cleanHref + end;
-  });
+  // 2. 修复粗体后缺少空格：**text：**内容 → **text：** 内容（粗体内容以冒号结尾）
+  processed = processed.replace(/\*\*([^*]+?[:：])\*\*([^\s])/g, '**$1** $2');
 
   return processed;
 }
 
 /** 渲染 markdown，生成带 id 的标题 */
 function renderContent(docKey: string): string {
-  const content = preprocessMarkdown(docContents[docKey] || '');
+  const content = cleanFeishuEscapes(docContents[docKey] || '');
   let headingIndex = 0;
   const renderer = new marked.Renderer();
 
+  // 为标题生成 id，用于目录跳转
   renderer.heading = ({ text, depth }) => {
     const id = `heading-${headingIndex++}`;
-    const cleanText = text.replace(/\\\./g, '.');
-    return `<h${depth} id="${id}">${cleanText}</h${depth}>`;
+    return `<h${depth} id="${id}">${text}</h${depth}>`;
   };
 
+  // 处理链接：md 文件在页面内打开，视频渲染为 video 标签
   renderer.link = ({ href, title, text }) => {
-    // 检查是否为 md 文件链接（href 可能是 "图片和附件/机器人WIFI配网指南.md"）
+    // md 文件链接：在页面内切换文档
     if (href.endsWith('.md')) {
-      // 从路径中提取文件名
       const filename = href.split('/').pop() || '';
       const mdKey = mdLinkMap[filename];
       if (mdKey) {
         return `<span class="md-view-link" data-doc="${mdKey}" title="${title || ''}">📄 查看详情：${text}</span>`;
       }
     }
-    // 视频链接处理（支持带查询参数的 URL）
+    // 视频链接：渲染为 video 标签
     if (/\.mp4(\?|$)/.test(href)) {
-      // 远程 URL 直接使用，本地路径添加前缀
       const videoSrc = href.startsWith('http') ? href : `/manual-files/${href}`;
       return `<video controls style="max-width:100%;border-radius:8px;margin:12px 0;"><source src="${videoSrc}" type="video/mp4">您的浏览器不支持视频播放</video>`;
     }
+    // 其他链接：新窗口打开
     return `<a href="${href}" title="${title || ''}" target="_blank" rel="noopener noreferrer">${text}</a>`;
   };
 
+  // 图片路径处理：添加前缀
   renderer.image = ({ href, title, text }) => {
     return `<img src="/manual-files/${href}" alt="${text}" title="${title || ''}" style="max-width:100%;border-radius:6px;margin:12px 0;" />`;
   };
 
-  let html = marked.parse(content, { renderer, gfm: true, breaks: true }) as string;
-
-  // 后处理：确保粗体和斜体语法被正确转换（防止 marked 遗漏）
-  // 注意：只匹配文本内容中的粗体/斜体，避免破坏 URL 等属性
-  // 粗体：**text**（要求 text 不包含特殊字符）
-  html = html.replace(/\*\*([^*\n]+?)\*\*/g, (match, text) => {
-    // 跳过包含 URL 或 HTML 标签的情况
-    if (text.includes('http') || text.includes('<') || text.includes('>')) {
-      return match;
-    }
-    return `<strong>${text}</strong>`;
-  });
-  // 斜体：*text*（单星号，要求前后无星号）
-  html = html.replace(/(?<![<*])\*(?!\*)([^*\n]+?)\*(?![*>])/g, (match, text) => {
-    // 跳过包含 URL 或 HTML 标签的情况
-    if (text.includes('http') || text.includes('<') || text.includes('>')) {
-      return match;
-    }
-    return `<em>${text}</em>`;
-  });
-
-  // 兼容旧版 md 中直接出现的文件名
-  html = html.replace(/<strong>\[([^\]]+\.md)\]<\/strong>/g, (_match, filename: string) => {
-    const key = mdLinkMap[filename];
-    if (key) {
-      return `<span class="md-view-link" data-doc="${key}">📄 ${docTitles[key]}</span>`;
-    }
-    return `<strong>[${filename}]</strong>`;
-  });
-
-  return html;
+  return marked.parse(content, { renderer, gfm: true, breaks: true }) as string;
 }
 
 /** 从主手册提取标题树 */
 function extractHeadings(): HeadingItem[] {
   const headings: HeadingItem[] = [];
-  const processed = preprocessMarkdown(manualContent);
-  const lines = processed.split('\n');
+  const lines = cleanFeishuEscapes(manualContent).split('\n');
   const regex = /^(#{1,6})\s+(.+)$/;
   let index = 0;
 
