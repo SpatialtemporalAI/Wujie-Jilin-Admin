@@ -80,11 +80,14 @@ function renderContent(docKey: string): string {
       const filename = href.split('/').pop() || '';
       const mdKey = mdLinkMap[filename];
       if (mdKey) {
-        return `<span class="md-view-link" data-doc="${mdKey}" title="${title || ''}">📄 ${text}</span>`;
+        return `<span class="md-view-link" data-doc="${mdKey}" title="${title || ''}">📄 查看详情：${text}</span>`;
       }
     }
-    if (href.endsWith('.mp4')) {
-      return `<video controls style="max-width:100%;border-radius:8px;margin:12px 0;"><source src="/manual-files/${href}" type="video/mp4">您的浏览器不支持视频播放</video>`;
+    // 视频链接处理（支持带查询参数的 URL）
+    if (/\.mp4(\?|$)/.test(href)) {
+      // 远程 URL 直接使用，本地路径添加前缀
+      const videoSrc = href.startsWith('http') ? href : `/manual-files/${href}`;
+      return `<video controls style="max-width:100%;border-radius:8px;margin:12px 0;"><source src="${videoSrc}" type="video/mp4">您的浏览器不支持视频播放</video>`;
     }
     return `<a href="${href}" title="${title || ''}" target="_blank" rel="noopener noreferrer">${text}</a>`;
   };
@@ -96,12 +99,23 @@ function renderContent(docKey: string): string {
   let html = marked.parse(content, { renderer, gfm: true, breaks: true }) as string;
 
   // 后处理：确保粗体和斜体语法被正确转换（防止 marked 遗漏）
-  // 粗体：**text** 或 __text__
-  html = html.replace(/\*\*([^*_\n]+?)\*\*/g, '<strong>$1</strong>');
-  html = html.replace(/__([^*_\n]+?)__/g, '<strong>$1</strong>');
-  // 斜体：*text* 或 _text_（排除已处理的情况）
-  html = html.replace(/(?<!\*)\*(?!\*)([^*\n]+?)\*(?!\*)/g, '<em>$1</em>');
-  html = html.replace(/(?<!_)_(?!_)([^_\n]+?)_(?!_)/g, '<em>$1</em>');
+  // 注意：只匹配文本内容中的粗体/斜体，避免破坏 URL 等属性
+  // 粗体：**text**（要求 text 不包含特殊字符）
+  html = html.replace(/\*\*([^*\n]+?)\*\*/g, (match, text) => {
+    // 跳过包含 URL 或 HTML 标签的情况
+    if (text.includes('http') || text.includes('<') || text.includes('>')) {
+      return match;
+    }
+    return `<strong>${text}</strong>`;
+  });
+  // 斜体：*text*（单星号，要求前后无星号）
+  html = html.replace(/(?<![<*])\*(?!\*)([^*\n]+?)\*(?![*>])/g, (match, text) => {
+    // 跳过包含 URL 或 HTML 标签的情况
+    if (text.includes('http') || text.includes('<') || text.includes('>')) {
+      return match;
+    }
+    return `<em>${text}</em>`;
+  });
 
   // 兼容旧版 md 中直接出现的文件名
   html = html.replace(/<strong>\[([^\]]+\.md)\]<\/strong>/g, (_match, filename: string) => {
