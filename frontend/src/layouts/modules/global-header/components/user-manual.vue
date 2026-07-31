@@ -227,7 +227,7 @@ watch(
 <style scoped>
 .manual-container {
   display: flex;
-  height: 70vh;
+  height: 78vh;
   overflow: hidden;
 }
 
