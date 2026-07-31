@@ -4,9 +4,12 @@
 # start_prod.sh 方式：Gunicorn stdout/stderr 重定向到的单一日志
 /opt/smilex-cloud/backend/logs/smilex-cloud.log
 
-# systemd 方式：Gunicorn 直接写入的 access/error 日志
-/var/log/smilex_cloud/access.log
+# Python 应用日志（start_prod.sh 与 systemd 两种方式均写入此处，由 logging_prod.ini 的 FileHandler 落盘）
+/var/log/smilex_cloud/info.log
 /var/log/smilex_cloud/error.log
+
+# systemd 方式：Gunicorn 直接写入的 access 日志（error.log 由 gunicorn 与 Python 共用同名文件，见 deploy.sh 一致性检查）
+/var/log/smilex_cloud/access.log
 
 {
     daily

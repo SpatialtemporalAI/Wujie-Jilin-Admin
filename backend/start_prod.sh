@@ -25,6 +25,21 @@ LOG_DIR="${SCRIPT_DIR}/logs"
 PID_FILE="${PID_DIR}/${APP_NAME}.pid"
 LOG_FILE="${LOG_DIR}/${APP_NAME}.log"
 
+# Python 应用日志目录由 settings.LOG.DIR 决定（.env / .env.prod 的 LOG__DIR，后者覆盖前者）。
+# prod 默认指向 /var/log/smilex_cloud，与脚本内 LOG_DIR(=backend/logs) 不同，解析真实路径用于启动提示。
+APP_LOG_DIR="${LOG_DIR}"
+for _env in "${SCRIPT_DIR}/.env" "${SCRIPT_DIR}/.env.prod"; do
+    if [[ -f "${_env}" ]]; then
+        _parsed=$(grep -iE '^[[:space:]]*LOG__DIR[[:space:]]*=' "${_env}" | tail -1 \
+            | sed -E 's/^[[:space:]]*LOG__DIR[[:space:]]*=//; s/^[[:space:]]*//; s/[[:space:]]*$//; s/^"//; s/"$//')
+        [[ -n "${_parsed}" ]] && APP_LOG_DIR="${_parsed}"
+    fi
+done
+# 相对路径基于项目根（与 app_logging.py 解析规则一致）
+if [[ "${APP_LOG_DIR}" != /* ]]; then
+    APP_LOG_DIR="${SCRIPT_DIR}/${APP_LOG_DIR}"
+fi
+
 mkdir -p "${PID_DIR}"
 mkdir -p "${LOG_DIR}"
 
@@ -78,8 +93,8 @@ start() {
     if kill -0 "${PID}" 2>/dev/null; then
         echo "[SUCCESS] 启动成功 PID=${PID}"
         echo "[INFO] 日志文件(gunicorn): ${LOG_FILE}"
-        # info.log / error.log 由 logging_prod.ini 的 file handler 写入（同名约定，改 ini 需同步此行）
-        echo "[INFO] 日志文件(logging): ${LOG_DIR}/info.log, ${LOG_DIR}/error.log"
+        # info.log / error.log 由 logging_prod.ini 的 FileHandler 写入，实际目录见 APP_LOG_DIR（解析自 .env/.env.prod 的 LOG__DIR）
+        echo "[INFO] 日志文件(logging): ${APP_LOG_DIR}/info.log, ${APP_LOG_DIR}/error.log"
     else
         echo "[ERROR] 启动失败"
         exit 1

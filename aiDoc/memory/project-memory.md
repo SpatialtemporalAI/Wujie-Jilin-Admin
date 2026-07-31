@@ -8,6 +8,7 @@
 
 ## 业务需求记忆
 
+- [2026-07-31 唤醒词保存 gRPC 改为同时推 middleware + agent](./business/2026-07-31_voice-wake-word-dual-push.md) — notify_wake_word 由「只推 middleware」改为「并发双推 middleware + agent」并聚合响应；仅推已配置端、全成才算成功，失败入重试队列（重试双推、NotifyWakeWord 幂等）；service/retry/proto/前端零改动，仅改 config_client.py
 - [2026-07-28 唤醒词/语音合成测试推送改走机器人 agent](./business/2026-07-28_voice-test-push-to-agent.md) — test_wake_word(TestWakeWord)+test_tts(TestTTSConfig) 两个测试推送的 target 由 middleware 改为 agent；保存类 notify_wake_word/notify_tts 不动仍走 middleware（config_client.py）
 - [2026-07-24 运行监控 obstacle-square 高度被强制等于宽度（3×0.5→3×3）](./business/2026-07-24_operation-monitor-obstacle-size-sync-editor.md) — 运行监控创建分支对 obstacle-square 强制 height=width 且无 updatePositions 二次覆盖（编辑器有覆盖），真实 height 丢失；去掉 isSquare 强制改用真实 obj.height，配套对齐默认值/更新分支/编辑器兜底
 - [2026-07-21 语音配置 gRPC target 统一回归 middleware](./business/2026-07-21_voice-grpc-target-to-middleware.md) — 语音合成保存/测试(notify_tts/test_tts)+ 唤醒词测试(test_wake_word)的 target 由 agent 改为 middleware（config_client.py）
@@ -105,6 +106,8 @@
 - [2026-07-10 商户开放 API 新增机器人列表查询接口](./business/2026-07-10_openapi-robots-list.md) — 新增 POST /openapi/v1/robots，返回当前商户绑定机器人的 id/name/sn
 - [2026-07-10 机器人事件日志状态标签与实时告警调整](./business/2026-07-10_robot-event-log-status-labels.md) — 事件日志去掉事件类型列，状态改为严重故障/告警提示/正常恢复三色标签；实时告警仅展示选中机器人最新 10 条
 - [2026-07-10 本地 .log 日志按日期滚动](./business/2026-07-10_log-date-rolling.md) — start_prod.sh 的 Gunicorn 日志通过 logrotate + copytruncate 按天滚动，归档文件名为 smilex-cloud-YYYY-MM-DD.log
+- [2026-07-30 多 worker 下 info.log 不滚动修复](./business/2026-07-10_log-date-rolling.md) — logging_prod.ini 的 TimedRotatingFileHandler 在 gunicorn -w 4 多 worker 下并发 doRollover 互相覆盖归档；改 FileHandler + logrotate 覆盖 info.log（copytruncate 多进程可靠）；start_prod.sh 解析 LOG__DIR 提示真实路径；deploy.sh 加 LOG__DIR 一致性校验
+- [2026-07-31 deploy.sh 部署流程修复](./business/2026-07-31_deploy-script-fix.md) — 配置内联进脚本（去掉 source deploy.env）；git 操作统一 cd PROJECT_DIR；setup/deploy/rollback 加 git submodule update --init --recursive（backend/database、backend/grpc 是 submodule）；alembic 改在 backend/database 执行（alembic.ini 在此）
 - [2026-07-13 gRPC 重试任务置 dead 时 next_retry_at 不能置 NULL](./business/2026-07-13_grpc-retry-dead-next-retry-not-null.md) — `_advance_fields` dead 分支删 `next_retry_at = None`（NOT NULL 列置空致 commit 抛 IntegrityError、任务每分钟卡死标不了 dead）；dead 行靠 status 过滤排除，无需 schema/迁移
 - [2026-07-14 getPermissions 路由/按钮查询补软删除过滤](./business/2026-07-14_route-getpermissions-soft-delete-filter.md) — `get_user_routes` 5 处补 `deleted_at.is_(None)`；软删菜单/按钮不再进权限；按钮缺失多为 sys_role_menu 未显式分配（不继承父菜单）
 - [2026-07-14 用户密码长度统一限定 6-20 字符](./business/2026-07-14_user-password-length-6-20.md) — 改密 new_password max_length 100→20 修复 422；前端改密规则补 max:20 + 4 个密码 NInput 加 :maxlength=20；登录密码字段不动
