@@ -92,7 +92,7 @@ async function loadSceneList() {
       start_point_x = data?.records[0]?.start_point_x;
       start_point_y = data?.records[0]?.start_point_y;
     }
-  } catch {}
+  } catch { }
 }
 function updateMinimap() {
   if (!fabricCanvas) return;
@@ -194,8 +194,10 @@ const POINT_MARKER_SCALE = 0.8;
 const ANN_RADIUS = 8 * POINT_MARKER_SCALE;
 const ANN_RADIUS_SELECTED = 10 * POINT_MARKER_SCALE;
 // 点位名称：字号与距圆心的垂直偏移
-const ANN_LABEL_FONT_SIZE = 10 * POINT_MARKER_SCALE;
+const ANN_LABEL_FONT_SIZE = 12 * POINT_MARKER_SCALE;
 const ANN_LABEL_OFFSET = 18 * POINT_MARKER_SCALE;
+// 障碍物/禁行区域/电子围栏名称标签字号（不随 POINT_MARKER_SCALE 收缩，保持 12px）
+const OBJECT_LABEL_FONT_SIZE = 12;
 // 机器人实时位置圆形半径与名称字号
 const ROBOT_RADIUS = 9 * POINT_MARKER_SCALE;
 const ROBOT_LABEL_FONT_SIZE = 11 * POINT_MARKER_SCALE;
@@ -384,7 +386,7 @@ function syncStructure() {
     const isFence = obj.type === 'fence' || obj.type === '电子围栏';
     const fillColor: any = isRestricted ? getRestrictedPattern() : isFence ? FENCE_FILL : OBSTACLE_FILL;
     const strokeColor = isRestricted ? RESTRICTED_STROKE : isFence ? FENCE_STROKE : OBSTACLE_STROKE;
-    const strokeWidth = isFence ? 3 : 2;
+    const baseStrokeWidth = isFence ? 3 : 2;
     const commonOpts = {
       left: obj.x,
       top: obj.y,
@@ -393,8 +395,14 @@ function syncStructure() {
       angle: obj.angle ?? 0,
       fill: fillColor,
       stroke: strokeColor,
-      strokeWidth,
-      hasControls: true
+      strokeWidth: baseStrokeWidth,
+      hasControls: true,
+      // 边框宽度按屏幕像素渲染，不随图形/视口缩放变化
+      strokeUniform: true,
+      // 禁用对象缓存，确保 strokeUniform 在缩放过程中实时生效，
+      // 避免缓存拉伸导致边框先变粗后恢复
+      objectCaching: false,
+      noScaleCache: true
     };
 
     let fabricObj: any = null;
@@ -440,9 +448,9 @@ function syncStructure() {
       fabricCanvas.add(fabricObj);
       elementMap.set(key, fabricObj);
 
-      // 名称标签（不可交互，跟随图形位置，字体大小与接待点保持一致）
+      // 名称标签（不可交互，跟随图形位置，字体大小与接待点保持一致并再放大两个像素）
       const labelText = new Text(obj.name || '', {
-        fontSize: ANN_LABEL_FONT_SIZE,
+        fontSize: OBJECT_LABEL_FONT_SIZE,
         fill: strokeColor,
         originX: 'center',
         originY: 'center',
@@ -705,19 +713,19 @@ function renderRobots() {
     // 方向箭头（与点位同一 ROS 弧度 → Fabric 变换）；无角度时不渲染
     const arrow = arrowTransform
       ? new Triangle({
-          width: ARROW_WIDTH,
-          height: ARROW_HEIGHT,
-          fill: ROBOT_FILL,
-          originX: 'center',
-          originY: 'center',
-          left: arrowTransform.x,
-          top: arrowTransform.y,
-          angle: arrowTransform.angle,
-          selectable: false,
-          evented: false,
-          hoverCursor: 'default',
-          excludeFromExport: true
-        })
+        width: ARROW_WIDTH,
+        height: ARROW_HEIGHT,
+        fill: ROBOT_FILL,
+        originX: 'center',
+        originY: 'center',
+        left: arrowTransform.x,
+        top: arrowTransform.y,
+        angle: arrowTransform.angle,
+        selectable: false,
+        evented: false,
+        hoverCursor: 'default',
+        excludeFromExport: true
+      })
       : null;
     const label = new Text(labelText, {
       fontSize: ROBOT_LABEL_FONT_SIZE,
@@ -1183,11 +1191,13 @@ function handleObjectModifiedied(opt: any) {
       updates.width = newRx * 2;
       updates.height = newRy * 2;
     } else if (obj instanceof Polygon) {
-      // 多边形禁区：clamp scale，不修改 points
-      const sx = Math.max(MIN_OBJECT_SIZE / (obj.width || 1), obj.scaleX ?? 1);
-      const sy = Math.max(MIN_OBJECT_SIZE / (obj.height || 1), obj.scaleY ?? 1);
+      // 多边形禁区：scale 保留在 fabric 对象上，不归一化（points 不动），
+      // 仅保证最小可视尺寸
+      const minSx = MIN_OBJECT_SIZE / (obj.width || 1);
+      const minSy = MIN_OBJECT_SIZE / (obj.height || 1);
+      const sx = Math.max(minSx, obj.scaleX ?? 1);
+      const sy = Math.max(minSy, obj.scaleY ?? 1);
       obj.set({ scaleX: sx, scaleY: sy });
-      // scale 保留在 fabric 对象上，不归一化（points 不动）
     } else {
       // Rect / Triangle：归一化 scale 到 width/height
       const newW = Math.max(MIN_OBJECT_SIZE, (obj.width ?? 1) * (obj.scaleX ?? 1));
@@ -1587,10 +1597,8 @@ defineExpose({ exportCanvas, zoomIn, zoomOut, zoomReset, locatePixelPoint });
     <canvas ref="canvasEl" />
 
     <!-- Legend -->
-    <div
-      v-if="editorData"
-      class="absolute left-12px top-12px z-10 flex flex-col gap-6px rounded-lg bg-white/90 px-12px py-8px text-xs shadow-md"
-    >
+    <div v-if="editorData"
+      class="absolute left-12px top-12px z-10 flex flex-col gap-6px rounded-lg bg-white/90 px-12px py-8px text-xs shadow-md">
       <div class="max-w-180px truncate text-sm text-gray-700 font-medium">{{ editorData.map.name }}</div>
       <div class="my-2px h-1px bg-gray-200"></div>
       <div class="flex items-center gap-6px">
@@ -1615,28 +1623,21 @@ defineExpose({ exportCanvas, zoomIn, zoomOut, zoomReset, locatePixelPoint });
         <span>机器人位置</span>
       </div>
       <div class="flex items-center gap-6px">
-        <span
-          class="inline-block h-10px w-10px"
-          style="background-color: rgba(59, 130, 246, 0.3); border: 1px solid #3b82f6"
-        ></span>
+        <span class="inline-block h-10px w-10px"
+          style="background-color: rgba(59, 130, 246, 0.3); border: 1px solid #3b82f6"></span>
         <span>障碍物</span>
       </div>
       <div class="flex items-center gap-6px">
-        <span
-          class="inline-block h-10px w-10px"
-          style="
+        <span class="inline-block h-10px w-10px" style="
             background-image: linear-gradient(135deg, transparent 45%, #6b7280 45%, #6b7280 55%, transparent 55%);
             background-color: rgba(107, 114, 128, 0.12);
             border: 1px solid #6b7280;
-          "
-        ></span>
+          "></span>
         <span>禁行区域/虚拟墙</span>
       </div>
       <div class="flex items-center gap-6px">
-        <span
-          class="inline-block h-10px w-10px"
-          style="background-color: rgba(239, 68, 68, 0.15); border: 2px solid #ef4444"
-        ></span>
+        <span class="inline-block h-10px w-10px"
+          style="background-color: rgba(239, 68, 68, 0.15); border: 2px solid #ef4444"></span>
         <span>电子围栏</span>
       </div>
     </div>
@@ -1648,82 +1649,55 @@ defineExpose({ exportCanvas, zoomIn, zoomOut, zoomReset, locatePixelPoint });
     </div>
 
     <!-- Zoom slider control -->
-    <div
-      v-if="editorData"
-      class="absolute right-12px top-12px z-10 flex flex-col items-center gap-4px rounded-lg bg-white/90 px-6px py-8px shadow-md"
-    >
+    <div v-if="editorData"
+      class="absolute right-12px top-12px z-10 flex flex-col items-center gap-4px rounded-lg bg-white/90 px-6px py-8px shadow-md">
       <button
         class="h-24px w-24px flex items-center justify-center rounded-full text-sm text-blue-500 font-bold transition-colors hover:bg-blue-50"
-        @click="zoomIn"
-      >
+        @click="zoomIn">
         +
       </button>
-      <NSlider
-        v-model:value="sliderZoomValue"
-        vertical
-        :min="0"
-        :max="100"
-        :step="1"
-        :tooltip="false"
-        :theme-overrides="sliderThemeOverrides"
-        class="!h-160px"
-        @update:value="handleSliderZoom"
-      />
+      <NSlider v-model:value="sliderZoomValue" vertical :min="0" :max="100" :step="1" :tooltip="false"
+        :theme-overrides="sliderThemeOverrides" class="!h-160px" @update:value="handleSliderZoom" />
       <button
         class="h-24px w-24px flex items-center justify-center rounded-full text-sm text-blue-500 font-bold transition-colors hover:bg-blue-50"
-        @click="zoomOut"
-      >
+        @click="zoomOut">
         -
       </button>
       <div class="text-xs text-gray-500">{{ Math.round(currentZoom * 100) }}%</div>
     </div>
 
     <!-- Cursor coordinates (placed above minimap) -->
-    <div
-      v-if="editorData"
-      class="absolute left-12px z-10 rounded bg-black/50 px-8px py-4px text-xs text-white"
-      :style="{ bottom: minimapImageUrl ? `${MINIMAP_SIZE + 24}px` : '12px' }"
-    >
+    <div v-if="editorData" class="absolute left-12px z-10 rounded bg-black/50 px-8px py-4px text-xs text-white"
+      :style="{ bottom: minimapImageUrl ? `${MINIMAP_SIZE + 24}px` : '12px' }">
       坐标: {{ cursorWorldX.toFixed(2) }}m, {{ cursorWorldY.toFixed(2) }}m
     </div>
 
     <!-- Minimap navigator -->
-    <div
-      v-if="editorData && minimapImageUrl"
-      ref="minimapEl"
+    <div v-if="editorData && minimapImageUrl" ref="minimapEl"
       class="absolute bottom-12px left-12px z-10 cursor-pointer overflow-hidden border border-gray-300 rounded-lg bg-white shadow-md"
-      :style="{ width: `${MINIMAP_SIZE}px`, height: `${MINIMAP_SIZE}px` }"
-      @mousedown="handleMinimapDown"
-      @mousemove="handleMinimapMove"
-      @mouseup="handleMinimapUp"
-      @mouseleave="handleMinimapUp"
-    >
-      <img
-        :src="minimapImageUrl"
-        :style="{
-          position: 'absolute',
-          left: `${minimapScale.ox}px`,
-          top: `${minimapScale.oy}px`,
-          width: `${minimapScale.w}px`,
-          height: `${minimapScale.h}px`,
-          objectFit: 'fill',
-          pointerEvents: 'none'
-        }"
-      />
+      :style="{ width: `${MINIMAP_SIZE}px`, height: `${MINIMAP_SIZE}px` }" @mousedown="handleMinimapDown"
+      @mousemove="handleMinimapMove" @mouseup="handleMinimapUp" @mouseleave="handleMinimapUp">
+      <img :src="minimapImageUrl" :style="{
+        position: 'absolute',
+        left: `${minimapScale.ox}px`,
+        top: `${minimapScale.oy}px`,
+        width: `${minimapScale.w}px`,
+        height: `${minimapScale.h}px`,
+        objectFit: 'fill',
+        pointerEvents: 'none'
+      }" />
       <!-- Viewport rect: blue border + massive box-shadow as outer mask -->
-      <div
-        :style="{
-          position: 'absolute',
-          left: `${minimapRect.x}px`,
-          top: `${minimapRect.y}px`,
-          width: `${minimapRect.w}px`,
-          height: `${minimapRect.h}px`,
-          border: '2px solid #3b82f6',
-          backgroundColor: 'transparent',
-          boxShadow: '0 0 0 9999px rgba(0, 0, 0, 0.45)',
-          pointerEvents: 'none'
-        }"
-      />
+      <div :style="{
+        position: 'absolute',
+        left: `${minimapRect.x}px`,
+        top: `${minimapRect.y}px`,
+        width: `${minimapRect.w}px`,
+        height: `${minimapRect.h}px`,
+        border: '2px solid #3b82f6',
+        backgroundColor: 'transparent',
+        boxShadow: '0 0 0 9999px rgba(0, 0, 0, 0.45)',
+        pointerEvents: 'none'
+      }" />
     </div>
   </div>
 </template>

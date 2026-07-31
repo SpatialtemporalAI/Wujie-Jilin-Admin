@@ -33,3 +33,6 @@ package-lock.json
 yarn.lock
 
 .VSCodeCounter
+
+# Media files
+*.mp4

@@ -37,6 +37,13 @@ const ANN_RADIUS = 8;
 const ARROW_WIDTH = 6;
 const ARROW_HEIGHT = 8;
 const ANN_LABEL_OFFSET = 18;
+// 点位名称字号（与地图编辑器保持一致）
+const ANN_LABEL_FONT_SIZE = 12;
+// 障碍物/禁行区域/电子围栏名称标签字号（比接待点再放大两个像素）
+const OBJECT_LABEL_FONT_SIZE = 12;
+// 障碍物/禁行区域/电子围栏边框宽度（屏幕像素，不随缩放变化）
+const OBSTACLE_STROKE_WIDTH = 2;
+const FENCE_STROKE_WIDTH = 3;
 // 机器人实时位置标记（红色圆点，与地图编辑器/图例保持一致）
 const ROBOT_FILL = '#ef4444';
 const ROBOT_STROKE = '#ffffff';
@@ -223,7 +230,7 @@ function syncObjectLabel(objId: number, fabricObj: any, name: string | null | un
   const inv = zoom > 0 ? 1 / zoom : 1;
   if (!label) {
     label = new Text(trimmed, {
-      fontSize: 10,
+      fontSize: OBJECT_LABEL_FONT_SIZE,
       fill: strokeColor,
       originX: 'center',
       originY: 'center',
@@ -333,7 +340,7 @@ function renderElements() {
       text.set({ text: ann.name, fill: color, left: ann.x, top: ann.y + ANN_LABEL_OFFSET });
     } else {
       const text = new Text(ann.name, {
-        fontSize: 10,
+        fontSize: ANN_LABEL_FONT_SIZE,
         fill: color,
         originX: 'center',
         originY: 'center',
@@ -356,7 +363,7 @@ function renderElements() {
     const isFence = obj.type === 'fence' || obj.type === '电子围栏';
     const fill = isRestricted ? getRestrictedPattern() : isFence ? FENCE_FILL : OBSTACLE_FILL;
     const stroke = isRestricted ? RESTRICTED_STROKE : isFence ? FENCE_STROKE : OBSTACLE_STROKE;
-    const strokeWidth = isFence ? 3 : 2;
+    const strokeWidth = isFence ? FENCE_STROKE_WIDTH : OBSTACLE_STROKE_WIDTH;
     if (elementMap.has(key)) {
       const fabricObj = elementMap.get(key);
       fabricObj.set({ left: obj.x, top: obj.y, angle: obj.angle ?? 0 });
@@ -382,7 +389,11 @@ function renderElements() {
         angle: obj.angle ?? 0,
         fill,
         stroke,
-        strokeWidth
+        strokeWidth,
+        strokeUniform: true,
+        // 禁用对象缓存，确保 strokeUniform 在缩放过程中实时生效
+        objectCaching: false,
+        noScaleCache: true
       };
       // 兜底默认值对齐地图编辑器 syncStructure；但矩形 height 一律用真实 obj.height，
       // 不照搬 obstacle-square 的 height=width 强制（见下方 else 注释）。
@@ -766,10 +777,8 @@ onBeforeUnmount(() => {
     </NSpin>
 
     <!-- 图例（与地图编辑器保持一致） -->
-    <div
-      v-if="mapData"
-      class="absolute left-12px top-12px z-10 flex flex-col gap-6px rounded-lg bg-white/90 px-12px py-8px text-xs shadow-md"
-    >
+    <div v-if="mapData"
+      class="absolute left-12px top-12px z-10 flex flex-col gap-6px rounded-lg bg-white/90 px-12px py-8px text-xs shadow-md">
       <div class="max-w-180px truncate text-sm text-gray-700 font-medium">{{ mapData.map.name }}</div>
       <div class="my-2px h-1px bg-gray-200"></div>
       <div class="flex items-center gap-6px">
@@ -794,58 +803,38 @@ onBeforeUnmount(() => {
         <span>机器人位置</span>
       </div>
       <div class="flex items-center gap-6px">
-        <span
-          class="inline-block h-10px w-10px"
-          style="background-color: rgba(59, 130, 246, 0.3); border: 1px solid #3b82f6"
-        ></span>
+        <span class="inline-block h-10px w-10px"
+          style="background-color: rgba(59, 130, 246, 0.3); border: 1px solid #3b82f6"></span>
         <span>障碍物</span>
       </div>
       <div class="flex items-center gap-6px">
-        <span
-          class="inline-block h-10px w-10px"
-          style="
+        <span class="inline-block h-10px w-10px" style="
             background-image: linear-gradient(135deg, transparent 45%, #6b7280 45%, #6b7280 55%, transparent 55%);
             background-color: rgba(107, 114, 128, 0.12);
             border: 1px solid #6b7280;
-          "
-        ></span>
+          "></span>
         <span>禁行区域/虚拟墙</span>
       </div>
       <div class="flex items-center gap-6px">
-        <span
-          class="inline-block h-10px w-10px"
-          style="background-color: rgba(239, 68, 68, 0.15); border: 2px solid #ef4444"
-        ></span>
+        <span class="inline-block h-10px w-10px"
+          style="background-color: rgba(239, 68, 68, 0.15); border: 2px solid #ef4444"></span>
         <span>电子围栏</span>
       </div>
     </div>
 
     <!-- 缩放控制（与地图编辑器保持一致） -->
-    <div
-      v-if="mapData"
-      class="absolute right-12px top-12px z-10 flex flex-col items-center gap-4px rounded-lg bg-white/90 px-6px py-8px shadow-md"
-    >
+    <div v-if="mapData"
+      class="absolute right-12px top-12px z-10 flex flex-col items-center gap-4px rounded-lg bg-white/90 px-6px py-8px shadow-md">
       <button
         class="h-24px w-24px flex items-center justify-center rounded-full text-sm text-blue-500 font-bold transition-colors hover:bg-blue-50"
-        @click="zoomIn"
-      >
+        @click="zoomIn">
         +
       </button>
-      <NSlider
-        v-model:value="sliderZoomValue"
-        vertical
-        :min="0"
-        :max="100"
-        :step="1"
-        :tooltip="false"
-        :theme-overrides="sliderThemeOverrides"
-        class="!h-160px"
-        @update:value="handleSliderZoom"
-      />
+      <NSlider v-model:value="sliderZoomValue" vertical :min="0" :max="100" :step="1" :tooltip="false"
+        :theme-overrides="sliderThemeOverrides" class="!h-160px" @update:value="handleSliderZoom" />
       <button
         class="h-24px w-24px flex items-center justify-center rounded-full text-sm text-blue-500 font-bold transition-colors hover:bg-blue-50"
-        @click="zoomOut"
-      >
+        @click="zoomOut">
         -
       </button>
       <div class="cursor-pointer text-xs text-gray-500" title="点击重置缩放" @click="zoomReset">
