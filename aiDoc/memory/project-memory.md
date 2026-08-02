@@ -8,6 +8,7 @@
 
 ## 业务需求记忆
 
+- [2026-08-02 机器人配置类 gRPC 推送 1s 内重复·前后端双重防重](./business/2026-08-02_grpc-config-push-1s-dedup.md) — 实时推送无去重门 + 前端保存按钮双击竞态致 1s 内重复推送；后端新增 modules/grpc/push_dedup.py（进程内 1s TTL，键=方法+机器人+载荷哈希，只压字节级相同重复）接入 _push_with_retry 兜底；前端 voice/speed/battery 三个 handler 改顶层互斥锁（saving 标志前置于任何 await）。仅限配置类，地图/任务同结构待后续复用
 - [2026-07-31 唤醒词保存 gRPC 改为同时推 middleware + agent](./business/2026-07-31_voice-wake-word-dual-push.md) — notify_wake_word 由「只推 middleware」改为「并发双推 middleware + agent」并聚合响应；仅推已配置端、全成才算成功，失败入重试队列（重试双推、NotifyWakeWord 幂等）；service/retry/proto/前端零改动，仅改 config_client.py
 - [2026-07-28 唤醒词/语音合成测试推送改走机器人 agent](./business/2026-07-28_voice-test-push-to-agent.md) — test_wake_word(TestWakeWord)+test_tts(TestTTSConfig) 两个测试推送的 target 由 middleware 改为 agent；保存类 notify_wake_word/notify_tts 不动仍走 middleware（config_client.py）
 - [2026-07-24 运行监控 obstacle-square 高度被强制等于宽度（3×0.5→3×3）](./business/2026-07-24_operation-monitor-obstacle-size-sync-editor.md) — 运行监控创建分支对 obstacle-square 强制 height=width 且无 updatePositions 二次覆盖（编辑器有覆盖），真实 height 丢失；去掉 isSquare 强制改用真实 obj.height，配套对齐默认值/更新分支/编辑器兜底
