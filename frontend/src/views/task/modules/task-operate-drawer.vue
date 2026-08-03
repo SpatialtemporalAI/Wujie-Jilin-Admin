@@ -505,7 +505,7 @@ onMounted(() => {
           <NInput v-model:value="model.name" placeholder="请输入任务名称（2-20字）" :maxlength="20" show-count />
         </NFormItemGi>
         <NFormItemGi :span="2" label="任务类型" path="task_type">
-          <NRadioGroup :value="model.task_type" @update:value="handleTaskTypeChange">
+          <NRadioGroup :value="model.task_type" @update:value="handleTaskTypeChange" :disabled="operateType === 'edit'">
             <NRadioButton v-for="opt in taskTypeOptions" :key="opt.value" :value="opt.value" :label="opt.label" />
           </NRadioGroup>
         </NFormItemGi>
