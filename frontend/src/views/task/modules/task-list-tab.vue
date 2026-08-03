@@ -12,6 +12,7 @@ import { useAppStore } from '@/store/modules/app';
 import { defaultTransform, useNaivePaginatedTable, useTableOperate } from '@/hooks/common/table';
 import { useAuth } from '@/hooks/business/auth';
 import { enableStatusToBoolean } from '@/utils/status';
+import { jsonClone } from '@sa/utils';
 import { $t } from '@/locales';
 import TaskSearch from './task-search.vue';
 import TaskOperateDrawer from './task-operate-drawer.vue';
@@ -177,7 +178,7 @@ const { columns, columnChecks, data, getData, getDataByPage, loading, mobilePagi
       key: 'operate',
       title: $t('common.operate'),
       align: 'center',
-      width: 320,
+      width: 380,
       fixed: 'right',
       render: row => {
         const pausableCount = row.active_execution_count || 0;
@@ -214,6 +215,11 @@ const { columns, columnChecks, data, getData, getDataByPage, loading, mobilePagi
                 {$t('common.edit')}
               </NButton>
             )}
+            {hasAuth('task:add') && (
+              <NButton size="small" ghost onClick={() => handleCopy(row.id)}>
+                复制
+              </NButton>
+            )}
             {hasAuth('task:edit') && (
               <NButton size="small" ghost onClick={() => handleToggleEnabled(row)}>
                 {row.enabled ? '禁用' : '启用'}
@@ -238,11 +244,16 @@ const { columns, columnChecks, data, getData, getDataByPage, loading, mobilePagi
   ]
 });
 
-const { drawerVisible, operateType, editingData, handleAdd, handleEdit, checkedRowKeys, onDeleted } = useTableOperate(
-  data,
-  'id',
-  getData
-);
+const { drawerVisible, openDrawer, operateType, editingData, handleAdd, handleEdit, checkedRowKeys, onDeleted } =
+  useTableOperate<Api.Task.Task, 'copy'>(data, 'id', getData);
+
+/** 复制任务：以源任务数据预填弹窗，提交时因 operateType !== 'edit' 自动命中新增接口 */
+function handleCopy(id: number) {
+  operateType.value = 'copy';
+  const findItem = data.value.find(item => item.id === id) || null;
+  editingData.value = jsonClone(findItem);
+  openDrawer();
+}
 
 async function handleDelete(id: number) {
   try {
@@ -335,7 +346,7 @@ onUnmounted(stopPolling);
       :data="data"
       size="small"
       :flex-height="!appStore.isMobile"
-      :scroll-x="1300"
+      :scroll-x="1360"
       :loading="loading"
       remote
       :row-key="(row: Api.Task.Task) => row.id"

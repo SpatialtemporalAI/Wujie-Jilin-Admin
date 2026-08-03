@@ -8,6 +8,8 @@
 
 ## 业务需求记忆
 
+- [2026-08-03 任务列表新增「复制」按钮](./business/2026-08-03_task-copy.md) — 行内复制按钮打开新增弹窗并回填源任务业务字段（排除 id/时间）；后端零改动复用 fetchCreateTask；不污染全局类型，改把 useTableOperate 泛型化（ExtraOperate）+ task 本地 handleCopy + drawer props 接受 'copy'；复用 handleSubmit 的 isEdit 分支自动命中新增
+- [2026-08-03 保存地图 gRPC 推送由串行改为有界并发](./business/2026-08-03_map-save-push-concurrent.md) — _notify_map_saved 原串行下发耗时随机器人数线性放大；抽出 _push_map_to_one 每机器人独立 session（AsyncSession 不可跨任务共享）+ Semaphore(16) + asyncio.gather 并发；map_info 只读共享、notify_map_saved_one 并发安全；前端无改动
 - [2026-08-02 机器人配置类 gRPC 推送 1s 内重复·前后端双重防重](./business/2026-08-02_grpc-config-push-1s-dedup.md) — 实时推送无去重门 + 前端保存按钮双击竞态致 1s 内重复推送；后端新增 modules/grpc/push_dedup.py（进程内 1s TTL，键=方法+机器人+载荷哈希，只压字节级相同重复）接入 _push_with_retry 兜底；前端 voice/speed/battery 三个 handler 改顶层互斥锁（saving 标志前置于任何 await）。仅限配置类，地图/任务同结构待后续复用
 - [2026-07-31 唤醒词保存 gRPC 改为同时推 middleware + agent](./business/2026-07-31_voice-wake-word-dual-push.md) — notify_wake_word 由「只推 middleware」改为「并发双推 middleware + agent」并聚合响应；仅推已配置端、全成才算成功，失败入重试队列（重试双推、NotifyWakeWord 幂等）；service/retry/proto/前端零改动，仅改 config_client.py
 - [2026-07-28 唤醒词/语音合成测试推送改走机器人 agent](./business/2026-07-28_voice-test-push-to-agent.md) — test_wake_word(TestWakeWord)+test_tts(TestTTSConfig) 两个测试推送的 target 由 middleware 改为 agent；保存类 notify_wake_word/notify_tts 不动仍走 middleware（config_client.py）

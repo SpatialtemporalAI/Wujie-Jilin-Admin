@@ -305,6 +305,7 @@
 - **前端源头**：`settings` 下 voice / speed / battery 三个保存 handler 用顶层互斥（`if (saving.value) return` → 立即 `saving.value = true` → try/finally 释放），锁先于任何 await 置位，挡双击。
 - `grpc_status` 取值不变：`synced` / `pending_retry` / `disabled`；前端按现有文案映射，无需改类型。地图保存 / 任务广播 / 切换地图暂未接入去重门，结构类似可后续复用。
 - **超时对齐**：实时 RPC 单次超时 `settings.GRPC.TIMEOUT_SECONDS=30s`（默认 + `.env.prod`/`.env.test`）；前端 `robot-config.ts` 触发 gRPC 的 5 个接口（语音保存/测试、速度、电量）用 `timeout: ROBOT_CONFIG_GRPC_TIMEOUT_MS(30s)` 覆盖全局默认 10s，避免前端先于后端 RPC 超时。其余接口仍走全局 10s。
+- **地图保存推送并发**：`SceneMapNavImageService._notify_map_saved` 用 `asyncio.gather + Semaphore(16)` 并发下发，每机器人独立 db session（`_push_map_to_one`，AsyncSession 不可跨任务共享）。仍是「广播全部启用 middleware/agent 的机器人」；同一机器人配两端会收到两次（不同服务地址，设计内）。地图保存为后台 `asyncio.create_task` 即发即忘，并发只影响设备收图延迟。
 
 ## 完成前检查清单
 

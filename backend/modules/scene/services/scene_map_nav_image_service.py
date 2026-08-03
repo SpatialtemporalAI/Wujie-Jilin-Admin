@@ -23,6 +23,9 @@ OBSTACLE_TYPES = {"obstacle-circle", "obstacle-square", "obstacle-triangle"}
 RESTRICTED_TYPES = {"restricted", "禁区"}
 FENCE_TYPES = {"fence", "电子围栏"}
 
+# NotifyMapSaved 并发下发上限：每机器人独立 db session，限流防连接池 / gRPC channel 打爆
+_MAX_CONCURRENT_MAP_PUSH = 16
+
 
 class SceneMapNavImageService:
     """导航地图图片生成服务"""
@@ -126,9 +129,7 @@ class SceneMapNavImageService:
 
         from database.models.business.scene_map_annotation import SceneMapAnnotation
         from modules.grpc.addr_provider import get_config_addr_provider
-        from modules.grpc.client import MapServiceClient
         from modules.grpc.converter import scene_map_to_map_info
-        from modules.grpc.retry_service import GrpcRetryService
         from modules.admin.services.sys.file_service import FileService
 
         # 直接查 map 主表，不再用 selectinload(annotations)。
@@ -168,78 +169,111 @@ class SceneMapNavImageService:
 
         map_id = fresh.id
         version = fresh.version or 0
-        # 每个目标机器人逐个下发：覆盖旧 pending → 在线判断 → 推送 / 入队
+        # 收集所有 (target, robot_id, addr)：广播给全部启用 middleware/agent 的机器人
         # （map_info 只构造一次，所有 target/robot 复用）
+        push_list: list[tuple[str, int, str]] = []
         for target in ("middleware", "agent"):
-            targets = await get_config_addr_provider().find_addrs_by_target(target)
-            for robot_id, addr in targets:
-                try:
-                    # 覆盖：取消同 (robot, map) 的旧 pending（旧 GRPC 不再补推）
-                    await GrpcRetryService.cancel_superseded(
-                        db,
+            for robot_id, addr in await get_config_addr_provider().find_addrs_by_target(
+                target
+            ):
+                push_list.append((target, robot_id, addr))
+
+        if not push_list:
+            return
+
+        # 并发下发：每个机器人开独立 db session（AsyncSession 不可跨任务共享），
+        # Semaphore 限流防止机器人过多时打爆 DB 连接池 / gRPC channel。
+        # 单机器人失败仅记日志、不影响其他（_push_map_to_one 内部兜底）。
+        sem = asyncio.Semaphore(_MAX_CONCURRENT_MAP_PUSH)
+
+        async def _bounded(t: str, r: int, a: str) -> None:
+            async with sem:
+                await SceneMapNavImageService._push_map_to_one(
+                    map_info, map_id, version, t, r, a
+                )
+
+        await asyncio.gather(*[_bounded(t, r, a) for t, r, a in push_list])
+
+    @staticmethod
+    async def _push_map_to_one(
+        map_info,
+        map_id: int,
+        version: int,
+        target: str,
+        robot_id: int,
+        addr: str,
+    ) -> None:
+        """单机器人下发 NotifyMapSaved（独立 db session，可并发调用）。
+
+        AsyncSession 不可跨任务并发共享，故每个机器人各自开 session，
+        与 _notify_map_saved 的广播 gather 配合。单机失败（含 RPC 异常）仅记日志，
+        不影响其他机器人（与原串行语义一致）。
+        """
+        from database.manager.async_manager import async_db_manager
+        from modules.grpc.client import MapServiceClient
+        from modules.grpc.retry_service import GrpcRetryService
+
+        payload = {"robot_id": robot_id, "map_id": map_id, "version": version}
+        try:
+            # 1. 覆盖旧 pending + 在线判断（需要 db，独立 session）
+            async with async_db_manager.get_session_cr() as push_db:
+                await GrpcRetryService.cancel_superseded(
+                    push_db,
+                    service_name="map",
+                    method_name="NotifyMapSaved",
+                    robot_id=robot_id,
+                    map_id=map_id,
+                )
+                # 离线：直接入队，等上线后定时重试
+                if not await GrpcRetryService.is_robot_online(push_db, robot_id):
+                    await GrpcRetryService.save_pending(
+                        push_db,
                         service_name="map",
                         method_name="NotifyMapSaved",
+                        payload=payload,
                         robot_id=robot_id,
                         map_id=map_id,
+                        last_error="机器人离线，等待上线后重试",
                     )
-                    # 离线：直接入队，等上线后定时重试
-                    if not await GrpcRetryService.is_robot_online(db, robot_id):
-                        await GrpcRetryService.save_pending(
-                            db,
-                            service_name="map",
-                            method_name="NotifyMapSaved",
-                            payload={
-                                "robot_id": robot_id,
-                                "map_id": map_id,
-                                "version": version,
-                            },
-                            robot_id=robot_id,
-                            map_id=map_id,
-                            last_error="机器人离线，等待上线后重试",
-                        )
-                        continue
-                    # 在线：单发
-                    resp = await MapServiceClient.notify_map_saved_one(
-                        map_info, robot_id, addr
+                    return
+
+            # 2. 在线：单发（RPC 不碰 db，放在 session 外）
+            resp = await MapServiceClient.notify_map_saved_one(map_info, robot_id, addr)
+            status = getattr(resp, "status", "")
+            if status == "OK":
+                logger.info(
+                    "notify_map_saved ok map=%s version=%s target=%s robot_id=%s",
+                    map_id,
+                    version,
+                    target,
+                    robot_id,
+                )
+            elif status == "DISABLED":
+                logger.info(
+                    "notify_map_saved skipped(disabled) map=%s target=%s robot_id=%s",
+                    map_id,
+                    target,
+                    robot_id,
+                )
+            else:
+                async with async_db_manager.get_session_cr() as push_db:
+                    await GrpcRetryService.save_pending(
+                        push_db,
+                        service_name="map",
+                        method_name="NotifyMapSaved",
+                        payload=payload,
+                        robot_id=robot_id,
+                        map_id=map_id,
+                        last_error=getattr(resp, "message", "") or "设备未响应",
                     )
-                    status = getattr(resp, "status", "")
-                    if status == "OK":
-                        logger.info(
-                            "notify_map_saved ok map=%s version=%s target=%s robot_id=%s",
-                            map_id,
-                            version,
-                            target,
-                            robot_id,
-                        )
-                    elif status == "DISABLED":
-                        logger.info(
-                            "notify_map_saved skipped(disabled) map=%s target=%s robot_id=%s",
-                            map_id,
-                            target,
-                            robot_id,
-                        )
-                    else:
-                        await GrpcRetryService.save_pending(
-                            db,
-                            service_name="map",
-                            method_name="NotifyMapSaved",
-                            payload={
-                                "robot_id": robot_id,
-                                "map_id": map_id,
-                                "version": version,
-                            },
-                            robot_id=robot_id,
-                            map_id=map_id,
-                            last_error=getattr(resp, "message", "") or "设备未响应",
-                        )
-                except Exception as exc:  # noqa: BLE001 - 单机器人失败不影响其他
-                    logger.warning(
-                        "notify_map_saved handle failed map=%s target=%s robot_id=%s: %s",
-                        map_id,
-                        target,
-                        robot_id,
-                        exc,
-                    )
+        except Exception as exc:  # noqa: BLE001 - 单机器人失败不影响其他
+            logger.warning(
+                "notify_map_saved handle failed map=%s target=%s robot_id=%s: %s",
+                map_id,
+                target,
+                robot_id,
+                exc,
+            )
 
     @staticmethod
     def _render(
