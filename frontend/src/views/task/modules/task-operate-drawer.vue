@@ -17,7 +17,8 @@ import { $t } from '@/locales';
 defineOptions({ name: 'TaskOperateDrawer' });
 
 interface Props {
-  operateType: NaiveUI.TableOperateType;
+  /** 任务模块在通用 add/edit 之外扩展了 'copy'（复用新增提交流程） */
+  operateType: NaiveUI.TableOperateType | 'copy';
   rowData?: Api.Task.Task | null;
 }
 
@@ -32,7 +33,11 @@ const emit = defineEmits<Emits>();
 const visible = defineModel<boolean>('visible', { default: false });
 const { formRef, validate, restoreValidation } = useNaiveForm();
 
-const title = computed(() => (props.operateType === 'add' ? '创建任务' : '编辑任务'));
+const title = computed(() => {
+  if (props.operateType === 'add') return '创建任务';
+  if (props.operateType === 'copy') return '复制任务';
+  return '编辑任务';
+});
 
 /** 任务类型选项 */
 const taskTypeOptions = [
@@ -300,7 +305,9 @@ async function handleInitModel() {
   mapOptions.value = [];
   mapOptionsLoaded = false;
 
-  if (props.operateType === 'edit' && props.rowData) {
+  // 复制与编辑共享同一套回填逻辑：均基于源任务数据，并通过详情接口补全点位/机器人。
+  // 区别在提交阶段：copy 的 operateType !== 'edit'，isEdit 为 false，自动走新增接口。
+  if ((props.operateType === 'edit' || props.operateType === 'copy') && props.rowData) {
     const cloned = jsonClone(props.rowData) as Api.Task.Task;
     model.value.name = cloned.name || '';
     model.value.task_type = cloned.task_type || 'patrol';

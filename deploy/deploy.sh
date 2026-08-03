@@ -13,14 +13,40 @@ set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 
-# 加载配置
-if [[ ! -f "${SCRIPT_DIR}/deploy.env" ]]; then
-    echo "[ERROR] 配置文件不存在: ${SCRIPT_DIR}/deploy.env"
-    echo "        请复制 deploy.env.example 并修改"
-    exit 1
-fi
-# shellcheck source=deploy.env
-source "${SCRIPT_DIR}/deploy.env"
+# ---- 配置（直接写在脚本里，按需修改；原 deploy.env 已不再读取） ----
+# 应用
+APP_NAME="smilex-cloud"
+APP_USER="smilex"
+APP_GROUP="smilex"
+
+# 项目根目录（git 仓库根，含 backend/frontend/deploy；submodule: backend/database、backend/grpc）
+PROJECT_DIR="/opt/smilex-cloud"
+BACKEND_DIR="${PROJECT_DIR}/backend"
+VENV_DIR="${BACKEND_DIR}/.venv"
+DATABASE_DIR="${BACKEND_DIR}/database"   # alembic 子模块，alembic.ini 位于此目录
+
+# Gunicorn
+GUNICORN_WORKERS=4
+GUNICORN_PORT=8000
+GUNICORN_BIND="0.0.0.0:${GUNICORN_PORT}"
+GUNICORN_TIMEOUT=120
+GUNICORN_MAX_REQUESTS=5000
+GUNICORN_MAX_REQUESTS_JITTER=500
+
+# 日志（须与 backend/.env.prod 的 LOG__DIR 一致，否则 logrotate 滚动不到应用日志）
+LOG_DIR="/var/log/smilex_cloud"
+ACCESS_LOG="${LOG_DIR}/access.log"
+ERROR_LOG="${LOG_DIR}/error.log"
+
+# 应用环境配置（Python 应用读取）
+ENV_FILE="${BACKEND_DIR}/.env.prod"
+
+# Git
+GIT_BRANCH="main"
+
+# 健康检查
+HEALTH_CHECK_URL="http://127.0.0.1:${GUNICORN_PORT}/openapi.json"
+HEALTH_CHECK_TIMEOUT=10
 
 # ---- 颜色输出 ----
 RED='\033[0;31m'
@@ -102,6 +128,11 @@ cmd_setup() {
     ensure_user
     ensure_dirs
 
+    # 初始化 submodule（backend/database 迁移、backend/grpc）
+    info "初始化 submodule"
+    cd "${PROJECT_DIR}"
+    git submodule update --init --recursive
+
     # 安装 Python 依赖
     info "安装 Python 依赖"
     cd "${BACKEND_DIR}"
@@ -117,9 +148,9 @@ cmd_setup() {
     fi
     info "环境配置: ${ENV_FILE}"
 
-    # 数据库迁移
+    # 数据库迁移（alembic.ini 位于 backend/database 子模块）
     info "运行数据库迁移"
-    cd "${BACKEND_DIR}"
+    cd "${DATABASE_DIR}"
     source "${VENV_DIR}/bin/activate"
     alembic upgrade head
     info "数据库迁移完成"
@@ -152,6 +183,17 @@ cmd_setup() {
         > /etc/logrotate.d/"${APP_NAME}"
     chmod 0644 /etc/logrotate.d/"${APP_NAME}"
 
+    # 校验 Python 应用日志目录（.env.prod 的 LOG__DIR）与 logrotate 目标（LOG_DIR）一致，
+    # 否则 logrotate 因 missingok 静默跳过，应用日志不会滚动。
+    if [[ -f "${ENV_FILE}" ]]; then
+        _py_log_dir=$(grep -iE '^[[:space:]]*LOG__DIR[[:space:]]*=' "${ENV_FILE}" | tail -1 \
+            | sed -E 's/^[[:space:]]*LOG__DIR[[:space:]]*=//; s/^[[:space:]]*//; s/[[:space:]]*$//; s/^"//; s/"$//')
+        if [[ -n "${_py_log_dir}" && "${_py_log_dir}" != "${LOG_DIR}" ]]; then
+            warn "Python 日志目录 LOG__DIR=${_py_log_dir} 与部署 LOG_DIR=${LOG_DIR} 不一致"
+            warn "logrotate 将无法滚动应用日志，请编辑 ${ENV_FILE} 将 LOG__DIR 设为 ${LOG_DIR}"
+        fi
+    fi
+
     if ! command -v logrotate &>/dev/null; then
         warn "未检测到 logrotate，请手动安装"
         warn "  Debian/Ubuntu: sudo apt-get install logrotate"
@@ -174,16 +216,17 @@ cmd_deploy() {
     info "========== 开始部署 =========="
     check_prerequisites
 
-    cd "${BACKEND_DIR}"
+    cd "${PROJECT_DIR}"
 
     # 记录当前 commit
     local before_commit
     before_commit=$(git rev-parse --short HEAD)
     info "当前版本: ${before_commit}"
 
-    # 拉取最新代码
+    # 拉取最新代码（主仓库 + submodule：backend/database、backend/grpc）
     info "拉取最新代码 (分支: ${GIT_BRANCH})"
     git pull origin "${GIT_BRANCH}"
+    git submodule update --init --recursive
 
     local after_commit
     after_commit=$(git rev-parse --short HEAD)
@@ -197,10 +240,12 @@ cmd_deploy() {
 
     # 更新依赖
     info "更新 Python 依赖"
+    cd "${BACKEND_DIR}"
     uv sync --frozen
 
-    # 数据库迁移
+    # 数据库迁移（alembic.ini 位于 backend/database 子模块）
     info "运行数据库迁移"
+    cd "${DATABASE_DIR}"
     source "${VENV_DIR}/bin/activate"
     alembic upgrade head
     info "数据库迁移完成"
@@ -226,19 +271,22 @@ cmd_deploy() {
 cmd_rollback() {
     local target="${1:-HEAD~1}"
     info "========== 回滚部署 =========="
-    cd "${BACKEND_DIR}"
+    cd "${PROJECT_DIR}"
 
     info "回滚到: ${target}"
     git log --oneline -1 "${target}"
 
     git reset --hard "${target}"
+    git submodule update --init --recursive
 
     # 更新依赖
     info "更新 Python 依赖"
+    cd "${BACKEND_DIR}"
     uv sync --frozen
 
-    # 数据库迁移（回滚到匹配版本）
+    # 数据库迁移（回滚到匹配版本，alembic.ini 位于 backend/database 子模块）
     info "运行数据库迁移"
+    cd "${DATABASE_DIR}"
     source "${VENV_DIR}/bin/activate"
     alembic upgrade head
 
@@ -262,7 +310,7 @@ cmd_status() {
     sudo journalctl -u "${APP_NAME}" --no-pager -n 20
     echo ""
     echo "========== 版本信息 =========="
-    cd "${BACKEND_DIR}"
+    cd "${PROJECT_DIR}"
     echo "分支: $(git branch --show-current)"
     echo "版本: $(git rev-parse --short HEAD) ($(git log -1 --format='%ci' HEAD))"
 }

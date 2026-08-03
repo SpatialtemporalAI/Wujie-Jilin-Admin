@@ -297,6 +297,16 @@
 - 一致性语义：create/update 阿里云注册失败 → 回滚本地（不留残桩）；delete 以本地为准，阿里云删除 best-effort
 - 语音 / 速度 / 电量三类配置仍走 gRPC 推送 + 重试队列，不受影响
 
+## 参数配置 · gRPC 推送 1s 防重契约
+
+语音 / 速度 / 电量三类配置保存会触发 gRPC 推送，前后端各有防重，避免 1s 内重复下发：
+
+- **后端兜底**：推送唯一入口 `RobotConfigService._push_with_retry`（`modules/robot/services/robot_config_service.py`）在调 RPC 前先过进程内去重门 `modules/grpc/push_dedup.py`，键 = `(service, method, robot_id, payload_hash)`，窗口 1s；只压「字节级完全相同」的重复（不同值如速度 low→high 照常下发），命中即返回 `"synced"` 并记 `grpc push suppressed(dedup ...)` 日志。仅进程内、非权威（误压由重试队列兜底）。
+- **前端源头**：`settings` 下 voice / speed / battery 三个保存 handler 用顶层互斥（`if (saving.value) return` → 立即 `saving.value = true` → try/finally 释放），锁先于任何 await 置位，挡双击。
+- `grpc_status` 取值不变：`synced` / `pending_retry` / `disabled`；前端按现有文案映射，无需改类型。地图保存 / 任务广播 / 切换地图暂未接入去重门，结构类似可后续复用。
+- **超时对齐**：实时 RPC 单次超时 `settings.GRPC.TIMEOUT_SECONDS=30s`（默认 + `.env.prod`/`.env.test`）；前端 `robot-config.ts` 触发 gRPC 的 5 个接口（语音保存/测试、速度、电量）用 `timeout: ROBOT_CONFIG_GRPC_TIMEOUT_MS(30s)` 覆盖全局默认 10s，避免前端先于后端 RPC 超时。其余接口仍走全局 10s。
+- **地图保存推送并发**：`SceneMapNavImageService._notify_map_saved` 用 `asyncio.gather + Semaphore(16)` 并发下发，每机器人独立 db session（`_push_map_to_one`，AsyncSession 不可跨任务共享）。仍是「广播全部启用 middleware/agent 的机器人」；同一机器人配两端会收到两次（不同服务地址，设计内）。地图保存为后台 `asyncio.create_task` 即发即忘，并发只影响设备收图延迟。
+
 ## 完成前检查清单
 
 - [ ] 后端响应结构与前端类型定义匹配

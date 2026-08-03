@@ -6,7 +6,8 @@ ConfigService gRPC 客户端
 - 每个业务一个 Client 类（类方法风格，无需实例化），方法签名强类型
 
 地址解析规则（target 对应 robot.grpc_config 的子键）：
-- voice.notify_wake_word / voice.notify_tts → middleware（保存配置）
+- voice.notify_wake_word → middleware + agent（保存唤醒词，同时双推两端）
+- voice.notify_tts → middleware（保存 TTS 配置）
 - voice.test_wake_word / voice.test_tts → agent（测试推送，发送到机器人 agent）
 - speed.notify_speed_level → middleware
 - battery.notify_battery_threshold → agent
@@ -20,6 +21,7 @@ ConfigService gRPC 客户端
 - 业务层据此决定提示文案，而非冒泡 500 给前端
 """
 
+import asyncio
 import logging
 from typing import Any, Awaitable, Callable, Dict, List, Optional, Tuple, TypeVar
 
@@ -109,7 +111,7 @@ async def _dispatch_with_target(
 class VoiceConfigClient:
     """语音配置 gRPC 客户端（唤醒词 + TTS 音色/语速/音量）
 
-    保存配置（notify_wake_word / notify_tts）走 middleware；
+    保存唤醒词（notify_wake_word）同时推 middleware + agent；保存 TTS（notify_tts）走 middleware；
     测试推送（test_wake_word / test_tts）走 agent。
     """
 
@@ -128,22 +130,79 @@ class VoiceConfigClient:
     async def notify_wake_word(
         cls, robot_id: int, wake_word_enabled: bool, wake_word: str
     ) -> voice_pb2.WakeWordChangedResponse:
+        """推送唤醒词变更：同时下发给 middleware 和 agent（仅推已配置且启用的端）。
+
+        聚合语义（配合上层 _push_with_retry 的最终一致模型）：
+        - 两端均未配置 → success=False 哨兵（按失败处理，可入重试队列等待配置）
+        - 至少一端配置：所有「已配置端」全部成功才视为 success；
+          任一已配置端失败 → success=False（message 拼接各失败端原因），由上层入重试队列，
+          重试时两端都重推（NotifyWakeWord 全量覆盖语义，重复推送幂等）。
+        并发双推：middleware / agent 是两个独立地址，asyncio.gather 并行下发，互不阻塞。
+        """
         request = voice_pb2.WakeWordChangedRequest(
             robot_id=robot_id,
             wake_word_enabled=wake_word_enabled,
             wake_word=wake_word or "",
         )
-        return await _dispatch_with_target(
-            robot_id=robot_id,
-            target="middleware",
-            stub_factory=cls._get_stub_for_addr,
-            method_name="NotifyWakeWordChanged",
-            request=request,
-            failure_factory=lambda msg: voice_pb2.WakeWordChangedResponse(
-                success=False, message=msg
-            ),
-            log_ctx={"robot_id": robot_id, "rpc": "notify_wake_word"},
-        )
+        log_ctx = {"robot_id": robot_id, "rpc": "notify_wake_word"}
+
+        def failure(msg: str) -> voice_pb2.WakeWordChangedResponse:
+            return voice_pb2.WakeWordChangedResponse(success=False, message=msg)
+
+        if not settings.GRPC.ENABLED:
+            return failure("gRPC 未启用")
+
+        # 仅推「已配置且启用」的 target；未配置端跳过（不计入失败），兼容只配一端的机器人
+        provider = get_config_addr_provider()
+        push_targets: List[Tuple[str, str]] = []
+        for target in ("middleware", "agent"):
+            addr = await provider.get_addr(robot_id, target)
+            if addr:
+                push_targets.append((target, addr))
+
+        if not push_targets:
+            return failure(f"middleware/agent 地址均未配置 (robot_id={robot_id})")
+
+        async def call_one(
+            target: str, addr: str
+        ) -> voice_pb2.WakeWordChangedResponse:
+            try:
+                stub = await cls._get_stub_for_addr(addr)
+                rpc: Callable[..., Awaitable[voice_pb2.WakeWordChangedResponse]] = (
+                    stub.NotifyWakeWordChanged
+                )
+                return await rpc(request, timeout=settings.GRPC.TIMEOUT_SECONDS)
+            except grpc.aio.AioRpcError as e:
+                logger.warning(
+                    "grpc config call failed method=NotifyWakeWordChanged "
+                    "target=%s code=%s details=%s addr=%s ctx=%s",
+                    target,
+                    e.code(),
+                    e.details(),
+                    addr,
+                    log_ctx,
+                )
+                return failure(f"{target} gRPC 调用失败: {e.code().name}")
+            except Exception as e:  # noqa: BLE001 - 兜底，保证不阻塞另一端
+                logger.exception(
+                    "grpc config call unexpected error method=NotifyWakeWordChanged "
+                    "target=%s addr=%s ctx=%s",
+                    target,
+                    addr,
+                    log_ctx,
+                )
+                return failure(f"{target} gRPC 调用异常: {e}")
+
+        resps = await asyncio.gather(*[call_one(t, a) for t, a in push_targets])
+
+        failed = [
+            f"{t}: {getattr(r, 'message', '') or '设备未响应'}"
+            for (t, _), r in zip(push_targets, resps)
+            if not getattr(r, "success", False)
+        ]
+        if not failed:
+            return voice_pb2.WakeWordChangedResponse(success=True, message="ok")
+        return failure("；".join(failed))
 
     @classmethod
     async def notify_tts(

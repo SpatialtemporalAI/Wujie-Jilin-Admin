@@ -172,14 +172,14 @@ export function useNaivePaginatedTable<ResponseData, ApiData>(
   };
 }
 
-export function useTableOperate<TableData>(
+export function useTableOperate<TableData, ExtraOperate extends string = never>(
   data: Ref<TableData[]>,
   idKey: keyof TableData,
   getData: () => Promise<void>
 ) {
   const { bool: drawerVisible, setTrue: openDrawer, setFalse: closeDrawer } = useBoolean();
 
-  const operateType = shallowRef<NaiveUI.TableOperateType>('add');
+  const operateType = shallowRef<NaiveUI.TableOperateType | ExtraOperate>('add');
 
   function handleAdd() {
     operateType.value = 'add';

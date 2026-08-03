@@ -214,7 +214,7 @@ class GrpcModel(BaseModel):
         "127.0.0.1:50052",
         description="ConfigService 地址 host:port（voice/speed/battery/face 共用）",
     )
-    TIMEOUT_SECONDS: float = Field(10.0, description="单次 RPC 超时(秒)")
+    TIMEOUT_SECONDS: float = Field(30.0, description="单次 RPC 超时(秒)")
 
 
 class MerchantModel(BaseModel):

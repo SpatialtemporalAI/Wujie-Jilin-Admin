@@ -34,6 +34,7 @@ from modules.grpc.config_client import (
     SpeedConfigClient,
     VoiceConfigClient,
 )
+from modules.grpc.push_dedup import DEDUP_WINDOW_SECONDS, should_suppress
 from modules.grpc.retry_service import GrpcRetryService
 from modules.face.services.face_service import FaceService
 from modules.admin.services.sys.file_service import FileService
@@ -80,6 +81,19 @@ class RobotConfigService:
         """
         if not settings.GRPC.ENABLED:
             return "disabled"
+
+        # 0. 实时推送去重门：同机器人 + 同方法 + 字节级相同载荷在窗口内只推一次，
+        #    挡掉双击 / 多标签页 / 并发请求造成的 1s 内重复（预约式，check+set 间无 await）。
+        #    不同载荷（如速度 low→high）不拦截，正常下发。
+        if should_suppress(service_name, method_name, robot_id, payload):
+            logger.info(
+                "grpc push suppressed(dedup %.1fs) service=%s method=%s robot_id=%s",
+                DEDUP_WINDOW_SECONDS,
+                service_name,
+                method_name,
+                robot_id,
+            )
+            return "synced"
 
         # 1. 取消同业务键旧 pending（覆盖：旧值不再补推）
         await GrpcRetryService.cancel_superseded(

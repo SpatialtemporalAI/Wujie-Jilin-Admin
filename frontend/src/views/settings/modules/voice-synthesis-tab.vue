@@ -128,13 +128,15 @@ function handleSelectRobot(robotId: number | null) {
 }
 
 async function handleSaveVoice() {
-  if (!selectedRobotId.value) {
-    message.warning('请先选择机器人');
-    return;
-  }
+  // 顶层互斥：锁必须在任何 await（含 validate）之前置位，挡住双击导致的 1s 内重复提交
+  if (saving.value) return;
+  saving.value = true;
   try {
+    if (!selectedRobotId.value) {
+      message.warning('请先选择机器人');
+      return;
+    }
     await validate();
-    saving.value = true;
     const { data, error } = await fetchSaveVoiceConfig(model);
     if (!error) {
       const msg = data?.grpc_status === 'pending_retry' ? '保存成功（设备同步待重试）' : '保存成功';

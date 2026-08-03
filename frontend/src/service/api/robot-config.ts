@@ -2,6 +2,12 @@ import { request } from '../request';
 
 /** ==================== 机器人参数配置 API ==================== */
 
+/**
+ * 触发实时 gRPC 下发（语音保存/测试、速度、电量）的接口单请求超时。
+ * 对齐后端 settings.GRPC.TIMEOUT_SECONDS=30s：避免前端先于后端 RPC 超时。
+ */
+const ROBOT_CONFIG_GRPC_TIMEOUT_MS = 30 * 1000;
+
 /** 获取语音合成配置 */
 export function fetchGetVoiceConfig(robotId: number) {
   return request<Api.RobotConfig.VoiceConfig>({
@@ -16,6 +22,7 @@ export function fetchSaveVoiceConfig(data: Api.RobotConfig.VoiceConfig) {
   return request<Api.RobotConfig.VoiceConfig>({
     url: '/admin/robot/config/voice',
     method: 'post',
+    timeout: ROBOT_CONFIG_GRPC_TIMEOUT_MS,
     data
   });
 }
@@ -25,6 +32,7 @@ export function fetchTestWakeWord(data: Api.RobotConfig.TestWakeWordRequest) {
   return request<void>({
     url: '/admin/robot/config/voice/test-wake-word',
     method: 'post',
+    timeout: ROBOT_CONFIG_GRPC_TIMEOUT_MS,
     data
   });
 }
@@ -34,6 +42,7 @@ export function fetchTestTTS(data: Api.RobotConfig.TestTTSRequest) {
   return request<void>({
     url: '/admin/robot/config/voice/test-tts',
     method: 'post',
+    timeout: ROBOT_CONFIG_GRPC_TIMEOUT_MS,
     data
   });
 }
@@ -92,6 +101,7 @@ export function fetchUpdateSpeedLevel(robotId: number, speedLevel: string | null
   return request<Api.RobotConfig.ConfigUpdateResponse>({
     url: `/admin/robot/config/speed-level/${robotId}`,
     method: 'put',
+    timeout: ROBOT_CONFIG_GRPC_TIMEOUT_MS,
     data: { speed_level: speedLevel }
   });
 }
@@ -101,6 +111,7 @@ export function fetchUpdateBatteryThreshold(robotId: number, batteryThreshold: n
   return request<Api.RobotConfig.ConfigUpdateResponse>({
     url: `/admin/robot/config/battery-threshold/${robotId}`,
     method: 'put',
+    timeout: ROBOT_CONFIG_GRPC_TIMEOUT_MS,
     data: { battery_threshold: batteryThreshold }
   });
 }
