@@ -442,11 +442,11 @@ async function handleSubmit() {
     points:
       model.value.task_type === 'patrol'
         ? model.value.points.map(p => ({
-            sort_order: p.sort_order,
-            point_name: p.point_name,
-            annotation_id: p.annotation_id,
-            actions: p.actions
-          }))
+          sort_order: p.sort_order,
+          point_name: p.point_name,
+          annotation_id: p.annotation_id,
+          actions: p.actions
+        }))
         : undefined,
     broadcast_text: model.value.task_type === 'broadcast' ? model.value.broadcast_text : undefined
   };
@@ -489,14 +489,8 @@ onMounted(() => {
 </script>
 
 <template>
-  <NModal
-    v-model:show="visible"
-    display-directive="show"
-    preset="card"
-    :mask-closable="false"
-    :title="title"
-    style="width: 640px; max-width: 90vw"
-  >
+  <NModal v-model:show="visible" display-directive="show" preset="card" :mask-closable="false" :title="title"
+    style="width: 640px; max-width: 90vw">
     <NForm ref="formRef" :model="model" :rules="rules" label-placement="top">
       <!-- 基础信息 -->
       <NGrid :cols="2" :x-gap="16">
@@ -518,39 +512,17 @@ onMounted(() => {
 
       <!-- 场景地图：仅巡逻任务需要选择 -->
       <NFormItem v-if="isPatrol" label="场景地图" path="map_id" class="mt-20px">
-        <NSelect
-          :value="model.map_id"
-          :options="mapOptions"
-          placeholder="请先选择场景地图"
-          filterable
-          clearable
-          @update:value="handleMapChange"
-          @focus="() => loadMapOptions()"
-        />
+        <NSelect :value="model.map_id" :options="mapOptions" placeholder="请先选择场景地图" filterable clearable
+          @update:value="handleMapChange" @focus="() => loadMapOptions()" />
       </NFormItem>
 
       <!-- 机器人绑定：巡逻单选（需先选场景且受场景约束），播报多选（不受场景约束） -->
       <NFormItem label="绑定机器人" path="robot_ids">
-        <NSelect
-          v-if="isPatrol"
-          v-model:value="robotId"
-          :options="filteredRobotOptions"
-          :placeholder="model.map_id === null ? '请先选择场景地图' : '请选择一台机器人'"
-          filterable
-          clearable
-          :disabled="model.map_id === null"
-          :render-label="renderRobotLabel"
-        />
-        <NSelect
-          v-else
-          v-model:value="model.robot_ids"
-          multiple
-          :options="robotOptions"
-          placeholder="请选择机器人（可多选）"
-          filterable
-          clearable
-          max-tag-count="responsive"
-        />
+        <NSelect v-if="isPatrol" v-model:value="robotId" :options="filteredRobotOptions"
+          :placeholder="model.map_id === null ? '请先选择场景地图' : '请选择一台机器人'" filterable clearable
+          :disabled="model.map_id === null" :render-label="renderRobotLabel" />
+        <NSelect v-else v-model:value="model.robot_ids" multiple :options="robotOptions" placeholder="请选择机器人（可多选）"
+          filterable clearable max-tag-count="responsive" />
       </NFormItem>
 
       <!-- 巡逻点位配置 -->
@@ -568,19 +540,14 @@ onMounted(() => {
               </NSpace>
             </template>
             <NFormItem label="巡逻点位" required>
-              <NSelect
-                v-model:value="point.annotation_id"
-                :options="annotationOptions"
-                :placeholder="selectedMapId === null ? '请先选择场景地图' : '请选择场景点位'"
-                :disabled="selectedMapId === null"
-                filterable
-                @update:value="
+              <NSelect v-model:value="point.annotation_id" :options="annotationOptions"
+                :placeholder="selectedMapId === null ? '请先选择场景地图' : '请选择场景点位'" :disabled="selectedMapId === null"
+                filterable @update:value="
                   (val: number | null) => {
                     const ann = val === null ? undefined : annotationMap.get(val);
                     point.point_name = ann?.name ?? null;
                   }
-                "
-              />
+                " />
             </NFormItem>
 
             <NDivider title-placement="center" style="font-size: 16px">运控动作（可添加多个）</NDivider>
@@ -590,7 +557,7 @@ onMounted(() => {
                   <NSelect v-model:value="actionItem.action" :options="actionOptions" placeholder="选择动作" />
                 </NFormItemGi>
                 <NFormItemGi :span="2" label="语音文本">
-                  <NInput v-model:value="actionItem.voice_text" placeholder="语音播报文本" />
+                  <NInput v-model:value="actionItem.voice_text" placeholder="语音播报文本" show-count :maxlength="1000" />
                 </NFormItemGi>
               </NGrid>
               <div class="mb-40px flex">
@@ -617,7 +584,8 @@ onMounted(() => {
       <template v-if="model.task_type === 'broadcast'">
         <NDivider style="font-size: 16px" title-placement="center">播报配置</NDivider>
         <NFormItem label="播报文本">
-          <NInput v-model:value="model.broadcast_text" type="textarea" placeholder="请输入播报文本" :rows="3" />
+          <NInput v-model:value="model.broadcast_text" type="textarea" placeholder="请输入播报文本" :rows="3" show-count
+            :maxlength="1000" />
         </NFormItem>
       </template>
 
