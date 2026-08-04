@@ -309,7 +309,8 @@ async function handleInitModel() {
   // 区别在提交阶段：copy 的 operateType !== 'edit'，isEdit 为 false，自动走新增接口。
   if ((props.operateType === 'edit' || props.operateType === 'copy') && props.rowData) {
     const cloned = jsonClone(props.rowData) as Api.Task.Task;
-    model.value.name = cloned.name || '';
+    // 复制时任务名默认清空，强制用户输入新名称（避免与源任务同名）
+    model.value.name = props.operateType === 'copy' ? '' : cloned.name || '';
     model.value.task_type = cloned.task_type || 'patrol';
     model.value.broadcast_text = cloned.broadcast_text || null;
     model.value.schedule_enabled = cloned.schedule_enabled || false;

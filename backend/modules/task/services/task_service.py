@@ -13,7 +13,7 @@ from typing import List
 from database.models.business.task import Task, task_robot_association
 from database.models.business.task_point import TaskPoint
 from database.models.business.robot import Robot
-from core.exception.errors import NotFoundError
+from core.exception.errors import NotFoundError, ConflictError
 from modules.grpc.task_client import TaskConfigClient
 from modules.task.schemas.task import (
     TaskCreate,
@@ -104,9 +104,21 @@ class TaskService:
             if len(robots) != len(task_in.robot_ids):
                 raise NotFoundError(msg="部分机器人不存在")
 
+            # 任务名称唯一性校验（去首尾空格后比较，自动过滤软删除记录）
+            stripped_name = task_in.name.strip()
+            name_exists = await db.execute(
+                select(Task.id).where(
+                    Task.name == stripped_name,
+                    Task.deleted_at.is_(None),
+                )
+            )
+            if name_exists.scalar_one_or_none() is not None:
+                logger.warning("创建任务失败，任务名称已存在，任务名: %s", stripped_name)
+                raise ConflictError(msg="任务名称已存在")
+
             # 创建任务主记录
             task_obj = Task(
-                name=task_in.name,
+                name=stripped_name,
                 map_id=task_in.map_id,
                 task_type=task_in.task_type,
                 broadcast_text=task_in.broadcast_text,
@@ -158,7 +170,7 @@ class TaskService:
 
             return task_obj
 
-        except NotFoundError:
+        except (NotFoundError, ConflictError):
             await db.rollback()
             raise
         except Exception as e:
@@ -174,6 +186,23 @@ class TaskService:
 
             # 更新基础字段
             update_data = task_in.model_dump(exclude_unset=True, exclude={"points", "robot_ids"})
+
+            # 任务名称唯一性校验（去首尾空格后比较，排除自身，自动过滤软删除记录）
+            if "name" in update_data:
+                stripped_name = update_data["name"].strip()
+                if stripped_name != task_obj.name:
+                    name_exists = await db.execute(
+                        select(Task.id).where(
+                            Task.name == stripped_name,
+                            Task.id != task_id,
+                            Task.deleted_at.is_(None),
+                        )
+                    )
+                    if name_exists.scalar_one_or_none() is not None:
+                        logger.warning("更新任务失败，任务名称已存在，任务名: %s", stripped_name)
+                        raise ConflictError(msg="任务名称已存在")
+                update_data["name"] = stripped_name
+
             for field, value in update_data.items():
                 setattr(task_obj, field, value)
 
@@ -247,7 +276,7 @@ class TaskService:
 
             return task_obj
 
-        except NotFoundError:
+        except (NotFoundError, ConflictError):
             await db.rollback()
             raise
         except Exception as e:
