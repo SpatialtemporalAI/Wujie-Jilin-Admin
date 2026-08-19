@@ -85,21 +85,23 @@ declare namespace Api {
       count: number;
     };
 
-    /** 统计响应 */
+    /** 统计响应（卡片统计为全量口径不随筛选，分布图表随筛选） */
     type Stats = {
-      /** 筛选范围内总交互数 */
+      /** 全量总交互数（不随筛选） */
       total: number;
-      /** 今日交互数 */
+      /** 总量较截止上周日累计的百分比变化 */
+      total_delta_pct: number | null;
+      /** 今日交互数（不随筛选） */
       today_count: number;
-      /** 今日较上周同日百分比变化 */
+      /** 今日较昨日百分比变化 */
       today_delta_pct: number | null;
-      /** 筛选范围内平均会话时长（秒） */
+      /** 全量平均会话时长（秒，不随筛选） */
       avg_duration: number | null;
-      /** 平均时长较上周百分比变化（近7天 vs 前7天） */
+      /** 当日均值较昨日均值的百分比变化 */
       avg_duration_delta_pct: number | null;
-      /** 意图分布，8 项含零值 */
+      /** 意图分布（随筛选），8 项含零值 */
       intent_distribution: DistributionItem[];
-      /** 触发方式分布，2 项含零值 */
+      /** 触发方式分布（随筛选），2 项含零值 */
       trigger_distribution: DistributionItem[];
     };
   }

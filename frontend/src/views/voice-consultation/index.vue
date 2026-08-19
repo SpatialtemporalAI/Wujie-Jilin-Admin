@@ -70,7 +70,8 @@ function formatTime(time: string | null): string {
   return time ? dayjs(time).format('YYYY-MM-DD HH:mm:ss') : '-';
 }
 
-const { columns, columnChecks, data, getData, getDataByPage, loading, mobilePagination } = useNaivePaginatedTable({
+const { columns, columnChecks, data, getData, getDataByPage, loading, mobilePagination, pagination } =
+  useNaivePaginatedTable({
   api: () => fetchGetVoiceConsultationSessionList(searchParams),
   transform: response => {
     return defaultTransform(response);
@@ -187,9 +188,13 @@ onMounted(() => {
     <NCard :bordered="false" size="small" class="card-wrapper">
       <template #header>
         <div class="flex-y-center justify-between gap-12px">
-          <span>{{ $t('page.manage.voiceConsultation.records') }}</span>
+          <div class="flex-y-center gap-8px">
+            <span>{{ $t('page.manage.voiceConsultation.records') }}</span>
+            <NTag size="small" :bordered="false" type="primary" round>
+              {{ pagination.itemCount }}
+            </NTag>
+          </div>
           <div class="flex-y-center gap-12px">
-            <SessionSearch v-model:model="searchParams" @search="handleSearch" />
             <TableHeaderOperation
               v-model:columns="columnChecks"
               :loading="loading"
@@ -214,6 +219,9 @@ onMounted(() => {
           </div>
         </div>
       </template>
+      <div class="flex-y-center flex-wrap gap-12px pb-12px">
+        <SessionSearch v-model:model="searchParams" @search="handleSearch" />
+      </div>
       <NDataTable
         :columns="columns"
         :data="data"

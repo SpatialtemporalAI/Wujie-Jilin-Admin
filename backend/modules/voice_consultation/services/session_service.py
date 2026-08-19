@@ -24,6 +24,9 @@ from modules.voice_consultation.schemas.session import (
 
 logger = logging.getLogger(__name__)
 
+# 统计起点：总交互「截止上周日累计」窗口的下限
+_STATS_EPOCH_START = datetime(2020, 1, 1, tzinfo=timezone_module.utc)
+
 
 class VoiceConsultationSessionService:
     """语音问诊会话管理服务类"""
@@ -117,12 +120,15 @@ class VoiceConsultationSessionService:
     async def get_stats(
         db: AsyncSession, query_params: VoiceConsultationSessionQueryParams
     ) -> VoiceConsultationStatsResponse:
-        """统计：总量/今日/平均时长（带环比） + 意图分布 + 触发方式分布"""
+        """统计：总量/今日/平均时长（带环比，全量口径不随筛选） + 意图分布 + 触发方式分布（随筛选）"""
         service = VoiceConsultationSessionService
 
-        # 筛选条件（不含时间范围，时间范围单独拼接滑动窗口）
+        # 卡片统计只认全量数据（仅排除软删除），不跟随用户筛选条件
+        base_conditions = [VoiceConsultationSession.deleted_at.is_(None)]
+
+        # 筛选条件（含时间范围），仅用于意图/触发分布图表
         def filter_conditions() -> list:
-            conditions = [VoiceConsultationSession.deleted_at.is_(None)]
+            conditions = list(base_conditions)
             if query_params.robot_id:
                 conditions.append(VoiceConsultationSession.robot_id == query_params.robot_id)
             if query_params.trigger_method:
@@ -131,59 +137,65 @@ class VoiceConsultationSessionService:
                 conditions.append(VoiceConsultationSession.status == query_params.status)
             if query_params.intent_type:
                 conditions.append(VoiceConsultationSession.intent_type == query_params.intent_type)
+            if query_params.start_time:
+                start = service._parse_time(query_params.start_time)
+                if start:
+                    conditions.append(VoiceConsultationSession.occurred_at >= start)
+            if query_params.end_time:
+                end = service._parse_time(query_params.end_time)
+                if end:
+                    conditions.append(VoiceConsultationSession.occurred_at <= end)
             return conditions
 
-        time_conditions = []
-        if query_params.start_time:
-            start = service._parse_time(query_params.start_time)
-            if start:
-                time_conditions.append(VoiceConsultationSession.occurred_at >= start)
-        if query_params.end_time:
-            end = service._parse_time(query_params.end_time)
-            if end:
-                time_conditions.append(VoiceConsultationSession.occurred_at <= end)
-
-        conditions = filter_conditions() + time_conditions
-
-        # 1) 筛选范围内总量 + 平均时长
+        # 1) 全量总量 + 全量平均时长
         summary_stmt = select(
             func.count(VoiceConsultationSession.id),
             func.avg(VoiceConsultationSession.duration_seconds),
-        ).where(and_(*conditions))
+        ).where(and_(*base_conditions))
         total, avg_duration = (await db.execute(summary_stmt)).one()
         total = total or 0
         avg_duration = float(avg_duration) if avg_duration is not None else None
 
-        # 2) 今日交互 + 上周同日（今日边界用 Asia/Shanghai 本地自然日，转 UTC 比较）
+        # 时间边界（Asia/Shanghai 本地自然日，转 UTC 比较）
         now_local = timezone.now()
         today_start_local = now_local.replace(hour=0, minute=0, second=0, microsecond=0)
         today_start = today_start_local.astimezone(timezone_module.utc)
-        last_week_start = today_start - timedelta(days=7)
-        last_week_end = today_start
+        yesterday_start = today_start - timedelta(days=1)
+        # 截止到上周日：本周一的 0 点即上周日结束；周一为一周起点
+        last_sunday_end = today_start - timedelta(days=today_start_local.weekday())
 
         async def count_between(start: datetime, end: datetime) -> int:
             stmt = select(func.count(VoiceConsultationSession.id)).where(
                 and_(
-                    *conditions,
+                    *base_conditions,
                     VoiceConsultationSession.occurred_at >= start,
                     VoiceConsultationSession.occurred_at < end,
                 )
             )
             return (await db.execute(stmt)).scalar() or 0
 
-        today_count = await count_between(today_start, today_start + timedelta(days=1))
-        last_week_same_day = await count_between(last_week_start, last_week_end)
-        today_delta_pct = (
-            round((today_count - last_week_same_day) / last_week_same_day * 100, 1)
-            if last_week_same_day
+        # 2) 总交互环比：全量总量 vs 截止到上周日的累计量
+        total_before_last_week = await count_between(_STATS_EPOCH_START, last_sunday_end)
+        total_delta_pct = (
+            round((total - total_before_last_week) / total_before_last_week * 100, 1)
+            if total_before_last_week
             else None
         )
 
-        # 3) 平均时长环比：近 7 天 vs 前 7 天（不受用户筛选的时间范围影响，固定滑动窗口）
+        # 3) 今日交互 vs 昨日
+        today_count = await count_between(today_start, today_start + timedelta(days=1))
+        yesterday_count = await count_between(yesterday_start, today_start)
+        today_delta_pct = (
+            round((today_count - yesterday_count) / yesterday_count * 100, 1)
+            if yesterday_count
+            else None
+        )
+
+        # 4) 平均时长环比：当日均值 vs 昨日均值（固定自然日窗口）
         async def avg_between(start: datetime, end: datetime) -> float | None:
             stmt = select(func.avg(VoiceConsultationSession.duration_seconds)).where(
                 and_(
-                    *filter_conditions(),
+                    *base_conditions,
                     VoiceConsultationSession.occurred_at >= start,
                     VoiceConsultationSession.occurred_at < end,
                 )
@@ -191,19 +203,21 @@ class VoiceConsultationSessionService:
             value = (await db.execute(stmt)).scalar()
             return float(value) if value is not None else None
 
-        recent_avg = await avg_between(today_start - timedelta(days=6), today_start + timedelta(days=1))
-        prior_avg = await avg_between(today_start - timedelta(days=13), today_start - timedelta(days=6))
+        today_avg = await avg_between(today_start, today_start + timedelta(days=1))
+        yesterday_avg = await avg_between(yesterday_start, today_start)
         avg_duration_delta_pct = (
-            round((recent_avg - prior_avg) / prior_avg * 100, 1)
-            if recent_avg is not None and prior_avg
+            round((today_avg - yesterday_avg) / yesterday_avg * 100, 1)
+            if today_avg is not None and yesterday_avg
             else None
         )
 
-        # 4) 意图分布 / 触发方式分布（筛选窗口内 group_by，Python 侧补零）
+        # 5) 意图分布 / 触发方式分布（跟随用户筛选窗口，Python 侧补零）
+        chart_conditions = filter_conditions()
+
         async def group_distribution(column, all_types: set[str]) -> list[dict]:
             stmt = (
                 select(column, func.count(VoiceConsultationSession.id))
-                .where(and_(*conditions))
+                .where(and_(*chart_conditions))
                 .group_by(column)
             )
             rows = (await db.execute(stmt)).all()
@@ -219,6 +233,7 @@ class VoiceConsultationSessionService:
 
         return VoiceConsultationStatsResponse(
             total=total,
+            total_delta_pct=total_delta_pct,
             today_count=today_count,
             today_delta_pct=today_delta_pct,
             avg_duration=round(avg_duration, 1) if avg_duration is not None else None,

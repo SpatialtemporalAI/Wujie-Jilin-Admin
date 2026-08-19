@@ -43,6 +43,7 @@ const cards = computed<CardItem[]>(() => {
     value: string,
     trendPct: number | null,
     trendUnit: string,
+    trendLabelKey: string,
     start: string,
     end: string,
     icon: string
@@ -53,7 +54,9 @@ const cards = computed<CardItem[]>(() => {
     trend:
       trendPct == null
         ? null
-        : `${trendPct > 0 ? '+' : ''}${trendPct}${trendUnit}${trendPct > 0 ? ' ↑' : trendPct < 0 ? ' ↓' : ''} ${$t(`${prefix}.vsLastWeek`)}`,
+        : `${trendPct > 0 ? '+' : ''}${trendPct}${trendUnit}${trendPct > 0 ? ' ↑' : trendPct < 0 ? ' ↓' : ''} ${$t(
+            trendLabelKey as App.I18n.I18nKey
+          )}`,
     trendUp: trendPct == null ? null : trendPct >= 0,
     gradientColor: `linear-gradient(to bottom right, ${start}, ${end})`,
     icon
@@ -64,8 +67,9 @@ const cards = computed<CardItem[]>(() => {
       'total',
       $t(`${prefix}.totalInteractions`),
       stats ? String(stats.total) : '-',
-      null,
-      '',
+      stats?.total_delta_pct ?? null,
+      '%',
+      `${prefix}.vsLastSunday`,
       '#56cdf3',
       '#719de3',
       'ant-design:message-outlined'
@@ -76,6 +80,7 @@ const cards = computed<CardItem[]>(() => {
       stats ? String(stats.today_count) : '-',
       stats?.today_delta_pct ?? null,
       '%',
+      `${prefix}.vsYesterday`,
       '#36cfc9',
       '#1a9e8f',
       'ant-design:rise-outlined'
@@ -86,6 +91,7 @@ const cards = computed<CardItem[]>(() => {
       formatDuration(stats?.avg_duration ?? null),
       stats?.avg_duration_delta_pct ?? null,
       '%',
+      `${prefix}.vsYesterday`,
       '#865ec0',
       '#5144b4',
       'ant-design:clock-circle-outlined'

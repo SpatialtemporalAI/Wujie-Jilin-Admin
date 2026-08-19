@@ -590,6 +590,8 @@ const local: App.I18n.Schema = {
         todayInteractions: '今日交互',
         avgDuration: '平均会话时长',
         vsLastWeek: '较上周',
+        vsLastSunday: '较上周日',
+        vsYesterday: '较昨日',
         intentDistribution: '意图分布',
         intentTypeLabel: '意图类型',
         triggerDistribution: '触发方式',
@@ -610,6 +612,7 @@ const local: App.I18n.Schema = {
         occurredAt: '发生时间',
         createdAt: '入库时间',
         allRobots: '全部机器人',
+        allTriggers: '全部触发',
         allStatuses: '全部状态',
         keywordPlaceholder: '搜索关键词、问题、患者...',
         form: {

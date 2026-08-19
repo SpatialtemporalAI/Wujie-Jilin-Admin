@@ -25,6 +25,11 @@ const statusOptions = (['in_progress', 'completed', 'interrupted'] as const).map
   value
 }));
 
+const triggerOptions = (['wake_word', 'face_recognition'] as const).map(value => ({
+  label: $t(`page.manage.voiceConsultation.triggerMethod.${value}`),
+  value
+}));
+
 const timeRange = computed<[number, number] | null>({
   get() {
     const start = model.value.start_time ? dayjs(model.value.start_time).valueOf() : null;
@@ -85,6 +90,14 @@ onMounted(() => {
       clearable
       filterable
       :style="{ width: '150px' }"
+      @update:value="handleSearch"
+    />
+    <NSelect
+      v-model:value="model.trigger_method"
+      :options="triggerOptions"
+      :placeholder="$t('page.manage.voiceConsultation.allTriggers')"
+      clearable
+      :style="{ width: '130px' }"
       @update:value="handleSearch"
     />
     <NSelect

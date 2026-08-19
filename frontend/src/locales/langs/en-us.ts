@@ -595,6 +595,8 @@ const local: App.I18n.Schema = {
         todayInteractions: "Today's Interactions",
         avgDuration: 'Avg Session Duration',
         vsLastWeek: 'vs last week',
+        vsLastSunday: 'vs last Sunday',
+        vsYesterday: 'vs yesterday',
         intentDistribution: 'Intent Distribution',
         intentTypeLabel: 'Intent Type',
         triggerDistribution: 'Trigger Method',
@@ -615,6 +617,7 @@ const local: App.I18n.Schema = {
         occurredAt: 'Occurred At',
         createdAt: 'Created At',
         allRobots: 'All Robots',
+        allTriggers: 'All Triggers',
         allStatuses: 'All Statuses',
         keywordPlaceholder: 'Search keywords, questions, patients...',
         form: {

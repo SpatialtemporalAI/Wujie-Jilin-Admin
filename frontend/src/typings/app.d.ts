@@ -714,6 +714,8 @@ declare namespace App {
             todayInteractions: string;
             avgDuration: string;
             vsLastWeek: string;
+            vsLastSunday: string;
+            vsYesterday: string;
             intentDistribution: string;
             intentTypeLabel: string;
             triggerDistribution: string;
@@ -734,6 +736,7 @@ declare namespace App {
             occurredAt: string;
             createdAt: string;
             allRobots: string;
+            allTriggers: string;
             allStatuses: string;
             keywordPlaceholder: string;
             form: {
