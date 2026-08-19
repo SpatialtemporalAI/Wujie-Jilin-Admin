@@ -58,6 +58,7 @@ declare module "@elegant-router/types" {
     "scene_map": "/scene/map";
     "settings": "/settings";
     "task": "/task";
+    "voice-consultation": "/voice-consultation";
   };
 
   /**
@@ -109,6 +110,7 @@ declare module "@elegant-router/types" {
     | "scene"
     | "settings"
     | "task"
+    | "voice-consultation"
   >;
 
   /**
@@ -160,6 +162,7 @@ declare module "@elegant-router/types" {
     | "scene_map"
     | "settings"
     | "task"
+    | "voice-consultation"
   >;
 
   /**

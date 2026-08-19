@@ -203,7 +203,8 @@ const routeMap: RouteMap = {
   "scene_group": "/scene/group",
   "scene_map": "/scene/map",
   "settings": "/settings",
-  "task": "/task"
+  "task": "/task",
+  "voice-consultation": "/voice-consultation"
 };
 
 /**

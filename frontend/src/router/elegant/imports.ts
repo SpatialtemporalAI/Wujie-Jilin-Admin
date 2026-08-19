@@ -50,4 +50,5 @@ export const views: Record<LastLevelRouteKey, RouteComponent | (() => Promise<Ro
   scene_map: () => import("@/views/scene/map/index.vue"),
   settings: () => import("@/views/settings/index.vue"),
   task: () => import("@/views/task/index.vue"),
+  "voice-consultation": () => import("@/views/voice-consultation/index.vue"),
 };

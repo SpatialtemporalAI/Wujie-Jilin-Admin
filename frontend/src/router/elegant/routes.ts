@@ -412,5 +412,14 @@ export const generatedRoutes: GeneratedRoute[] = [
       title: 'task',
       i18nKey: 'route.task'
     }
+  },
+  {
+    name: 'voice-consultation',
+    path: '/voice-consultation',
+    component: 'layout.base$view.voice-consultation',
+    meta: {
+      title: 'voice-consultation',
+      i18nKey: 'route.voice-consultation'
+    }
   }
 ];

@@ -250,6 +250,10 @@ const local: App.I18n.Schema = {
     'open-merchant_call-log': '调用日志',
     'open-merchant_call-log_list': '查询',
     'open-merchant_call-log_delete': '删除',
+    'voice-consultation': '语音问诊',
+    'voice-consultation_list': '查询',
+    'voice-consultation_detail': '详情',
+    'voice-consultation_export': '导出',
     manage_user: '用户管理',
     manage_dict: '字典管理',
     manage_config: '系统配置',
@@ -578,6 +582,57 @@ const local: App.I18n.Schema = {
           apiKey: '请输入 API Key',
           startTime: '开始时间',
           endTime: '结束时间'
+        }
+      },
+      voiceConsultation: {
+        title: '语音问诊',
+        totalInteractions: '总交互',
+        todayInteractions: '今日交互',
+        avgDuration: '平均会话时长',
+        vsLastWeek: '较上周',
+        intentDistribution: '意图分布',
+        triggerDistribution: '触发方式',
+        records: '问答记录',
+        time: '时间',
+        trigger: '触发',
+        robot: '机器人',
+        turns: '轮次',
+        questionSummary: '提问摘要',
+        duration: '时长',
+        status: '状态',
+        viewDetail: '查看',
+        detailTitle: '会话详情',
+        turnList: '对话轮次',
+        turnNo: '轮次',
+        question: '提问',
+        answer: '回答',
+        occurredAt: '发生时间',
+        createdAt: '入库时间',
+        allRobots: '全部机器人',
+        allStatuses: '全部状态',
+        keywordPlaceholder: '搜索关键词、问题、患者...',
+        form: {
+          startTime: '开始时间',
+          endTime: '结束时间'
+        },
+        triggerMethod: {
+          wake_word: '唤醒词',
+          face_recognition: '人脸识别'
+        },
+        statusLabel: {
+          in_progress: '进行中',
+          completed: '已完成',
+          interrupted: '已中断'
+        },
+        intentType: {
+          indoor_navigation: '院内问路',
+          triage_qa: '分诊问答',
+          medical_guide: '就医指南',
+          health_check_notice: '体检须知',
+          insurance_guide: '医保指南',
+          admission_notice: '住院须知',
+          medication_consult: '药物咨询',
+          general_chat: '闲聊寒暄'
         }
       },
       face: {

@@ -1,0 +1,93 @@
+#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
+
+from datetime import datetime
+from typing import Annotated
+
+from pydantic import BeforeValidator, Field
+
+from app.models.common.base import BaseEntity, BaseRespEntity, OptionalIntField, parse_optional_enum
+
+# 枚举取值（与外部写入方约定的 code，中文标签由前端 i18n 映射）
+INTENT_TYPES = {
+    "indoor_navigation",
+    "triage_qa",
+    "medical_guide",
+    "health_check_notice",
+    "insurance_guide",
+    "admission_notice",
+    "medication_consult",
+    "general_chat",
+}
+TRIGGER_METHODS = {"wake_word", "face_recognition"}
+SESSION_STATUSES = {"in_progress", "completed", "interrupted"}
+
+IntentTypeField = Annotated[str | None, BeforeValidator(parse_optional_enum(INTENT_TYPES))]
+TriggerMethodField = Annotated[str | None, BeforeValidator(parse_optional_enum(TRIGGER_METHODS))]
+SessionStatusField = Annotated[str | None, BeforeValidator(parse_optional_enum(SESSION_STATUSES))]
+
+
+class VoiceConsultationSessionQueryParams(BaseEntity):
+    """语音问诊会话查询参数"""
+
+    robot_id: OptionalIntField = Field(None, description="机器人ID")
+    trigger_method: TriggerMethodField = Field(None, description="触发方式：wake_word/face_recognition")
+    status: SessionStatusField = Field(None, description="状态：in_progress/completed/interrupted")
+    intent_type: IntentTypeField = Field(None, description="意图类型")
+    keyword: str | None = Field(None, description="关键词，模糊匹配提问摘要")
+    start_time: str | None = Field(None, description="开始时间")
+    end_time: str | None = Field(None, description="结束时间")
+
+
+class VoiceConsultationSessionResponse(BaseRespEntity):
+    """语音问诊会话列表响应"""
+
+    id: int
+    robot_id: int
+    robot_name: str | None = Field(None, description="机器人名称")
+    occurred_at: datetime | None = Field(None, description="交互发生时间")
+    trigger_method: str
+    turn_count: int
+    question_summary: str | None
+    duration_seconds: int | None
+    status: str
+    intent_type: str
+    created_at: datetime | None
+    updated_at: datetime | None
+
+
+class VoiceConsultationTurnResponse(BaseRespEntity):
+    """语音问诊轮次明细响应"""
+
+    id: int
+    turn_no: int
+    question: str | None
+    answer: str | None
+    intent_type: str | None
+    duration_seconds: int | None
+    occurred_at: datetime | None
+
+
+class VoiceConsultationSessionDetailResponse(VoiceConsultationSessionResponse):
+    """语音问诊会话详情响应（含轮次明细）"""
+
+    turns: list[VoiceConsultationTurnResponse] = Field(default_factory=list, description="轮次明细，按轮次序号排序")
+
+
+class VoiceConsultationDistributionItem(BaseRespEntity):
+    """分布统计项"""
+
+    type: str = Field(description="枚举 code")
+    count: int = Field(description="数量")
+
+
+class VoiceConsultationStatsResponse(BaseRespEntity):
+    """语音问诊统计响应"""
+
+    total: int = Field(description="筛选范围内总交互数")
+    today_count: int = Field(description="今日交互数")
+    today_delta_pct: float | None = Field(None, description="今日较上周同日百分比变化")
+    avg_duration: float | None = Field(None, description="筛选范围内平均会话时长（秒）")
+    avg_duration_delta_pct: float | None = Field(None, description="平均时长较上周百分比变化（近7天 vs 前7天）")
+    intent_distribution: list[VoiceConsultationDistributionItem] = Field(description="意图分布，8 项含零值")
+    trigger_distribution: list[VoiceConsultationDistributionItem] = Field(description="触发方式分布，2 项含零值")

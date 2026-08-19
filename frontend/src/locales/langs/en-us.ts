@@ -254,6 +254,10 @@ const local: App.I18n.Schema = {
     'open-merchant_call-log': 'Call Log',
     'open-merchant_call-log_list': 'List',
     'open-merchant_call-log_delete': 'Delete',
+    'voice-consultation': 'Voice Consultation',
+    'voice-consultation_list': 'List',
+    'voice-consultation_detail': 'Detail',
+    'voice-consultation_export': 'Export',
     manage_user: 'User Management',
     manage_dict: 'Dict Management',
     manage_config: 'System Config',
@@ -583,6 +587,57 @@ const local: App.I18n.Schema = {
           apiKey: 'Please enter API Key',
           startTime: 'Start time',
           endTime: 'End time'
+        }
+      },
+      voiceConsultation: {
+        title: 'Voice Consultation',
+        totalInteractions: 'Total Interactions',
+        todayInteractions: "Today's Interactions",
+        avgDuration: 'Avg Session Duration',
+        vsLastWeek: 'vs last week',
+        intentDistribution: 'Intent Distribution',
+        triggerDistribution: 'Trigger Method',
+        records: 'Q&A Records',
+        time: 'Time',
+        trigger: 'Trigger',
+        robot: 'Robot',
+        turns: 'Turns',
+        questionSummary: 'Question Summary',
+        duration: 'Duration',
+        status: 'Status',
+        viewDetail: 'View',
+        detailTitle: 'Session Detail',
+        turnList: 'Conversation Turns',
+        turnNo: 'Turn',
+        question: 'Question',
+        answer: 'Answer',
+        occurredAt: 'Occurred At',
+        createdAt: 'Created At',
+        allRobots: 'All Robots',
+        allStatuses: 'All Statuses',
+        keywordPlaceholder: 'Search keywords, questions, patients...',
+        form: {
+          startTime: 'Start time',
+          endTime: 'End time'
+        },
+        triggerMethod: {
+          wake_word: 'Wake Word',
+          face_recognition: 'Face Recognition'
+        },
+        statusLabel: {
+          in_progress: 'In Progress',
+          completed: 'Completed',
+          interrupted: 'Interrupted'
+        },
+        intentType: {
+          indoor_navigation: 'Indoor Navigation',
+          triage_qa: 'Triage Q&A',
+          medical_guide: 'Medical Guide',
+          health_check_notice: 'Health Check Notice',
+          insurance_guide: 'Insurance Guide',
+          admission_notice: 'Admission Notice',
+          medication_consult: 'Medication Consult',
+          general_chat: 'General Chat'
         }
       },
       face: {
