@@ -591,6 +591,7 @@ const local: App.I18n.Schema = {
         avgDuration: '平均会话时长',
         vsLastWeek: '较上周',
         intentDistribution: '意图分布',
+        intentTypeLabel: '意图类型',
         triggerDistribution: '触发方式',
         records: '问答记录',
         time: '时间',

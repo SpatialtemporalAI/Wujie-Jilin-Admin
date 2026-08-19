@@ -123,7 +123,8 @@ const [DefineGradientBg, GradientBg] = createReusableTemplate<GradientBgProps>()
           </NSpin>
           <template v-else>
             <div class="pt-4px text-28px font-500">{{ item.value }}</div>
-            <div v-if="item.trend" class="pt-2px text-12px opacity-90">{{ item.trend }}</div>
+            <!-- 趋势行固定占位（无数据显示空白），保证三张卡片等高 -->
+            <div class="h-18px pt-2px text-12px leading-18px opacity-90">{{ item.trend || ' ' }}</div>
           </template>
         </GradientBg>
       </NGi>

@@ -715,6 +715,7 @@ declare namespace App {
             avgDuration: string;
             vsLastWeek: string;
             intentDistribution: string;
+            intentTypeLabel: string;
             triggerDistribution: string;
             records: string;
             time: string;

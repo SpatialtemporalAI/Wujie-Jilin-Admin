@@ -4,7 +4,7 @@
 from datetime import datetime
 from typing import Annotated
 
-from pydantic import BeforeValidator, Field
+from pydantic import BeforeValidator, Field, field_serializer
 
 from app.models.common.base import BaseEntity, BaseRespEntity, OptionalIntField, parse_optional_enum
 
@@ -54,6 +54,12 @@ class VoiceConsultationSessionResponse(BaseRespEntity):
     intent_type: str
     created_at: datetime | None
     updated_at: datetime | None
+
+    # 覆盖 BaseRespEntity 的 status 序列化器（后者将 status 当作布尔值转 "1"/"2"），
+    # 语音问诊状态是 in_progress/completed/interrupted 字符串枚举，需保持原值。
+    @field_serializer("status")
+    def serialize_status_output(self, value):
+        return value.value if hasattr(value, "value") else value
 
 
 class VoiceConsultationTurnResponse(BaseRespEntity):
