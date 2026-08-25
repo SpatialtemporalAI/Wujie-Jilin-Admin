@@ -20,6 +20,7 @@ from database.models.business.robot_voice_config import (
     DEFAULT_TTS_VOICE,
     DEFAULT_TTS_SPEED,
     DEFAULT_TTS_VOLUME,
+    DEFAULT_GREETING_MODE,
 )
 from database.models.business.robot_event_log import RobotEventLog
 from database.models.business.robot_model import RobotModel
@@ -354,6 +355,7 @@ class RobotService:
                 tts_voice=DEFAULT_TTS_VOICE,
                 tts_speed=DEFAULT_TTS_SPEED,
                 tts_volume=DEFAULT_TTS_VOLUME,
+                greeting_mode=DEFAULT_GREETING_MODE,
             )
             db.add(voice_config)
 

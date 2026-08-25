@@ -8,6 +8,7 @@ ConfigService gRPC 客户端
 地址解析规则（target 对应 robot.grpc_config 的子键）：
 - voice.notify_wake_word → middleware + agent（保存唤醒词，同时双推两端）
 - voice.notify_tts → middleware（保存 TTS 配置）
+- voice.notify_greeting_mode → agent（保存打招呼模式，仅推 agent 端）
 - voice.test_wake_word / voice.test_tts → agent（测试推送，发送到机器人 agent）
 - speed.notify_speed_level → middleware
 - battery.notify_battery_threshold → agent
@@ -224,6 +225,30 @@ class VoiceConfigClient:
                 success=False, message=msg
             ),
             log_ctx={"robot_id": robot_id, "rpc": "notify_tts"},
+        )
+
+    @classmethod
+    async def notify_greeting_mode(
+        cls, robot_id: int, greeting_mode: str
+    ) -> voice_pb2.GreetingModeChangedResponse:
+        """推送打招呼模式变更（wave/no_wave）：仅下发给 agent 端"""
+        request = voice_pb2.GreetingModeChangedRequest(
+            robot_id=robot_id, greeting_mode=greeting_mode or ""
+        )
+        return await _dispatch_with_target(
+            robot_id=robot_id,
+            target="agent",
+            stub_factory=cls._get_stub_for_addr,
+            method_name="NotifyGreetingModeChanged",
+            request=request,
+            failure_factory=lambda msg: voice_pb2.GreetingModeChangedResponse(
+                success=False, message=msg
+            ),
+            log_ctx={
+                "robot_id": robot_id,
+                "rpc": "notify_greeting_mode",
+                "greeting_mode": greeting_mode,
+            },
         )
 
     @classmethod

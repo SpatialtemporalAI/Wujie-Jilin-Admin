@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 
-from typing import Optional
+from typing import Literal, Optional
 from pydantic import Field, ConfigDict, field_validator, model_validator
 from datetime import datetime
 from urllib.parse import urlsplit
@@ -60,6 +60,9 @@ class RobotVoiceConfigResponse(BaseRespEntity):
     tts_voice: Optional[str] = Field(None, description="音色")
     tts_speed: Optional[float] = Field(None, description="语速（0.5-2.0）")
     tts_volume: Optional[int] = Field(None, description="音量")
+    greeting_mode: Optional[str] = Field(
+        None, description="打招呼模式：wave-招手模式，no_wave-无招手模式"
+    )
     created_at: Optional[datetime] = Field(None, description="创建时间")
     updated_at: Optional[datetime] = Field(None, description="更新时间")
     grpc_status: Optional[str] = Field(
@@ -151,6 +154,14 @@ class RobotBatteryThresholdUpdate(BaseReqEntity):
 
     battery_threshold: int = Field(
         ..., description="电量报警阈值(5-50)", ge=5, le=50
+    )
+
+
+class RobotGreetingModeUpdate(BaseReqEntity):
+    """机器人打招呼模式更新"""
+
+    greeting_mode: Literal["wave", "no_wave"] = Field(
+        ..., description="打招呼模式：wave-招手模式，no_wave-无招手模式"
     )
 
 

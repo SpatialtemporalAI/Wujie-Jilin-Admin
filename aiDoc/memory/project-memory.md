@@ -8,6 +8,7 @@
 
 ## 业务需求记忆
 
+- [2026-08-25 机器人打招呼模式 greeting_mode](./business/2026-08-25_robot-greeting-mode.md) — robot_voice_config 加 greeting_mode（wave/no_wave，迁移 0005）；参数配置新增「打招呼模式」tab；新增 PUT /config/greeting-mode/{robot_id}（upsert）；voice.proto 加 NotifyGreetingModeChanged 仅推 agent 端
 - [2026-08-03 任务列表「复制」按钮 + 任务名唯一性校验](./business/2026-08-03_task-copy.md) — 行内复制按钮打开新增弹窗回填源任务业务字段（排除 id/时间），复制时任务名默认清空；任务名（新增/编辑/复制）去首尾空格后全局唯一，后端 service 层 ConflictError(409,"任务名称已存在")，前端请求层自动 toast；不污染全局类型，useTableOperate 泛型化 + task 本地 handleCopy + drawer 接受 'copy'
 - [2026-08-03 保存地图 gRPC 推送由串行改为有界并发](./business/2026-08-03_map-save-push-concurrent.md) — _notify_map_saved 原串行下发耗时随机器人数线性放大；抽出 _push_map_to_one 每机器人独立 session（AsyncSession 不可跨任务共享）+ Semaphore(16) + asyncio.gather 并发；map_info 只读共享、notify_map_saved_one 并发安全；前端无改动
 - [2026-08-02 机器人配置类 gRPC 推送 1s 内重复·前后端双重防重](./business/2026-08-02_grpc-config-push-1s-dedup.md) — 实时推送无去重门 + 前端保存按钮双击竞态致 1s 内重复推送；后端新增 modules/grpc/push_dedup.py（进程内 1s TTL，键=方法+机器人+载荷哈希，只压字节级相同重复）接入 _push_with_retry 兜底；前端 voice/speed/battery 三个 handler 改顶层互斥锁（saving 标志前置于任何 await）。仅限配置类，地图/任务同结构待后续复用

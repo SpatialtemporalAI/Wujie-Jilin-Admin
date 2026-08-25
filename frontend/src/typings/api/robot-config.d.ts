@@ -12,6 +12,8 @@ declare namespace Api.RobotConfig {
     tts_voice: string;
     tts_speed: number;
     tts_volume: number;
+    /** 打招呼模式：wave-招手模式 / no_wave-无招手模式 */
+    greeting_mode?: 'wave' | 'no_wave';
     created_at?: string;
     updated_at?: string | null;
     grpc_status?: GrpcStatus;

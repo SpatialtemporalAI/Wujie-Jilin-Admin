@@ -34,6 +34,7 @@ from modules.robot.schemas.robot_config import (
     TestTTSRequest,
     RobotSpeedLevelUpdate,
     RobotBatteryThresholdUpdate,
+    RobotGreetingModeUpdate,
     RobotVideoMonitoringControl,
     RobotVideoMonitoringTicket,
     RobotVideoMonitoringHeartbeat,
@@ -406,6 +407,46 @@ async def update_battery_threshold(
         )
     except Exception as e:
         logger.error("更新机器人电量阈值接口失败: %s", str(e), exc_info=True)
+        raise
+
+
+# ==================== 打招呼模式 ====================
+
+
+@robot_config_router.put(
+    "/greeting-mode/{robot_id}",
+    response_model=ResponseModel[ConfigUpdateResponse],
+    dependencies=[Depends(require_permission("robot:config:edit"))],
+)
+@log_operation(module="robot", action="update", description="更新机器人打招呼模式")
+async def update_greeting_mode(
+    request: Request,
+    payload: RobotGreetingModeUpdate,
+    robot_id: int = Path(..., description="机器人ID"),
+    db: AsyncSession = Depends(get_session),
+    user: SysUser = Depends(current_user),
+):
+    """更新机器人打招呼模式（wave-招手/no_wave-无招手，参数配置专用，权限 robot:config:edit）"""
+    try:
+        logger.info(
+            "更新机器人打招呼模式接口被调用，robot_id: %d, greeting_mode: %s",
+            robot_id,
+            payload.greeting_mode,
+        )
+        _, grpc_status = await RobotConfigService.update_greeting_mode(
+            db, robot_id, payload.greeting_mode
+        )
+        logger.info(
+            "更新机器人打招呼模式接口成功，robot_id: %d, grpc_status=%s",
+            robot_id,
+            grpc_status,
+        )
+        return response_base.success(
+            data=ConfigUpdateResponse(grpc_status=grpc_status),
+            msg=_GRPC_MSG_MAP.get(grpc_status, "保存成功"),
+        )
+    except Exception as e:
+        logger.error("更新机器人打招呼模式接口失败: %s", str(e), exc_info=True)
         raise
 
 

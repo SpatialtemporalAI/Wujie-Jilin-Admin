@@ -24,6 +24,7 @@ from database.models.business.robot_voice_config import (
     DEFAULT_TTS_VOICE,
     DEFAULT_TTS_SPEED,
     DEFAULT_TTS_VOLUME,
+    DEFAULT_GREETING_MODE,
 )
 from database.models.business.robot_face_recognition import RobotFaceRecognition
 from core.config import settings
@@ -178,6 +179,7 @@ class RobotConfigService:
                     tts_voice=DEFAULT_TTS_VOICE,
                     tts_speed=DEFAULT_TTS_SPEED,
                     tts_volume=DEFAULT_TTS_VOLUME,
+                    greeting_mode=DEFAULT_GREETING_MODE,
                 )
             return config
         except Exception as e:
@@ -597,4 +599,58 @@ class RobotConfigService:
         except Exception as e:
             await db.rollback()
             logger.error("更新机器人电量阈值失败: %s", str(e), exc_info=True)
+            raise
+
+    # ==================== 打招呼模式 ====================
+
+    @staticmethod
+    async def update_greeting_mode(
+        db: AsyncSession, robot_id: int, greeting_mode: str
+    ) -> Tuple[RobotVoiceConfig, str]:
+        """更新机器人打招呼模式（wave/no_wave），按 robot_id upsert，返回 (orm_obj, grpc_status)
+
+        robot_voice_config 按 robot_id 唯一；无记录时按默认值常量建行（greeting_mode 用入参）。
+        DB 落库后推送 NotifyGreetingModeChanged 给 agent 端。
+        """
+        try:
+            result = await db.execute(
+                select(RobotVoiceConfig)
+                .where(RobotVoiceConfig.robot_id == robot_id)
+                .where(RobotVoiceConfig.deleted_at.is_(None))
+            )
+            config = result.scalar_one_or_none()
+            if config:
+                config.greeting_mode = greeting_mode
+            else:
+                config = RobotVoiceConfig(
+                    robot_id=robot_id,
+                    wake_word_enabled=DEFAULT_WAKE_WORD_ENABLED,
+                    wake_word=DEFAULT_WAKE_WORD,
+                    tts_voice=DEFAULT_TTS_VOICE,
+                    tts_speed=DEFAULT_TTS_SPEED,
+                    tts_volume=DEFAULT_TTS_VOLUME,
+                    greeting_mode=greeting_mode,
+                )
+                db.add(config)
+            await db.commit()
+            await db.refresh(config)
+            logger.info(
+                "更新打招呼模式成功，robot_id: %d, greeting_mode: %s",
+                robot_id,
+                greeting_mode,
+            )
+            # 推送打招呼模式变更（仅 agent 端）
+            payload = {"robot_id": robot_id, "greeting_mode": greeting_mode}
+            status = await RobotConfigService._push_with_retry(
+                db,
+                rpc_call=lambda: VoiceConfigClient.notify_greeting_mode(**payload),
+                service_name="voice",
+                method_name="NotifyGreetingModeChanged",
+                payload=payload,
+                robot_id=robot_id,
+            )
+            return config, status
+        except Exception as e:
+            await db.rollback()
+            logger.error("更新机器人打招呼模式失败: %s", str(e), exc_info=True)
             raise

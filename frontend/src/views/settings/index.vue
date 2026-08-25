@@ -2,6 +2,7 @@
 import { ref } from 'vue';
 import VoiceSynthesisTab from './modules/voice-synthesis-tab.vue';
 import FaceRecognitionTab from './modules/face-recognition-tab.vue';
+import GreetingModeTab from './modules/greeting-mode-tab.vue';
 import WalkingSpeedTab from './modules/walking-speed-tab.vue';
 import BatteryThresholdTab from './modules/battery-threshold-tab.vue';
 
@@ -19,6 +20,9 @@ const activeTab = ref('voice');
         </NTabPane>
         <NTabPane name="face" tab="人脸识别TTS">
           <FaceRecognitionTab />
+        </NTabPane>
+        <NTabPane name="greeting" tab="打招呼模式">
+          <GreetingModeTab />
         </NTabPane>
         <NTabPane name="speed" tab="行走速度设置">
           <WalkingSpeedTab />
