@@ -9,7 +9,7 @@
 
 ## 枚举约定（外部写入方需遵守）
 
-- `intent_type` 意图 8 种：`indoor_navigation` 院内问路 / `triage_qa` 分诊问答 / `medical_guide` 就医指南 / `health_check_notice` 体检须知 / `insurance_guide` 医保指南 / `admission_notice` 住院须知 / `medication_consult` 药物咨询 / `general_chat` 闲聊寒暄
+- `intent_type` 意图 6 种：`indoor_navigation` 院内问路 / `triage_qa` 分诊问答 / `medical_guide` 就医指南 / `health_check_notice` 体检须知 / `insurance_guide` 医保指南 / `admission_notice` 住院须知（2026-08-26 起移除 `medication_consult` 药物咨询、`general_chat` 闲聊寒暄）
 - `trigger_method` 触发 2 种：`wake_word` 唤醒词 / `face_recognition` 人脸识别
 - `status` 状态 3 种：`in_progress` 进行中 / `completed` 已完成 / `interrupted` 已中断
 
@@ -23,7 +23,7 @@
 
 - **Model**：`database/models/business/voice_consultation_session.py`（`VoiceConsultationSession`：robot_id FK、occurred_at 交互时间、trigger_method、turn_count 冗余轮次、question_summary、duration_seconds、status、intent_type）、`voice_consultation_turn.py`（`VoiceConsultationTurn`：session_id FK、turn_no、question/answer Text、intent_type、duration_seconds、occurred_at）。两模型已注册 `business/__init__.py` + `alembic/env.py` 模块元组。
 - **模块**：`modules/voice_consultation/`（endpoints/schemas/services + router，`prefix="/voice-consultation"`），挂 `modules/admin/router.py`，最终路径 `/admin/voice-consultation/sessions/{list,stats,{id}}`。权限码 `voice:consultation:{list,detail,export}`。无写入/删除接口。
-- **stats 统计**：`func.count/avg` + `group_by`；今日边界用 `database.utils.timezone`（Asia/Shanghai 自然日转 UTC）；总量环比 = 全量 vs 截止上周日累计；今日环比 = 今日 vs 昨日；平均时长 = 当日均值、环比昨日均值（自然日窗口）；分布 8/2 项 Python 侧补零 + 未知 code 兜底追加。
+- **stats 统计**：`func.count/avg` + `group_by`；今日边界用 `database.utils.timezone`（Asia/Shanghai 自然日转 UTC）；总量环比 = 全量 vs 截止上周日累计；今日环比 = 今日 vs 昨日；平均时长 = 当日均值、环比昨日均值（自然日窗口）；分布 6/2 项 Python 侧补零 + 未知 code 兜底追加。
 - **导出**：`modules/admin/exports/voice_consultation_export.py`，module_key `voice_consultation`，含 code→中文标签映射 + `enrich_fn` 填机器人名。
 
 ### 前端

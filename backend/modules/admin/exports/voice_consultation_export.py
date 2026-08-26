@@ -19,8 +19,6 @@ INTENT_LABELS = {
     "health_check_notice": "体检须知",
     "insurance_guide": "医保指南",
     "admission_notice": "住院须知",
-    "medication_consult": "药物咨询",
-    "general_chat": "闲聊寒暄",
 }
 TRIGGER_LABELS = {
     "wake_word": "唤醒词",

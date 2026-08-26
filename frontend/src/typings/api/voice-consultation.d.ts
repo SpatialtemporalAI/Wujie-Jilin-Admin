@@ -20,9 +20,7 @@ declare namespace Api {
       | 'medical_guide'
       | 'health_check_notice'
       | 'insurance_guide'
-      | 'admission_notice'
-      | 'medication_consult'
-      | 'general_chat';
+      | 'admission_notice';
 
     /** 语音问诊会话记录（status 为业务枚举，覆盖 CommonRecord 的通用 status） */
     type SessionRecord = Omit<Common.CommonRecord, 'status'> & {
@@ -99,7 +97,7 @@ declare namespace Api {
       avg_duration: number | null;
       /** 当日均值较昨日均值的百分比变化 */
       avg_duration_delta_pct: number | null;
-      /** 意图分布（随筛选），8 项含零值 */
+      /** 意图分布（随筛选），6 项含零值 */
       intent_distribution: DistributionItem[];
       /** 触发方式分布（随筛选），2 项含零值 */
       trigger_distribution: DistributionItem[];

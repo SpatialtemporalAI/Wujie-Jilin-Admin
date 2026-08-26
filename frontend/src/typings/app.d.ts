@@ -759,8 +759,6 @@ declare namespace App {
               health_check_notice: string;
               insurance_guide: string;
               admission_notice: string;
-              medication_consult: string;
-              general_chat: string;
             };
           };
           face: {

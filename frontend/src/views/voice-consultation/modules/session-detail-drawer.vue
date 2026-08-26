@@ -91,9 +91,7 @@ const INTENT_LABEL_KEYS = [
   'medical_guide',
   'health_check_notice',
   'insurance_guide',
-  'admission_notice',
-  'medication_consult',
-  'general_chat'
+  'admission_notice'
 ] as const;
 
 function intentLabel(type: string | null): string {
