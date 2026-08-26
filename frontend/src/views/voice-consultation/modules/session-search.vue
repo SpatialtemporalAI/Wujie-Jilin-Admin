@@ -38,8 +38,8 @@ const timeRange = computed<[number, number] | null>({
   },
   set(val: [number, number] | null) {
     if (val) {
-      model.value.start_time = dayjs(val[0]).format();
-      model.value.end_time = dayjs(val[1]).format();
+      model.value.start_time = dayjs(val[0]).startOf('day').format();
+      model.value.end_time = dayjs(val[1]).endOf('day').format();
     } else {
       model.value.start_time = undefined;
       model.value.end_time = undefined;
