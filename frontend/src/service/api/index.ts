@@ -14,3 +14,4 @@ export * from './merchant';
 export * from './call-log';
 export * from './face';
 export * from './export';
+export * from './voice-consultation';

@@ -708,6 +708,61 @@ declare namespace App {
               endTime: string;
             };
           };
+          voiceConsultation: {
+            title: string;
+            totalInteractions: string;
+            todayInteractions: string;
+            avgDuration: string;
+            vsLastWeek: string;
+            vsLastSunday: string;
+            vsYesterday: string;
+            intentDistribution: string;
+            intentTypeLabel: string;
+            triggerDistribution: string;
+            records: string;
+            time: string;
+            trigger: string;
+            robot: string;
+            turns: string;
+            questionSummary: string;
+            duration: string;
+            status: string;
+            viewDetail: string;
+            detailTitle: string;
+            turnList: string;
+            turnNo: string;
+            question: string;
+            answer: string;
+            occurredAt: string;
+            createdAt: string;
+            allRobots: string;
+            allTriggers: string;
+            allStatuses: string;
+            keywordPlaceholder: string;
+            form: {
+              startTime: string;
+              endTime: string;
+            };
+            triggerMethod: {
+              wake_word: string;
+              face_recognition: string;
+            };
+            statusLabel: {
+              in_progress: string;
+              completed: string;
+              interrupted: string;
+            };
+            intentType: {
+              indoor_navigation: string;
+              triage_qa: string;
+              medical_guide: string;
+              health_check_notice: string;
+              insurance_guide: string;
+              admission_notice: string;
+              medication_consult: string;
+              general_chat: string;
+            };
+          };
           face: {
             title: string;
             selectDb: string;
