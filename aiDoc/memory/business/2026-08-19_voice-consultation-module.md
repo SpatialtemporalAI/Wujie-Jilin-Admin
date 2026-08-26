@@ -23,7 +23,7 @@
 
 - **Model**：`database/models/business/voice_consultation_session.py`（`VoiceConsultationSession`：robot_id FK、occurred_at 交互时间、trigger_method、turn_count 冗余轮次、question_summary、duration_seconds、status、intent_type）、`voice_consultation_turn.py`（`VoiceConsultationTurn`：session_id FK、turn_no、question/answer Text、intent_type、duration_seconds、occurred_at）。两模型已注册 `business/__init__.py` + `alembic/env.py` 模块元组。
 - **模块**：`modules/voice_consultation/`（endpoints/schemas/services + router，`prefix="/voice-consultation"`），挂 `modules/admin/router.py`，最终路径 `/admin/voice-consultation/sessions/{list,stats,{id}}`。权限码 `voice:consultation:{list,detail,export}`。无写入/删除接口。
-- **stats 统计**：`func.count/avg` + `group_by`；今日边界用 `database.utils.timezone`（Asia/Shanghai 自然日转 UTC）；环比 = 今日 vs 上周同日、平均时长近 7 天 vs 前 7 天（固定滑动窗口）；分布 8/2 项 Python 侧补零 + 未知 code 兜底追加。
+- **stats 统计**：`func.count/avg` + `group_by`；今日边界用 `database.utils.timezone`（Asia/Shanghai 自然日转 UTC）；总量环比 = 全量 vs 截止上周日累计；今日环比 = 今日 vs 昨日；平均时长 = 当日均值、环比昨日均值（自然日窗口）；分布 8/2 项 Python 侧补零 + 未知 code 兜底追加。
 - **导出**：`modules/admin/exports/voice_consultation_export.py`，module_key `voice_consultation`，含 code→中文标签映射 + `enrich_fn` 填机器人名。
 
 ### 前端
@@ -43,7 +43,7 @@
 - **外部写入方对接要点**：`id` 为雪花主键无 DB 默认，外部必须自行生成唯一 BigInteger；`created_at` 已有 server_default 兜底但建议显式提供；`turn_count` 为冗余字段由外部维护；`occurred_at` 是业务时间（列表排序/筛选字段），区别于入库时间 `created_at`。
 - **前端类型陷阱**：`Common.CommonRecord` 自带 `status: EnableStatus | null`（'1'/'2'），与业务 status 枚举冲突会把交叉类型折叠成 never —— `SessionRecord` 用 `Omit<Common.CommonRecord, 'status'> & {...}` 规避。
 - **i18n 层级**：页面文案放 `page.manage.voiceConsultation.*`（manage 下，与 callLog 同级），不是 `page.voiceConsultation.*`。
-- 环比语义：时间筛选不影响今日卡片和时长环比窗口（均为固定滑动窗口），只影响总量/平均/分布。
+- 环比语义：卡片统计（总量/今日/平均时长）均不随筛选；平均时长为当日口径、环比昨日（2026-08-26 由全量均值改为当日均值）；时间筛选只影响意图/触发分布图表。
 
 ## 记录日期
 

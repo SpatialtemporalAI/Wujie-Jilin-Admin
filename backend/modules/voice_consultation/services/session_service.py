@@ -120,7 +120,7 @@ class VoiceConsultationSessionService:
     async def get_stats(
         db: AsyncSession, query_params: VoiceConsultationSessionQueryParams
     ) -> VoiceConsultationStatsResponse:
-        """统计：总量/今日/平均时长（带环比，全量口径不随筛选） + 意图分布 + 触发方式分布（随筛选）"""
+        """统计：总量/今日交互（全量口径不随筛选） + 当日平均时长（环比昨日） + 意图/触发分布（随筛选）"""
         service = VoiceConsultationSessionService
 
         # 卡片统计只认全量数据（仅排除软删除），不跟随用户筛选条件
@@ -147,14 +147,9 @@ class VoiceConsultationSessionService:
                     conditions.append(VoiceConsultationSession.occurred_at <= end)
             return conditions
 
-        # 1) 全量总量 + 全量平均时长
-        summary_stmt = select(
-            func.count(VoiceConsultationSession.id),
-            func.avg(VoiceConsultationSession.duration_seconds),
-        ).where(and_(*base_conditions))
-        total, avg_duration = (await db.execute(summary_stmt)).one()
-        total = total or 0
-        avg_duration = float(avg_duration) if avg_duration is not None else None
+        # 1) 全量总量
+        total_stmt = select(func.count(VoiceConsultationSession.id)).where(and_(*base_conditions))
+        total = (await db.execute(total_stmt)).scalar() or 0
 
         # 时间边界（Asia/Shanghai 本地自然日，转 UTC 比较）
         now_local = timezone.now()
@@ -191,7 +186,7 @@ class VoiceConsultationSessionService:
             else None
         )
 
-        # 4) 平均时长环比：当日均值 vs 昨日均值（固定自然日窗口）
+        # 4) 平均问诊时长：当日均值，环比昨日均值（固定自然日窗口）
         async def avg_between(start: datetime, end: datetime) -> float | None:
             stmt = select(func.avg(VoiceConsultationSession.duration_seconds)).where(
                 and_(
@@ -236,7 +231,7 @@ class VoiceConsultationSessionService:
             total_delta_pct=total_delta_pct,
             today_count=today_count,
             today_delta_pct=today_delta_pct,
-            avg_duration=round(avg_duration, 1) if avg_duration is not None else None,
+            avg_duration=round(today_avg, 1) if today_avg is not None else None,
             avg_duration_delta_pct=avg_duration_delta_pct,
             intent_distribution=intent_distribution,
             trigger_distribution=trigger_distribution,

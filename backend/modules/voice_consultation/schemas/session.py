@@ -88,13 +88,13 @@ class VoiceConsultationDistributionItem(BaseRespEntity):
 
 
 class VoiceConsultationStatsResponse(BaseRespEntity):
-    """语音问诊统计响应（卡片统计为全量口径不随筛选，分布图表随筛选）"""
+    """语音问诊统计响应（卡片统计不随筛选，平均时长为当日口径；分布图表随筛选）"""
 
     total: int = Field(description="全量总交互数（不随筛选）")
     total_delta_pct: float | None = Field(None, description="总量较截止上周日累计的百分比变化")
     today_count: int = Field(description="今日交互数（不随筛选）")
     today_delta_pct: float | None = Field(None, description="今日较昨日百分比变化")
-    avg_duration: float | None = Field(None, description="全量平均会话时长（秒，不随筛选）")
+    avg_duration: float | None = Field(None, description="当日平均会话时长（秒，不随筛选）")
     avg_duration_delta_pct: float | None = Field(None, description="当日均值较昨日均值的百分比变化")
     intent_distribution: list[VoiceConsultationDistributionItem] = Field(description="意图分布（随筛选），8 项含零值")
     trigger_distribution: list[VoiceConsultationDistributionItem] = Field(description="触发方式分布（随筛选），2 项含零值")

@@ -85,7 +85,7 @@ declare namespace Api {
       count: number;
     };
 
-    /** 统计响应（卡片统计为全量口径不随筛选，分布图表随筛选） */
+    /** 统计响应（卡片统计不随筛选，平均时长为当日口径；分布图表随筛选） */
     type Stats = {
       /** 全量总交互数（不随筛选） */
       total: number;
@@ -95,7 +95,7 @@ declare namespace Api {
       today_count: number;
       /** 今日较昨日百分比变化 */
       today_delta_pct: number | null;
-      /** 全量平均会话时长（秒，不随筛选） */
+      /** 当日平均会话时长（秒，不随筛选） */
       avg_duration: number | null;
       /** 当日均值较昨日均值的百分比变化 */
       avg_duration_delta_pct: number | null;

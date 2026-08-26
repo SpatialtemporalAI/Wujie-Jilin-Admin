@@ -66,7 +66,7 @@ async def get_voice_consultation_stats(
     user: SysUser = Depends(current_user),
     db: AsyncSession = Depends(get_session),
 ):
-    """查询语音问诊统计（总量/今日/平均时长带环比 + 意图分布 + 触发方式分布）"""
+    """查询语音问诊统计（总量/今日交互 + 当日平均时长环比昨日 + 意图分布 + 触发方式分布）"""
     stats = await VoiceConsultationSessionService.get_stats(db, query_params)
     return response_base.success(data=stats, msg="获取语音问诊统计数据成功")
 
