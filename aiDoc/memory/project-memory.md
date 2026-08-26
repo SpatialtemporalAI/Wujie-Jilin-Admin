@@ -8,6 +8,7 @@
 
 ## 业务需求记忆
 
+- [2026-08-26 机器人卡片「服务器自启状态 + 重启」](./business/2026-08-26_robot-slot-status.md) — 透传外部控制面板 slot-status/slot-restart HTTP 接口（robot_id+serial_number 标识）；地址走 `ROBOT_PANEL__BASE_URL` 配置；新增 `GET/POST /robot/manage/{id}/slot-status|slot-restart`（SlotStatusData 不能用 BaseRespEntity，status 会被转 "1"）；前端卡片底部新增状态行 + 重启按钮
 - [2026-08-25 机器人打招呼模式 greeting_mode](./business/2026-08-25_robot-greeting-mode.md) — robot_voice_config 加 greeting_mode（wave/no_wave，迁移 0005）；参数配置新增「打招呼模式」tab；新增 PUT /config/greeting-mode/{robot_id}（upsert）；voice.proto 加 NotifyGreetingModeChanged 仅推 agent 端
 - [2026-08-19 语音问诊模块（会话记录 + 统计分析页）](./business/2026-08-19_voice-consultation-module.md) — 两张新表（会话主表+轮次明细，数据由外部应用直连写入，需自带雪花 id/created_at 兜底 server_default）；只读 API（list/stats/detail）+ 导出；前端统计分析页（3 统计卡片+意图柱状图+触发环形图+筛选表格+详情抽屉）；顶级菜单 voice-consultation 迁移 0004；i18n 在 page.manage.voiceConsultation 下；CommonRecord.status 冲突用 Omit 规避
 - [2026-08-03 任务列表「复制」按钮 + 任务名唯一性校验](./business/2026-08-03_task-copy.md) — 行内复制按钮打开新增弹窗回填源任务业务字段（排除 id/时间），复制时任务名默认清空；任务名（新增/编辑/复制）去首尾空格后全局唯一，后端 service 层 ConflictError(409,"任务名称已存在")，前端请求层自动 toast；不污染全局类型，useTableOperate 泛型化 + task 本地 handleCopy + drawer 接受 'copy'

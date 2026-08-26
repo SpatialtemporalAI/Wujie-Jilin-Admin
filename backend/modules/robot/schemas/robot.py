@@ -137,6 +137,18 @@ class RobotResponseData(BaseRespEntity):
         return value.value if hasattr(value, "value") else value
 
 
+class SlotStatusData(BaseModel):
+    """
+    服务器自启动状态响应
+    注意不能用 BaseRespEntity：其 status 序列化器会把 truthy 值转成 "1"，
+    本接口 status 是中文字符串（已启动/启动中/启动失败/未配置/未知），需保持原值。
+    """
+
+    status: str = Field(
+        ..., description="服务器自启动状态：已启动/启动中/启动失败/未配置/未知"
+    )
+
+
 class RobotSimpleResponse(BaseRespEntity):
     """
     机器人简化响应模型

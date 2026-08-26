@@ -27,6 +27,7 @@ from .settings_model import (
     MerchantModel,
     FaceRecognitionModel,
     LiveKitModel,
+    RobotPanelModel,
 )
 
 
@@ -76,3 +77,5 @@ class GlobalSetting(BaseSettings):
     FACE: FaceRecognitionModel = FaceRecognitionModel()
     # LiveKit 实时音视频配置
     LIVEKIT: LiveKitModel = LiveKitModel()
+    # 机器人控制面板（服务器自启动状态）配置
+    ROBOT_PANEL: RobotPanelModel = RobotPanelModel()

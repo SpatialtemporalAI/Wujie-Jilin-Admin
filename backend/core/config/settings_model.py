@@ -266,3 +266,12 @@ class LiveKitModel(BaseModel):
     VIEWERS_SET_TTL_SECONDS: int = Field(
         7200, description="观众集合兜底过期时间（秒）"
     )
+
+
+class RobotPanelModel(BaseModel):
+    """机器人控制面板（服务器自启动状态）HTTP 接口配置"""
+
+    BASE_URL: str = Field(
+        "", description="控制面板地址，如 http://192.168.112.198:5678，为空则功能不可用"
+    )
+    TIMEOUT_SECONDS: float = Field(5.0, description="面板接口超时时间(秒)")

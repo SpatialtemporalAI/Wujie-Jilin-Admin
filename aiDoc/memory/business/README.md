@@ -101,3 +101,4 @@
 - [2026-07-28 唤醒词/语音合成测试推送改走机器人 agent](./2026-07-28_voice-test-push-to-agent.md) — test_wake_word(TestWakeWord)+test_tts(TestTTSConfig) 两个测试推送的 target 由 middleware 改为 agent；保存类 notify_wake_word/notify_tts 不动仍走 middleware（config_client.py）
 - [2026-07-31 唤醒词保存 gRPC 改为同时推 middleware + agent](./2026-07-31_voice-wake-word-dual-push.md) — notify_wake_word 由「只推 middleware」改为「并发双推 middleware + agent」并聚合响应；仅推已配置端、全成才算成功，失败入重试队列（重试双推、NotifyWakeWord 幂等）；service/retry/proto/前端零改动，仅改 config_client.py
 - [2026-08-25 机器人打招呼模式 greeting_mode](./2026-08-25_robot-greeting-mode.md) — robot_voice_config 加 greeting_mode（wave/no_wave，迁移 0005）；参数配置新增「打招呼模式」tab；新增 PUT /config/greeting-mode/{robot_id}（upsert）；voice.proto 加 NotifyGreetingModeChanged 仅推 agent 端
+- [2026-08-26 机器人卡片「服务器自启状态 + 重启」](./2026-08-26_robot-slot-status.md) — 透传外部控制面板 slot-status/slot-restart HTTP 接口；地址走 `ROBOT_PANEL__BASE_URL` 配置；新增 `GET/POST /robot/manage/{id}/slot-status|slot-restart`；前端卡片底部新增状态行 + 重启按钮

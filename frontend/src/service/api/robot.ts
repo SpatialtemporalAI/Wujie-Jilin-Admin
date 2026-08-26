@@ -113,6 +113,22 @@ export function fetchDeleteRobot(id: number) {
   });
 }
 
+/** 查询机器人服务器自启动状态（面板：已启动/启动中/启动失败/未配置/未知） */
+export function fetchGetRobotSlotStatus(id: number) {
+  return request<Api.Robot.SlotStatusData>({
+    url: `/admin/robot/manage/${id}/slot-status`,
+    method: 'get'
+  });
+}
+
+/** 重启机器人服务器自启动（面板按序补齐 zenoh -> middleware） */
+export function fetchRestartRobotSlot(id: number) {
+  return request<Api.Robot.SlotStatusData>({
+    url: `/admin/robot/manage/${id}/slot-restart`,
+    method: 'post'
+  });
+}
+
 /** update robot grpc config (agent + middleware + ros) */
 export function fetchUpdateRobotGrpcConfig(id: number, data: Api.Robot.RobotGrpcConfig) {
   return request<Api.Robot.Robot>({

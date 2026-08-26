@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { ref } from 'vue';
 import { NButton, NCard, NEmpty, NPopconfirm, NSpace, NSpin, NTag, useMessage } from 'naive-ui';
-import { fetchDeleteRobot, fetchGetRobotList } from '@/service/api';
+import { fetchDeleteRobot, fetchGetRobotList, fetchGetRobotSlotStatus, fetchRestartRobotSlot } from '@/service/api';
 import { useAuth } from '@/hooks/business/auth';
 import { $t } from '@/locales';
 import SvgIcon from '@/components/custom/svg-icon.vue';
@@ -37,11 +37,57 @@ async function loadData() {
     const { data, error } = await fetchGetRobotList({ page: 1, page_size: 200 });
     if (!error && data) {
       robotList.value = data.records || [];
+      loadSlotStatuses(data.records || []);
     }
   } catch (err) {
     console.error('加载机器人列表失败:', err);
   } finally {
     loading.value = false;
+  }
+}
+
+/** 服务器自启状态（面板返回：已启动/启动中/启动失败/未配置/未知） */
+const slotStatusMap = ref<Record<number, string>>({});
+const slotRestartingMap = ref<Record<number, boolean>>({});
+
+/** 并行拉取每台机器人的自启状态，单台失败置「未知」不影响其它卡片 */
+function loadSlotStatuses(records: Api.Robot.Robot[]) {
+  records.forEach(robot => {
+    loadSlotStatus(robot.id);
+  });
+}
+
+async function loadSlotStatus(robotId: number) {
+  try {
+    const { data, error } = await fetchGetRobotSlotStatus(robotId);
+    slotStatusMap.value[robotId] = !error && data ? data.status : '未知';
+  } catch {
+    slotStatusMap.value[robotId] = '未知';
+  }
+}
+
+function getSlotStatusType(status: string): import('naive-ui').TagProps['type'] {
+  const typeMap: Record<string, import('naive-ui').TagProps['type']> = {
+    已启动: 'success',
+    启动中: 'warning',
+    启动失败: 'error'
+  };
+  return typeMap[status] || 'default';
+}
+
+async function handleRestartSlot(robot: Api.Robot.Robot) {
+  slotRestartingMap.value[robot.id] = true;
+  try {
+    const { data, error } = await fetchRestartRobotSlot(robot.id);
+    if (!error && data) {
+      slotStatusMap.value[robot.id] = data.status;
+      message.success(`重启指令已下发，当前状态：${data.status}`);
+    }
+  } catch (err) {
+    console.error('重启服务器自启失败:', err);
+  } finally {
+    slotRestartingMap.value[robot.id] = false;
+    loadSlotStatus(robot.id);
   }
 }
 
@@ -155,6 +201,28 @@ loadData();
                 <span class="robot-info-label">地图：</span>
                 <span class="robot-info-value">{{ robot.map_name || '-' }}</span>
               </div>
+            </div>
+
+            <div class="robot-card-slot">
+              <span class="robot-info-label">服务器自启状态</span>
+              <NSpace align="center">
+                <NTag :type="getSlotStatusType(slotStatusMap[robot.id] || '未知')" size="small" round>
+                  {{ slotStatusMap[robot.id] || '未知' }}
+                </NTag>
+                <NButton
+                  v-if="hasAuth('robot:manage:edit')"
+                  size="small"
+                  secondary
+                  :loading="slotRestartingMap[robot.id]"
+                  :disabled="slotStatusMap[robot.id] === '启动中'"
+                  @click="handleRestartSlot(robot)"
+                >
+                  <template #icon>
+                    <icon-mdi-restart class="text-icon" />
+                  </template>
+                  重启
+                </NButton>
+              </NSpace>
             </div>
 
             <div class="robot-card-footer">
@@ -310,6 +378,16 @@ loadData();
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
+}
+
+.robot-card-slot {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px 0;
+  margin-bottom: 4px;
+  border-top: 1px dashed var(--n-divider-color);
+  font-size: 13px;
 }
 
 .robot-card-footer {

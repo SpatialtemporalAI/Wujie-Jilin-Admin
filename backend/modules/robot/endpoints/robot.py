@@ -36,7 +36,9 @@ from modules.robot.schemas.robot import (
     RobotSimpleResponse,
     RobotGrpcConfigUpdate,
     RobotMapBindingUpdate,
+    SlotStatusData,
 )
+from modules.robot.services.robot_slot_service import RobotSlotService
 
 logger = logging.getLogger(__name__)
 
@@ -317,4 +319,75 @@ async def update_robot_map_binding(
 
     except Exception as e:
         logger.error("更新机器人绑定场景接口失败: %s", str(e), exc_info=True)
+        raise
+
+
+@robot_router.get(
+    "/{robot_id}/slot-status",
+    response_model=ResponseModel[SlotStatusData],
+    dependencies=[Depends(require_permission("robot:manage:list"))],
+)
+async def get_robot_slot_status(
+    robot_id: int = Path(..., description="机器人ID"),
+    db: AsyncSession = Depends(get_session),
+):
+    """
+    查询机器人服务器自启动状态（zenoh/middleware/大脑层）
+
+    透传外部控制面板 `GET {BASE}/api/slot-status`，status 取值：
+    已启动/启动中/启动失败；面板地址未配置返回「未配置」，网络异常返回「未知」。
+    """
+    try:
+        logger.info("查询机器人服务器自启动状态接口被调用，机器人ID: %d", robot_id)
+
+        robot_obj = await RobotService.get(db, robot_id)
+        status = await RobotSlotService.get_slot_status(robot_obj)
+
+        logger.info(
+            "查询机器人服务器自启动状态接口成功，机器人ID: %d，状态: %s",
+            robot_id,
+            status,
+        )
+        return response_base.success(data=SlotStatusData(status=status))
+
+    except Exception as e:
+        logger.error("查询机器人服务器自启动状态接口失败: %s", str(e), exc_info=True)
+        raise
+
+
+@robot_router.post(
+    "/{robot_id}/slot-restart",
+    response_model=ResponseModel[SlotStatusData],
+    dependencies=[Depends(require_permission("robot:manage:edit"))],
+)
+@log_operation(module="robot", action="restart", description="重启机器人服务器自启动")
+async def restart_robot_slot(
+    request: Request,
+    robot_id: int = Path(..., description="机器人ID"),
+    db: AsyncSession = Depends(get_session),
+    user: SysUser = Depends(current_user),
+):
+    """
+    重启机器人服务器自启动（面板按序补齐 zenoh -> middleware，不重启大脑层）
+
+    透传外部控制面板 `POST {BASE}/api/slot-restart`，返回重启后的 status。
+    面板返回「启动中」时应轮询 slot-status 查询，不要重复重启。
+    """
+    try:
+        logger.info("重启机器人服务器自启动接口被调用，机器人ID: %d", robot_id)
+
+        robot_obj = await RobotService.get(db, robot_id)
+        status = await RobotSlotService.restart_slot(robot_obj)
+
+        logger.info(
+            "重启机器人服务器自启动接口成功，机器人ID: %d，状态: %s",
+            robot_id,
+            status,
+        )
+        return response_base.success(
+            data=SlotStatusData(status=status), msg="重启指令已下发"
+        )
+
+    except Exception as e:
+        logger.error("重启机器人服务器自启动接口失败: %s", str(e), exc_info=True)
         raise

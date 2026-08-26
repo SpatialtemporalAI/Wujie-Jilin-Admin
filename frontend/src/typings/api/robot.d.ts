@@ -131,6 +131,14 @@ declare namespace Api {
     /** robot list */
     type RobotList = Common.PaginatingQueryRecord<Robot>;
 
+    /** 服务器自启动状态（面板 HTTP 接口返回，见接口说明_服务器自启动状态_Back.md） */
+    type SlotStatus = '已启动' | '启动中' | '启动失败' | '未配置' | '未知';
+
+    /** 服务器自启动状态响应 */
+    type SlotStatusData = {
+      status: SlotStatus | string;
+    };
+
     /** robot create */
     type RobotCreate = {
       name: string;
