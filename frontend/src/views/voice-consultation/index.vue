@@ -97,7 +97,7 @@ const { columns, columnChecks, data, getData, getDataByPage, loading, mobilePagi
           return (
             <NTag
               type={isFace ? undefined : (triggerTagMap[row.trigger_method] || 'default')}
-              style={isFace ? { backgroundColor: '#b37feb', color: '#fff', borderColor: '#b37feb' } : undefined}
+              style={isFace ? { backgroundColor: '#b37feb1A', color: '#b37feb', borderColor: '#b37feb80', borderWidth: '1px' } : undefined}
               bordered={!isFace}
               size="small"
             >
