@@ -54,8 +54,7 @@ const statusTagMap: Record<string, NaiveUI.ThemeColor> = {
 };
 
 const triggerTagMap: Record<string, NaiveUI.ThemeColor> = {
-  wake_word: 'info',
-  face_recognition: 'default'
+  wake_word: 'info'
 };
 
 function formatDuration(seconds: number | null): string {
@@ -72,87 +71,95 @@ function formatTime(time: string | null): string {
 
 const { columns, columnChecks, data, getData, getDataByPage, loading, mobilePagination, pagination } =
   useNaivePaginatedTable({
-  api: () => fetchGetVoiceConsultationSessionList(searchParams),
-  transform: response => {
-    return defaultTransform(response);
-  },
-  onPaginationParamsChange: params => {
-    searchParams.page = params.page;
-    searchParams.page_size = params.pageSize;
-  },
-  columns: () => [
-    {
-      key: 'occurred_at',
-      title: $t('page.manage.voiceConsultation.time'),
-      align: 'center',
-      width: 170,
-      render: row => formatTime(row.occurred_at)
+    api: () => fetchGetVoiceConsultationSessionList(searchParams),
+    transform: response => {
+      return defaultTransform(response);
     },
-    {
-      key: 'trigger_method',
-      title: $t('page.manage.voiceConsultation.trigger'),
-      align: 'center',
-      width: 100,
-      render: row => (
-        <NTag type={triggerTagMap[row.trigger_method] || 'default'} size="small">
-          {$t(`page.manage.voiceConsultation.triggerMethod.${row.trigger_method}`)}
-        </NTag>
-      )
+    onPaginationParamsChange: params => {
+      searchParams.page = params.page;
+      searchParams.page_size = params.pageSize;
     },
-    {
-      key: 'robot_name',
-      title: $t('page.manage.voiceConsultation.robot'),
-      align: 'center',
-      width: 110,
-      render: row => row.robot_name || '-'
-    },
-    {
-      key: 'turn_count',
-      title: $t('page.manage.voiceConsultation.turns'),
-      align: 'center',
-      width: 70
-    },
-    {
-      key: 'question_summary',
-      title: $t('page.manage.voiceConsultation.questionSummary'),
-      align: 'center',
-      minWidth: 220,
-      ellipsis: { tooltip: true },
-      render: row => row.question_summary || '-'
-    },
-    {
-      key: 'duration_seconds',
-      title: $t('page.manage.voiceConsultation.duration'),
-      align: 'center',
-      width: 100,
-      render: row => formatDuration(row.duration_seconds)
-    },
-    {
-      key: 'status',
-      title: $t('page.manage.voiceConsultation.status'),
-      align: 'center',
-      width: 90,
-      render: row => (
-        <NTag type={statusTagMap[row.status] || 'default'} size="small">
-          {$t(`page.manage.voiceConsultation.statusLabel.${row.status}`)}
-        </NTag>
-      )
-    },
-    {
-      key: 'operate',
-      title: $t('common.operate'),
-      align: 'center',
-      width: 80,
-      render: row => {
-        return (
-          <NButton type="primary" text size="small" onClick={() => handleViewDetail(row.id)}>
-            {$t('page.manage.voiceConsultation.viewDetail')}
-          </NButton>
-        );
+    columns: () => [
+      {
+        key: 'occurred_at',
+        title: $t('page.manage.voiceConsultation.time'),
+        align: 'center',
+        width: 170,
+        render: row => formatTime(row.occurred_at)
+      },
+      {
+        key: 'trigger_method',
+        title: $t('page.manage.voiceConsultation.trigger'),
+        align: 'center',
+        width: 100,
+        render: row => {
+          const isFace = row.trigger_method === 'face_recognition';
+          return (
+            <NTag
+              type={isFace ? undefined : (triggerTagMap[row.trigger_method] || 'default')}
+              style={isFace ? { backgroundColor: '#b37feb', color: '#fff', borderColor: '#b37feb' } : undefined}
+              bordered={!isFace}
+              size="small"
+            >
+              {$t(`page.manage.voiceConsultation.triggerMethod.${row.trigger_method}`)}
+            </NTag>
+          );
+        }
+      },
+      {
+        key: 'robot_name',
+        title: $t('page.manage.voiceConsultation.robot'),
+        align: 'center',
+        width: 110,
+        render: row => row.robot_name || '-'
+      },
+      {
+        key: 'turn_count',
+        title: $t('page.manage.voiceConsultation.turns'),
+        align: 'center',
+        width: 70
+      },
+      {
+        key: 'question_summary',
+        title: $t('page.manage.voiceConsultation.questionSummary'),
+        align: 'center',
+        minWidth: 220,
+        ellipsis: { tooltip: true },
+        render: row => row.question_summary || '-'
+      },
+      {
+        key: 'duration_seconds',
+        title: $t('page.manage.voiceConsultation.duration'),
+        align: 'center',
+        width: 100,
+        render: row => formatDuration(row.duration_seconds)
+      },
+      {
+        key: 'status',
+        title: $t('page.manage.voiceConsultation.status'),
+        align: 'center',
+        width: 90,
+        render: row => (
+          <NTag type={statusTagMap[row.status] || 'default'} size="small">
+            {$t(`page.manage.voiceConsultation.statusLabel.${row.status}`)}
+          </NTag>
+        )
+      },
+      {
+        key: 'operate',
+        title: $t('common.operate'),
+        align: 'center',
+        width: 80,
+        render: row => {
+          return (
+            <NButton type="primary" text size="small" onClick={() => handleViewDetail(row.id)}>
+              {$t('page.manage.voiceConsultation.viewDetail')}
+            </NButton>
+          );
+        }
       }
-    }
-  ]
-});
+    ]
+  });
 
 const detailDrawerVisible = ref(false);
 const detailSessionId = ref<number | null>(null);
@@ -195,23 +202,11 @@ onMounted(() => {
             </NTag>
           </div>
           <div class="flex-y-center gap-12px">
-            <TableHeaderOperation
-              v-model:columns="columnChecks"
-              :loading="loading"
-              :show-add="false"
-              :show-delete="false"
-              @refresh="getData"
-            >
+            <TableHeaderOperation v-model:columns="columnChecks" :loading="loading" :show-add="false"
+              :show-delete="false" @refresh="getData">
               <template #prefix>
-                <NButton
-                  v-if="hasAuth('voice:consultation:export')"
-                  type="primary"
-                  ghost
-                  size="small"
-                  :loading="submitting"
-                  :disabled="loading"
-                  @click="submitExport('voice_consultation', searchParams)"
-                >
+                <NButton v-if="hasAuth('voice:consultation:export')" type="primary" ghost size="small"
+                  :loading="submitting" :disabled="loading" @click="submitExport('voice_consultation', searchParams)">
                   {{ $t('common.export') }}
                 </NButton>
               </template>
@@ -222,20 +217,10 @@ onMounted(() => {
       <div class="flex-y-center flex-wrap gap-12px pb-12px">
         <SessionSearch v-model:model="searchParams" @search="handleSearch" />
       </div>
-      <NDataTable
-        :columns="columns"
-        :data="data"
-        size="small"
-        :scroll-x="1100"
-        :loading="loading"
-        remote
-        :row-key="row => row.id"
-        :pagination="mobilePagination"
-      />
+      <NDataTable :columns="columns" :data="data" size="small" :scroll-x="1100" :loading="loading" remote
+        :row-key="row => row.id" :pagination="mobilePagination" />
     </NCard>
 
     <SessionDetailDrawer v-model:visible="detailDrawerVisible" :session-id="detailSessionId" />
   </div>
 </template>
-
-<style scoped></style>
