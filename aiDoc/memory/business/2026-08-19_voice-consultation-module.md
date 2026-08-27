@@ -44,7 +44,7 @@
 - **外部写入方对接要点**：`id` 为雪花主键无 DB 默认，外部必须自行生成唯一 BigInteger；`created_at` 已有 server_default 兜底但建议显式提供；`turn_count` 为冗余字段由外部维护；`occurred_at` 是业务时间（列表排序/筛选字段），区别于入库时间 `created_at`。
 - **前端类型陷阱**：`Common.CommonRecord` 自带 `status: EnableStatus | null`（'1'/'2'），与业务 status 枚举冲突会把交叉类型折叠成 never —— `SessionRecord` 用 `Omit<Common.CommonRecord, 'status'> & {...}` 规避。
 - **i18n 层级**：页面文案放 `page.manage.voiceConsultation.*`（manage 下，与 callLog 同级），不是 `page.voiceConsultation.*`。
-- 环比语义：卡片统计（总量/今日/平均时长）均不随筛选；平均时长为当日口径、环比昨日（2026-08-26 由全量均值改为当日均值）；时间筛选只影响意图/触发分布图表。
+- 环比语义：卡片统计（总量/今日/平均时长）均不随筛选；平均时长为当日口径、环比昨日（2026-08-26 由全量均值改为当日均值）；意图/触发分布图表跟随全部筛选条件（2026-08-27 补齐：`filter_conditions` 此前漏了 `keyword` 关键词筛选，现已与列表 `build_session_query` 口径一致）。
 
 ## 记录日期
 

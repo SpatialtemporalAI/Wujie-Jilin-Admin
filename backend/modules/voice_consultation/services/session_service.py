@@ -133,6 +133,10 @@ class VoiceConsultationSessionService:
                 conditions.append(VoiceConsultationSession.trigger_method == query_params.trigger_method)
             if query_params.status:
                 conditions.append(VoiceConsultationSession.status == query_params.status)
+            if query_params.keyword:
+                conditions.append(
+                    VoiceConsultationSession.question_summary.like(f"%{query_params.keyword}%")
+                )
             if query_params.start_time:
                 start = service._parse_time(query_params.start_time)
                 if start:
