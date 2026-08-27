@@ -106,12 +106,8 @@ watch(
 </script>
 
 <template>
-  <NCard
-    :bordered="false"
-    size="small"
-    class="card-wrapper"
-    :title="$t('page.manage.voiceConsultation.triggerDistribution')"
-  >
+  <NCard :bordered="false" size="small" class="card-wrapper"
+    :title="$t('page.manage.voiceConsultation.triggerDistribution')">
     <div ref="domRef" class="h-320px overflow-hidden"></div>
   </NCard>
 </template>
