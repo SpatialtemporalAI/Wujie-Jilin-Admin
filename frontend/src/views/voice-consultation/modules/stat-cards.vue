@@ -117,7 +117,7 @@ const [DefineGradientBg, GradientBg] = createReusableTemplate<GradientBgProps>()
       </div>
     </DefineGradientBg>
 
-    <NGrid cols="s:1 m:2 l:3" responsive="screen" :x-gap="12" :y-gap="12">
+    <NGrid cols="s:1 m:3 l:3" responsive="screen" :x-gap="12" :y-gap="12">
       <NGi v-for="item in cards" :key="item.key">
         <GradientBg :gradient-color="item.gradientColor" class="flex-1">
           <div class="flex items-center justify-between">
