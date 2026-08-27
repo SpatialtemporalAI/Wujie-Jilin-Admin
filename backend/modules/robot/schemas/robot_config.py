@@ -29,6 +29,17 @@ class RobotVoiceConfigSchema(BaseReqEntity):
     tts_voice: str = Field(..., description="音色", max_length=50)
     tts_speed: float = Field(..., description="语速（0.5-2.0，步长 0.1）", ge=0.5, le=2.0)
     tts_volume: int = Field(..., description="音量")
+    greeting_mode: Optional[Literal["wave", "no_wave"]] = Field(
+        default="wave", description="打招呼模式：wave-招手模式，no_wave-无招手模式"
+    )
+
+    @field_validator("greeting_mode", mode="before")
+    @classmethod
+    def _normalize_greeting_mode(cls, value):
+        """未传或传 null/空字符串时兜底为招手模式，避免写入 null"""
+        if value is None or value == "":
+            return "wave"
+        return value
 
     @model_validator(mode="after")
     def validate_wake_word(self):
@@ -61,8 +72,17 @@ class RobotVoiceConfigResponse(BaseRespEntity):
     tts_speed: Optional[float] = Field(None, description="语速（0.5-2.0）")
     tts_volume: Optional[int] = Field(None, description="音量")
     greeting_mode: Optional[str] = Field(
-        None, description="打招呼模式：wave-招手模式，no_wave-无招手模式"
+        "wave", description="打招呼模式：wave-招手模式，no_wave-无招手模式"
     )
+
+    @field_validator("greeting_mode", mode="before")
+    @classmethod
+    def _normalize_greeting_mode_response(cls, value):
+        """数据库旧数据可能为 null，返回时兜底为招手模式"""
+        if value is None or value == "":
+            return "wave"
+        return value
+
     created_at: Optional[datetime] = Field(None, description="创建时间")
     updated_at: Optional[datetime] = Field(None, description="更新时间")
     grpc_status: Optional[str] = Field(
@@ -154,14 +174,6 @@ class RobotBatteryThresholdUpdate(BaseReqEntity):
 
     battery_threshold: int = Field(
         ..., description="电量报警阈值(5-50)", ge=5, le=50
-    )
-
-
-class RobotGreetingModeUpdate(BaseReqEntity):
-    """机器人打招呼模式更新"""
-
-    greeting_mode: Literal["wave", "no_wave"] = Field(
-        ..., description="打招呼模式：wave-招手模式，no_wave-无招手模式"
     )
 
 

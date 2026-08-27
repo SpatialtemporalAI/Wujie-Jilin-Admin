@@ -211,7 +211,7 @@ class RobotConfigService:
             existing = result.scalar_one_or_none()
 
             # 计算字段变化（用于决定调哪些 gRPC）
-            changed = {"wake", "tts"}  # 新建时全推
+            changed = {"wake", "tts", "greeting"}  # 新建时全推
             if existing:
                 changed = set()
                 if (
@@ -225,6 +225,10 @@ class RobotConfigService:
                     or existing.tts_volume != schema.tts_volume
                 ):
                     changed.add("tts")
+                if (existing.greeting_mode or "") != (schema.greeting_mode or ""):
+                    changed.add("greeting")
+
+            greeting_mode = schema.greeting_mode or DEFAULT_GREETING_MODE
 
             if existing:
                 existing.wake_word_enabled = schema.wake_word_enabled
@@ -232,6 +236,7 @@ class RobotConfigService:
                 existing.tts_voice = schema.tts_voice
                 existing.tts_speed = schema.tts_speed
                 existing.tts_volume = schema.tts_volume
+                existing.greeting_mode = greeting_mode
                 await db.commit()
                 await db.refresh(existing)
                 logger.info("更新语音配置成功，ID: %d", existing.id)
@@ -244,6 +249,7 @@ class RobotConfigService:
                     tts_voice=schema.tts_voice,
                     tts_speed=schema.tts_speed,
                     tts_volume=schema.tts_volume,
+                    greeting_mode=greeting_mode,
                 )
                 db.add(config)
                 await db.commit()
@@ -285,6 +291,23 @@ class RobotConfigService:
                         service_name="voice",
                         method_name="NotifyTTSConfigChanged",
                         payload=tts_payload,
+                        robot_id=saved.robot_id,
+                    )
+                )
+            if "greeting" in changed and saved.greeting_mode:
+                greeting_payload = {
+                    "robot_id": saved.robot_id,
+                    "greeting_mode": saved.greeting_mode,
+                }
+                statuses.append(
+                    await RobotConfigService._push_with_retry(
+                        db,
+                        rpc_call=lambda: VoiceConfigClient.notify_greeting_mode(
+                            **greeting_payload
+                        ),
+                        service_name="voice",
+                        method_name="NotifyGreetingModeChanged",
+                        payload=greeting_payload,
                         robot_id=saved.robot_id,
                     )
                 )
@@ -601,56 +624,4 @@ class RobotConfigService:
             logger.error("更新机器人电量阈值失败: %s", str(e), exc_info=True)
             raise
 
-    # ==================== 打招呼模式 ====================
 
-    @staticmethod
-    async def update_greeting_mode(
-        db: AsyncSession, robot_id: int, greeting_mode: str
-    ) -> Tuple[RobotVoiceConfig, str]:
-        """更新机器人打招呼模式（wave/no_wave），按 robot_id upsert，返回 (orm_obj, grpc_status)
-
-        robot_voice_config 按 robot_id 唯一；无记录时按默认值常量建行（greeting_mode 用入参）。
-        DB 落库后推送 NotifyGreetingModeChanged 给 agent 端。
-        """
-        try:
-            result = await db.execute(
-                select(RobotVoiceConfig)
-                .where(RobotVoiceConfig.robot_id == robot_id)
-                .where(RobotVoiceConfig.deleted_at.is_(None))
-            )
-            config = result.scalar_one_or_none()
-            if config:
-                config.greeting_mode = greeting_mode
-            else:
-                config = RobotVoiceConfig(
-                    robot_id=robot_id,
-                    wake_word_enabled=DEFAULT_WAKE_WORD_ENABLED,
-                    wake_word=DEFAULT_WAKE_WORD,
-                    tts_voice=DEFAULT_TTS_VOICE,
-                    tts_speed=DEFAULT_TTS_SPEED,
-                    tts_volume=DEFAULT_TTS_VOLUME,
-                    greeting_mode=greeting_mode,
-                )
-                db.add(config)
-            await db.commit()
-            await db.refresh(config)
-            logger.info(
-                "更新打招呼模式成功，robot_id: %d, greeting_mode: %s",
-                robot_id,
-                greeting_mode,
-            )
-            # 推送打招呼模式变更（仅 agent 端）
-            payload = {"robot_id": robot_id, "greeting_mode": greeting_mode}
-            status = await RobotConfigService._push_with_retry(
-                db,
-                rpc_call=lambda: VoiceConfigClient.notify_greeting_mode(**payload),
-                service_name="voice",
-                method_name="NotifyGreetingModeChanged",
-                payload=payload,
-                robot_id=robot_id,
-            )
-            return config, status
-        except Exception as e:
-            await db.rollback()
-            logger.error("更新机器人打招呼模式失败: %s", str(e), exc_info=True)
-            raise

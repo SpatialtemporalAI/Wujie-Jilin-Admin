@@ -1,6 +1,6 @@
 <script setup lang="ts">
-import { computed, onMounted, reactive, ref } from 'vue';
-import { NText, useMessage } from 'naive-ui';
+import { computed, onActivated, onMounted, reactive, ref } from 'vue';
+import { NRadioButton, NRadioGroup, NText, useMessage } from 'naive-ui';
 import {
   fetchGetAllRobots,
   fetchGetVoiceConfig,
@@ -33,7 +33,8 @@ const model = reactive<Api.RobotConfig.VoiceConfig>({
   wake_word: '',
   tts_voice: 'female',
   tts_speed: 1.0,
-  tts_volume: 80
+  tts_volume: 80,
+  greeting_mode: 'wave'
 });
 
 const rules = computed(() => ({
@@ -104,12 +105,29 @@ async function loadRobots() {
   }
 }
 
+function resetModel() {
+  Object.assign(model, {
+    robot_id: selectedRobotId.value || 0,
+    wake_word_enabled: true,
+    wake_word: '',
+    tts_voice: 'female',
+    tts_speed: 1.0,
+    tts_volume: 80,
+    greeting_mode: 'wave'
+  });
+}
+
 async function loadConfig(robotId: number) {
   loading.value = true;
+  resetModel();
   try {
     const { data, error } = await fetchGetVoiceConfig(robotId);
     if (!error && data) {
       Object.assign(model, data);
+      // 兜底：后端旧数据可能返回 null/空，避免 NRadioGroup 因 null 失去绑定
+      if (!model.greeting_mode) {
+        model.greeting_mode = 'wave';
+      }
     }
   } catch (err) {
     console.error('加载语音配置失败:', err);
@@ -120,12 +138,20 @@ async function loadConfig(robotId: number) {
 
 function handleSelectRobot(robotId: number | null) {
   selectedRobotId.value = robotId;
-  model.robot_id = robotId || 0;
   restoreValidation();
   if (robotId) {
     loadConfig(robotId);
+  } else {
+    resetModel();
   }
 }
+
+onActivated(() => {
+  // 页面被 keep-alive 缓存后重新进入时刷新当前配置
+  if (selectedRobotId.value) {
+    loadConfig(selectedRobotId.value);
+  }
+});
 
 async function handleSaveVoice() {
   // 顶层互斥：锁必须在任何 await（含 validate）之前置位，挡住双击导致的 1s 内重复提交
@@ -237,14 +263,14 @@ onMounted(() => {
             当前机器人：{{ selectedRobot?.name }}（{{ selectedRobot?.serial_number }}）
           </div>
 
-          <NForm ref="formRef" :model="model" :rules="rules" label-placement="left" :label-width="140">
+          <NForm ref="formRef" :model="model" :rules="rules" label-placement="top">
             <div class="config-row">
-              <!-- 左侧：唤醒词配置 -->
-              <NCard title="唤醒词配置" size="small" class="flex-1">
-                <NGrid responsive="screen" :cols="1">
+              <!-- 唤醒词配置 -->
+              <NCard title="唤醒词配置" size="small" class="config-card">
+                <NGrid :cols="1" :y-gap="8">
                   <NFormItemGi label="人脸识别（免唤醒）">
                     <div class="flex-col gap-4px">
-                      <div>
+                      <div class="flex-y-center">
                         <NSwitch v-model:value="faceWakeEnabled" />
                         <span class="ml-8px text-gray-400">
                           {{ faceWakeEnabled ? '已开启' : '已关闭' }}
@@ -265,17 +291,18 @@ onMounted(() => {
                     />
                   </NFormItemGi>
                   <NFormItemGi v-if="!faceWakeEnabled">
-                    <NSpace align="center">
+                    <NSpace align="center" wrap>
                       <NButton
                         v-if="hasAuth('robot:config:edit')"
                         type="primary"
                         ghost
+                        size="small"
                         :disabled="!canSaveWakeWord"
                         @click="handleTestWakeWord"
                       >
                         测试
                       </NButton>
-                      <div v-if="wakeWordTestText" class="flex items-center gap-4px">
+                      <div v-if="wakeWordTestText" class="flex-y-center gap-4px">
                         <SvgIcon icon="mdi:volume-high" class="text-16px" />
                         <NText type="info" class="text-14px">
                           {{ wakeWordTestText }}
@@ -286,9 +313,26 @@ onMounted(() => {
                 </NGrid>
               </NCard>
 
-              <!-- 右侧：语音合成设置 -->
-              <NCard title="语音合成设置" size="small" class="flex-1">
-                <NGrid responsive="screen" :cols="1">
+              <!-- 打招呼模式 -->
+              <NCard title="打招呼模式" size="small" class="config-card">
+                <NGrid :cols="1" :y-gap="8">
+                  <NFormItemGi label="动作模式">
+                    <NRadioGroup v-model:value="model.greeting_mode" size="small">
+                      <NRadioButton value="wave">招手模式</NRadioButton>
+                      <NRadioButton value="no_wave">无招手模式</NRadioButton>
+                    </NRadioGroup>
+                  </NFormItemGi>
+                  <NFormItemGi>
+                    <div class="tip-text">
+                      招手模式下机器人检测到访客执行打招呼动作；无招手模式下机器人唤醒后无招手动作，仅语音问候。
+                    </div>
+                  </NFormItemGi>
+                </NGrid>
+              </NCard>
+
+              <!-- 语音合成设置 -->
+              <NCard title="语音合成设置" size="small" class="config-card">
+                <NGrid :cols="1" :y-gap="8">
                   <NFormItemGi label="音色" path="tts_voice">
                     <NSelect v-model:value="model.tts_voice" :options="voiceOptions" placeholder="请选择音色" />
                   </NFormItemGi>
@@ -320,7 +364,7 @@ onMounted(() => {
                   </NFormItemGi>
                   <NFormItemGi>
                     <NSpace>
-                      <NButton v-if="hasAuth('robot:config:edit')" type="primary" ghost @click="handleTestTTS">
+                      <NButton v-if="hasAuth('robot:config:edit')" type="primary" ghost size="small" @click="handleTestTTS">
                         测试语音
                       </NButton>
                     </NSpace>
@@ -396,12 +440,34 @@ onMounted(() => {
   color: #9ca3af;
 }
 .config-row {
-  display: flex;
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
   gap: 16px;
+  align-items: stretch;
 }
-@media (max-width: 768px) {
+
+.config-card {
+  min-width: 0;
+}
+
+.config-card :deep(.n-card__content) {
+  padding: 16px;
+}
+
+.flex-y-center {
+  display: flex;
+  align-items: center;
+}
+
+.tip-text {
+  color: #9ca3af;
+  font-size: 13px;
+  line-height: 1.6;
+}
+
+@media (max-width: 1024px) {
   .config-row {
-    flex-direction: column;
+    grid-template-columns: 1fr;
   }
 }
 </style>

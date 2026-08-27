@@ -116,12 +116,3 @@ export function fetchUpdateBatteryThreshold(robotId: number, batteryThreshold: n
   });
 }
 
-/** 更新机器人打招呼模式（wave-招手 / no_wave-无招手） */
-export function fetchUpdateGreetingMode(robotId: number, greetingMode: 'wave' | 'no_wave') {
-  return request<Api.RobotConfig.ConfigUpdateResponse>({
-    url: `/admin/robot/config/greeting-mode/${robotId}`,
-    method: 'put',
-    timeout: ROBOT_CONFIG_GRPC_TIMEOUT_MS,
-    data: { greeting_mode: greetingMode }
-  });
-}
