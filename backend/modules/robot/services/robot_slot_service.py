@@ -38,7 +38,10 @@ class RobotSlotService:
         if not base_url:
             return "未配置"
         try:
-            async with httpx.AsyncClient(timeout=settings.ROBOT_PANEL.TIMEOUT_SECONDS) as client:
+            # trust_env=False：面板是内网地址，不能走进程环境里的 HTTP/SOCKS 代理
+            async with httpx.AsyncClient(
+                timeout=settings.ROBOT_PANEL.TIMEOUT_SECONDS, trust_env=False
+            ) as client:
                 resp = await client.get(
                     f"{base_url}/api/slot-status", params=_panel_ids(robot)
                 )
@@ -62,7 +65,10 @@ class RobotSlotService:
         if not base_url:
             raise ServerError(msg="机器人控制面板地址未配置，请联系管理员")
         try:
-            async with httpx.AsyncClient(timeout=settings.ROBOT_PANEL.TIMEOUT_SECONDS) as client:
+            # trust_env=False：面板是内网地址，不能走进程环境里的 HTTP/SOCKS 代理
+            async with httpx.AsyncClient(
+                timeout=settings.ROBOT_PANEL.TIMEOUT_SECONDS, trust_env=False
+            ) as client:
                 resp = await client.post(
                     f"{base_url}/api/slot-restart", json=_panel_ids(robot)
                 )
