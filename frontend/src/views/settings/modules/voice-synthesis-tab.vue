@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { computed, onActivated, onMounted, reactive, ref } from 'vue';
-import { NRadioButton, NRadioGroup, NText, useMessage } from 'naive-ui';
+import { NSwitch, NText, useMessage } from 'naive-ui';
 import {
   fetchGetAllRobots,
   fetchGetVoiceConfig,
@@ -40,18 +40,18 @@ const model = reactive<Api.RobotConfig.VoiceConfig>({
 const rules = computed(() => ({
   wake_word: !faceWakeEnabled.value
     ? [
-        { required: true, message: '请输入唤醒词', trigger: 'blur' },
-        {
-          validator: (_rule: unknown, value: string) => {
-            if (!value) return true;
-            if (!/^[\u4E00-\u9FA5]{4,6}$/.test(value)) {
-              return new Error('唤醒词必须为 4-6 个中文汉字，不能包含字母、数字、符号或空格');
-            }
-            return true;
-          },
-          trigger: 'blur'
-        }
-      ]
+      { required: true, message: '请输入唤醒词', trigger: 'blur' },
+      {
+        validator: (_rule: unknown, value: string) => {
+          if (!value) return true;
+          if (!/^[\u4E00-\u9FA5]{4,6}$/.test(value)) {
+            return new Error('唤醒词必须为 4-6 个中文汉字，不能包含字母、数字、符号或空格');
+          }
+          return true;
+        },
+        trigger: 'blur'
+      }
+    ]
     : [],
   tts_voice: { required: true, message: '请选择音色', trigger: 'change' }
 }));
@@ -78,6 +78,18 @@ const faceWakeEnabled = computed<boolean>({
   get: () => !model.wake_word_enabled,
   set: val => {
     model.wake_word_enabled = !val;
+  }
+});
+
+/**
+ * 招手模式开关 - UI 状态
+ *   greetingWaveEnabled = true  ⇒ 招手模式（greeting_mode='wave'）
+ *   greetingWaveEnabled = false ⇒ 无招手模式（greeting_mode='no_wave'）
+ */
+const greetingWaveEnabled = computed<boolean>({
+  get: () => model.greeting_mode === 'wave',
+  set: val => {
+    model.greeting_mode = val ? 'wave' : 'no_wave';
   }
 });
 
@@ -241,15 +253,8 @@ onMounted(() => {
   <div class="flex-col gap-16px">
     <!-- 选择机器人 -->
     <NCard title="选择机器人" size="small">
-      <NSelect
-        :value="selectedRobotId"
-        :options="robotOptions"
-        :loading="robotLoading"
-        placeholder="请选择机器人"
-        filterable
-        clearable
-        @update:value="handleSelectRobot"
-      />
+      <NSelect :value="selectedRobotId" :options="robotOptions" :loading="robotLoading" placeholder="请选择机器人" filterable
+        clearable @update:value="handleSelectRobot" />
     </NCard>
 
     <!-- 配置区域 -->
@@ -276,30 +281,19 @@ onMounted(() => {
                           {{ faceWakeEnabled ? '已开启' : '已关闭' }}
                         </span>
                       </div>
-                      <NText depth="3" class="text-13px leading-relaxed">
+                      <NText depth="3" class="text-13px leading-relaxed mt-12px text-gray-700">
                         关闭时通过唤醒词与机器人交互；开启时检测到人脸可直接唤醒机器人，无需唤醒词
                       </NText>
                     </div>
                   </NFormItemGi>
                   <NFormItemGi v-if="!faceWakeEnabled" label="唤醒词" path="wake_word">
-                    <NInput
-                      v-model:value="model.wake_word"
-                      placeholder="请输入 4-6 个中文汉字"
-                      maxlength="6"
-                      show-count
-                      clearable
-                    />
+                    <NInput v-model:value="model.wake_word" placeholder="请输入 4-6 个中文汉字" maxlength="6" show-count
+                      clearable />
                   </NFormItemGi>
                   <NFormItemGi v-if="!faceWakeEnabled">
                     <NSpace align="center" wrap>
-                      <NButton
-                        v-if="hasAuth('robot:config:edit')"
-                        type="primary"
-                        ghost
-                        size="small"
-                        :disabled="!canSaveWakeWord"
-                        @click="handleTestWakeWord"
-                      >
+                      <NButton v-if="hasAuth('robot:config:edit')" type="primary" ghost size="small"
+                        :disabled="!canSaveWakeWord" @click="handleTestWakeWord">
                         测试
                       </NButton>
                       <div v-if="wakeWordTestText" class="flex-y-center gap-4px">
@@ -316,15 +310,17 @@ onMounted(() => {
               <!-- 打招呼模式 -->
               <NCard title="打招呼模式" size="small" class="config-card">
                 <NGrid :cols="1" :y-gap="8">
-                  <NFormItemGi label="动作模式">
-                    <NRadioGroup v-model:value="model.greeting_mode" size="small">
-                      <NRadioButton value="wave">招手模式</NRadioButton>
-                      <NRadioButton value="no_wave">无招手模式</NRadioButton>
-                    </NRadioGroup>
-                  </NFormItemGi>
-                  <NFormItemGi>
-                    <div class="tip-text">
-                      招手模式下机器人检测到访客执行打招呼动作；无招手模式下机器人唤醒后无招手动作，仅语音问候。
+                  <NFormItemGi label="招手模式">
+                    <div class="flex-col gap-4px">
+                      <div class="flex-y-center">
+                        <NSwitch v-model:value="greetingWaveEnabled" />
+                        <span class="ml-8px text-gray-400">
+                          {{ greetingWaveEnabled ? '已开启' : '已关闭' }}
+                        </span>
+                      </div>
+                      <NText depth="3" class="text-13px leading-relaxed mt-12px text-gray-700">
+                        开启后机器人检测到访客执行打招呼动作；关闭后机器人唤醒后无招手动作，仅语音问候。
+                      </NText>
                     </div>
                   </NFormItemGi>
                 </NGrid>
@@ -338,33 +334,22 @@ onMounted(() => {
                   </NFormItemGi>
                   <NFormItemGi label="语速">
                     <div class="w-full flex-col gap-8px">
-                      <NSlider
-                        v-model:value="model.tts_speed"
-                        :min="0.5"
-                        :max="2"
-                        :step="0.1"
-                        :tooltip="false"
-                        :marks="{ 0.5: '0.5', 1: '1.0', 1.5: '1.5', 2: '2.0' }"
-                      />
+                      <NSlider v-model:value="model.tts_speed" :min="0.5" :max="2" :step="0.1" :tooltip="false"
+                        :marks="{ 0.5: '0.5', 1: '1.0', 1.5: '1.5', 2: '2.0' }" />
                       <span class="text-13px text-gray-400">当前语速：{{ model.tts_speed.toFixed(1) }} 倍</span>
                     </div>
                   </NFormItemGi>
                   <NFormItemGi label="音量">
                     <div class="w-full flex-col gap-8px">
-                      <NSlider
-                        v-model:value="model.tts_volume"
-                        :min="0"
-                        :max="100"
-                        :step="1"
-                        :tooltip="false"
-                        :marks="{ 0: '0', 50: '50', 100: '100' }"
-                      />
+                      <NSlider v-model:value="model.tts_volume" :min="0" :max="100" :step="1" :tooltip="false"
+                        :marks="{ 0: '0', 50: '50', 100: '100' }" />
                       <span class="text-13px text-gray-400">当前音量：{{ model.tts_volume }}</span>
                     </div>
                   </NFormItemGi>
                   <NFormItemGi>
                     <NSpace>
-                      <NButton v-if="hasAuth('robot:config:edit')" type="primary" ghost size="small" @click="handleTestTTS">
+                      <NButton v-if="hasAuth('robot:config:edit')" type="primary" ghost size="small"
+                        @click="handleTestTTS">
                         测试语音
                       </NButton>
                     </NSpace>
@@ -374,13 +359,8 @@ onMounted(() => {
             </div>
 
             <div class="mt-16px">
-              <NButton
-                v-if="hasAuth('robot:config:edit')"
-                type="primary"
-                :loading="saving"
-                :disabled="!canSaveWakeWord"
-                @click="handleSaveVoice"
-              >
+              <NButton v-if="hasAuth('robot:config:edit')" type="primary" :loading="saving" :disabled="!canSaveWakeWord"
+                @click="handleSaveVoice">
                 保存设置
               </NButton>
             </div>
@@ -396,42 +376,55 @@ onMounted(() => {
   display: flex;
   flex-direction: column;
 }
+
 .flex-1 {
   flex: 1;
 }
+
 .gap-16px {
   gap: 16px;
 }
+
 .gap-4px {
   gap: 4px;
 }
+
 .gap-8px {
   gap: 8px;
 }
+
 .w-full {
   width: 100%;
 }
+
 .mt-16px {
   margin-top: 16px;
 }
+
 .ml-8px {
   margin-left: 8px;
 }
+
 .text-14px {
   font-size: 14px;
 }
+
 .text-13px {
   font-size: 13px;
 }
+
 .font-medium {
   font-weight: 500;
 }
+
 .text-gray-400 {
   color: #9ca3af;
 }
+
 .leading-relaxed {
   line-height: 1.6;
 }
+
 .empty-tip {
   display: flex;
   align-items: center;
@@ -439,6 +432,7 @@ onMounted(() => {
   min-height: 160px;
   color: #9ca3af;
 }
+
 .config-row {
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
@@ -457,12 +451,6 @@ onMounted(() => {
 .flex-y-center {
   display: flex;
   align-items: center;
-}
-
-.tip-text {
-  color: #9ca3af;
-  font-size: 13px;
-  line-height: 1.6;
 }
 
 @media (max-width: 1024px) {
