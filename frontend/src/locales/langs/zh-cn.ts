@@ -344,6 +344,7 @@ const local: App.I18n.Schema = {
     robot_manage_edit: '编辑',
     robot_manage_delete: '删除',
     robot_manage_grpc_config: 'gRPC配置',
+    robot_manage_restart: '重启',
     scene_group_list: '查询',
     scene_group_add: '新增',
     scene_group_edit: '编辑',

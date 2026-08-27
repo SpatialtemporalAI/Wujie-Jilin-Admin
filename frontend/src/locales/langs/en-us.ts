@@ -348,6 +348,7 @@ const local: App.I18n.Schema = {
     robot_manage_edit: 'Edit',
     robot_manage_delete: 'Delete',
     robot_manage_grpc_config: 'gRPC Config',
+    robot_manage_restart: 'Restart',
     scene_group_list: 'List',
     scene_group_add: 'Add',
     scene_group_edit: 'Edit',

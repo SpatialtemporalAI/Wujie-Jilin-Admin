@@ -210,7 +210,7 @@ loadData();
                   {{ slotStatusMap[robot.id] || '未知' }}
                 </NTag>
                 <NButton
-                  v-if="hasAuth('robot:manage:edit')"
+                  v-if="hasAuth('robot:manage:restart')"
                   size="small"
                   secondary
                   :loading="slotRestartingMap[robot.id]"

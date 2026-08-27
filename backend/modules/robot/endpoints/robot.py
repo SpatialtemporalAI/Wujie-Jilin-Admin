@@ -358,7 +358,7 @@ async def get_robot_slot_status(
 @robot_router.post(
     "/{robot_id}/slot-restart",
     response_model=ResponseModel[SlotStatusData],
-    dependencies=[Depends(require_permission("robot:manage:edit"))],
+    dependencies=[Depends(require_permission("robot:manage:restart"))],
 )
 @log_operation(module="robot", action="restart", description="重启机器人服务器自启动")
 async def restart_robot_slot(
