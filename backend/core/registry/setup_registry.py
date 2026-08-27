@@ -25,14 +25,6 @@ def setup_app(app: FastAPI, settings: GlobalSetting):
         TrustedHostMiddleware, allowed_hosts=settings.SECURITY.ALLOWED_HOSTS
     )
 
-    # 配置跨域（允许其他服务访问）
-    app.add_middleware(
-        CORSMiddleware,
-        allow_origins=settings.SECURITY.ALLOWED_ORIGINS,
-        allow_credentials=True,
-        allow_methods=["*"],
-        allow_headers=["*"],
-    )
     app.add_middleware(RequestAuditMiddleware)
     app.add_middleware(RequestSizeLimitMiddleware)
     app.add_middleware(SecurityHeadersMiddleware)
@@ -40,6 +32,18 @@ def setup_app(app: FastAPI, settings: GlobalSetting):
     app.add_middleware(MerchantCallLogMiddleware)
     app.add_middleware(OperationLogMiddleware)
     app.add_middleware(RequestContextMiddleware)
+
+    # 配置跨域（允许其他服务访问）
+    # 注意：Starlette 后注册的先执行，CORS 必须最后注册（最外层）。
+    # 否则 RateLimit/RequestSizeLimit 等中间件短路返回的 429/413 响应
+    # 不会携带 CORS 头，跨域场景下浏览器拦截响应，前端只能看到 Network Error
+    app.add_middleware(
+        CORSMiddleware,
+        allow_origins=settings.SECURITY.ALLOWED_ORIGINS,
+        allow_credentials=True,
+        allow_methods=["*"],
+        allow_headers=["*"],
+    )
 
     # 注册全局异常
     setup_exception_handlers(app)

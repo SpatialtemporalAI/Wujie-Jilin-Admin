@@ -8,6 +8,7 @@
 
 ## 业务需求记忆
 
+- [2026-08-27 限流 429 跨域 Network Error 修复](./business/2026-08-27_rate-limit-429-cors-network-error.md) — CORS 注册得早执行靠内，RateLimit/RequestSizeLimit 短路的 429/413 无 CORS 头，跨域（内网直连 :8000）被浏览器拦成 Network Error；CORSMiddleware 移到最后注册（最外层），铁律：短路中间件必须注册在 CORS 之前
 - [2026-08-26 机器人卡片「服务器自启状态 + 重启」](./business/2026-08-26_robot-slot-status.md) — 透传外部控制面板 slot-status/slot-restart HTTP 接口（robot_id+serial_number 标识）；地址走 `ROBOT_PANEL__BASE_URL` 配置；新增 `GET/POST /robot/manage/{id}/slot-status|slot-restart`（SlotStatusData 不能用 BaseRespEntity，status 会被转 "1"）；前端卡片底部新增状态行 + 重启按钮
 - [2026-08-25 机器人打招呼模式 greeting_mode](./business/2026-08-25_robot-greeting-mode.md) — robot_voice_config 加 greeting_mode（wave/no_wave，迁移 0005）；参数配置新增「打招呼模式」tab；新增 PUT /config/greeting-mode/{robot_id}（upsert）；voice.proto 加 NotifyGreetingModeChanged 仅推 agent 端
 - [2026-08-19 语音问诊模块（会话记录 + 统计分析页）](./business/2026-08-19_voice-consultation-module.md) — 两张新表（会话主表+轮次明细，数据由外部应用直连写入，需自带雪花 id/created_at 兜底 server_default）；只读 API（list/stats/detail）+ 导出；前端统计分析页（3 统计卡片+意图柱状图+触发环形图+筛选表格+详情抽屉）；顶级菜单 voice-consultation 迁移 0004；i18n 在 page.manage.voiceConsultation 下；CommonRecord.status 冲突用 Omit 规避
