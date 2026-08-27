@@ -20,7 +20,6 @@ INTENT_TYPES = {
 TRIGGER_METHODS = {"wake_word", "face_recognition"}
 SESSION_STATUSES = {"in_progress", "completed", "interrupted"}
 
-IntentTypeField = Annotated[str | None, BeforeValidator(parse_optional_enum(INTENT_TYPES))]
 TriggerMethodField = Annotated[str | None, BeforeValidator(parse_optional_enum(TRIGGER_METHODS))]
 SessionStatusField = Annotated[str | None, BeforeValidator(parse_optional_enum(SESSION_STATUSES))]
 
@@ -31,7 +30,6 @@ class VoiceConsultationSessionQueryParams(BaseEntity):
     robot_id: OptionalIntField = Field(None, description="机器人ID")
     trigger_method: TriggerMethodField = Field(None, description="触发方式：wake_word/face_recognition")
     status: SessionStatusField = Field(None, description="状态：in_progress/completed/interrupted")
-    intent_type: IntentTypeField = Field(None, description="意图类型")
     keyword: str | None = Field(None, description="关键词，模糊匹配提问摘要")
     start_time: str | None = Field(None, description="开始时间")
     end_time: str | None = Field(None, description="结束时间")
@@ -49,7 +47,6 @@ class VoiceConsultationSessionResponse(BaseRespEntity):
     question_summary: str | None
     duration_seconds: int | None
     status: str
-    intent_type: str
     created_at: datetime | None
     updated_at: datetime | None
 
@@ -94,5 +91,5 @@ class VoiceConsultationStatsResponse(BaseRespEntity):
     today_delta_pct: float | None = Field(None, description="今日较昨日百分比变化")
     avg_duration: float | None = Field(None, description="当日平均会话时长（秒，不随筛选）")
     avg_duration_delta_pct: float | None = Field(None, description="当日均值较昨日均值的百分比变化")
-    intent_distribution: list[VoiceConsultationDistributionItem] = Field(description="意图分布（随筛选），6 项含零值")
+    intent_distribution: list[VoiceConsultationDistributionItem] = Field(description="意图分布（按轮次统计，随筛选），6 项含零值")
     trigger_distribution: list[VoiceConsultationDistributionItem] = Field(description="触发方式分布（随筛选），2 项含零值")

@@ -24,7 +24,6 @@ const searchParams: Api.VoiceConsultation.SessionSearchParams = reactive({
   robot_id: null,
   trigger_method: null,
   status: null,
-  intent_type: null,
   keyword: null,
   start_time: undefined,
   end_time: undefined

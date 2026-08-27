@@ -717,7 +717,6 @@ declare namespace App {
             vsLastSunday: string;
             vsYesterday: string;
             intentDistribution: string;
-            intentTypeLabel: string;
             triggerDistribution: string;
             records: string;
             time: string;

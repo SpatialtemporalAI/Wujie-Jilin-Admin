@@ -56,8 +56,6 @@ class VoiceConsultationSessionService:
             conditions.append(VoiceConsultationSession.trigger_method == query_params.trigger_method)
         if query_params.status:
             conditions.append(VoiceConsultationSession.status == query_params.status)
-        if query_params.intent_type:
-            conditions.append(VoiceConsultationSession.intent_type == query_params.intent_type)
         if query_params.keyword:
             conditions.append(VoiceConsultationSession.question_summary.like(f"%{query_params.keyword}%"))
         if query_params.start_time:
@@ -120,7 +118,7 @@ class VoiceConsultationSessionService:
     async def get_stats(
         db: AsyncSession, query_params: VoiceConsultationSessionQueryParams
     ) -> VoiceConsultationStatsResponse:
-        """统计：总量/今日交互（全量口径不随筛选） + 当日平均时长（环比昨日） + 意图/触发分布（随筛选）"""
+        """统计：总量/今日交互（全量口径不随筛选） + 当日平均时长（环比昨日） + 意图（按轮次）/触发分布（随筛选）"""
         service = VoiceConsultationSessionService
 
         # 卡片统计只认全量数据（仅排除软删除），不跟随用户筛选条件
@@ -135,8 +133,6 @@ class VoiceConsultationSessionService:
                 conditions.append(VoiceConsultationSession.trigger_method == query_params.trigger_method)
             if query_params.status:
                 conditions.append(VoiceConsultationSession.status == query_params.status)
-            if query_params.intent_type:
-                conditions.append(VoiceConsultationSession.intent_type == query_params.intent_type)
             if query_params.start_time:
                 start = service._parse_time(query_params.start_time)
                 if start:
@@ -209,22 +205,38 @@ class VoiceConsultationSessionService:
         # 5) 意图分布 / 触发方式分布（跟随用户筛选窗口，Python 侧补零）
         chart_conditions = filter_conditions()
 
-        async def group_distribution(column, all_types: set[str]) -> list[dict]:
-            stmt = (
-                select(column, func.count(VoiceConsultationSession.id))
-                .where(and_(*chart_conditions))
-                .group_by(column)
-            )
-            rows = (await db.execute(stmt)).all()
-            count_map = {row[0]: row[1] for row in rows}
-            # 按既定枚举顺序输出，含未知 code 兜底追加
+        def ordered_distribution(count_map: dict, all_types: set[str]) -> list[dict]:
+            """按既定枚举顺序输出，含未知 code 兜底追加"""
             ordered = [t for t in sorted(all_types)] + [t for t in count_map if t not in all_types]
             return [{"type": t, "count": count_map.get(t, 0)} for t in ordered]
 
-        intent_distribution = await group_distribution(VoiceConsultationSession.intent_type, INTENT_TYPES)
-        trigger_distribution = await group_distribution(
-            VoiceConsultationSession.trigger_method, TRIGGER_METHODS
+        # 意图分布：统计轮次表 intent_type（空意图轮次不计入），随会话筛选窗口
+        intent_stmt = (
+            select(VoiceConsultationTurn.intent_type, func.count())
+            .join(
+                VoiceConsultationSession,
+                VoiceConsultationTurn.session_id == VoiceConsultationSession.id,
+            )
+            .where(
+                and_(
+                    *chart_conditions,
+                    VoiceConsultationTurn.deleted_at.is_(None),
+                    VoiceConsultationTurn.intent_type.is_not(None),
+                )
+            )
+            .group_by(VoiceConsultationTurn.intent_type)
         )
+        intent_rows = (await db.execute(intent_stmt)).all()
+        intent_distribution = ordered_distribution({row[0]: row[1] for row in intent_rows}, INTENT_TYPES)
+
+        # 触发方式分布：会话表统计
+        trigger_stmt = (
+            select(VoiceConsultationSession.trigger_method, func.count(VoiceConsultationSession.id))
+            .where(and_(*chart_conditions))
+            .group_by(VoiceConsultationSession.trigger_method)
+        )
+        trigger_rows = (await db.execute(trigger_stmt)).all()
+        trigger_distribution = ordered_distribution({row[0]: row[1] for row in trigger_rows}, TRIGGER_METHODS)
 
         return VoiceConsultationStatsResponse(
             total=total,

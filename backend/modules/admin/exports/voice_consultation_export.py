@@ -5,21 +5,12 @@ from core.utils.excel_export import ExportColumn
 from database.utils.timezone import timezone
 from modules.admin.exports import ModuleExportConfig, register_export
 from modules.voice_consultation.schemas.session import (
-    INTENT_TYPES,
     SESSION_STATUSES,
     TRIGGER_METHODS,
     VoiceConsultationSessionQueryParams,
 )
 from modules.voice_consultation.services.session_service import VoiceConsultationSessionService
 
-INTENT_LABELS = {
-    "indoor_navigation": "院内问路",
-    "triage_qa": "分诊问答",
-    "medical_guide": "就医指南",
-    "health_check_notice": "体检须知",
-    "insurance_guide": "医保指南",
-    "admission_notice": "住院须知",
-}
 TRIGGER_LABELS = {
     "wake_word": "唤醒词",
     "face_recognition": "人脸识别",
@@ -53,12 +44,6 @@ _voice_consultation_columns = [
         "状态",
         width=10,
         transform=lambda v: STATUS_LABELS.get(v, v),
-    ),
-    ExportColumn(
-        "intent_type",
-        "意图类型",
-        width=14,
-        transform=lambda v: INTENT_LABELS.get(v, v),
     ),
     ExportColumn(
         "created_at",

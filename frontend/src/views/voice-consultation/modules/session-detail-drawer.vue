@@ -132,9 +132,6 @@ function intentLabel(type: string | null): string {
                 {{ $t(`page.manage.voiceConsultation.statusLabel.${detail.status}`) }}
               </NTag>
             </NDescriptionsItem>
-            <NDescriptionsItem :label="$t('page.manage.voiceConsultation.intentTypeLabel')">
-              {{ intentLabel(detail.intent_type) }}
-            </NDescriptionsItem>
             <NDescriptionsItem :label="$t('page.manage.voiceConsultation.createdAt')">
               {{ formatTime(detail.created_at) }}
             </NDescriptionsItem>

@@ -16,7 +16,7 @@ const props = defineProps<Props>();
 
 const appStore = useAppStore();
 
-// 意图展示顺序与配色（绿/橙/蓝/粉/青/紫，对应参考图）
+// 意图展示顺序与配色（绿/橙/蓝/粉/青/紫，对应参考图）；数据为后端按会话轮次统计的意图分布
 const INTENT_ORDER: Api.VoiceConsultation.IntentType[] = [
   'indoor_navigation',
   'triage_qa',

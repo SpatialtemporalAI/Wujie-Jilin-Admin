@@ -598,7 +598,6 @@ const local: App.I18n.Schema = {
         vsLastSunday: 'vs last Sunday',
         vsYesterday: 'vs yesterday',
         intentDistribution: 'Intent Distribution',
-        intentTypeLabel: 'Intent Type',
         triggerDistribution: 'Trigger Method',
         records: 'Q&A Records',
         time: 'Time',

@@ -593,7 +593,6 @@ const local: App.I18n.Schema = {
         vsLastSunday: '较上周日',
         vsYesterday: '较昨日',
         intentDistribution: '意图分布',
-        intentTypeLabel: '意图类型',
         triggerDistribution: '触发方式',
         records: '问答记录',
         time: '时间',

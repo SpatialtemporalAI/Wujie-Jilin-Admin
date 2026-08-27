@@ -40,13 +40,11 @@ declare namespace Api {
       duration_seconds: number | null;
       /** 状态 */
       status: SessionStatus;
-      /** 意图类型 */
-      intent_type: IntentType | string;
     };
 
     /** 会话搜索参数 */
     type SessionSearchParams = CommonType.RecordNullable<
-      Pick<SessionRecord, 'robot_id' | 'trigger_method' | 'status' | 'intent_type'> &
+      Pick<SessionRecord, 'robot_id' | 'trigger_method' | 'status'> &
         CommonSearchParams & {
           /** 关键词，模糊匹配提问摘要 */
           keyword: string | null;
@@ -97,7 +95,7 @@ declare namespace Api {
       avg_duration: number | null;
       /** 当日均值较昨日均值的百分比变化 */
       avg_duration_delta_pct: number | null;
-      /** 意图分布（随筛选），6 项含零值 */
+      /** 意图分布（按轮次统计，随筛选），6 项含零值 */
       intent_distribution: DistributionItem[];
       /** 触发方式分布（随筛选），2 项含零值 */
       trigger_distribution: DistributionItem[];
