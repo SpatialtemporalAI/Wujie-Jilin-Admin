@@ -180,7 +180,7 @@ function startPolling() {
   pollTimer = setInterval(() => {
     getData();
     loadStats();
-  }, 7000);
+  }, 5500);
 }
 
 function stopPolling() {
