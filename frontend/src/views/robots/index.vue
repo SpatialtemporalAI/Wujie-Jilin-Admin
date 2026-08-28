@@ -203,20 +203,14 @@ loadData();
               </div>
             </div>
 
-            <div class="robot-card-slot">
+            <div class="robot-card-slot" v-if="hasAuth('robot:manage:restart')">
               <span class="robot-info-label">服务器自启状态</span>
               <NSpace align="center">
                 <NTag :type="getSlotStatusType(slotStatusMap[robot.id] || '未知')" size="small" round>
                   {{ slotStatusMap[robot.id] || '未知' }}
                 </NTag>
-                <NButton
-                  v-if="hasAuth('robot:manage:restart')"
-                  size="small"
-                  secondary
-                  :loading="slotRestartingMap[robot.id]"
-                  :disabled="slotStatusMap[robot.id] === '启动中'"
-                  @click="handleRestartSlot(robot)"
-                >
+                <NButton size="small" secondary :loading="slotRestartingMap[robot.id]"
+                  :disabled="slotStatusMap[robot.id] === '启动中'" @click="handleRestartSlot(robot)">
                   <template #icon>
                     <icon-mdi-restart class="text-icon" />
                   </template>
@@ -227,31 +221,16 @@ loadData();
 
             <div class="robot-card-footer">
               <NSpace>
-                <NButton
-                  v-if="hasAuth('robot:manage:edit')"
-                  type="primary"
-                  ghost
-                  size="small"
-                  @click="handleEditRobot(robot)"
-                >
+                <NButton v-if="hasAuth('robot:manage:edit')" type="primary" ghost size="small"
+                  @click="handleEditRobot(robot)">
                   {{ $t('common.edit') }}
                 </NButton>
-                <NButton
-                  v-if="hasAuth('robot:manage:grpc_config')"
-                  type="info"
-                  ghost
-                  size="small"
-                  @click="handleEditGrpc(robot)"
-                >
+                <NButton v-if="hasAuth('robot:manage:grpc_config')" type="info" ghost size="small"
+                  @click="handleEditGrpc(robot)">
                   gRPC配置
                 </NButton>
-                <NButton
-                  v-if="hasAuth('robot:manage:list')"
-                  class="hidden"
-                  ghost
-                  size="small"
-                  @click="handleViewStatus(robot)"
-                >
+                <NButton v-if="hasAuth('robot:manage:list')" class="hidden" ghost size="small"
+                  @click="handleViewStatus(robot)">
                   状态
                 </NButton>
                 <NPopconfirm v-if="hasAuth('robot:manage:delete')" @positive-click="handleDelete(robot.id)">
@@ -268,12 +247,8 @@ loadData();
         </div>
       </NSpin>
 
-      <RobotOperateDrawer
-        v-model:visible="robotDrawerVisible"
-        :operate-type="robotOperateType"
-        :row-data="editingRobotData"
-        @submitted="loadData"
-      />
+      <RobotOperateDrawer v-model:visible="robotDrawerVisible" :operate-type="robotOperateType"
+        :row-data="editingRobotData" @submitted="loadData" />
       <RobotStatusDrawer v-model:visible="statusDrawerVisible" :robot-id="statusDrawerRobotId" />
       <RobotGrpcConfigDrawer v-model:visible="grpcDrawerVisible" :robot-id="grpcDrawerRobotId" @submitted="loadData" />
     </NCard>
