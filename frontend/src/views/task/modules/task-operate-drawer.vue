@@ -1,7 +1,6 @@
 <script setup lang="ts">
-import { computed, h, nextTick, onMounted, ref, watch } from 'vue';
+import { computed, h, onMounted, ref, watch } from 'vue';
 import { NText, NTooltip } from 'naive-ui';
-import { VueDraggable } from 'vue-draggable-plus';
 import dayjs from 'dayjs';
 import { jsonClone } from '@sa/utils';
 import {
@@ -213,11 +212,6 @@ function createDefaultModel(): FormModel {
 
 const model = ref<FormModel>(createDefaultModel());
 
-/** 当前选中的巡逻点位索引 */
-const selectedPointIndex = ref(0);
-
-const selectedPoint = computed<PointItem | null>(() => model.value.points[selectedPointIndex.value] ?? null);
-
 /** 机器人单选绑定（API 仍为 robot_ids 数组，但当前限制仅 1 个） */
 const robotId = computed({
   get: () => model.value.robot_ids[0] ?? null,
@@ -260,7 +254,6 @@ function addPoint() {
     // 动作列表可为空：新增点位时不预置默认动作，用户按需添加
     actions: []
   });
-  selectedPointIndex.value = model.value.points.length - 1;
 }
 
 function removePoint(index: number) {
@@ -268,13 +261,6 @@ function removePoint(index: number) {
   model.value.points.forEach((p, i) => {
     p.sort_order = i;
   });
-  if (selectedPointIndex.value >= model.value.points.length) {
-    selectedPointIndex.value = Math.max(0, model.value.points.length - 1);
-  }
-}
-
-function selectPoint(index: number) {
-  selectedPointIndex.value = index;
 }
 
 /** 点位内动作管理 */
@@ -314,7 +300,6 @@ const submitting = ref(false);
 
 async function handleInitModel() {
   model.value = createDefaultModel();
-  selectedPointIndex.value = 0;
   annotationOptions.value = [];
   annotationMap.value = new Map();
   mapOptions.value = [];
@@ -513,7 +498,7 @@ onMounted(() => {
 
 <template>
   <NModal v-model:show="visible" display-directive="show" preset="card" :mask-closable="false" :title="title"
-    style="width: 960px; max-width: 95vw">
+    style="width: 640px; max-width: 90vw">
     <NForm ref="formRef" :model="model" :rules="rules" label-placement="top">
       <!-- 基础信息 -->
       <NGrid :cols="2" :x-gap="16">
@@ -555,74 +540,53 @@ onMounted(() => {
         <div v-if="selectedMapId === null" class="mb-12px text-13px" style="color: var(--n-text-color-3, #999)">
           请先选择场景地图，才能选择巡逻点位
         </div>
-        <div v-else class="point-config-wrapper">
-          <!-- 左侧点位目录：可拖拽排序、点击切换 -->
-          <div class="point-sidebar">
-            <div class="point-sidebar-title">点位列表</div>
-            <VueDraggable v-model="model.points" :animation="150" handle=".point-drag-handle" class="point-list">
-              <div
-                v-for="(point, index) in model.points"
-                :key="index"
-                class="point-list-item"
-                :class="{ active: selectedPointIndex === index }"
-                @click="selectPoint(index)"
-              >
-                <icon-mdi-drag class="point-drag-handle cursor-move text-icon" />
-                <span class="point-list-label">点位 {{ index + 1 }}</span>
-                <NButton type="error" ghost size="tiny" class="point-delete-btn" @click.stop="removePoint(index)">移除</NButton>
+        <div v-for="(point, index) in model.points" :key="index" class="mb-12px">
+          <NCard size="small" embedded>
+            <template #header>
+              <NSpace align="center">
+                <span>点位 {{ index + 1 }}</span>
+                <NButton type="error" ghost size="tiny" @click="removePoint(index)">移除</NButton>
+              </NSpace>
+            </template>
+            <NFormItem label="巡逻点位" required>
+              <NSelect v-model:value="point.annotation_id" :options="annotationOptions"
+                :placeholder="selectedMapId === null ? '请先选择场景地图' : '请选择场景点位'" :disabled="selectedMapId === null"
+                filterable @update:value="
+                  (val: number | null) => {
+                    const ann = val === null ? undefined : annotationMap.get(val);
+                    point.point_name = ann?.name ?? null;
+                  }
+                " />
+            </NFormItem>
+
+            <NDivider title-placement="center" style="font-size: 16px">运控动作（可添加多个）</NDivider>
+            <div v-for="(actionItem, actionIndex) in point.actions" :key="actionIndex" class="mb-8px">
+              <NGrid :cols="3" :x-gap="12" responsive="screen">
+                <NFormItemGi label="动作">
+                  <NSelect v-model:value="actionItem.action" :options="actionOptions" placeholder="选择动作" />
+                </NFormItemGi>
+                <NFormItemGi :span="2" label="语音文本">
+                  <NInput v-model:value="actionItem.voice_text" placeholder="语音播报文本" show-count :maxlength="1000" />
+                </NFormItemGi>
+              </NGrid>
+              <div class="mb-40px flex">
+                <NButton type="error" ghost size="small" @click="removeAction(point, actionIndex)">删除动作</NButton>
               </div>
-            </VueDraggable>
-            <NButton dashed block size="small" :disabled="selectedMapId === null" class="mt-12px" @click="addPoint">
+            </div>
+            <NButton dashed size="small" block @click="addAction(point)">
               <template #icon>
                 <icon-ic-round-plus class="text-icon" />
               </template>
-              添加点位
+              添加动作
             </NButton>
-          </div>
-
-          <!-- 右侧编辑区 -->
-          <div class="point-edit-area">
-            <NCard v-if="selectedPoint" size="small" embedded>
-              <template #header>
-                <NSpace align="center">
-                  <span>点位 {{ selectedPointIndex + 1 }}</span>
-                </NSpace>
-              </template>
-              <NFormItem label="巡逻点位" required>
-                <NSelect v-model:value="selectedPoint.annotation_id" :options="annotationOptions"
-                  :placeholder="selectedMapId === null ? '请先选择场景地图' : '请选择场景点位'" :disabled="selectedMapId === null"
-                  filterable @update:value="
-                    (val: number | null) => {
-                      const ann = val === null ? undefined : annotationMap.get(val);
-                      selectedPoint!.point_name = ann?.name ?? null;
-                    }
-                  " />
-              </NFormItem>
-
-              <NDivider title-placement="center" style="font-size: 16px">运控动作（可添加多个）</NDivider>
-              <div v-for="(actionItem, actionIndex) in selectedPoint.actions" :key="actionIndex" class="mb-8px">
-                <NGrid :cols="12" :x-gap="12" responsive="screen" class="items-end">
-                  <NFormItemGi :span="3" label="动作">
-                    <NSelect v-model:value="actionItem.action" :options="actionOptions" placeholder="选择动作" />
-                  </NFormItemGi>
-                  <NFormItemGi :span="7" label="语音文本">
-                    <NInput v-model:value="actionItem.voice_text" placeholder="语音播报文本" show-count :maxlength="1000" />
-                  </NFormItemGi>
-                  <NFormItemGi :span="2">
-                    <NButton type="error" ghost size="small" class="action-delete-btn" @click="removeAction(selectedPoint!, actionIndex)">删除动作</NButton>
-                  </NFormItemGi>
-                </NGrid>
-              </div>
-              <NButton dashed size="small" block @click="addAction(selectedPoint)">
-                <template #icon>
-                  <icon-ic-round-plus class="text-icon" />
-                </template>
-                添加动作
-              </NButton>
-            </NCard>
-            <div v-else class="point-empty-tip">暂无点位，请点击左侧「添加点位」</div>
-          </div>
+          </NCard>
         </div>
+        <NButton dashed block :disabled="selectedMapId === null" @click="addPoint">
+          <template #icon>
+            <icon-ic-round-plus class="text-icon" />
+          </template>
+          添加点位
+        </NButton>
       </template>
 
       <!-- 播报配置 -->
@@ -672,82 +636,5 @@ onMounted(() => {
 <style scoped>
 :deep(.n-divider:not(.n-divider--dashed) .n-divider__line) {
   background-color: transparent;
-}
-
-.point-config-wrapper {
-  display: flex;
-  gap: 16px;
-  min-height: 280px;
-}
-
-.point-sidebar {
-  width: 180px;
-  flex-shrink: 0;
-  display: flex;
-  flex-direction: column;
-}
-
-.point-sidebar-title {
-  font-size: 14px;
-  font-weight: 600;
-  margin-bottom: 10px;
-  color: var(--n-text-color-1, #333);
-}
-
-.point-list {
-  flex: 1;
-  overflow-y: auto;
-  max-height: 360px;
-  border: 1px solid var(--n-border-color, #e0e0e6);
-  border-radius: 6px;
-  padding: 6px;
-}
-
-.point-list-item {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  padding: 8px 10px;
-  border-radius: 4px;
-  cursor: pointer;
-  transition: background-color 0.2s;
-  font-size: 13px;
-}
-
-.point-list-item:hover {
-  background-color: var(--n-hover-color, #f3f4f6);
-}
-
-.point-list-item.active {
-  background-color: var(--n-primary-color-suppl, #eff6ff);
-  color: var(--n-primary-color, #3b82f6);
-}
-
-.point-list-label {
-  flex: 1;
-}
-
-.point-delete-btn {
-  flex-shrink: 0;
-}
-
-.point-edit-area {
-  flex: 1;
-  min-width: 0;
-}
-
-.point-empty-tip {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  height: 200px;
-  color: var(--n-text-color-3, #999);
-  font-size: 14px;
-  border: 1px dashed var(--n-border-color, #e0e0e6);
-  border-radius: 6px;
-}
-
-.action-delete-btn {
-  width: 72px;
 }
 </style>
