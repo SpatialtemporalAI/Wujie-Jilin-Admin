@@ -262,7 +262,7 @@ onMounted(() => {
       <div v-if="!selectedRobotId" class="empty-tip">请先选择机器人</div>
       <NSpin v-else :show="loading">
         <div class="flex-col gap-16px">
-          <NAlert v-if="showAlert" type="info" closable>唤醒词设置成功，预计 1 分钟后生效</NAlert>
+          <NAlert v-if="showAlert" type="info" closable>唤醒词设置成功，请等待生效</NAlert>
 
           <div class="text-14px font-medium">
             当前机器人：{{ selectedRobot?.name }}（{{ selectedRobot?.serial_number }}）
