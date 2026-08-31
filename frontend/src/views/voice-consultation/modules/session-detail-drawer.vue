@@ -37,8 +37,16 @@ const statusTagMap: Record<string, NaiveUI.ThemeColor> = {
 };
 
 const triggerTagMap: Record<string, NaiveUI.ThemeColor> = {
-  wake_word: 'info',
-  face_recognition: 'default'
+  wake_word: 'info'
+};
+
+const isFaceRecognitionTrigger = (method?: string) => method === 'face_recognition';
+
+const faceRecognitionTagStyle = {
+  backgroundColor: '#b37feb1A',
+  color: '#b37feb',
+  borderColor: '#b37feb80',
+  borderWidth: '1px'
 };
 
 watch(
@@ -111,7 +119,12 @@ function intentLabel(type: string | null): string {
               {{ formatTime(detail.occurred_at) }}
             </NDescriptionsItem>
             <NDescriptionsItem :label="$t('page.manage.voiceConsultation.trigger')">
-              <NTag :type="triggerTagMap[detail.trigger_method] || 'default'" size="small">
+              <NTag
+                size="small"
+                :type="isFaceRecognitionTrigger(detail.trigger_method) ? undefined : (triggerTagMap[detail.trigger_method] || 'default')"
+                :style="isFaceRecognitionTrigger(detail.trigger_method) ? faceRecognitionTagStyle : undefined"
+                :bordered="!isFaceRecognitionTrigger(detail.trigger_method)"
+              >
                 {{ $t(`page.manage.voiceConsultation.triggerMethod.${detail.trigger_method}`) }}
               </NTag>
             </NDescriptionsItem>

@@ -1,5 +1,5 @@
 <script setup lang="tsx">
-import { onMounted, reactive, ref } from 'vue';
+import { onActivated, onDeactivated, onMounted, onUnmounted, reactive, ref } from 'vue';
 import { NButton, NCard, NDataTable, NTag } from 'naive-ui';
 import dayjs from 'dayjs';
 import { fetchGetVoiceConsultationSessionList, fetchGetVoiceConsultationStats } from '@/service/api';
@@ -173,9 +173,31 @@ function handleSearch() {
   loadStats();
 }
 
+let pollTimer: ReturnType<typeof setInterval> | null = null;
+
+function startPolling() {
+  stopPolling();
+  pollTimer = setInterval(() => {
+    getData();
+    loadStats();
+  }, 5500);
+}
+
+function stopPolling() {
+  if (pollTimer) {
+    clearInterval(pollTimer);
+    pollTimer = null;
+  }
+}
+
 onMounted(() => {
   loadStats();
+  startPolling();
 });
+
+onUnmounted(stopPolling);
+onActivated(startPolling);
+onDeactivated(stopPolling);
 </script>
 
 <template>
