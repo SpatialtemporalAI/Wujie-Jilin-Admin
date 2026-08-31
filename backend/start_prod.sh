@@ -16,6 +16,7 @@ TIMEOUT="${TIMEOUT:-120}"
 MAX_REQUESTS="${MAX_REQUESTS:-5000}"
 MAX_REQUESTS_JITTER="${MAX_REQUESTS_JITTER:-500}"
 LOG_LEVEL="${LOG_LEVEL:-info}"
+TAIL_LINES="${TAIL_LINES:-100}"
 
 PID_DIR="${SCRIPT_DIR}/run"
 # 日志目录/文件保持固定名称，由 logrotate（deploy/logrotate/smilex-cloud）按天滚动。
@@ -53,20 +54,39 @@ else
     exit 1
 fi
 
-start() {
+# 进程存活校验：除 kill -0 外，Linux 下再比对 /proc cmdline，防止 PID 复用误判
+is_running() {
+    local pid="${1:-}"
+    [[ "${pid}" =~ ^[0-9]+$ ]] || return 1
+    kill -0 "${pid}" 2>/dev/null || return 1
+    if [[ -r "/proc/${pid}/cmdline" ]]; then
+        tr '\0' ' ' < "/proc/${pid}/cmdline" | grep -q "main:app" || return 1
+    fi
+    return 0
+}
 
+# 输出运行中的 PID；未运行则输出空（并清理残留 PID 文件）
+current_pid() {
+    local pid=""
     if [[ -f "${PID_FILE}" ]]; then
-        PID=$(cat "${PID_FILE}")
-
-        if kill -0 "${PID}" 2>/dev/null; then
-            echo "[INFO] 服务已运行 PID=${PID}"
-            exit 0
-        fi
-
+        pid="$(tr -d '[:space:]' < "${PID_FILE}")"
+    fi
+    if is_running "${pid}"; then
+        echo "${pid}"
+    else
         rm -f "${PID_FILE}"
     fi
+}
 
-    echo "[INFO] 启动 ${APP_NAME}"
+start() {
+    local pid
+    pid="$(current_pid)"
+    if [[ -n "${pid}" ]]; then
+        echo "[INFO] 服务已运行 PID=${pid}"
+        return 0
+    fi
+
+    echo "[INFO] 启动 ${APP_NAME} (${HOST}:${PORT}, workers=${WORKERS})"
 
     if [[ ! -f "/etc/logrotate.d/${APP_NAME}" ]]; then
         echo "[WARN] 未检测到 logrotate 配置 /etc/logrotate.d/${APP_NAME}，日志不会自动按天滚动"
@@ -84,85 +104,91 @@ start() {
         --log-level "${LOG_LEVEL}" \
         >> "${LOG_FILE}" 2>&1 &
 
-    PID=$!
+    pid=$!
+    echo "${pid}" > "${PID_FILE}"
 
-    echo "${PID}" > "${PID_FILE}"
-
-    sleep 2
-
-    if kill -0 "${PID}" 2>/dev/null; then
-        echo "[SUCCESS] 启动成功 PID=${PID}"
-        echo "[INFO] 日志文件(gunicorn): ${LOG_FILE}"
-        # info.log / error.log 由 logging_prod.ini 的 FileHandler 写入，实际目录见 APP_LOG_DIR（解析自 .env/.env.prod 的 LOG__DIR）
-        echo "[INFO] 日志文件(logging): ${APP_LOG_DIR}/info.log, ${APP_LOG_DIR}/error.log"
-    else
-        echo "[ERROR] 启动失败"
-        exit 1
-    fi
-}
-
-stop() {
-
-    if [[ ! -f "${PID_FILE}" ]]; then
-        echo "[INFO] 服务未运行"
-        exit 0
-    fi
-
-    PID=$(cat "${PID_FILE}")
-
-    if ! kill -0 "${PID}" 2>/dev/null; then
-        rm -f "${PID_FILE}"
-        echo "[INFO] 服务已停止"
-        exit 0
-    fi
-
-    echo "[INFO] 停止服务 PID=${PID}"
-
-    kill -TERM "${PID}"
-
-    for i in {1..30}; do
-        if ! kill -0 "${PID}" 2>/dev/null; then
+    # 健康检查：进程秒挂立即失败；最多等待 10s 端口就绪
+    local probe_host="${HOST}" i
+    [[ "${probe_host}" == "0.0.0.0" || "${probe_host}" == "::" ]] && probe_host="127.0.0.1"
+    for i in {1..10}; do
+        if ! kill -0 "${pid}" 2>/dev/null; then
+            echo "[ERROR] 启动失败，进程已退出，最近日志："
+            tail -n 20 "${LOG_FILE}" 2>/dev/null || true
             rm -f "${PID_FILE}"
-            echo "[SUCCESS] 已停止"
-            return
+            exit 1
         fi
-
+        if (exec 3<>"/dev/tcp/${probe_host}/${PORT}") 2>/dev/null; then
+            echo "[SUCCESS] 启动成功 PID=${pid}"
+            echo "[INFO] 日志文件(gunicorn): ${LOG_FILE}"
+            # info.log / error.log 由 logging_prod.ini 的 FileHandler 写入，实际目录见 APP_LOG_DIR（解析自 .env/.env.prod 的 LOG__DIR）
+            echo "[INFO] 日志文件(logging): ${APP_LOG_DIR}/info.log, ${APP_LOG_DIR}/error.log"
+            return 0
+        fi
         sleep 1
     done
 
-    echo "[WARN] 强制停止"
+    echo "[WARN] 进程存活但 10s 内端口未就绪，请检查日志: ${LOG_FILE}"
+    echo "[INFO] PID=${pid}"
+}
 
-    kill -9 "${PID}" || true
+stop() {
+    local pid
+    pid="$(current_pid)"
+    if [[ -z "${pid}" ]]; then
+        echo "[INFO] 服务未运行"
+        return 0
+    fi
+
+    echo "[INFO] 停止服务 PID=${pid}"
+
+    kill -TERM "${pid}" 2>/dev/null || true
+
+    local i
+    for i in {1..30}; do
+        if ! kill -0 "${pid}" 2>/dev/null; then
+            rm -f "${PID_FILE}"
+            echo "[SUCCESS] 已停止"
+            return 0
+        fi
+        sleep 1
+    done
+
+    echo "[WARN] 30s 内未退出，强制停止"
+
+    kill -9 "${pid}" 2>/dev/null || true
 
     rm -f "${PID_FILE}"
 }
 
 status() {
-
-    if [[ ! -f "${PID_FILE}" ]]; then
-        echo "[INFO] 未运行"
-        return
+    local pid
+    pid="$(current_pid)"
+    if [[ -n "${pid}" ]]; then
+        echo "[RUNNING] PID=${pid}"
+        ps -fp "${pid}" || true
+        return 0
     fi
-
-    PID=$(cat "${PID_FILE}")
-
-    if kill -0 "${PID}" 2>/dev/null; then
-        echo "[RUNNING] PID=${PID}"
-        ps -fp "${PID}"
-    else
-        echo "[STOPPED]"
-        rm -f "${PID_FILE}"
-    fi
+    echo "[STOPPED]"
+    return 3
 }
 
 logs() {
-    tail -f "${LOG_FILE}"
+    tail -n "${TAIL_LINES}" -f "${LOG_FILE}"
 }
 
 restart() {
     stop
     sleep 2
     start
+}
+
+usage() {
+    echo "用法:"
+    echo "  $0 start      启动服务"
+    echo "  $0 stop       停止服务"
+    echo "  $0 restart    重启服务（未运行时等同 start）"
+    echo "  $0 status     查看状态（运行中退出码 0，未运行 3）"
+    echo "  $0 logs       跟踪日志（TAIL_LINES 控制初始行数，默认 100）"
 }
 
 case "${1:-}" in
@@ -181,13 +207,11 @@ case "${1:-}" in
     logs)
         logs
         ;;
+    -h|--help|help)
+        usage
+        ;;
     *)
-        echo "用法:"
-        echo "  $0 start"
-        echo "  $0 stop"
-        echo "  $0 restart"
-        echo "  $0 status"
-        echo "  $0 logs"
+        usage
         exit 1
         ;;
 esac
