@@ -119,19 +119,20 @@ const [DefineGradientBg, GradientBg] = createReusableTemplate<GradientBgProps>()
 
     <NGrid cols="s:1 m:3 l:3" responsive="screen" :x-gap="12" :y-gap="12">
       <NGi v-for="item in cards" :key="item.key">
-        <GradientBg :gradient-color="item.gradientColor" class="flex-1">
+        <GradientBg :gradient-color="item.gradientColor" class="min-h-104px flex-1">
           <div class="flex items-center justify-between">
             <h3 class="text-15px font-normal">{{ item.title }}</h3>
             <SvgIcon :icon="item.icon" class="text-26px" />
           </div>
-          <NSpin v-if="loading" size="small" class="pt-8px">
-            <div class="h-32px"></div>
-          </NSpin>
-          <template v-else>
-            <div class="pt-4px text-28px font-500">{{ item.value }}</div>
-            <!-- 趋势行固定占位（无数据显示空白），保证三张卡片等高 -->
-            <div class="h-18px pt-2px text-12px leading-18px opacity-90">{{ item.trend || ' ' }}</div>
-          </template>
+          <!-- 数字固定高度，loading 时用空白占位，避免刷新时高度抖动 -->
+          <div class="h-36px flex items-center pt-4px">
+            <span v-if="!loading" class="text-28px font-500">{{ item.value }}</span>
+            <span v-else class="invisible text-28px font-500">&nbsp;</span>
+          </div>
+          <!-- 趋势行固定占位（无数据显示空白），保证三张卡片等高 -->
+          <div class="h-18px pt-2px text-12px leading-18px opacity-90">
+            <template v-if="!loading">{{ item.trend || ' ' }}</template>
+          </div>
         </GradientBg>
       </NGi>
     </NGrid>
