@@ -1,10 +1,11 @@
 <script setup lang="ts">
-import { computed } from 'vue';
+import { computed, ref } from 'vue';
 import type { VNode } from 'vue';
 import { useAuthStore } from '@/store/modules/auth';
 import { useRouterPush } from '@/hooks/common/router';
 import { useSvgIcon } from '@/hooks/common/icon';
 import { $t } from '@/locales';
+import ChangePasswordModal from './change-password-modal.vue';
 
 defineOptions({
   name: 'UserAvatar'
@@ -18,7 +19,7 @@ function loginOrRegister() {
   toLogin();
 }
 
-type DropdownKey = 'logout';
+type DropdownKey = 'change-password' | 'logout';
 
 type DropdownOption =
   | {
@@ -31,8 +32,15 @@ type DropdownOption =
       key: string;
     };
 
+const changePasswordVisible = ref(false);
+
 const options = computed(() => {
   const opts: DropdownOption[] = [
+    {
+      label: $t('common.changePassword'),
+      key: 'change-password',
+      icon: SvgIconVNode({ icon: 'ph:lock-key', fontSize: 18 })
+    },
     {
       label: $t('common.logout'),
       key: 'logout',
@@ -56,7 +64,9 @@ function logout() {
 }
 
 function handleDropdown(key: DropdownKey) {
-  if (key === 'logout') {
+  if (key === 'change-password') {
+    changePasswordVisible.value = true;
+  } else if (key === 'logout') {
     logout();
   } else {
     // If your other options are jumps from other routes, they will be directly supported here
@@ -77,6 +87,7 @@ function handleDropdown(key: DropdownKey) {
       </ButtonIcon>
     </div>
   </NDropdown>
+  <ChangePasswordModal v-model:visible="changePasswordVisible" />
 </template>
 
 <style scoped></style>

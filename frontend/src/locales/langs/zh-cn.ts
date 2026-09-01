@@ -690,6 +690,7 @@ const local: App.I18n.Schema = {
           userStatus: '请选择用户状态',
           userRole: '请选择用户角色',
           isSuperuser: '请选择是否为超级管理员',
+          oldPassword: '请输入旧密码',
           newPassword: '请输入新密码',
           confirmPassword: '请确认新密码',
           passwordMinLength: '密码长度至少为6位',

@@ -697,6 +697,7 @@ const local: App.I18n.Schema = {
           userStatus: 'Please select user status',
           userRole: 'Please select user role',
           isSuperuser: 'Please select whether to be a super admin',
+          oldPassword: 'Please enter old password',
           newPassword: 'Please enter new password',
           confirmPassword: 'Please confirm new password',
           passwordMinLength: 'Password length must be at least 6 characters',

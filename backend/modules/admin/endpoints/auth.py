@@ -7,13 +7,16 @@ import logging
 from fastapi import APIRouter, Depends, Request, Body
 from pydantic import BaseModel, Field
 from redis import Redis
+from sqlalchemy.ext.asyncio import AsyncSession
 from database.models.sys.user import SysUser
+from database.db_manager import get_session
 from core.config import settings
 from core.response import (
     ResponseModel,
     response_base,
 )
-from core.exception.errors import CustomError
+from core.exception.errors import CustomError, RequestError
+from core.decorators.operation_log import log_operation
 from core.utils.ip_utils import get_real_client_ip
 from modules.admin.deps.auth.user_manager import (
     UserManager,
@@ -25,6 +28,8 @@ from modules.admin.schemas.auth import (
     LoginResponseData,
     UserInfoResponseData,
 )
+from modules.admin.schemas.sys.user import SysUserPasswordUpdate
+from modules.admin.services.sys import UserService
 from core.security.rate_limit import limit_by_ip
 from modules.admin.services.sys.rate_limit_service import RateLimitService
 from modules.admin.services.captcha_service import CaptchaService
@@ -195,3 +200,25 @@ async def get_current_info(
         data=user_info,
         msg="获取用户信息成功",
     )
+
+
+@router.put(
+    "/password",
+    response_model=ResponseModel,
+    summary="当前用户修改密码",
+    description="当前登录用户自助修改密码，必须提供正确的旧密码",
+)
+@log_operation(module="auth", action="change_password", description="用户自助修改密码")
+async def change_own_password(
+    request: Request,
+    password_update: SysUserPasswordUpdate,
+    db: AsyncSession = Depends(get_session),
+    user: SysUser = Depends(current_user),
+):
+    if not password_update.old_password:
+        raise RequestError(msg="旧密码不能为空")
+
+    await UserService.update_user_password(db, user.id, password_update, current_user=user)
+
+    logger.info(f"用户自助修改密码成功，用户ID: {user.id}")
+    return response_base.success(msg="密码修改成功")

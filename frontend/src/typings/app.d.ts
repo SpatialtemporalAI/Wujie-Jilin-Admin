@@ -815,6 +815,7 @@ declare namespace App {
               userStatus: string;
               userRole: string;
               isSuperuser: string;
+              oldPassword: string;
               newPassword: string;
               confirmPassword: string;
               passwordMinLength: string;
