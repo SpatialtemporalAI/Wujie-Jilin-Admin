@@ -34,6 +34,7 @@
 ## 约束与备注
 
 - 预设模板存模板原文而非渲染后文本，避免改唤醒词后语料过期；后端推送时才渲染占位符
+- gRPC 契约：`wake_reply_mode` / `wake_reply_text` 允许传空，用于兼容先前版本（proto3 旧版本不发送该字段即默认空串，接收方按 corpus / 空语料兜底）
 - proto 位于 git 子模块 `backend/grpc`（Wujie-Jilin-Grpc），改动需在子模块仓库提交推送，并在主仓库更新子模块指针
 - 生成 pb2：`cd backend/grpc && uv run python main.py`（Windows GBK 控制台需 `PYTHONUTF8=1`）
 - 测试回复复用 `POST /admin/robot/config/voice/test-tts`，无新增接口
