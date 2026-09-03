@@ -23,6 +23,8 @@ const robotLoading = ref(false);
 const showAlert = ref(false);
 const wakeWordTestText = ref('');
 let wakeWordTestTimer: ReturnType<typeof setTimeout> | null = null;
+const replyTestText = ref('');
+let replyTestTimer: ReturnType<typeof setTimeout> | null = null;
 
 const robotList = ref<Api.Robot.AllRobot[]>([]);
 const selectedRobotId = ref<number | null>(null);
@@ -34,8 +36,63 @@ const model = reactive<Api.RobotConfig.VoiceConfig>({
   tts_voice: 'female',
   tts_speed: 1.0,
   tts_volume: 80,
-  greeting_mode: 'wave'
+  greeting_mode: 'wave',
+  wake_reply_mode: 'corpus',
+  wake_reply_text: ''
 });
+
+/** 唤醒词占位符：预设语料模板中的【唤醒词】在展示/推送时替换为实际唤醒词 */
+const WAKE_WORD_PLACEHOLDER = '【唤醒词】';
+
+/** 预设回复语料模板原文（存库值，含占位符） */
+const REPLY_TEMPLATES = {
+  wake_prefix: '【唤醒词】在呢，有什么可以帮您',
+  plain: '在呢，有什么可以帮您'
+} as const;
+
+type ReplyTemplateKey = keyof typeof REPLY_TEMPLATES | 'custom';
+
+/** 语料模板选择（本地 UI 状态）：预设模板或自定义 */
+const replyTemplate = ref<ReplyTemplateKey>('wake_prefix');
+/** 自定义回复内容（本地 UI 状态） */
+const customReplyText = ref('');
+
+const replyTemplateOptions = [
+  { label: '「唤醒词」在呢，有什么可以帮您', value: 'wake_prefix' },
+  { label: '在呢，有什么可以帮您', value: 'plain' },
+  { label: '自定义回复内容', value: 'custom' }
+];
+
+const replyModeOptions = [
+  { label: '配置语料', value: 'corpus' },
+  { label: '调用大模型', value: 'llm' }
+];
+
+/** 语料预览：模板原文替换占位符；自定义取输入值 */
+const replyPreview = computed(() => {
+  if (replyTemplate.value === 'custom') {
+    return customReplyText.value.trim();
+  }
+  return REPLY_TEMPLATES[replyTemplate.value].split(WAKE_WORD_PLACEHOLDER).join(model.wake_word || '');
+});
+
+/** 根据加载到的 wake_reply_text 回填模板选择 */
+function syncReplyTemplate() {
+  const text = model.wake_reply_text || '';
+  if (text === REPLY_TEMPLATES.wake_prefix) {
+    replyTemplate.value = 'wake_prefix';
+    customReplyText.value = '';
+  } else if (text === REPLY_TEMPLATES.plain) {
+    replyTemplate.value = 'plain';
+    customReplyText.value = '';
+  } else if (text) {
+    replyTemplate.value = 'custom';
+    customReplyText.value = text;
+  } else {
+    replyTemplate.value = 'wake_prefix';
+    customReplyText.value = '';
+  }
+}
 
 const rules = computed(() => ({
   wake_word: !faceWakeEnabled.value
@@ -99,6 +156,13 @@ const canSaveWakeWord = computed(() => {
   return /^[\u4E00-\u9FA5]{4,6}$/.test(model.wake_word);
 });
 
+/** 配置语料模式下回复语料必填（调用大模型 / 免唤醒模式不校验） */
+const canSaveReply = computed(() => {
+  if (faceWakeEnabled.value) return true;
+  if (model.wake_reply_mode !== 'corpus') return true;
+  return replyPreview.value.length > 0;
+});
+
 const selectedRobot = computed(() => robotList.value.find(r => r.id === selectedRobotId.value) || null);
 
 async function loadRobots() {
@@ -125,8 +189,12 @@ function resetModel() {
     tts_voice: 'female',
     tts_speed: 1.0,
     tts_volume: 80,
-    greeting_mode: 'wave'
+    greeting_mode: 'wave',
+    wake_reply_mode: 'corpus',
+    wake_reply_text: ''
   });
+  replyTemplate.value = 'wake_prefix';
+  customReplyText.value = '';
 }
 
 async function loadConfig(robotId: number) {
@@ -140,6 +208,10 @@ async function loadConfig(robotId: number) {
       if (!model.greeting_mode) {
         model.greeting_mode = 'wave';
       }
+      if (!model.wake_reply_mode) {
+        model.wake_reply_mode = 'corpus';
+      }
+      syncReplyTemplate();
     }
   } catch (err) {
     console.error('加载语音配置失败:', err);
@@ -175,6 +247,13 @@ async function handleSaveVoice() {
       return;
     }
     await validate();
+    // 保存前把模板选择落到 wake_reply_text：预设模板存原文（含【唤醒词】占位符），自定义存输入
+    if (model.wake_reply_mode === 'corpus') {
+      model.wake_reply_text =
+        replyTemplate.value === 'custom'
+          ? customReplyText.value.trim()
+          : REPLY_TEMPLATES[replyTemplate.value];
+    }
     const { data, error } = await fetchSaveVoiceConfig(model);
     if (!error) {
       const msg = data?.grpc_status === 'pending_retry' ? '保存成功（设备同步待重试）' : '保存成功';
@@ -244,6 +323,42 @@ async function handleTestTTS() {
   }
 }
 
+async function handleTestReply() {
+  if (!selectedRobotId.value) {
+    message.warning('请先选择机器人');
+    return;
+  }
+  if (model.wake_reply_mode !== 'corpus') {
+    message.warning('调用大模型模式下无需测试回复语料');
+    return;
+  }
+  if (!replyPreview.value) {
+    message.warning('请先填写回复语料');
+    return;
+  }
+  // 点击后立即显示提示文字
+  replyTestText.value = replyPreview.value;
+  if (replyTestTimer) clearTimeout(replyTestTimer);
+  replyTestTimer = setTimeout(() => {
+    replyTestText.value = '';
+  }, 5000);
+  try {
+    // 复用 TTS 测试通道，按当前音色/语速/音量播报回复语料
+    const { error } = await fetchTestTTS({
+      robot_id: model.robot_id,
+      voice: model.tts_voice,
+      speed: model.tts_speed,
+      volume: model.tts_volume,
+      text: replyPreview.value
+    });
+    if (!error) {
+      message.success('测试指令已下发');
+    }
+  } catch (err) {
+    console.error('测试回复失败:', err);
+  }
+}
+
 onMounted(() => {
   loadRobots();
 });
@@ -304,6 +419,53 @@ onMounted(() => {
                       </div>
                     </NSpace>
                   </NFormItemGi>
+                  <!-- 回复方式 -->
+                  <NFormItemGi v-if="!faceWakeEnabled" label="回复方式">
+                    <NRadioGroup v-model:value="model.wake_reply_mode">
+                      <NSpace>
+                        <NRadio v-for="opt in replyModeOptions" :key="opt.value" :value="opt.value">
+                          {{ opt.label }}
+                        </NRadio>
+                      </NSpace>
+                    </NRadioGroup>
+                  </NFormItemGi>
+                  <!-- 配置语料：模板选择 / 自定义输入 / 预览 -->
+                  <template v-if="!faceWakeEnabled && model.wake_reply_mode === 'corpus'">
+                    <NFormItemGi label="语料模板">
+                      <NSelect v-model:value="replyTemplate" :options="replyTemplateOptions" />
+                    </NFormItemGi>
+                    <NFormItemGi v-if="replyTemplate === 'custom'" label="自定义回复内容">
+                      <NInput v-model:value="customReplyText" placeholder="请输入自定义回复内容" maxlength="100"
+                        show-count clearable />
+                    </NFormItemGi>
+                    <NFormItemGi v-else label="语料预览">
+                      <div class="w-full flex-col gap-4px">
+                        <div class="reply-preview">{{ replyPreview }}</div>
+                        <NText depth="3" class="text-13px text-gray-700">
+                          该模板不可编辑；如需自定义请在上方切换为「自定义回复内容」。
+                        </NText>
+                      </div>
+                    </NFormItemGi>
+                    <NFormItemGi>
+                      <NSpace align="center" wrap>
+                        <NButton v-if="hasAuth('robot:config:edit')" type="primary" ghost size="small"
+                          :disabled="!replyPreview" @click="handleTestReply">
+                          测试回复
+                        </NButton>
+                        <div v-if="replyTestText" class="flex-y-center gap-4px">
+                          <SvgIcon icon="mdi:volume-high" class="text-16px" />
+                          <NText type="info" class="text-14px">
+                            "{{ replyTestText }}"
+                          </NText>
+                        </div>
+                      </NSpace>
+                    </NFormItemGi>
+                  </template>
+                  <NFormItemGi v-if="!faceWakeEnabled && model.wake_reply_mode === 'llm'">
+                    <NText depth="3" class="text-13px leading-relaxed text-gray-700">
+                      唤醒后由大模型生成回复语料，无需配置语料模板
+                    </NText>
+                  </NFormItemGi>
                 </NGrid>
               </NCard>
 
@@ -359,8 +521,8 @@ onMounted(() => {
             </div>
 
             <div class="mt-16px">
-              <NButton v-if="hasAuth('robot:config:edit')" type="primary" :loading="saving" :disabled="!canSaveWakeWord"
-                @click="handleSaveVoice">
+              <NButton v-if="hasAuth('robot:config:edit')" type="primary" :loading="saving"
+                :disabled="!canSaveWakeWord || !canSaveReply" @click="handleSaveVoice">
                 保存设置
               </NButton>
             </div>
@@ -431,6 +593,15 @@ onMounted(() => {
   justify-content: center;
   min-height: 160px;
   color: #9ca3af;
+}
+
+.reply-preview {
+  padding: 8px 12px;
+  border-radius: 6px;
+  background: #f5f7fa;
+  color: #4b5563;
+  line-height: 1.6;
+  word-break: break-all;
 }
 
 .config-row {

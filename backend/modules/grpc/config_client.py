@@ -129,7 +129,12 @@ class VoiceConfigClient:
 
     @classmethod
     async def notify_wake_word(
-        cls, robot_id: int, wake_word_enabled: bool, wake_word: str
+        cls,
+        robot_id: int,
+        wake_word_enabled: bool,
+        wake_word: str,
+        wake_reply_mode: str = "corpus",
+        wake_reply_text: str = "",
     ) -> voice_pb2.WakeWordChangedResponse:
         """推送唤醒词变更：同时下发给 middleware 和 agent（仅推已配置且启用的端）。
 
@@ -144,6 +149,8 @@ class VoiceConfigClient:
             robot_id=robot_id,
             wake_word_enabled=wake_word_enabled,
             wake_word=wake_word or "",
+            wake_reply_mode=wake_reply_mode or "corpus",
+            wake_reply_text=wake_reply_text or "",
         )
         log_ctx = {"robot_id": robot_id, "rpc": "notify_wake_word"}
 
