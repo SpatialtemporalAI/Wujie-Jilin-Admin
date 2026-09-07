@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 
 from typing import Optional, List, Annotated, ClassVar
-from pydantic import Field, ConfigDict, BeforeValidator, field_validator, ValidationInfo
+from pydantic import Field, ConfigDict, BeforeValidator, field_validator, model_validator, ValidationInfo
 from datetime import datetime, date, time
 
 from app.models.common.base import BaseEntity, BaseRespEntity, BaseReqEntity, BoolField, OptionalIntField
@@ -28,6 +28,16 @@ def _validate_repeat_cycle(v: Optional[str]) -> Optional[str]:
         if part not in VALID_REPEAT_CYCLES:
             raise ValueError(f"无效的重复周期值: {part}")
     return v
+
+
+# ==================== 播报步骤 Schema ====================
+
+class BroadcastStepSchema(BaseReqEntity):
+    """播报任务单个步骤"""
+
+    content: str = Field(..., description="播报内容", max_length=200)
+    interval: int = Field(..., description="播报间隔（秒）", ge=0)
+    actions: List[str] = Field(default_factory=list, description="动作列表")
 
 
 # ==================== 点位 Schema ====================
@@ -88,8 +98,9 @@ class TaskCreate(BaseReqEntity):
     map_id: Optional[int] = Field(None, description="关联场景地图ID")
     task_type: str = Field(..., description="任务类型: patrol/broadcast")
     points: Optional[List[TaskPointCreate]] = Field(None, description="巡逻点位列表")
-    broadcast_text: Optional[str] = Field(None, description="播报文本")
+    broadcast_text: Optional[str] = Field(None, description="播报文本（兼容旧数据）")
     broadcast_count: Optional[str] = Field(None, description="播报次数: 1/2/3/5/loop")
+    broadcast_steps: Optional[List[BroadcastStepSchema]] = Field(None, description="播报步骤列表")
     robot_ids: List[int] = Field(..., description="绑定的机器人ID列表（巡逻任务仅支持单选，播报任务支持多选）", min_length=1)
     schedule_enabled: bool = Field(False, description="是否启用定时调度")
     schedule_date: Optional[date] = Field(None, description="调度日期")
@@ -110,6 +121,21 @@ class TaskCreate(BaseReqEntity):
             raise ValueError('巡逻任务仅支持绑定一台机器人')
         return v
 
+    @model_validator(mode='after')
+    def validate_broadcast_steps(self):
+        """播报任务必须包含至少一个有效步骤"""
+        if self.task_type != 'broadcast':
+            return self
+        steps = self.broadcast_steps
+        if not steps or len(steps) == 0:
+            raise ValueError('播报任务至少包含一个播报步骤')
+        for idx, step in enumerate(steps, start=1):
+            if not step.content or not step.content.strip():
+                raise ValueError(f'第 {idx} 个播报步骤的内容不能为空')
+            if step.interval < 0:
+                raise ValueError(f'第 {idx} 个播报步骤的间隔不能小于 0')
+        return self
+
 
 class TaskUpdate(BaseReqEntity):
     """更新任务"""
@@ -117,8 +143,9 @@ class TaskUpdate(BaseReqEntity):
     map_id: Optional[int] = Field(None, description="关联场景地图ID")
     task_type: Optional[str] = Field(None, description="任务类型")
     points: Optional[List[TaskPointCreate]] = Field(None, description="巡逻点位列表")
-    broadcast_text: Optional[str] = Field(None, description="播报文本")
+    broadcast_text: Optional[str] = Field(None, description="播报文本（兼容旧数据）")
     broadcast_count: Optional[str] = Field(None, description="播报次数")
+    broadcast_steps: Optional[List[BroadcastStepSchema]] = Field(None, description="播报步骤列表")
     robot_ids: Optional[List[int]] = Field(None, description="绑定的机器人ID列表（巡逻任务仅支持单选，播报任务支持多选）")
     schedule_enabled: Optional[bool] = Field(None, description="是否启用定时调度")
     schedule_date: Optional[date] = Field(None, description="调度日期")
@@ -141,6 +168,23 @@ class TaskUpdate(BaseReqEntity):
             raise ValueError('巡逻任务仅支持绑定一台机器人')
         return v
 
+    @model_validator(mode='after')
+    def validate_broadcast_steps(self):
+        """播报任务必须包含至少一个有效步骤"""
+        if self.task_type != 'broadcast':
+            return self
+        steps = self.broadcast_steps
+        if steps is None:
+            return self
+        if len(steps) == 0:
+            raise ValueError('播报任务至少包含一个播报步骤')
+        for idx, step in enumerate(steps, start=1):
+            if not step.content or not step.content.strip():
+                raise ValueError(f'第 {idx} 个播报步骤的内容不能为空')
+            if step.interval < 0:
+                raise ValueError(f'第 {idx} 个播报步骤的间隔不能小于 0')
+        return self
+
 
 class TaskResponseData(BaseEntity):
     """任务响应"""
@@ -155,8 +199,9 @@ class TaskResponseData(BaseEntity):
     task_type: str = Field(..., description="任务类型")
     enabled: EnableStatusField = Field(..., description="启用状态: 1-启用, 2-禁用")
     status: str = Field(..., description="执行状态")
-    broadcast_text: Optional[str] = Field(None, description="播报文本")
+    broadcast_text: Optional[str] = Field(None, description="播报文本（兼容旧数据）")
     broadcast_count: Optional[str] = Field(None, description="播报次数")
+    broadcast_steps: Optional[List[BroadcastStepSchema]] = Field(None, description="播报步骤列表")
     schedule_enabled: bool = Field(..., description="是否启用定时调度")
     schedule_date: Optional[date] = Field(None, description="调度日期")
     schedule_start_time: Optional[time] = Field(None, description="调度开始时间")
