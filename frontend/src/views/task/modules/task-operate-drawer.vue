@@ -277,6 +277,13 @@ function selectPoint(index: number) {
   selectedPointIndex.value = index;
 }
 
+/** 拖拽排序结束后，按当前数组顺序重排 sort_order */
+function handlePointSortEnd() {
+  model.value.points.forEach((p, i) => {
+    p.sort_order = i;
+  });
+}
+
 /** 点位内动作管理 */
 function addAction(point: PointItem) {
   point.actions.push({ action: 'no', voice_text: null });
@@ -559,7 +566,8 @@ onMounted(() => {
           <!-- 左侧点位目录：可拖拽排序、点击切换 -->
           <div class="point-sidebar">
             <div class="point-sidebar-title">点位列表</div>
-            <VueDraggable v-model="model.points" :animation="150" handle=".point-drag-handle" class="point-list">
+            <VueDraggable v-model="model.points" :animation="150" handle=".point-drag-handle" class="point-list"
+              @end="handlePointSortEnd">
               <div
                 v-for="(point, index) in model.points"
                 :key="index"
