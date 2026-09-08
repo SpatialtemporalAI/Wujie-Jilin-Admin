@@ -123,6 +123,9 @@ class TaskService:
                 task_type=task_in.task_type,
                 broadcast_text=task_in.broadcast_text,
                 broadcast_count=task_in.broadcast_count,
+                broadcast_steps=[step.model_dump() for step in task_in.broadcast_steps]
+                if task_in.broadcast_steps
+                else None,
                 schedule_enabled=task_in.schedule_enabled,
                 schedule_date=task_in.schedule_date,
                 schedule_start_time=task_in.schedule_start_time,

@@ -58,6 +58,21 @@ const actionOptions = [
   { label: '无动作', value: 'no' }
 ];
 
+/** 播报动作可选项（不含“无动作”） */
+const broadcastActionOptions = actionOptions.filter(opt => opt.value !== 'no');
+
+/** 播报动作 emoji */
+const actionEmojiMap: Record<string, string> = {
+  shake_hand: '🤝',
+  high_wave: '🙌',
+  clap: '👏',
+  face_wave: '👋',
+  hands_up: '🙆',
+  right_hand_up: '✋',
+  reject: '🙅',
+  no: ''
+};
+
 /** 重复周期选项（星期复选框） */
 const weekdayOptions = [
   { label: '周一', value: 'mon' },
@@ -181,12 +196,19 @@ interface PointItem {
   actions: ActionItem[];
 }
 
+interface BroadcastStepItem {
+  content: string;
+  interval: number;
+  actions: Api.Task.TaskAction[];
+}
+
 interface FormModel {
   name: string;
   task_type: Api.Task.TaskType;
   map_id: number | null;
   points: PointItem[];
   broadcast_text: string | null;
+  broadcast_steps: BroadcastStepItem[];
   robot_ids: number[];
   schedule_enabled: boolean;
   /** 调度日期（时间戳，ms），提交时转换为 yyyy-MM-dd */
@@ -196,6 +218,14 @@ interface FormModel {
   schedule_repeat_cycles: string[];
 }
 
+function createDefaultBroadcastStep(): BroadcastStepItem {
+  return {
+    content: '',
+    interval: 3,
+    actions: []
+  };
+}
+
 function createDefaultModel(): FormModel {
   return {
     name: '',
@@ -203,6 +233,7 @@ function createDefaultModel(): FormModel {
     map_id: null,
     points: [],
     broadcast_text: null,
+    broadcast_steps: [createDefaultBroadcastStep()],
     robot_ids: [],
     schedule_enabled: false,
     schedule_date: null,
@@ -293,6 +324,47 @@ function removeAction(point: PointItem, index: number) {
   point.actions.splice(index, 1);
 }
 
+/** 播报步骤管理 */
+function addBroadcastStep() {
+  model.value.broadcast_steps.push(createDefaultBroadcastStep());
+}
+
+function removeBroadcastStep(index: number) {
+  model.value.broadcast_steps.splice(index, 1);
+  if (model.value.broadcast_steps.length === 0) {
+    model.value.broadcast_steps.push(createDefaultBroadcastStep());
+  }
+}
+
+function moveBroadcastStep(index: number, direction: -1 | 1) {
+  const steps = model.value.broadcast_steps;
+  const target = index + direction;
+  if (target < 0 || target >= steps.length) return;
+  const temp = steps[index];
+  steps[index] = steps[target];
+  steps[target] = temp;
+}
+
+function toggleBroadcastAction(step: BroadcastStepItem, action: Api.Task.TaskAction) {
+  const idx = step.actions.indexOf(action);
+  if (idx === -1) {
+    step.actions.push(action);
+  } else {
+    step.actions.splice(idx, 1);
+  }
+}
+
+function removeBroadcastAction(step: BroadcastStepItem, action: Api.Task.TaskAction) {
+  const idx = step.actions.indexOf(action);
+  if (idx !== -1) {
+    step.actions.splice(idx, 1);
+  }
+}
+
+function getBroadcastActionOptions(step: BroadcastStepItem) {
+  return broadcastActionOptions.filter(opt => !step.actions.includes(opt.value as Api.Task.TaskAction));
+}
+
 /** 校验规则 */
 const rules = computed(() => ({
   name: [
@@ -335,6 +407,16 @@ async function handleInitModel() {
     model.value.name = props.operateType === 'copy' ? '' : cloned.name || '';
     model.value.task_type = cloned.task_type || 'patrol';
     model.value.broadcast_text = cloned.broadcast_text || null;
+    model.value.broadcast_steps =
+      cloned.broadcast_steps && cloned.broadcast_steps.length > 0
+        ? cloned.broadcast_steps.map(s => ({
+          content: s.content || '',
+          interval: s.interval ?? 3,
+          actions: s.actions || []
+        }))
+        : cloned.broadcast_text
+          ? [{ content: cloned.broadcast_text, interval: 3, actions: [] }]
+          : [createDefaultBroadcastStep()];
     model.value.schedule_enabled = cloned.schedule_enabled || false;
     model.value.schedule_date = dateStrToTs(cloned.schedule_date);
     model.value.schedule_start_time = timeStrToTs(cloned.schedule_start_time);
@@ -382,6 +464,15 @@ async function handleInitModel() {
                 : []
           }));
         }
+        if (detail.broadcast_steps && detail.broadcast_steps.length > 0) {
+          model.value.broadcast_steps = detail.broadcast_steps.map(s => ({
+            content: s.content || '',
+            interval: s.interval ?? 3,
+            actions: s.actions || []
+          }));
+        } else if (detail.broadcast_text) {
+          model.value.broadcast_steps = [{ content: detail.broadcast_text, interval: 3, actions: [] }];
+        }
       }
     }
   }
@@ -406,6 +497,9 @@ function handleTaskTypeChange(val: Api.Task.TaskType) {
     annotationMap.value = new Map();
     mapOptions.value = [];
     mapOptionsLoaded = false;
+  }
+  if (previous === 'patrol' && val === 'broadcast') {
+    model.value.broadcast_steps = [createDefaultBroadcastStep()];
   }
 }
 
@@ -440,9 +534,18 @@ async function handleSubmit() {
       }
     }
   }
-  if (model.value.task_type === 'broadcast' && !model.value.broadcast_text) {
-    window.$message?.warning('请填写播报文本');
-    return;
+  if (model.value.task_type === 'broadcast') {
+    if (model.value.broadcast_steps.length === 0) {
+      window.$message?.warning('请至少添加一个播报步骤');
+      return;
+    }
+    for (let i = 0; i < model.value.broadcast_steps.length; i += 1) {
+      const step = model.value.broadcast_steps[i];
+      if (!step.content.trim()) {
+        window.$message?.warning(`请填写步骤 ${i + 1} 的播报内容`);
+        return;
+      }
+    }
   }
   if (model.value.schedule_enabled) {
     if (model.value.schedule_date === null) {
@@ -478,7 +581,14 @@ async function handleSubmit() {
           actions: p.actions
         }))
         : undefined,
-    broadcast_text: model.value.task_type === 'broadcast' ? model.value.broadcast_text : undefined
+    broadcast_steps:
+      model.value.task_type === 'broadcast'
+        ? model.value.broadcast_steps.map((s, i) => ({
+          content: s.content.trim(),
+          interval: s.interval,
+          actions: s.actions
+        }))
+        : undefined
   };
 
   submitting.value = true;
@@ -633,13 +743,78 @@ onMounted(() => {
         </div>
       </template>
 
-      <!-- 播报配置 -->
+      <!-- 播报步骤配置 -->
       <template v-if="model.task_type === 'broadcast'">
-        <NDivider style="font-size: 16px" title-placement="center">播报配置</NDivider>
-        <NFormItem label="播报文本">
-          <NInput v-model:value="model.broadcast_text" type="textarea" placeholder="请输入播报文本" :rows="3" show-count
-            :maxlength="1000" />
-        </NFormItem>
+        <NDivider style="font-size: 16px" title-placement="center">播报步骤</NDivider>
+        <div v-for="(step, index) in model.broadcast_steps" :key="index" class="broadcast-step-card">
+          <div class="broadcast-step-header">
+            <div class="flex-y-center gap-12px">
+              <div class="broadcast-step-index">{{ index + 1 }}</div>
+              <span class="broadcast-step-title">步骤 {{ index + 1 }}</span>
+            </div>
+            <NSpace :size="8">
+              <NButton quaternary size="small" :disabled="index === 0" @click="moveBroadcastStep(index, -1)">
+                ↑
+              </NButton>
+              <NButton quaternary size="small" :disabled="index === model.broadcast_steps.length - 1"
+                @click="moveBroadcastStep(index, 1)">
+                ↓
+              </NButton>
+              <NButton type="error" quaternary size="small" @click="removeBroadcastStep(index)">
+                <template #icon>
+                  <icon-ic-round-delete-outline class="text-icon" />
+                </template>
+              </NButton>
+            </NSpace>
+          </div>
+
+          <NFormItem :path="`broadcast_steps.${index}.content`"
+            :rule="{ required: true, message: '请填写播报内容', trigger: 'blur' }">
+            <NInput v-model:value="step.content" type="textarea" placeholder="请输入播报内容" :rows="2" show-count
+              :maxlength="200" />
+          </NFormItem>
+
+          <div class="flex-y-center gap-16px flex-wrap">
+            <NFormItem label="播报间隔" class="mb-0">
+              <NInputNumber v-model:value="step.interval" :min="0" :show-button="false" style="width: 80px">
+                <template #suffix>秒</template>
+              </NInputNumber>
+            </NFormItem>
+          </div>
+
+          <NFormItem label="动作" class="mb-0 mt-12px">
+            <NSpace align="center" :wrap="true" :size="8">
+              <NTag v-for="action in step.actions" :key="action" closable round
+                :color="{ color: '#f3e8ff', textColor: '#7c3aed', borderColor: '#d8b4fe' }"
+                @close="removeBroadcastAction(step, action)">
+                <template #icon>
+                  <span class="text-16px">{{ actionEmojiMap[action] }}</span>
+                </template>
+                {{broadcastActionOptions.find(opt => opt.value === action)?.label}}
+              </NTag>
+              <NDropdown v-if="getBroadcastActionOptions(step).length > 0"
+                :options="getBroadcastActionOptions(step).map(opt => ({ label: `${actionEmojiMap[opt.value]} ${opt.label}`, key: opt.value }))"
+                @select="(key: string) => toggleBroadcastAction(step, key as Api.Task.TaskAction)">
+                <NButton dashed size="small">
+                  <template #icon>
+                    <icon-ic-round-plus class="text-icon" />
+                  </template>
+                  添加动作
+                </NButton>
+              </NDropdown>
+            </NSpace>
+          </NFormItem>
+        </div>
+
+        <NButton type="primary" dashed block class="mt-12px" @click="addBroadcastStep">
+          <template #icon>
+            <icon-ic-round-plus class="text-icon" />
+          </template>
+          添加播报步骤
+        </NButton>
+        <div class="mt-8px text-12px" style="color: var(--n-text-color-3)">
+          步骤按顺序串行执行；同一步骤内的多个动作并行触发。
+        </div>
       </template>
 
       <!-- 定时配置 -->
@@ -757,5 +932,39 @@ onMounted(() => {
 
 .action-delete-btn {
   width: 72px;
+}
+
+.broadcast-step-card {
+  margin-bottom: 12px;
+  padding: 16px;
+  border: 1px solid var(--n-border-color, #e0e0e6);
+  border-radius: 12px;
+  background-color: var(--n-color, #fff);
+}
+
+.broadcast-step-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 12px;
+}
+
+.broadcast-step-index {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #8b5cf6, #7c3aed);
+  color: #fff;
+  font-size: 14px;
+  font-weight: 500;
+}
+
+.broadcast-step-title {
+  font-size: 16px;
+  font-weight: 500;
+  color: #8b5cf6;
 }
 </style>
