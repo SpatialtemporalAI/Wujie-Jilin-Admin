@@ -704,10 +704,7 @@ onMounted(() => {
         <NDivider style="font-size: 16px" title-placement="center">播报步骤</NDivider>
         <div v-for="(step, index) in model.broadcast_steps" :key="index" class="broadcast-step-card">
           <div class="broadcast-step-header">
-            <div class="flex-y-center gap-12px">
-              <div class="broadcast-step-index">{{ index + 1 }}</div>
-              <span class="broadcast-step-title">步骤 {{ index + 1 }}</span>
-            </div>
+            <span class="broadcast-step-title">步骤 {{ index + 1 }}</span>
             <NSpace :size="8">
               <NButton quaternary size="small" :disabled="index === 0" @click="moveBroadcastStep(index, -1)">
                 ↑
@@ -730,18 +727,9 @@ onMounted(() => {
               :maxlength="200" />
           </NFormItem>
 
-          <div class="flex-y-center gap-16px flex-wrap">
-            <NFormItem label="播报间隔" class="mb-0">
-              <NInputNumber v-model:value="step.interval" :min="0" :show-button="false" style="width: 80px">
-                <template #suffix>秒</template>
-              </NInputNumber>
-            </NFormItem>
-          </div>
-
           <NFormItem label="动作" class="mb-0 mt-12px">
             <NSpace align="center" :wrap="true" :size="8">
-              <NTag v-for="action in step.actions" :key="action" closable round
-                :color="{ color: '#f3e8ff', textColor: '#7c3aed', borderColor: '#d8b4fe' }"
+              <NTag v-for="action in step.actions" :key="action" closable round type="primary"
                 @close="removeBroadcastAction(step, action)">
                 <template #icon>
                   <span class="text-16px">{{ actionEmojiMap[action] }}</span>
@@ -759,6 +747,12 @@ onMounted(() => {
                 </NButton>
               </NDropdown>
             </NSpace>
+          </NFormItem>
+
+          <NFormItem v-if="index < model.broadcast_steps.length - 1" label="间隔" class="mb-0 mt-12px">
+            <NInputNumber v-model:value="step.interval" :min="0" :show-button="false" style="width: 80px">
+              <template #suffix>秒</template>
+            </NInputNumber>
           </NFormItem>
         </div>
 
@@ -828,22 +822,9 @@ onMounted(() => {
   margin-bottom: 12px;
 }
 
-.broadcast-step-index {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: 28px;
-  height: 28px;
-  border-radius: 50%;
-  background: linear-gradient(135deg, #8b5cf6, #7c3aed);
-  color: #fff;
-  font-size: 14px;
-  font-weight: 500;
-}
-
 .broadcast-step-title {
   font-size: 16px;
   font-weight: 500;
-  color: #8b5cf6;
+  color: var(--n-primary-color, #2080f0);
 }
 </style>
