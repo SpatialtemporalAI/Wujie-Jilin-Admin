@@ -44,6 +44,7 @@
 - **外部写入方对接要点**：`id` 为雪花主键无 DB 默认，外部必须自行生成唯一 BigInteger；`created_at` 已有 server_default 兜底但建议显式提供；`turn_count` 为冗余字段由外部维护；`occurred_at` 是业务时间（列表排序/筛选字段），区别于入库时间 `created_at`。
 - **前端类型陷阱**：`Common.CommonRecord` 自带 `status: EnableStatus | null`（'1'/'2'），与业务 status 枚举冲突会把交叉类型折叠成 never —— `SessionRecord` 用 `Omit<Common.CommonRecord, 'status'> & {...}` 规避。
 - **i18n 层级**：页面文案放 `page.manage.voiceConsultation.*`（manage 下，与 callLog 同级），不是 `page.voiceConsultation.*`。
+- **新增意图枚举的改动清单（勿漏）**：后端 `schemas/session.py` 的 `INTENT_TYPES` + database 子模块模型列注释；前端 `voice-consultation.d.ts` 的 `IntentType`、`app.d.ts` i18n 类型、`zh-cn.ts`/`en-us.ts` 的 `intentType.*`、`intent-bar-chart.vue` 的 `INTENT_ORDER`+`INTENT_COLORS`、**`session-detail-drawer.vue` 的 `INTENT_LABEL_KEYS` 白名单**（漏掉会回退显示原始 code，2026-09-09 同步 general_chat 时曾遗漏）。
 - 环比语义：卡片统计（总量/今日/平均时长）均不随筛选；平均时长为当日口径、环比昨日（2026-08-26 由全量均值改为当日均值）；意图/触发分布图表跟随全部筛选条件（2026-08-27 补齐：`filter_conditions` 此前漏了 `keyword` 关键词筛选，现已与列表 `build_session_query` 口径一致）。
 
 ## 记录日期
