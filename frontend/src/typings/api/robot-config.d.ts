@@ -14,6 +14,10 @@ declare namespace Api.RobotConfig {
     tts_volume: number;
     /** 打招呼模式：wave-招手模式 / no_wave-无招手模式 */
     greeting_mode?: 'wave' | 'no_wave';
+    /** 唤醒回复方式：corpus-配置语料 / llm-调用大模型 */
+    wake_reply_mode?: 'corpus' | 'llm';
+    /** 唤醒回复语料：预设模板存原文（含【唤醒词】占位符），自定义存用户输入 */
+    wake_reply_text?: string;
     created_at?: string;
     updated_at?: string | null;
     grpc_status?: GrpcStatus;

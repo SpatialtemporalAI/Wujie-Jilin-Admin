@@ -25,6 +25,8 @@ from database.models.business.robot_voice_config import (
     DEFAULT_TTS_SPEED,
     DEFAULT_TTS_VOLUME,
     DEFAULT_GREETING_MODE,
+    DEFAULT_WAKE_REPLY_MODE,
+    DEFAULT_WAKE_REPLY_TEXT,
 )
 from database.models.business.robot_face_recognition import RobotFaceRecognition
 from core.config import settings
@@ -180,6 +182,8 @@ class RobotConfigService:
                     tts_speed=DEFAULT_TTS_SPEED,
                     tts_volume=DEFAULT_TTS_VOLUME,
                     greeting_mode=DEFAULT_GREETING_MODE,
+                    wake_reply_mode=DEFAULT_WAKE_REPLY_MODE,
+                    wake_reply_text=DEFAULT_WAKE_REPLY_TEXT,
                 )
             return config
         except Exception as e:
@@ -217,6 +221,8 @@ class RobotConfigService:
                 if (
                     existing.wake_word_enabled != schema.wake_word_enabled
                     or (existing.wake_word or "") != (schema.wake_word or "")
+                    or (existing.wake_reply_mode or "") != (schema.wake_reply_mode or "")
+                    or (existing.wake_reply_text or "") != (schema.wake_reply_text or "")
                 ):
                     changed.add("wake")
                 if (
@@ -229,6 +235,7 @@ class RobotConfigService:
                     changed.add("greeting")
 
             greeting_mode = schema.greeting_mode or DEFAULT_GREETING_MODE
+            wake_reply_mode = schema.wake_reply_mode or DEFAULT_WAKE_REPLY_MODE
 
             if existing:
                 existing.wake_word_enabled = schema.wake_word_enabled
@@ -237,6 +244,8 @@ class RobotConfigService:
                 existing.tts_speed = schema.tts_speed
                 existing.tts_volume = schema.tts_volume
                 existing.greeting_mode = greeting_mode
+                existing.wake_reply_mode = wake_reply_mode
+                existing.wake_reply_text = schema.wake_reply_text
                 await db.commit()
                 await db.refresh(existing)
                 logger.info("更新语音配置成功，ID: %d", existing.id)
@@ -250,6 +259,8 @@ class RobotConfigService:
                     tts_speed=schema.tts_speed,
                     tts_volume=schema.tts_volume,
                     greeting_mode=greeting_mode,
+                    wake_reply_mode=wake_reply_mode,
+                    wake_reply_text=schema.wake_reply_text,
                 )
                 db.add(config)
                 await db.commit()
@@ -260,10 +271,17 @@ class RobotConfigService:
             # DB 已落库，下面是尽力推送 + 失败入重试队列
             statuses: List[str] = []
             if "wake" in changed:
+                # 语料中的【唤醒词】占位符在推送前渲染为实际唤醒词，设备侧直接播报
+                reply_text = (saved.wake_reply_text or "").replace(
+                    "【唤醒词】", saved.wake_word or ""
+                )
                 wake_payload = {
                     "robot_id": saved.robot_id,
                     "wake_word_enabled": bool(saved.wake_word_enabled),
                     "wake_word": saved.wake_word or "",
+                    "wake_reply_mode": saved.wake_reply_mode
+                    or DEFAULT_WAKE_REPLY_MODE,
+                    "wake_reply_text": reply_text,
                 }
                 statuses.append(
                     await RobotConfigService._push_with_retry(

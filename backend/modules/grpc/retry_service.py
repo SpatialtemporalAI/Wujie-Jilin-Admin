@@ -57,10 +57,18 @@ _CALL_TIMEOUT_SECONDS: float = 30.0
 
 
 async def _wrap_voice_wake(
-    robot_id: int, wake_word_enabled: bool, wake_word: str
+    robot_id: int,
+    wake_word_enabled: bool,
+    wake_word: str,
+    wake_reply_mode: str = "corpus",
+    wake_reply_text: str = "",
 ) -> RetryCallResult:
     resp = await VoiceConfigClient.notify_wake_word(
-        robot_id, wake_word_enabled, wake_word
+        robot_id,
+        wake_word_enabled,
+        wake_word,
+        wake_reply_mode=wake_reply_mode,
+        wake_reply_text=wake_reply_text,
     )
     return RetryCallResult(
         success=getattr(resp, "success", False),
@@ -364,7 +372,9 @@ class GrpcRetryService:
                 return "waiting_online"
 
         try:
-            kwargs = {k: payload[k] for k in required_keys}
+            # payload 由各业务保存时按客户端方法签名构造（如唤醒词含 wake_reply_mode/text），
+            # 直接整体透传；required_keys 只做缺失校验，wrapper 的默认值兼容旧格式 payload
+            kwargs = dict(payload)
             resp = await asyncio.wait_for(
                 client_method(**kwargs), timeout=_CALL_TIMEOUT_SECONDS
             )

@@ -32,6 +32,14 @@ class RobotVoiceConfigSchema(BaseReqEntity):
     greeting_mode: Optional[Literal["wave", "no_wave"]] = Field(
         default="wave", description="打招呼模式：wave-招手模式，no_wave-无招手模式"
     )
+    wake_reply_mode: Optional[Literal["corpus", "llm"]] = Field(
+        default="corpus", description="唤醒回复方式：corpus-配置语料，llm-调用大模型"
+    )
+    wake_reply_text: Optional[str] = Field(
+        default=None,
+        description="唤醒回复语料：预设模板存原文（含【唤醒词】占位符），自定义存用户输入",
+        max_length=200,
+    )
 
     @field_validator("greeting_mode", mode="before")
     @classmethod
@@ -39,6 +47,14 @@ class RobotVoiceConfigSchema(BaseReqEntity):
         """未传或传 null/空字符串时兜底为招手模式，避免写入 null"""
         if value is None or value == "":
             return "wave"
+        return value
+
+    @field_validator("wake_reply_mode", mode="before")
+    @classmethod
+    def _normalize_wake_reply_mode(cls, value):
+        """未传或传 null/空字符串时兜底为配置语料模式，避免写入 null"""
+        if value is None or value == "":
+            return "corpus"
         return value
 
     @model_validator(mode="after")
@@ -54,6 +70,15 @@ class RobotVoiceConfigSchema(BaseReqEntity):
         else:
             if self.wake_word is not None:
                 self.wake_word = self.wake_word.strip() or None
+        # 配置语料且启用唤醒词时回复语料必填；其余情况允许为空
+        if self.wake_reply_text is not None:
+            self.wake_reply_text = self.wake_reply_text.strip() or None
+        if (
+            self.wake_word_enabled
+            and self.wake_reply_mode == "corpus"
+            and not self.wake_reply_text
+        ):
+            raise ValueError("回复方式为配置语料时，回复语料不能为空")
         return self
 
 
@@ -74,6 +99,10 @@ class RobotVoiceConfigResponse(BaseRespEntity):
     greeting_mode: Optional[str] = Field(
         "wave", description="打招呼模式：wave-招手模式，no_wave-无招手模式"
     )
+    wake_reply_mode: Optional[str] = Field(
+        "corpus", description="唤醒回复方式：corpus-配置语料，llm-调用大模型"
+    )
+    wake_reply_text: Optional[str] = Field(None, description="唤醒回复语料")
 
     @field_validator("greeting_mode", mode="before")
     @classmethod
@@ -81,6 +110,14 @@ class RobotVoiceConfigResponse(BaseRespEntity):
         """数据库旧数据可能为 null，返回时兜底为招手模式"""
         if value is None or value == "":
             return "wave"
+        return value
+
+    @field_validator("wake_reply_mode", mode="before")
+    @classmethod
+    def _normalize_wake_reply_mode_response(cls, value):
+        """数据库旧数据可能为 null，返回时兜底为配置语料模式"""
+        if value is None or value == "":
+            return "corpus"
         return value
 
     created_at: Optional[datetime] = Field(None, description="创建时间")
