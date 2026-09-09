@@ -38,7 +38,7 @@ class RobotVoiceConfigSchema(BaseReqEntity):
     wake_reply_text: Optional[str] = Field(
         default=None,
         description="唤醒回复语料：预设模板存原文（含【唤醒词】占位符），自定义存用户输入",
-        max_length=200,
+        max_length=1000,
     )
 
     @field_validator("greeting_mode", mode="before")
