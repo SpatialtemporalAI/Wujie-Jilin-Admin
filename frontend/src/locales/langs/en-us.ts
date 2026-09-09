@@ -639,7 +639,8 @@ const local: App.I18n.Schema = {
           medical_guide: 'Medical Guide',
           health_check_notice: 'Health Check Notice',
           insurance_guide: 'Insurance Guide',
-          admission_notice: 'Admission Notice'
+          admission_notice: 'Admission Notice',
+          general_chat: 'General Chat'
         }
       },
       face: {

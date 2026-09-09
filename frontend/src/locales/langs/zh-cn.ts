@@ -634,7 +634,8 @@ const local: App.I18n.Schema = {
           medical_guide: '就医指南',
           health_check_notice: '体检须知',
           insurance_guide: '医保指南',
-          admission_notice: '住院须知'
+          admission_notice: '住院须知',
+          general_chat: '闲聊问答'
         }
       },
       face: {
