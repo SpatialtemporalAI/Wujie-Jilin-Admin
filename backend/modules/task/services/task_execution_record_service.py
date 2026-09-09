@@ -22,6 +22,19 @@ from modules.task.schemas.task_execution_record import (
 logger = logging.getLogger(__name__)
 
 
+def _parse_optional_int(value: Optional[str]) -> Optional[int]:
+    """查询参数中的 int 字段以字符串接收（FastAPI 兼容），在此收敛为 int；空/脏值返回 None"""
+    if value is None:
+        return None
+    stripped = value.strip()
+    if stripped == "":
+        return None
+    try:
+        return int(stripped)
+    except (ValueError, TypeError):
+        return None
+
+
 class TaskExecutionRecordService:
     """任务执行记录服务类"""
 
@@ -259,14 +272,18 @@ class TaskExecutionRecordService:
             conditions = []
             if query_params.status:
                 conditions.append(TaskExecutionRecord.status == query_params.status)
-            if query_params.task_id is not None:
-                conditions.append(TaskExecutionRecord.task_id == query_params.task_id)
-            if query_params.robot_id is not None:
-                conditions.append(TaskExecutionRecord.robot_id == query_params.robot_id)
-            if query_params.scene_id is not None:
-                conditions.append(TaskExecutionRecord.scene_id == query_params.scene_id)
-            if query_params.user_id is not None:
-                conditions.append(TaskExecutionRecord.user_id == query_params.user_id)
+            task_id = _parse_optional_int(query_params.task_id)
+            if task_id is not None:
+                conditions.append(TaskExecutionRecord.task_id == task_id)
+            robot_id = _parse_optional_int(query_params.robot_id)
+            if robot_id is not None:
+                conditions.append(TaskExecutionRecord.robot_id == robot_id)
+            scene_id = _parse_optional_int(query_params.scene_id)
+            if scene_id is not None:
+                conditions.append(TaskExecutionRecord.scene_id == scene_id)
+            user_id = _parse_optional_int(query_params.user_id)
+            if user_id is not None:
+                conditions.append(TaskExecutionRecord.user_id == user_id)
             if query_params.source:
                 conditions.append(TaskExecutionRecord.source == query_params.source)
             if conditions:
@@ -285,14 +302,18 @@ class TaskExecutionRecordService:
         conditions = []
         if query_params.status:
             conditions.append(TaskExecutionRecord.status == query_params.status)
-        if query_params.task_id is not None:
-            conditions.append(TaskExecutionRecord.task_id == query_params.task_id)
-        if query_params.robot_id is not None:
-            conditions.append(TaskExecutionRecord.robot_id == query_params.robot_id)
-        if query_params.scene_id is not None:
-            conditions.append(TaskExecutionRecord.scene_id == query_params.scene_id)
-        if query_params.user_id is not None:
-            conditions.append(TaskExecutionRecord.user_id == query_params.user_id)
+        task_id = _parse_optional_int(query_params.task_id)
+        if task_id is not None:
+            conditions.append(TaskExecutionRecord.task_id == task_id)
+        robot_id = _parse_optional_int(query_params.robot_id)
+        if robot_id is not None:
+            conditions.append(TaskExecutionRecord.robot_id == robot_id)
+        scene_id = _parse_optional_int(query_params.scene_id)
+        if scene_id is not None:
+            conditions.append(TaskExecutionRecord.scene_id == scene_id)
+        user_id = _parse_optional_int(query_params.user_id)
+        if user_id is not None:
+            conditions.append(TaskExecutionRecord.user_id == user_id)
         if query_params.source:
             conditions.append(TaskExecutionRecord.source == query_params.source)
 

@@ -9,32 +9,15 @@
 而本 schema 的 status 是字符串枚举（pending/running/paused/...），需要原样返回。
 JS 大整数 ID 检查的序列化器在这里手动复制一份。
 """
-from typing import Optional, List, Dict, Any, ClassVar, Annotated, Literal
-from pydantic import Field, ConfigDict, field_serializer, BeforeValidator
+from typing import Optional, List, Dict, Any, ClassVar, Literal
+from pydantic import Field, ConfigDict, field_serializer
 from datetime import datetime
 
 from app.models.common.base import (
     BaseEntity,
     BaseReqEntity,
-    OptionalIntField,
-    parse_optional_enum,
 )
 from modules.task.schemas.task import BroadcastStepSchema
-
-ExecutionStatusField = Annotated[
-    str | None,
-    BeforeValidator(
-        parse_optional_enum(
-            {"pending", "running", "paused", "cancelled", "completed", "failed"}
-        )
-    ),
-]
-ExecutionSourceField = Annotated[
-    str | None,
-    BeforeValidator(
-        parse_optional_enum({"platform_schedule", "voice_trigger", "manual"})
-    ),
-]
 
 
 # ==================== 任务定义快照 Schema ====================
@@ -101,14 +84,20 @@ class ProgressDetail(BaseReqEntity):
 
 
 class TaskExecutionRecordQueryParams(BaseReqEntity):
-    """任务执行记录查询参数"""
+    """任务执行记录查询参数
 
-    status: ExecutionStatusField = Field(None, description="执行状态")
-    task_id: OptionalIntField = Field(None, description="来源任务ID")
-    robot_id: OptionalIntField = Field(None, description="机器人ID")
-    scene_id: OptionalIntField = Field(None, description="场景地图ID")
-    user_id: OptionalIntField = Field(None, description="触发用户ID")
-    source: ExecutionSourceField = Field(None, description="触发源")
+    注意：字段统一使用最基础的 Optional[str] 而非 Annotated[Optional[int], BeforeValidator(...)]。
+    FastAPI 对 Depends() query 模型中的 Annotated 字段在部分版本存在兼容性问题（可能漏收集
+    请求参数导致模型构造缺键报 missing）；Optional[str] 是 FastAPI 全版本稳定的形式。
+    空值/脏值收敛由 service 层解析完成（见 parse_optional_int 工具）。
+    """
+
+    status: Optional[str] = Field(None, description="执行状态")
+    task_id: Optional[str] = Field(None, description="来源任务ID")
+    robot_id: Optional[str] = Field(None, description="机器人ID")
+    scene_id: Optional[str] = Field(None, description="场景地图ID")
+    user_id: Optional[str] = Field(None, description="触发用户ID")
+    source: Optional[str] = Field(None, description="触发源")
     start_time: Optional[str] = Field(None, description="开始时间(起)")
     end_time: Optional[str] = Field(None, description="结束时间(止)")
 
