@@ -382,7 +382,8 @@ async function handleInitModel() {
       cloned.broadcast_steps && cloned.broadcast_steps.length > 0
         ? cloned.broadcast_steps.map(s => ({
           content: s.content || '',
-          interval: s.interval ?? 3,
+          // 不回填空值，避免掩盖未填写的间隔（提交时会校验）
+          interval: s.interval ?? null,
           actions: s.actions || []
         }))
         : cloned.broadcast_text
@@ -438,7 +439,7 @@ async function handleInitModel() {
         if (detail.broadcast_steps && detail.broadcast_steps.length > 0) {
           model.value.broadcast_steps = detail.broadcast_steps.map(s => ({
             content: s.content || '',
-            interval: s.interval ?? 3,
+            interval: s.interval ?? null,
             actions: s.actions || []
           }));
         } else if (detail.broadcast_text) {

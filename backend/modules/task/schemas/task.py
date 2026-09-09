@@ -138,12 +138,16 @@ class TaskCreate(BaseReqEntity):
 
     @model_validator(mode='after')
     def validate_broadcast_steps(self):
-        """播报任务必须包含至少一个步骤（每个步骤的内容/动作校验由 BroadcastStepSchema 负责）"""
+        """播报任务必须包含至少一个步骤（每个步骤的内容/动作校验由 BroadcastStepSchema 负责）；
+        除最后一步外，其余步骤必须填写播报间隔"""
         if self.task_type != 'broadcast':
             return self
         steps = self.broadcast_steps
         if not steps or len(steps) == 0:
             raise ValueError('播报任务至少包含一个播报步骤')
+        for idx, step in enumerate(steps[:-1]):
+            if step.interval is None:
+                raise ValueError(f'步骤 {idx + 1} 的播报间隔不能为空')
         return self
 
 
@@ -180,7 +184,8 @@ class TaskUpdate(BaseReqEntity):
 
     @model_validator(mode='after')
     def validate_broadcast_steps(self):
-        """播报任务必须包含至少一个步骤（每个步骤的内容/动作校验由 BroadcastStepSchema 负责）"""
+        """播报任务必须包含至少一个步骤（每个步骤的内容/动作校验由 BroadcastStepSchema 负责）；
+        除最后一步外，其余步骤必须填写播报间隔"""
         if self.task_type != 'broadcast':
             return self
         steps = self.broadcast_steps
@@ -188,6 +193,9 @@ class TaskUpdate(BaseReqEntity):
             return self
         if len(steps) == 0:
             raise ValueError('播报任务至少包含一个播报步骤')
+        for idx, step in enumerate(steps[:-1]):
+            if step.interval is None:
+                raise ValueError(f'步骤 {idx + 1} 的播报间隔不能为空')
         return self
 
 
