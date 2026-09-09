@@ -33,11 +33,19 @@ def _validate_repeat_cycle(v: Optional[str]) -> Optional[str]:
 # ==================== 播报步骤 Schema ====================
 
 class BroadcastStepSchema(BaseReqEntity):
-    """播报任务单个步骤"""
+    """播报任务单个步骤：content 与 actions 均非必填，但二者至少有其一"""
 
-    content: str = Field(..., description="播报内容", max_length=200)
+    content: Optional[str] = Field(None, description="播报内容", max_length=1000)
     interval: int = Field(..., description="播报间隔（秒）", ge=0)
-    actions: List[str] = Field(default_factory=list, description="动作列表")
+    actions: List[str] = Field(default_factory=list, description="动作列表（同一动作可重复出现）")
+
+    @model_validator(mode='after')
+    def validate_at_least_one(self):
+        has_content = bool(self.content and self.content.strip())
+        has_actions = bool(self.actions)
+        if not has_content and not has_actions:
+            raise ValueError('播报内容与动作至少填写一项')
+        return self
 
 
 # ==================== 点位 Schema ====================
@@ -123,17 +131,12 @@ class TaskCreate(BaseReqEntity):
 
     @model_validator(mode='after')
     def validate_broadcast_steps(self):
-        """播报任务必须包含至少一个有效步骤"""
+        """播报任务必须包含至少一个步骤（每个步骤的内容/动作校验由 BroadcastStepSchema 负责）"""
         if self.task_type != 'broadcast':
             return self
         steps = self.broadcast_steps
         if not steps or len(steps) == 0:
             raise ValueError('播报任务至少包含一个播报步骤')
-        for idx, step in enumerate(steps, start=1):
-            if not step.content or not step.content.strip():
-                raise ValueError(f'第 {idx} 个播报步骤的内容不能为空')
-            if step.interval < 0:
-                raise ValueError(f'第 {idx} 个播报步骤的间隔不能小于 0')
         return self
 
 
@@ -170,7 +173,7 @@ class TaskUpdate(BaseReqEntity):
 
     @model_validator(mode='after')
     def validate_broadcast_steps(self):
-        """播报任务必须包含至少一个有效步骤"""
+        """播报任务必须包含至少一个步骤（每个步骤的内容/动作校验由 BroadcastStepSchema 负责）"""
         if self.task_type != 'broadcast':
             return self
         steps = self.broadcast_steps
@@ -178,11 +181,6 @@ class TaskUpdate(BaseReqEntity):
             return self
         if len(steps) == 0:
             raise ValueError('播报任务至少包含一个播报步骤')
-        for idx, step in enumerate(steps, start=1):
-            if not step.content or not step.content.strip():
-                raise ValueError(f'第 {idx} 个播报步骤的内容不能为空')
-            if step.interval < 0:
-                raise ValueError(f'第 {idx} 个播报步骤的间隔不能小于 0')
         return self
 
 
