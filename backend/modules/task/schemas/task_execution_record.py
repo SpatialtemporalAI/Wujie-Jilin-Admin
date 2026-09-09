@@ -19,6 +19,7 @@ from app.models.common.base import (
     OptionalIntField,
     parse_optional_enum,
 )
+from modules.task.schemas.task import BroadcastStepSchema
 
 ExecutionStatusField = Annotated[
     str | None,
@@ -65,7 +66,10 @@ class TaskDefinitionSnapshot(BaseReqEntity):
     points: List[TaskPointSnapshot] = Field(
         default_factory=list, description="巡逻点位列表"
     )
-    broadcast_text: Optional[str] = Field(None, description="播报文本")
+    broadcast_text: Optional[str] = Field(None, description="播报文本（兼容旧数据）")
+    broadcast_steps: Optional[List[BroadcastStepSchema]] = Field(
+        None, description="播报步骤列表"
+    )
 
 
 # ==================== 进度 Schema ====================

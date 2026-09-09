@@ -40,6 +40,13 @@ declare namespace Api {
       actions: TaskActionItem[];
     }>;
 
+    /** broadcast step */
+    type BroadcastStep = {
+      content: string;
+      interval: number;
+      actions: TaskAction[];
+    };
+
     /** robot brief info for task */
     type TaskRobot = {
       id: number;
@@ -58,6 +65,7 @@ declare namespace Api {
       enabled: boolean;
       status: TaskStatus;
       broadcast_text: string | null;
+      broadcast_steps: BroadcastStep[] | null;
       schedule_enabled: boolean;
       schedule_date: string | null;
       schedule_start_time: string | null;
@@ -93,6 +101,7 @@ declare namespace Api {
         actions: TaskActionItem[];
       }[];
       broadcast_text?: string | null;
+      broadcast_steps?: BroadcastStep[] | null;
       robot_ids: number[];
       schedule_enabled?: boolean;
       schedule_date?: string | null;
@@ -147,6 +156,7 @@ declare namespace Api {
       task_name: string | null;
       points: TaskPointSnapshot[];
       broadcast_text: string | null;
+      broadcast_steps: BroadcastStep[] | null;
     };
 
     /** task execution record (new) */
