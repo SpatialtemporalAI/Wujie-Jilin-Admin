@@ -12,6 +12,7 @@ from datetime import datetime, timezone, timedelta
 
 from database.models.business.robot_event_log import RobotEventLog
 from database.models.business.robot import Robot
+from app.models.common.base import parse_optional_int_value
 from core.exception.errors import NotFoundError
 from modules.robot.schemas.robot_event_log import RobotEventLogQueryParams
 
@@ -26,8 +27,9 @@ class RobotEventLogService:
         """构建机器人事件日志查询"""
         conditions = [RobotEventLog.deleted_at.is_(None)]
 
-        if query_params.robot_id:
-            conditions.append(RobotEventLog.robot_id == query_params.robot_id)
+        robot_id = parse_optional_int_value(query_params.robot_id)
+        if robot_id is not None:
+            conditions.append(RobotEventLog.robot_id == robot_id)
         if query_params.event_type:
             conditions.append(RobotEventLog.event_type == query_params.event_type)
         if query_params.event_status:

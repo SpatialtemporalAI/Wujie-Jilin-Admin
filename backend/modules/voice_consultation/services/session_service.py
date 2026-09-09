@@ -11,6 +11,7 @@ from sqlalchemy import and_, func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from core.exception.errors import NotFoundError
+from app.models.common.base import parse_optional_int_value
 from database.models.business.robot import Robot
 from database.models.business.voice_consultation_session import VoiceConsultationSession
 from database.models.business.voice_consultation_turn import VoiceConsultationTurn
@@ -50,8 +51,9 @@ class VoiceConsultationSessionService:
         time_field = time_field or VoiceConsultationSession.occurred_at
         conditions = [VoiceConsultationSession.deleted_at.is_(None)]
 
-        if query_params.robot_id:
-            conditions.append(VoiceConsultationSession.robot_id == query_params.robot_id)
+        robot_id = parse_optional_int_value(query_params.robot_id)
+        if robot_id is not None:
+            conditions.append(VoiceConsultationSession.robot_id == robot_id)
         if query_params.trigger_method:
             conditions.append(VoiceConsultationSession.trigger_method == query_params.trigger_method)
         if query_params.status:

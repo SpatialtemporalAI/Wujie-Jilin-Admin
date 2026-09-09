@@ -12,6 +12,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from typing import List
 
 from database.models.business.merchant_call_log import MerchantCallLog
+from app.models.common.base import parse_optional_int_value, parse_optional_bool_value
 from core.exception.errors import NotFoundError
 from modules.merchant.schemas.call_log import CallLogQueryParams
 
@@ -26,12 +27,14 @@ class CallLogService:
         """构建调用日志查询（供导出和列表共用）"""
         conditions = []
 
-        if query_params.merchant_id:
-            conditions.append(MerchantCallLog.merchant_id == query_params.merchant_id)
+        merchant_id = parse_optional_int_value(query_params.merchant_id)
+        if merchant_id is not None:
+            conditions.append(MerchantCallLog.merchant_id == merchant_id)
         if query_params.action:
             conditions.append(MerchantCallLog.action == query_params.action)
-        if query_params.success is not None:
-            conditions.append(MerchantCallLog.success == query_params.success)
+        success = parse_optional_bool_value(query_params.success)
+        if success is not None:
+            conditions.append(MerchantCallLog.success == success)
         if query_params.api_key:
             conditions.append(
                 MerchantCallLog.api_key_masked.like(f"%{query_params.api_key}%")

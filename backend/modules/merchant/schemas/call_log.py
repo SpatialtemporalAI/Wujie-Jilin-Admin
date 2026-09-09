@@ -3,21 +3,26 @@
 
 """商户开放 API 调用日志相关 Schema"""
 from datetime import datetime
+from typing import Optional
 
 from pydantic import Field
 
-from app.models.common.base import BaseEntity, BaseRespEntity, OptionalIntField, BoolField
+from app.models.common.base import BaseEntity, BaseRespEntity
 
 
 class CallLogQueryParams(BaseEntity):
-    """调用日志查询参数"""
+    """调用日志查询参数
 
-    merchant_id: OptionalIntField = Field(None, description="商户ID")
-    action: str | None = Field(None, description="动作（goto_point/speak/...）")
-    success: BoolField = Field(None, description="是否成功")
-    start_time: str | None = Field(None, description="开始时间")
-    end_time: str | None = Field(None, description="结束时间")
-    api_key: str | None = Field(None, description="API Key（模糊匹配脱敏值）")
+    注意：查询参数统一使用基础 Optional[str]（FastAPI 对 Annotated query 模型字段在部分
+    版本存在兼容性问题，可能漏收集请求参数导致模型构造缺键报 missing）。
+    """
+
+    merchant_id: Optional[str] = Field(None, description="商户ID")
+    action: Optional[str] = Field(None, description="动作（goto_point/speak/...）")
+    success: Optional[str] = Field(None, description="是否成功")
+    start_time: Optional[str] = Field(None, description="开始时间")
+    end_time: Optional[str] = Field(None, description="结束时间")
+    api_key: Optional[str] = Field(None, description="API Key（模糊匹配脱敏值）")
 
 
 class CallLogResponse(BaseRespEntity):

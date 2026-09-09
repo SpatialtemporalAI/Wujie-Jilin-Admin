@@ -12,6 +12,7 @@ from sqlalchemy.orm import noload
 from typing import List, Optional, Tuple
 
 from database.models.sys.dict import SysDict, SysDictItem
+from app.models.common.base import parse_optional_bool_value
 from core.exception.errors import NotFoundError, ConflictError, ForbiddenError
 from modules.admin.schemas.sys.dict import (
     SysDictCreate,
@@ -55,10 +56,12 @@ class DictService:
             conditions.append(SysDict.name.contains(query_params.name))
         if query_params.code:
             conditions.append(SysDict.code.contains(query_params.code))
-        if query_params.status is not None:
-            conditions.append(SysDict.status == query_params.status)
-        if query_params.is_system is not None:
-            conditions.append(SysDict.is_system == query_params.is_system)
+        status = parse_optional_bool_value(query_params.status)
+        if status is not None:
+            conditions.append(SysDict.status == status)
+        is_system = parse_optional_bool_value(query_params.is_system)
+        if is_system is not None:
+            conditions.append(SysDict.is_system == is_system)
 
         if conditions:
             base_query = base_query.where(and_(*conditions))
@@ -473,8 +476,9 @@ class DictService:
             conditions.append(SysDictItem.label.contains(query_params.label))
         if query_params.value:
             conditions.append(SysDictItem.value.contains(query_params.value))
-        if query_params.status is not None:
-            conditions.append(SysDictItem.status == query_params.status)
+        status = parse_optional_bool_value(query_params.status)
+        if status is not None:
+            conditions.append(SysDictItem.status == status)
 
         if conditions:
             base_query = base_query.where(and_(*conditions))
