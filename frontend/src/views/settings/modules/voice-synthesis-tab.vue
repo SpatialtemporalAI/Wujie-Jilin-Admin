@@ -435,7 +435,7 @@ onMounted(() => {
                       <NSelect v-model:value="replyTemplate" :options="replyTemplateOptions" />
                     </NFormItemGi>
                     <NFormItemGi v-if="replyTemplate === 'custom'" label="自定义回复内容">
-                      <NInput v-model:value="customReplyText" placeholder="请输入自定义回复内容" maxlength="100"
+                      <NInput v-model:value="customReplyText" placeholder="请输入自定义回复内容" maxlength="1000"
                         show-count clearable />
                     </NFormItemGi>
                     <NFormItemGi v-else label="语料预览">
