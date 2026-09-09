@@ -751,7 +751,8 @@ onMounted(() => {
                 @click="moveBroadcastStep(index, 1)">
                 ↓
               </NButton>
-              <NButton type="error" quaternary size="small" @click="removeBroadcastStep(index)">
+              <NButton v-if="model.broadcast_steps.length > 1" type="error" quaternary size="small"
+                @click="removeBroadcastStep(index)">
                 <template #icon>
                   <icon-ic-round-delete-outline class="text-icon" />
                 </template>
