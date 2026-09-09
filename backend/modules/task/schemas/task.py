@@ -33,10 +33,11 @@ def _validate_repeat_cycle(v: Optional[str]) -> Optional[str]:
 # ==================== 播报步骤 Schema ====================
 
 class BroadcastStepSchema(BaseReqEntity):
-    """播报任务单个步骤：content 与 actions 均非必填，但二者至少有其一"""
+    """播报任务单个步骤：content 与 actions 均非必填，但二者至少有其一；
+    interval 仅非最后一步需要（最后一步无后续间隔），允许为空"""
 
     content: Optional[str] = Field(None, description="播报内容", max_length=1000)
-    interval: int = Field(..., description="播报间隔（秒）", ge=0)
+    interval: Optional[int] = Field(None, description="播报间隔（秒），最后一步可为空", ge=0)
     actions: List[str] = Field(default_factory=list, description="动作列表（同一动作可重复出现）")
 
     @model_validator(mode='after')

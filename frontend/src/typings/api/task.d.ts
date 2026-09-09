@@ -43,7 +43,8 @@ declare namespace Api {
     /** broadcast step */
     type BroadcastStep = {
       content: string;
-      interval: number;
+      /** 播报间隔（秒），最后一个步骤无间隔，为 null */
+      interval: number | null;
       actions: TaskAction[];
     };
 
