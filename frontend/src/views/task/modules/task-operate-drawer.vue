@@ -324,24 +324,16 @@ function moveBroadcastStep(index: number, direction: -1 | 1) {
   steps[target] = temp;
 }
 
-function toggleBroadcastAction(step: BroadcastStepItem, action: Api.Task.TaskAction) {
-  const idx = step.actions.indexOf(action);
-  if (idx === -1) {
-    step.actions.push(action);
-  } else {
-    step.actions.splice(idx, 1);
-  }
+function addBroadcastAction(step: BroadcastStepItem, action: Api.Task.TaskAction) {
+  step.actions.push(action);
 }
 
-function removeBroadcastAction(step: BroadcastStepItem, action: Api.Task.TaskAction) {
-  const idx = step.actions.indexOf(action);
-  if (idx !== -1) {
-    step.actions.splice(idx, 1);
-  }
+function removeBroadcastAction(step: BroadcastStepItem, index: number) {
+  step.actions.splice(index, 1);
 }
 
-function getBroadcastActionOptions(step: BroadcastStepItem) {
-  return broadcastActionOptions.filter(opt => !step.actions.includes(opt.value as Api.Task.TaskAction));
+function getBroadcastActionOptions() {
+  return broadcastActionOptions;
 }
 
 /** 校验规则 */
@@ -519,8 +511,10 @@ async function handleSubmit() {
     }
     for (let i = 0; i < model.value.broadcast_steps.length; i += 1) {
       const step = model.value.broadcast_steps[i];
-      if (!step.content.trim()) {
-        window.$message?.warning(`请填写步骤 ${i + 1} 的播报内容`);
+      const hasContent = step.content.trim();
+      const hasActions = step.actions.length > 0;
+      if (!hasContent && !hasActions) {
+        window.$message?.warning(`步骤 ${i + 1} 的播报内容与动作至少填写一项`);
         return;
       }
     }
@@ -721,24 +715,22 @@ onMounted(() => {
             </NSpace>
           </div>
 
-          <NFormItem :path="`broadcast_steps.${index}.content`"
-            :rule="{ required: true, message: '请填写播报内容', trigger: 'blur' }">
+          <NFormItem :path="`broadcast_steps.${index}.content`">
             <NInput v-model:value="step.content" type="textarea" placeholder="请输入播报内容" :rows="2" show-count
-              :maxlength="200" />
+              :maxlength="1000" />
           </NFormItem>
 
           <NFormItem label="动作" class="mb-0 mt-12px">
             <NSpace align="center" :wrap="true" :size="8">
-              <NTag v-for="action in step.actions" :key="action" closable round type="primary"
-                @close="removeBroadcastAction(step, action)">
+              <NTag v-for="(action, aIndex) in step.actions" :key="aIndex" closable round type="primary"
+                @close="removeBroadcastAction(step, aIndex)">
                 <template #icon>
                   <span class="text-16px">{{ actionEmojiMap[action] }}</span>
                 </template>
                 {{broadcastActionOptions.find(opt => opt.value === action)?.label}}
               </NTag>
-              <NDropdown v-if="getBroadcastActionOptions(step).length > 0"
-                :options="getBroadcastActionOptions(step).map(opt => ({ label: `${actionEmojiMap[opt.value]} ${opt.label}`, key: opt.value }))"
-                @select="(key: string) => toggleBroadcastAction(step, key as Api.Task.TaskAction)">
+              <NDropdown :options="getBroadcastActionOptions().map(opt => ({ label: `${actionEmojiMap[opt.value]} ${opt.label}`, key: opt.value }))"
+                @select="(key: string) => addBroadcastAction(step, key as Api.Task.TaskAction)">
                 <NButton dashed size="small">
                   <template #icon>
                     <icon-ic-round-plus class="text-icon" />
