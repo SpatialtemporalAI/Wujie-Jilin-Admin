@@ -16,6 +16,7 @@ INTENT_TYPES = {
     "health_check_notice",
     "insurance_guide",
     "admission_notice",
+    "general_chat",
 }
 TRIGGER_METHODS = {"wake_word", "face_recognition"}
 SESSION_STATUSES = {"in_progress", "completed", "interrupted"}
@@ -91,5 +92,5 @@ class VoiceConsultationStatsResponse(BaseRespEntity):
     today_delta_pct: float | None = Field(None, description="今日较昨日百分比变化")
     avg_duration: float | None = Field(None, description="当日平均会话时长（秒，不随筛选）")
     avg_duration_delta_pct: float | None = Field(None, description="当日均值较昨日均值的百分比变化")
-    intent_distribution: list[VoiceConsultationDistributionItem] = Field(description="意图分布（按轮次统计，随筛选），6 项含零值")
+    intent_distribution: list[VoiceConsultationDistributionItem] = Field(description="意图分布（按轮次统计，随筛选），7 项含零值")
     trigger_distribution: list[VoiceConsultationDistributionItem] = Field(description="触发方式分布（随筛选），2 项含零值")

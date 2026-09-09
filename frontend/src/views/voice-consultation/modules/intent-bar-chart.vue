@@ -16,14 +16,15 @@ const props = defineProps<Props>();
 
 const appStore = useAppStore();
 
-// 意图展示顺序与配色（绿/橙/蓝/粉/青/紫，对应参考图）；数据为后端按会话轮次统计的意图分布
+// 意图展示顺序与配色（青/橙/蓝/粉/绿/紫/浅绿）；数据为后端按会话轮次统计的意图分布
 const INTENT_ORDER: Api.VoiceConsultation.IntentType[] = [
   'indoor_navigation',
   'triage_qa',
   'medical_guide',
   'health_check_notice',
   'insurance_guide',
-  'admission_notice'
+  'admission_notice',
+  'general_chat'
 ];
 
 const INTENT_COLORS: Record<string, string> = {
@@ -32,7 +33,8 @@ const INTENT_COLORS: Record<string, string> = {
   medical_guide: '#5da8ff',
   health_check_notice: '#ff85c0',
   insurance_guide: '#5cdbd3',
-  admission_notice: '#b37feb'
+  admission_notice: '#b37feb',
+  general_chat: '#95de64'
 };
 
 const chartData = computed(() => {
