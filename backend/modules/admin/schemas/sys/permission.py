@@ -10,10 +10,14 @@ from app.models.common.base import BaseReqEntity, BaseRespEntity, BoolField
 
 
 class SysPermissionQueryParams(BaseModel):
-    """系统权限查询参数模型"""
+    """系统权限查询参数模型
+
+    注意：查询参数统一使用基础 Optional[str]（FastAPI 对 Annotated query 模型字段在部分
+    版本存在兼容性问题，可能漏收集请求参数导致模型构造缺键报 missing）；空值/脏值收敛由 service 层完成。
+    """
 
     category: Optional[str] = Field(None, description="权限分类")
-    status: BoolField = Field(None, description="状态：True-启用，False-禁用")
+    status: Optional[str] = Field(None, description="状态：True-启用，False-禁用")
 
 
 class SysPermissionCreate(BaseReqEntity):

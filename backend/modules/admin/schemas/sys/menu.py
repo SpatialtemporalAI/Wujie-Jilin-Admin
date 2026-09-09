@@ -27,12 +27,16 @@ class SysMenuQueryParams(PageRequest):
     """
     系统菜单查询参数模型
     用于菜单列表查询时的筛选条件
+
+    注意：查询参数统一使用基础 Optional[str] 而非 Annotated[Optional[int/bool], BeforeValidator]，
+    FastAPI 对 Depends() query 模型中的 Annotated 字段在部分版本存在兼容性问题（可能漏收集
+    请求参数导致模型构造缺键报 missing）；空值/脏值收敛由 service 层完成。
     """
 
     name: Optional[str] = Field(None, description="菜单名称，支持模糊查询")
-    status: BoolField = Field(None, description="菜单状态：True-启用，False-禁用")
-    type: Optional[MenuType] = Field(None, description="菜单类型")
-    is_system: BoolField = Field(None, description="是否为系统内置菜单")
+    status: Optional[str] = Field(None, description="菜单状态：True-启用，False-禁用")
+    type: Optional[str] = Field(None, description="菜单类型")
+    is_system: Optional[str] = Field(None, description="是否为系统内置菜单")
 
     @field_validator("type", mode="before")
     @classmethod
@@ -56,9 +60,12 @@ class SysMenuTreeQuery(BaseEntity):
     """
     系统菜单树形查询参数模型
     用于获取菜单树形结构时的筛选条件
+
+    注意：查询参数统一使用基础 Optional[str]（FastAPI 对 Annotated query 模型字段在部分
+    版本存在兼容性问题，可能漏收集请求参数导致模型构造缺键报 missing）；空值/脏值收敛由 service 层完成。
     """
 
-    status: BoolField = Field(None, description="菜单状态：True-启用，False-禁用")
+    status: Optional[str] = Field(None, description="菜单状态：True-启用，False-禁用")
 
 
 class SysMenuCreate(BaseEntity):

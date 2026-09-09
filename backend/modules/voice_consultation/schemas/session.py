@@ -2,11 +2,11 @@
 # -*- coding: utf-8 -*-
 
 from datetime import datetime
-from typing import Annotated
+from typing import Optional
 
-from pydantic import BeforeValidator, Field, field_serializer
+from pydantic import Field, field_serializer
 
-from app.models.common.base import BaseEntity, BaseRespEntity, OptionalIntField, parse_optional_enum
+from app.models.common.base import BaseEntity, BaseRespEntity
 
 # 枚举取值（与外部写入方约定的 code，中文标签由前端 i18n 映射）
 INTENT_TYPES = {
@@ -21,16 +21,17 @@ INTENT_TYPES = {
 TRIGGER_METHODS = {"wake_word", "face_recognition"}
 SESSION_STATUSES = {"in_progress", "completed", "interrupted"}
 
-TriggerMethodField = Annotated[str | None, BeforeValidator(parse_optional_enum(TRIGGER_METHODS))]
-SessionStatusField = Annotated[str | None, BeforeValidator(parse_optional_enum(SESSION_STATUSES))]
-
 
 class VoiceConsultationSessionQueryParams(BaseEntity):
-    """语音问诊会话查询参数"""
+    """语音问诊会话查询参数
 
-    robot_id: OptionalIntField = Field(None, description="机器人ID")
-    trigger_method: TriggerMethodField = Field(None, description="触发方式：wake_word/face_recognition")
-    status: SessionStatusField = Field(None, description="状态：in_progress/completed/interrupted")
+    注意：查询参数统一使用基础 Optional[str]（FastAPI 对 Annotated query 模型字段在部分
+    版本存在兼容性问题，可能漏收集请求参数导致模型构造缺键报 missing）。
+    """
+
+    robot_id: Optional[str] = Field(None, description="机器人ID")
+    trigger_method: Optional[str] = Field(None, description="触发方式：wake_word/face_recognition")
+    status: Optional[str] = Field(None, description="状态：in_progress/completed/interrupted")
     keyword: str | None = Field(None, description="关键词，模糊匹配提问摘要")
     start_time: str | None = Field(None, description="开始时间")
     end_time: str | None = Field(None, description="结束时间")

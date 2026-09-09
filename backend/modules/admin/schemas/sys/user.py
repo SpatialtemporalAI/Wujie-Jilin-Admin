@@ -13,14 +13,18 @@ class SysUserQueryParams(PageRequest):
     """
     系统用户查询参数模型
     用于用户列表分页查询时的筛选条件
+
+    注意：查询参数统一使用基础 Optional[str] 而非 Annotated[Optional[int/bool], BeforeValidator]，
+    FastAPI 对 Depends() query 模型中的 Annotated 字段在部分版本存在兼容性问题（可能漏收集
+    请求参数导致模型构造缺键报 missing）；空值/脏值收敛由 service 层完成。
     """
 
     username: Optional[str] = Field(None, description="用户名，支持模糊查询")
     nickname: Optional[str] = Field(None, description="用户昵称，支持模糊查询")
     email: Optional[str] = Field(None, description="邮箱，支持模糊查询")
     phone: Optional[str] = Field(None, description="手机号，支持模糊查询")
-    status: BoolField = Field(None, description="用户状态：True-启用，False-禁用")
-    is_superuser: BoolField = Field(None, description="是否为超级管理员")
+    status: Optional[str] = Field(None, description="用户状态：True-启用，False-禁用")
+    is_superuser: Optional[str] = Field(None, description="是否为超级管理员")
     role_ids: Optional[List[int]] = Field(None, description="角色ID列表")
 
     @field_validator("role_ids", mode="before")

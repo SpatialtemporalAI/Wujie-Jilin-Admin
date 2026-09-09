@@ -17,6 +17,7 @@ from sqlalchemy.orm import joinedload
 from database.models.sys.notice import SysNotice, NoticeType, NoticeTargetType, NoticePriority
 from database.models.sys.notice_read import SysNoticeRead
 from database.models.sys.user import SysUser
+from app.models.common.base import parse_optional_bool_value
 from core.exception.errors import NotFoundError, ForbiddenError, ConflictError
 from core.websocket.manager import ConnectionManager
 from database.utils.timezone import timezone
@@ -47,12 +48,13 @@ class NoticeService:
             conditions.append(SysNotice.type == query_params.type)
         if query_params.target_type:
             conditions.append(SysNotice.target_type == query_params.target_type)
-        if query_params.status is not None:
-            conditions.append(SysNotice.status == query_params.status)
         if query_params.priority:
             conditions.append(SysNotice.priority == query_params.priority)
         if query_params.sender_id is not None:
             conditions.append(SysNotice.sender_id == query_params.sender_id)
+        status = parse_optional_bool_value(query_params.status)
+        if status is not None:
+            conditions.append(SysNotice.status == status)
 
         if conditions:
             base_query = base_query.where(and_(*conditions))
@@ -352,8 +354,9 @@ class NoticeService:
 
         if query_params.type:
             stmt = stmt.where(SysNotice.type == query_params.type)
-        if query_params.is_read is not None:
-            stmt = stmt.where(SysNoticeRead.is_read == query_params.is_read)
+        is_read = parse_optional_bool_value(query_params.is_read)
+        if is_read is not None:
+            stmt = stmt.where(SysNoticeRead.is_read == is_read)
 
         # 统计总数
         count_query = select(func.count()).select_from(stmt.subquery())

@@ -10,6 +10,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import noload, joinedload
 
 from core.exception.errors import NotFoundError
+from app.models.common.base import parse_optional_int_value, parse_optional_bool_value
 from database.models.business.scene_map import SceneMap
 from database.models.business.scene_map_annotation import SceneMapAnnotation
 from database.models.business.scene_map_object import SceneMapObject
@@ -35,10 +36,12 @@ class SceneMapService:
         conditions = []
         if query_params.name:
             conditions.append(SceneMap.name.like(f"%{query_params.name}%"))
-        if query_params.group_id is not None:
-            conditions.append(SceneMap.group_id == query_params.group_id)
-        if query_params.status is not None:
-            conditions.append(SceneMap.status == query_params.status)
+        group_id = parse_optional_int_value(query_params.group_id)
+        if group_id is not None:
+            conditions.append(SceneMap.group_id == group_id)
+        status = parse_optional_bool_value(query_params.status)
+        if status is not None:
+            conditions.append(SceneMap.status == status)
 
         stmt = (
             select(SceneMap)

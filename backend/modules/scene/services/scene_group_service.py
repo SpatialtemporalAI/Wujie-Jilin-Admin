@@ -8,6 +8,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import noload
 
 from core.exception.errors import NotFoundError, ConflictError
+from app.models.common.base import parse_optional_bool_value
 from database.models.business.scene_group import SceneGroup
 from database.utils.timezone import timezone
 from modules.scene.schemas.scene_group import (
@@ -26,8 +27,9 @@ class SceneGroupService:
         conditions = []
         if query_params.name:
             conditions.append(SceneGroup.name.like(f"%{query_params.name}%"))
-        if query_params.status is not None:
-            conditions.append(SceneGroup.status == query_params.status)
+        status = parse_optional_bool_value(query_params.status)
+        if status is not None:
+            conditions.append(SceneGroup.status == status)
 
         stmt = select(SceneGroup).where(SceneGroup.deleted_at.is_(None))
         if conditions:

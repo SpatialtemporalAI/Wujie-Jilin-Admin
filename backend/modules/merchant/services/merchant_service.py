@@ -14,6 +14,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from database.models.business.merchant import Merchant
 from database.models.business.merchant_robot import merchant_robot_association
 from database.models.business.robot import Robot
+from app.models.common.base import parse_optional_bool_value
 from core.exception.errors import NotFoundError, ConflictError
 from modules.merchant.schemas.merchant import (
     MerchantCreate,
@@ -37,8 +38,9 @@ class MerchantService:
             conditions.append(Merchant.name.like(f"%{query_params.name}%"))
         if query_params.code:
             conditions.append(Merchant.code.like(f"%{query_params.code}%"))
-        if query_params.status is not None:
-            conditions.append(Merchant.status == query_params.status)
+        status = parse_optional_bool_value(query_params.status)
+        if status is not None:
+            conditions.append(Merchant.status == status)
         if conditions:
             base_query = base_query.where(and_(*conditions))
         return base_query.order_by(Merchant.created_at.desc())

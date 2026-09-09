@@ -10,6 +10,7 @@ from sqlalchemy import select
 from typing import List, Optional
 
 from database.models.sys.permission import SysPermission
+from app.models.common.base import parse_optional_bool_value
 from core.exception.errors import NotFoundError, ConflictError
 from modules.admin.schemas.sys.permission import (
     SysPermissionCreate,

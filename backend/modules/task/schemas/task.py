@@ -5,7 +5,7 @@ from typing import Optional, List, Annotated, ClassVar
 from pydantic import Field, ConfigDict, BeforeValidator, field_validator, model_validator, ValidationInfo
 from datetime import datetime, date, time
 
-from app.models.common.base import BaseEntity, BaseRespEntity, BaseReqEntity, BoolField, OptionalIntField
+from app.models.common.base import BaseEntity, BaseRespEntity, BaseReqEntity
 
 
 def _bool_to_enable_str(v):
@@ -92,12 +92,18 @@ class TaskRobotBrief(BaseRespEntity):
 # ==================== 任务 CRUD Schema ====================
 
 class TaskQueryParams(BaseReqEntity):
-    """任务查询参数"""
+    """任务查询参数
+
+    注意：查询参数统一使用基础 Optional[str] 而非 Annotated[Optional[int/bool], BeforeValidator]，
+    FastAPI 对 Depends() query 模型中的 Annotated 字段在部分版本存在兼容性问题（可能漏收集
+    请求参数导致模型构造缺键报 missing）；空值/脏值收敛由 service 层完成。
+    """
+
     name: Optional[str] = Field(None, description="任务名称，支持模糊查询")
     task_type: Optional[str] = Field(None, description="任务类型: patrol/broadcast")
-    enabled: BoolField = Field(None, description="启用状态")
-    robot_id: OptionalIntField = Field(None, description="关联机器人ID")
-    map_id: OptionalIntField = Field(None, description="关联场景地图ID")
+    enabled: Optional[str] = Field(None, description="启用状态")
+    robot_id: Optional[str] = Field(None, description="关联机器人ID")
+    map_id: Optional[str] = Field(None, description="关联场景地图ID")
 
 
 class TaskCreate(BaseReqEntity):

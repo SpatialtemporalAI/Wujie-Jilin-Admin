@@ -2,11 +2,11 @@
 # -*- coding: utf-8 -*-
 
 from datetime import datetime
-from typing import ClassVar
+from typing import ClassVar, Optional
 
 from pydantic import Field
 
-from app.models.common.base import BaseEntity, BaseRespEntity, BoolField
+from app.models.common.base import BaseEntity, BaseRespEntity
 
 
 class ScheduledTaskCreate(BaseEntity):
@@ -37,11 +37,15 @@ class ScheduledTaskUpdate(BaseEntity):
 
 
 class ScheduledTaskQueryParams(BaseEntity):
-    """定时任务查询参数"""
+    """定时任务查询参数
+
+    注意：查询参数统一使用基础 Optional[str]（FastAPI 对 Annotated query 模型字段在部分
+    版本存在兼容性问题，可能漏收集请求参数导致模型构造缺键报 missing）。
+    """
 
     name: str | None = Field(None, description="任务名称")
     task_key: str | None = Field(None, description="任务标识")
-    status: BoolField = Field(None, description="状态")
+    status: Optional[str] = Field(None, description="状态")
     trigger_type: str | None = Field(None, description="触发类型")
 
 

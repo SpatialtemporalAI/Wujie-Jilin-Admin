@@ -7,7 +7,7 @@ from datetime import datetime
 
 from pydantic import BaseModel
 
-from app.models.common.base import BaseRespEntity, BaseReqEntity, OptionalIntField, parse_optional_enum
+from app.models.common.base import BaseRespEntity, BaseReqEntity, parse_optional_enum
 
 RobotStatusField = Annotated[
     Optional[str], BeforeValidator(parse_optional_enum({"online", "offline", "inactive"}))
@@ -21,13 +21,17 @@ class RobotQueryParams(BaseModel):
     """
     机器人查询参数模型
     用于机器人列表分页查询时的筛选条件
+
+    注意：查询参数统一使用基础 Optional[str] 而非 Annotated 形式（FastAPI 对 Depends()
+    query 模型中的 Annotated 字段在部分版本存在兼容性问题，可能漏收集请求参数导致
+    模型构造缺键报 missing）；空值/脏值收敛由 service 层完成。
     """
 
     name: Optional[str] = Field(None, description="机器人名称，支持模糊查询")
     serial_number: Optional[str] = Field(None, description="序列号，支持模糊查询")
-    status: RobotStatusField = Field(None, description="状态：online/offline/inactive")
-    model_id: OptionalIntField = Field(None, description="型号ID")
-    map_id: OptionalIntField = Field(None, description="绑定场景地图ID")
+    status: Optional[str] = Field(None, description="状态：online/offline/inactive")
+    model_id: Optional[str] = Field(None, description="型号ID")
+    map_id: Optional[str] = Field(None, description="绑定场景地图ID")
 
 
 class GrpcServiceConfig(BaseModel):

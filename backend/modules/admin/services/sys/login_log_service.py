@@ -11,6 +11,7 @@ from typing import List
 from datetime import datetime, timezone, timedelta
 
 from database.models.sys.login_log import SysLoginLog
+from app.models.common.base import parse_optional_bool_value
 from core.exception.errors import NotFoundError
 from modules.admin.schemas.sys.login_log import LoginLogQueryParams
 
@@ -50,8 +51,9 @@ class LoginLogService:
             conditions.append(SysLoginLog.username.like(f"%{query_params.username}%"))
         if query_params.ip:
             conditions.append(SysLoginLog.ip.like(f"%{query_params.ip}%"))
-        if query_params.status is not None:
-            conditions.append(SysLoginLog.status == query_params.status)
+        status = parse_optional_bool_value(query_params.status)
+        if status is not None:
+            conditions.append(SysLoginLog.status == status)
         if query_params.start_time:
             try:
                 dt = datetime.fromisoformat(query_params.start_time)

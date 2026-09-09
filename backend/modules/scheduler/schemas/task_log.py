@@ -2,26 +2,26 @@
 # -*- coding: utf-8 -*-
 
 from datetime import datetime
-from typing import Annotated, ClassVar
+from typing import Optional, ClassVar
 
-from pydantic import Field, BeforeValidator
+from pydantic import Field
 
-from app.models.common.base import BaseEntity, OptionalIntField, parse_optional_enum
-
-TaskLogStatusField = Annotated[
-    str | None, BeforeValidator(parse_optional_enum({"running", "success", "timeout", "failed"}))
-]
+from app.models.common.base import BaseEntity
 
 
 class TaskLogQueryParams(BaseEntity):
-    """任务执行日志查询参数"""
+    """任务执行日志查询参数
 
-    task_id: OptionalIntField = Field(None, description="任务ID")
-    task_name: str | None = Field(None, description="任务名称")
-    task_key: str | None = Field(None, description="任务标识")
-    status: TaskLogStatusField = Field(None, description="执行状态")
-    start_time: str | None = Field(None, description="开始时间")
-    end_time: str | None = Field(None, description="结束时间")
+    注意：查询参数统一使用基础 Optional[str]（FastAPI 对 Annotated query 模型字段在部分
+    版本存在兼容性问题，可能漏收集请求参数导致模型构造缺键报 missing）。
+    """
+
+    task_id: Optional[str] = Field(None, description="任务ID")
+    task_name: Optional[str] = Field(None, description="任务名称")
+    task_key: Optional[str] = Field(None, description="任务标识")
+    status: Optional[str] = Field(None, description="执行状态")
+    start_time: Optional[str] = Field(None, description="开始时间")
+    end_time: Optional[str] = Field(None, description="结束时间")
 
 
 class TaskLogResponse(BaseEntity):

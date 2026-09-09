@@ -13,6 +13,7 @@ from typing import List
 from database.models.business.task import Task, task_robot_association
 from database.models.business.task_point import TaskPoint
 from database.models.business.robot import Robot
+from app.models.common.base import parse_optional_bool_value, parse_optional_int_value
 from core.exception.errors import NotFoundError, ConflictError
 from modules.grpc.task_client import TaskConfigClient
 from modules.task.schemas.task import (
@@ -40,16 +41,19 @@ class TaskService:
             conditions.append(Task.name.contains(query_params.name))
         if query_params.task_type:
             conditions.append(Task.task_type == query_params.task_type)
-        if query_params.enabled is not None:
-            conditions.append(Task.enabled == query_params.enabled)
-        if query_params.map_id is not None:
-            conditions.append(Task.map_id == query_params.map_id)
-        if query_params.robot_id is not None:
+        enabled = parse_optional_bool_value(query_params.enabled)
+        if enabled is not None:
+            conditions.append(Task.enabled == enabled)
+        map_id = parse_optional_int_value(query_params.map_id)
+        if map_id is not None:
+            conditions.append(Task.map_id == map_id)
+        robot_id = parse_optional_int_value(query_params.robot_id)
+        if robot_id is not None:
             base_query = base_query.join(
                 task_robot_association,
                 Task.id == task_robot_association.c.task_id,
             ).join(Robot, Robot.id == task_robot_association.c.robot_id)
-            conditions.append(Robot.id == query_params.robot_id)
+            conditions.append(Robot.id == robot_id)
             conditions.append(Robot.deleted_at.is_(None))
             base_query = base_query.distinct()
 
