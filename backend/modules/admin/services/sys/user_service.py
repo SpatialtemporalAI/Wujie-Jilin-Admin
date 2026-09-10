@@ -13,6 +13,7 @@ from typing import List, Optional, Tuple
 
 from database.models.sys.user import SysUser
 from database.models.sys.role import SysRole
+from app.models.common.base import parse_optional_bool_value
 from core.exception.errors import NotFoundError, ConflictError, ForbiddenError
 from core.utils.memory_cache import get_memory_cache, CacheNamespace
 from core.security.oauth.jwt import JWTAuthManager
@@ -44,8 +45,9 @@ class UserService:
         base_query: Select, query_params: SysUserQueryParams
     ) -> Select:
         conditions = []
-        if query_params.status is not None:
-            conditions.append(SysUser.status == query_params.status)
+        status = parse_optional_bool_value(query_params.status)
+        if status is not None:
+            conditions.append(SysUser.status == status)
         if query_params.username:
             conditions.append(SysUser.username.like(f"%{query_params.username}%"))
         if query_params.nickname:
@@ -54,8 +56,9 @@ class UserService:
             conditions.append(SysUser.email.like(f"%{query_params.email}%"))
         if query_params.phone:
             conditions.append(SysUser.phone.like(f"%{query_params.phone}%"))
-        if query_params.is_superuser is not None:
-            conditions.append(SysUser.is_superuser == query_params.is_superuser)
+        is_superuser = parse_optional_bool_value(query_params.is_superuser)
+        if is_superuser is not None:
+            conditions.append(SysUser.is_superuser == is_superuser)
         if query_params.role_ids:
             base_query = base_query.join(SysUser.roles).where(
                 SysRole.id.in_(query_params.role_ids)

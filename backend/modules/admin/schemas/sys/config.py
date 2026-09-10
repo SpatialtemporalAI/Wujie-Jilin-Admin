@@ -1,11 +1,10 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 
-from typing import Optional, List, Any, Union, Annotated
+from typing import Optional, List, Any, Union
 from pydantic import (
     Field,
     ConfigDict,
-    BeforeValidator,
 )
 from datetime import datetime
 from app.models.common.base import BaseRespEntity, BaseEntity, BoolField
@@ -65,22 +64,21 @@ def parse_config_group(v):
     return None
 
 
-# 使用 Annotated 类型定义带验证器的字段
-ConfigTypeField = Annotated[Optional[ConfigType], BeforeValidator(parse_config_type)]
-ConfigGroupField = Annotated[Optional[ConfigGroup], BeforeValidator(parse_config_group)]
-
-
 class SysConfigQueryParams(PageRequest):
     """
     系统配置查询参数模型
     用于配置列表分页查询时的筛选条件
+
+    注意：查询参数统一使用基础 Optional[str] 而非 Annotated 别名（FastAPI 对 Depends() query
+    模型中的 Annotated 字段在部分版本存在兼容性问题，可能漏收集请求参数导致模型构造缺键报
+    missing）；空值/脏值收敛由 service 层完成。
     """
 
     key: Optional[str] = Field(None, description="配置键名，支持模糊查询")
     description: Optional[str] = Field(None, description="配置描述，支持模糊查询")
-    type: ConfigTypeField = Field(None, description="配置类型")
-    group: ConfigGroupField = Field(None, description="配置分组")
-    is_system: BoolField = Field(None, description="是否为系统内置配置")
+    type: Optional[str] = Field(None, description="配置类型")
+    group: Optional[str] = Field(None, description="配置分组")
+    is_system: Optional[str] = Field(None, description="是否为系统内置配置")
 
 
 class SysConfigCreate(BaseEntity):

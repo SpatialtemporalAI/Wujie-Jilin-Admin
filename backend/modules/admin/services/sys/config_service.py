@@ -20,6 +20,8 @@ from core.exception.errors import (
     ValidationError,
 )
 from modules.admin.schemas.sys.config import (
+    parse_config_type,
+    parse_config_group,
     SysConfigCreate,
     SysConfigUpdate,
     SysConfigQueryParams,
@@ -27,6 +29,7 @@ from modules.admin.schemas.sys.config import (
     SysConfigReset,
     SysConfigByGroupQuery,
 )
+from app.models.common.base import parse_optional_bool_value
 
 # 获取logger
 logger = logging.getLogger(__name__)
@@ -65,13 +68,16 @@ class ConfigService:
             conditions.append(SysConfig.key.contains(query_params.key))
         if query_params.description:
             conditions.append(SysConfig.description.contains(query_params.description))
-        if query_params.type:
-            conditions.append(SysConfig.type == query_params.type)
-        if query_params.group:
-            conditions.append(SysConfig.group == query_params.group)
+        config_type = parse_config_type(query_params.type)
+        if config_type is not None:
+            conditions.append(SysConfig.type == config_type)
+        config_group = parse_config_group(query_params.group)
+        if config_group is not None:
+            conditions.append(SysConfig.group == config_group)
 
-        if query_params.is_system is not None:
-            conditions.append(SysConfig.is_system == query_params.is_system)
+        is_system = parse_optional_bool_value(query_params.is_system)
+        if is_system is not None:
+            conditions.append(SysConfig.is_system == is_system)
 
         if conditions:
             query = query.where(and_(*conditions))

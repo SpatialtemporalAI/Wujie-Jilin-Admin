@@ -13,12 +13,16 @@ class SysDictQueryParams(BaseReqEntity):
     """
     系统字典查询参数模型
     用于字典列表分页查询时的筛选条件
+
+    注意：查询参数统一使用基础 Optional[str] 而非 Annotated[Optional[int/bool], BeforeValidator]，
+    FastAPI 对 Depends() query 模型中的 Annotated 字段在部分版本存在兼容性问题（可能漏收集
+    请求参数导致模型构造缺键报 missing）；空值/脏值收敛由 service 层完成。
     """
 
     name: Optional[str] = Field(None, description="字典名称，支持模糊查询")
     code: Optional[str] = Field(None, description="字典编码，支持模糊查询")
-    status: BoolField = Field(None, description="字典状态：True-启用，False-禁用")
-    is_system: BoolField = Field(
+    status: Optional[str] = Field(None, description="字典状态：True-启用，False-禁用")
+    is_system: Optional[str] = Field(
         None, description="是否为系统内置字典：True-是，False-否"
     )
 
@@ -27,9 +31,12 @@ class SysDictAllQuery(BaseReqEntity):
     """
     系统字典查询参数模型（不分页）
     用于获取所有字典时的筛选条件
+
+    注意：查询参数统一使用基础 Optional[str]（FastAPI 对 Annotated query 模型字段在部分
+    版本存在兼容性问题，可能漏收集请求参数导致模型构造缺键报 missing）；空值/脏值收敛由 service 层完成。
     """
 
-    status: BoolField = Field(None, description="字典状态：True-启用，False-禁用")
+    status: Optional[str] = Field(None, description="字典状态：True-启用，False-禁用")
 
 
 class SysDictCreate(BaseReqEntity):
@@ -94,12 +101,15 @@ class SysDictItemQueryParams(PageRequest):
     """
     系统字典项查询参数模型
     用于字典项列表分页查询时的筛选条件
+
+    注意：查询参数统一使用基础 Optional[str]（FastAPI 对 Annotated query 模型字段在部分
+    版本存在兼容性问题，可能漏收集请求参数导致模型构造缺键报 missing）；空值/脏值收敛由 service 层完成。
     """
 
     dict_id: Optional[int] = Field(None, description="字典ID")
     label: Optional[str] = Field(None, description="字典项文本，支持模糊查询")
     value: Optional[str] = Field(None, description="字典项值，支持模糊查询")
-    status: BoolField = Field(None, description="字典项状态：True-启用，False-禁用")
+    status: Optional[str] = Field(None, description="字典项状态：True-启用，False-禁用")
 
     @field_validator("dict_id", mode="before")
     @classmethod

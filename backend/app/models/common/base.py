@@ -121,6 +121,36 @@ def parse_bool(value):
 BoolField = Annotated[Optional[bool], BeforeValidator(parse_bool)]
 
 
+def parse_optional_int_value(value: Optional[str]) -> Optional[int]:
+    """service 层解析 query int 字段：空值/脏值静默收敛为 None，不抛错。
+
+    查询参数统一以 Optional[str] 接收（FastAPI 对 Annotated[Optional[int], BeforeValidator]
+    形式的 Depends() query 模型字段在部分版本存在兼容性问题，可能漏收集请求参数导致
+    模型构造缺键报 missing），int 解析移入 service 层复用本函数。
+    """
+    if value is None:
+        return None
+    stripped = value.strip()
+    if stripped == "":
+        return None
+    try:
+        return int(stripped)
+    except (ValueError, TypeError):
+        return None
+
+
+def parse_optional_bool_value(value: Optional[str]) -> Optional[bool]:
+    """service 层解析 query bool 字段：空值/脏值静默收敛为 None，不抛错。"""
+    if value is None:
+        return None
+    stripped = value.strip().lower()
+    if stripped in ("1", "true", "yes", "on"):
+        return True
+    if stripped in ("0", "false", "no", "off"):
+        return False
+    return None
+
+
 def parse_optional_int(value):
     if isinstance(value, str):
         value = value.strip()

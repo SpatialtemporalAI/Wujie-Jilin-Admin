@@ -5,7 +5,7 @@ from typing import Optional, List, Annotated, ClassVar
 from pydantic import Field, ConfigDict, BeforeValidator, field_validator, model_validator, ValidationInfo
 from datetime import datetime, date, time
 
-from app.models.common.base import BaseEntity, BaseRespEntity, BaseReqEntity, BoolField, OptionalIntField
+from app.models.common.base import BaseEntity, BaseRespEntity, BaseReqEntity
 
 
 def _bool_to_enable_str(v):
@@ -33,10 +33,11 @@ def _validate_repeat_cycle(v: Optional[str]) -> Optional[str]:
 # ==================== 播报步骤 Schema ====================
 
 class BroadcastStepSchema(BaseReqEntity):
-    """播报任务单个步骤：content 与 actions 均非必填，但二者至少有其一"""
+    """播报任务单个步骤：content 与 actions 均非必填，但二者至少有其一；
+    interval 仅非最后一步需要（最后一步无后续间隔），允许为空"""
 
     content: Optional[str] = Field(None, description="播报内容", max_length=1000)
-    interval: int = Field(..., description="播报间隔（秒）", ge=0)
+    interval: Optional[int] = Field(None, description="播报间隔（秒），最后一步可为空", ge=0)
     actions: List[str] = Field(default_factory=list, description="动作列表（同一动作可重复出现）")
 
     @model_validator(mode='after')
@@ -92,12 +93,18 @@ class TaskRobotBrief(BaseRespEntity):
 # ==================== 任务 CRUD Schema ====================
 
 class TaskQueryParams(BaseReqEntity):
-    """任务查询参数"""
+    """任务查询参数
+
+    注意：查询参数统一使用基础 Optional[str] 而非 Annotated[Optional[int/bool], BeforeValidator]，
+    FastAPI 对 Depends() query 模型中的 Annotated 字段在部分版本存在兼容性问题（可能漏收集
+    请求参数导致模型构造缺键报 missing）；空值/脏值收敛由 service 层完成。
+    """
+
     name: Optional[str] = Field(None, description="任务名称，支持模糊查询")
     task_type: Optional[str] = Field(None, description="任务类型: patrol/broadcast")
-    enabled: BoolField = Field(None, description="启用状态")
-    robot_id: OptionalIntField = Field(None, description="关联机器人ID")
-    map_id: OptionalIntField = Field(None, description="关联场景地图ID")
+    enabled: Optional[str] = Field(None, description="启用状态")
+    robot_id: Optional[str] = Field(None, description="关联机器人ID")
+    map_id: Optional[str] = Field(None, description="关联场景地图ID")
 
 
 class TaskCreate(BaseReqEntity):
@@ -131,12 +138,16 @@ class TaskCreate(BaseReqEntity):
 
     @model_validator(mode='after')
     def validate_broadcast_steps(self):
-        """播报任务必须包含至少一个步骤（每个步骤的内容/动作校验由 BroadcastStepSchema 负责）"""
+        """播报任务必须包含至少一个步骤（每个步骤的内容/动作校验由 BroadcastStepSchema 负责）；
+        除最后一步外，其余步骤必须填写播报间隔"""
         if self.task_type != 'broadcast':
             return self
         steps = self.broadcast_steps
         if not steps or len(steps) == 0:
             raise ValueError('播报任务至少包含一个播报步骤')
+        for idx, step in enumerate(steps[:-1]):
+            if step.interval is None:
+                raise ValueError(f'步骤 {idx + 1} 的播报间隔不能为空')
         return self
 
 
@@ -173,7 +184,8 @@ class TaskUpdate(BaseReqEntity):
 
     @model_validator(mode='after')
     def validate_broadcast_steps(self):
-        """播报任务必须包含至少一个步骤（每个步骤的内容/动作校验由 BroadcastStepSchema 负责）"""
+        """播报任务必须包含至少一个步骤（每个步骤的内容/动作校验由 BroadcastStepSchema 负责）；
+        除最后一步外，其余步骤必须填写播报间隔"""
         if self.task_type != 'broadcast':
             return self
         steps = self.broadcast_steps
@@ -181,6 +193,9 @@ class TaskUpdate(BaseReqEntity):
             return self
         if len(steps) == 0:
             raise ValueError('播报任务至少包含一个播报步骤')
+        for idx, step in enumerate(steps[:-1]):
+            if step.interval is None:
+                raise ValueError(f'步骤 {idx + 1} 的播报间隔不能为空')
         return self
 
 

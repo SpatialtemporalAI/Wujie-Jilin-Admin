@@ -8,15 +8,19 @@ from pydantic import Field, ConfigDict
 
 from pydantic import BaseModel
 
-from app.models.common.base import BaseReqEntity, BaseRespEntity, BoolField, OptionalIntField
+from app.models.common.base import BaseReqEntity, BaseRespEntity
 
 
 class SceneMapQueryParams(BaseModel):
-    """场景地图查询参数"""
+    """场景地图查询参数
+
+    注意：查询参数统一使用基础 Optional[str]（FastAPI 对 Annotated query 模型字段在部分
+    版本存在兼容性问题，可能漏收集请求参数导致模型构造缺键报 missing）。
+    """
 
     name: str | None = Field(None, description="地图名称")
-    group_id: OptionalIntField = Field(None, description="分组ID")
-    status: BoolField = Field(None, description="状态")
+    group_id: Optional[str] = Field(None, description="分组ID")
+    status: Optional[str] = Field(None, description="状态")
 
 
 class SceneMapCreate(BaseReqEntity):

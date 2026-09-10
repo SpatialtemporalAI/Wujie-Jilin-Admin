@@ -198,7 +198,8 @@ interface PointItem {
 
 interface BroadcastStepItem {
   content: string;
-  interval: number;
+  /** 播报间隔（秒），最后一个步骤无间隔输入项，提交时为 null */
+  interval: number | null;
   actions: Api.Task.TaskAction[];
 }
 
@@ -403,7 +404,8 @@ async function handleInitModel() {
       cloned.broadcast_steps && cloned.broadcast_steps.length > 0
         ? cloned.broadcast_steps.map(s => ({
           content: s.content || '',
-          interval: s.interval ?? 3,
+          // 不回填空值，避免掩盖未填写的间隔（提交时会校验）
+          interval: s.interval ?? null,
           actions: s.actions || []
         }))
         : cloned.broadcast_text
@@ -459,7 +461,7 @@ async function handleInitModel() {
         if (detail.broadcast_steps && detail.broadcast_steps.length > 0) {
           model.value.broadcast_steps = detail.broadcast_steps.map(s => ({
             content: s.content || '',
-            interval: s.interval ?? 3,
+            interval: s.interval ?? null,
             actions: s.actions || []
           }));
         } else if (detail.broadcast_text) {
@@ -579,7 +581,8 @@ async function handleSubmit() {
       model.value.task_type === 'broadcast'
         ? model.value.broadcast_steps.map((s, i) => ({
           content: s.content.trim(),
-          interval: s.interval,
+          // 最后一个步骤无间隔输入项，提交 null
+          interval: i < model.value.broadcast_steps.length - 1 ? s.interval : null,
           actions: s.actions
         }))
         : undefined

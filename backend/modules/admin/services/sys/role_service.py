@@ -15,6 +15,7 @@ from database.models.sys.role import SysRole
 from database.models.sys.menu import SysMenu
 from core.exception.errors import NotFoundError, ConflictError, ForbiddenError
 from core.utils.memory_cache import get_memory_cache, CacheNamespace
+from app.models.common.base import parse_optional_bool_value
 from modules.admin.schemas.sys.role import (
     SysRoleCreate,
     SysRoleUpdate,
@@ -51,12 +52,14 @@ class RoleService:
 
         # 添加查询条件
         conditions = []
-        if query_params.status is not None:
-            conditions.append(SysRole.status == query_params.status)
+        status = parse_optional_bool_value(query_params.status)
+        if status is not None:
+            conditions.append(SysRole.status == status)
         if query_params.name:
             conditions.append(SysRole.name.like(f"%{query_params.name}%"))
-        if query_params.is_system is not None:
-            conditions.append(SysRole.is_system == query_params.is_system)
+        is_system = parse_optional_bool_value(query_params.is_system)
+        if is_system is not None:
+            conditions.append(SysRole.is_system == is_system)
 
         if conditions:
             base_query = base_query.where(and_(*conditions))

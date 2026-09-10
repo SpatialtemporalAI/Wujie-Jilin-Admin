@@ -11,11 +11,16 @@ from app.models.common.page import PageRequest
 
 
 class MerchantQueryParams(PageRequest):
-    """商户列表查询参数"""
+    """商户列表查询参数
+
+    注意：查询参数统一使用基础 Optional[str] 而非 Annotated[Optional[int/bool], BeforeValidator]，
+    FastAPI 对 Depends() query 模型中的 Annotated 字段在部分版本存在兼容性问题（可能漏收集
+    请求参数导致模型构造缺键报 missing）；空值/脏值收敛由 service 层完成。
+    """
 
     name: Optional[str] = Field(None, description="商户名称，支持模糊查询")
     code: Optional[str] = Field(None, description="商户编码，支持模糊查询")
-    status: BoolField = Field(None, description="状态：True-启用，False-禁用")
+    status: Optional[str] = Field(None, description="状态：True-启用，False-禁用")
 
 
 class MerchantCreate(BaseEntity):

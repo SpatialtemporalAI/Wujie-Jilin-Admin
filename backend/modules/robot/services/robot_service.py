@@ -33,6 +33,7 @@ from database.models.business.task_execution_record import (
 from database.utils.timezone import timezone
 from core.config import settings
 from core.exception.errors import NotFoundError, ConflictError
+from app.models.common.base import parse_optional_int_value
 from modules.robot.schemas.robot import (
     RobotCreate,
     RobotUpdate,
@@ -72,11 +73,17 @@ class RobotService:
         if query_params.serial_number:
             conditions.append(Robot.serial_number.contains(query_params.serial_number))
         if query_params.status:
-            conditions.append(Robot.status == RobotStatus(query_params.status))
-        if query_params.model_id:
-            conditions.append(Robot.model_id == query_params.model_id)
-        if query_params.map_id:
-            conditions.append(Robot.map_id == query_params.map_id)
+            try:
+                conditions.append(Robot.status == RobotStatus(query_params.status))
+            except ValueError:
+                # 非法状态值不参与过滤，保持宽松查询
+                pass
+        model_id = parse_optional_int_value(query_params.model_id)
+        if model_id is not None:
+            conditions.append(Robot.model_id == model_id)
+        map_id = parse_optional_int_value(query_params.map_id)
+        if map_id is not None:
+            conditions.append(Robot.map_id == map_id)
 
         if conditions:
             base_query = base_query.where(and_(*conditions))

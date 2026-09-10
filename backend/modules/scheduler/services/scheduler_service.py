@@ -4,6 +4,7 @@
 from sqlalchemy import select, and_
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from app.models.common.base import parse_optional_bool_value
 from core.exception.errors import NotFoundError, ConflictError
 from database.models.sys.scheduled_task import SysScheduledTask
 from modules.scheduler.schemas.scheduled_task import (
@@ -28,8 +29,9 @@ class SchedulerService:
             conditions.append(
                 SysScheduledTask.task_key.like(f"%{query_params.task_key}%")
             )
-        if query_params.status is not None:
-            conditions.append(SysScheduledTask.status == query_params.status)
+        status = parse_optional_bool_value(query_params.status)
+        if status is not None:
+            conditions.append(SysScheduledTask.status == status)
         if query_params.trigger_type:
             conditions.append(
                 SysScheduledTask.trigger_type == query_params.trigger_type

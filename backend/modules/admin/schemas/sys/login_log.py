@@ -6,15 +6,19 @@ from typing import ClassVar
 
 from pydantic import Field
 
-from app.models.common.base import BaseEntity, BoolField
+from app.models.common.base import BaseEntity
 
 
 class LoginLogQueryParams(BaseEntity):
-    """登录日志查询参数"""
+    """登录日志查询参数
+
+    注意：查询参数统一使用基础 Optional[str]（FastAPI 对 Annotated query 模型字段在部分
+    版本存在兼容性问题，可能漏收集请求参数导致模型构造缺键报 missing）；空值/脏值收敛由 service 层完成。
+    """
 
     username: str | None = Field(None, description="登录用户名")
     ip: str | None = Field(None, description="客户端IP")
-    status: BoolField = Field(None, description="登录状态")
+    status: str | None = Field(None, description="登录状态")
     start_time: str | None = Field(None, description="开始时间")
     end_time: str | None = Field(None, description="结束时间")
 

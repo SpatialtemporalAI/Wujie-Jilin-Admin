@@ -9,7 +9,7 @@ from typing import Optional, List
 from pydantic import Field, ConfigDict, field_validator
 from datetime import datetime
 
-from app.models.common.base import BaseRespEntity, BaseEntity, BoolField
+from app.models.common.base import BaseRespEntity, BaseEntity
 from app.models.common.page import PageRequest
 from core.security.sanitize import sanitize_rich_text
 
@@ -17,11 +17,15 @@ from core.security.sanitize import sanitize_rich_text
 class SysNoticeQueryParams(PageRequest):
     """
     通知查询参数模型
+
+    注意：查询参数统一使用基础 Optional[str] 而非 Annotated[Optional[int/bool], BeforeValidator]，
+    FastAPI 对 Depends() query 模型中的 Annotated 字段在部分版本存在兼容性问题（可能漏收集
+    请求参数导致模型构造缺键报 missing）；空值/脏值收敛由 service 层完成。
     """
     title: Optional[str] = Field(None, description="通知标题，支持模糊查询")
     type: Optional[str] = Field(None, description="通知类型")
     target_type: Optional[str] = Field(None, description="推送范围")
-    status: BoolField = Field(None, description="状态：True-已发布，False-草稿")
+    status: Optional[str] = Field(None, description="状态：True-已发布，False-草稿")
     priority: Optional[str] = Field(None, description="优先级")
     sender_id: Optional[int] = Field(None, description="发送者用户ID")
 
@@ -179,8 +183,12 @@ class SysNoticeResponse(BaseRespEntity):
 class MyNoticeQueryParams(PageRequest):
     """
     我的通知查询参数
+
+    注意：查询参数统一使用基础 Optional[str] 而非 Annotated[Optional[int/bool], BeforeValidator]，
+    FastAPI 对 Depends() query 模型中的 Annotated 字段在部分版本存在兼容性问题（可能漏收集
+    请求参数导致模型构造缺键报 missing）；空值/脏值收敛由 service 层完成。
     """
-    is_read: BoolField = Field(None, description="是否已读")
+    is_read: Optional[str] = Field(None, description="是否已读")
     type: Optional[str] = Field(None, description="通知类型")
 
 

@@ -15,6 +15,7 @@ from sqlalchemy import func
 from database.models.sys.menu import SysMenu, MenuType
 from database.models.sys.user import SysUser
 from database.models.sys.role import SysRole
+from app.models.common.base import parse_optional_bool_value
 from core.exception.errors import NotFoundError, ConflictError, ForbiddenError
 from core.utils.memory_cache import get_memory_cache, CacheNamespace
 from modules.admin.schemas.sys.menu import (
@@ -93,8 +94,9 @@ class MenuService:
             noload(SysMenu.roles),
         )
         conditions = []
-        if query_params.status is not None:
-            conditions.append(SysMenu.status == query_params.status)
+        status = parse_optional_bool_value(query_params.status)
+        if status is not None:
+            conditions.append(SysMenu.status == status)
         if query_params.name:
             conditions.append(SysMenu.name.like(f"%{query_params.name}%"))
         if query_params.type:
@@ -135,14 +137,16 @@ class MenuService:
 
         # 添加查询条件
         conditions = []
-        if query_params.status is not None:
-            conditions.append(SysMenu.status == query_params.status)
+        status = parse_optional_bool_value(query_params.status)
+        if status is not None:
+            conditions.append(SysMenu.status == status)
         if query_params.name:
             conditions.append(SysMenu.name.like(f"%{query_params.name}%"))
         if query_params.type:
             conditions.append(SysMenu.type == query_params.type)
-        if query_params.is_system is not None:
-            conditions.append(SysMenu.is_system == query_params.is_system)
+        is_system = parse_optional_bool_value(query_params.is_system)
+        if is_system is not None:
+            conditions.append(SysMenu.is_system == is_system)
 
         if conditions:
             base_query = base_query.where(and_(*conditions))
@@ -201,7 +205,7 @@ class MenuService:
     @staticmethod
     async def get_menu_tree(
         db: AsyncSession,
-        status: Optional[bool] = None,
+        status: Optional[str] = None,
     ) -> List[SysMenuTreeResponse]:
         """
         获取菜单树结构
@@ -221,8 +225,9 @@ class MenuService:
             noload(SysMenu.parent),
             noload(SysMenu.roles),
         ).order_by(SysMenu.sort, SysMenu.id)
-        if status is not None:
-            base_query = base_query.where(SysMenu.status == status)
+        status_flag = parse_optional_bool_value(status)
+        if status_flag is not None:
+            base_query = base_query.where(SysMenu.status == status_flag)
 
         result = await db.execute(base_query)
         menus = result.scalars().all()

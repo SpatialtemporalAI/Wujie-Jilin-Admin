@@ -19,11 +19,15 @@ class SysRoleQueryParams(PageRequest):
     """
     系统角色查询参数模型
     用于角色列表分页查询时的筛选条件
+
+    注意：查询参数统一使用基础 Optional[str] 而非 Annotated[Optional[int/bool], BeforeValidator]，
+    FastAPI 对 Depends() query 模型中的 Annotated 字段在部分版本存在兼容性问题（可能漏收集
+    请求参数导致模型构造缺键报 missing）；空值/脏值收敛由 service 层完成。
     """
 
     name: Optional[str] = Field(None, description="角色名称，支持模糊查询")
-    status: BoolField = Field(None, description="角色状态：True-启用，False-禁用")
-    is_system: BoolField = Field(None, description="是否为系统内置角色")
+    status: Optional[str] = Field(None, description="角色状态：True-启用，False-禁用")
+    is_system: Optional[str] = Field(None, description="是否为系统内置角色")
 
 
 class SysRoleCreate(BaseEntity):
