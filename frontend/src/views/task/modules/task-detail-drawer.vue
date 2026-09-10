@@ -93,6 +93,11 @@ function pointStatusType(index: number): 'success' | 'default' | 'error' {
   if (statusItem.status === 'failed') return 'error';
   return 'default';
 }
+
+/** 播报间隔仅非最后一步展示（最后一步无后续间隔，历史快照中可能残留数值） */
+function showStepInterval(step: Api.Task.BroadcastStep, index: number, total: number): boolean {
+  return index < total - 1 && step.interval !== null && step.interval !== undefined;
+}
 </script>
 
 <template>
@@ -172,7 +177,7 @@ function pointStatusType(index: number): 'success' | 'default' | 'error' {
                 <br v-if="step.content" />
                 <NText depth="3">动作: {{ step.actions.map(a => actionLabel[a] || a).join('、') }}</NText>
               </template>
-              <template v-if="step.interval !== null && step.interval !== undefined">
+              <template v-if="showStepInterval(step, index, detail.task_definition?.broadcast_steps?.length ?? 0)">
                 <br v-if="step.content || (step.actions && step.actions.length > 0)" />
                 <NText depth="3">间隔: {{ step.interval }} 秒</NText>
               </template>
