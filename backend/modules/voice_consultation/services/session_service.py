@@ -127,8 +127,9 @@ class VoiceConsultationSessionService:
         # 筛选条件（含时间范围），仅用于意图/触发分布图表
         def filter_conditions() -> list:
             conditions = list(base_conditions)
-            if query_params.robot_id:
-                conditions.append(VoiceConsultationSession.robot_id == query_params.robot_id)
+            robot_id = parse_optional_int_value(query_params.robot_id)
+            if robot_id is not None:
+                conditions.append(VoiceConsultationSession.robot_id == robot_id)
             if query_params.trigger_method:
                 conditions.append(VoiceConsultationSession.trigger_method == query_params.trigger_method)
             if query_params.status:

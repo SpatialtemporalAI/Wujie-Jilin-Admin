@@ -155,6 +155,31 @@ function pointStatusType(index: number): 'success' | 'default' | 'error' {
             </NTimelineItem>
           </NTimeline>
         </template>
+
+        <!-- 播报步骤 -->
+        <template
+          v-if="detail.task_definition?.broadcast_steps?.length || detail.task_definition?.broadcast_text"
+        >
+          <NDivider title-placement="left">播报内容</NDivider>
+          <NTimeline v-if="detail.task_definition?.broadcast_steps?.length">
+            <NTimelineItem
+              v-for="(step, index) in detail.task_definition.broadcast_steps"
+              :key="index"
+              :title="`步骤 ${index + 1}`"
+            >
+              <NText v-if="step.content" depth="3">内容: {{ step.content }}</NText>
+              <template v-if="step.actions && step.actions.length > 0">
+                <br v-if="step.content" />
+                <NText depth="3">动作: {{ step.actions.map(a => actionLabel[a] || a).join('、') }}</NText>
+              </template>
+              <template v-if="step.interval !== null && step.interval !== undefined">
+                <br v-if="step.content || (step.actions && step.actions.length > 0)" />
+                <NText depth="3">间隔: {{ step.interval }} 秒</NText>
+              </template>
+            </NTimelineItem>
+          </NTimeline>
+          <NText v-else depth="3">{{ detail.task_definition?.broadcast_text }}</NText>
+        </template>
       </template>
     </NDrawerContent>
   </NDrawer>
