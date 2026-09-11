@@ -60,18 +60,6 @@ const actionOptions = [
 /** 播报动作可选项（不含“无动作”） */
 const broadcastActionOptions = actionOptions.filter(opt => opt.value !== 'no');
 
-/** 播报动作 emoji */
-const actionEmojiMap: Record<string, string> = {
-  shake_hand: '🤝',
-  high_wave: '🙌',
-  clap: '👏',
-  face_wave: '👋',
-  hands_up: '🙆',
-  right_hand_up: '✋',
-  reject: '🙅',
-  no: ''
-};
-
 /** 重复周期选项（星期复选框） */
 const weekdayOptions = [
   { label: '周一', value: 'mon' },
@@ -728,12 +716,9 @@ onMounted(() => {
             <NSpace align="center" :wrap="true" :size="8">
               <NTag v-for="(action, aIndex) in step.actions" :key="aIndex" closable round type="primary"
                 @close="removeBroadcastAction(step, aIndex)">
-                <template #icon>
-                  <span class="text-16px">{{ actionEmojiMap[action] }}</span>
-                </template>
                 {{broadcastActionOptions.find(opt => opt.value === action)?.label}}
               </NTag>
-              <NDropdown :options="getBroadcastActionOptions().map(opt => ({ label: `${actionEmojiMap[opt.value]} ${opt.label}`, key: opt.value }))"
+              <NDropdown :options="getBroadcastActionOptions().map(opt => ({ label: opt.label, key: opt.value }))"
                 @select="(key: string) => addBroadcastAction(step, key as Api.Task.TaskAction)">
                 <NButton dashed size="small">
                   <template #icon>
