@@ -31,8 +31,9 @@ LOG_FILE="${LOG_DIR}/${APP_NAME}.log"
 APP_LOG_DIR="${LOG_DIR}"
 for _env in "${SCRIPT_DIR}/.env" "${SCRIPT_DIR}/.env.prod"; do
     if [[ -f "${_env}" ]]; then
+        # grep 无匹配时管道返回 1，需 || true 兜底，否则 set -euo pipefail 会让脚本静默退出
         _parsed=$(grep -iE '^[[:space:]]*LOG__DIR[[:space:]]*=' "${_env}" | tail -1 \
-            | sed -E 's/^[[:space:]]*LOG__DIR[[:space:]]*=//; s/^[[:space:]]*//; s/[[:space:]]*$//; s/^"//; s/"$//')
+            | sed -E 's/^[[:space:]]*LOG__DIR[[:space:]]*=//; s/^[[:space:]]*//; s/[[:space:]]*$//; s/^"//; s/"$//' || true)
         [[ -n "${_parsed}" ]] && APP_LOG_DIR="${_parsed}"
     fi
 done
