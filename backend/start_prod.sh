@@ -30,8 +30,9 @@ LOG_FILE="${LOG_DIR}/${APP_NAME}.log"
 APP_LOG_DIR="${LOG_DIR}"
 for _env in "${SCRIPT_DIR}/.env" "${SCRIPT_DIR}/.env.prod"; do
     if [[ -f "${_env}" ]]; then
+        # grep 无匹配时返回非零，配合 set -euo pipefail 会导致脚本静默退出，必须兜底
         _parsed=$(grep -iE '^[[:space:]]*LOG__DIR[[:space:]]*=' "${_env}" | tail -1 \
-            | sed -E 's/^[[:space:]]*LOG__DIR[[:space:]]*=//; s/^[[:space:]]*//; s/[[:space:]]*$//; s/^"//; s/"$//')
+            | cut -d= -f2- | sed -E 's/^[[:space:]]*//; s/[[:space:]]*$//; s/^"//; s/"$//; s/^'"'"'//; s/'"'"'$//' || true)
         [[ -n "${_parsed}" ]] && APP_LOG_DIR="${_parsed}"
     fi
 done
@@ -105,7 +106,7 @@ stop() {
 
     if [[ ! -f "${PID_FILE}" ]]; then
         echo "[INFO] 服务未运行"
-        exit 0
+        return 0
     fi
 
     PID=$(cat "${PID_FILE}")
@@ -113,7 +114,7 @@ stop() {
     if ! kill -0 "${PID}" 2>/dev/null; then
         rm -f "${PID_FILE}"
         echo "[INFO] 服务已停止"
-        exit 0
+        return 0
     fi
 
     echo "[INFO] 停止服务 PID=${PID}"
