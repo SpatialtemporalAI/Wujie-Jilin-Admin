@@ -48,7 +48,8 @@ function cleanFeishuEscapes(content: string): string {
   let processed = content.replace(/\\([\.\-|\+\*\~\!\[\]\(\)])/g, '$1');
 
   // 2. 修复粗体后缺少空格：**text：**内容 → **text：** 内容（粗体内容以冒号结尾）
-  processed = processed.replace(/\*\*([^*]+?[:：])\*\*([^\s])/g, '**$1** $2');
+  //    注意：这里必须用 [^*\n]，否则 [^*] 会跨行匹配，把下一行的正常粗体破坏掉
+  processed = processed.replace(/\*\*([^*\n]+?[:：])\*\*([^\s\n])/g, '**$1** $2');
 
   return processed;
 }
