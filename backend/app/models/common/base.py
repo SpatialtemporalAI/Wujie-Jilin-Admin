@@ -146,7 +146,7 @@ def parse_optional_bool_value(value: Optional[str]) -> Optional[bool]:
     stripped = value.strip().lower()
     if stripped in ("1", "true", "yes", "on"):
         return True
-    if stripped in ("0", "false", "no", "off"):
+    if stripped in ("0", "2", "false", "no", "off"):
         return False
     return None
 
