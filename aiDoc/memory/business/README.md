@@ -107,3 +107,4 @@
 - [2026-08-27 机器人「重启」按钮独立权限点](./2026-08-27_robot-slot-restart-permission.md) — 重启按钮由复用 `robot:manage:edit` 拆为独立 `robot:manage:restart`；新增迁移 0006 种子 BUTTON `robot_manage_restart`（挂 robots 菜单下），补 route.robot_manage_restart 中英文 locale；非超管需在角色管理分配
 - [2026-09-02 唤醒词配置新增「回复方式」](./2026-09-02_wake-word-reply-mode.md) — robot_voice_config 加 wake_reply_mode(corpus/llm)+wake_reply_text（迁移 0007）；前端语料模板下拉（含【唤醒词】占位符模板/自定义输入）+ 语料预览 + 测试回复（复用 test-tts）；voice.proto WakeWordChangedRequest 加 4/5 号字段随唤醒词双推 middleware+agent
 - [2026-10-13 NotifyTaskChanged 增加 execution_id](./2026-10-13_task-notify-execution-id.md) — TaskChangedRequest 新增字段 3（值=task_execution_record.id，0=未指定走兜底），解决同名任务多行恢复错位；pause/resume/stop 逐记录带 id，pause-by-task 改逐条推送；proto 在子模块 backend/grpc 改并重新生成；机器人 not found 仅记日志不阻塞
+- [2026-10-13 巡逻任务运控动作加回 5 项](./2026-10-13_task-action-options-add-back-5.md) — operate-drawer actionOptions 加回 击掌/拥抱/右手飞吻/双手飞吻/动感光波（07-02 精简项的子集，不含 left_kiss）；类型/详情标签/后端 schema 本就保留这些值，仅改下拉一处
