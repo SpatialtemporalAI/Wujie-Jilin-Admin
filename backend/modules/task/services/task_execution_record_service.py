@@ -134,12 +134,14 @@ class TaskExecutionRecordService:
                         task_id=record.task_id,
                         operation="pause",
                         robot_ids=[record.robot_id],
+                        execution_id=record.id,
                     )
                 except Exception as exc:  # noqa: BLE001 - 推送容错
                     logger.warning(
-                        "grpc task broadcast pause failed task_id=%s robot_id=%s err=%s",
+                        "grpc task broadcast pause failed task_id=%s robot_id=%s execution_id=%s err=%s",
                         record.task_id,
                         record.robot_id,
+                        record.id,
                         exc,
                     )
 
@@ -168,12 +170,14 @@ class TaskExecutionRecordService:
                         task_id=record.task_id,
                         operation="resume",
                         robot_ids=[record.robot_id],
+                        execution_id=record.id,
                     )
                 except Exception as exc:  # noqa: BLE001 - 推送容错
                     logger.warning(
-                        "grpc task broadcast resume failed task_id=%s robot_id=%s err=%s",
+                        "grpc task broadcast resume failed task_id=%s robot_id=%s execution_id=%s err=%s",
                         record.task_id,
                         record.robot_id,
+                        record.id,
                         exc,
                     )
 
@@ -203,12 +207,14 @@ class TaskExecutionRecordService:
                         task_id=record.task_id,
                         operation="stop",
                         robot_ids=[record.robot_id],
+                        execution_id=record.id,
                     )
                 except Exception as exc:  # noqa: BLE001 - 推送容错
                     logger.warning(
-                        "grpc task broadcast stop failed task_id=%s robot_id=%s err=%s",
+                        "grpc task broadcast stop failed task_id=%s robot_id=%s execution_id=%s err=%s",
                         record.task_id,
                         record.robot_id,
+                        record.id,
                         exc,
                     )
 
@@ -240,19 +246,25 @@ class TaskExecutionRecordService:
                 record.status = "paused"
             await db.commit()
 
-            # 批量暂停后下发 pause 到该任务关联的所有 robot
-            try:
-                await TaskConfigClient.broadcast_task_changed(
-                    task_id=task_id,
-                    operation="pause",
-                    robot_ids=[r.robot_id for r in records if r.robot_id is not None],
-                )
-            except Exception as exc:  # noqa: BLE001 - 推送容错
-                logger.warning(
-                    "grpc task broadcast pause failed task_id=%s err=%s",
-                    task_id,
-                    exc,
-                )
+            # 批量暂停后逐条下发 pause，execution_id 精确到每条执行记录
+            for record in records:
+                if record.robot_id is None:
+                    continue
+                try:
+                    await TaskConfigClient.broadcast_task_changed(
+                        task_id=record.task_id,
+                        operation="pause",
+                        robot_ids=[record.robot_id],
+                        execution_id=record.id,
+                    )
+                except Exception as exc:  # noqa: BLE001 - 推送容错
+                    logger.warning(
+                        "grpc task broadcast pause failed task_id=%s robot_id=%s execution_id=%s err=%s",
+                        record.task_id,
+                        record.robot_id,
+                        record.id,
+                        exc,
+                    )
 
             return len(records)
         except Exception as e:

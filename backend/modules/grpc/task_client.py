@@ -11,6 +11,10 @@ operation 取值（与 task.proto 注释保持一致）：
 - resume   —— 恢复任务
 - stop     —— 停止任务
 
+execution_id 约定（与 task.proto 字段注释保持一致）：
+- pause / resume / stop 带上目标执行记录 id，服务端精确到该条执行记录
+- 0 = 未指定（缺省），服务端走原兜底逻辑；run_now / create 等场景传 0
+
 调用约定（对齐 config_client._dispatch_with_target）：
 - GRPC.ENABLED=false → 返回 success=False 哨兵，不抛异常
 - robot.grpc_config[agent] 缺失 / enabled=false / 无 host:port → success=False 哨兵
@@ -44,12 +48,13 @@ class TaskConfigClient:
 
     @classmethod
     async def notify_task_changed(
-        cls, robot_id: int, task_id: int, operation: str
+        cls, robot_id: int, task_id: int, operation: str, execution_id: int = 0
     ) -> task_pb2.TaskChangedResponse:
         """单 robot 推送任务变更到 agent"""
         request = task_pb2.TaskChangedRequest(
             task_id=task_id,
             operation=operation,
+            execution_id=execution_id,
         )
         return await _dispatch_with_target(
             robot_id=robot_id,
@@ -65,12 +70,13 @@ class TaskConfigClient:
                 "rpc": "notify_task_changed",
                 "task_id": task_id,
                 "operation": operation,
+                "execution_id": execution_id,
             },
         )
 
     @classmethod
     async def broadcast_task_changed(
-        cls, task_id: int, operation: str, robot_ids: List[int]
+        cls, task_id: int, operation: str, robot_ids: List[int], execution_id: int = 0
     ) -> Dict[str, object]:
         """按 robot_ids 逐个推送，聚合结果（含成功/失败的 robot_id 列表）。
 
@@ -93,13 +99,16 @@ class TaskConfigClient:
         failed_robot_ids: List[int] = []
         for robot_id in robot_ids:
             try:
-                resp = await cls.notify_task_changed(robot_id, task_id, operation)
+                resp = await cls.notify_task_changed(
+                    robot_id, task_id, operation, execution_id=execution_id
+                )
             except Exception as e:  # noqa: BLE001 - _dispatch 已吞，这里是双保险
                 logger.exception(
-                    "grpc task broadcast raised task_id=%s robot_id=%s operation=%s",
+                    "grpc task broadcast raised task_id=%s robot_id=%s operation=%s execution_id=%s",
                     task_id,
                     robot_id,
                     operation,
+                    execution_id,
                 )
                 failed_robot_ids.append(robot_id)
                 continue
@@ -107,18 +116,20 @@ class TaskConfigClient:
             if getattr(resp, "success", False):
                 success_robot_ids.append(robot_id)
                 logger.info(
-                    "grpc task notify ok task_id=%s robot_id=%s operation=%s",
+                    "grpc task notify ok task_id=%s robot_id=%s operation=%s execution_id=%s",
                     task_id,
                     robot_id,
                     operation,
+                    execution_id,
                 )
             else:
                 failed_robot_ids.append(robot_id)
                 logger.warning(
-                    "grpc task notify failed task_id=%s robot_id=%s operation=%s msg=%s",
+                    "grpc task notify failed task_id=%s robot_id=%s operation=%s execution_id=%s msg=%s",
                     task_id,
                     robot_id,
                     operation,
+                    execution_id,
                     getattr(resp, "message", "") or "未知错误",
                 )
 
