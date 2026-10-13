@@ -8,6 +8,7 @@
 
 ## 业务需求记忆
 
+- [2026-10-13 巡逻任务运控动作加回 5 项](./business/2026-10-13_task-action-options-add-back-5.md) — operate-drawer actionOptions 加回 击掌/拥抱/右手飞吻/双手飞吻/动感光波（07-02 精简项的子集，不含 left_kiss）；类型/详情标签/后端 schema 本就保留这些值，仅改下拉一处
 - [2026-10-13 NotifyTaskChanged 增加 execution_id](./business/2026-10-13_task-notify-execution-id.md) — TaskChangedRequest 新增字段 3（值=task_execution_record.id，0=未指定走兜底），解决同名任务多行恢复错位；pause/resume/stop 逐记录带 id，批量暂停改逐条推送；proto 在子模块 backend/grpc 改并重新生成；机器人 not found 仅记日志不阻塞
 - [2026-08-27 限流 429 跨域 Network Error 修复](./business/2026-08-27_rate-limit-429-cors-network-error.md) — CORS 注册得早执行靠内，RateLimit/RequestSizeLimit 短路的 429/413 无 CORS 头，跨域（内网直连 :8000）被浏览器拦成 Network Error；CORSMiddleware 移到最后注册（最外层），铁律：短路中间件必须注册在 CORS 之前
 - [2026-08-26 机器人卡片「服务器自启状态 + 重启」](./business/2026-08-26_robot-slot-status.md) — 透传外部控制面板 slot-status/slot-restart HTTP 接口（robot_id+serial_number 标识）；地址走 `ROBOT_PANEL__BASE_URL` 配置；新增 `GET/POST /robot/manage/{id}/slot-status|slot-restart`（SlotStatusData 不能用 BaseRespEntity，status 会被转 "1"）；前端卡片底部新增状态行 + 重启按钮

@@ -2495,8 +2495,8 @@
     "semantic_hash": ""
   },
   "D:\\project\\SpatialtemporalAi\\Wujie-Jilin-Admin\\aiDoc\\memory\\project-memory.md": {
-    "mtime": 1791867659.8889465,
-    "ast_hash": "9e2a7415cd3dbe58d6fa7939c2e082cc",
+    "mtime": 1791872631.0494697,
+    "ast_hash": "b97bfecc3cf96625a381354ce5047671",
     "semantic_hash": ""
   },
   "D:\\project\\SpatialtemporalAi\\Wujie-Jilin-Admin\\aiDoc\\memory\\README.md": {
@@ -2510,8 +2510,8 @@
     "semantic_hash": ""
   },
   "D:\\project\\SpatialtemporalAi\\Wujie-Jilin-Admin\\aiDoc\\memory\\business\\README.md": {
-    "mtime": 1791867670.045539,
-    "ast_hash": "63f778af53646a69f86b32117665d51c",
+    "mtime": 1791872643.4854958,
+    "ast_hash": "e19d822a77f8102624e027a525f41265",
     "semantic_hash": ""
   },
   "D:\\project\\SpatialtemporalAi\\Wujie-Jilin-Admin\\aiDoc\\memory\\business\\TEMPLATE.md": {
@@ -3765,8 +3765,8 @@
     "semantic_hash": ""
   },
   "D:\\project\\SpatialtemporalAi\\Wujie-Jilin-Admin\\frontend\\src\\views\\task\\modules\\task-operate-drawer.vue": {
-    "mtime": 1791444817.2033863,
-    "ast_hash": "104c54785d950a5c07a856c6c2fad1c7",
+    "mtime": 1791872603.8127587,
+    "ast_hash": "3a2903eec6fc640b625b8acd4a770c1f",
     "semantic_hash": ""
   },
   "D:\\project\\SpatialtemporalAi\\Wujie-Jilin-Admin\\frontend\\src\\views\\task\\modules\\task-search.vue": {
@@ -5955,17 +5955,17 @@
     "semantic_hash": ""
   },
   "D:\\project\\SpatialtemporalAi\\Wujie-Jilin-Admin\\graphify-out\\converted\\voice_consultations_20260910_155808_9189fecb.md": {
-    "mtime": 1791867709.2400815,
+    "mtime": 1791872656.1822255,
     "ast_hash": "30f6245da10afe404c746d0c7fd93a4c",
     "semantic_hash": ""
   },
   "D:\\project\\SpatialtemporalAi\\Wujie-Jilin-Admin\\graphify-out\\converted\\voice_consultations_20260910_164208_c9ecf51e.md": {
-    "mtime": 1791867709.375713,
+    "mtime": 1791872656.304973,
     "ast_hash": "747734aa8ee6a402cb10b2de6af3ef04",
     "semantic_hash": ""
   },
   "D:\\project\\SpatialtemporalAi\\Wujie-Jilin-Admin\\graphify-out\\converted\\voice_consultations_20260910_164215_2f8da1af.md": {
-    "mtime": 1791867709.496587,
+    "mtime": 1791872656.4201863,
     "ast_hash": "bb4c6a44e5cccdb1a67290c5782d1a60",
     "semantic_hash": ""
   },
@@ -5977,6 +5977,11 @@
   "D:\\project\\SpatialtemporalAi\\Wujie-Jilin-Admin\\frontend\\public\\manual-files\\\u56fe\u7247\u548c\u9644\u4ef6\\image 27.png": {
     "mtime": 1791444894.4514,
     "ast_hash": "7d3946af83c401878b8e6cef83342abc",
+    "semantic_hash": ""
+  },
+  "D:\\project\\SpatialtemporalAi\\Wujie-Jilin-Admin\\aiDoc\\memory\\business\\2026-10-13_task-action-options-add-back-5.md": {
+    "mtime": 1791872613.3595707,
+    "ast_hash": "39be8f2684d8313dde5373b50ebea379",
     "semantic_hash": ""
   }
 }
