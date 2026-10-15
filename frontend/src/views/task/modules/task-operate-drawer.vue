@@ -931,15 +931,15 @@ onMounted(() => {
                 style="width: 100px">
                 <template #suffix>秒</template>
               </NInputNumber>
-              <span class="text-12px" style="color: var(--n-text-color-3)">
+              <span class="text-12px text-#777 mt-4px pl-4px">
                 第 {{ index + 1 }} 套全部播完后，等待该间隔再开始第 {{ index + 2 }} 套；同一套内连续播放多次不间隔。
               </span>
             </div>
           </NFormItem>
         </div>
 
-        <NButton type="primary" dashed block class="mt-12px" :disabled="model.performance_steps.length >= PERFORMANCE_MAX_STEPS"
-          @click="addPerformanceStep">
+        <NButton type="primary" dashed block class="mt-12px"
+          :disabled="model.performance_steps.length >= PERFORMANCE_MAX_STEPS" @click="addPerformanceStep">
           <template #icon>
             <icon-ic-round-plus class="text-icon" />
           </template>
