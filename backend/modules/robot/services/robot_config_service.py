@@ -27,7 +27,6 @@ from database.models.business.robot_voice_config import (
     DEFAULT_GREETING_MODE,
     DEFAULT_WAKE_REPLY_MODE,
     DEFAULT_WAKE_REPLY_TEXT,
-    DEFAULT_MEETING_MODE_ENABLED,
     DEFAULT_MEETING_ENTER_COMMAND,
     DEFAULT_MEETING_EXIT_COMMAND,
 )
@@ -187,7 +186,6 @@ class RobotConfigService:
                     greeting_mode=DEFAULT_GREETING_MODE,
                     wake_reply_mode=DEFAULT_WAKE_REPLY_MODE,
                     wake_reply_text=DEFAULT_WAKE_REPLY_TEXT,
-                    meeting_mode_enabled=DEFAULT_MEETING_MODE_ENABLED,
                     meeting_enter_command=DEFAULT_MEETING_ENTER_COMMAND,
                     meeting_exit_command=DEFAULT_MEETING_EXIT_COMMAND,
                 )
@@ -206,6 +204,8 @@ class RobotConfigService:
         DB 写入成功后按字段变化智能推送：
         - 唤醒词开关或内容变化 → NotifyWakeWordChanged
         - TTS 音色/语速/音量变化 → NotifyTTSConfigChanged
+        - 打招呼模式变化 → NotifyGreetingModeChanged
+        - 会议模式进入/退出指令变化 → NotifyMeetingModeChanged
         新建记录时全量推送。
 
         Returns: (orm_obj, grpc_status) grpc_status ∈ synced/pending_retry/disabled
@@ -221,7 +221,7 @@ class RobotConfigService:
             existing = result.scalar_one_or_none()
 
             # 计算字段变化（用于决定调哪些 gRPC）
-            changed = {"wake", "tts", "greeting"}  # 新建时全推
+            changed = {"wake", "tts", "greeting", "meeting"}  # 新建时全推
             if existing:
                 changed = set()
                 if (
@@ -239,12 +239,25 @@ class RobotConfigService:
                     changed.add("tts")
                 if (existing.greeting_mode or "") != (schema.greeting_mode or ""):
                     changed.add("greeting")
+                if (
+                    (
+                        schema.meeting_enter_command is not None
+                        and (existing.meeting_enter_command or "")
+                        != schema.meeting_enter_command
+                    )
+                    or (
+                        schema.meeting_exit_command is not None
+                        and (existing.meeting_exit_command or "")
+                        != schema.meeting_exit_command
+                    )
+                ):
+                    changed.add("meeting")
 
             greeting_mode = schema.greeting_mode or DEFAULT_GREETING_MODE
             wake_reply_mode = schema.wake_reply_mode or DEFAULT_WAKE_REPLY_MODE
-            # 会议模式仅落库（机器人端识别指令自行进入监听，本期不推 gRPC）。
-            # 开关仅机器人端语音指令可变更：系统侧不传（None）时保持原值；
-            # 指令系统侧可配置，不传时保持原值。
+            # 会议模式指令变更后推 agent 端 NotifyMeetingModeChanged（见下方推送段）；
+            # 会议模式开关状态记录在 robot.meeting_mode（机器人侧上报），不在此维护。
+            # 指令不传（None）时保持原值。
             meeting_enter_command = schema.meeting_enter_command
             meeting_exit_command = schema.meeting_exit_command
 
@@ -257,8 +270,6 @@ class RobotConfigService:
                 existing.greeting_mode = greeting_mode
                 existing.wake_reply_mode = wake_reply_mode
                 existing.wake_reply_text = schema.wake_reply_text
-                if schema.meeting_mode_enabled is not None:
-                    existing.meeting_mode_enabled = schema.meeting_mode_enabled
                 if meeting_enter_command is not None:
                     existing.meeting_enter_command = meeting_enter_command
                 if meeting_exit_command is not None:
@@ -278,11 +289,6 @@ class RobotConfigService:
                     greeting_mode=greeting_mode,
                     wake_reply_mode=wake_reply_mode,
                     wake_reply_text=schema.wake_reply_text,
-                    meeting_mode_enabled=(
-                        schema.meeting_mode_enabled
-                        if schema.meeting_mode_enabled is not None
-                        else DEFAULT_MEETING_MODE_ENABLED
-                    ),
                     meeting_enter_command=meeting_enter_command or DEFAULT_MEETING_ENTER_COMMAND,
                     meeting_exit_command=meeting_exit_command or DEFAULT_MEETING_EXIT_COMMAND,
                 )
@@ -350,6 +356,26 @@ class RobotConfigService:
                         service_name="voice",
                         method_name="NotifyGreetingModeChanged",
                         payload=greeting_payload,
+                        robot_id=saved.robot_id,
+                    )
+                )
+            if "meeting" in changed:
+                meeting_payload = {
+                    "robot_id": saved.robot_id,
+                    "meeting_enter_command": saved.meeting_enter_command
+                    or DEFAULT_MEETING_ENTER_COMMAND,
+                    "meeting_exit_command": saved.meeting_exit_command
+                    or DEFAULT_MEETING_EXIT_COMMAND,
+                }
+                statuses.append(
+                    await RobotConfigService._push_with_retry(
+                        db,
+                        rpc_call=lambda: VoiceConfigClient.notify_meeting_mode(
+                            **meeting_payload
+                        ),
+                        service_name="voice",
+                        method_name="NotifyMeetingModeChanged",
+                        payload=meeting_payload,
                         robot_id=saved.robot_id,
                     )
                 )

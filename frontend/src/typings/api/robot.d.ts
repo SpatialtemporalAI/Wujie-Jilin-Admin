@@ -107,6 +107,8 @@ declare namespace Api {
       battery_threshold?: number | null;
       /** grpc config (agent + middleware + ros) */
       grpc_config?: RobotGrpcConfig | null;
+      /** meeting mode state: true = in meeting mode (reported by robot side) */
+      meeting_mode?: boolean;
       /** robot logo url */
       logo?: string | null;
     };

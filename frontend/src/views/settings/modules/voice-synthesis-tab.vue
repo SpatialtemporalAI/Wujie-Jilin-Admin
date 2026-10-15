@@ -39,7 +39,6 @@ const model = reactive<Api.RobotConfig.VoiceConfig>({
   greeting_mode: 'wave',
   wake_reply_mode: 'corpus',
   wake_reply_text: '',
-  meeting_mode_enabled: false,
   meeting_enter_command: '开始会议',
   meeting_exit_command: '结束会议'
 });
@@ -205,7 +204,6 @@ function resetModel() {
     greeting_mode: 'wave',
     wake_reply_mode: 'corpus',
     wake_reply_text: '',
-    meeting_mode_enabled: false,
     meeting_enter_command: '开始会议',
     meeting_exit_command: '结束会议'
   });
@@ -277,8 +275,7 @@ async function handleSaveVoice() {
           ? customReplyText.value.trim()
           : REPLY_TEMPLATES[replyTemplate.value];
     }
-    // 会议模式开关仅机器人端语音指令可变更，系统侧不提交该字段（后端保持原值）
-    const { data, error } = await fetchSaveVoiceConfig({ ...model, meeting_mode_enabled: undefined });
+    const { data, error } = await fetchSaveVoiceConfig({ ...model });
     if (!error) {
       const msg = data?.grpc_status === 'pending_retry' ? '保存成功（设备同步待重试）' : '保存成功';
       message.success(msg);

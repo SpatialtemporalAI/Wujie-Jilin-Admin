@@ -222,18 +222,18 @@
 
 ## 参数配置 · 会议模式契约
 
-会议模式配置挂在机器人语音配置上（`RobotVoiceConfig` 三字段），保存/读取复用 `GET/POST /robot/config/voice`。
+会议模式指令配置挂在机器人语音配置上（`RobotVoiceConfig` 两个指令字段），保存/读取复用 `GET/POST /robot/config/voice`；会议模式状态在 `robot.meeting_mode`。
 
 | 字段 | 类型 | 说明 |
 |------|------|------|
-| `meeting_mode_enabled` | `bool` | 会议模式开关，默认 `false`；**系统侧不控制**，保存时传 null/缺省则保持原值 |
 | `meeting_enter_command` | `string(20) \| null` | 进入指令，默认「开始会议」 |
 | `meeting_exit_command` | `string(20) \| null` | 退出指令，默认「结束会议」 |
+| `robot.meeting_mode` | `bool` | 会议模式状态（机器人表字段，随机器人列表接口返回）：`true`-已进入会议模式 |
 
-- **开关仅能通过语音控制**（对机器人说进入/退出指令），系统不提供开关；系统侧只维护指令，状态展示在机器人列表
-- 校验：任一指令传入时两条都必填且 strip 后 4-6 字（后端 `RobotVoiceConfigSchema.validate_wake_word` model_validator 内追加；前端 `canSaveMeeting` 同规则禁用保存按钮）；service 层对三字段均为「传 None 保持原值」
-- **本期仅 DB 落库 + 前端展示，不推 gRPC**（`VoiceConfigClient` 无会议模式 proto；机器人端自行识别指令进入监听），故会议模式字段不参与 `changed` 集合、`grpc_status` 不受影响
-- 前端：「参数配置 → 语音配置」页「会议模式」卡片只有进入/退出指令两个输入（`voice-synthesis-tab.vue`，保存时 `meeting_mode_enabled` 置 `undefined` 不提交）；机器人列表卡片逐台拉取语音配置展示「监听中/未开启」tag（`robots/index.vue` 的 `meetingModeMap`）
+- **开关仅能通过语音控制**（对机器人说进入/退出指令），系统不提供开关；系统侧只维护指令。状态由机器人侧上报写入 `robot.meeting_mode`（上报通道另行对接），系统侧不控制该字段
+- 校验：任一指令传入时两条都必填且 strip 后 4-6 字（后端 `RobotVoiceConfigSchema.validate_wake_word` model_validator 内追加；前端 `canSaveMeeting` 同规则禁用保存按钮）；service 层对两个指令字段均为「传 None 保持原值」
+- **指令变更推 gRPC**：保存后向 agent 端下发 `NotifyMeetingModeChanged`（`VoiceConfigClient.notify_meeting_mode`，仅 `robot_id` + 两条指令，不含开关），参与 `changed` 集合与 `grpc_status` 聚合；失败/离线入 `grpc_retry_task` 重试队列（`retry_service` 已注册 `("voice", "NotifyMeetingModeChanged")` 路由）
+- 前端：「参数配置 → 语音配置」页「会议模式」卡片只有进入/退出指令两个输入（`voice-synthesis-tab.vue`）；机器人列表卡片直接读 `robot.meeting_mode` 展示「监听中/未开启」tag（`robots/index.vue`，不再逐台拉语音配置）
 
 ## 机器人与场景绑定契约
 

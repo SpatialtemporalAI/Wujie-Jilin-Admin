@@ -33,6 +33,7 @@
 - 音乐仅支持 mp3/wav、时长 ≤ 4 分钟（本期只做预设，前后端校验逻辑预留给后续上传）。
 - 会议模式指令 4-6 字，是否限制「仅中文」PRD 未明确，沿用唤醒词同款校验。
 - 会议模式开关系统侧不可控：前端保存时 `meeting_mode_enabled` 置 `undefined` 不提交，后端 schema 默认 `None`、service「传 None 保持原值」；后续由机器人端语音识别结果回写该字段。
+  （2026-10-15 起被取代：`meeting_mode_enabled` 字段已删除，状态改记 `robot.meeting_mode`，指令变更推 agent 端 `NotifyMeetingModeChanged`，见 [2026-10-15 会议指令接 gRPC](./2026-10-15_meeting-mode-grpc-push.md)）
 - 状态流转：暂停/中断→执行列表「已暂停」；恢复时判断进度、节点处重头开始；取消→历史「已取消」；完成→历史「已完成」。
 
 ## 相关文件

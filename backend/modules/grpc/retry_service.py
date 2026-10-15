@@ -86,6 +86,18 @@ async def _wrap_voice_tts(
     )
 
 
+async def _wrap_voice_meeting(
+    robot_id: int, meeting_enter_command: str, meeting_exit_command: str
+) -> RetryCallResult:
+    resp = await VoiceConfigClient.notify_meeting_mode(
+        robot_id, meeting_enter_command, meeting_exit_command
+    )
+    return RetryCallResult(
+        success=getattr(resp, "success", False),
+        message=getattr(resp, "message", ""),
+    )
+
+
 async def _wrap_speed(robot_id: int, speed_level: str) -> RetryCallResult:
     resp = await SpeedConfigClient.notify_speed_level(robot_id, speed_level)
     return RetryCallResult(
@@ -114,6 +126,10 @@ _ROUTING: Dict[Tuple[str, str], Tuple[Callable[..., Awaitable[RetryCallResult]],
     ("voice", "NotifyTTSConfigChanged"): (
         _wrap_voice_tts,
         ("robot_id", "tts_voice", "tts_speed", "tts_volume"),
+    ),
+    ("voice", "NotifyMeetingModeChanged"): (
+        _wrap_voice_meeting,
+        ("robot_id", "meeting_enter_command", "meeting_exit_command"),
     ),
     ("speed", "NotifySpeedLevelChanged"): (
         _wrap_speed,

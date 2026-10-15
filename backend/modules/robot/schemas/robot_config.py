@@ -40,10 +40,6 @@ class RobotVoiceConfigSchema(BaseReqEntity):
         description="唤醒回复语料：预设模板存原文（含【唤醒词】占位符），自定义存用户输入",
         max_length=1000,
     )
-    meeting_mode_enabled: Optional[bool] = Field(
-        default=None,
-        description="是否启用会议模式；系统侧不控制开关（仅机器人端语音指令可变更），传 null/缺省时保持原值",
-    )
     meeting_enter_command: Optional[str] = Field(
         default=None, description="进入会议模式指令（4-6字）", max_length=20
     )
@@ -129,7 +125,6 @@ class RobotVoiceConfigResponse(BaseRespEntity):
         "corpus", description="唤醒回复方式：corpus-配置语料，llm-调用大模型"
     )
     wake_reply_text: Optional[str] = Field(None, description="唤醒回复语料")
-    meeting_mode_enabled: Optional[bool] = Field(None, description="是否启用会议模式")
     meeting_enter_command: Optional[str] = Field(None, description="进入会议模式指令")
     meeting_exit_command: Optional[str] = Field(None, description="退出会议模式指令")
 

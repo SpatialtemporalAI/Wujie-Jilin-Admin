@@ -111,6 +111,7 @@ class RobotResponseData(BaseRespEntity):
     status: str = Field(..., description="状态")
     speed_level: Optional[str] = Field(None, description="速度等级")
     battery_threshold: Optional[int] = Field(None, description="电量报警阈值(%)")
+    meeting_mode: bool = Field(False, description="会议模式状态：True-已进入会议模式（机器人侧上报）")
     grpc_config: Optional[RobotGrpcConfigPayload] = Field(
         None, description="gRPC 配置: { agent, middleware, ros }"
     )

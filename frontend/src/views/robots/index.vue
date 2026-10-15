@@ -5,7 +5,6 @@ import {
   fetchDeleteRobot,
   fetchGetRobotList,
   fetchGetRobotSlotStatus,
-  fetchGetVoiceConfig,
   fetchRestartRobotSlot
 } from '@/service/api';
 import { useAuth } from '@/hooks/business/auth';
@@ -44,7 +43,6 @@ async function loadData() {
     if (!error && data) {
       robotList.value = data.records || [];
       loadSlotStatuses(data.records || []);
-      loadMeetingModes(data.records || []);
     }
   } catch (err) {
     console.error('加载机器人列表失败:', err);
@@ -82,23 +80,7 @@ function getSlotStatusType(status: string): import('naive-ui').TagProps['type'] 
   return typeMap[status] || 'default';
 }
 
-/** 会议模式开关状态（true=监听中 / false=未开启），逐台拉取语音配置，单台失败不影响其它卡片 */
-const meetingModeMap = ref<Record<number, boolean>>({});
-
-function loadMeetingModes(records: Api.Robot.Robot[]) {
-  records.forEach(robot => {
-    loadMeetingMode(robot.id);
-  });
-}
-
-async function loadMeetingMode(robotId: number) {
-  try {
-    const { data, error } = await fetchGetVoiceConfig(robotId);
-    meetingModeMap.value[robotId] = !error && data ? Boolean(data.meeting_mode_enabled) : false;
-  } catch {
-    meetingModeMap.value[robotId] = false;
-  }
-}
+/** 会议模式状态直接读 robot.meeting_mode（机器人侧上报，随列表接口返回），无需逐台拉取 */
 
 async function handleRestartSlot(robot: Api.Robot.Robot) {
   slotRestartingMap.value[robot.id] = true;
@@ -228,8 +210,8 @@ loadData();
               </div>
               <div class="robot-info-item">
                 <span class="robot-info-label">会议模式：</span>
-                <NTag :type="meetingModeMap[robot.id] ? 'success' : 'default'" size="small" round>
-                  {{ meetingModeMap[robot.id] ? '监听中' : '未开启' }}
+                <NTag :type="robot.meeting_mode ? 'success' : 'default'" size="small" round>
+                  {{ robot.meeting_mode ? '监听中' : '未开启' }}
                 </NTag>
               </div>
             </div>

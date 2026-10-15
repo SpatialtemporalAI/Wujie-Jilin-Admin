@@ -355,7 +355,7 @@
     "semantic_hash": ""
   },
   "D:\\project\\SpatialtemporalAi\\Wujie-Jilin-Admin\\backend\\modules\\admin\\endpoints\\auth.py": {
-    "mtime": 1791444817.0857878,
+    "mtime": 1792054910.5521417,
     "ast_hash": "cd2779f59315de90b0b849761e1d3ddc",
     "semantic_hash": ""
   },
@@ -1380,7 +1380,7 @@
     "semantic_hash": ""
   },
   "D:\\project\\SpatialtemporalAi\\Wujie-Jilin-Admin\\frontend\\src\\layouts\\modules\\global-header\\components\\user-avatar.vue": {
-    "mtime": 1791444817.119302,
+    "mtime": 1792054911.0414257,
     "ast_hash": "d8cce797486837ea9ffb58f40bfb3b23",
     "semantic_hash": ""
   },
@@ -1590,12 +1590,12 @@
     "semantic_hash": ""
   },
   "D:\\project\\SpatialtemporalAi\\Wujie-Jilin-Admin\\frontend\\src\\locales\\langs\\en-us.ts": {
-    "mtime": 1791788489.2643082,
+    "mtime": 1792054911.0572455,
     "ast_hash": "502c2bb8006a65bad4b9cac9211722f9",
     "semantic_hash": ""
   },
   "D:\\project\\SpatialtemporalAi\\Wujie-Jilin-Admin\\frontend\\src\\locales\\langs\\zh-cn.ts": {
-    "mtime": 1791788489.5901265,
+    "mtime": 1792054911.0670722,
     "ast_hash": "797f9eb01fe036ee4cda88b57a0eb1ba",
     "semantic_hash": ""
   },
@@ -1685,7 +1685,7 @@
     "semantic_hash": ""
   },
   "D:\\project\\SpatialtemporalAi\\Wujie-Jilin-Admin\\frontend\\src\\service\\api\\auth.ts": {
-    "mtime": 1791444817.1676538,
+    "mtime": 1792054911.088545,
     "ast_hash": "a7dd42dee1bdd809f2f7d64cf6e3034d",
     "semantic_hash": ""
   },
@@ -1825,7 +1825,7 @@
     "semantic_hash": ""
   },
   "D:\\project\\SpatialtemporalAi\\Wujie-Jilin-Admin\\frontend\\src\\typings\\app.d.ts": {
-    "mtime": 1791788490.0642352,
+    "mtime": 1792054911.1002579,
     "ast_hash": "b9d7f59b5a59af05a49e6ea9242110cf",
     "semantic_hash": ""
   },
@@ -1835,8 +1835,8 @@
     "semantic_hash": ""
   },
   "D:\\project\\SpatialtemporalAi\\Wujie-Jilin-Admin\\frontend\\src\\typings\\components.d.ts": {
-    "mtime": 1791444817.1916196,
-    "ast_hash": "036a043ca90dcda21f10346df45c9079",
+    "mtime": 1792054940.9396656,
+    "ast_hash": "4d4e2219c5959acbb5f6ac76b8768136",
     "semantic_hash": ""
   },
   "D:\\project\\SpatialtemporalAi\\Wujie-Jilin-Admin\\frontend\\src\\typings\\elegant-router.d.ts": {
@@ -2480,8 +2480,8 @@
     "semantic_hash": ""
   },
   "D:\\project\\SpatialtemporalAi\\Wujie-Jilin-Admin\\aiDoc\\frontend-backend\\boundary.md": {
-    "mtime": 1785726861.63539,
-    "ast_hash": "3f9f48386ce99f542dba912b3f653f6d",
+    "mtime": 1792057644.6748123,
+    "ast_hash": "086a93159b2ca39bdabccd0afade5fe4",
     "semantic_hash": ""
   },
   "D:\\project\\SpatialtemporalAi\\Wujie-Jilin-Admin\\aiDoc\\frontend-backend\\frontend-rules.md": {
@@ -2495,7 +2495,7 @@
     "semantic_hash": ""
   },
   "D:\\project\\SpatialtemporalAi\\Wujie-Jilin-Admin\\aiDoc\\memory\\project-memory.md": {
-    "mtime": 1791872631.0494697,
+    "mtime": 1791873711.2476716,
     "ast_hash": "b97bfecc3cf96625a381354ce5047671",
     "semantic_hash": ""
   },
@@ -2510,8 +2510,8 @@
     "semantic_hash": ""
   },
   "D:\\project\\SpatialtemporalAi\\Wujie-Jilin-Admin\\aiDoc\\memory\\business\\README.md": {
-    "mtime": 1791872643.4854958,
-    "ast_hash": "e19d822a77f8102624e027a525f41265",
+    "mtime": 1792057680.9906318,
+    "ast_hash": "1ec935ebee73f8c506b91e022e95c32e",
     "semantic_hash": ""
   },
   "D:\\project\\SpatialtemporalAi\\Wujie-Jilin-Admin\\aiDoc\\memory\\business\\TEMPLATE.md": {
@@ -2595,8 +2595,8 @@
     "semantic_hash": ""
   },
   "D:\\project\\SpatialtemporalAi\\Wujie-Jilin-Admin\\frontend\\pnpm-workspace.yaml": {
-    "mtime": 1780382464.4878407,
-    "ast_hash": "15e915330bfbfeab7601d69ae0a8a2ac",
+    "mtime": 1792054940.8627667,
+    "ast_hash": "d17fa0436c96a6c67788274c620e9c02",
     "semantic_hash": ""
   },
   "D:\\project\\SpatialtemporalAi\\Wujie-Jilin-Admin\\frontend\\README.en_US.md": {
@@ -3190,8 +3190,8 @@
     "semantic_hash": ""
   },
   "D:\\project\\SpatialtemporalAi\\Wujie-Jilin-Admin\\backend\\database\\models\\business\\robot.py": {
-    "mtime": 1787640083.478605,
-    "ast_hash": "66efec703842d5ae4a4d3956ffebac4c",
+    "mtime": 1792057239.2325869,
+    "ast_hash": "83fd237ab563ef63423de82d0e2b9cfe",
     "semantic_hash": ""
   },
   "D:\\project\\SpatialtemporalAi\\Wujie-Jilin-Admin\\backend\\database\\models\\business\\robot_face_recognition.py": {
@@ -3210,8 +3210,8 @@
     "semantic_hash": ""
   },
   "D:\\project\\SpatialtemporalAi\\Wujie-Jilin-Admin\\backend\\database\\models\\business\\robot_voice_config.py": {
-    "mtime": 1789010054.3977778,
-    "ast_hash": "50be3e8afbdd4d04970d0ce67359c019",
+    "mtime": 1792057223.2168326,
+    "ast_hash": "31e08eae7f65ed563835765996535053",
     "semantic_hash": ""
   },
   "D:\\project\\SpatialtemporalAi\\Wujie-Jilin-Admin\\backend\\database\\models\\business\\scene_group.py": {
@@ -3240,8 +3240,8 @@
     "semantic_hash": ""
   },
   "D:\\project\\SpatialtemporalAi\\Wujie-Jilin-Admin\\backend\\database\\models\\business\\task.py": {
-    "mtime": 1788922622.4166808,
-    "ast_hash": "d95a170357949461c5eec81941c6f479",
+    "mtime": 1792055630.5128922,
+    "ast_hash": "0485fbad1943e38fbc268c22bc094fac",
     "semantic_hash": ""
   },
   "D:\\project\\SpatialtemporalAi\\Wujie-Jilin-Admin\\backend\\database\\models\\business\\task_point.py": {
@@ -3285,13 +3285,13 @@
     "semantic_hash": ""
   },
   "D:\\project\\SpatialtemporalAi\\Wujie-Jilin-Admin\\backend\\modules\\robot\\schemas\\robot.py": {
-    "mtime": 1789009521.046294,
-    "ast_hash": "b355da293f75a88e38310a7bdb181010",
+    "mtime": 1792057451.3653471,
+    "ast_hash": "c488c615941f417989a1947e6242f894",
     "semantic_hash": ""
   },
   "D:\\project\\SpatialtemporalAi\\Wujie-Jilin-Admin\\backend\\modules\\robot\\schemas\\robot_config.py": {
-    "mtime": 1788939973.785057,
-    "ast_hash": "a3261c3911f72764ec5c7635a7b6012f",
+    "mtime": 1792057438.906819,
+    "ast_hash": "c88c6be049373162145571c90b4fc623",
     "semantic_hash": ""
   },
   "D:\\project\\SpatialtemporalAi\\Wujie-Jilin-Admin\\backend\\modules\\robot\\schemas\\robot_model.py": {
@@ -3310,8 +3310,8 @@
     "semantic_hash": ""
   },
   "D:\\project\\SpatialtemporalAi\\Wujie-Jilin-Admin\\backend\\modules\\robot\\services\\robot_config_service.py": {
-    "mtime": 1788939973.7865648,
-    "ast_hash": "0d182ba4cf89bd4b16b10974619154ea",
+    "mtime": 1792057753.6209009,
+    "ast_hash": "aa621be6af283446c4ead929ddd340e0",
     "semantic_hash": ""
   },
   "D:\\project\\SpatialtemporalAi\\Wujie-Jilin-Admin\\backend\\modules\\robot\\services\\robot_model_service.py": {
@@ -3550,18 +3550,18 @@
     "semantic_hash": ""
   },
   "D:\\project\\SpatialtemporalAi\\Wujie-Jilin-Admin\\backend\\modules\\task\\endpoints\\task.py": {
-    "mtime": 1783066321.464875,
-    "ast_hash": "13486998b7b3e9446d22abad755d3cf4",
+    "mtime": 1792054940.7824087,
+    "ast_hash": "2922e277ecdd44c0404edf66e2c4cdbe",
     "semantic_hash": ""
   },
   "D:\\project\\SpatialtemporalAi\\Wujie-Jilin-Admin\\backend\\modules\\task\\schemas\\task.py": {
-    "mtime": 1789009521.0558763,
-    "ast_hash": "1d7a1c00d14ccff1e18974afd2743637",
+    "mtime": 1792054940.8062985,
+    "ast_hash": "4009cfd8463b150467f1db53f6d42496",
     "semantic_hash": ""
   },
   "D:\\project\\SpatialtemporalAi\\Wujie-Jilin-Admin\\backend\\modules\\task\\services\\task_service.py": {
-    "mtime": 1789009521.0563924,
-    "ast_hash": "02ed06f9b0fca6a5f0195735b4a255e2",
+    "mtime": 1792054940.8443716,
+    "ast_hash": "ab6b18585fb5f7ae1f262fb2a3c9f9a8",
     "semantic_hash": ""
   },
   "D:\\project\\SpatialtemporalAi\\Wujie-Jilin-Admin\\frontend\\src\\components\\custom\\dict-select.vue": {
@@ -3615,18 +3615,18 @@
     "semantic_hash": ""
   },
   "D:\\project\\SpatialtemporalAi\\Wujie-Jilin-Admin\\frontend\\src\\service\\api\\task.ts": {
-    "mtime": 1785316671.0354383,
-    "ast_hash": "e265f89b6cdb493f3cb5b0d540cec766",
+    "mtime": 1792054940.8879025,
+    "ast_hash": "90b654cd5bee8fe5c5c081aa04da67bf",
     "semantic_hash": ""
   },
   "D:\\project\\SpatialtemporalAi\\Wujie-Jilin-Admin\\frontend\\src\\typings\\api\\robot-config.d.ts": {
-    "mtime": 1788939973.7941399,
-    "ast_hash": "99978608c8c1c9eda1b0976140f90c4d",
+    "mtime": 1792057510.6547644,
+    "ast_hash": "3f632cdbf459ec09bf8aa8d11d70183e",
     "semantic_hash": ""
   },
   "D:\\project\\SpatialtemporalAi\\Wujie-Jilin-Admin\\frontend\\src\\typings\\api\\robot.d.ts": {
-    "mtime": 1787738787.7878623,
-    "ast_hash": "2768b7b2561841d50f05bdba623c79c3",
+    "mtime": 1792057510.6547644,
+    "ast_hash": "30fb25b98bd011a7d477320c5408127a",
     "semantic_hash": ""
   },
   "D:\\project\\SpatialtemporalAi\\Wujie-Jilin-Admin\\frontend\\src\\typings\\api\\scene.d.ts": {
@@ -3635,8 +3635,8 @@
     "semantic_hash": ""
   },
   "D:\\project\\SpatialtemporalAi\\Wujie-Jilin-Admin\\frontend\\src\\typings\\api\\task.d.ts": {
-    "mtime": 1789009521.062449,
-    "ast_hash": "cff42258f95b3b85920854d0baa7fe82",
+    "mtime": 1792054940.9180174,
+    "ast_hash": "e51a7c002a15d0e7db86382abbc37744",
     "semantic_hash": ""
   },
   "D:\\project\\SpatialtemporalAi\\Wujie-Jilin-Admin\\frontend\\src\\views\\demo\\dict\\index.vue": {
@@ -3725,8 +3725,8 @@
     "semantic_hash": ""
   },
   "D:\\project\\SpatialtemporalAi\\Wujie-Jilin-Admin\\frontend\\src\\views\\settings\\modules\\voice-synthesis-tab.vue": {
-    "mtime": 1788939973.7997224,
-    "ast_hash": "ef22345e9fd05b9eac3a0ea77a896103",
+    "mtime": 1792057542.6690488,
+    "ast_hash": "77510aa9e81e335a2fffdb02798c51e3",
     "semantic_hash": ""
   },
   "D:\\project\\SpatialtemporalAi\\Wujie-Jilin-Admin\\frontend\\src\\views\\settings\\modules\\walking-speed-tab.vue": {
@@ -3740,13 +3740,13 @@
     "semantic_hash": ""
   },
   "D:\\project\\SpatialtemporalAi\\Wujie-Jilin-Admin\\frontend\\src\\views\\task\\modules\\task-detail-drawer.vue": {
-    "mtime": 1789009944.6556869,
-    "ast_hash": "2335036e5ded8af01f4560e28675aa29",
+    "mtime": 1792054941.0000243,
+    "ast_hash": "8e1fd770b69060bc51047ec86773652e",
     "semantic_hash": ""
   },
   "D:\\project\\SpatialtemporalAi\\Wujie-Jilin-Admin\\frontend\\src\\views\\task\\modules\\task-execution-tab.vue": {
-    "mtime": 1785316671.0879378,
-    "ast_hash": "68aed24d57720b81a3c075c001ddfb7d",
+    "mtime": 1792054941.0205812,
+    "ast_hash": "2412819809cbfcb0c1c3776992d9d313",
     "semantic_hash": ""
   },
   "D:\\project\\SpatialtemporalAi\\Wujie-Jilin-Admin\\frontend\\src\\views\\task\\modules\\task-history-search.vue": {
@@ -3755,23 +3755,23 @@
     "semantic_hash": ""
   },
   "D:\\project\\SpatialtemporalAi\\Wujie-Jilin-Admin\\frontend\\src\\views\\task\\modules\\task-history-tab.vue": {
-    "mtime": 1785316671.0889657,
-    "ast_hash": "c30ba362f96696822d342eba42b95198",
+    "mtime": 1792054941.0406163,
+    "ast_hash": "51de33cf78fab5ab953c13f4da87ad57",
     "semantic_hash": ""
   },
   "D:\\project\\SpatialtemporalAi\\Wujie-Jilin-Admin\\frontend\\src\\views\\task\\modules\\task-list-tab.vue": {
-    "mtime": 1785742492.8735912,
-    "ast_hash": "dd42494665b75206637873c458de5d56",
+    "mtime": 1792054941.0554998,
+    "ast_hash": "ac2e03c3121679dbc4bb22640cafc71c",
     "semantic_hash": ""
   },
   "D:\\project\\SpatialtemporalAi\\Wujie-Jilin-Admin\\frontend\\src\\views\\task\\modules\\task-operate-drawer.vue": {
-    "mtime": 1791872603.8127587,
-    "ast_hash": "3a2903eec6fc640b625b8acd4a770c1f",
+    "mtime": 1792054941.0722787,
+    "ast_hash": "c58ea154d66d3ea7ca0a6247fd268222",
     "semantic_hash": ""
   },
   "D:\\project\\SpatialtemporalAi\\Wujie-Jilin-Admin\\frontend\\src\\views\\task\\modules\\task-search.vue": {
-    "mtime": 1783324233.5442278,
-    "ast_hash": "ecf08acd563dd8dafe6ff7f6b9102881",
+    "mtime": 1792054941.0915477,
+    "ast_hash": "a9fc69120d2e69923a516ae5f1918c93",
     "semantic_hash": ""
   },
   "D:\\project\\SpatialtemporalAi\\Wujie-Jilin-Admin\\aiDoc\\examples\\frontend\\dict-component-example.md": {
@@ -3990,12 +3990,12 @@
     "semantic_hash": ""
   },
   "D:\\project\\SpatialtemporalAi\\Wujie-Jilin-Admin\\backend\\grpc\\generated\\map\\map_pb2.py": {
-    "mtime": 1791867483.6639974,
+    "mtime": 1792057295.9097383,
     "ast_hash": "11dccecdb24e06615276461a91c55996",
     "semantic_hash": ""
   },
   "D:\\project\\SpatialtemporalAi\\Wujie-Jilin-Admin\\backend\\grpc\\generated\\map\\map_pb2_grpc.py": {
-    "mtime": 1791867483.6905313,
+    "mtime": 1792057295.9409592,
     "ast_hash": "5f24140f4d3fc70a8207e68c5cb538b5",
     "semantic_hash": ""
   },
@@ -4010,7 +4010,7 @@
     "semantic_hash": ""
   },
   "D:\\project\\SpatialtemporalAi\\Wujie-Jilin-Admin\\backend\\start_prod.sh": {
-    "mtime": 1791444817.0978973,
+    "mtime": 1792054910.5656862,
     "ast_hash": "71f39e7849d4055d9ce8f4fde9867ac0",
     "semantic_hash": ""
   },
@@ -4070,52 +4070,52 @@
     "semantic_hash": ""
   },
   "D:\\project\\SpatialtemporalAi\\Wujie-Jilin-Admin\\backend\\grpc\\generated\\config\\battery_pb2.py": {
-    "mtime": 1791867484.7451742,
+    "mtime": 1792057298.0105846,
     "ast_hash": "291a610f0e1f2a16a67ebfea2ea85959",
     "semantic_hash": ""
   },
   "D:\\project\\SpatialtemporalAi\\Wujie-Jilin-Admin\\backend\\grpc\\generated\\config\\battery_pb2_grpc.py": {
-    "mtime": 1791867484.7684946,
+    "mtime": 1792057298.0370238,
     "ast_hash": "f94543ce1a22c8e2b68b510192fcb79b",
     "semantic_hash": ""
   },
   "D:\\project\\SpatialtemporalAi\\Wujie-Jilin-Admin\\backend\\grpc\\generated\\config\\face_recognition_pb2.py": {
-    "mtime": 1791867484.797002,
+    "mtime": 1792057298.0815015,
     "ast_hash": "af5decc3e389e6262e5c71b2bce86b2b",
     "semantic_hash": ""
   },
   "D:\\project\\SpatialtemporalAi\\Wujie-Jilin-Admin\\backend\\grpc\\generated\\config\\face_recognition_pb2_grpc.py": {
-    "mtime": 1791867484.8190665,
+    "mtime": 1792057298.1105769,
     "ast_hash": "b7aa7d5758ca80365c912ee9c6c37651",
     "semantic_hash": ""
   },
   "D:\\project\\SpatialtemporalAi\\Wujie-Jilin-Admin\\backend\\grpc\\generated\\config\\speed_pb2.py": {
-    "mtime": 1791867484.8646967,
+    "mtime": 1792057298.1600623,
     "ast_hash": "7e8beb9f6430cbaea407cef3d9312d8d",
     "semantic_hash": ""
   },
   "D:\\project\\SpatialtemporalAi\\Wujie-Jilin-Admin\\backend\\grpc\\generated\\config\\speed_pb2_grpc.py": {
-    "mtime": 1791867484.891358,
+    "mtime": 1792057298.1891644,
     "ast_hash": "eadb8162dc88c00803d9e4b3e65ef09f",
     "semantic_hash": ""
   },
   "D:\\project\\SpatialtemporalAi\\Wujie-Jilin-Admin\\backend\\grpc\\generated\\config\\voice_pb2.py": {
-    "mtime": 1791867485.0078762,
-    "ast_hash": "fb4a440e3403c7c49585d2aff5d7afe3",
+    "mtime": 1792057298.3183458,
+    "ast_hash": "8a8789b66c49c0f0aab1d6bc56ce3d1e",
     "semantic_hash": ""
   },
   "D:\\project\\SpatialtemporalAi\\Wujie-Jilin-Admin\\backend\\grpc\\generated\\config\\voice_pb2_grpc.py": {
-    "mtime": 1791867485.0321887,
-    "ast_hash": "1acce792148ead9dba719f64158e8a1c",
+    "mtime": 1792057298.3524365,
+    "ast_hash": "bed9b7149f616fab12f48c12f39821fc",
     "semantic_hash": ""
   },
   "D:\\project\\SpatialtemporalAi\\Wujie-Jilin-Admin\\backend\\grpc\\generated\\task\\task_pb2.py": {
-    "mtime": 1791867483.9033942,
+    "mtime": 1792057296.34675,
     "ast_hash": "0b8d067b3656903a5543a617c0738657",
     "semantic_hash": ""
   },
   "D:\\project\\SpatialtemporalAi\\Wujie-Jilin-Admin\\backend\\grpc\\generated\\task\\task_pb2_grpc.py": {
-    "mtime": 1791867483.912101,
+    "mtime": 1792057296.3672593,
     "ast_hash": "aa85ddab8ed649c45a03881029add584",
     "semantic_hash": ""
   },
@@ -4135,8 +4135,8 @@
     "semantic_hash": ""
   },
   "D:\\project\\SpatialtemporalAi\\Wujie-Jilin-Admin\\backend\\modules\\grpc\\config_client.py": {
-    "mtime": 1788939973.7820508,
-    "ast_hash": "cbf67ae0b72039ae84df08509592040c",
+    "mtime": 1792057326.954629,
+    "ast_hash": "8f4657fd495d31711bfd10c187b7a963",
     "semantic_hash": ""
   },
   "D:\\project\\SpatialtemporalAi\\Wujie-Jilin-Admin\\backend\\modules\\grpc\\converter.py": {
@@ -4145,8 +4145,8 @@
     "semantic_hash": ""
   },
   "D:\\project\\SpatialtemporalAi\\Wujie-Jilin-Admin\\backend\\modules\\grpc\\retry_service.py": {
-    "mtime": 1788939973.7830517,
-    "ast_hash": "06276b3e05ee700eca48b7a31ada1893",
+    "mtime": 1792057418.1135802,
+    "ast_hash": "3f1120df973be817302c61fc080050eb",
     "semantic_hash": ""
   },
   "D:\\project\\SpatialtemporalAi\\Wujie-Jilin-Admin\\backend\\modules\\grpc\\__init__.py": {
@@ -4180,12 +4180,12 @@
     "semantic_hash": ""
   },
   "D:\\project\\SpatialtemporalAi\\Wujie-Jilin-Admin\\backend\\modules\\task\\schemas\\task_execution_record.py": {
-    "mtime": 1788939973.7901025,
-    "ast_hash": "540e12821777b6ba2cf1815c7187f651",
+    "mtime": 1792054940.827587,
+    "ast_hash": "5ee9cb4a99b21bdd8394cd60b6539b0b",
     "semantic_hash": ""
   },
   "D:\\project\\SpatialtemporalAi\\Wujie-Jilin-Admin\\backend\\modules\\task\\services\\task_execution_record_service.py": {
-    "mtime": 1791867607.0114088,
+    "mtime": 1791873702.692023,
     "ast_hash": "c35326ca4f8ca914e0d2681ad247a5f8",
     "semantic_hash": ""
   },
@@ -4335,8 +4335,8 @@
     "semantic_hash": ""
   },
   "D:\\project\\SpatialtemporalAi\\Wujie-Jilin-Admin\\backend\\modules\\grpc\\task_client.py": {
-    "mtime": 1791867551.0194354,
-    "ast_hash": "ff9b7fb2ea944dd6baed7e3c2629f00c",
+    "mtime": 1791873702.691027,
+    "ast_hash": "f865355a37d2c69736865f9dc331896b",
     "semantic_hash": ""
   },
   "D:\\project\\SpatialtemporalAi\\Wujie-Jilin-Admin\\backend\\modules\\merchant\\router.py": {
@@ -4615,8 +4615,8 @@
     "semantic_hash": ""
   },
   "D:\\project\\SpatialtemporalAi\\Wujie-Jilin-Admin\\frontend\\src\\views\\robots\\index.vue": {
-    "mtime": 1788166776.3173518,
-    "ast_hash": "72be15747da18ad286d4f03f2439f1cd",
+    "mtime": 1792057594.6788526,
+    "ast_hash": "d32e429747d1ee3ab88bd7e66e95e19f",
     "semantic_hash": ""
   },
   "D:\\project\\SpatialtemporalAi\\Wujie-Jilin-Admin\\frontend\\src\\views\\robots\\modules\\robot-grpc-config-drawer.vue": {
@@ -4795,12 +4795,12 @@
     "semantic_hash": ""
   },
   "D:\\project\\SpatialtemporalAi\\Wujie-Jilin-Admin\\backend\\grpc\\generated\\navigation\\navigation_pb2.py": {
-    "mtime": 1791867485.258129,
+    "mtime": 1792057298.768828,
     "ast_hash": "5d3d141f50341583a91937656b3303c8",
     "semantic_hash": ""
   },
   "D:\\project\\SpatialtemporalAi\\Wujie-Jilin-Admin\\backend\\grpc\\generated\\navigation\\navigation_pb2_grpc.py": {
-    "mtime": 1791867485.285894,
+    "mtime": 1792057298.7999938,
     "ast_hash": "04c803e8d59d9ba59549c70974ffcbf8",
     "semantic_hash": ""
   },
@@ -4885,12 +4885,12 @@
     "semantic_hash": ""
   },
   "D:\\project\\SpatialtemporalAi\\Wujie-Jilin-Admin\\backend\\grpc\\generated\\config\\video_pb2.py": {
-    "mtime": 1791867484.938701,
+    "mtime": 1792057298.250856,
     "ast_hash": "db8e4793c878435ceac6f29301ece6f2",
     "semantic_hash": ""
   },
   "D:\\project\\SpatialtemporalAi\\Wujie-Jilin-Admin\\backend\\grpc\\generated\\config\\video_pb2_grpc.py": {
-    "mtime": 1791867484.9620883,
+    "mtime": 1792057298.2734685,
     "ast_hash": "4afb0a31baa29b3b1229adfd866e041f",
     "semantic_hash": ""
   },
@@ -5550,7 +5550,7 @@
     "semantic_hash": ""
   },
   "D:\\project\\SpatialtemporalAi\\Wujie-Jilin-Admin\\frontend\\src\\layouts\\modules\\global-header\\components\\user-manual.vue": {
-    "mtime": 1791444894.894619,
+    "mtime": 1792054911.0488336,
     "ast_hash": "6abbd87fe885e87f7a6d38642918dd63",
     "semantic_hash": ""
   },
@@ -5605,7 +5605,7 @@
     "semantic_hash": ""
   },
   "D:\\project\\SpatialtemporalAi\\Wujie-Jilin-Admin\\frontend\\src\\assets\\manual-files\\\u673a\u5668\u4eba\u7ba1\u7406\u7cfb\u7edf\u7528\u6237\u624b\u518c.md": {
-    "mtime": 1791866987.9063826,
+    "mtime": 1792054911.007821,
     "ast_hash": "e3183c4fcd605d3b7b91382243fcc244",
     "semantic_hash": ""
   },
@@ -5615,132 +5615,132 @@
     "semantic_hash": ""
   },
   "D:\\project\\SpatialtemporalAi\\Wujie-Jilin-Admin\\frontend\\public\\manual-files\\\u56fe\u7247\u548c\u9644\u4ef6\\image 1.png": {
-    "mtime": 1791444893.519329,
+    "mtime": 1792054910.585218,
     "ast_hash": "34053f0f33389cc7fa2525c87eb172f6",
     "semantic_hash": ""
   },
   "D:\\project\\SpatialtemporalAi\\Wujie-Jilin-Admin\\frontend\\public\\manual-files\\\u56fe\u7247\u548c\u9644\u4ef6\\image 10.png": {
-    "mtime": 1791444893.5637052,
+    "mtime": 1792054910.5993538,
     "ast_hash": "9799af696031af9f1c5c4772b14d50be",
     "semantic_hash": ""
   },
   "D:\\project\\SpatialtemporalAi\\Wujie-Jilin-Admin\\frontend\\public\\manual-files\\\u56fe\u7247\u548c\u9644\u4ef6\\image 11.png": {
-    "mtime": 1791444893.613257,
+    "mtime": 1792054910.6272285,
     "ast_hash": "fd5fb5003e431725c42a9a03c558133a",
     "semantic_hash": ""
   },
   "D:\\project\\SpatialtemporalAi\\Wujie-Jilin-Admin\\frontend\\public\\manual-files\\\u56fe\u7247\u548c\u9644\u4ef6\\image 12.png": {
-    "mtime": 1791444893.6513865,
+    "mtime": 1792054910.6451895,
     "ast_hash": "7f63720840a7bb7dd5b5de5cf96b5955",
     "semantic_hash": ""
   },
   "D:\\project\\SpatialtemporalAi\\Wujie-Jilin-Admin\\frontend\\public\\manual-files\\\u56fe\u7247\u548c\u9644\u4ef6\\image 13.png": {
-    "mtime": 1791444893.6859746,
+    "mtime": 1792054910.6592417,
     "ast_hash": "c29e74e44448662a8a7d6426a12c0fea",
     "semantic_hash": ""
   },
   "D:\\project\\SpatialtemporalAi\\Wujie-Jilin-Admin\\frontend\\public\\manual-files\\\u56fe\u7247\u548c\u9644\u4ef6\\image 14.png": {
-    "mtime": 1791444893.725557,
+    "mtime": 1792054910.6727066,
     "ast_hash": "9323adad3b76835d6b9f8aa93bb59060",
     "semantic_hash": ""
   },
   "D:\\project\\SpatialtemporalAi\\Wujie-Jilin-Admin\\frontend\\public\\manual-files\\\u56fe\u7247\u548c\u9644\u4ef6\\image 15.png": {
-    "mtime": 1791444893.8016973,
+    "mtime": 1792054910.6887121,
     "ast_hash": "a4c001e0b819b948442a0f94226ee736",
     "semantic_hash": ""
   },
   "D:\\project\\SpatialtemporalAi\\Wujie-Jilin-Admin\\frontend\\public\\manual-files\\\u56fe\u7247\u548c\u9644\u4ef6\\image 16.png": {
-    "mtime": 1791444893.8876882,
+    "mtime": 1792054910.7040076,
     "ast_hash": "2683f1ba48e98036ae99808e8a8cb11f",
     "semantic_hash": ""
   },
   "D:\\project\\SpatialtemporalAi\\Wujie-Jilin-Admin\\frontend\\public\\manual-files\\\u56fe\u7247\u548c\u9644\u4ef6\\image 17.png": {
-    "mtime": 1791444893.9327414,
+    "mtime": 1792054910.7124014,
     "ast_hash": "57dcae74c071524cba4d417d2d2a4ed9",
     "semantic_hash": ""
   },
   "D:\\project\\SpatialtemporalAi\\Wujie-Jilin-Admin\\frontend\\public\\manual-files\\\u56fe\u7247\u548c\u9644\u4ef6\\image 18.png": {
-    "mtime": 1791444894.0036457,
+    "mtime": 1792054910.7221239,
     "ast_hash": "89a3474b5e472816a9858cc065ad656b",
     "semantic_hash": ""
   },
   "D:\\project\\SpatialtemporalAi\\Wujie-Jilin-Admin\\frontend\\public\\manual-files\\\u56fe\u7247\u548c\u9644\u4ef6\\image 19.png": {
-    "mtime": 1791444894.025641,
+    "mtime": 1792054910.726428,
     "ast_hash": "7996920ac891f8450d80badd787e6424",
     "semantic_hash": ""
   },
   "D:\\project\\SpatialtemporalAi\\Wujie-Jilin-Admin\\frontend\\public\\manual-files\\\u56fe\u7247\u548c\u9644\u4ef6\\image 2.png": {
-    "mtime": 1791444894.0702503,
+    "mtime": 1792054910.7408676,
     "ast_hash": "b85fe2f47cb6b550c597d9a4a6326ec7",
     "semantic_hash": ""
   },
   "D:\\project\\SpatialtemporalAi\\Wujie-Jilin-Admin\\frontend\\public\\manual-files\\\u56fe\u7247\u548c\u9644\u4ef6\\image 20.png": {
-    "mtime": 1791444894.131038,
+    "mtime": 1792054910.7567372,
     "ast_hash": "433984d6752a107d620e6ffb16153725",
     "semantic_hash": ""
   },
   "D:\\project\\SpatialtemporalAi\\Wujie-Jilin-Admin\\frontend\\public\\manual-files\\\u56fe\u7247\u548c\u9644\u4ef6\\image 21.png": {
-    "mtime": 1791444894.1776183,
+    "mtime": 1792054910.7651038,
     "ast_hash": "4a24baa2b058f125f59cb3293addd830",
     "semantic_hash": ""
   },
   "D:\\project\\SpatialtemporalAi\\Wujie-Jilin-Admin\\frontend\\public\\manual-files\\\u56fe\u7247\u548c\u9644\u4ef6\\image 22.png": {
-    "mtime": 1791444894.2277102,
+    "mtime": 1792054910.7808938,
     "ast_hash": "f302bb8fa0fb9493a5012b9ee501c4a2",
     "semantic_hash": ""
   },
   "D:\\project\\SpatialtemporalAi\\Wujie-Jilin-Admin\\frontend\\public\\manual-files\\\u56fe\u7247\u548c\u9644\u4ef6\\image 23.png": {
-    "mtime": 1791444894.2753954,
+    "mtime": 1792054910.8025186,
     "ast_hash": "149c1b054f5cf1dd743e8abb57c8f623",
     "semantic_hash": ""
   },
   "D:\\project\\SpatialtemporalAi\\Wujie-Jilin-Admin\\frontend\\public\\manual-files\\\u56fe\u7247\u548c\u9644\u4ef6\\image 24.png": {
-    "mtime": 1791444894.3237698,
+    "mtime": 1792054910.829371,
     "ast_hash": "24eb6dda4a0e444954d827237d36d71b",
     "semantic_hash": ""
   },
   "D:\\project\\SpatialtemporalAi\\Wujie-Jilin-Admin\\frontend\\public\\manual-files\\\u56fe\u7247\u548c\u9644\u4ef6\\image 25.png": {
-    "mtime": 1791444894.3648396,
+    "mtime": 1792054910.8495631,
     "ast_hash": "c47f3144ee7883ec7532adfd445ceba9",
     "semantic_hash": ""
   },
   "D:\\project\\SpatialtemporalAi\\Wujie-Jilin-Admin\\frontend\\public\\manual-files\\\u56fe\u7247\u548c\u9644\u4ef6\\image 3.png": {
-    "mtime": 1791444894.4931006,
+    "mtime": 1792054910.903012,
     "ast_hash": "de7b737ea101fb9045bb998d895d7cc2",
     "semantic_hash": ""
   },
   "D:\\project\\SpatialtemporalAi\\Wujie-Jilin-Admin\\frontend\\public\\manual-files\\\u56fe\u7247\u548c\u9644\u4ef6\\image 4.png": {
-    "mtime": 1791444894.5312378,
+    "mtime": 1792054910.9138327,
     "ast_hash": "e082556ae1875c5af18dd42c09555a2b",
     "semantic_hash": ""
   },
   "D:\\project\\SpatialtemporalAi\\Wujie-Jilin-Admin\\frontend\\public\\manual-files\\\u56fe\u7247\u548c\u9644\u4ef6\\image 5.png": {
-    "mtime": 1791444894.575873,
+    "mtime": 1792054910.9293668,
     "ast_hash": "47bb326d29e7c402bc95003b38763f06",
     "semantic_hash": ""
   },
   "D:\\project\\SpatialtemporalAi\\Wujie-Jilin-Admin\\frontend\\public\\manual-files\\\u56fe\u7247\u548c\u9644\u4ef6\\image 6.png": {
-    "mtime": 1791444894.6137147,
+    "mtime": 1792054910.9441779,
     "ast_hash": "87a2caf64b8cb7e5f0a742831af0f48d",
     "semantic_hash": ""
   },
   "D:\\project\\SpatialtemporalAi\\Wujie-Jilin-Admin\\frontend\\public\\manual-files\\\u56fe\u7247\u548c\u9644\u4ef6\\image 7.png": {
-    "mtime": 1791444894.665481,
+    "mtime": 1792054910.96304,
     "ast_hash": "d6e2618432fe50405f05ee9e6155bfab",
     "semantic_hash": ""
   },
   "D:\\project\\SpatialtemporalAi\\Wujie-Jilin-Admin\\frontend\\public\\manual-files\\\u56fe\u7247\u548c\u9644\u4ef6\\image 8.png": {
-    "mtime": 1791444894.6833568,
+    "mtime": 1792054910.9695506,
     "ast_hash": "c9d682606a2c907327ad8c9a3c37b37b",
     "semantic_hash": ""
   },
   "D:\\project\\SpatialtemporalAi\\Wujie-Jilin-Admin\\frontend\\public\\manual-files\\\u56fe\u7247\u548c\u9644\u4ef6\\image 9.png": {
-    "mtime": 1791444894.7049496,
+    "mtime": 1792054910.9742024,
     "ast_hash": "3a047f440bf3000ba17f2cccb745cabc",
     "semantic_hash": ""
   },
   "D:\\project\\SpatialtemporalAi\\Wujie-Jilin-Admin\\frontend\\public\\manual-files\\\u56fe\u7247\u548c\u9644\u4ef6\\image.png": {
-    "mtime": 1791444894.7568738,
+    "mtime": 1792054910.9893959,
     "ast_hash": "53cc9a20c9b33f54a82e4db900d24184",
     "semantic_hash": ""
   },
@@ -5860,7 +5860,7 @@
     "semantic_hash": ""
   },
   "D:\\project\\SpatialtemporalAi\\Wujie-Jilin-Admin\\frontend\\src\\views\\voice-consultation\\modules\\stat-cards.vue": {
-    "mtime": 1791444817.2327812,
+    "mtime": 1792054911.1556003,
     "ast_hash": "c9a66cd0c2d8cdea75a492032cdfdabb",
     "semantic_hash": ""
   },
@@ -5930,8 +5930,8 @@
     "semantic_hash": ""
   },
   "D:\\project\\SpatialtemporalAi\\Wujie-Jilin-Admin\\backend\\database\\alembic\\versions\\0012_fix_broadcast_steps_null_interval.py": {
-    "mtime": 1791444913.3794146,
-    "ast_hash": "29085779d750edd42e6858ac343235ec",
+    "mtime": 1792054957.4788013,
+    "ast_hash": "2fd1bca0730c65e986fa6c0371006492",
     "semantic_hash": ""
   },
   "D:\\project\\SpatialtemporalAi\\Wujie-Jilin-Admin\\backend\\database\\alembic\\versions\\0013_fix_legacy_broadcast_steps_keys.py": {
@@ -5945,43 +5945,73 @@
     "semantic_hash": ""
   },
   "D:\\project\\SpatialtemporalAi\\Wujie-Jilin-Admin\\aiDoc\\memory\\business\\2026-09-02_wake-word-reply-mode.md": {
-    "mtime": 1791444817.0034509,
+    "mtime": 1792054910.4750614,
     "ast_hash": "b048f5db3c0587e1f48f1a801b19498b",
     "semantic_hash": ""
   },
   "D:\\project\\SpatialtemporalAi\\Wujie-Jilin-Admin\\aiDoc\\memory\\business\\2026-10-13_task-notify-execution-id.md": {
-    "mtime": 1791867644.2558572,
-    "ast_hash": "12db884178771da43272f910b07ffd0d",
+    "mtime": 1791873702.6664107,
+    "ast_hash": "ee2c447a3ed76d235148ebfb1e26fd58",
     "semantic_hash": ""
   },
   "D:\\project\\SpatialtemporalAi\\Wujie-Jilin-Admin\\graphify-out\\converted\\voice_consultations_20260910_155808_9189fecb.md": {
-    "mtime": 1791872656.1822255,
+    "mtime": 1792057754.2349305,
     "ast_hash": "30f6245da10afe404c746d0c7fd93a4c",
     "semantic_hash": ""
   },
   "D:\\project\\SpatialtemporalAi\\Wujie-Jilin-Admin\\graphify-out\\converted\\voice_consultations_20260910_164208_c9ecf51e.md": {
-    "mtime": 1791872656.304973,
+    "mtime": 1792057754.8292472,
     "ast_hash": "747734aa8ee6a402cb10b2de6af3ef04",
     "semantic_hash": ""
   },
   "D:\\project\\SpatialtemporalAi\\Wujie-Jilin-Admin\\graphify-out\\converted\\voice_consultations_20260910_164215_2f8da1af.md": {
-    "mtime": 1791872656.4201863,
+    "mtime": 1792057755.4887466,
     "ast_hash": "bb4c6a44e5cccdb1a67290c5782d1a60",
     "semantic_hash": ""
   },
   "D:\\project\\SpatialtemporalAi\\Wujie-Jilin-Admin\\frontend\\public\\manual-files\\\u56fe\u7247\u548c\u9644\u4ef6\\image 26.png": {
-    "mtime": 1791444894.4070687,
+    "mtime": 1792054910.8675852,
     "ast_hash": "0b4c7b9b0c9728cf91cc68443df1bece",
     "semantic_hash": ""
   },
   "D:\\project\\SpatialtemporalAi\\Wujie-Jilin-Admin\\frontend\\public\\manual-files\\\u56fe\u7247\u548c\u9644\u4ef6\\image 27.png": {
-    "mtime": 1791444894.4514,
+    "mtime": 1792054910.8859196,
     "ast_hash": "7d3946af83c401878b8e6cef83342abc",
     "semantic_hash": ""
   },
   "D:\\project\\SpatialtemporalAi\\Wujie-Jilin-Admin\\aiDoc\\memory\\business\\2026-10-13_task-action-options-add-back-5.md": {
-    "mtime": 1791872613.3595707,
-    "ast_hash": "39be8f2684d8313dde5373b50ebea379",
+    "mtime": 1791873711.2157714,
+    "ast_hash": "073514ce7b81be7fa39abd8d3f0291e9",
+    "semantic_hash": ""
+  },
+  "D:\\project\\SpatialtemporalAi\\Wujie-Jilin-Admin\\backend\\database\\alembic\\versions\\0014_add_performance_steps_and_meeting_mode.py": {
+    "mtime": 1792055630.508319,
+    "ast_hash": "eba671d3ea67555b2888b08e58d8fec7",
+    "semantic_hash": ""
+  },
+  "D:\\project\\SpatialtemporalAi\\Wujie-Jilin-Admin\\backend\\database\\alembic\\versions\\0015_update_task_type_comment.py": {
+    "mtime": 1792055630.508319,
+    "ast_hash": "c54b16de034a75de69bbf69b4968960f",
+    "semantic_hash": ""
+  },
+  "D:\\project\\SpatialtemporalAi\\Wujie-Jilin-Admin\\backend\\database\\alembic\\versions\\0016_robot_meeting_mode_drop_voice_config_enabled.py": {
+    "mtime": 1792057254.174374,
+    "ast_hash": "9db5403dfa002cd612bc5e6d1686eabf",
+    "semantic_hash": ""
+  },
+  "D:\\project\\SpatialtemporalAi\\Wujie-Jilin-Admin\\aiDoc\\memory\\business\\2026-09-17_meeting-mode-and-baduanjin-performance.md": {
+    "mtime": 1792057697.0431688,
+    "ast_hash": "9bb123d64039627cf9de06d0a69b3cb7",
+    "semantic_hash": ""
+  },
+  "D:\\project\\SpatialtemporalAi\\Wujie-Jilin-Admin\\aiDoc\\memory\\business\\2026-10-15_meeting-mode-grpc-push.md": {
+    "mtime": 1792057680.9713385,
+    "ast_hash": "82dbfe5130a9751f97ed21763a4c1f66",
+    "semantic_hash": ""
+  },
+  "D:\\project\\SpatialtemporalAi\\Wujie-Jilin-Admin\\aiDoc\\memory\\business\\2026-10-15_task-type-comment-performance.md": {
+    "mtime": 1792055284.2700374,
+    "ast_hash": "fc67425f2ea81b27044fdddede6ff705",
     "semantic_hash": ""
   }
 }

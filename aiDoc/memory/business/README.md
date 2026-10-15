@@ -109,3 +109,4 @@
 - [2026-10-13 NotifyTaskChanged 增加 execution_id](./2026-10-13_task-notify-execution-id.md) — TaskChangedRequest 新增字段 3（值=task_execution_record.id，0=未指定走兜底），解决同名任务多行恢复错位；pause/resume/stop 逐记录带 id，pause-by-task 改逐条推送；proto 在子模块 backend/grpc 改并重新生成；机器人 not found 仅记日志不阻塞
 - [2026-10-13 巡逻任务运控动作加回 5 项](./2026-10-13_task-action-options-add-back-5.md) — operate-drawer actionOptions 加回 击掌/拥抱/右手飞吻/双手飞吻/动感光波（07-02 精简项的子集，不含 left_kiss）；类型/详情标签/后端 schema 本就保留这些值，仅改下拉一处
 - [2026-10-15 task 表 task_type 注释补充表演枚举](./2026-10-15_task-type-comment-performance.md) — ORM 模型 comment 补 `performance-表演` + 新增迁移 0015 仅更新列注释；商户开放 API 的 TaskTypeField 有意仍限 patrol/broadcast 未动
+- [2026-10-15 会议指令接 gRPC + 状态迁 robot 表](./2026-10-15_meeting-mode-grpc-push.md) — voice.proto 新增 NotifyMeetingModeChanged（仅两指令，推 agent）；robot_voice_config 删 meeting_mode_enabled、robot 表加 meeting_mode（迁移 0016）；机器人卡片改读 robot.meeting_mode，不再逐台拉语音配置
