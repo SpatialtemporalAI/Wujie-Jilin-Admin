@@ -728,7 +728,7 @@ onMounted(() => {
 
 <template>
   <NModal v-model:show="visible" display-directive="show" preset="card" :mask-closable="false" :title="title"
-    style="width: 640px; max-width: 90vw">
+    style="width: 760px; max-width: 90vw">
     <NForm ref="formRef" :model="model" :rules="rules" label-placement="top">
       <!-- 基础信息 -->
       <NGrid :cols="2" :x-gap="16">
@@ -906,7 +906,7 @@ onMounted(() => {
             </NSpace>
           </div>
 
-          <NGrid :cols="2" :x-gap="12" responsive="screen">
+          <NGrid :cols="3" :x-gap="12" responsive="screen">
             <NFormItemGi label="表演动作">
               <NSelect v-model:value="step.action" :options="performanceActionOptions" placeholder="选择表演动作"
                 @focus="() => loadPerformanceOptions()" />
@@ -915,14 +915,13 @@ onMounted(() => {
               <NSelect v-model:value="step.music" :options="performanceMusicOptions" placeholder="选择预设背景音乐"
                 @focus="() => loadPerformanceOptions()" />
             </NFormItemGi>
+            <NFormItemGi label="播放次数">
+              <NInputNumber v-model:value="step.play_count" :min="1" :precision="0" :show-button="false"
+                style="width: 100%">
+                <template #suffix>次</template>
+              </NInputNumber>
+            </NFormItemGi>
           </NGrid>
-
-          <NFormItem label="播放次数" class="mb-0 mt-12px">
-            <NInputNumber v-model:value="step.play_count" :min="1" :precision="0" :show-button="false"
-              style="width: 100px">
-              <template #suffix>次</template>
-            </NInputNumber>
-          </NFormItem>
 
           <!-- 套间间隔单独一行：仅作用于两套动作之间，同一套内连续播放多次不受此间隔影响 -->
           <NFormItem v-if="index < model.performance_steps.length - 1" label="与下一套的间隔" class="mb-0 mt-12px">
