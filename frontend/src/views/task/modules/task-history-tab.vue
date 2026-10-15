@@ -39,13 +39,15 @@ const statusLabelMap: Record<string, string> = {
 const taskTypeLabel: Record<string, string> = {
   patrol: '巡逻',
   broadcast: '播报',
-  instant: '即时'
+  instant: '即时',
+  performance: '表演'
 };
 
 const taskTypeTagType: Record<string, NaiveUI.ThemeColor> = {
   patrol: 'info',
   broadcast: 'success',
-  instant: 'warning'
+  instant: 'warning',
+  performance: 'error'
 };
 
 /** 详情抽屉 */

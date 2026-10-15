@@ -130,6 +130,9 @@ class TaskService:
                 broadcast_steps=[step.model_dump() for step in task_in.broadcast_steps]
                 if task_in.broadcast_steps
                 else None,
+                performance_steps=[step.model_dump() for step in task_in.performance_steps]
+                if task_in.performance_steps
+                else None,
                 schedule_enabled=task_in.schedule_enabled,
                 schedule_date=task_in.schedule_date,
                 schedule_start_time=task_in.schedule_start_time,
@@ -193,6 +196,12 @@ class TaskService:
 
             # 更新基础字段
             update_data = task_in.model_dump(exclude_unset=True, exclude={"points", "robot_ids"})
+
+            # 表演步骤需序列化为纯 dict 列表后落库（与 broadcast_steps 同款处理）
+            if task_in.performance_steps is not None:
+                update_data["performance_steps"] = [
+                    step.model_dump() for step in task_in.performance_steps
+                ]
 
             # 任务名称唯一性校验（去首尾空格后比较，排除自身，自动过滤软删除记录）
             if "name" in update_data:

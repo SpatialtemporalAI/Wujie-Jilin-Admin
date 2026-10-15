@@ -58,6 +58,22 @@ export function fetchToggleTaskEnabled(id: number, enabled: boolean) {
   });
 }
 
+/** get preset performance action options（八段锦） */
+export function fetchGetPerformanceActions() {
+  return request<Api.Task.PerformanceActionOption[]>({
+    url: '/admin/task/manage/performance/actions',
+    method: 'get'
+  });
+}
+
+/** get preset performance music options（本期仅预设，不支持上传） */
+export function fetchGetPerformanceMusic() {
+  return request<Api.Task.PerformanceMusicOption[]>({
+    url: '/admin/task/manage/performance/music',
+    method: 'get'
+  });
+}
+
 /** ==================== 任务执行记录 API（新版，对应 task_execution_record 表） ==================== */
 
 /** start task execution (new record table) */

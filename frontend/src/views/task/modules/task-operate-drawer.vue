@@ -7,6 +7,8 @@ import {
   fetchCreateTask,
   fetchGetAllRobots,
   fetchGetMapAnnotations,
+  fetchGetPerformanceActions,
+  fetchGetPerformanceMusic,
   fetchGetSceneMapList,
   fetchGetTask,
   fetchUpdateTask
@@ -42,7 +44,8 @@ const title = computed(() => {
 /** 任务类型选项 */
 const taskTypeOptions = [
   { label: '巡逻', value: 'patrol' },
-  { label: '播报', value: 'broadcast' }
+  { label: '播报', value: 'broadcast' },
+  { label: '表演', value: 'performance' }
 ];
 
 /** 运控动作选项 */
@@ -195,6 +198,39 @@ interface BroadcastStepItem {
   actions: Api.Task.TaskAction[];
 }
 
+/** 表演步骤（每套动作）：动作/音乐均为后端预设标识，套数最多 3 */
+interface PerformanceStepItem {
+  action: string | null;
+  music: string | null;
+  play_count: number;
+  /** 套间间隔（秒），最后一套无间隔输入项，提交时为 null */
+  interval: number | null;
+}
+
+/** 表演步骤上限（与后端 PERFORMANCE_MAX_STEPS 一致） */
+const PERFORMANCE_MAX_STEPS = 3;
+
+/** 预设表演动作选项 */
+const performanceActionOptions = ref<{ label: string; value: string }[]>([]);
+/** 预设背景音乐选项 */
+const performanceMusicOptions = ref<{ label: string; value: string }[]>([]);
+let performanceOptionsLoaded = false;
+
+async function loadPerformanceOptions(force = false) {
+  if (!force && performanceOptionsLoaded) return;
+  const [actionsResult, musicResult] = await Promise.all([fetchGetPerformanceActions(), fetchGetPerformanceMusic()]);
+  if (!actionsResult.error && actionsResult.data) {
+    performanceActionOptions.value = (actionsResult.data || []).map(opt => ({
+      label: opt.label,
+      value: opt.value
+    }));
+  }
+  if (!musicResult.error && musicResult.data) {
+    performanceMusicOptions.value = (musicResult.data || []).map(opt => ({ label: opt.label, value: opt.value }));
+  }
+  performanceOptionsLoaded = true;
+}
+
 interface FormModel {
   name: string;
   task_type: Api.Task.TaskType;
@@ -202,6 +238,7 @@ interface FormModel {
   points: PointItem[];
   broadcast_text: string | null;
   broadcast_steps: BroadcastStepItem[];
+  performance_steps: PerformanceStepItem[];
   robot_ids: number[];
   schedule_enabled: boolean;
   /** 调度日期（时间戳，ms），提交时转换为 yyyy-MM-dd */
@@ -219,6 +256,15 @@ function createDefaultBroadcastStep(): BroadcastStepItem {
   };
 }
 
+function createDefaultPerformanceStep(): PerformanceStepItem {
+  return {
+    action: null,
+    music: null,
+    play_count: 1,
+    interval: 0
+  };
+}
+
 function createDefaultModel(): FormModel {
   return {
     name: '',
@@ -227,6 +273,7 @@ function createDefaultModel(): FormModel {
     points: [],
     broadcast_text: null,
     broadcast_steps: [createDefaultBroadcastStep()],
+    performance_steps: [createDefaultPerformanceStep()],
     robot_ids: [],
     schedule_enabled: false,
     schedule_date: null,
@@ -330,6 +377,28 @@ function getBroadcastActionOptions() {
   return broadcastActionOptions;
 }
 
+/** 表演步骤管理（最多 PERFORMANCE_MAX_STEPS 套，可重复选择同一动作） */
+function addPerformanceStep() {
+  if (model.value.performance_steps.length >= PERFORMANCE_MAX_STEPS) return;
+  model.value.performance_steps.push(createDefaultPerformanceStep());
+}
+
+function removePerformanceStep(index: number) {
+  model.value.performance_steps.splice(index, 1);
+  if (model.value.performance_steps.length === 0) {
+    model.value.performance_steps.push(createDefaultPerformanceStep());
+  }
+}
+
+function movePerformanceStep(index: number, direction: -1 | 1) {
+  const steps = model.value.performance_steps;
+  const target = index + direction;
+  if (target < 0 || target >= steps.length) return;
+  const temp = steps[index];
+  steps[index] = steps[target];
+  steps[target] = temp;
+}
+
 /** 校验规则 */
 const rules = computed(() => ({
   name: [
@@ -382,6 +451,16 @@ async function handleInitModel() {
         : cloned.broadcast_text
           ? [{ content: cloned.broadcast_text, interval: 3, actions: [] }]
           : [createDefaultBroadcastStep()];
+    model.value.performance_steps =
+      cloned.performance_steps && cloned.performance_steps.length > 0
+        ? cloned.performance_steps.map(s => ({
+          action: s.action || null,
+          music: s.music || null,
+          play_count: s.play_count ?? 1,
+          // 不回填空值，避免掩盖未填写的套间间隔（提交时会校验）
+          interval: s.interval ?? null
+        }))
+        : [createDefaultPerformanceStep()];
     model.value.schedule_enabled = cloned.schedule_enabled || false;
     model.value.schedule_date = dateStrToTs(cloned.schedule_date);
     model.value.schedule_start_time = timeStrToTs(cloned.schedule_start_time);
@@ -438,6 +517,14 @@ async function handleInitModel() {
         } else if (detail.broadcast_text) {
           model.value.broadcast_steps = [{ content: detail.broadcast_text, interval: 3, actions: [] }];
         }
+        if (detail.performance_steps && detail.performance_steps.length > 0) {
+          model.value.performance_steps = detail.performance_steps.map(s => ({
+            action: s.action || null,
+            music: s.music || null,
+            play_count: s.play_count ?? 1,
+            interval: s.interval ?? null
+          }));
+        }
       }
     }
   }
@@ -449,12 +536,12 @@ function handleMapChange(mapId: number | null) {
   model.value.points = [];
 }
 
-/** 任务类型切换：播报 → 巡逻时清空地图与机器人选择。
- * 巡逻需先选场景地图再按场景选机器人，播报阶段选的机器人/地图不适用，一并清空（点位随地图失效）。 */
+/** 任务类型切换：播报/表演 → 巡逻时清空地图与机器人选择。
+ * 巡逻需先选场景地图再按场景选机器人，播报/表演阶段选的机器人/地图不适用，一并清空（点位随地图失效）。 */
 function handleTaskTypeChange(val: Api.Task.TaskType) {
   const previous = model.value.task_type;
   model.value.task_type = val;
-  if (previous === 'broadcast' && val === 'patrol') {
+  if (previous !== 'patrol' && val === 'patrol') {
     model.value.map_id = null;
     model.value.robot_ids = [];
     model.value.points = [];
@@ -465,6 +552,12 @@ function handleTaskTypeChange(val: Api.Task.TaskType) {
   }
   if (previous === 'patrol' && val === 'broadcast') {
     model.value.broadcast_steps = [createDefaultBroadcastStep()];
+  }
+  if (previous === 'patrol' && val === 'performance') {
+    model.value.performance_steps = [createDefaultPerformanceStep()];
+  }
+  if (val === 'performance') {
+    loadPerformanceOptions();
   }
 }
 
@@ -514,6 +607,31 @@ async function handleSubmit() {
       }
     }
   }
+  if (model.value.task_type === 'performance') {
+    if (model.value.performance_steps.length === 0) {
+      window.$message?.warning('请至少添加一套表演动作');
+      return;
+    }
+    for (let i = 0; i < model.value.performance_steps.length; i += 1) {
+      const step = model.value.performance_steps[i];
+      if (!step.action) {
+        window.$message?.warning(`请选择第 ${i + 1} 套的表演动作`);
+        return;
+      }
+      if (!step.music) {
+        window.$message?.warning(`请选择第 ${i + 1} 套的背景音乐`);
+        return;
+      }
+      if (!step.play_count || step.play_count < 1) {
+        window.$message?.warning(`第 ${i + 1} 套的播放次数至少为 1`);
+        return;
+      }
+      if (i < model.value.performance_steps.length - 1 && (step.interval === null || step.interval < 0)) {
+        window.$message?.warning(`请填写第 ${i + 1} 套与下一套之间的间隔（秒）`);
+        return;
+      }
+    }
+  }
   if (model.value.schedule_enabled) {
     if (model.value.schedule_date === null) {
       window.$message?.warning('请选择调度日期');
@@ -556,6 +674,16 @@ async function handleSubmit() {
           interval: i < model.value.broadcast_steps.length - 1 ? s.interval : null,
           actions: s.actions
         }))
+        : undefined,
+    performance_steps:
+      model.value.task_type === 'performance'
+        ? model.value.performance_steps.map((s, i) => ({
+          action: s.action as string,
+          music: s.music as string,
+          play_count: s.play_count,
+          // 最后一套无间隔输入项，提交 null
+          interval: i < model.value.performance_steps.length - 1 ? s.interval : null
+        }))
         : undefined
   };
 
@@ -593,6 +721,8 @@ watch(selectedMapId, newMapId => {
 
 onMounted(() => {
   loadRobotOptions();
+  // 编辑/复制时类型切换不可用，预设动作/音乐选项提前加载
+  loadPerformanceOptions();
 });
 </script>
 
@@ -750,6 +880,73 @@ onMounted(() => {
         </NButton>
         <div class="mt-8px text-12px" style="color: var(--n-text-color-3)">
           步骤按顺序串行执行；同一步骤内的多个动作并行触发。
+        </div>
+      </template>
+
+      <!-- 表演动作编排（养生操：八段锦） -->
+      <template v-if="model.task_type === 'performance'">
+        <NDivider style="font-size: 16px" title-placement="center">表演动作编排</NDivider>
+        <div v-for="(step, index) in model.performance_steps" :key="index" class="broadcast-step-card">
+          <div class="broadcast-step-header">
+            <span class="broadcast-step-title">第 {{ index + 1 }} 套</span>
+            <NSpace :size="8">
+              <NButton quaternary size="small" :disabled="index === 0" @click="movePerformanceStep(index, -1)">
+                ↑
+              </NButton>
+              <NButton quaternary size="small" :disabled="index === model.performance_steps.length - 1"
+                @click="movePerformanceStep(index, 1)">
+                ↓
+              </NButton>
+              <NButton v-if="model.performance_steps.length > 1" type="error" quaternary size="small"
+                @click="removePerformanceStep(index)">
+                <template #icon>
+                  <icon-ic-round-delete-outline class="text-icon" />
+                </template>
+              </NButton>
+            </NSpace>
+          </div>
+
+          <NGrid :cols="2" :x-gap="12" responsive="screen">
+            <NFormItemGi label="表演动作">
+              <NSelect v-model:value="step.action" :options="performanceActionOptions" placeholder="选择表演动作"
+                @focus="() => loadPerformanceOptions()" />
+            </NFormItemGi>
+            <NFormItemGi label="背景音乐">
+              <NSelect v-model:value="step.music" :options="performanceMusicOptions" placeholder="选择预设背景音乐"
+                @focus="() => loadPerformanceOptions()" />
+            </NFormItemGi>
+          </NGrid>
+
+          <NFormItem label="播放次数" class="mb-0 mt-12px">
+            <NInputNumber v-model:value="step.play_count" :min="1" :precision="0" :show-button="false"
+              style="width: 100px">
+              <template #suffix>次</template>
+            </NInputNumber>
+          </NFormItem>
+
+          <!-- 套间间隔单独一行：仅作用于两套动作之间，同一套内连续播放多次不受此间隔影响 -->
+          <NFormItem v-if="index < model.performance_steps.length - 1" label="与下一套的间隔" class="mb-0 mt-12px">
+            <div class="flex-col gap-4px">
+              <NInputNumber v-model:value="step.interval" :min="0" :max="300" :precision="0" :show-button="false"
+                style="width: 100px">
+                <template #suffix>秒</template>
+              </NInputNumber>
+              <span class="text-12px" style="color: var(--n-text-color-3)">
+                第 {{ index + 1 }} 套全部播完后，等待该间隔再开始第 {{ index + 2 }} 套；同一套内连续播放多次不间隔。
+              </span>
+            </div>
+          </NFormItem>
+        </div>
+
+        <NButton type="primary" dashed block class="mt-12px" :disabled="model.performance_steps.length >= PERFORMANCE_MAX_STEPS"
+          @click="addPerformanceStep">
+          <template #icon>
+            <icon-ic-round-plus class="text-icon" />
+          </template>
+          添加表演动作（最多 {{ PERFORMANCE_MAX_STEPS }} 套）
+        </NButton>
+        <div class="mt-8px text-12px" style="color: var(--n-text-color-3)">
+          多套动作按顺序串行执行，可重复选择同一套动作；音乐仅支持系统预设曲目。
         </div>
       </template>
 

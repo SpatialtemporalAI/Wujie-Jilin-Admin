@@ -40,6 +40,16 @@ class RobotVoiceConfigSchema(BaseReqEntity):
         description="唤醒回复语料：预设模板存原文（含【唤醒词】占位符），自定义存用户输入",
         max_length=1000,
     )
+    meeting_mode_enabled: Optional[bool] = Field(
+        default=None,
+        description="是否启用会议模式；系统侧不控制开关（仅机器人端语音指令可变更），传 null/缺省时保持原值",
+    )
+    meeting_enter_command: Optional[str] = Field(
+        default=None, description="进入会议模式指令（4-6字）", max_length=20
+    )
+    meeting_exit_command: Optional[str] = Field(
+        default=None, description="退出会议模式指令（4-6字）", max_length=20
+    )
 
     @field_validator("greeting_mode", mode="before")
     @classmethod
@@ -79,6 +89,22 @@ class RobotVoiceConfigSchema(BaseReqEntity):
             and not self.wake_reply_text
         ):
             raise ValueError("回复方式为配置语料时，回复语料不能为空")
+        # 会议模式指令校验：系统侧只配置指令（开关由语音控制），
+        # 任一指令传入时两条都必填且 4-6 字；均未传则不校验（保持原值）
+        if self.meeting_enter_command is not None:
+            self.meeting_enter_command = self.meeting_enter_command.strip() or None
+        if self.meeting_exit_command is not None:
+            self.meeting_exit_command = self.meeting_exit_command.strip() or None
+        if self.meeting_enter_command is not None or self.meeting_exit_command is not None:
+            for field_name, label in (
+                ("meeting_enter_command", "进入会议模式指令"),
+                ("meeting_exit_command", "退出会议模式指令"),
+            ):
+                cmd = getattr(self, field_name)
+                if not cmd:
+                    raise ValueError(f"配置会议模式指令时，{label}不能为空")
+                if len(cmd) < 4 or len(cmd) > 6:
+                    raise ValueError(f"{label}必须为 4-6 个字")
         return self
 
 
@@ -103,6 +129,9 @@ class RobotVoiceConfigResponse(BaseRespEntity):
         "corpus", description="唤醒回复方式：corpus-配置语料，llm-调用大模型"
     )
     wake_reply_text: Optional[str] = Field(None, description="唤醒回复语料")
+    meeting_mode_enabled: Optional[bool] = Field(None, description="是否启用会议模式")
+    meeting_enter_command: Optional[str] = Field(None, description="进入会议模式指令")
+    meeting_exit_command: Optional[str] = Field(None, description="退出会议模式指令")
 
     @field_validator("greeting_mode", mode="before")
     @classmethod

@@ -18,6 +18,12 @@ EnableStatusField = Annotated[str, BeforeValidator(_bool_to_enable_str)]
 
 VALID_REPEAT_CYCLES = {'none', 'mon', 'tue', 'wed', 'thu', 'fri', 'sat', 'sun'}
 
+# 表演任务（八段锦）约束：动作与音乐均为后端预置，本期不支持用户上传音频
+VALID_PERFORMANCE_ACTIONS = {'baduanjin_1', 'baduanjin_2', 'baduanjin_3'}
+VALID_PERFORMANCE_MUSIC = {'bdj_1', 'bdj_2', 'bdj_3', 'bdj_full_12min'}
+PERFORMANCE_MAX_STEPS = 3
+PERFORMANCE_MAX_INTERVAL = 300
+
 
 def _validate_repeat_cycle(v: Optional[str]) -> Optional[str]:
     """校验逗号分隔的重复周期值"""
@@ -47,6 +53,32 @@ class BroadcastStepSchema(BaseReqEntity):
         if not has_content and not has_actions:
             raise ValueError('播报内容与动作至少填写一项')
         return self
+
+
+# ==================== 表演步骤 Schema ====================
+
+class PerformanceStepSchema(BaseReqEntity):
+    """表演任务单套动作（八段锦）：动作与音乐均为后端预置标识；
+    play_count 播放次数最低 1，interval 套间间隔 0-300 秒（最后一套可为空）"""
+
+    action: str = Field(..., description="表演动作: baduanjin_1/baduanjin_2/baduanjin_3", max_length=30)
+    music: str = Field(..., description="背景音乐（预设标识）: bdj_1/bdj_2/bdj_3/bdj_full_12min", max_length=30)
+    play_count: int = Field(1, description="播放次数（循环动作+音乐）", ge=1)
+    interval: Optional[int] = Field(None, description="套间间隔（秒），最后一套可为空", ge=0, le=PERFORMANCE_MAX_INTERVAL)
+
+    @field_validator('action')
+    @classmethod
+    def validate_action(cls, v: str) -> str:
+        if v not in VALID_PERFORMANCE_ACTIONS:
+            raise ValueError(f"无效的表演动作: {v}")
+        return v
+
+    @field_validator('music')
+    @classmethod
+    def validate_music(cls, v: str) -> str:
+        if v not in VALID_PERFORMANCE_MUSIC:
+            raise ValueError(f"无效的背景音乐: {v}")
+        return v
 
 
 # ==================== 点位 Schema ====================
@@ -101,7 +133,7 @@ class TaskQueryParams(BaseReqEntity):
     """
 
     name: Optional[str] = Field(None, description="任务名称，支持模糊查询")
-    task_type: Optional[str] = Field(None, description="任务类型: patrol/broadcast")
+    task_type: Optional[str] = Field(None, description="任务类型: patrol/broadcast/performance")
     enabled: Optional[str] = Field(None, description="启用状态")
     robot_id: Optional[str] = Field(None, description="关联机器人ID")
     map_id: Optional[str] = Field(None, description="关联场景地图ID")
@@ -111,12 +143,13 @@ class TaskCreate(BaseReqEntity):
     """创建任务"""
     name: str = Field(..., description="任务名称", min_length=2, max_length=20)
     map_id: Optional[int] = Field(None, description="关联场景地图ID")
-    task_type: str = Field(..., description="任务类型: patrol/broadcast")
+    task_type: str = Field(..., description="任务类型: patrol/broadcast/performance")
     points: Optional[List[TaskPointCreate]] = Field(None, description="巡逻点位列表")
     broadcast_text: Optional[str] = Field(None, description="播报文本（兼容旧数据）")
     broadcast_count: Optional[str] = Field(None, description="播报次数: 1/2/3/5/loop")
     broadcast_steps: Optional[List[BroadcastStepSchema]] = Field(None, description="播报步骤列表")
-    robot_ids: List[int] = Field(..., description="绑定的机器人ID列表（巡逻任务仅支持单选，播报任务支持多选）", min_length=1)
+    performance_steps: Optional[List[PerformanceStepSchema]] = Field(None, description="表演步骤列表（最多3套）")
+    robot_ids: List[int] = Field(..., description="绑定的机器人ID列表（巡逻任务仅支持单选，播报/表演任务支持多选）", min_length=1)
     schedule_enabled: bool = Field(False, description="是否启用定时调度")
     schedule_date: Optional[date] = Field(None, description="调度日期")
     schedule_start_time: Optional[time] = Field(None, description="调度开始时间")
@@ -150,6 +183,22 @@ class TaskCreate(BaseReqEntity):
                 raise ValueError(f'步骤 {idx + 1} 的播报间隔不能为空')
         return self
 
+    @model_validator(mode='after')
+    def validate_performance_steps(self):
+        """表演任务必须包含 1-3 套动作（每个步骤的动作/音乐校验由 PerformanceStepSchema 负责）；
+        除最后一套外，其余套必须填写套间间隔"""
+        if self.task_type != 'performance':
+            return self
+        steps = self.performance_steps
+        if not steps or len(steps) == 0:
+            raise ValueError('表演任务至少包含一套表演动作')
+        if len(steps) > PERFORMANCE_MAX_STEPS:
+            raise ValueError(f'表演任务最多包含 {PERFORMANCE_MAX_STEPS} 套动作')
+        for idx, step in enumerate(steps[:-1]):
+            if step.interval is None:
+                raise ValueError(f'第 {idx + 1} 套动作的套间间隔不能为空')
+        return self
+
 
 class TaskUpdate(BaseReqEntity):
     """更新任务"""
@@ -160,7 +209,8 @@ class TaskUpdate(BaseReqEntity):
     broadcast_text: Optional[str] = Field(None, description="播报文本（兼容旧数据）")
     broadcast_count: Optional[str] = Field(None, description="播报次数")
     broadcast_steps: Optional[List[BroadcastStepSchema]] = Field(None, description="播报步骤列表")
-    robot_ids: Optional[List[int]] = Field(None, description="绑定的机器人ID列表（巡逻任务仅支持单选，播报任务支持多选）")
+    performance_steps: Optional[List[PerformanceStepSchema]] = Field(None, description="表演步骤列表（最多3套）")
+    robot_ids: Optional[List[int]] = Field(None, description="绑定的机器人ID列表（巡逻任务仅支持单选，播报/表演任务支持多选）")
     schedule_enabled: Optional[bool] = Field(None, description="是否启用定时调度")
     schedule_date: Optional[date] = Field(None, description="调度日期")
     schedule_start_time: Optional[time] = Field(None, description="调度开始时间")
@@ -198,6 +248,23 @@ class TaskUpdate(BaseReqEntity):
                 raise ValueError(f'步骤 {idx + 1} 的播报间隔不能为空')
         return self
 
+    @model_validator(mode='after')
+    def validate_performance_steps(self):
+        """表演任务必须包含 1-3 套动作；task_type 缺省或 performance_steps 为 None 时跳过"""
+        if self.task_type != 'performance':
+            return self
+        steps = self.performance_steps
+        if steps is None:
+            return self
+        if len(steps) == 0:
+            raise ValueError('表演任务至少包含一套表演动作')
+        if len(steps) > PERFORMANCE_MAX_STEPS:
+            raise ValueError(f'表演任务最多包含 {PERFORMANCE_MAX_STEPS} 套动作')
+        for idx, step in enumerate(steps[:-1]):
+            if step.interval is None:
+                raise ValueError(f'第 {idx + 1} 套动作的套间间隔不能为空')
+        return self
+
 
 class TaskResponseData(BaseEntity):
     """任务响应"""
@@ -215,6 +282,7 @@ class TaskResponseData(BaseEntity):
     broadcast_text: Optional[str] = Field(None, description="播报文本（兼容旧数据）")
     broadcast_count: Optional[str] = Field(None, description="播报次数")
     broadcast_steps: Optional[List[BroadcastStepSchema]] = Field(None, description="播报步骤列表")
+    performance_steps: Optional[List[PerformanceStepSchema]] = Field(None, description="表演步骤列表")
     schedule_enabled: bool = Field(..., description="是否启用定时调度")
     schedule_date: Optional[date] = Field(None, description="调度日期")
     schedule_start_time: Optional[time] = Field(None, description="调度开始时间")
@@ -230,3 +298,20 @@ class TaskResponseData(BaseEntity):
 class TaskToggleEnabled(BaseReqEntity):
     """切换启用/禁用"""
     enabled: bool = Field(..., description="启用状态")
+
+
+# ==================== 预设表演资源 Schema ====================
+
+class PerformanceActionOption(BaseRespEntity):
+    """表演动作下拉选项（预训练八段锦）"""
+    value: str = Field(..., description="动作标识")
+    label: str = Field(..., description="展示名称")
+    duration_seconds: int = Field(..., description="单套动作时长（秒）")
+
+
+class PerformanceMusicOption(BaseRespEntity):
+    """背景音乐下拉选项（预设，本期不支持上传）"""
+    value: str = Field(..., description="音乐标识")
+    label: str = Field(..., description="展示名称")
+    duration_seconds: int = Field(..., description="音频时长（秒，≤240）")
+    file_url: Optional[str] = Field(None, description="试听文件地址（预留）")

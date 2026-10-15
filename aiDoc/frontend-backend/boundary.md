@@ -204,6 +204,37 @@
 - 前端：`task-operate-drawer.vue` 巡逻任务单选 `NSelect`（受场景地图约束），播报任务 `multiple` 多选（不受场景约束，且隐藏场景地图输入框与 NAlert 提示）
 - 类型：`robot_ids` 仍为 `number[]`
 
+## 任务管理 · 表演任务契约（养生操/八段锦）
+
+`task_type` 新增取值 `performance`（前后端字符串约定，无枚举类）。行为与播报任务同型：机器人多选、不绑定场景地图、复用定时配置。
+
+- `performance_steps: JSON`（`task` 表，复用 `broadcast_steps` 模式）：每套动作一个元素
+  `[{ "action": "baduanjin_1", "music": "bdj_1", "play_count": 1, "interval": 0 }, ...]`
+  - `action` / `music`：后端预设标识，前端只能下拉选择，**本期不支持用户上传音频**
+  - 套数 1-3（`PERFORMANCE_MAX_STEPS=3`）；`play_count >= 1`；非最后一套 `interval` 必填（0-300 秒），最后一套为 `null`
+  - 校验：后端 `PerformanceStepSchema` + `TaskCreate.validate_performance_steps`（`modules/task/schemas/task.py`）；前端弹窗提交前逐项校验
+- 预设枚举接口（挂在 `/task/manage` 下，仅需登录）：
+  - `GET /task/manage/performance/actions` → `PerformanceActionOption[]`（`value/label/duration_seconds`）
+  - `GET /task/manage/performance/music` → `PerformanceMusicOption[]`（+ `file_url` 预留，当前为 null）
+  - 数据来源是后端模块级常量（`_PERFORMANCE_ACTIONS`/`_PERFORMANCE_MUSIC`），不建表
+- 前端：`task-operate-drawer.vue` 表演类型渲染「表演动作编排」卡片（动作/音乐 NSelect + 播放次数/套间间隔 NInputNumber + 上移/下移/删除，最多 3 套）；类型文案/颜色映射在各 tab 同步（`performance` → 表演 / error 色）
+- `TaskDefinitionSnapshot` 同步含 `performance_steps`（宽松 dict，容纳历史脏数据）
+
+## 参数配置 · 会议模式契约
+
+会议模式配置挂在机器人语音配置上（`RobotVoiceConfig` 三字段），保存/读取复用 `GET/POST /robot/config/voice`。
+
+| 字段 | 类型 | 说明 |
+|------|------|------|
+| `meeting_mode_enabled` | `bool` | 会议模式开关，默认 `false`；**系统侧不控制**，保存时传 null/缺省则保持原值 |
+| `meeting_enter_command` | `string(20) \| null` | 进入指令，默认「开始会议」 |
+| `meeting_exit_command` | `string(20) \| null` | 退出指令，默认「结束会议」 |
+
+- **开关仅能通过语音控制**（对机器人说进入/退出指令），系统不提供开关；系统侧只维护指令，状态展示在机器人列表
+- 校验：任一指令传入时两条都必填且 strip 后 4-6 字（后端 `RobotVoiceConfigSchema.validate_wake_word` model_validator 内追加；前端 `canSaveMeeting` 同规则禁用保存按钮）；service 层对三字段均为「传 None 保持原值」
+- **本期仅 DB 落库 + 前端展示，不推 gRPC**（`VoiceConfigClient` 无会议模式 proto；机器人端自行识别指令进入监听），故会议模式字段不参与 `changed` 集合、`grpc_status` 不受影响
+- 前端：「参数配置 → 语音配置」页「会议模式」卡片只有进入/退出指令两个输入（`voice-synthesis-tab.vue`，保存时 `meeting_mode_enabled` 置 `undefined` 不提交）；机器人列表卡片逐台拉取语音配置展示「监听中/未开启」tag（`robots/index.vue` 的 `meetingModeMap`）
+
 ## 机器人与场景绑定契约
 
 ## 场景地图新增/编辑字段契约

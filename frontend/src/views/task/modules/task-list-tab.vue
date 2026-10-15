@@ -34,13 +34,15 @@ const searchParams: Api.Task.TaskSearchParams = reactive({
 const taskTypeLabel: Record<string, string> = {
   patrol: '巡逻',
   broadcast: '播报',
-  instant: '即时'
+  instant: '即时',
+  performance: '表演'
 };
 
 const taskTypeTagType: Record<string, import('naive-ui').TagProps['type']> = {
   patrol: 'info',
   broadcast: 'success',
-  instant: 'warning'
+  instant: 'warning',
+  performance: 'error'
 };
 
 const scheduleCycleLabel: Record<string, string> = {

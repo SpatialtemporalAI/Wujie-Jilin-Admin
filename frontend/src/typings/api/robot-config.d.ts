@@ -18,6 +18,12 @@ declare namespace Api.RobotConfig {
     wake_reply_mode?: 'corpus' | 'llm';
     /** 唤醒回复语料：预设模板存原文（含【唤醒词】占位符），自定义存用户输入 */
     wake_reply_text?: string;
+    /** 会议模式开关 */
+    meeting_mode_enabled?: boolean;
+    /** 会议模式进入指令（4-6 字） */
+    meeting_enter_command?: string | null;
+    /** 会议模式退出指令（4-6 字） */
+    meeting_exit_command?: string | null;
     created_at?: string;
     updated_at?: string | null;
     grpc_status?: GrpcStatus;

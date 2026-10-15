@@ -18,7 +18,8 @@ const detail = ref<Api.Task.TaskExecutionRecordDetail | null>(null);
 const taskTypeLabel: Record<string, string> = {
   patrol: '巡逻',
   broadcast: '播报',
-  instant: '即时'
+  instant: '即时',
+  performance: '表演'
 };
 
 const statusLabelMap: Record<string, string> = {

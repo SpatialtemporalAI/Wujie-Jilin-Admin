@@ -44,7 +44,7 @@ class TaskPointSnapshot(BaseReqEntity):
 class TaskDefinitionSnapshot(BaseReqEntity):
     """任务定义快照"""
 
-    task_type: str = Field(..., description="任务类型: patrol/broadcast")
+    task_type: str = Field(..., description="任务类型: patrol/broadcast/performance")
     task_name: Optional[str] = Field(None, description="任务名称")
     points: List[TaskPointSnapshot] = Field(
         default_factory=list, description="巡逻点位列表"
@@ -52,6 +52,9 @@ class TaskDefinitionSnapshot(BaseReqEntity):
     broadcast_text: Optional[str] = Field(None, description="播报文本（兼容旧数据）")
     broadcast_steps: Optional[List[BroadcastStepSchema]] = Field(
         None, description="播报步骤列表"
+    )
+    performance_steps: Optional[List[Dict[str, Any]]] = Field(
+        None, description="表演步骤列表"
     )
 
 

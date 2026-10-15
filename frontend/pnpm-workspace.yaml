@@ -1,2 +1,12 @@
 packages:
   - "packages/*"
+# pnpm 11 不再读取 .npmrc 的 public-hoist-pattern，迁移至此保持根 node_modules 提升（等价 shamefully-hoist）
+publicHoistPattern:
+  - "*"
+allowBuilds:
+  '@parcel/watcher': true
+  canvas: false
+  esbuild: true
+  simple-git-hooks: true
+  unrs-resolver: true
+  vue-demi: true

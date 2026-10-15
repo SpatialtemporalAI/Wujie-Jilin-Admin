@@ -27,6 +27,9 @@ from database.models.business.robot_voice_config import (
     DEFAULT_GREETING_MODE,
     DEFAULT_WAKE_REPLY_MODE,
     DEFAULT_WAKE_REPLY_TEXT,
+    DEFAULT_MEETING_MODE_ENABLED,
+    DEFAULT_MEETING_ENTER_COMMAND,
+    DEFAULT_MEETING_EXIT_COMMAND,
 )
 from database.models.business.robot_face_recognition import RobotFaceRecognition
 from core.config import settings
@@ -184,6 +187,9 @@ class RobotConfigService:
                     greeting_mode=DEFAULT_GREETING_MODE,
                     wake_reply_mode=DEFAULT_WAKE_REPLY_MODE,
                     wake_reply_text=DEFAULT_WAKE_REPLY_TEXT,
+                    meeting_mode_enabled=DEFAULT_MEETING_MODE_ENABLED,
+                    meeting_enter_command=DEFAULT_MEETING_ENTER_COMMAND,
+                    meeting_exit_command=DEFAULT_MEETING_EXIT_COMMAND,
                 )
             return config
         except Exception as e:
@@ -236,6 +242,11 @@ class RobotConfigService:
 
             greeting_mode = schema.greeting_mode or DEFAULT_GREETING_MODE
             wake_reply_mode = schema.wake_reply_mode or DEFAULT_WAKE_REPLY_MODE
+            # 会议模式仅落库（机器人端识别指令自行进入监听，本期不推 gRPC）。
+            # 开关仅机器人端语音指令可变更：系统侧不传（None）时保持原值；
+            # 指令系统侧可配置，不传时保持原值。
+            meeting_enter_command = schema.meeting_enter_command
+            meeting_exit_command = schema.meeting_exit_command
 
             if existing:
                 existing.wake_word_enabled = schema.wake_word_enabled
@@ -246,6 +257,12 @@ class RobotConfigService:
                 existing.greeting_mode = greeting_mode
                 existing.wake_reply_mode = wake_reply_mode
                 existing.wake_reply_text = schema.wake_reply_text
+                if schema.meeting_mode_enabled is not None:
+                    existing.meeting_mode_enabled = schema.meeting_mode_enabled
+                if meeting_enter_command is not None:
+                    existing.meeting_enter_command = meeting_enter_command
+                if meeting_exit_command is not None:
+                    existing.meeting_exit_command = meeting_exit_command
                 await db.commit()
                 await db.refresh(existing)
                 logger.info("更新语音配置成功，ID: %d", existing.id)
@@ -261,6 +278,13 @@ class RobotConfigService:
                     greeting_mode=greeting_mode,
                     wake_reply_mode=wake_reply_mode,
                     wake_reply_text=schema.wake_reply_text,
+                    meeting_mode_enabled=(
+                        schema.meeting_mode_enabled
+                        if schema.meeting_mode_enabled is not None
+                        else DEFAULT_MEETING_MODE_ENABLED
+                    ),
+                    meeting_enter_command=meeting_enter_command or DEFAULT_MEETING_ENTER_COMMAND,
+                    meeting_exit_command=meeting_exit_command or DEFAULT_MEETING_EXIT_COMMAND,
                 )
                 db.add(config)
                 await db.commit()

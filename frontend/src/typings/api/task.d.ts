@@ -3,7 +3,7 @@ declare namespace Api {
     type CommonSearchParams = Pick<Common.PaginatingCommonParams, 'page' | 'page_size'>;
 
     /** task type */
-    type TaskType = 'patrol' | 'broadcast' | 'instant';
+    type TaskType = 'patrol' | 'broadcast' | 'instant' | 'performance';
 
     /** task execution status */
     type TaskStatus = 'idle' | 'running' | 'paused';
@@ -48,6 +48,30 @@ declare namespace Api {
       actions: TaskAction[];
     };
 
+    /** performance step（八段锦，动作/音乐均为后端预置标识） */
+    type PerformanceStep = {
+      action: string;
+      music: string;
+      play_count: number;
+      /** 套间间隔（秒），最后一套无间隔，为 null */
+      interval: number | null;
+    };
+
+    /** performance action option（预设表演动作） */
+    type PerformanceActionOption = {
+      value: string;
+      label: string;
+      duration_seconds: number;
+    };
+
+    /** performance music option（预设背景音乐，本期不支持上传） */
+    type PerformanceMusicOption = {
+      value: string;
+      label: string;
+      duration_seconds: number;
+      file_url?: string | null;
+    };
+
     /** robot brief info for task */
     type TaskRobot = {
       id: number;
@@ -67,6 +91,7 @@ declare namespace Api {
       status: TaskStatus;
       broadcast_text: string | null;
       broadcast_steps: BroadcastStep[] | null;
+      performance_steps: PerformanceStep[] | null;
       schedule_enabled: boolean;
       schedule_date: string | null;
       schedule_start_time: string | null;
@@ -103,6 +128,7 @@ declare namespace Api {
       }[];
       broadcast_text?: string | null;
       broadcast_steps?: BroadcastStep[] | null;
+      performance_steps?: PerformanceStep[] | null;
       robot_ids: number[];
       schedule_enabled?: boolean;
       schedule_date?: string | null;
@@ -158,6 +184,7 @@ declare namespace Api {
       points: TaskPointSnapshot[];
       broadcast_text: string | null;
       broadcast_steps: BroadcastStep[] | null;
+      performance_steps: PerformanceStep[] | null;
     };
 
     /** task execution record (new) */

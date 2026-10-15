@@ -1,7 +1,13 @@
 <script setup lang="ts">
 import { ref } from 'vue';
 import { NButton, NCard, NEmpty, NPopconfirm, NSpace, NSpin, NTag, useMessage } from 'naive-ui';
-import { fetchDeleteRobot, fetchGetRobotList, fetchGetRobotSlotStatus, fetchRestartRobotSlot } from '@/service/api';
+import {
+  fetchDeleteRobot,
+  fetchGetRobotList,
+  fetchGetRobotSlotStatus,
+  fetchGetVoiceConfig,
+  fetchRestartRobotSlot
+} from '@/service/api';
 import { useAuth } from '@/hooks/business/auth';
 import { $t } from '@/locales';
 import SvgIcon from '@/components/custom/svg-icon.vue';
@@ -38,6 +44,7 @@ async function loadData() {
     if (!error && data) {
       robotList.value = data.records || [];
       loadSlotStatuses(data.records || []);
+      loadMeetingModes(data.records || []);
     }
   } catch (err) {
     console.error('加载机器人列表失败:', err);
@@ -73,6 +80,24 @@ function getSlotStatusType(status: string): import('naive-ui').TagProps['type'] 
     启动失败: 'error'
   };
   return typeMap[status] || 'default';
+}
+
+/** 会议模式开关状态（true=监听中 / false=未开启），逐台拉取语音配置，单台失败不影响其它卡片 */
+const meetingModeMap = ref<Record<number, boolean>>({});
+
+function loadMeetingModes(records: Api.Robot.Robot[]) {
+  records.forEach(robot => {
+    loadMeetingMode(robot.id);
+  });
+}
+
+async function loadMeetingMode(robotId: number) {
+  try {
+    const { data, error } = await fetchGetVoiceConfig(robotId);
+    meetingModeMap.value[robotId] = !error && data ? Boolean(data.meeting_mode_enabled) : false;
+  } catch {
+    meetingModeMap.value[robotId] = false;
+  }
 }
 
 async function handleRestartSlot(robot: Api.Robot.Robot) {
@@ -200,6 +225,12 @@ loadData();
               <div class="robot-info-item">
                 <span class="robot-info-label">地图：</span>
                 <span class="robot-info-value">{{ robot.map_name || '-' }}</span>
+              </div>
+              <div class="robot-info-item">
+                <span class="robot-info-label">会议模式：</span>
+                <NTag :type="meetingModeMap[robot.id] ? 'success' : 'default'" size="small" round>
+                  {{ meetingModeMap[robot.id] ? '监听中' : '未开启' }}
+                </NTag>
               </div>
             </div>
 

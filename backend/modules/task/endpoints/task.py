@@ -36,9 +36,24 @@ from modules.task.schemas.task import (
     TaskToggleEnabled,
     TaskPointResponse,
     TaskRobotBrief,
+    PerformanceActionOption,
+    PerformanceMusicOption,
 )
 
 logger = logging.getLogger(__name__)
+
+# 表演任务（八段锦）预设动作与背景音乐：本期仅提供平台预置项，不支持用户上传
+_PERFORMANCE_ACTIONS: list[PerformanceActionOption] = [
+    PerformanceActionOption(value="baduanjin_1", label="八段锦·第一套（双手托天理三焦）", duration_seconds=240),
+    PerformanceActionOption(value="baduanjin_2", label="八段锦·第二套（左右开弓似射雕）", duration_seconds=240),
+    PerformanceActionOption(value="baduanjin_3", label="八段锦·第三套（调理脾胃须单举）", duration_seconds=240),
+]
+_PERFORMANCE_MUSIC: list[PerformanceMusicOption] = [
+    PerformanceMusicOption(value="bdj_1", label="八段锦配乐·第一套", duration_seconds=240),
+    PerformanceMusicOption(value="bdj_2", label="八段锦配乐·第二套", duration_seconds=240),
+    PerformanceMusicOption(value="bdj_3", label="八段锦配乐·第三套", duration_seconds=240),
+    PerformanceMusicOption(value="bdj_full_12min", label="八段锦配乐·完整版（约4分钟）", duration_seconds=240),
+]
 
 
 async def _fill_task_map_name(db: AsyncSession, records: list[TaskResponseData]) -> None:
@@ -319,3 +334,21 @@ async def toggle_task_enabled(
     except Exception as e:
         logger.error("切换任务启用状态失败: %s", str(e), exc_info=True)
         raise
+
+
+@task_router.get(
+    "/performance/actions",
+    response_model=ResponseModel[list[PerformanceActionOption]],
+)
+async def list_performance_actions():
+    """获取表演动作预设列表（八段锦，最多 3 套，可重复）"""
+    return response_base.success(data=_PERFORMANCE_ACTIONS)
+
+
+@task_router.get(
+    "/performance/music",
+    response_model=ResponseModel[list[PerformanceMusicOption]],
+)
+async def list_performance_music():
+    """获取背景音乐预设列表（本期仅预设，不支持上传）"""
+    return response_base.success(data=_PERFORMANCE_MUSIC)
