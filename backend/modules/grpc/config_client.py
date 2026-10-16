@@ -9,7 +9,6 @@ ConfigService gRPC 客户端
 - voice.notify_wake_word → middleware + agent（保存唤醒词，同时双推两端）
 - voice.notify_tts → middleware（保存 TTS 配置）
 - voice.notify_greeting_mode → agent（保存打招呼模式，仅推 agent 端）
-- voice.notify_meeting_mode → agent（保存会议模式进入/退出指令，仅推 agent 端）
 - voice.test_wake_word / voice.test_tts → agent（测试推送，发送到机器人 agent）
 - speed.notify_speed_level → middleware
 - battery.notify_battery_threshold → agent
@@ -256,39 +255,6 @@ class VoiceConfigClient:
                 "robot_id": robot_id,
                 "rpc": "notify_greeting_mode",
                 "greeting_mode": greeting_mode,
-            },
-        )
-
-    @classmethod
-    async def notify_meeting_mode(
-        cls,
-        robot_id: int,
-        meeting_enter_command: str,
-        meeting_exit_command: str,
-    ) -> voice_pb2.MeetingModeChangedResponse:
-        """推送会议模式进入/退出指令变更：仅下发给 agent 端
-
-        会议模式开关状态由机器人侧上报（robot.meeting_mode），不在本 RPC 下发。
-        """
-        request = voice_pb2.MeetingModeChangedRequest(
-            robot_id=robot_id,
-            meeting_enter_command=meeting_enter_command or "",
-            meeting_exit_command=meeting_exit_command or "",
-        )
-        return await _dispatch_with_target(
-            robot_id=robot_id,
-            target="agent",
-            stub_factory=cls._get_stub_for_addr,
-            method_name="NotifyMeetingModeChanged",
-            request=request,
-            failure_factory=lambda msg: voice_pb2.MeetingModeChangedResponse(
-                success=False, message=msg
-            ),
-            log_ctx={
-                "robot_id": robot_id,
-                "rpc": "notify_meeting_mode",
-                "meeting_enter_command": meeting_enter_command,
-                "meeting_exit_command": meeting_exit_command,
             },
         )
 

@@ -38,9 +38,7 @@ const model = reactive<Api.RobotConfig.VoiceConfig>({
   tts_volume: 80,
   greeting_mode: 'wave',
   wake_reply_mode: 'corpus',
-  wake_reply_text: '',
-  meeting_enter_command: '开始会议',
-  meeting_exit_command: '结束会议'
+  wake_reply_text: ''
 });
 
 /** 唤醒词占位符：预设语料模板中的【唤醒词】在展示/推送时替换为实际唤醒词 */
@@ -165,16 +163,6 @@ const canSaveReply = computed(() => {
   return replyPreview.value.length > 0;
 });
 
-/** 会议模式进入/退出指令必填且为 4-6 个字（与后端校验一致） */
-function isValidMeetingCommand(value?: string | null) {
-  const text = (value || '').trim();
-  return text.length >= 4 && text.length <= 6;
-}
-
-const canSaveMeeting = computed(
-  () => isValidMeetingCommand(model.meeting_enter_command) && isValidMeetingCommand(model.meeting_exit_command)
-);
-
 const selectedRobot = computed(() => robotList.value.find(r => r.id === selectedRobotId.value) || null);
 
 async function loadRobots() {
@@ -203,9 +191,7 @@ function resetModel() {
     tts_volume: 80,
     greeting_mode: 'wave',
     wake_reply_mode: 'corpus',
-    wake_reply_text: '',
-    meeting_enter_command: '开始会议',
-    meeting_exit_command: '结束会议'
+    wake_reply_text: ''
   });
   replyTemplate.value = 'wake_prefix';
   customReplyText.value = '';
@@ -224,13 +210,6 @@ async function loadConfig(robotId: number) {
       }
       if (!model.wake_reply_mode) {
         model.wake_reply_mode = 'corpus';
-      }
-      // 兜底：会议指令旧数据可能为 null，回填默认值便于展示
-      if (!model.meeting_enter_command) {
-        model.meeting_enter_command = '开始会议';
-      }
-      if (!model.meeting_exit_command) {
-        model.meeting_exit_command = '结束会议';
       }
       syncReplyTemplate();
     }
@@ -509,25 +488,6 @@ onMounted(() => {
                 </NGrid>
               </NCard>
 
-              <!-- 会议模式 -->
-              <NCard title="会议模式" size="small" class="config-card">
-                <NGrid :cols="1" :y-gap="8">
-                  <NFormItemGi label="进入指令">
-                    <NInput v-model:value="model.meeting_enter_command" placeholder="请输入 4-6 个字" maxlength="6"
-                      show-count clearable />
-                  </NFormItemGi>
-                  <NFormItemGi label="退出指令">
-                    <NInput v-model:value="model.meeting_exit_command" placeholder="请输入 4-6 个字" maxlength="6"
-                      show-count clearable />
-                  </NFormItemGi>
-                  <NFormItemGi>
-                    <NText depth="3" class="text-13px leading-relaxed text-gray-700">
-                      会议模式仅能通过语音指令控制：对机器人说出进入指令即开始会议录音，说出退出指令结束会议；当前状态可在机器人列表查看。
-                    </NText>
-                  </NFormItemGi>
-                </NGrid>
-              </NCard>
-
               <!-- 语音合成设置 -->
               <NCard title="语音合成设置" size="small" class="config-card">
                 <NGrid :cols="1" :y-gap="8">
@@ -562,7 +522,7 @@ onMounted(() => {
 
             <div class="mt-16px">
               <NButton v-if="hasAuth('robot:config:edit')" type="primary" :loading="saving"
-                :disabled="!canSaveWakeWord || !canSaveReply || !canSaveMeeting" @click="handleSaveVoice">
+                :disabled="!canSaveWakeWord || !canSaveReply" @click="handleSaveVoice">
                 保存设置
               </NButton>
             </div>

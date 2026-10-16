@@ -7,6 +7,8 @@
 
 ## 状态
 
+指令配置部分已于 2026-10-16 下线（见 [2026-10-16 移除会议指令配置](./2026-10-16_remove-meeting-command-config.md)）；robot.meeting_mode 状态字段保留
+
 已完成（机器人 agent 端实现 `NotifyMeetingModeChanged`、`meeting_mode` 上报通道对接另行处理）
 
 ## 涉及范围
