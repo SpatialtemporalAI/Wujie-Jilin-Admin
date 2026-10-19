@@ -40,7 +40,9 @@ def setup_logging():
             encoding="utf8",
             defaults={
                 "env": env,
-                "log_dir": str(log_dir),
+                # ini 中的 args 会被 fileConfig 以 eval 方式解析，Windows 反斜杠
+                # 会被当作转义（如 \backend 中的 \b 变成退格），统一用正斜杠
+                "log_dir": str(log_dir).replace("\\", "/"),
             },
         )
         # 启动时收集各文件 handler 的实际落盘路径（baseFilename），
