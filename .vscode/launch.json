@@ -10,18 +10,16 @@
       "console": "integratedTerminal",
       "justMyCode": false,
       "cwd": "${workspaceFolder}/backend",
-      "envFile": "${workspaceFolder}/backend/.env.dev",
+      "envFile": "${workspaceFolder}/backend/.env", // 原来指向不存在的 .env.dev
       "args": [
         "main:app",
-        "--reload",
         "--host",
         "0.0.0.0",
         "--port",
         "8000"
-      ],
+      ], // 去掉 --reload
       "python": "${workspaceFolder}/backend/.venv/Scripts/python.exe"
     },
-    
     // 前端Vue启动配置
     {
       "name": "前端 - Vue",
@@ -32,14 +30,16 @@
       "sourceMaps": true,
       "preLaunchTask": "npm: dev"
     },
-    
     // 前端TypeScript调试
     {
       "name": "前端 - TS Debugger",
       "type": "node",
       "request": "launch",
       "runtimeExecutable": "tsx",
-      "skipFiles": ["<node_internals>/**", "${workspaceFolder}/frontend/node_modules/**"],
+      "skipFiles": [
+        "<node_internals>/**",
+        "${workspaceFolder}/frontend/node_modules/**"
+      ],
       "program": "${file}",
       "console": "integratedTerminal",
       "internalConsoleOptions": "neverOpen",
