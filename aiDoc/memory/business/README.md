@@ -111,3 +111,4 @@
 - [2026-10-15 task 表 task_type 注释补充表演枚举](./2026-10-15_task-type-comment-performance.md) — ORM 模型 comment 补 `performance-表演` + 新增迁移 0015 仅更新列注释；商户开放 API 的 TaskTypeField 有意仍限 patrol/broadcast 未动
 - [2026-10-15 会议指令接 gRPC + 状态迁 robot 表](./2026-10-15_meeting-mode-grpc-push.md) — voice.proto 新增 NotifyMeetingModeChanged（仅两指令，推 agent）；robot_voice_config 删 meeting_mode_enabled、robot 表加 meeting_mode（迁移 0016）；机器人卡片改读 robot.meeting_mode，不再逐台拉语音配置（指令部分 2026-10-16 已下线）
 - [2026-10-16 移除会议指令配置](./2026-10-16_remove-meeting-command-config.md) — 指令输入卡片、NotifyMeetingModeChanged 推送链路、robot_voice_config 两个指令列（迁移 0017）全部移除；保留 robot.meeting_mode 状态字段与机器人列表 tag
+- [2026-10-19 修复任务管理按机器人筛选报错](./2026-10-19_task-robot-filter-json-distinct-error.md) — build_query robot_id 分支 join+distinct 触发 PG「json 无相等操作符」（performance_steps 为 json），改为 EXISTS 子查询

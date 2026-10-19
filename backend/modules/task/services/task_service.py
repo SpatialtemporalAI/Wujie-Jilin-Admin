@@ -49,13 +49,19 @@ class TaskService:
             conditions.append(Task.map_id == map_id)
         robot_id = parse_optional_int_value(query_params.robot_id)
         if robot_id is not None:
-            base_query = base_query.join(
-                task_robot_association,
-                Task.id == task_robot_association.c.task_id,
-            ).join(Robot, Robot.id == task_robot_association.c.robot_id)
-            conditions.append(Robot.id == robot_id)
-            conditions.append(Robot.deleted_at.is_(None))
-            base_query = base_query.distinct()
+            # 用 EXISTS 子查询代替 join+distinct：task_robot 主键 (task_id, robot_id)
+            # 保证单个 robot_id 过滤不会产生重复行；distinct 会触发 PostgreSQL
+            # 对 task 全列做相等比较，json 类型列（如 performance_steps）无相等
+            # 操作符，导致 "could not identify an equality operator for type json"。
+            robot_exists = (
+                select(task_robot_association.c.task_id)
+                .join(Robot, Robot.id == task_robot_association.c.robot_id)
+                .where(task_robot_association.c.task_id == Task.id)
+                .where(task_robot_association.c.robot_id == robot_id)
+                .where(Robot.deleted_at.is_(None))
+                .exists()
+            )
+            conditions.append(robot_exists)
 
         if conditions:
             base_query = base_query.where(and_(*conditions))
