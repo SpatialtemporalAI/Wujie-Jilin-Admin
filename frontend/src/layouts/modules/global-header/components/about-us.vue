@@ -23,8 +23,8 @@ const showModal = ref(false);
           <img :src="logoPng" alt="logo" class="about-logo" />
           <div class="flex-col gap-4px">
             <div class="about-title">吉大二院管理系统</div>
-            <div class="about-meta">版本号：v1.0.0</div>
-            <div class="about-meta">版本更新：2026-07-04</div>
+            <div class="about-meta">版本号：v2.0</div>
+            <div class="about-meta">版本更新：2026-10-19</div>
           </div>
         </div>
 
