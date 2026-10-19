@@ -105,8 +105,8 @@
     "semantic_hash": ""
   },
   "D:\\project\\SpatialtemporalAi\\Wujie-Jilin-Admin\\backend\\core\\log\\app_logging.py": {
-    "mtime": 1783933179.5210345,
-    "ast_hash": "865757f5ce509e93f63575623caddfa0",
+    "mtime": 1792396881.377711,
+    "ast_hash": "d1d2a205e6d1ca1dfbe9eb2c114c25d3",
     "semantic_hash": ""
   },
   "D:\\project\\SpatialtemporalAi\\Wujie-Jilin-Admin\\backend\\core\\log\\request_id_filter.py": {
@@ -3560,8 +3560,8 @@
     "semantic_hash": ""
   },
   "D:\\project\\SpatialtemporalAi\\Wujie-Jilin-Admin\\backend\\modules\\task\\services\\task_service.py": {
-    "mtime": 1792054940.8443716,
-    "ast_hash": "ab6b18585fb5f7ae1f262fb2a3c9f9a8",
+    "mtime": 1792398651.2630236,
+    "ast_hash": "04290a3f7eb0784f8c7ad55da52babe4",
     "semantic_hash": ""
   },
   "D:\\project\\SpatialtemporalAi\\Wujie-Jilin-Admin\\frontend\\src\\components\\custom\\dict-select.vue": {
@@ -4775,8 +4775,8 @@
     "semantic_hash": ""
   },
   "D:\\project\\SpatialtemporalAi\\Wujie-Jilin-Admin\\frontend\\src\\layouts\\modules\\global-header\\components\\about-us.vue": {
-    "mtime": 1785316671.024372,
-    "ast_hash": "b3ec06ae6f4e36a51e3cc1b6920b8b3f",
+    "mtime": 1792396881.3976264,
+    "ast_hash": "41cd35241f1facf681602d54745b5c2f",
     "semantic_hash": ""
   },
   "D:\\project\\SpatialtemporalAi\\Wujie-Jilin-Admin\\aiDoc\\memory\\business\\2026-07-03_scene-map-form-required-validation.md": {
@@ -5955,17 +5955,17 @@
     "semantic_hash": ""
   },
   "D:\\project\\SpatialtemporalAi\\Wujie-Jilin-Admin\\graphify-out\\converted\\voice_consultations_20260910_155808_9189fecb.md": {
-    "mtime": 1792117591.5408778,
+    "mtime": 1792398718.7375798,
     "ast_hash": "30f6245da10afe404c746d0c7fd93a4c",
     "semantic_hash": ""
   },
   "D:\\project\\SpatialtemporalAi\\Wujie-Jilin-Admin\\graphify-out\\converted\\voice_consultations_20260910_164208_c9ecf51e.md": {
-    "mtime": 1792117591.9822977,
+    "mtime": 1792398719.1295488,
     "ast_hash": "747734aa8ee6a402cb10b2de6af3ef04",
     "semantic_hash": ""
   },
   "D:\\project\\SpatialtemporalAi\\Wujie-Jilin-Admin\\graphify-out\\converted\\voice_consultations_20260910_164215_2f8da1af.md": {
-    "mtime": 1792117592.383503,
+    "mtime": 1792398719.5280087,
     "ast_hash": "bb4c6a44e5cccdb1a67290c5782d1a60",
     "semantic_hash": ""
   },

@@ -23190,7 +23190,7 @@
       "source_file": "backend/modules/grpc/channel.py",
       "source_location": "L37",
       "id": "grpc_channel_get_channel",
-      "community": 535,
+      "community": 545,
       "norm_label": "get_channel()"
     },
     {
@@ -23199,7 +23199,7 @@
       "source_file": "backend/modules/grpc/channel.py",
       "source_location": "L37",
       "id": "channel",
-      "community": 535,
+      "community": 545,
       "norm_label": "channel"
     },
     {
@@ -23217,7 +23217,7 @@
       "source_file": "backend/modules/grpc/channel.py",
       "source_location": "L85",
       "id": "grpc_channel_get_config_channel_by_addr",
-      "community": 535,
+      "community": 545,
       "norm_label": "get_config_channel_by_addr()"
     },
     {
@@ -23262,7 +23262,7 @@
       "source_file": "backend/modules/grpc/channel.py",
       "source_location": "L38",
       "id": "grpc_channel_rationale_38",
-      "community": 535,
+      "community": 545,
       "norm_label": "\u83b7\u53d6(\u60f0\u6027\u521b\u5efa)\u5355\u4f8b grpc aio channel"
     },
     {
@@ -23280,7 +23280,7 @@
       "source_file": "backend/modules/grpc/channel.py",
       "source_location": "L86",
       "id": "grpc_channel_rationale_86",
-      "community": 535,
+      "community": 545,
       "norm_label": "\u6309\u5730\u5740\u83b7\u53d6(\u60f0\u6027\u521b\u5efa)configservice grpc aio channel      \u4e0d\u540c\u5730\u5740(\u6765\u81ea\u4e0d\u540c robot \u7684 grpc_config)\u5404\u81ea\u7f13"
     },
     {
@@ -23568,7 +23568,7 @@
       "source_file": "backend/modules/grpc/config_client.py",
       "source_location": "L122",
       "id": "grpc_config_client_get_stub_for_addr",
-      "community": 535,
+      "community": 1511,
       "norm_label": "_get_stub_for_addr()"
     },
     {
@@ -23577,7 +23577,7 @@
       "source_file": "backend/modules/grpc/config_client.py",
       "source_location": "L122",
       "id": "voiceconfigservicestub",
-      "community": 535,
+      "community": 1511,
       "norm_label": "voiceconfigservicestub"
     },
     {
@@ -23703,7 +23703,7 @@
       "source_file": "backend/modules/grpc/config_client.py",
       "source_location": "L313",
       "id": "speedconfigservicestub",
-      "community": 535,
+      "community": 1511,
       "norm_label": "speedconfigservicestub"
     },
     {
@@ -23739,7 +23739,7 @@
       "source_file": "backend/modules/grpc/config_client.py",
       "source_location": "L357",
       "id": "videomonitoringservicestub",
-      "community": 535,
+      "community": 1511,
       "norm_label": "videomonitoringservicestub"
     },
     {
@@ -23775,7 +23775,7 @@
       "source_file": "backend/modules/grpc/config_client.py",
       "source_location": "L401",
       "id": "batteryconfigservicestub",
-      "community": 535,
+      "community": 1511,
       "norm_label": "batteryconfigservicestub"
     },
     {
@@ -23811,7 +23811,7 @@
       "source_file": "backend/modules/grpc/config_client.py",
       "source_location": "L448",
       "id": "facerecognitionservicestub",
-      "community": 535,
+      "community": 1511,
       "norm_label": "facerecognitionservicestub"
     },
     {
@@ -34537,7 +34537,7 @@
       "label": "get()",
       "file_type": "code",
       "source_file": "backend/modules/task/services/task_service.py",
-      "source_location": "L67",
+      "source_location": "L73",
       "id": "services_task_service_get",
       "community": 1344,
       "norm_label": "get()"
@@ -34546,7 +34546,7 @@
       "label": "AsyncSession",
       "file_type": "code",
       "source_file": "backend/modules/task/services/task_service.py",
-      "source_location": "L67",
+      "source_location": "L73",
       "id": "backend_modules_task_services_task_service_py_asyncsession",
       "community": 1344,
       "norm_label": "asyncsession"
@@ -34555,7 +34555,7 @@
       "label": "int",
       "file_type": "code",
       "source_file": "backend/modules/task/services/task_service.py",
-      "source_location": "L67",
+      "source_location": "L73",
       "id": "backend_modules_task_services_task_service_py_int",
       "community": 1344,
       "norm_label": "int"
@@ -34564,7 +34564,7 @@
       "label": "Task",
       "file_type": "code",
       "source_file": "backend/modules/task/services/task_service.py",
-      "source_location": "L67",
+      "source_location": "L73",
       "id": "backend_modules_task_services_task_service_py_task",
       "community": 1344,
       "norm_label": "task"
@@ -34573,7 +34573,7 @@
       "label": "get_with_relations()",
       "file_type": "code",
       "source_file": "backend/modules/task/services/task_service.py",
-      "source_location": "L80",
+      "source_location": "L86",
       "id": "services_task_service_get_with_relations",
       "community": 1344,
       "norm_label": "get_with_relations()"
@@ -34582,7 +34582,7 @@
       "label": "create()",
       "file_type": "code",
       "source_file": "backend/modules/task/services/task_service.py",
-      "source_location": "L97",
+      "source_location": "L103",
       "id": "services_task_service_create",
       "community": 1344,
       "norm_label": "create()"
@@ -34591,7 +34591,7 @@
       "label": "TaskCreate",
       "file_type": "code",
       "source_file": "backend/modules/task/services/task_service.py",
-      "source_location": "L97",
+      "source_location": "L103",
       "id": "backend_modules_task_services_task_service_py_taskcreate",
       "community": 54,
       "norm_label": "taskcreate"
@@ -34600,7 +34600,7 @@
       "label": "update()",
       "file_type": "code",
       "source_file": "backend/modules/task/services/task_service.py",
-      "source_location": "L192",
+      "source_location": "L198",
       "id": "services_task_service_update",
       "community": 1344,
       "norm_label": "update()"
@@ -34609,7 +34609,7 @@
       "label": "TaskUpdate",
       "file_type": "code",
       "source_file": "backend/modules/task/services/task_service.py",
-      "source_location": "L192",
+      "source_location": "L198",
       "id": "backend_modules_task_services_task_service_py_taskupdate",
       "community": 54,
       "norm_label": "taskupdate"
@@ -34618,7 +34618,7 @@
       "label": "delete_points_by_annotation_ids()",
       "file_type": "code",
       "source_file": "backend/modules/task/services/task_service.py",
-      "source_location": "L304",
+      "source_location": "L310",
       "id": "services_task_service_delete_points_by_annotation_ids",
       "community": 1344,
       "norm_label": "delete_points_by_annotation_ids()"
@@ -34627,7 +34627,7 @@
       "label": "count_tasks_by_annotation_ids()",
       "file_type": "code",
       "source_file": "backend/modules/task/services/task_service.py",
-      "source_location": "L346",
+      "source_location": "L352",
       "id": "services_task_service_count_tasks_by_annotation_ids",
       "community": 1344,
       "norm_label": "count_tasks_by_annotation_ids()"
@@ -34636,7 +34636,7 @@
       "label": "delete()",
       "file_type": "code",
       "source_file": "backend/modules/task/services/task_service.py",
-      "source_location": "L374",
+      "source_location": "L380",
       "id": "services_task_service_delete",
       "community": 1344,
       "norm_label": "delete()"
@@ -34645,7 +34645,7 @@
       "label": "bool",
       "file_type": "code",
       "source_file": "backend/modules/task/services/task_service.py",
-      "source_location": "L374",
+      "source_location": "L380",
       "id": "backend_modules_task_services_task_service_py_bool",
       "community": 54,
       "norm_label": "bool"
@@ -34654,7 +34654,7 @@
       "label": "soft_delete_by_map_id()",
       "file_type": "code",
       "source_file": "backend/modules/task/services/task_service.py",
-      "source_location": "L414",
+      "source_location": "L420",
       "id": "services_task_service_soft_delete_by_map_id",
       "community": 1344,
       "norm_label": "soft_delete_by_map_id()"
@@ -34663,7 +34663,7 @@
       "label": "toggle_enabled()",
       "file_type": "code",
       "source_file": "backend/modules/task/services/task_service.py",
-      "source_location": "L430",
+      "source_location": "L436",
       "id": "services_task_service_toggle_enabled",
       "community": 1344,
       "norm_label": "toggle_enabled()"
@@ -34672,18 +34672,18 @@
       "label": "\u7edf\u8ba1\u6bcf\u4e2a\u6807\u6ce8\u5173\u8054\u7684\u6709\u6548\u4efb\u52a1\u6570\uff08\u6309 task_id \u53bb\u91cd\uff09\u3002          \u4ec5\u7edf\u8ba1\u672a\u5220\u9664\u7684\u4efb\u52a1\u53ca\u5176\u672a\u5220\u9664\u7684\u4efb\u52a1\u70b9\u4f4d\uff0c\u7528\u4e8e\u5730\u56fe\u7f16\u8f91\u5668\u5224\u65ad",
       "file_type": "rationale",
       "source_file": "backend/modules/task/services/task_service.py",
-      "source_location": "L349",
-      "id": "services_task_service_rationale_349",
-      "community": 1825,
+      "source_location": "L355",
+      "id": "services_task_service_rationale_355",
+      "community": 1779,
       "norm_label": "\u7edf\u8ba1\u6bcf\u4e2a\u6807\u6ce8\u5173\u8054\u7684\u6709\u6548\u4efb\u52a1\u6570(\u6309 task_id \u53bb\u91cd)\u3002          \u4ec5\u7edf\u8ba1\u672a\u5220\u9664\u7684\u4efb\u52a1\u53ca\u5176\u672a\u5220\u9664\u7684\u4efb\u52a1\u70b9\u4f4d,\u7528\u4e8e\u5730\u56fe\u7f16\u8f91\u5668\u5224\u65ad"
     },
     {
       "label": "\u8f6f\u5220\u9664\u67d0\u573a\u666f\u5730\u56fe\u4e0b\u7684\u6240\u6709\u4efb\u52a1\uff08\u4e0d commit\uff0c\u7531\u8c03\u7528\u65b9\u63a7\u5236\u4e8b\u52a1\uff09\u3002         \u8fd4\u56de\u8f6f\u5220\u9664\u7684\u8bb0\u5f55\u6570\u3002",
       "file_type": "rationale",
       "source_file": "backend/modules/task/services/task_service.py",
-      "source_location": "L415",
-      "id": "services_task_service_rationale_415",
-      "community": 1826,
+      "source_location": "L421",
+      "id": "services_task_service_rationale_421",
+      "community": 1780,
       "norm_label": "\u8f6f\u5220\u9664\u67d0\u573a\u666f\u5730\u56fe\u4e0b\u7684\u6240\u6709\u4efb\u52a1(\u4e0d commit,\u7531\u8c03\u7528\u65b9\u63a7\u5236\u4e8b\u52a1)\u3002         \u8fd4\u56de\u8f6f\u5220\u9664\u7684\u8bb0\u5f55\u6570\u3002"
     },
     {
@@ -44337,7 +44337,7 @@
       "source_file": "frontend/src/directives/permission.ts",
       "source_location": "L1",
       "id": "frontend_src_directives_permission_ts",
-      "community": 1301,
+      "community": 1254,
       "norm_label": "permission.ts"
     },
     {
@@ -44346,7 +44346,7 @@
       "source_file": "frontend/src/directives/permission.ts",
       "source_location": "L4",
       "id": "directives_permission_permission",
-      "community": 1301,
+      "community": 1254,
       "norm_label": "permission"
     },
     {
@@ -44373,7 +44373,7 @@
       "source_file": "frontend/src/hooks/business/auth.ts",
       "source_location": "L1",
       "id": "frontend_src_hooks_business_auth_ts",
-      "community": 1301,
+      "community": 1254,
       "norm_label": "auth.ts"
     },
     {
@@ -44382,7 +44382,7 @@
       "source_file": "frontend/src/hooks/business/auth.ts",
       "source_location": "L3",
       "id": "business_auth_useauth",
-      "community": 1301,
+      "community": 1254,
       "norm_label": "useauth()"
     },
     {
@@ -44472,7 +44472,7 @@
       "source_file": "frontend/src/hooks/business/slider-captcha.ts",
       "source_location": "L1",
       "id": "frontend_src_hooks_business_slider_captcha_ts",
-      "community": 1301,
+      "community": 91,
       "norm_label": "slider-captcha.ts"
     },
     {
@@ -44481,7 +44481,7 @@
       "source_file": "frontend/src/hooks/business/slider-captcha.ts",
       "source_location": "L4",
       "id": "business_slider_captcha_useslidercaptcha",
-      "community": 1301,
+      "community": 91,
       "norm_label": "useslidercaptcha()"
     },
     {
@@ -46299,7 +46299,7 @@
       "source_file": "frontend/src/service/api/auth.ts",
       "source_location": "L1",
       "id": "frontend_src_service_api_auth_ts",
-      "community": 1301,
+      "community": 91,
       "norm_label": "auth.ts"
     },
     {
@@ -46308,7 +46308,7 @@
       "source_file": "frontend/src/service/api/auth.ts",
       "source_location": "L9",
       "id": "api_auth_fetchlogin",
-      "community": 1301,
+      "community": 91,
       "norm_label": "fetchlogin()"
     },
     {
@@ -46317,7 +46317,7 @@
       "source_file": "frontend/src/service/api/auth.ts",
       "source_location": "L22",
       "id": "api_auth_fetchgetuserinfo",
-      "community": 1301,
+      "community": 91,
       "norm_label": "fetchgetuserinfo()"
     },
     {
@@ -46326,7 +46326,7 @@
       "source_file": "frontend/src/service/api/auth.ts",
       "source_location": "L32",
       "id": "api_auth_fetchchangeownpassword",
-      "community": 1301,
+      "community": 91,
       "norm_label": "fetchchangeownpassword()"
     },
     {
@@ -46335,7 +46335,7 @@
       "source_file": "frontend/src/service/api/auth.ts",
       "source_location": "L48",
       "id": "api_auth_fetchrefreshtoken",
-      "community": 1301,
+      "community": 91,
       "norm_label": "fetchrefreshtoken()"
     },
     {
@@ -46344,7 +46344,7 @@
       "source_file": "frontend/src/service/api/auth.ts",
       "source_location": "L64",
       "id": "api_auth_fetchcustombackenderror",
-      "community": 1301,
+      "community": 91,
       "norm_label": "fetchcustombackenderror()"
     },
     {
@@ -46353,7 +46353,7 @@
       "source_file": "frontend/src/service/api/auth.ts",
       "source_location": "L69",
       "id": "api_auth_fetchgetcaptcha",
-      "community": 1301,
+      "community": 91,
       "norm_label": "fetchgetcaptcha()"
     },
     {
@@ -46362,7 +46362,7 @@
       "source_file": "frontend/src/service/api/auth.ts",
       "source_location": "L77",
       "id": "api_auth_fetchverifycaptcha",
-      "community": 1301,
+      "community": 91,
       "norm_label": "fetchverifycaptcha()"
     },
     {
@@ -46371,7 +46371,7 @@
       "source_file": "frontend/src/service/api/auth.ts",
       "source_location": "L86",
       "id": "api_auth_fetchcheckcaptcha",
-      "community": 1301,
+      "community": 91,
       "norm_label": "fetchcheckcaptcha()"
     },
     {
@@ -47127,7 +47127,7 @@
       "source_file": "frontend/src/service/api/robot-config.ts",
       "source_location": "L1",
       "id": "frontend_src_service_api_robot_config_ts",
-      "community": 1511,
+      "community": 91,
       "norm_label": "robot-config.ts"
     },
     {
@@ -47136,7 +47136,7 @@
       "source_file": "frontend/src/service/api/robot-config.ts",
       "source_location": "L12",
       "id": "api_robot_config_fetchgetvoiceconfig",
-      "community": 1511,
+      "community": 91,
       "norm_label": "fetchgetvoiceconfig()"
     },
     {
@@ -47145,7 +47145,7 @@
       "source_file": "frontend/src/service/api/robot-config.ts",
       "source_location": "L21",
       "id": "api_robot_config_fetchsavevoiceconfig",
-      "community": 1511,
+      "community": 91,
       "norm_label": "fetchsavevoiceconfig()"
     },
     {
@@ -47154,7 +47154,7 @@
       "source_file": "frontend/src/service/api/robot-config.ts",
       "source_location": "L31",
       "id": "api_robot_config_fetchtestwakeword",
-      "community": 1511,
+      "community": 91,
       "norm_label": "fetchtestwakeword()"
     },
     {
@@ -47163,7 +47163,7 @@
       "source_file": "frontend/src/service/api/robot-config.ts",
       "source_location": "L41",
       "id": "api_robot_config_fetchtesttts",
-      "community": 1511,
+      "community": 91,
       "norm_label": "fetchtesttts()"
     },
     {
@@ -47172,7 +47172,7 @@
       "source_file": "frontend/src/service/api/robot-config.ts",
       "source_location": "L51",
       "id": "api_robot_config_fetchuploadfacephoto",
-      "community": 1511,
+      "community": 91,
       "norm_label": "fetchuploadfacephoto()"
     },
     {
@@ -47181,7 +47181,7 @@
       "source_file": "frontend/src/service/api/robot-config.ts",
       "source_location": "L63",
       "id": "api_robot_config_fetchgetfacerecognitionlist",
-      "community": 1511,
+      "community": 91,
       "norm_label": "fetchgetfacerecognitionlist()"
     },
     {
@@ -47190,7 +47190,7 @@
       "source_file": "frontend/src/service/api/robot-config.ts",
       "source_location": "L72",
       "id": "api_robot_config_fetchcreatefacerecognition",
-      "community": 1511,
+      "community": 91,
       "norm_label": "fetchcreatefacerecognition()"
     },
     {
@@ -47199,7 +47199,7 @@
       "source_file": "frontend/src/service/api/robot-config.ts",
       "source_location": "L81",
       "id": "api_robot_config_fetchupdatefacerecognition",
-      "community": 1511,
+      "community": 91,
       "norm_label": "fetchupdatefacerecognition()"
     },
     {
@@ -47208,7 +47208,7 @@
       "source_file": "frontend/src/service/api/robot-config.ts",
       "source_location": "L90",
       "id": "api_robot_config_fetchdeletefacerecognition",
-      "community": 1511,
+      "community": 91,
       "norm_label": "fetchdeletefacerecognition()"
     },
     {
@@ -47217,7 +47217,7 @@
       "source_file": "frontend/src/service/api/robot-config.ts",
       "source_location": "L100",
       "id": "api_robot_config_fetchupdatespeedlevel",
-      "community": 1511,
+      "community": 91,
       "norm_label": "fetchupdatespeedlevel()"
     },
     {
@@ -47226,7 +47226,7 @@
       "source_file": "frontend/src/service/api/robot-config.ts",
       "source_location": "L110",
       "id": "api_robot_config_fetchupdatebatterythreshold",
-      "community": 1511,
+      "community": 91,
       "norm_label": "fetchupdatebatterythreshold()"
     },
     {
@@ -48585,7 +48585,7 @@
       "source_file": "frontend/src/service/request/index.ts",
       "source_location": "L1",
       "id": "frontend_src_service_request_index_ts",
-      "community": 1301,
+      "community": 91,
       "norm_label": "index.ts"
     },
     {
@@ -48594,7 +48594,7 @@
       "source_file": "frontend/src/service/request/index.ts",
       "source_location": "L11",
       "id": "request_index_baseurl_otherbaseurl",
-      "community": 1301,
+      "community": 91,
       "norm_label": "{ baseurl, otherbaseurl }"
     },
     {
@@ -48612,7 +48612,7 @@
       "source_file": "frontend/src/service/request/index.ts",
       "source_location": "L144",
       "id": "request_index_demorequest",
-      "community": 1301,
+      "community": 91,
       "norm_label": "demorequest"
     },
     {
@@ -48621,7 +48621,7 @@
       "source_file": "frontend/src/service/request/shared.ts",
       "source_location": "L1",
       "id": "frontend_src_service_request_shared_ts",
-      "community": 1301,
+      "community": 91,
       "norm_label": "shared.ts"
     },
     {
@@ -48630,7 +48630,7 @@
       "source_file": "frontend/src/service/request/shared.ts",
       "source_location": "L6",
       "id": "request_shared_getauthorization",
-      "community": 1301,
+      "community": 91,
       "norm_label": "getauthorization()"
     },
     {
@@ -48639,7 +48639,7 @@
       "source_file": "frontend/src/service/request/shared.ts",
       "source_location": "L14",
       "id": "request_shared_handlerefreshtoken",
-      "community": 1301,
+      "community": 91,
       "norm_label": "handlerefreshtoken()"
     },
     {
@@ -48648,7 +48648,7 @@
       "source_file": "frontend/src/service/request/shared.ts",
       "source_location": "L31",
       "id": "request_shared_handleexpiredrequest",
-      "community": 1301,
+      "community": 91,
       "norm_label": "handleexpiredrequest()"
     },
     {
@@ -48657,7 +48657,7 @@
       "source_file": "frontend/src/service/request/shared.ts",
       "source_location": "L45",
       "id": "request_shared_showerrormsg",
-      "community": 1301,
+      "community": 91,
       "norm_label": "showerrormsg()"
     },
     {
@@ -48666,7 +48666,7 @@
       "source_file": "frontend/src/service/request/type.ts",
       "source_location": "L1",
       "id": "frontend_src_service_request_type_ts",
-      "community": 1301,
+      "community": 91,
       "norm_label": "type.ts"
     },
     {
@@ -48675,7 +48675,7 @@
       "source_file": "frontend/src/service/request/type.ts",
       "source_location": "L1",
       "id": "request_type_requestinstancestate",
-      "community": 1301,
+      "community": 91,
       "norm_label": "requestinstancestate"
     },
     {
@@ -48729,7 +48729,7 @@
       "source_file": "frontend/src/store/modules/auth/index.ts",
       "source_location": "L15",
       "id": "auth_index_useauthstore",
-      "community": 1301,
+      "community": 1254,
       "norm_label": "useauthstore"
     },
     {
@@ -57477,7 +57477,7 @@
       "source_file": "mcp-platform/mcp_server/context.py",
       "source_location": "L1",
       "id": "mcp_platform_mcp_server_context_py",
-      "community": 71,
+      "community": 121,
       "norm_label": "context.py"
     },
     {
@@ -57486,7 +57486,7 @@
       "source_file": "mcp-platform/mcp_server/context.py",
       "source_location": "L13",
       "id": "mcp_server_context_mcpcontext",
-      "community": 71,
+      "community": 121,
       "norm_label": "mcpcontext"
     },
     {
@@ -57495,7 +57495,7 @@
       "source_file": "mcp-platform/mcp_server/context.py",
       "source_location": "L17",
       "id": "mcp_server_context_from_headers",
-      "community": 71,
+      "community": 121,
       "norm_label": "from_headers()"
     },
     {
@@ -57504,7 +57504,7 @@
       "source_file": "mcp-platform/mcp_server/http_client.py",
       "source_location": "L1",
       "id": "mcp_platform_mcp_server_http_client_py",
-      "community": 60,
+      "community": 71,
       "norm_label": "http_client.py"
     },
     {
@@ -57513,7 +57513,7 @@
       "source_file": "mcp-platform/mcp_server/http_client.py",
       "source_location": "L18",
       "id": "mcp_server_http_client_mcphttpclient",
-      "community": 60,
+      "community": 71,
       "norm_label": "mcphttpclient"
     },
     {
@@ -57522,7 +57522,7 @@
       "source_file": "mcp-platform/mcp_server/http_client.py",
       "source_location": "L19",
       "id": "mcp_server_http_client_mcphttpclient_init",
-      "community": 60,
+      "community": 71,
       "norm_label": ".__init__()"
     },
     {
@@ -57531,7 +57531,7 @@
       "source_file": "mcp-platform/mcp_server/http_client.py",
       "source_location": "L23",
       "id": "mcp_server_http_client_mcphttpclient_build_headers",
-      "community": 60,
+      "community": 71,
       "norm_label": "._build_headers()"
     },
     {
@@ -57540,7 +57540,7 @@
       "source_file": "mcp-platform/mcp_server/http_client.py",
       "source_location": "L30",
       "id": "mcp_server_http_client_mcphttpclient_get",
-      "community": 60,
+      "community": 71,
       "norm_label": ".get()"
     },
     {
@@ -57549,7 +57549,7 @@
       "source_file": "mcp-platform/mcp_server/http_client.py",
       "source_location": "L30",
       "id": "mcp_platform_mcp_server_http_client_py_str",
-      "community": 60,
+      "community": 71,
       "norm_label": "str"
     },
     {
@@ -57558,7 +57558,7 @@
       "source_file": "mcp-platform/mcp_server/http_client.py",
       "source_location": "L40",
       "id": "mcp_server_http_client_mcphttpclient_post",
-      "community": 60,
+      "community": 71,
       "norm_label": ".post()"
     },
     {
@@ -57567,7 +57567,7 @@
       "source_file": "mcp-platform/mcp_server/http_client.py",
       "source_location": "L50",
       "id": "mcp_server_http_client_mcphttpclient_put",
-      "community": 60,
+      "community": 71,
       "norm_label": ".put()"
     },
     {
@@ -57576,7 +57576,7 @@
       "source_file": "mcp-platform/mcp_server/http_client.py",
       "source_location": "L60",
       "id": "mcp_server_http_client_mcphttpclient_delete",
-      "community": 60,
+      "community": 71,
       "norm_label": ".delete()"
     },
     {
@@ -57702,7 +57702,7 @@
       "source_file": "mcp-platform/mcp_server/registry.py",
       "source_location": "L30",
       "id": "mcp_server_registry_mcptool",
-      "community": 71,
+      "community": 121,
       "norm_label": "mcptool"
     },
     {
@@ -57711,7 +57711,7 @@
       "source_file": "",
       "source_location": "",
       "id": "protocol",
-      "community": 71,
+      "community": 121,
       "norm_label": "protocol"
     },
     {
@@ -57756,7 +57756,7 @@
       "source_file": "mcp-platform/mcp_server/registry.py",
       "source_location": "L40",
       "id": "mcp_server_registry_mcptool_handle",
-      "community": 71,
+      "community": 121,
       "norm_label": ".handle()"
     },
     {
@@ -57765,7 +57765,7 @@
       "source_file": "mcp-platform/mcp_server/registry.py",
       "source_location": "L40",
       "id": "mcp_platform_mcp_server_registry_py_mcpcontext",
-      "community": 71,
+      "community": 121,
       "norm_label": "mcpcontext"
     },
     {
@@ -57774,7 +57774,7 @@
       "source_file": "mcp-platform/mcp_server/registry.py",
       "source_location": "L40",
       "id": "mcp_platform_mcp_server_registry_py_textcontent",
-      "community": 71,
+      "community": 121,
       "norm_label": "textcontent"
     },
     {
@@ -91393,6 +91393,24 @@
       "norm_label": "business-map-editor-scene-switch-optimization.md"
     },
     {
+      "label": "\u7edf\u8ba1\u6bcf\u4e2a\u6807\u6ce8\u5173\u8054\u7684\u6709\u6548\u4efb\u52a1\u6570\uff08\u6309 task_id \u53bb\u91cd\uff09\u3002          \u4ec5\u7edf\u8ba1\u672a\u5220\u9664\u7684\u4efb\u52a1\u53ca\u5176\u672a\u5220\u9664\u7684\u4efb\u52a1\u70b9\u4f4d\uff0c\u7528\u4e8e\u5730\u56fe\u7f16\u8f91\u5668\u5224\u65ad",
+      "file_type": "rationale",
+      "source_file": "backend/modules/task/services/task_service.py",
+      "source_location": "L349",
+      "community": 1825,
+      "norm_label": "\u7edf\u8ba1\u6bcf\u4e2a\u6807\u6ce8\u5173\u8054\u7684\u6709\u6548\u4efb\u52a1\u6570(\u6309 task_id \u53bb\u91cd)\u3002          \u4ec5\u7edf\u8ba1\u672a\u5220\u9664\u7684\u4efb\u52a1\u53ca\u5176\u672a\u5220\u9664\u7684\u4efb\u52a1\u70b9\u4f4d,\u7528\u4e8e\u5730\u56fe\u7f16\u8f91\u5668\u5224\u65ad",
+      "id": "services_task_service_rationale_349"
+    },
+    {
+      "label": "\u8f6f\u5220\u9664\u67d0\u573a\u666f\u5730\u56fe\u4e0b\u7684\u6240\u6709\u4efb\u52a1\uff08\u4e0d commit\uff0c\u7531\u8c03\u7528\u65b9\u63a7\u5236\u4e8b\u52a1\uff09\u3002         \u8fd4\u56de\u8f6f\u5220\u9664\u7684\u8bb0\u5f55\u6570\u3002",
+      "file_type": "rationale",
+      "source_file": "backend/modules/task/services/task_service.py",
+      "source_location": "L415",
+      "community": 1826,
+      "norm_label": "\u8f6f\u5220\u9664\u67d0\u573a\u666f\u5730\u56fe\u4e0b\u7684\u6240\u6709\u4efb\u52a1(\u4e0d commit,\u7531\u8c03\u7528\u65b9\u63a7\u5236\u4e8b\u52a1)\u3002         \u8fd4\u56de\u8f6f\u5220\u9664\u7684\u8bb0\u5f55\u6570\u3002",
+      "id": "services_task_service_rationale_415"
+    },
+    {
       "label": "\u673a\u5668\u4eba\u8bed\u97f3\u914d\u7f6e\u8868     \u6309\u673a\u5668\u4eba\u5b58\u50a8\u5524\u9192\u8bcd\u4e0eTTS\u53c2\u6570",
       "file_type": "rationale",
       "source_file": "backend/database/models/business/robot_voice_config.py",
@@ -94367,7 +94385,7 @@
       "file_type": "code",
       "source_file": "frontend/src/service/api/robot-config.ts",
       "source_location": "L120",
-      "community": 1511,
+      "community": 91,
       "norm_label": "fetchupdategreetingmode()",
       "id": "api_robot_config_fetchupdategreetingmode"
     },
@@ -101774,7 +101792,7 @@
       "file_type": "code",
       "source_file": "backend/modules/grpc/channel.py",
       "source_location": "L102",
-      "community": 535,
+      "community": 545,
       "norm_label": "get_config_channel()",
       "id": "grpc_channel_get_config_channel"
     },
@@ -101792,7 +101810,7 @@
       "file_type": "rationale",
       "source_file": "backend/modules/grpc/channel.py",
       "source_location": "L39",
-      "community": 535,
+      "community": 545,
       "norm_label": "\u83b7\u53d6(\u60f0\u6027\u521b\u5efa)\u5355\u4f8b grpc aio channel",
       "id": "grpc_channel_rationale_39"
     },
@@ -101819,7 +101837,7 @@
       "file_type": "rationale",
       "source_file": "backend/modules/grpc/channel.py",
       "source_location": "L103",
-      "community": 535,
+      "community": 545,
       "norm_label": "\u83b7\u53d6(\u60f0\u6027\u521b\u5efa)configservice \u5355\u4f8b grpc aio channel      \u5730\u5740\u7531 configserviceaddrprovider \u63d0",
       "id": "grpc_channel_rationale_103"
     },
@@ -101837,7 +101855,7 @@
       "file_type": "code",
       "source_file": "backend/modules/grpc/config_client.py",
       "source_location": "L90",
-      "community": 535,
+      "community": 1511,
       "norm_label": "_ensure_stub()",
       "id": "grpc_config_client_ensure_stub"
     },
@@ -160999,9 +161017,9 @@
       "source_file": "backend/database/alembic/versions/0017_drop_meeting_commands_from_voice_config.py",
       "source_location": "L28",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "backend_database_alembic_versions_0017_drop_meeting_commands_from_voice_config_py",
-      "target": "versions_0017_drop_meeting_commands_from_voice_config_upgrade",
-      "confidence_score": 1.0
+      "target": "versions_0017_drop_meeting_commands_from_voice_config_upgrade"
     },
     {
       "relation": "contains",
@@ -161009,9 +161027,9 @@
       "source_file": "backend/database/alembic/versions/0017_drop_meeting_commands_from_voice_config.py",
       "source_location": "L33",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "backend_database_alembic_versions_0017_drop_meeting_commands_from_voice_config_py",
-      "target": "versions_0017_drop_meeting_commands_from_voice_config_downgrade",
-      "confidence_score": 1.0
+      "target": "versions_0017_drop_meeting_commands_from_voice_config_downgrade"
     },
     {
       "relation": "contains",
@@ -301066,9 +301084,9 @@
       "source_file": "aiDoc/frontend-backend/boundary.md",
       "source_location": "L223",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "frontend_backend_boundary_\u524d\u540e\u7aef\u8fb9\u754c\u4e0e\u6570\u636e\u5951\u7ea6",
-      "target": "frontend_backend_boundary_\u53c2\u6570\u914d\u7f6e_\u4f1a\u8bae\u6a21\u5f0f\u72b6\u6001\u5951\u7ea6",
-      "confidence_score": 1.0
+      "target": "frontend_backend_boundary_\u53c2\u6570\u914d\u7f6e_\u4f1a\u8bae\u6a21\u5f0f\u72b6\u6001\u5951\u7ea6"
     },
     {
       "relation": "contains",
@@ -317726,9 +317744,9 @@
       "source_file": "aiDoc/memory/business/2026-10-16_remove-meeting-command-config.md",
       "source_location": "L1",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "aidoc_memory_business_2026_10_16_remove_meeting_command_config_md",
-      "target": "business_2026_10_16_remove_meeting_command_config_\u79fb\u9664\u53c2\u6570\u914d\u7f6e_\u4f1a\u8bae\u6307\u4ee4\u914d\u7f6e_\u542b_grpc_\u4e0e\u6570\u636e\u5e93\u5b57\u6bb5",
-      "confidence_score": 1.0
+      "target": "business_2026_10_16_remove_meeting_command_config_\u79fb\u9664\u53c2\u6570\u914d\u7f6e_\u4f1a\u8bae\u6307\u4ee4\u914d\u7f6e_\u542b_grpc_\u4e0e\u6570\u636e\u5e93\u5b57\u6bb5"
     },
     {
       "relation": "contains",
@@ -317736,9 +317754,9 @@
       "source_file": "aiDoc/memory/business/2026-10-16_remove-meeting-command-config.md",
       "source_location": "L3",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "business_2026_10_16_remove_meeting_command_config_\u79fb\u9664\u53c2\u6570\u914d\u7f6e_\u4f1a\u8bae\u6307\u4ee4\u914d\u7f6e_\u542b_grpc_\u4e0e\u6570\u636e\u5e93\u5b57\u6bb5",
-      "target": "business_2026_10_16_remove_meeting_command_config_\u9700\u6c42\u63cf\u8ff0",
-      "confidence_score": 1.0
+      "target": "business_2026_10_16_remove_meeting_command_config_\u9700\u6c42\u63cf\u8ff0"
     },
     {
       "relation": "contains",
@@ -317746,9 +317764,9 @@
       "source_file": "aiDoc/memory/business/2026-10-16_remove-meeting-command-config.md",
       "source_location": "L9",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "business_2026_10_16_remove_meeting_command_config_\u79fb\u9664\u53c2\u6570\u914d\u7f6e_\u4f1a\u8bae\u6307\u4ee4\u914d\u7f6e_\u542b_grpc_\u4e0e\u6570\u636e\u5e93\u5b57\u6bb5",
-      "target": "business_2026_10_16_remove_meeting_command_config_\u72b6\u6001",
-      "confidence_score": 1.0
+      "target": "business_2026_10_16_remove_meeting_command_config_\u72b6\u6001"
     },
     {
       "relation": "contains",
@@ -317756,9 +317774,9 @@
       "source_file": "aiDoc/memory/business/2026-10-16_remove-meeting-command-config.md",
       "source_location": "L13",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "business_2026_10_16_remove_meeting_command_config_\u79fb\u9664\u53c2\u6570\u914d\u7f6e_\u4f1a\u8bae\u6307\u4ee4\u914d\u7f6e_\u542b_grpc_\u4e0e\u6570\u636e\u5e93\u5b57\u6bb5",
-      "target": "business_2026_10_16_remove_meeting_command_config_\u6d89\u53ca\u8303\u56f4",
-      "confidence_score": 1.0
+      "target": "business_2026_10_16_remove_meeting_command_config_\u6d89\u53ca\u8303\u56f4"
     },
     {
       "relation": "contains",
@@ -317766,9 +317784,9 @@
       "source_file": "aiDoc/memory/business/2026-10-16_remove-meeting-command-config.md",
       "source_location": "L27",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "business_2026_10_16_remove_meeting_command_config_\u79fb\u9664\u53c2\u6570\u914d\u7f6e_\u4f1a\u8bae\u6307\u4ee4\u914d\u7f6e_\u542b_grpc_\u4e0e\u6570\u636e\u5e93\u5b57\u6bb5",
-      "target": "business_2026_10_16_remove_meeting_command_config_\u7ea6\u675f\u4e0e\u5907\u6ce8",
-      "confidence_score": 1.0
+      "target": "business_2026_10_16_remove_meeting_command_config_\u7ea6\u675f\u4e0e\u5907\u6ce8"
     },
     {
       "relation": "contains",
@@ -317776,9 +317794,9 @@
       "source_file": "aiDoc/memory/business/2026-10-16_remove-meeting-command-config.md",
       "source_location": "L33",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "business_2026_10_16_remove_meeting_command_config_\u79fb\u9664\u53c2\u6570\u914d\u7f6e_\u4f1a\u8bae\u6307\u4ee4\u914d\u7f6e_\u542b_grpc_\u4e0e\u6570\u636e\u5e93\u5b57\u6bb5",
-      "target": "business_2026_10_16_remove_meeting_command_config_\u76f8\u5173\u6587\u4ef6",
-      "confidence_score": 1.0
+      "target": "business_2026_10_16_remove_meeting_command_config_\u76f8\u5173\u6587\u4ef6"
     },
     {
       "relation": "contains",
@@ -317786,9 +317804,9 @@
       "source_file": "aiDoc/memory/business/2026-10-16_remove-meeting-command-config.md",
       "source_location": "L41",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "business_2026_10_16_remove_meeting_command_config_\u79fb\u9664\u53c2\u6570\u914d\u7f6e_\u4f1a\u8bae\u6307\u4ee4\u914d\u7f6e_\u542b_grpc_\u4e0e\u6570\u636e\u5e93\u5b57\u6bb5",
-      "target": "business_2026_10_16_remove_meeting_command_config_\u8bb0\u5f55\u65e5\u671f",
-      "confidence_score": 1.0
+      "target": "business_2026_10_16_remove_meeting_command_config_\u8bb0\u5f55\u65e5\u671f"
     },
     {
       "relation": "contains",
@@ -317796,9 +317814,9 @@
       "source_file": "aiDoc/memory/business/2026-10-16_remove-meeting-command-config.md",
       "source_location": "L15",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "business_2026_10_16_remove_meeting_command_config_\u6d89\u53ca\u8303\u56f4",
-      "target": "business_2026_10_16_remove_meeting_command_config_\u540e\u7aef",
-      "confidence_score": 1.0
+      "target": "business_2026_10_16_remove_meeting_command_config_\u540e\u7aef"
     },
     {
       "relation": "contains",
@@ -317806,9 +317824,9 @@
       "source_file": "aiDoc/memory/business/2026-10-16_remove-meeting-command-config.md",
       "source_location": "L21",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "business_2026_10_16_remove_meeting_command_config_\u6d89\u53ca\u8303\u56f4",
-      "target": "business_2026_10_16_remove_meeting_command_config_\u524d\u7aef",
-      "confidence_score": 1.0
+      "target": "business_2026_10_16_remove_meeting_command_config_\u524d\u7aef"
     },
     {
       "relation": "contains",
@@ -339931,5 +339949,5 @@
       "source_file": "frontend/src/assets/svg-icon/activity.svg"
     }
   ],
-  "built_at_commit": "955c1c65b13fb9849f1759f7c8c9675dd07bdb28"
+  "built_at_commit": "b54b71e28705d9e59dc42f7fac52303da60d66f5"
 }

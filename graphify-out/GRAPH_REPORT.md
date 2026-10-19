@@ -1,16 +1,16 @@
-# Graph Report - Wujie-Jilin-Admin  (2026-10-16)
+# Graph Report - Wujie-Jilin-Admin  (2026-10-19)
 
 ## Corpus Check
-- 1078 files · ~1,300,215 words
+- 1078 files · ~1,300,263 words
 - Verdict: corpus is large enough that graph structure adds value.
 
 ## Summary
-- 12022 nodes · 22489 edges · 1818 communities (933 shown, 885 thin omitted)
+- 12024 nodes · 22489 edges · 1820 communities (933 shown, 887 thin omitted)
 - Extraction: 67% EXTRACTED · 33% INFERRED · 0% AMBIGUOUS · INFERRED: 7479 edges (avg confidence: 0.52)
 - Token cost: 0 input · 0 output
 
 ## Graph Freshness
-- Built from commit: `955c1c65`
+- Built from commit: `b54b71e2`
 - Run `git rev-parse HEAD` and compare to check if the graph is stale.
 - Run `graphify update .` after code changes (no API cost).
 
@@ -1045,7 +1045,6 @@
 - [[_COMMUNITY_Community 1296|Community 1296]]
 - [[_COMMUNITY_Community 1297|Community 1297]]
 - [[_COMMUNITY_Community 1299|Community 1299]]
-- [[_COMMUNITY_Community 1301|Community 1301]]
 - [[_COMMUNITY_Community 1302|Community 1302]]
 - [[_COMMUNITY_Community 1304|Community 1304]]
 - [[_COMMUNITY_Community 1305|Community 1305]]
@@ -1237,6 +1236,7 @@
 - [[_COMMUNITY_Community 1507|Community 1507]]
 - [[_COMMUNITY_Community 1508|Community 1508]]
 - [[_COMMUNITY_Community 1510|Community 1510]]
+- [[_COMMUNITY_Community 1511|Community 1511]]
 - [[_COMMUNITY_Community 1512|Community 1512]]
 - [[_COMMUNITY_Community 1513|Community 1513]]
 - [[_COMMUNITY_Community 1514|Community 1514]]
@@ -1489,6 +1489,8 @@
 - [[_COMMUNITY_Community 1776|Community 1776]]
 - [[_COMMUNITY_Community 1777|Community 1777]]
 - [[_COMMUNITY_Community 1778|Community 1778]]
+- [[_COMMUNITY_Community 1779|Community 1779]]
+- [[_COMMUNITY_Community 1780|Community 1780]]
 - [[_COMMUNITY_Community 1783|Community 1783]]
 - [[_COMMUNITY_Community 1792|Community 1792]]
 - [[_COMMUNITY_Community 1793|Community 1793]]
@@ -1564,7 +1566,7 @@
 - **App Branding and Identity Assets** — favicon_app_brand_icon, logo_sidebar_brand, banner_dashboard_hero, soybean_mascot [INFERRED 0.80]
 - **Feather-style Action Icons** — activity_heartbeat_icon, copy_clipboard_icon, cast_screencast_icon, heart_favorite_icon, wind_airflow_icon, at_sign_email_icon [INFERRED 0.85]
 
-## Communities (1818 total, 885 thin omitted)
+## Communities (1820 total, 887 thin omitted)
 
 ### Community 0 - "Community 0"
 Cohesion: 0.29
@@ -1799,8 +1801,8 @@ Cohesion: 0.08
 Nodes (86): AsyncSession, int, PageRequest, Request, 获取当前用户可分配的菜单权限树（含按钮）。     用于角色权限分配时，只展示当前用户自身拥有的菜单和按钮。, SysMenuCreate, SysMenuQueryParams, SysMenuUpdate (+78 more)
 
 ### Community 60 - "Community 60"
-Cohesion: 0.18
-Nodes (10): str, McpContext, str, TextContent, ToolParam, McpHttpClient, QueryDictionaries, tool_description() (+2 more)
+Cohesion: 0.24
+Nodes (8): McpContext, str, TextContent, ToolParam, QueryDictionaries, tool_description(), tool_name(), tool_params()
 
 ### Community 61 - "Community 61"
 Cohesion: 0.12
@@ -1843,8 +1845,8 @@ Cohesion: 0.12
 Nodes (17): compilerOptions, allowSyntheticDefaultImports, baseUrl, esModuleInterop, forceConsistentCasingInFileNames, jsx, lib, module (+9 more)
 
 ### Community 71 - "Community 71"
-Cohesion: 0.16
-Nodes (13): McpContext, TextContent, McpContext, str, TextContent, ToolParam, McpContext, McpTool (+5 more)
+Cohesion: 0.18
+Nodes (10): str, McpContext, str, TextContent, ToolParam, McpHttpClient, CreateMenu, tool_description() (+2 more)
 
 ### Community 72 - "Community 72"
 Cohesion: 0.12
@@ -1924,7 +1926,7 @@ Nodes (10): fetchCloseVideoMonitoring(), fetchCreateRobotModel(), fetchGetAllRob
 
 ### Community 91 - "Community 91"
 Cohesion: 0.03
-Nodes (5): fetchGetApiStats(), fetchGetSystemMetrics(), fetchGetPermissions(), fetchIsRouteExist(), request
+Nodes (17): fetchGetCaptcha(), fetchGetUserInfo(), fetchLogin(), fetchRefreshToken(), fetchVerifyCaptcha(), fetchGetApiStats(), fetchGetSystemMetrics(), fetchGetPermissions() (+9 more)
 
 ### Community 92 - "Community 92"
 Cohesion: 0.26
@@ -2043,8 +2045,8 @@ Cohesion: 0.24
 Nodes (8): McpContext, str, TextContent, ToolParam, CreatePermission, tool_description(), tool_name(), tool_params()
 
 ### Community 121 - "Community 121"
-Cohesion: 0.24
-Nodes (8): McpContext, str, TextContent, ToolParam, GenerateDictionary, tool_description(), tool_name(), tool_params()
+Cohesion: 0.16
+Nodes (13): McpContext, TextContent, McpContext, str, TextContent, ToolParam, McpContext, McpTool (+5 more)
 
 ### Community 122 - "Community 122"
 Cohesion: 0.13
@@ -2519,8 +2521,8 @@ Cohesion: 0.15
 Nodes (12): &nbsp;&nbsp;&nbsp;🛠 优化, &nbsp;&nbsp;&nbsp;🛠 优化, &nbsp;&nbsp;&nbsp;🛠 优化, &nbsp;&nbsp;&nbsp;🏡 杂务, &nbsp;&nbsp;&nbsp;❤️ 贡献者, &nbsp;&nbsp;&nbsp;❤️ 贡献者, &nbsp;&nbsp;&nbsp;❤️ 贡献者, &nbsp;&nbsp;&nbsp;🐞 错误修复 (+4 more)
 
 ### Community 535 - "Community 535"
-Cohesion: 0.10
-Nodes (28): str, BatteryConfigServiceStub, Channel, FaceRecognitionServiceStub, close_all_config_channels(), close_channel(), get_channel(), get_config_channel() (+20 more)
+Cohesion: 0.18
+Nodes (13): str, close_all_config_channels(), close_channel(), get_map_service_addr(), gRPC channel 单例管理  支持运行时切换 MapService 地址： - get_map_service_addr() / set_map_ser, 关闭所有 ConfigService 缓存 channel（应用 shutdown 时调用）, 关闭并清理所有 channel（MapService 单例 + ConfigService 多通道），供应用 shutdown 时调用, 当前生效的 MapService 地址（运行时覆盖 > settings 配置） (+5 more)
 
 ### Community 537 - "Community 537"
 Cohesion: 0.05
@@ -2555,8 +2557,8 @@ Cohesion: 0.13
 Nodes (22): int, SnowflakeInfo, _current_millis(), generate_id(), parse_id(), Snowflake, SnowflakeConfig, int (+14 more)
 
 ### Community 545 - "Community 545"
-Cohesion: 0.28
-Nodes (14): int, MapInfo, str, _get_stub_for_addr(), notify_map_saved(), notify_map_saved_one(), MapService gRPC 客户端  封装 NotifyMapSaved / SearchMaps / SwitchMap 三个 RPC：  地址路由（ta, search_maps() (+6 more)
+Cohesion: 0.15
+Nodes (22): int, MapInfo, str, Channel, get_channel(), get_config_channel(), get_config_channel_by_addr(), 获取（惰性创建）ConfigService 单例 gRPC aio Channel      地址由 ConfigServiceAddrProvider 提 (+14 more)
 
 ### Community 546 - "Community 546"
 Cohesion: 0.11
@@ -3607,8 +3609,8 @@ Cohesion: 0.40
 Nodes (4): ExportTask, ExportTaskList, ExportTaskStatus, ExportTaskSubmit
 
 ### Community 1254 - "Community 1254"
-Cohesion: 0.09
-Nodes (17): clearAuthStorage(), getToken(), connected, lastMessage, useWebSocketNotification(), getRouteName(), getRouteQueryOfLoginRoute(), initRoute() (+9 more)
+Cohesion: 0.08
+Nodes (20): useAuthStore, clearAuthStorage(), getToken(), useAuth(), connected, lastMessage, useWebSocketNotification(), permission (+12 more)
 
 ### Community 1255 - "Community 1255"
 Cohesion: 0.33
@@ -3653,10 +3655,6 @@ Nodes (13): 两种修法各司其职（沿用项目既有模式）, 为何不直
 ### Community 1299 - "Community 1299"
 Cohesion: 0.20
 Nodes (9): 任务类型新增「即时」(instant), 前端, 后端, 涉及范围, 状态, 相关文件, 约束与备注, 记录日期 (+1 more)
-
-### Community 1301 - "Community 1301"
-Cohesion: 0.07
-Nodes (15): fetchGetCaptcha(), fetchGetUserInfo(), fetchLogin(), fetchRefreshToken(), fetchVerifyCaptcha(), useAuthStore, useAuth(), permission (+7 more)
 
 ### Community 1302 - "Community 1302"
 Cohesion: 0.11
@@ -3922,6 +3920,10 @@ Nodes (6): 视频监控打开成功后返回的 LiveKit 连接票据, 视频监�
 Cohesion: 0.38
 Nodes (12): AsyncSession, int, SceneGroupQueryParams, SceneGroup, build_query(), create(), delete(), get() (+4 more)
 
+### Community 1511 - "Community 1511"
+Cohesion: 0.43
+Nodes (7): BatteryConfigServiceStub, FaceRecognitionServiceStub, _ensure_stub(), _get_stub_for_addr(), SpeedConfigServiceStub, VideoMonitoringServiceStub, VoiceConfigServiceStub
+
 ### Community 1512 - "Community 1512"
 Cohesion: 0.22
 Nodes (8): 前置条件：, 前置条件：, 操作步骤：, 操作步骤：, 方案A：电脑连接, 方案B：显示屏连接, 方案总览, 语音背包wifi配网操作指南
@@ -4069,17 +4071,17 @@ Nodes (3): local, local, locales
 ## Knowledge Gaps
 - **3721 isolated node(s):** `allow`, `PreToolUse`, `allow`, `additionalDirectories`, `recommendations` (+3716 more)
   These have ≤1 connection - possible missing edges or undocumented components.
-- **885 thin communities (<3 nodes) omitted from report** — run `graphify query` to explore isolated nodes.
+- **887 thin communities (<3 nodes) omitted from report** — run `graphify query` to explore isolated nodes.
 
 ## Suggested Questions
 _Questions this graph is uniquely positioned to answer:_
 
 - **Why does `Client` connect `Community 58` to `Community 1503`, `Community 28`, `Community 863`?**
-  _High betweenness centrality (0.032) - this node is a cross-community bridge._
+  _High betweenness centrality (0.033) - this node is a cross-community bridge._
 - **Why does `ResponseModel` connect `Community 1022` to `Community 1`, `Community 3`, `Community 6`, `Community 9`, `Community 10`, `Community 150`, `Community 543`, `Community 41`, `Community 45`, `Community 177`, `Community 54`, `Community 58`, `Community 59`, `Community 1219`, `Community 76`, `Community 1234`, `Community 609`, `Community 488`, `Community 1514`, `Community 886`, `Community 1020`, `Community 509`?**
-  _High betweenness centrality (0.027) - this node is a cross-community bridge._
+  _High betweenness centrality (0.028) - this node is a cross-community bridge._
 - **Why does `NotFoundError` connect `Community 58` to `Community 1`, `Community 3`, `Community 5`, `Community 6`, `Community 136`, `Community 9`, `Community 11`, `Community 15`, `Community 19`, `Community 147`, `Community 21`, `Community 1172`, `Community 23`, `Community 30`, `Community 543`, `Community 1442`, `Community 41`, `Community 1322`, `Community 1195`, `Community 1451`, `Community 1200`, `Community 1588`, `Community 1589`, `Community 54`, `Community 55`, `Community 59`, `Community 1596`, `Community 1597`, `Community 704`, `Community 1344`, `Community 1219`, `Community 76`, `Community 1231`, `Community 1501`, `Community 1504`, `Community 609`, `Community 1765`, `Community 1510`, `Community 1255`, `Community 488`, `Community 1257`, `Community 1515`, `Community 509`, `Community 1022`?**
-  _High betweenness centrality (0.027) - this node is a cross-community bridge._
+  _High betweenness centrality (0.026) - this node is a cross-community bridge._
 - **Are the 330 inferred relationships involving `NotFoundError` (e.g. with `FastAPI` and `Request`) actually correct?**
   _`NotFoundError` has 330 INFERRED edges - model-reasoned connections that need verification._
 - **Are the 315 inferred relationships involving `ResponseModel` (e.g. with `FastAPI` and `Request`) actually correct?**
