@@ -64,12 +64,20 @@ declare namespace Api {
       duration_seconds: number;
     };
 
-    /** performance music option（预设背景音乐，本期不支持上传） */
+    /** performance music option（预设 bdj_* 或用户上传 upload:<file_id>，上传仅自己可见） */
     type PerformanceMusicOption = {
       value: string;
       label: string;
-      duration_seconds: number;
+      duration_seconds?: number | null;
+      /** 可试听的文件ID（sys_file）；为空表示服务端无音频文件、不支持试听 */
+      file_id?: number | null;
       file_url?: string | null;
+    };
+
+    /** performance music upload result（超过4分钟自动截取前4分钟） */
+    type PerformanceMusicUploadResult = PerformanceMusicOption & {
+      file_id: number;
+      truncated: boolean;
     };
 
     /** robot brief info for task */

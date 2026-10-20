@@ -8,13 +8,13 @@ import {
   fetchGetAllRobots,
   fetchGetMapAnnotations,
   fetchGetPerformanceActions,
-  fetchGetPerformanceMusic,
   fetchGetSceneMapList,
   fetchGetTask,
   fetchUpdateTask
 } from '@/service/api';
 import { useNaiveForm } from '@/hooks/common/form';
 import { $t } from '@/locales';
+import PerformanceMusicSelect from './performance-music-select.vue';
 
 defineOptions({ name: 'TaskOperateDrawer' });
 
@@ -210,25 +210,20 @@ interface PerformanceStepItem {
 /** 表演步骤上限（与后端 PERFORMANCE_MAX_STEPS 一致） */
 const PERFORMANCE_MAX_STEPS = 3;
 
-/** 预设表演动作选项 */
+/** 预设表演动作选项（背景音乐的选择/上传/试听/删除在 PerformanceMusicSelect 组件内闭环） */
 const performanceActionOptions = ref<{ label: string; value: string }[]>([]);
-/** 预设背景音乐选项 */
-const performanceMusicOptions = ref<{ label: string; value: string }[]>([]);
-let performanceOptionsLoaded = false;
+let performanceActionOptionsLoaded = false;
 
 async function loadPerformanceOptions(force = false) {
-  if (!force && performanceOptionsLoaded) return;
-  const [actionsResult, musicResult] = await Promise.all([fetchGetPerformanceActions(), fetchGetPerformanceMusic()]);
-  if (!actionsResult.error && actionsResult.data) {
-    performanceActionOptions.value = (actionsResult.data || []).map(opt => ({
+  if (!force && performanceActionOptionsLoaded) return;
+  const { error, data } = await fetchGetPerformanceActions();
+  if (!error && data) {
+    performanceActionOptions.value = (data || []).map(opt => ({
       label: opt.label,
       value: opt.value
     }));
   }
-  if (!musicResult.error && musicResult.data) {
-    performanceMusicOptions.value = (musicResult.data || []).map(opt => ({ label: opt.label, value: opt.value }));
-  }
-  performanceOptionsLoaded = true;
+  performanceActionOptionsLoaded = true;
 }
 
 interface FormModel {
@@ -912,8 +907,7 @@ onMounted(() => {
                 @focus="() => loadPerformanceOptions()" />
             </NFormItemGi>
             <NFormItemGi label="背景音乐">
-              <NSelect v-model:value="step.music" :options="performanceMusicOptions" placeholder="选择预设背景音乐"
-                @focus="() => loadPerformanceOptions()" />
+              <PerformanceMusicSelect v-model:value="step.music" />
             </NFormItemGi>
             <NFormItemGi label="播放次数">
               <NInputNumber v-model:value="step.play_count" :min="1" :precision="0" :show-button="false"
@@ -945,7 +939,8 @@ onMounted(() => {
           添加表演动作（最多 {{ PERFORMANCE_MAX_STEPS }} 套）
         </NButton>
         <div class="mt-8px text-12px" style="color: var(--n-text-color-3)">
-          多套动作按顺序串行执行，可重复选择同一套动作；音乐仅支持系统预设曲目。
+          多套动作按顺序串行执行，可重复选择同一套动作；背景音乐可选系统预设曲目，也可上传本地音频（mp3/wav，单个不超过
+          20MB），超过 4 分钟的音频将自动截取前 4 分钟。
         </div>
       </template>
 

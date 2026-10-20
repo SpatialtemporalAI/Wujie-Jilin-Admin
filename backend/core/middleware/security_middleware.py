@@ -62,8 +62,12 @@ class RequestAuditMiddleware(BaseHTTPMiddleware):
 class RequestSizeLimitMiddleware(BaseHTTPMiddleware):
     """基于 Content-Length 的请求体大小限制。"""
 
-    # 上传接口豁免路径前缀（使用 UPLOAD_LOCAL.MAX_FILE_SIZE 单独控制）
-    _UPLOAD_PATHS = ("/admin/sys/file/upload", "/robot/config/face/upload")
+    # 上传接口豁免路径前缀（使用各自的文件大小限制单独控制）
+    _UPLOAD_PATHS = (
+        "/admin/sys/file/upload",
+        "/robot/config/face/upload",
+        "/admin/task/manage/performance/music/upload",
+    )
 
     async def dispatch(self, request: Request, call_next: Callable):
         # 上传接口豁免全局请求体大小限制

@@ -210,13 +210,17 @@
 
 - `performance_steps: JSON`（`task` 表，复用 `broadcast_steps` 模式）：每套动作一个元素
   `[{ "action": "baduanjin_1", "music": "bdj_1", "play_count": 1, "interval": 0 }, ...]`
-  - `action` / `music`：后端预设标识，前端只能下拉选择，**本期不支持用户上传音频**
+  - `action`：后端预设标识，前端只能下拉选择
+  - `music`：预设标识 `bdj_*` 或用户上传 `upload:<sys_file_id>`（2026-10-19 起支持上传，仅自己可见；mp3/wav ≤20MB，超 4 分钟后端自动截取前 240s）
   - 套数 1-3（`PERFORMANCE_MAX_STEPS=3`）；`play_count >= 1`；非最后一套 `interval` 必填（0-300 秒），最后一套为 `null`
-  - 校验：后端 `PerformanceStepSchema` + `TaskCreate.validate_performance_steps`（`modules/task/schemas/task.py`）；前端弹窗提交前逐项校验
+  - 校验：后端 `PerformanceStepSchema` + `TaskCreate.validate_performance_steps`（`modules/task/schemas/task.py`），`upload:` 引用存在性由 `PerformanceMusicService.validate_music_refs` 在创建/更新时校验；前端弹窗提交前逐项校验
 - 预设枚举接口（挂在 `/task/manage` 下，仅需登录）：
   - `GET /task/manage/performance/actions` → `PerformanceActionOption[]`（`value/label/duration_seconds`）
-  - `GET /task/manage/performance/music` → `PerformanceMusicOption[]`（+ `file_url` 预留，当前为 null）
-  - 数据来源是后端模块级常量（`_PERFORMANCE_ACTIONS`/`_PERFORMANCE_MUSIC`），不建表
+  - `GET /task/manage/performance/music` → `PerformanceMusicOption[]`（预设 + 当前用户上传；上传项 `duration_seconds` 为列表时实时探测的实际时长（截取后应为 240），探测失败为 null；`file_url` 预留为 null）
+  - 试听契约：`file_id` 非空即可试听，统一走 `GET /admin/sys/file/{file_id}/preview?token=<JWT>`（支持 Range），前端 `getFilePreviewUrl(file_id)` 拼 URL、`<audio>` 播放。上传音乐 `file_id` 为自身；预设音乐 `file_id` 来自后端 `_PRESET_MUSIC_FILE_IDS` 映射（`modules/task/endpoints/task.py`，把预设音频传到文件管理后填入 sys_file_id 即开通试听，未配置的预设试听按钮禁用）
+  - `POST /task/manage/performance/music/upload`（multipart）→ `PerformanceMusicUploadResult`（`value/label/duration_seconds/file_id/truncated`，`truncated=true` 表示超 4 分钟已截取）
+  - `DELETE /task/manage/performance/music/{file_id}` → 删除自己上传的音乐，被表演任务引用返回 409
+  - 预设数据来源是后端模块级常量（`_PERFORMANCE_ACTIONS`/`_PERFORMANCE_MUSIC`），不建表；上传音频复用 `sys_file` + `core.storage`，按 `created_by` + 扩展名（mp3/wav）识别
 - 前端：`task-operate-drawer.vue` 表演类型渲染「表演动作编排」卡片（动作/音乐 NSelect + 播放次数/套间间隔 NInputNumber + 上移/下移/删除，最多 3 套）；类型文案/颜色映射在各 tab 同步（`performance` → 表演 / error 色）
 - `TaskDefinitionSnapshot` 同步含 `performance_steps`（宽松 dict，容纳历史脏数据）
 

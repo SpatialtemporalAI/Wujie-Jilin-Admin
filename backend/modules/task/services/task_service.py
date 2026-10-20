@@ -16,6 +16,7 @@ from database.models.business.robot import Robot
 from app.models.common.base import parse_optional_bool_value, parse_optional_int_value
 from core.exception.errors import NotFoundError, ConflictError
 from modules.grpc.task_client import TaskConfigClient
+from modules.task.services.performance_music_service import PerformanceMusicService
 from modules.task.schemas.task import (
     TaskCreate,
     TaskUpdate,
@@ -126,6 +127,12 @@ class TaskService:
                 logger.warning("创建任务失败，任务名称已存在，任务名: %s", stripped_name)
                 raise ConflictError(msg="任务名称已存在")
 
+            # 表演步骤中用户上传音乐（upload:<file_id>）引用存在性校验
+            if task_in.performance_steps:
+                await PerformanceMusicService.validate_music_refs(
+                    db, [step.music for step in task_in.performance_steps]
+                )
+
             # 创建任务主记录
             task_obj = Task(
                 name=stripped_name,
@@ -205,6 +212,9 @@ class TaskService:
 
             # 表演步骤需序列化为纯 dict 列表后落库（与 broadcast_steps 同款处理）
             if task_in.performance_steps is not None:
+                await PerformanceMusicService.validate_music_refs(
+                    db, [step.music for step in task_in.performance_steps]
+                )
                 update_data["performance_steps"] = [
                     step.model_dump() for step in task_in.performance_steps
                 ]

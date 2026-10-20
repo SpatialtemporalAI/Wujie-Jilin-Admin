@@ -2,6 +2,7 @@
 # -*- coding: utf-8 -*-
 
 from typing import Optional, List, Annotated, ClassVar
+import re
 from pydantic import Field, ConfigDict, BeforeValidator, field_validator, model_validator, ValidationInfo
 from datetime import datetime, date, time
 
@@ -18,9 +19,10 @@ EnableStatusField = Annotated[str, BeforeValidator(_bool_to_enable_str)]
 
 VALID_REPEAT_CYCLES = {'none', 'mon', 'tue', 'wed', 'thu', 'fri', 'sat', 'sun'}
 
-# 表演任务（八段锦）约束：动作与音乐均为后端预置，本期不支持用户上传音频
+# 表演任务（八段锦）约束：动作为后端预置；音乐支持预设标识与用户上传（upload:<sys_file_id>）
 VALID_PERFORMANCE_ACTIONS = {'baduanjin_1', 'baduanjin_2', 'baduanjin_3'}
 VALID_PERFORMANCE_MUSIC = {'bdj_1', 'bdj_2', 'bdj_3', 'bdj_full_12min'}
+UPLOAD_MUSIC_PATTERN = re.compile(r'^upload:\d+$')
 PERFORMANCE_MAX_STEPS = 3
 PERFORMANCE_MAX_INTERVAL = 300
 
@@ -62,7 +64,7 @@ class PerformanceStepSchema(BaseReqEntity):
     play_count 播放次数最低 1，interval 套间间隔 0-300 秒（最后一套可为空）"""
 
     action: str = Field(..., description="表演动作: baduanjin_1/baduanjin_2/baduanjin_3", max_length=30)
-    music: str = Field(..., description="背景音乐（预设标识）: bdj_1/bdj_2/bdj_3/bdj_full_12min", max_length=30)
+    music: str = Field(..., description="背景音乐: 预设标识 bdj_1/bdj_2/bdj_3/bdj_full_12min，或用户上传 upload:<file_id>", max_length=30)
     play_count: int = Field(1, description="播放次数（循环动作+音乐）", ge=1)
     interval: Optional[int] = Field(None, description="套间间隔（秒），最后一套可为空", ge=0, le=PERFORMANCE_MAX_INTERVAL)
 
@@ -76,7 +78,7 @@ class PerformanceStepSchema(BaseReqEntity):
     @field_validator('music')
     @classmethod
     def validate_music(cls, v: str) -> str:
-        if v not in VALID_PERFORMANCE_MUSIC:
+        if v not in VALID_PERFORMANCE_MUSIC and not UPLOAD_MUSIC_PATTERN.match(v):
             raise ValueError(f"无效的背景音乐: {v}")
         return v
 
@@ -310,8 +312,15 @@ class PerformanceActionOption(BaseRespEntity):
 
 
 class PerformanceMusicOption(BaseRespEntity):
-    """背景音乐下拉选项（预设，本期不支持上传）"""
+    """背景音乐下拉选项：预设（bdj_*）或用户上传（upload:<file_id>）"""
     value: str = Field(..., description="音乐标识")
     label: str = Field(..., description="展示名称")
-    duration_seconds: int = Field(..., description="音频时长（秒，≤240）")
+    duration_seconds: Optional[int] = Field(None, description="音频时长（秒，≤240；上传项未持久化时长时为 None）")
+    file_id: Optional[int] = Field(None, description="可试听的文件ID（sys_file）；为空表示该曲目服务端无音频文件、不支持试听")
     file_url: Optional[str] = Field(None, description="试听文件地址（预留）")
+
+
+class PerformanceMusicUploadResult(PerformanceMusicOption):
+    """背景音乐上传结果"""
+    file_id: int = Field(..., description="文件ID（sys_file）")
+    truncated: bool = Field(..., description="是否因超过 4 分钟被截取")

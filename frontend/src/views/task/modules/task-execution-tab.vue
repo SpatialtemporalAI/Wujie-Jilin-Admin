@@ -59,7 +59,7 @@ const taskTypeTagType: Record<string, NaiveUI.ThemeColor> = {
   patrol: 'info',
   broadcast: 'success',
   instant: 'warning',
-  performance: 'error'
+  performance: 'primary'
 };
 
 const statusOptions = [

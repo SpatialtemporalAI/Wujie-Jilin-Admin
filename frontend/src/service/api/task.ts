@@ -66,11 +66,30 @@ export function fetchGetPerformanceActions() {
   });
 }
 
-/** get preset performance music options（本期仅预设，不支持上传） */
+/** get performance music options（预设 + 当前用户上传，上传仅自己可见） */
 export function fetchGetPerformanceMusic() {
   return request<Api.Task.PerformanceMusicOption[]>({
     url: '/admin/task/manage/performance/music',
     method: 'get'
+  });
+}
+
+/** upload performance music（mp3/wav ≤20MB，超过4分钟自动截取前4分钟） */
+export function fetchUploadPerformanceMusic(file: File) {
+  const formData = new FormData();
+  formData.append('file', file);
+  return request<Api.Task.PerformanceMusicUploadResult>({
+    url: '/admin/task/manage/performance/music/upload',
+    method: 'post',
+    data: formData
+  });
+}
+
+/** delete uploaded performance music（仅自己上传的；被任务引用的不可删） */
+export function fetchDeletePerformanceMusic(fileId: number) {
+  return request<void>({
+    url: `/admin/task/manage/performance/music/${fileId}`,
+    method: 'delete'
   });
 }
 

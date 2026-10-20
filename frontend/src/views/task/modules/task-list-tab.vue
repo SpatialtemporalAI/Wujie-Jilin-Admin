@@ -42,7 +42,7 @@ const taskTypeTagType: Record<string, import('naive-ui').TagProps['type']> = {
   patrol: 'info',
   broadcast: 'success',
   instant: 'warning',
-  performance: 'error'
+  performance: 'primary'
 };
 
 const scheduleCycleLabel: Record<string, string> = {

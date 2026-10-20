@@ -5,7 +5,7 @@
 任务管理接口
 """
 import logging
-from fastapi import APIRouter, Depends, Path, Request
+from fastapi import APIRouter, Depends, Path, Request, UploadFile, File
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select
 from sqlalchemy.orm import selectinload
@@ -28,6 +28,7 @@ from database.models.business.robot import Robot
 from database.models.business.scene_map import SceneMap
 
 from modules.task.services.task_service import TaskService
+from modules.task.services.performance_music_service import PerformanceMusicService, UPLOAD_MUSIC_PREFIX
 from modules.task.schemas.task import (
     TaskCreate,
     TaskUpdate,
@@ -38,22 +39,34 @@ from modules.task.schemas.task import (
     TaskRobotBrief,
     PerformanceActionOption,
     PerformanceMusicOption,
+    PerformanceMusicUploadResult,
 )
 
 logger = logging.getLogger(__name__)
 
-# 表演任务（八段锦）预设动作与背景音乐：本期仅提供平台预置项，不支持用户上传
+# 表演任务（八段锦）预设动作与背景音乐：动作为平台预置；音乐支持预设与用户上传
 _PERFORMANCE_ACTIONS: list[PerformanceActionOption] = [
     PerformanceActionOption(value="baduanjin_1", label="八段锦·第一套（双手托天理三焦）", duration_seconds=240),
     PerformanceActionOption(value="baduanjin_2", label="八段锦·第二套（左右开弓似射雕）", duration_seconds=240),
     PerformanceActionOption(value="baduanjin_3", label="八段锦·第三套（调理脾胃须单举）", duration_seconds=240),
 ]
 _PERFORMANCE_MUSIC: list[PerformanceMusicOption] = [
-    PerformanceMusicOption(value="bdj_1", label="八段锦配乐·第一套", duration_seconds=240),
-    PerformanceMusicOption(value="bdj_2", label="八段锦配乐·第二套", duration_seconds=240),
-    PerformanceMusicOption(value="bdj_3", label="八段锦配乐·第三套", duration_seconds=240),
-    PerformanceMusicOption(value="bdj_full_12min", label="八段锦配乐·完整版（约4分钟）", duration_seconds=240),
+    PerformanceMusicOption(value="bdj_1", label="八段锦音乐·第一套", duration_seconds=240),
+    PerformanceMusicOption(value="bdj_2", label="八段锦音乐·第二套", duration_seconds=240),
+    PerformanceMusicOption(value="bdj_3", label="八段锦音乐·第三套", duration_seconds=240),
+    PerformanceMusicOption(value="bdj_full_12min", label="八段锦音乐·完整版（12分钟）", duration_seconds=240),
 ]
+
+# 预设音乐对应的服务端音频文件（sys_file_id）：填入后预设曲目即可试听
+# （与上传音乐一样走 /admin/sys/file/{file_id}/preview）。预设音频原本只内置在
+# 机器人端，将音频文件上传到文件管理后，把对应的 sys_file_id 填到这里即可。
+# 注意：当前映射的是测试环境数据（sample-audio-*），正式环境部署时需替换为正式音频的 file_id。
+_PRESET_MUSIC_FILE_IDS: dict[str, int] = {
+    "bdj_1": 3723809320935424,          # sample-audio-short.mp3（测试数据）
+    "bdj_2": 3723809318641664,          # sample-audio-long.mp3（测试数据）
+    "bdj_3": 3723809321328640,          # sample-audio-5mb.mp3（测试数据）
+    "bdj_full_12min": 3723809322704896, # sample-audio-10mb.mp3（测试数据）
+}
 
 
 async def _fill_task_map_name(db: AsyncSession, records: list[TaskResponseData]) -> None:
@@ -349,6 +362,90 @@ async def list_performance_actions():
     "/performance/music",
     response_model=ResponseModel[list[PerformanceMusicOption]],
 )
-async def list_performance_music():
-    """获取背景音乐预设列表（本期仅预设，不支持上传）"""
-    return response_base.success(data=_PERFORMANCE_MUSIC)
+async def list_performance_music(
+    db: AsyncSession = Depends(get_session),
+    user: SysUser = Depends(current_user),
+):
+    """获取背景音乐列表：平台预设 + 当前用户上传（仅自己可见，含实际时长）
+
+    file_id 非空即表示可试听（走 /admin/sys/file/{file_id}/preview）：
+    上传音乐为自身文件；预设音乐需在 _PRESET_MUSIC_FILE_IDS 配置映射，
+    已映射的预设时长展示为音频文件的真实时长。
+    """
+    preset_durations = await PerformanceMusicService.probe_durations_by_ids(
+        db, set(_PRESET_MUSIC_FILE_IDS.values())
+    )
+    options: list[PerformanceMusicOption] = []
+    for opt in _PERFORMANCE_MUSIC:
+        file_id = _PRESET_MUSIC_FILE_IDS.get(opt.value)
+        duration = preset_durations.get(file_id) if file_id else None
+        options.append(
+            opt.model_copy(
+                update={
+                    "file_id": file_id,
+                    "duration_seconds": int(round(duration)) if duration is not None else opt.duration_seconds,
+                }
+            )
+        )
+    uploads = await PerformanceMusicService.list_user_music_with_duration(db, user.id)
+    options.extend(
+        PerformanceMusicOption(
+            value=f"{UPLOAD_MUSIC_PREFIX}{item.id}",
+            label=item.original_name,
+            duration_seconds=int(round(duration)) if duration is not None else None,
+            file_id=item.id,
+        )
+        for item, duration in uploads
+    )
+    return response_base.success(data=options)
+
+
+@task_router.post(
+    "/performance/music/upload",
+    response_model=ResponseModel[PerformanceMusicUploadResult],
+    summary="上传表演背景音乐",
+)
+async def upload_performance_music(
+    file: UploadFile = File(..., description="音频文件（mp3/wav，≤20MB，超过4分钟自动截取前4分钟）"),
+    db: AsyncSession = Depends(get_session),
+    user: SysUser = Depends(current_user),
+):
+    """上传表演背景音乐（仅自己可见）
+
+    - 仅支持 mp3/wav，单文件不超过 20MB；
+    - 时长超过 4 分钟的音频自动截取前 4 分钟，响应 truncated=true。
+    """
+    file_data = await file.read()
+    sys_file, duration, truncated = await PerformanceMusicService.upload_music(
+        db=db,
+        file_data=file_data,
+        original_name=file.filename or "unknown",
+        mime_type=file.content_type or "application/octet-stream",
+        user_id=user.id,
+    )
+    await db.commit()
+    result = PerformanceMusicUploadResult(
+        value=f"{UPLOAD_MUSIC_PREFIX}{sys_file.id}",
+        label=sys_file.original_name,
+        duration_seconds=int(duration),
+        file_id=sys_file.id,
+        truncated=truncated,
+    )
+    msg = "上传成功，音频超过 4 分钟已自动截取前 4 分钟" if truncated else "上传成功"
+    return response_base.success(data=result, msg=msg)
+
+
+@task_router.delete(
+    "/performance/music/{file_id}",
+    response_model=ResponseModel,
+    summary="删除上传的表演背景音乐",
+)
+async def delete_performance_music(
+    file_id: int = Path(..., description="文件ID（sys_file）"),
+    db: AsyncSession = Depends(get_session),
+    user: SysUser = Depends(current_user),
+):
+    """删除自己上传的表演背景音乐；被表演任务引用的不允许删除"""
+    await PerformanceMusicService.delete_music(db, file_id, user.id)
+    await db.commit()
+    return response_base.success(msg="删除成功")
