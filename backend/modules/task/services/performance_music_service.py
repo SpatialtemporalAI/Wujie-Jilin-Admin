@@ -7,7 +7,9 @@
 规则：
 - 上传音频仅自己可见、可选用、可删除（被表演任务引用的不允许删除）；
 - 时长超过 4 分钟（240 秒）的音频自动截取前 4 分钟；
-- performance_steps.music 中，预设为 bdj_* 标识，用户上传为 upload:<sys_file_id>。
+- performance_steps.music 中，预设为 bdj_* 标识，用户上传为 upload:<sys_file_id>；
+- 预设音频是 alembic 0019 种入 sys_file 的系统内置文件（created_by=0，
+  file_path 前缀 performance_music/），试听与上传音乐一样走 /admin/sys/file/{file_id}/preview。
 """
 import asyncio
 import logging
@@ -37,16 +39,10 @@ _DURATION_TOLERANCE = 0.5
 UPLOAD_MUSIC_PREFIX = "upload:"
 UPLOAD_MUSIC_PATTERN = re.compile(r"^upload:(\d+)$")
 
-# 预设音乐对应的服务端音频文件（sys_file_id）：填入后预设曲目即可试听
-# （与上传音乐一样走 /admin/sys/file/{file_id}/preview）。预设音频原本只内置在
-# 机器人端，将音频文件上传到文件管理后，把对应的 sys_file_id 填到这里即可。
-# 被映射的文件不会再出现在「我上传的音乐」列表中（避免重复展示）。
-PRESET_MUSIC_FILE_IDS: dict[str, int] = {
-    "bdj_1": 3728273413709824,  # 八段锦1.mp3
-    "bdj_2": 3728273413775360,  # 八段锦2.mp3
-    "bdj_3": 3728273413644288,  # 八段锦3.mp3
-    # bdj_full_12min 已从预设目录下线（2026-10-21），无需映射
-}
+# 预设音乐种子数据的 file_path 前缀（alembic 0019 种入 sys_file，created_by=0 系统内置）。
+# 预设标识 = 文件名去扩展名（如 performance_music/bdj_1.mp3 -> bdj_1）。
+# 代码不硬编码 sys_file_id，统一按该前缀动态查询映射。
+PRESET_MUSIC_PATH_PREFIX = "performance_music/"
 
 _DURATION_RE = re.compile(r"Duration: (\d+):(\d+):(\d+(?:\.\d+)?)")
 
@@ -122,6 +118,28 @@ def parse_upload_file_id(value: str) -> int | None:
 class PerformanceMusicService:
 
     @staticmethod
+    async def get_preset_music_file_map(db: AsyncSession) -> dict[str, int]:
+        """查询预设音乐标识 -> sys_file_id 映射
+
+        数据源是 alembic 0019 种入的 sys_file 行（file_path 前缀 performance_music/），
+        按文件名 stem（如 bdj_1）匹配预设标识；未种入的预设不在映射中。
+        """
+        result = await db.execute(
+            select(SysFile.file_path, SysFile.id)
+            .where(
+                SysFile.deleted_at.is_(None),
+                SysFile.file_path.like(f"{PRESET_MUSIC_PATH_PREFIX}%"),
+                SysFile.extension.in_(ALLOWED_EXTENSIONS),
+            )
+            .order_by(SysFile.id.asc())
+        )
+        mapping: dict[str, int] = {}
+        for file_path, file_id in result.all():
+            stem = file_path.rsplit("/", 1)[-1].rsplit(".", 1)[0]
+            mapping[stem] = file_id
+        return mapping
+
+    @staticmethod
     async def upload_music(
         db: AsyncSession,
         file_data: bytes,
@@ -169,19 +187,15 @@ class PerformanceMusicService:
     async def list_user_music(db: AsyncSession, user_id: int) -> list[SysFile]:
         """当前用户上传的表演背景音乐列表（仅自己可见）
 
-        已被预设音乐映射（PRESET_MUSIC_FILE_IDS）占用的文件不再重复出现在上传列表中。
+        预设音乐种子行 created_by=0（系统内置），不会匹配任何真实用户，无需额外排除。
         """
-        conditions = [
-            SysFile.deleted_at.is_(None),
-            SysFile.created_by == user_id,
-            SysFile.extension.in_(ALLOWED_EXTENSIONS),
-        ]
-        preset_file_ids = set(PRESET_MUSIC_FILE_IDS.values())
-        if preset_file_ids:
-            conditions.append(SysFile.id.notin_(preset_file_ids))
         result = await db.execute(
             select(SysFile)
-            .where(*conditions)
+            .where(
+                SysFile.deleted_at.is_(None),
+                SysFile.created_by == user_id,
+                SysFile.extension.in_(ALLOWED_EXTENSIONS),
+            )
             .order_by(SysFile.created_at.desc())
         )
         return list(result.scalars().all())

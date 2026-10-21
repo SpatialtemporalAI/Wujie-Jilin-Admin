@@ -30,10 +30,10 @@
 ## 约束与备注
 
 - `performance_steps.music` 取值约定：预设为 `bdj_*` 标识，用户上传为 `upload:<sys_file_id>`（前后端共用一个前缀常量，后端 `UPLOAD_MUSIC_PATTERN` 校验）
-- 时长上限 240s，容忍 0.5s（240.3s 之类不重新转码）；截取用 `-c copy` 流拷贝，不重编码
+- 时长上限 240s（容忍 0.5s）仅约束用户上传，超长按 `-c copy` 流拷贝截取，不重编码；**预设音频不受上限约束**——`bdj_3` 正式文件为 291s 完整版（用户 2026-10-21 确认保留），预设兜底时长已按实际值（225/147/291）写入 `_PERFORMANCE_MUSIC`
 - 上传音乐未持久化时长字段：上传响应实时返回时长；列表项时长为实时探测（ffmpeg，并发执行），探测失败返回 null
-- 试听：`file_id` 非空即可试听，复用 `GET /admin/sys/file/{file_id}/preview?token=<JWT>`（前端 `getFilePreviewUrl`）。上传音乐 `file_id` 为自身；预设音乐通过在文件管理上传音频后、把 sys_file_id 填入后端 `_PRESET_MUSIC_FILE_IDS`（`modules/task/endpoints/task.py`）开通试听，已映射的预设时长展示音频真实时长
-- **预设试听映射（`PRESET_MUSIC_FILE_IDS`，位于 `modules/task/services/performance_music_service.py`）已于 2026-10-21 填入正式文件：八段锦1/2/3.mp3；`bdj_full_12min` 已于 2026-10-21 从预设目录下线（校验值保留兼容历史任务）。被映射的文件自动从「我上传的音乐」列表排除，避免重复展示**
+- 试听：`file_id` 非空即可试听，复用 `GET /admin/sys/file/{file_id}/preview?token=<JWT>`（前端 `getFilePreviewUrl`）。上传音乐 `file_id` 为自身；预设音乐 `file_id` 来自 `sys_file` 种子数据，已种入的预设时长展示音频真实时长
+- **预设音频已种子化（2026-10-21，用户确认方案）：alembic `0019_seed_performance_preset_music` 把 `database/seed_assets/performance_music/bdj_{1,2,3}.mp3` 复制到 `uploads/performance_music/` 并插入固定 ID（3000000000000301-303）、`created_by=0` 的 sys_file 行；代码侧 `PRESET_MUSIC_FILE_IDS` 硬编码已删除，改为 `PerformanceMusicService.get_preset_music_file_map` 按 `file_path` 前缀 `performance_music/` 动态查询。`bdj_full_12min` 已于 2026-10-21 从预设目录下线（校验值保留兼容历史任务）。种子行 `created_by=0` 不匹配任何真实用户，天然不会出现在「我上传的音乐」列表**
 - 音乐列表数据源是「`created_by=当前用户` 且扩展名为 mp3/wav 的 sys_file」：通过通用文件管理上传的音频也会出现在「我上传的音乐」中（用户 2026-10-20 确认该行为符合预期，"直接用就行了"）
 - 前端交互（2026-10-20 改版）：背景音乐改为 `PerformanceMusicSelect` 组件（按钮 + 弹窗），弹窗内完成选择/上传/试听/删除；NUpload `custom-request` 必须调用 `onFinish/onError` 收尾，否则文件滞留队列导致报错累积
 - 上传接口路径已加入 `RequestSizeLimitMiddleware` 豁免清单（全局请求体限制 2MB，上传接口按各自大小限制控制）

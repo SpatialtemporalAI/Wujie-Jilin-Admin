@@ -217,10 +217,10 @@
 - 预设枚举接口（挂在 `/task/manage` 下，仅需登录）：
   - `GET /task/manage/performance/actions` → `PerformanceActionOption[]`（`value/label/duration_seconds`）
   - `GET /task/manage/performance/music` → `PerformanceMusicOption[]`（预设 + 当前用户上传；上传项 `duration_seconds` 为列表时实时探测的实际时长（截取后应为 240），探测失败为 null；`file_url` 预留为 null）
-  - 试听契约：`file_id` 非空即可试听，统一走 `GET /admin/sys/file/{file_id}/preview?token=<JWT>`（支持 Range），前端 `getFilePreviewUrl(file_id)` 拼 URL、`<audio>` 播放。上传音乐 `file_id` 为自身；预设音乐 `file_id` 来自后端 `PRESET_MUSIC_FILE_IDS` 映射（`modules/task/services/performance_music_service.py`，当前映射到八段锦1/2/3.mp3，`bdj_full_12min` 已于 2026-10-21 从预设目录下线（`VALID_PERFORMANCE_MUSIC` 保留校验值兼容历史任务）；被映射文件不会出现在「我上传的音乐」列表）
+  - 试听契约：`file_id` 非空即可试听，统一走 `GET /admin/sys/file/{file_id}/preview?token=<JWT>`（支持 Range），前端 `getFilePreviewUrl(file_id)` 拼 URL、`<audio>` 播放。上传音乐 `file_id` 为自身；预设音乐 `file_id` 来自 `sys_file` 种子数据（alembic `0019_seed_performance_preset_music`，`file_path` 前缀 `performance_music/`，`PerformanceMusicService.get_preset_music_file_map` 动态查询，无硬编码 ID），未种入的预设试听按钮禁用；`bdj_full_12min` 已于 2026-10-21 从预设目录下线（`VALID_PERFORMANCE_MUSIC` 保留校验值兼容历史任务）
   - `POST /task/manage/performance/music/upload`（multipart）→ `PerformanceMusicUploadResult`（`value/label/duration_seconds/file_id/truncated`，`truncated=true` 表示超 4 分钟已截取）
   - `DELETE /task/manage/performance/music/{file_id}` → 删除自己上传的音乐，被表演任务引用返回 409
-  - 预设数据来源是后端模块级常量（`_PERFORMANCE_ACTIONS`/`_PERFORMANCE_MUSIC`），不建表；上传音频复用 `sys_file` + `core.storage`，按 `created_by` + 扩展名（mp3/wav）识别
+  - 预设清单（标识/名称/时长）来源是后端模块级常量（`_PERFORMANCE_ACTIONS`/`_PERFORMANCE_MUSIC`），不建表；预设音频文件种入 `sys_file`（固定 ID，`created_by=0` 系统内置，实体文件由迁移从 `database/seed_assets/performance_music/` 复制到存储）；上传音频复用 `sys_file` + `core.storage`，按 `created_by` + 扩展名（mp3/wav）识别
 - 前端：`task-operate-drawer.vue` 表演类型渲染「表演动作编排」卡片（动作/音乐 NSelect + 播放次数/套间间隔 NInputNumber + 上移/下移/删除，最多 3 套）；类型文案/颜色映射在各 tab 同步（`performance` → 表演 / error 色）
 - `TaskDefinitionSnapshot` 同步含 `performance_steps`（宽松 dict，容纳历史脏数据）
 

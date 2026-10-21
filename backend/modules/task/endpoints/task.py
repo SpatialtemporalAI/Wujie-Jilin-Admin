@@ -30,7 +30,6 @@ from database.models.business.scene_map import SceneMap
 from modules.task.services.task_service import TaskService
 from modules.task.services.performance_music_service import (
     PerformanceMusicService,
-    PRESET_MUSIC_FILE_IDS,
     UPLOAD_MUSIC_PREFIX,
 )
 from modules.task.schemas.task import (
@@ -55,9 +54,11 @@ _PERFORMANCE_ACTIONS: list[PerformanceActionOption] = [
     PerformanceActionOption(value="baduanjin_3", label="八段锦·第三套（调理脾胃须单举）", duration_seconds=240),
 ]
 _PERFORMANCE_MUSIC: list[PerformanceMusicOption] = [
-    PerformanceMusicOption(value="bdj_1", label="八段锦音乐·第一套", duration_seconds=240),
-    PerformanceMusicOption(value="bdj_2", label="八段锦音乐·第二套", duration_seconds=240),
-    PerformanceMusicOption(value="bdj_3", label="八段锦音乐·第三套", duration_seconds=240),
+    # duration_seconds 为种子文件缺失时的兜底展示值，与 seed_assets 中音频的实际时长保持一致；
+    # 种子就绪后列表接口会实时探测并覆盖为真实时长
+    PerformanceMusicOption(value="bdj_1", label="八段锦音乐·第一套", duration_seconds=225),
+    PerformanceMusicOption(value="bdj_2", label="八段锦音乐·第二套", duration_seconds=147),
+    PerformanceMusicOption(value="bdj_3", label="八段锦音乐·第三套", duration_seconds=291),
     # bdj_full_12min 已从预设目录下线（2026-10-21）；VALID_PERFORMANCE_MUSIC 仍保留该校验值，
     # 以兼容引用了它的历史任务
 ]
@@ -363,15 +364,16 @@ async def list_performance_music(
     """获取背景音乐列表：平台预设 + 当前用户上传（仅自己可见，含实际时长）
 
     file_id 非空即表示可试听（走 /admin/sys/file/{file_id}/preview）：
-    上传音乐为自身文件；预设音乐需在 PRESET_MUSIC_FILE_IDS 配置映射，
-    已映射的预设时长展示为音频文件的真实时长。
+    上传音乐为自身文件；预设音乐来自 sys_file 种子数据（file_path 前缀
+    performance_music/，动态查询映射），已种入的预设时长展示为音频文件的真实时长。
     """
+    preset_file_map = await PerformanceMusicService.get_preset_music_file_map(db)
     preset_durations = await PerformanceMusicService.probe_durations_by_ids(
-        db, set(PRESET_MUSIC_FILE_IDS.values())
+        db, set(preset_file_map.values())
     )
     options: list[PerformanceMusicOption] = []
     for opt in _PERFORMANCE_MUSIC:
-        file_id = PRESET_MUSIC_FILE_IDS.get(opt.value)
+        file_id = preset_file_map.get(opt.value)
         duration = preset_durations.get(file_id) if file_id else None
         options.append(
             opt.model_copy(
