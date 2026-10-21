@@ -45,7 +45,7 @@ PRESET_MUSIC_FILE_IDS: dict[str, int] = {
     "bdj_1": 3728273413709824,  # 八段锦1.mp3
     "bdj_2": 3728273413775360,  # 八段锦2.mp3
     "bdj_3": 3728273413644288,  # 八段锦3.mp3
-    # "bdj_full_12min": 暂无对应服务端音频文件
+    # bdj_full_12min 已从预设目录下线（2026-10-21），无需映射
 }
 
 _DURATION_RE = re.compile(r"Duration: (\d+):(\d+):(\d+(?:\.\d+)?)")

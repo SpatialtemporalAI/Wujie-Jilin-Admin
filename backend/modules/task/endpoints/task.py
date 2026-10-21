@@ -58,7 +58,8 @@ _PERFORMANCE_MUSIC: list[PerformanceMusicOption] = [
     PerformanceMusicOption(value="bdj_1", label="八段锦音乐·第一套", duration_seconds=240),
     PerformanceMusicOption(value="bdj_2", label="八段锦音乐·第二套", duration_seconds=240),
     PerformanceMusicOption(value="bdj_3", label="八段锦音乐·第三套", duration_seconds=240),
-    PerformanceMusicOption(value="bdj_full_12min", label="八段锦音乐·完整版（12分钟）", duration_seconds=240),
+    # bdj_full_12min 已从预设目录下线（2026-10-21）；VALID_PERFORMANCE_MUSIC 仍保留该校验值，
+    # 以兼容引用了它的历史任务
 ]
 
 
