@@ -723,7 +723,7 @@ onMounted(() => {
 
 <template>
   <NModal v-model:show="visible" display-directive="show" preset="card" :mask-closable="false" :title="title"
-    style="width: 760px; max-width: 90vw">
+    style="width: 880px; max-width: 90vw">
     <NForm ref="formRef" :model="model" :rules="rules" label-placement="top">
       <!-- 基础信息 -->
       <NGrid :cols="2" :x-gap="16">
@@ -901,15 +901,16 @@ onMounted(() => {
             </NSpace>
           </div>
 
-          <NGrid :cols="3" :x-gap="12" responsive="screen">
-            <NFormItemGi label="表演动作">
+          <!-- 动作/音乐文本较长占大头，播放次数只需窄列 -->
+          <NGrid :cols="24" :x-gap="12" responsive="screen">
+            <NFormItemGi label="表演动作" :span="10">
               <NSelect v-model:value="step.action" :options="performanceActionOptions" placeholder="选择表演动作"
                 @focus="() => loadPerformanceOptions()" />
             </NFormItemGi>
-            <NFormItemGi label="背景音乐">
+            <NFormItemGi label="背景音乐" :span="9">
               <PerformanceMusicSelect v-model:value="step.music" />
             </NFormItemGi>
-            <NFormItemGi label="播放次数">
+            <NFormItemGi label="播放次数" :span="5">
               <NInputNumber v-model:value="step.play_count" :min="1" :precision="0" :show-button="false"
                 style="width: 100%">
                 <template #suffix>次</template>

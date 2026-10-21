@@ -38,11 +38,12 @@ const taskTypeLabel: Record<string, string> = {
   performance: '表演'
 };
 
-const taskTypeTagType: Record<string, import('naive-ui').TagProps['type']> = {
-  patrol: 'info',
-  broadcast: 'success',
-  instant: 'warning',
-  performance: 'primary'
+// 表演类型用自定义紫色，与巡逻(info 蓝)、播报(success 绿)、即时(warning 橙)区分
+const taskTypeTagProps: Record<string, import('naive-ui').TagProps> = {
+  patrol: { type: 'info' },
+  broadcast: { type: 'success' },
+  instant: { type: 'warning' },
+  performance: { color: { color: '#f5f3ff', textColor: '#7c3aed', borderColor: '#ddd6fe' } }
 };
 
 const scheduleCycleLabel: Record<string, string> = {
@@ -129,7 +130,7 @@ const { columns, columnChecks, data, getData, getDataByPage, loading, mobilePagi
       align: 'center',
       width: 100,
       render: row => (
-        <NTag size="small" type={taskTypeTagType[row.task_type] || 'default'}>
+        <NTag size="small" {...(taskTypeTagProps[row.task_type] || { type: 'default' })}>
           {taskTypeLabel[row.task_type] || row.task_type}
         </NTag>
       )

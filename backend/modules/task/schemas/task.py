@@ -64,7 +64,7 @@ class PerformanceStepSchema(BaseReqEntity):
     play_count 播放次数最低 1，interval 套间间隔 0-300 秒（最后一套可为空）"""
 
     action: str = Field(..., description="表演动作: baduanjin_1/baduanjin_2/baduanjin_3", max_length=30)
-    music: str = Field(..., description="背景音乐: 预设标识 bdj_1/bdj_2/bdj_3/bdj_full_12min，或用户上传 upload:<file_id>", max_length=30)
+    music: str = Field(..., description="背景音乐: 预设标识 bdj_1/bdj_2/bdj_3（bdj_full_12min 为历史兼容值），或用户上传 upload:<file_id>", max_length=30)
     play_count: int = Field(1, description="播放次数（循环动作+音乐）", ge=1)
     interval: Optional[int] = Field(None, description="套间间隔（秒），最后一套可为空", ge=0, le=PERFORMANCE_MAX_INTERVAL)
 

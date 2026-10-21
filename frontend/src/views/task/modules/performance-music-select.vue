@@ -156,7 +156,8 @@ onBeforeUnmount(stopPlay);
 
 <template>
   <div class="w-full">
-    <NButton class="w-full" @click="showModal = true">
+    <!-- 与两侧的 NSelect/NInputNumber 保持居左对齐 -->
+    <NButton class="w-full" style="justify-content: flex-start" @click="showModal = true">
       <template #icon>
         <icon-ic-round-music-note class="text-icon" />
       </template>

@@ -28,7 +28,11 @@ from database.models.business.robot import Robot
 from database.models.business.scene_map import SceneMap
 
 from modules.task.services.task_service import TaskService
-from modules.task.services.performance_music_service import PerformanceMusicService, UPLOAD_MUSIC_PREFIX
+from modules.task.services.performance_music_service import (
+    PerformanceMusicService,
+    PRESET_MUSIC_FILE_IDS,
+    UPLOAD_MUSIC_PREFIX,
+)
 from modules.task.schemas.task import (
     TaskCreate,
     TaskUpdate,
@@ -54,19 +58,9 @@ _PERFORMANCE_MUSIC: list[PerformanceMusicOption] = [
     PerformanceMusicOption(value="bdj_1", label="八段锦音乐·第一套", duration_seconds=240),
     PerformanceMusicOption(value="bdj_2", label="八段锦音乐·第二套", duration_seconds=240),
     PerformanceMusicOption(value="bdj_3", label="八段锦音乐·第三套", duration_seconds=240),
-    PerformanceMusicOption(value="bdj_full_12min", label="八段锦音乐·完整版（12分钟）", duration_seconds=240),
+    # bdj_full_12min 已从预设目录下线（2026-10-21）；VALID_PERFORMANCE_MUSIC 仍保留该校验值，
+    # 以兼容引用了它的历史任务
 ]
-
-# 预设音乐对应的服务端音频文件（sys_file_id）：填入后预设曲目即可试听
-# （与上传音乐一样走 /admin/sys/file/{file_id}/preview）。预设音频原本只内置在
-# 机器人端，将音频文件上传到文件管理后，把对应的 sys_file_id 填到这里即可。
-# 注意：当前映射的是测试环境数据（sample-audio-*），正式环境部署时需替换为正式音频的 file_id。
-_PRESET_MUSIC_FILE_IDS: dict[str, int] = {
-    "bdj_1": 3723809320935424,          # sample-audio-short.mp3（测试数据）
-    "bdj_2": 3723809318641664,          # sample-audio-long.mp3（测试数据）
-    "bdj_3": 3723809321328640,          # sample-audio-5mb.mp3（测试数据）
-    "bdj_full_12min": 3723809322704896, # sample-audio-10mb.mp3（测试数据）
-}
 
 
 async def _fill_task_map_name(db: AsyncSession, records: list[TaskResponseData]) -> None:
@@ -369,15 +363,15 @@ async def list_performance_music(
     """获取背景音乐列表：平台预设 + 当前用户上传（仅自己可见，含实际时长）
 
     file_id 非空即表示可试听（走 /admin/sys/file/{file_id}/preview）：
-    上传音乐为自身文件；预设音乐需在 _PRESET_MUSIC_FILE_IDS 配置映射，
+    上传音乐为自身文件；预设音乐需在 PRESET_MUSIC_FILE_IDS 配置映射，
     已映射的预设时长展示为音频文件的真实时长。
     """
     preset_durations = await PerformanceMusicService.probe_durations_by_ids(
-        db, set(_PRESET_MUSIC_FILE_IDS.values())
+        db, set(PRESET_MUSIC_FILE_IDS.values())
     )
     options: list[PerformanceMusicOption] = []
     for opt in _PERFORMANCE_MUSIC:
-        file_id = _PRESET_MUSIC_FILE_IDS.get(opt.value)
+        file_id = PRESET_MUSIC_FILE_IDS.get(opt.value)
         duration = preset_durations.get(file_id) if file_id else None
         options.append(
             opt.model_copy(
