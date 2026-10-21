@@ -20,6 +20,7 @@
 - `modules/task/endpoints/task.py`：`GET /task/manage/performance/music` 合并预设 + 当前用户上传；新增 `POST /task/manage/performance/music/upload`、`DELETE /task/manage/performance/music/{file_id}`
 - `modules/task/schemas/task.py`：`PerformanceStepSchema.music` 放开 `upload:\d+` 校验；`PerformanceMusicOption.duration_seconds` 改 Optional；新增 `PerformanceMusicUploadResult`（`truncated` 标识是否被截取）
 - `requirements.txt` 新增 `imageio-ffmpeg>=0.5.1`
+- `database/models/business/task.py` + alembic `0018_update_performance_steps_comment.py`（2026-10-21 补充）：`task.performance_steps` 列注释补充 music 取值约定（预设 `bdj_*` / 用户上传 `upload:<sys_file_id>`），仅注释迁移
 
 ### 前端
 
