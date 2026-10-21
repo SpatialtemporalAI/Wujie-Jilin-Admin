@@ -37,6 +37,17 @@ _DURATION_TOLERANCE = 0.5
 UPLOAD_MUSIC_PREFIX = "upload:"
 UPLOAD_MUSIC_PATTERN = re.compile(r"^upload:(\d+)$")
 
+# 预设音乐对应的服务端音频文件（sys_file_id）：填入后预设曲目即可试听
+# （与上传音乐一样走 /admin/sys/file/{file_id}/preview）。预设音频原本只内置在
+# 机器人端，将音频文件上传到文件管理后，把对应的 sys_file_id 填到这里即可。
+# 被映射的文件不会再出现在「我上传的音乐」列表中（避免重复展示）。
+PRESET_MUSIC_FILE_IDS: dict[str, int] = {
+    "bdj_1": 3728273413709824,  # 八段锦1.mp3
+    "bdj_2": 3728273413775360,  # 八段锦2.mp3
+    "bdj_3": 3728273413644288,  # 八段锦3.mp3
+    # "bdj_full_12min": 暂无对应服务端音频文件
+}
+
 _DURATION_RE = re.compile(r"Duration: (\d+):(\d+):(\d+(?:\.\d+)?)")
 
 
@@ -156,14 +167,21 @@ class PerformanceMusicService:
 
     @staticmethod
     async def list_user_music(db: AsyncSession, user_id: int) -> list[SysFile]:
-        """当前用户上传的表演背景音乐列表（仅自己可见）"""
+        """当前用户上传的表演背景音乐列表（仅自己可见）
+
+        已被预设音乐映射（PRESET_MUSIC_FILE_IDS）占用的文件不再重复出现在上传列表中。
+        """
+        conditions = [
+            SysFile.deleted_at.is_(None),
+            SysFile.created_by == user_id,
+            SysFile.extension.in_(ALLOWED_EXTENSIONS),
+        ]
+        preset_file_ids = set(PRESET_MUSIC_FILE_IDS.values())
+        if preset_file_ids:
+            conditions.append(SysFile.id.notin_(preset_file_ids))
         result = await db.execute(
             select(SysFile)
-            .where(
-                SysFile.deleted_at.is_(None),
-                SysFile.created_by == user_id,
-                SysFile.extension.in_(ALLOWED_EXTENSIONS),
-            )
+            .where(*conditions)
             .order_by(SysFile.created_at.desc())
         )
         return list(result.scalars().all())
