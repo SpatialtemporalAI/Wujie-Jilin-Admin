@@ -5,7 +5,7 @@
 二期八段锦表演任务的背景音乐，原约定「仅预设，不做用户上传」（见 [2026-09-17 会议模式+养生操](./2026-09-17_meeting-mode-and-baduanjin-performance.md) 的约束，现已取代）。本期恢复用户上传：
 
 - 表演步骤的背景音乐可选系统预设曲目，也可上传本地音频（mp3/wav，单个 ≤ 20MB）；
-- 上传音频时长超过 4 分钟（240s）时，后端自动截取前 4 分钟，UI 有明确文字说明（上传按钮旁提示 + 截取后 toast 提醒）；
+- 上传音频时长超过 5 分钟（300s，2026-10-21 由 4 分钟调整）时，后端自动截取前 5 分钟，UI 有明确文字说明（上传按钮旁提示 + 截取后 toast 提醒）；
 - 上传的音乐**仅自己可见**（用户 2026-10-19 明确），支持删除，已被表演任务引用的不允许删除。
 
 ## 状态
@@ -30,7 +30,8 @@
 ## 约束与备注
 
 - `performance_steps.music` 取值约定：预设为 `bdj_*` 标识，用户上传为 `upload:<sys_file_id>`（前后端共用一个前缀常量，后端 `UPLOAD_MUSIC_PATTERN` 校验）
-- 时长上限 240s（容忍 0.5s）仅约束用户上传，超长按 `-c copy` 流拷贝截取，不重编码；**预设音频不受上限约束**——`bdj_3` 正式文件为 291s 完整版（用户 2026-10-21 确认保留），预设兜底时长已按实际值（225/147/291）写入 `_PERFORMANCE_MUSIC`
+- 时长上限 300s（2026-10-21 由 240s 调整），容忍 0.5s；上限仅约束用户上传，超长按 `-c copy` 流拷贝截取，不重编码；**预设音频不受上限约束**——`bdj_3` 正式文件为 291s 完整版（用户 2026-10-21 确认保留），预设兜底时长已按实际值（225/147/291）写入 `_PERFORMANCE_MUSIC`
+- 2026-10-21 调整：背景音乐改为非必填（不选则无配乐，`music` 可为 null）；播放次数限定 1-99999（避免大数显示为科学计数法）；上传成功后不再自动切换当前已选音乐；字段上新增「清除选择」按钮（有值时）与「删除上传音乐」按钮（已选为 upload 时）
 - 上传音乐未持久化时长字段：上传响应实时返回时长；列表项时长为实时探测（ffmpeg，并发执行），探测失败返回 null
 - 试听：`file_id` 非空即可试听，复用 `GET /admin/sys/file/{file_id}/preview?token=<JWT>`（前端 `getFilePreviewUrl`）。上传音乐 `file_id` 为自身；预设音乐 `file_id` 来自 `sys_file` 种子数据，已种入的预设时长展示音频真实时长
 - **预设音频已种子化（2026-10-21，用户确认方案）：alembic `0019_seed_performance_preset_music` 把 `database/seed_assets/performance_music/bdj_{1,2,3}.mp3` 复制到 `uploads/performance_music/` 并插入固定 ID（3000000000000301-303）、`created_by=0` 的 sys_file 行；代码侧 `PRESET_MUSIC_FILE_IDS` 硬编码已删除，改为 `PerformanceMusicService.get_preset_music_file_map` 按 `file_path` 前缀 `performance_music/` 动态查询。`bdj_full_12min` 已于 2026-10-21 从预设目录下线（校验值保留兼容历史任务）。种子行 `created_by=0` 不匹配任何真实用户，天然不会出现在「我上传的音乐」列表**

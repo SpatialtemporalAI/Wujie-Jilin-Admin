@@ -402,14 +402,14 @@ async def list_performance_music(
     summary="上传表演背景音乐",
 )
 async def upload_performance_music(
-    file: UploadFile = File(..., description="音频文件（mp3/wav，≤20MB，超过4分钟自动截取前4分钟）"),
+    file: UploadFile = File(..., description="音频文件（mp3/wav，≤20MB，超过5分钟自动截取前5分钟）"),
     db: AsyncSession = Depends(get_session),
     user: SysUser = Depends(current_user),
 ):
     """上传表演背景音乐（仅自己可见）
 
     - 仅支持 mp3/wav，单文件不超过 20MB；
-    - 时长超过 4 分钟的音频自动截取前 4 分钟，响应 truncated=true。
+    - 时长超过 5 分钟的音频自动截取前 5 分钟，响应 truncated=true。
     """
     file_data = await file.read()
     sys_file, duration, truncated = await PerformanceMusicService.upload_music(
@@ -427,7 +427,7 @@ async def upload_performance_music(
         file_id=sys_file.id,
         truncated=truncated,
     )
-    msg = "上传成功，音频超过 4 分钟已自动截取前 4 分钟" if truncated else "上传成功"
+    msg = "上传成功，音频超过 5 分钟已自动截取前 5 分钟" if truncated else "上传成功"
     return response_base.success(data=result, msg=msg)
 
 

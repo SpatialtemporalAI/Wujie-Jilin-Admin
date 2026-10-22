@@ -48,10 +48,12 @@ declare namespace Api {
       actions: TaskAction[];
     };
 
-    /** performance step（八段锦，动作/音乐均为后端预置标识） */
+    /** performance step（八段锦；动作为后端预置标识，音乐可选：预设标识或 upload:<file_id>） */
     type PerformanceStep = {
       action: string;
-      music: string;
+      /** 背景音乐（可选） */
+      music: string | null;
+      /** 播放次数 1-99999 */
       play_count: number;
       /** 套间间隔（秒），最后一套无间隔，为 null */
       interval: number | null;
@@ -74,7 +76,7 @@ declare namespace Api {
       file_url?: string | null;
     };
 
-    /** performance music upload result（超过4分钟自动截取前4分钟） */
+    /** performance music upload result（超过5分钟自动截取前5分钟） */
     type PerformanceMusicUploadResult = PerformanceMusicOption & {
       file_id: number;
       truncated: boolean;

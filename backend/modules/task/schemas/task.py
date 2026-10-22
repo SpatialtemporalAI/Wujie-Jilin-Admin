@@ -60,12 +60,12 @@ class BroadcastStepSchema(BaseReqEntity):
 # ==================== 表演步骤 Schema ====================
 
 class PerformanceStepSchema(BaseReqEntity):
-    """表演任务单套动作（八段锦）：动作与音乐均为后端预置标识；
-    play_count 播放次数最低 1，interval 套间间隔 0-300 秒（最后一套可为空）"""
+    """表演任务单套动作（八段锦）：动作为后端预置标识；背景音乐可选（预设标识或用户上传）；
+    play_count 播放次数 1-99999，interval 套间间隔 0-300 秒（最后一套可为空）"""
 
     action: str = Field(..., description="表演动作: baduanjin_1/baduanjin_2/baduanjin_3", max_length=30)
-    music: str = Field(..., description="背景音乐: 预设标识 bdj_1/bdj_2/bdj_3（bdj_full_12min 为历史兼容值），或用户上传 upload:<file_id>", max_length=30)
-    play_count: int = Field(1, description="播放次数（循环动作+音乐）", ge=1)
+    music: Optional[str] = Field(None, description="背景音乐（可选）: 预设标识 bdj_1/bdj_2/bdj_3（bdj_full_12min 为历史兼容值），或用户上传 upload:<file_id>", max_length=30)
+    play_count: int = Field(1, description="播放次数（循环动作+音乐）", ge=1, le=99999)
     interval: Optional[int] = Field(None, description="套间间隔（秒），最后一套可为空", ge=0, le=PERFORMANCE_MAX_INTERVAL)
 
     @field_validator('action')
@@ -77,8 +77,8 @@ class PerformanceStepSchema(BaseReqEntity):
 
     @field_validator('music')
     @classmethod
-    def validate_music(cls, v: str) -> str:
-        if v not in VALID_PERFORMANCE_MUSIC and not UPLOAD_MUSIC_PATTERN.match(v):
+    def validate_music(cls, v: Optional[str]) -> Optional[str]:
+        if v is not None and v not in VALID_PERFORMANCE_MUSIC and not UPLOAD_MUSIC_PATTERN.match(v):
             raise ValueError(f"无效的背景音乐: {v}")
         return v
 
@@ -325,4 +325,4 @@ class PerformanceMusicOption(BaseRespEntity):
 class PerformanceMusicUploadResult(PerformanceMusicOption):
     """背景音乐上传结果"""
     file_id: int = Field(..., description="文件ID（sys_file）")
-    truncated: bool = Field(..., description="是否因超过 4 分钟被截取")
+    truncated: bool = Field(..., description="是否因超过 5 分钟被截取")
