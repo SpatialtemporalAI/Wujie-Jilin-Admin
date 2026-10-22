@@ -120,11 +120,11 @@ async function handleUpload({ file, onFinish, onError }: UploadCustomRequestOpti
       return;
     }
     await loadOptions();
-    emit('update:value', data.value);
+    // 上传仅加入列表，不自动切换当前已选音乐（用户可能已选好其他曲目）
     if (data.truncated) {
-      window.$message?.warning('上传成功：音频超过 4 分钟，已自动截取前 4 分钟');
+      window.$message?.warning('上传成功：音频超过 5 分钟，已自动截取前 5 分钟');
     } else {
-      window.$message?.success('上传成功');
+      window.$message?.success('上传成功，可在列表中试听并选择');
     }
     onFinish();
   } finally {
@@ -143,6 +143,13 @@ async function handleDelete(item: Api.Task.PerformanceMusicOption) {
   window.$message?.success('删除成功');
 }
 
+/** 删除当前已选中的上传音乐（字段上的删除按钮入口） */
+async function handleDeleteSelected() {
+  if (selectedOption.value && isUploadMusic(selectedOption.value.value)) {
+    await handleDelete(selectedOption.value);
+  }
+}
+
 onMounted(loadOptions);
 watch(showModal, visible => {
   if (visible) {
@@ -156,17 +163,41 @@ onBeforeUnmount(stopPlay);
 
 <template>
   <div class="w-full">
-    <!-- 与两侧的 NSelect/NInputNumber 保持居左对齐 -->
-    <NButton class="w-full" style="justify-content: flex-start" @click="showModal = true">
-      <template #icon>
-        <icon-ic-round-music-note class="text-icon" />
-      </template>
-      <span class="flex-1 truncate text-left" :class="{ 'text-#999': !selectedOption }">{{ displayLabel }}</span>
-    </NButton>
+    <div class="flex items-center gap-6px">
+      <!-- 与两侧的 NSelect/NInputNumber 保持居左对齐 -->
+      <NButton class="flex-1" style="justify-content: flex-start" @click="showModal = true">
+        <template #icon>
+          <icon-ic-round-music-note class="text-icon" />
+        </template>
+        <span class="flex-1 truncate text-left" :class="{ 'text-#999': !selectedOption }">{{ displayLabel }}</span>
+      </NButton>
+      <!-- 清除已选（背景音乐为非必填项） -->
+      <NTooltip v-if="value">
+        <template #trigger>
+          <NButton quaternary circle size="small" @click="emit('update:value', null)">
+            <template #icon>
+              <icon-ic-round-close class="text-icon" />
+            </template>
+          </NButton>
+        </template>
+        清除背景音乐
+      </NTooltip>
+      <!-- 已选为自己上传的音乐时，提供删除入口 -->
+      <NPopconfirm v-if="value && isUploadMusic(value)" @positive-click="handleDeleteSelected">
+        <template #trigger>
+          <NButton quaternary circle size="small" type="error">
+            <template #icon>
+              <icon-ic-round-delete-outline class="text-icon" />
+            </template>
+          </NButton>
+        </template>
+        删除该上传音乐？已被任务引用的音乐无法删除。
+      </NPopconfirm>
+    </div>
 
     <NModal v-model:show="showModal" preset="card" title="选择背景音乐" style="width: 560px">
       <div class="mb-12px text-12px text-#999 leading-18px">
-        支持系统预设曲目或上传本地音频（mp3/wav，单个不超过 20MB）；超过 4 分钟的音频将自动截取前 4
+        支持系统预设曲目或上传本地音频（mp3/wav，单个不超过 20MB）；超过 5 分钟的音频将自动截取前 5
         分钟，时长以列表显示为准。点击左侧播放按钮可试听。
       </div>
 

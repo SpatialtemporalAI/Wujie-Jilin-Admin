@@ -6,7 +6,7 @@
 
 规则：
 - 上传音频仅自己可见、可选用、可删除（被表演任务引用的不允许删除）；
-- 时长超过 4 分钟（240 秒）的音频自动截取前 4 分钟；
+- 时长超过 5 分钟（300 秒）的音频自动截取前 5 分钟；
 - performance_steps.music 中，预设为 bdj_* 标识，用户上传为 upload:<sys_file_id>；
 - 预设音频是 alembic 0019 种入 sys_file 的系统内置文件（created_by=0，
   file_path 前缀 performance_music/），试听与上传音乐一样走 /admin/sys/file/{file_id}/preview。
@@ -32,8 +32,8 @@ logger = logging.getLogger(__name__)
 
 ALLOWED_EXTENSIONS = ("mp3", "wav")
 MAX_FILE_SIZE = 20 * 1024 * 1024  # 单个音频最大 20MB
-MAX_DURATION_SECONDS = 240  # 背景音乐最长 4 分钟，超出自动截取前 4 分钟
-# 截取判定的容忍秒数：超出 240s 一点点（如 240.3s）不再重新转码
+MAX_DURATION_SECONDS = 300  # 背景音乐最长 5 分钟，超出自动截取前 5 分钟
+# 截取判定的容忍秒数：超出 300s 一点点（如 300.3s）不再重新转码
 _DURATION_TOLERANCE = 0.5
 
 UPLOAD_MUSIC_PREFIX = "upload:"
@@ -79,7 +79,7 @@ def _probe_duration_bytes(file_data: bytes, ext: str) -> float:
 
 
 def _probe_and_truncate(file_data: bytes, ext: str) -> tuple[float, bytes, bool]:
-    """探测音频时长，超过 4 分钟则截取前 4 分钟
+    """探测音频时长，超过 5 分钟则截取前 5 分钟
 
     返回 (原始时长秒, 最终文件字节, 是否发生了截取)
     """
@@ -104,12 +104,12 @@ def _probe_and_truncate(file_data: bytes, ext: str) -> tuple[float, bytes, bool]
         return duration, dst.read_bytes(), True
 
 
-def is_upload_music(value: str) -> bool:
+def is_upload_music(value: str | None) -> bool:
     """判断 music 标识是否为用户上传音频"""
     return bool(UPLOAD_MUSIC_PATTERN.match(value or ""))
 
 
-def parse_upload_file_id(value: str) -> int | None:
+def parse_upload_file_id(value: str | None) -> int | None:
     """从 upload:<file_id> 标识中解析 sys_file_id，非法返回 None"""
     match = UPLOAD_MUSIC_PATTERN.match(value or "")
     return int(match.group(1)) if match else None
@@ -147,7 +147,7 @@ class PerformanceMusicService:
         mime_type: str,
         user_id: int,
     ) -> tuple[SysFile, float, bool]:
-        """上传表演背景音乐，超长自动截取前 4 分钟
+        """上传表演背景音乐，超长自动截取前 5 分钟
 
         返回 (sys_file, 最终时长秒, 是否截取)
         """
@@ -271,7 +271,7 @@ class PerformanceMusicService:
         logger.info("表演背景音乐删除成功: file_id=%d, %s", file_id, sys_file.original_name)
 
     @staticmethod
-    async def validate_music_refs(db: AsyncSession, music_values: list[str]) -> None:
+    async def validate_music_refs(db: AsyncSession, music_values: list[str | None]) -> None:
         """校验表演步骤中 upload:<file_id> 引用的音频文件存在且未删除"""
         file_ids = {fid for v in music_values if (fid := parse_upload_file_id(v)) is not None}
         if not file_ids:

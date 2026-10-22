@@ -198,11 +198,11 @@ interface BroadcastStepItem {
   actions: Api.Task.TaskAction[];
 }
 
-/** 表演步骤（每套动作）：动作/音乐均为后端预设标识，套数最多 3 */
+/** 表演步骤（每套动作）：动作为后端预设标识，音乐可选，套数最多 3 */
 interface PerformanceStepItem {
   action: string | null;
   music: string | null;
-  play_count: number;
+  play_count: number | null;
   /** 套间间隔（秒），最后一套无间隔输入项，提交时为 null */
   interval: number | null;
 }
@@ -613,12 +613,8 @@ async function handleSubmit() {
         window.$message?.warning(`请选择第 ${i + 1} 套的表演动作`);
         return;
       }
-      if (!step.music) {
-        window.$message?.warning(`请选择第 ${i + 1} 套的背景音乐`);
-        return;
-      }
-      if (!step.play_count || step.play_count < 1) {
-        window.$message?.warning(`第 ${i + 1} 套的播放次数至少为 1`);
+      if (step.play_count === null || step.play_count < 1 || step.play_count > 99999) {
+        window.$message?.warning(`第 ${i + 1} 套的播放次数需在 1-99999 之间`);
         return;
       }
       if (i < model.value.performance_steps.length - 1 && (step.interval === null || step.interval < 0)) {
@@ -674,8 +670,8 @@ async function handleSubmit() {
       model.value.task_type === 'performance'
         ? model.value.performance_steps.map((s, i) => ({
           action: s.action as string,
-          music: s.music as string,
-          play_count: s.play_count,
+          music: s.music || null,
+          play_count: s.play_count ?? 1,
           // 最后一套无间隔输入项，提交 null
           interval: i < model.value.performance_steps.length - 1 ? s.interval : null
         }))
@@ -911,7 +907,7 @@ onMounted(() => {
               <PerformanceMusicSelect v-model:value="step.music" />
             </NFormItemGi>
             <NFormItemGi label="播放次数" :span="5">
-              <NInputNumber v-model:value="step.play_count" :min="1" :precision="0" :show-button="false"
+              <NInputNumber v-model:value="step.play_count" :min="1" :max="99999" :precision="0" :show-button="false"
                 style="width: 100%">
                 <template #suffix>次</template>
               </NInputNumber>
@@ -940,8 +936,8 @@ onMounted(() => {
           添加表演动作（最多 {{ PERFORMANCE_MAX_STEPS }} 套）
         </NButton>
         <div class="mt-8px text-12px" style="color: var(--n-text-color-3)">
-          多套动作按顺序串行执行，可重复选择同一套动作；背景音乐可选系统预设曲目，也可上传本地音频（mp3/wav，单个不超过
-          20MB），超过 4 分钟的音频将自动截取前 4 分钟。
+          多套动作按顺序串行执行，可重复选择同一套动作；背景音乐可选（不选则无配乐），可选系统预设曲目，也可上传本地音频（mp3/wav，单个不超过
+          20MB），超过 5 分钟的音频将自动截取前 5 分钟。
         </div>
       </template>
 
