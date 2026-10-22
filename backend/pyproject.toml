@@ -45,6 +45,7 @@ dependencies = [
     "aliyun-python-sdk-viapiutils>=0.0.1",
     "oss2>=2.18.0",
     "alibabacloud-credentials>=1.0.0",
+    "imageio-ffmpeg>=0.6.0",
 ]
 
 [tool.uv.workspace]
