@@ -150,13 +150,6 @@ async function handleDelete(item: Api.Task.PerformanceMusicOption) {
   window.$message?.success('删除成功');
 }
 
-/** 删除当前已选中的上传音乐（字段上的删除按钮入口） */
-async function handleDeleteSelected() {
-  if (selectedOption.value && isUploadMusic(selectedOption.value.value)) {
-    await handleDelete(selectedOption.value);
-  }
-}
-
 onMounted(loadOptions);
 watch(showModal, visible => {
   if (visible) {
@@ -170,40 +163,23 @@ onBeforeUnmount(stopPlay);
 
 <template>
   <div class="w-full">
-    <div class="flex items-center gap-6px">
-      <!-- 与两侧的 NSelect/NInputNumber 保持居左对齐 -->
-      <NButton class="flex-1" style="justify-content: flex-start" @click="showModal = true">
-        <template #icon>
-          <icon-ic-round-music-note class="text-icon" />
-        </template>
-        <!-- truncate 超出省略，title 悬停显示完整歌名 -->
+    <!-- 清除/删除图标放在按钮内部右侧（类似 NSelect 的 clearable），字段宽度保持恒定；
+         图标点击需 stop 阻止冒泡，避免触发打开弹窗 -->
+    <NButton class="w-full music-trigger" style="justify-content: flex-start" @click="showModal = true">
+      <template #icon>
+        <icon-ic-round-music-note class="text-icon" />
+      </template>
+      <!-- truncate 超出省略，title 悬停显示完整歌名 -->
       <span class="flex-1 truncate text-left" :class="{ 'text-#999': !selectedOption }" :title="displayLabel">
         {{ displayLabel }}
       </span>
-      </NButton>
-      <!-- 清除已选（背景音乐为非必填项） -->
-      <NTooltip v-if="value">
-        <template #trigger>
-          <NButton quaternary circle size="small" @click="emit('update:value', null)">
-            <template #icon>
-              <icon-ic-round-close class="text-icon" />
-            </template>
-          </NButton>
-        </template>
-        清除背景音乐
-      </NTooltip>
-      <!-- 已选为自己上传的音乐时，提供删除入口 -->
-      <NPopconfirm v-if="value && isUploadMusic(value)" @positive-click="handleDeleteSelected">
-        <template #trigger>
-          <NButton quaternary circle size="small" type="error">
-            <template #icon>
-              <icon-ic-round-delete-outline class="text-icon" />
-            </template>
-          </NButton>
-        </template>
-        删除该上传音乐？已被任务引用的音乐无法删除。
-      </NPopconfirm>
-    </div>
+      <!-- 清除已选（背景音乐为非必填项），固定在最右侧；删除入口在弹窗的上传列表里 -->
+      <icon-ic-round-close
+        v-if="value"
+        class="text-icon shrink-0 text-#999 hover:text-#666"
+        @click.stop="emit('update:value', null)"
+      />
+    </NButton>
 
     <NModal v-model:show="showModal" preset="card" title="选择背景音乐" style="width: 560px">
       <div class="mb-12px text-12px text-#999 leading-18px">
@@ -284,6 +260,11 @@ onBeforeUnmount(stopPlay);
 </template>
 
 <style scoped>
+/* NButton 的内容容器默认只有内容宽，撑满后 label 的 flex-1 才能把后缀图标推到最右侧 */
+.music-trigger :deep(.n-button__content) {
+  width: 100%;
+}
+
 .music-group-title {
   font-size: 13px;
   font-weight: 600;
