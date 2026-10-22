@@ -38,6 +38,7 @@
 - 前端交互（2026-10-20 改版）：背景音乐改为 `PerformanceMusicSelect` 组件（按钮 + 弹窗），弹窗内完成选择/上传/试听/删除；NUpload `custom-request` 必须调用 `onFinish/onError` 收尾，否则文件滞留队列导致报错累积
 - 上传接口路径已加入 `RequestSizeLimitMiddleware` 豁免清单（全局请求体限制 2MB，上传接口按各自大小限制控制）
 - 物理文件不随删除清理（与系统文件管理软删除行为一致）
+- 2026-10-22 事故记录：一条表演任务步骤 `music` 为 null（非 API 写入，API 创建/更新均有 `PerformanceStepSchema` 严格校验），`TaskResponseData` 严格序列化导致整个任务列表 422「数据验证失败」。处理：脏数据修复（删除该套动作）+ `TaskResponseData.performance_steps` 改宽松 dict（同 `TaskDefinitionSnapshot` 思路），写入侧校验保持严格
 - 机器人端播放上传音乐需按 `upload:<file_id>` 自行拉取文件（可走 preview/download 链路，preview 支持 `?token=` 与签名 URL），agent 侧配套不在本次范围
 
 ## 相关文件

@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 
-from typing import Optional, List, Annotated, ClassVar
+from typing import Optional, List, Annotated, ClassVar, Dict, Any
 import re
 from pydantic import Field, ConfigDict, BeforeValidator, field_validator, model_validator, ValidationInfo
 from datetime import datetime, date, time
@@ -284,7 +284,9 @@ class TaskResponseData(BaseEntity):
     broadcast_text: Optional[str] = Field(None, description="播报文本（兼容旧数据）")
     broadcast_count: Optional[str] = Field(None, description="播报次数")
     broadcast_steps: Optional[List[BroadcastStepSchema]] = Field(None, description="播报步骤列表")
-    performance_steps: Optional[List[PerformanceStepSchema]] = Field(None, description="表演步骤列表")
+    # 宽松 dict（与 TaskDefinitionSnapshot 同思路）：容忍历史脏数据（如 music 为 null），
+    # 避免单行脏数据导致整个任务列表 422；写入侧仍由 TaskCreate/TaskUpdate 严格校验
+    performance_steps: Optional[List[Dict[str, Any]]] = Field(None, description="表演步骤列表")
     schedule_enabled: bool = Field(..., description="是否启用定时调度")
     schedule_date: Optional[date] = Field(None, description="调度日期")
     schedule_start_time: Optional[time] = Field(None, description="调度开始时间")
