@@ -24,12 +24,14 @@ const UPLOAD_MUSIC_MAX_SIZE = 20 * 1024 * 1024;
 const showModal = ref(false);
 const loading = ref(false);
 const uploading = ref(false);
+/** 首次加载完成后才允许判定“已失效”，避免 options 未就绪时误闪 */
+const loadedOnce = ref(false);
 const options = ref<Api.Task.PerformanceMusicOption[]>([]);
 
 const presetOptions = computed(() => options.value.filter(o => !isUploadMusic(o.value)));
 const uploadOptions = computed(() => options.value.filter(o => isUploadMusic(o.value)));
 const selectedOption = computed(() => options.value.find(o => o.value === props.value));
-const displayLabel = computed(() => selectedOption.value?.label ?? props.value ?? '点击选择背景音乐');
+const displayLabel = computed(() => selectedOption.value?.label ?? '点击选择背景音乐');
 
 function isUploadMusic(value: string): boolean {
   return value.startsWith(UPLOAD_MUSIC_PREFIX);
@@ -55,6 +57,11 @@ async function loadOptions() {
     }
   } finally {
     loading.value = false;
+    loadedOnce.value = true;
+  }
+  // 引用的音乐已被删除/不可见时直接置空，不保留无法播放的脏引用（也不展示 upload:xxx 原始标识）
+  if (loadedOnce.value && props.value && !options.value.some(o => o.value === props.value)) {
+    emit('update:value', null);
   }
 }
 
@@ -169,7 +176,10 @@ onBeforeUnmount(stopPlay);
         <template #icon>
           <icon-ic-round-music-note class="text-icon" />
         </template>
-        <span class="flex-1 truncate text-left" :class="{ 'text-#999': !selectedOption }">{{ displayLabel }}</span>
+        <!-- truncate 超出省略，title 悬停显示完整歌名 -->
+      <span class="flex-1 truncate text-left" :class="{ 'text-#999': !selectedOption }" :title="displayLabel">
+        {{ displayLabel }}
+      </span>
       </NButton>
       <!-- 清除已选（背景音乐为非必填项） -->
       <NTooltip v-if="value">

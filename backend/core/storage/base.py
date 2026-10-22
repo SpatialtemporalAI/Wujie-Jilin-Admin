@@ -66,6 +66,10 @@ class StorageBackend(ABC):
         """获取文件大小（字节）"""
 
     @abstractmethod
+    def exists(self, file_path: str) -> bool:
+        """文件是否物理存在于存储中（不抛异常，用于引用完整性校验）"""
+
+    @abstractmethod
     def get_full_path(self, file_path: str) -> str:
         """获取文件系统绝对路径"""
 

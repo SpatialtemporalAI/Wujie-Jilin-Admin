@@ -213,7 +213,7 @@
   - `action`：后端预设标识，前端只能下拉选择
   - `music`：**可选**（2026-10-21 起非必填，不选则无配乐）；预设标识 `bdj_*` 或用户上传 `upload:<sys_file_id>`（2026-10-19 起支持上传，仅自己可见；mp3/wav ≤20MB，超 5 分钟后端自动截取前 300s）
   - 套数 1-3（`PERFORMANCE_MAX_STEPS=3`）；`play_count` 1-99999；非最后一套 `interval` 必填（0-300 秒），最后一套为 `null`
-  - 校验：后端 `PerformanceStepSchema` + `TaskCreate.validate_performance_steps`（`modules/task/schemas/task.py`），`upload:` 引用存在性由 `PerformanceMusicService.validate_music_refs` 在创建/更新时校验；前端弹窗提交前逐项校验
+  - 校验：后端 `PerformanceStepSchema` + `TaskCreate.validate_performance_steps`（`modules/task/schemas/task.py`），`upload:` 引用由 `PerformanceMusicService.validate_music_refs` 在创建/更新时校验（记录存在未删除 + **存储中文件物理存在**，防止绑定无法播放的脏引用）；前端弹窗提交前逐项校验
 - 预设枚举接口（挂在 `/task/manage` 下，仅需登录）：
   - `GET /task/manage/performance/actions` → `PerformanceActionOption[]`（`value/label/duration_seconds`）
   - `GET /task/manage/performance/music` → `PerformanceMusicOption[]`（预设 + 当前用户上传；上传项 `duration_seconds` 为列表时实时探测的实际时长（截取后应为 300），探测失败为 null；`file_url` 预留为 null）

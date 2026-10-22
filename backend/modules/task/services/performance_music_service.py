@@ -272,18 +272,27 @@ class PerformanceMusicService:
 
     @staticmethod
     async def validate_music_refs(db: AsyncSession, music_values: list[str | None]) -> None:
-        """校验表演步骤中 upload:<file_id> 引用的音频文件存在且未删除"""
+        """校验表演步骤中 upload:<file_id> 引用的音频：记录存在（未删除）且文件物理存在于存储
+
+        物理存在校验用于兜住「DB 有记录但存储中文件缺失」的脏引用（如共享库 +
+        多机本地存储的开发环境），避免任务绑定一个实际无法播放的音频。
+        """
         file_ids = {fid for v in music_values if (fid := parse_upload_file_id(v)) is not None}
         if not file_ids:
             return
         result = await db.execute(
-            select(SysFile.id).where(
+            select(SysFile.id, SysFile.file_path).where(
                 SysFile.id.in_(file_ids),
                 SysFile.deleted_at.is_(None),
                 SysFile.extension.in_(ALLOWED_EXTENSIONS),
             )
         )
-        existing = {row[0] for row in result.all()}
+        rows = result.all()
+        existing = {row[0] for row in rows}
         missing = file_ids - existing
         if missing:
             raise ValidationError(msg=f"背景音乐不存在或已被删除: {sorted(missing)}")
+        storage = get_storage_backend()
+        lost = sorted(fid for fid, file_path in rows if not storage.exists(file_path))
+        if lost:
+            raise ValidationError(msg=f"背景音乐文件已丢失（服务器存储中不存在），请重新上传: {lost}")

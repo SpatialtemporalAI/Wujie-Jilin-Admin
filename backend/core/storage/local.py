@@ -57,6 +57,9 @@ class LocalStorageBackend(StorageBackend):
     def file_size(self, file_path: str) -> int:
         return os.path.getsize(self._resolve(file_path))
 
+    def exists(self, file_path: str) -> bool:
+        return os.path.exists(os.path.join(self._base_dir, file_path))
+
     def get_full_path(self, file_path: str) -> str:
         return self._resolve(file_path)
 
