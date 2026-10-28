@@ -564,6 +564,11 @@ async function handleSubmit() {
   await validate();
 
   // Custom validations
+  if (model.value.task_type === 'performance' && model.value.name.trim() === '八段锦') {
+    // 「八段锦」为机器人端内置表演流程的约定名（后端同样校验），任务侧禁止使用
+    window.$message?.warning('任务名称不能使用「八段锦」，请更换其他名称');
+    return;
+  }
   if (isPatrol.value && model.value.map_id === null) {
     window.$message?.warning('请选择场景地图');
     return;

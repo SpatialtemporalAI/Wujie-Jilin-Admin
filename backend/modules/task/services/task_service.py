@@ -14,7 +14,7 @@ from database.models.business.task import Task, task_robot_association
 from database.models.business.task_point import TaskPoint
 from database.models.business.robot import Robot
 from app.models.common.base import parse_optional_bool_value, parse_optional_int_value
-from core.exception.errors import NotFoundError, ConflictError
+from core.exception.errors import NotFoundError, ConflictError, ValidationError
 from modules.grpc.task_client import TaskConfigClient
 from modules.task.services.performance_music_service import PerformanceMusicService
 from modules.task.schemas.task import (
@@ -24,6 +24,14 @@ from modules.task.schemas.task import (
 )
 
 logger = logging.getLogger(__name__)
+
+# 表演任务的保留名称（「八段锦」为机器人端内置表演流程的约定名，任务侧禁止使用）
+RESERVED_PERFORMANCE_TASK_NAMES = {"八段锦"}
+
+
+def _check_reserved_performance_name(task_type: str | None, name: str) -> None:
+    if task_type == "performance" and name in RESERVED_PERFORMANCE_TASK_NAMES:
+        raise ValidationError(msg=f"任务名称不能使用「{name}」，请更换其他名称")
 
 
 class TaskService:
@@ -117,6 +125,7 @@ class TaskService:
 
             # 任务名称唯一性校验（去首尾空格后比较，自动过滤软删除记录）
             stripped_name = task_in.name.strip()
+            _check_reserved_performance_name(task_in.task_type, stripped_name)
             name_exists = await db.execute(
                 select(Task.id).where(
                     Task.name == stripped_name,
@@ -222,6 +231,9 @@ class TaskService:
             # 任务名称唯一性校验（去首尾空格后比较，排除自身，自动过滤软删除记录）
             if "name" in update_data:
                 stripped_name = update_data["name"].strip()
+                _check_reserved_performance_name(
+                    update_data.get("task_type", task_obj.task_type), stripped_name
+                )
                 if stripped_name != task_obj.name:
                     name_exists = await db.execute(
                         select(Task.id).where(
