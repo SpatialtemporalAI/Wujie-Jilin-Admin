@@ -224,6 +224,16 @@
 - 前端：`task-operate-drawer.vue` 表演类型渲染「表演动作编排」卡片（动作/音乐 NSelect + 播放次数/套间间隔 NInputNumber + 上移/下移/删除，最多 3 套）；类型文案/颜色映射在各 tab 同步（`performance` → 表演 / 自定义紫色）
 - `TaskDefinitionSnapshot` 同步含 `performance_steps`（宽松 dict，容纳历史脏数据）；`TaskResponseData.performance_steps` 同样为宽松 dict（2026-10-22：防止单行脏数据导致整个任务列表 422，写入侧仍由 `TaskCreate`/`TaskUpdate` 严格校验）
 
+## 机器人管理 · 麦克风蓝牙状态契约（2026-10-29）
+
+- 链路：后端 gRPC 直连机器人 **agent 端**（`robot.grpc_config.agent`），不走控制面板 HTTP；proto 在子模块 `backend/grpc`：`protos/config/mic_bluetooth.proto`（`MicBluetoothService.GetMicBluetoothStatus` / `ReconnectMicBluetooth`）
+- 端点（挂 `/robot/manage`）：
+  - `GET /robot/manage/{id}/mic-bluetooth/status`（权限 `robot:manage:list`）→ `{ status }`，status ∈ `已连接 / 未连接 / 未知`（机器人不可达、gRPC 未启用/未配置时为「未知」）
+  - `POST /robot/manage/{id}/mic-bluetooth/reconnect`（权限 `robot:manage:restart`，复用重启权限点）→ 同上，返回重连后状态；机器人不可达/重连失败返回业务错误
+- `MicBluetoothStatusData` 为纯 BaseModel（不能用 `BaseRespEntity`，status 序列化器会把中文字符串转成 "1"）
+- 前端：机器人卡片「服务器自启状态」行下方新增「麦克风蓝牙状态」行（权限 `robot:manage:restart` 控制整行）；列表加载后并行逐台查询，失败置「未知」；已连接 success / 未连接 error / 未知 default；重连按钮带 loading，完成后刷新该台状态
+- 状态为实时查询不落库；agent 端需实现对应两个 RPC，未实现时前端显示「未知」
+
 ## 参数配置 · 会议模式状态契约
 
 会议指令配置已下线（2026-10-16）：参数配置页不再提供进入/退出指令输入，`robot_voice_config` 的两个指令列与 `NotifyMeetingModeChanged` gRPC 推送链路已移除。

@@ -129,6 +129,22 @@ export function fetchRestartRobotSlot(id: number) {
   });
 }
 
+/** 查询机器人麦克风蓝牙状态（gRPC 直连机器人 agent：已连接/未连接/未知） */
+export function fetchGetRobotMicBluetoothStatus(id: number) {
+  return request<Api.Robot.MicBluetoothStatusData>({
+    url: `/admin/robot/manage/${id}/mic-bluetooth/status`,
+    method: 'get'
+  });
+}
+
+/** 重连机器人麦克风蓝牙（gRPC 直连机器人 agent，返回重连后的状态） */
+export function fetchReconnectRobotMicBluetooth(id: number) {
+  return request<Api.Robot.MicBluetoothStatusData>({
+    url: `/admin/robot/manage/${id}/mic-bluetooth/reconnect`,
+    method: 'post'
+  });
+}
+
 /** update robot grpc config (agent + middleware + ros) */
 export function fetchUpdateRobotGrpcConfig(id: number, data: Api.Robot.RobotGrpcConfig) {
   return request<Api.Robot.Robot>({

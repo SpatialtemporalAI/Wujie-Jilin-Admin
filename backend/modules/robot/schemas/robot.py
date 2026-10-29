@@ -154,6 +154,15 @@ class SlotStatusData(BaseModel):
     )
 
 
+class MicBluetoothStatusData(BaseModel):
+    """
+    麦克风蓝牙状态响应
+    同 SlotStatusData：不能用 BaseRespEntity，status 中文字符串需保持原值。
+    """
+
+    status: str = Field(..., description="麦克风蓝牙状态：已连接/未连接/未知")
+
+
 class RobotSimpleResponse(BaseRespEntity):
     """
     机器人简化响应模型

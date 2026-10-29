@@ -5,6 +5,8 @@ import {
   fetchDeleteRobot,
   fetchGetRobotList,
   fetchGetRobotSlotStatus,
+  fetchGetRobotMicBluetoothStatus,
+  fetchReconnectRobotMicBluetooth,
   fetchRestartRobotSlot
 } from '@/service/api';
 import { useAuth } from '@/hooks/business/auth';
@@ -43,6 +45,7 @@ async function loadData() {
     if (!error && data) {
       robotList.value = data.records || [];
       loadSlotStatuses(data.records || []);
+      loadMicBtStatuses(data.records || []);
     }
   } catch (err) {
     console.error('加载机器人列表失败:', err);
@@ -95,6 +98,50 @@ async function handleRestartSlot(robot: Api.Robot.Robot) {
   } finally {
     slotRestartingMap.value[robot.id] = false;
     loadSlotStatus(robot.id);
+  }
+}
+
+/** 麦克风蓝牙状态（后端 gRPC 直连机器人：已连接/未连接/未知） */
+const micBtStatusMap = ref<Record<number, string>>({});
+const micBtReconnectingMap = ref<Record<number, boolean>>({});
+
+/** 并行拉取每台机器人的麦克风蓝牙状态，单台失败置「未知」不影响其它卡片 */
+function loadMicBtStatuses(records: Api.Robot.Robot[]) {
+  records.forEach(robot => {
+    loadMicBtStatus(robot.id);
+  });
+}
+
+async function loadMicBtStatus(robotId: number) {
+  try {
+    const { data, error } = await fetchGetRobotMicBluetoothStatus(robotId);
+    micBtStatusMap.value[robotId] = !error && data ? data.status : '未知';
+  } catch {
+    micBtStatusMap.value[robotId] = '未知';
+  }
+}
+
+function getMicBtStatusType(status: string): import('naive-ui').TagProps['type'] {
+  const typeMap: Record<string, import('naive-ui').TagProps['type']> = {
+    已连接: 'success',
+    未连接: 'error'
+  };
+  return typeMap[status] || 'default';
+}
+
+async function handleReconnectMicBt(robot: Api.Robot.Robot) {
+  micBtReconnectingMap.value[robot.id] = true;
+  try {
+    const { data, error } = await fetchReconnectRobotMicBluetooth(robot.id);
+    if (!error && data) {
+      micBtStatusMap.value[robot.id] = data.status;
+      message.success(`重连指令已执行，当前状态：${data.status}`);
+    }
+  } catch (err) {
+    console.error('重连麦克风蓝牙失败:', err);
+  } finally {
+    micBtReconnectingMap.value[robot.id] = false;
+    loadMicBtStatus(robot.id);
   }
 }
 
@@ -228,6 +275,22 @@ loadData();
                     <icon-mdi-restart class="text-icon" />
                   </template>
                   重启
+                </NButton>
+              </NSpace>
+            </div>
+
+            <div class="robot-card-slot" v-if="hasAuth('robot:manage:restart')">
+              <span class="robot-info-label">麦克风蓝牙状态</span>
+              <NSpace align="center">
+                <NTag :type="getMicBtStatusType(micBtStatusMap[robot.id] || '未知')" size="small" round>
+                  {{ micBtStatusMap[robot.id] || '未知' }}
+                </NTag>
+                <NButton size="small" secondary :loading="micBtReconnectingMap[robot.id]"
+                  @click="handleReconnectMicBt(robot)">
+                  <template #icon>
+                    <icon-mdi-bluetooth-connect class="text-icon" />
+                  </template>
+                  重连
                 </NButton>
               </NSpace>
             </div>

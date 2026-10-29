@@ -37,8 +37,10 @@ from modules.robot.schemas.robot import (
     RobotGrpcConfigUpdate,
     RobotMapBindingUpdate,
     SlotStatusData,
+    MicBluetoothStatusData,
 )
 from modules.robot.services.robot_slot_service import RobotSlotService
+from modules.robot.services.robot_mic_bluetooth_service import RobotMicBluetoothService
 
 logger = logging.getLogger(__name__)
 
@@ -390,4 +392,75 @@ async def restart_robot_slot(
 
     except Exception as e:
         logger.error("重启机器人服务器自启动接口失败: %s", str(e), exc_info=True)
+        raise
+
+
+@robot_router.get(
+    "/{robot_id}/mic-bluetooth/status",
+    response_model=ResponseModel[MicBluetoothStatusData],
+    dependencies=[Depends(require_permission("robot:manage:list"))],
+)
+async def get_robot_mic_bluetooth_status(
+    robot_id: int = Path(..., description="机器人ID"),
+    db: AsyncSession = Depends(get_session),
+):
+    """
+    查询机器人麦克风蓝牙连接状态
+
+    经 gRPC（agent 端）直连机器人查询，status 取值：已连接/未连接；
+    机器人不可达（离线/未配置 gRPC/未启用）返回「未知」。
+    """
+    try:
+        logger.info("查询机器人麦克风蓝牙状态接口被调用，机器人ID: %d", robot_id)
+
+        robot_obj = await RobotService.get(db, robot_id)
+        status = await RobotMicBluetoothService.get_status(robot_obj)
+
+        logger.info(
+            "查询机器人麦克风蓝牙状态接口成功，机器人ID: %d，状态: %s",
+            robot_id,
+            status,
+        )
+        return response_base.success(data=MicBluetoothStatusData(status=status))
+
+    except Exception as e:
+        logger.error("查询机器人麦克风蓝牙状态接口失败: %s", str(e), exc_info=True)
+        raise
+
+
+@robot_router.post(
+    "/{robot_id}/mic-bluetooth/reconnect",
+    response_model=ResponseModel[MicBluetoothStatusData],
+    dependencies=[Depends(require_permission("robot:manage:restart"))],
+)
+@log_operation(module="robot", action="reconnect", description="重连机器人麦克风蓝牙")
+async def reconnect_robot_mic_bluetooth(
+    request: Request,
+    robot_id: int = Path(..., description="机器人ID"),
+    db: AsyncSession = Depends(get_session),
+    user: SysUser = Depends(current_user),
+):
+    """
+    重连机器人麦克风蓝牙（断开当前连接后重新搜索/连接）
+
+    经 gRPC（agent 端）直连机器人执行，返回重连后的 status（已连接/未连接）。
+    机器人不可达或重连动作失败时返回业务错误提示。
+    """
+    try:
+        logger.info("重连机器人麦克风蓝牙接口被调用，机器人ID: %d", robot_id)
+
+        robot_obj = await RobotService.get(db, robot_id)
+        status = await RobotMicBluetoothService.reconnect(robot_obj)
+
+        logger.info(
+            "重连机器人麦克风蓝牙接口成功，机器人ID: %d，状态: %s",
+            robot_id,
+            status,
+        )
+        return response_base.success(
+            data=MicBluetoothStatusData(status=status), msg="重连指令已执行"
+        )
+
+    except Exception as e:
+        logger.error("重连机器人麦克风蓝牙接口失败: %s", str(e), exc_info=True)
         raise

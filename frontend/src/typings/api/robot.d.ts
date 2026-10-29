@@ -141,6 +141,14 @@ declare namespace Api {
       status: SlotStatus | string;
     };
 
+    /** 麦克风蓝牙状态（后端 gRPC 直连机器人 agent 查询；机器人不可达为「未知」） */
+    type MicBluetoothStatus = '已连接' | '未连接' | '未知';
+
+    /** 麦克风蓝牙状态响应 */
+    type MicBluetoothStatusData = {
+      status: MicBluetoothStatus | string;
+    };
+
     /** robot create */
     type RobotCreate = {
       name: string;

@@ -113,3 +113,4 @@
 - [2026-10-16 移除会议指令配置](./2026-10-16_remove-meeting-command-config.md) — 指令输入卡片、NotifyMeetingModeChanged 推送链路、robot_voice_config 两个指令列（迁移 0017）全部移除；保留 robot.meeting_mode 状态字段与机器人列表 tag
 - [2026-10-19 修复任务管理按机器人筛选报错](./2026-10-19_task-robot-filter-json-distinct-error.md) — build_query robot_id 分支 join+distinct 触发 PG「json 无相等操作符」（performance_steps 为 json），改为 EXISTS 子查询
 - [2026-10-19 表演背景音乐支持用户上传](./2026-10-19_performance-music-upload.md) — 恢复上传音频需求：mp3/wav ≤20MB，超5分钟 ffmpeg 截取前300s（imageio-ffmpeg 自带二进制）；仅自己可见可删、被任务引用不可删；music 取值 upload:<sys_file_id>；音乐非必填、次数 1-99999（2026-10-21 调整）
+- [2026-10-29 机器人卡片新增麦克风蓝牙状态与重连](./2026-10-29_robot-mic-bluetooth-status.md) — 子模块新增 mic_bluetooth.proto（GetMicBluetoothStatus/ReconnectMicBluetooth 两 RPC）；后端 gRPC 直连 agent 查询/重连，状态 已连接/未连接/未知；新增 GET/POST /robot/manage/{id}/mic-bluetooth/*，重连复用 robot:manage:restart 权限；前端卡片新增状态行+重连按钮；agent 端需实现对应 RPC
