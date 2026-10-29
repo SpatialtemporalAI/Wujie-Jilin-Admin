@@ -27,6 +27,7 @@
 - **agent 端需实现 `MicBluetoothService` 两个 RPC**（proto 见子模块 `backend/grpc` 提交 80e2e67）；未实现/机器人离线时状态显示「未知」，重连提示「机器人当前不可达」
 - gRPC 地址解析沿用 `robot.grpc_config.agent`；`GRPC.ENABLED=false` 时一律返回「未知」
 - 蓝牙状态为实时查询，不落库（与会议模式 meeting_mode 上报落库的模式不同）
+- 2026-10-29 调整：机器人列表 10s 静默轮询，为避免「每轮 N 台 × 2 个状态接口」的请求放大，`GET /robot/manage/list` 聚合返回每台 `slot_status` + `mic_bluetooth_status`（后端 `asyncio.gather` 逐台并发，单机失败兜底「未知」）；前端初始加载与轮询只调 list，单独状态接口仅用于重启/重连动作后的单台刷新
 
 ## 相关文件
 

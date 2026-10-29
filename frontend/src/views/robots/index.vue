@@ -38,14 +38,21 @@ const robotDrawerVisible = ref(false);
 const robotOperateType = ref<NaiveUI.TableOperateType>('add');
 const editingRobotData = ref<Api.Robot.Robot | null>(null);
 
+/** 列表数据落本地：list 接口已聚合逐台状态（自启/蓝牙），无需逐台再调状态接口 */
+function applyRecords(records: Api.Robot.Robot[]) {
+  robotList.value = records;
+  records.forEach(robot => {
+    slotStatusMap.value[robot.id] = robot.slot_status || '未知';
+    micBtStatusMap.value[robot.id] = robot.mic_bluetooth_status || '未知';
+  });
+}
+
 async function loadData() {
   loading.value = true;
   try {
     const { data, error } = await fetchGetRobotList({ page: 1, page_size: 200 });
     if (!error && data) {
-      robotList.value = data.records || [];
-      loadSlotStatuses(data.records || []);
-      loadMicBtStatuses(data.records || []);
+      applyRecords(data.records || []);
     }
   } catch (err) {
     console.error('加载机器人列表失败:', err);
@@ -54,7 +61,7 @@ async function loadData() {
   }
 }
 
-/** 10 秒静默轮询：不转全屏 loading，刷新列表（在线状态/会议模式）与逐台状态 */
+/** 10 秒静默轮询：不转全屏 loading，只调 list 一个接口（在线/会议模式/自启/蓝牙状态全部由 list 聚合返回） */
 const POLL_INTERVAL_MS = 10_000;
 let pollTimer: ReturnType<typeof setInterval> | null = null;
 /** 轮询请求在途标记：上一次未返回则跳过本次，避免机器人不可达时请求堆积 */
@@ -66,9 +73,7 @@ async function pollSilently() {
   try {
     const { data, error } = await fetchGetRobotList({ page: 1, page_size: 200 });
     if (!error && data) {
-      robotList.value = data.records || [];
-      loadSlotStatuses(data.records || []);
-      loadMicBtStatuses(data.records || []);
+      applyRecords(data.records || []);
     }
   } catch {
     // 静默轮询失败不打断页面，下个周期再试
@@ -92,13 +97,7 @@ onBeforeUnmount(() => {
 const slotStatusMap = ref<Record<number, string>>({});
 const slotRestartingMap = ref<Record<number, boolean>>({});
 
-/** 并行拉取每台机器人的自启状态，单台失败置「未知」不影响其它卡片 */
-function loadSlotStatuses(records: Api.Robot.Robot[]) {
-  records.forEach(robot => {
-    loadSlotStatus(robot.id);
-  });
-}
-
+/** 重启/重连动作完成后单独刷新该台状态（初始与轮询由 list 聚合返回） */
 async function loadSlotStatus(robotId: number) {
   try {
     const { data, error } = await fetchGetRobotSlotStatus(robotId);
@@ -135,16 +134,9 @@ async function handleRestartSlot(robot: Api.Robot.Robot) {
   }
 }
 
-/** 麦克风蓝牙状态（后端 gRPC 直连机器人：已连接/未连接/未知） */
+/** 麦克风蓝牙状态（list 接口聚合返回：已连接/未连接/未知） */
 const micBtStatusMap = ref<Record<number, string>>({});
 const micBtReconnectingMap = ref<Record<number, boolean>>({});
-
-/** 并行拉取每台机器人的麦克风蓝牙状态，单台失败置「未知」不影响其它卡片 */
-function loadMicBtStatuses(records: Api.Robot.Robot[]) {
-  records.forEach(robot => {
-    loadMicBtStatus(robot.id);
-  });
-}
 
 async function loadMicBtStatus(robotId: number) {
   try {

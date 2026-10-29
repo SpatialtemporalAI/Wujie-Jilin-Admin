@@ -116,6 +116,12 @@ class RobotResponseData(BaseRespEntity):
         None, description="gRPC 配置: { agent, middleware, ros }"
     )
     model_name: Optional[str] = Field(None, description="型号名称（关联查询）")
+    slot_status: Optional[str] = Field(
+        None, description="服务器自启状态（list 接口实时聚合）：已启动/启动中/启动失败/未配置/未知"
+    )
+    mic_bluetooth_status: Optional[str] = Field(
+        None, description="麦克风蓝牙状态（list 接口实时聚合）：已连接/未连接/未知"
+    )
     created_at: datetime = Field(..., description="创建时间")
     updated_at: Optional[datetime] = Field(None, description="更新时间")
 

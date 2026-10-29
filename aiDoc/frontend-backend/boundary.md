@@ -231,8 +231,9 @@
   - `GET /robot/manage/{id}/mic-bluetooth/status`（权限 `robot:manage:list`）→ `{ status }`，status ∈ `已连接 / 未连接 / 未知`（机器人不可达、gRPC 未启用/未配置时为「未知」）
   - `POST /robot/manage/{id}/mic-bluetooth/reconnect`（权限 `robot:manage:restart`，复用重启权限点）→ 同上，返回重连后状态；机器人不可达/重连失败返回业务错误
 - `MicBluetoothStatusData` 为纯 BaseModel（不能用 `BaseRespEntity`，status 序列化器会把中文字符串转成 "1"）
-- 前端：机器人卡片「服务器自启状态」行下方新增「麦克风蓝牙状态」行（权限 `robot:manage:restart` 控制整行）；列表加载后并行逐台查询，失败置「未知」；已连接 success / 未连接 error / 未知 default；重连按钮带 loading，完成后刷新该台状态
+- 前端：机器人卡片「服务器自启状态」行下方新增「麦克风蓝牙状态」行（权限 `robot:manage:restart` 控制整行）；已连接 success / 未连接 error / 未知 default；重连按钮带 loading，完成后单独刷新该台状态
 - 状态为实时查询不落库；agent 端需实现对应两个 RPC，未实现时前端显示「未知」
+- **列表聚合（2026-10-29）**：`GET /robot/manage/list` 每条记录附带 `slot_status` / `mic_bluetooth_status`（后端逐台并发查询，单机失败兜底「未知」不拖垮整页）；前端列表页 10s 静默轮询只调 list 一个接口，初始加载与轮询不再逐台调状态接口（单独状态接口保留，供重启/重连动作后单台刷新）
 
 ## 参数配置 · 会议模式状态契约
 

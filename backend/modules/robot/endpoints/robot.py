@@ -4,6 +4,7 @@
 """
 机器人管理相关接口
 """
+import asyncio
 import logging
 from fastapi import APIRouter, Depends, Path, Request
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -69,6 +70,35 @@ async def _fill_robot_names(db: AsyncSession, records: list[RobotResponseData]) 
             record.map_name = map_map.get(record.map_id)
 
 
+async def _fill_runtime_statuses(
+    db: AsyncSession, records: list[RobotResponseData]
+) -> None:
+    """list 接口聚合每台机器人的自启状态与麦克风蓝牙状态
+
+    逐台并发查询（面板 HTTP + gRPC agent），两个 service 内部已做失败兜底
+    （未知/未配置），单机失败不拖垮整页；前端因此只需轮询 list 一个接口。
+    """
+    if not records:
+        return
+
+    ids = [record.id for record in records]
+    result = await db.execute(select(Robot).where(Robot.id.in_(ids)))
+    robots = {robot.id: robot for robot in result.scalars().all()}
+
+    async def fill_one(record: RobotResponseData) -> None:
+        robot = robots.get(record.id)
+        if robot is None:
+            return
+        slot_status, mic_bt_status = await asyncio.gather(
+            RobotSlotService.get_slot_status(robot),
+            RobotMicBluetoothService.get_status(robot),
+        )
+        record.slot_status = slot_status
+        record.mic_bluetooth_status = mic_bt_status
+
+    await asyncio.gather(*(fill_one(record) for record in records))
+
+
 @robot_router.get(
     "/list",
     response_model=ResponsePageModel[RobotResponseData],
@@ -81,6 +111,10 @@ async def get_robot_list(
 ):
     """
     获取机器人列表（分页）
+
+    每台机器人附带实时聚合的运行状态：slot_status（服务器自启）与
+    mic_bluetooth_status（麦克风蓝牙），供列表页一次渲染/轮询，
+    无需逐台再调状态接口。
     """
     try:
         logger.info("获取机器人列表接口被调用")
@@ -96,6 +130,7 @@ async def get_robot_list(
         )
 
         await _fill_robot_names(db, page_data.records)
+        await _fill_runtime_statuses(db, page_data.records)
 
         logger.info("获取机器人列表接口成功，共 %d 条记录", page_data.total)
         return response_base.page(data=page_data)
