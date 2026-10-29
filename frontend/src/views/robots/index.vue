@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref } from 'vue';
+import { onBeforeUnmount, onMounted, ref } from 'vue';
 import { NButton, NCard, NEmpty, NPopconfirm, NSpace, NSpin, NTag, useMessage } from 'naive-ui';
 import {
   fetchDeleteRobot,
@@ -53,6 +53,40 @@ async function loadData() {
     loading.value = false;
   }
 }
+
+/** 10 秒静默轮询：不转全屏 loading，刷新列表（在线状态/会议模式）与逐台状态 */
+const POLL_INTERVAL_MS = 10_000;
+let pollTimer: ReturnType<typeof setInterval> | null = null;
+/** 轮询请求在途标记：上一次未返回则跳过本次，避免机器人不可达时请求堆积 */
+let polling = false;
+
+async function pollSilently() {
+  if (polling || loading.value) return;
+  polling = true;
+  try {
+    const { data, error } = await fetchGetRobotList({ page: 1, page_size: 200 });
+    if (!error && data) {
+      robotList.value = data.records || [];
+      loadSlotStatuses(data.records || []);
+      loadMicBtStatuses(data.records || []);
+    }
+  } catch {
+    // 静默轮询失败不打断页面，下个周期再试
+  } finally {
+    polling = false;
+  }
+}
+
+onMounted(() => {
+  pollTimer = setInterval(pollSilently, POLL_INTERVAL_MS);
+});
+
+onBeforeUnmount(() => {
+  if (pollTimer) {
+    clearInterval(pollTimer);
+    pollTimer = null;
+  }
+});
 
 /** 服务器自启状态（面板返回：已启动/启动中/启动失败/未配置/未知） */
 const slotStatusMap = ref<Record<number, string>>({});
