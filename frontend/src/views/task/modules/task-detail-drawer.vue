@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { ref, watch } from 'vue';
-import { fetchGetExecutionRecordDetail } from '@/service/api';
+import { fetchGetExecutionRecordDetail, fetchGetPerformanceActions, fetchGetPerformanceMusic } from '@/service/api';
 
 defineOptions({ name: 'TaskDetailDrawer' });
 
@@ -14,6 +14,8 @@ const visible = defineModel<boolean>('visible', { default: false });
 
 const loading = ref(false);
 const detail = ref<Api.Task.TaskExecutionRecordDetail | null>(null);
+const performanceActionLabels = ref<Record<string, string>>({});
+const performanceMusicLabels = ref<Record<string, string>>({});
 
 const taskTypeLabel: Record<string, string> = {
   patrol: '巡逻',
@@ -74,6 +76,20 @@ async function loadDetail() {
     const { data, error } = await fetchGetExecutionRecordDetail(props.execId);
     if (!error && data) {
       detail.value = data;
+      if (data.task_definition?.task_type === 'performance') {
+        const [actionResult, musicResult] = await Promise.all([
+          fetchGetPerformanceActions(),
+          fetchGetPerformanceMusic()
+        ]);
+        performanceActionLabels.value =
+          !actionResult.error && actionResult.data
+            ? Object.fromEntries(actionResult.data.map(option => [option.value, option.label]))
+            : {};
+        performanceMusicLabels.value =
+          !musicResult.error && musicResult.data
+            ? Object.fromEntries(musicResult.data.map(option => [option.value, option.label]))
+            : {};
+      }
     }
   } finally {
     loading.value = false;
@@ -95,8 +111,8 @@ function pointStatusType(index: number): 'success' | 'default' | 'error' {
   return 'default';
 }
 
-/** 播报间隔仅非最后一步展示（最后一步无后续间隔，历史快照中可能残留数值） */
-function showStepInterval(step: Api.Task.BroadcastStep, index: number, total: number): boolean {
+/** 间隔仅非最后一步展示（最后一步无后续间隔，历史快照中可能残留数值） */
+function showStepInterval(step: { interval: number | null | undefined }, index: number, total: number): boolean {
   return index < total - 1 && step.interval !== null && step.interval !== undefined;
 }
 </script>
@@ -163,9 +179,7 @@ function showStepInterval(step: Api.Task.BroadcastStep, index: number, total: nu
         </template>
 
         <!-- 播报步骤 -->
-        <template
-          v-if="detail.task_definition?.broadcast_steps?.length || detail.task_definition?.broadcast_text"
-        >
+        <template v-if="detail.task_definition?.broadcast_steps?.length || detail.task_definition?.broadcast_text">
           <NDivider title-placement="left">播报内容</NDivider>
           <NTimeline v-if="detail.task_definition?.broadcast_steps?.length">
             <NTimelineItem
@@ -185,6 +199,34 @@ function showStepInterval(step: Api.Task.BroadcastStep, index: number, total: nu
             </NTimelineItem>
           </NTimeline>
           <NText v-else depth="3">{{ detail.task_definition?.broadcast_text }}</NText>
+        </template>
+
+        <!-- 表演步骤 -->
+        <template
+          v-if="
+            detail.task_definition?.task_type === 'performance' && detail.task_definition?.performance_steps?.length
+          "
+        >
+          <NDivider title-placement="left">表演内容</NDivider>
+          <NTimeline>
+            <NTimelineItem
+              v-for="(step, index) in detail.task_definition.performance_steps"
+              :key="index"
+              :title="`第 ${index + 1} 套`"
+            >
+              <NText depth="3">表演动作: {{ performanceActionLabels[step.action] || step.action }}</NText>
+              <br />
+              <NText depth="3">
+                背景音乐: {{ step.music ? performanceMusicLabels[step.music] || step.music : '无' }}
+              </NText>
+              <br />
+              <NText depth="3">播放次数: {{ step.play_count }} 次</NText>
+              <template v-if="showStepInterval(step, index, detail.task_definition?.performance_steps?.length ?? 0)">
+                <br />
+                <NText depth="3">与下一套间隔: {{ step.interval }} 秒</NText>
+              </template>
+            </NTimelineItem>
+          </NTimeline>
         </template>
       </template>
     </NDrawerContent>
