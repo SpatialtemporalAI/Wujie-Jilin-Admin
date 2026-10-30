@@ -289,29 +289,33 @@ loadData();
               </div>
               <div class="robot-info-item" v-if="hasAuth('robot:manage:restart')">
                 <span class="robot-info-label">服务器自启状态：</span>
-                <NTag :type="getSlotStatusType(slotStatusMap[robot.id] || '未知')" size="small" round>
-                  {{ slotStatusMap[robot.id] || '未知' }}
-                </NTag>
-                <NButton size="tiny" type="primary" ghost :loading="slotRestartingMap[robot.id]"
-                  :disabled="slotStatusMap[robot.id] === '启动中'" @click="handleRestartSlot(robot)">
-                  <template #icon>
-                    <icon-mdi-restart class="text-icon" />
-                  </template>
-                  重启
-                </NButton>
+                <div class="robot-info-extra">
+                  <NTag :type="getSlotStatusType(slotStatusMap[robot.id] || '未知')" size="small" round>
+                    {{ slotStatusMap[robot.id] || '未知' }}
+                  </NTag>
+                  <NButton size="tiny" type="primary" ghost :loading="slotRestartingMap[robot.id]"
+                    :disabled="slotStatusMap[robot.id] === '启动中'" @click="handleRestartSlot(robot)">
+                    <template #icon>
+                      <icon-mdi-restart class="text-icon" />
+                    </template>
+                    重启
+                  </NButton>
+                </div>
               </div>
               <div class="robot-info-item" v-if="hasAuth('robot:manage:restart')">
                 <span class="robot-info-label">麦克风蓝牙状态：</span>
-                <NTag :type="getMicBtStatusType(micBtStatusMap[robot.id] || '未知')" size="small" round>
-                  {{ micBtStatusMap[robot.id] || '未知' }}
-                </NTag>
-                <NButton size="tiny" type="primary" ghost :loading="micBtReconnectingMap[robot.id]"
-                  @click="handleReconnectMicBt(robot)">
-                  <template #icon>
-                    <icon-mdi-bluetooth-connect class="text-icon" />
-                  </template>
-                  重连
-                </NButton>
+                <div class="robot-info-extra">
+                  <NTag :type="getMicBtStatusType(micBtStatusMap[robot.id] || '未知')" size="small" round>
+                    {{ micBtStatusMap[robot.id] || '未知' }}
+                  </NTag>
+                  <NButton size="tiny" type="primary" ghost :loading="micBtReconnectingMap[robot.id]"
+                    @click="handleReconnectMicBt(robot)">
+                    <template #icon>
+                      <icon-mdi-bluetooth-connect class="text-icon" />
+                    </template>
+                    重连
+                  </NButton>
+                </div>
               </div>
             </div>
 
@@ -436,8 +440,17 @@ loadData();
 .robot-info-item {
   display: flex;
   align-items: center;
+  justify-content: space-between;
   gap: 6px;
   font-size: 13px;
+}
+
+/* 状态行右侧内容组（tag + 操作按钮），与 label 形成左右布局 */
+.robot-info-extra {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-shrink: 0;
 }
 
 .robot-info-label {
@@ -447,6 +460,8 @@ loadData();
 
 .robot-info-value {
   color: var(--n-text-color);
+  min-width: 0;
+  text-align: right;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
