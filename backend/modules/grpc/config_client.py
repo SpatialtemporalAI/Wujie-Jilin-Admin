@@ -54,6 +54,18 @@ logger = logging.getLogger(__name__)
 T = TypeVar("T")
 
 
+class GrpcMethodUnsupported(Exception):
+    """机器人端未实现该 RPC（UNIMPLEMENTED）
+
+    与「机器人不可达」严格区分：能够拿到 UNIMPLEMENTED 说明 TCP/gRPC 链路是通的，
+    只是对端 agent 程序版本里没有这个方法，需要升级机器人端程序。
+    """
+
+    def __init__(self, method_name: str):
+        super().__init__(f"agent 未实现 RPC: {method_name}")
+        self.method_name = method_name
+
+
 async def _dispatch_with_target(
     robot_id: Optional[int],
     target: str,
@@ -701,6 +713,15 @@ class MeetingModeClient:
             rpc: Callable[..., Awaitable[Any]] = getattr(stub, method_name)
             return await rpc(request, timeout=settings.GRPC.TIMEOUT_SECONDS)
         except grpc.aio.AioRpcError as e:
+            if e.code() == grpc.StatusCode.UNIMPLEMENTED:
+                logger.warning(
+                    "meeting mode rpc unimplemented method=%s robot_id=%s addr=%s details=%s",
+                    method_name,
+                    robot_id,
+                    addr,
+                    e.details(),
+                )
+                raise GrpcMethodUnsupported(method_name) from e
             logger.warning(
                 "meeting mode rpc failed method=%s robot_id=%s code=%s details=%s",
                 method_name,
