@@ -461,10 +461,15 @@ loadData();
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 12px 0;
-  margin-bottom: 4px;
+  padding: 10px 0;
   border-top: 1px dashed var(--n-divider-color);
   font-size: 13px;
+}
+
+/* 相邻状态行（自启/蓝牙）收紧间距，去掉重复分隔线 */
+.robot-card-slot + .robot-card-slot {
+  border-top: none;
+  padding-top: 2px;
 }
 
 .robot-card-footer {
