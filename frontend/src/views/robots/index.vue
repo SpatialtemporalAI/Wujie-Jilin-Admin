@@ -273,49 +273,52 @@ loadData();
             </div>
 
             <div class="robot-card-body">
-              <div class="robot-info-item">
-                <span class="robot-info-label">型号</span>
-                <span class="robot-info-value">{{ robot.model_name || '-' }}</span>
-              </div>
-              <div class="robot-info-item">
-                <span class="robot-info-label">地图</span>
-                <span class="robot-info-value">{{ robot.map_name || '-' }}</span>
-              </div>
-              <div class="robot-info-item">
-                <span class="robot-info-label">会议模式</span>
-                <NTag :type="robot.meeting_mode ? 'success' : 'default'" size="small" round>
-                  {{ robot.meeting_mode ? '监听中' : '未开启' }}
-                </NTag>
-              </div>
-              <div class="robot-info-divider" v-if="hasAuth('robot:manage:restart')"></div>
-              <div class="robot-info-item" v-if="hasAuth('robot:manage:restart')">
-                <span class="robot-info-label">服务器自启状态</span>
-                <div class="robot-info-extra">
-                  <NTag :type="getSlotStatusType(slotStatusMap[robot.id] || '未知')" size="small" round>
-                    {{ slotStatusMap[robot.id] || '未知' }}
+              <div class="robot-info-group">
+                <div class="robot-info-item">
+                  <span class="robot-info-label">型号</span>
+                  <span class="robot-info-value">{{ robot.model_name || '-' }}</span>
+                </div>
+                <div class="robot-info-item">
+                  <span class="robot-info-label">地图</span>
+                  <span class="robot-info-value">{{ robot.map_name || '-' }}</span>
+                </div>
+                <div class="robot-info-item">
+                  <span class="robot-info-label">会议模式</span>
+                  <NTag :type="robot.meeting_mode ? 'success' : 'default'" size="small" round>
+                    {{ robot.meeting_mode ? '监听中' : '未开启' }}
                   </NTag>
-                  <NButton size="tiny" secondary :loading="slotRestartingMap[robot.id]"
-                    :disabled="slotStatusMap[robot.id] === '启动中'" @click="handleRestartSlot(robot)">
-                    <template #icon>
-                      <icon-mdi-restart class="text-icon" />
-                    </template>
-                    重启
-                  </NButton>
                 </div>
               </div>
-              <div class="robot-info-item" v-if="hasAuth('robot:manage:restart')">
-                <span class="robot-info-label">麦克风蓝牙状态</span>
-                <div class="robot-info-extra">
-                  <NTag :type="getMicBtStatusType(micBtStatusMap[robot.id] || '未知')" size="small" round>
-                    {{ micBtStatusMap[robot.id] || '未知' }}
-                  </NTag>
-                  <NButton size="tiny" secondary :loading="micBtReconnectingMap[robot.id]"
-                    @click="handleReconnectMicBt(robot)">
-                    <template #icon>
-                      <icon-mdi-bluetooth-connect class="text-icon" />
-                    </template>
-                    重连
-                  </NButton>
+              <div class="robot-info-group" v-if="hasAuth('robot:manage:restart')">
+                <div class="robot-info-item">
+                  <span class="robot-info-label">服务器自启状态</span>
+                  <div class="robot-info-extra">
+                    <NTag :type="getSlotStatusType(slotStatusMap[robot.id] || '未知')" size="small" round>
+                      {{ slotStatusMap[robot.id] || '未知' }}
+                    </NTag>
+                    <NButton size="tiny" secondary :loading="slotRestartingMap[robot.id]"
+                      :disabled="slotStatusMap[robot.id] === '启动中'" @click="handleRestartSlot(robot)">
+                      <template #icon>
+                        <icon-mdi-restart class="text-icon" />
+                      </template>
+                      重启
+                    </NButton>
+                  </div>
+                </div>
+                <div class="robot-info-item">
+                  <span class="robot-info-label">麦克风蓝牙状态</span>
+                  <div class="robot-info-extra">
+                    <NTag :type="getMicBtStatusType(micBtStatusMap[robot.id] || '未知')" size="small" round>
+                      {{ micBtStatusMap[robot.id] || '未知' }}
+                    </NTag>
+                    <NButton size="tiny" secondary :loading="micBtReconnectingMap[robot.id]"
+                      @click="handleReconnectMicBt(robot)">
+                      <template #icon>
+                        <icon-mdi-bluetooth-connect class="text-icon" />
+                      </template>
+                      重连
+                    </NButton>
+                  </div>
                 </div>
               </div>
             </div>
@@ -434,8 +437,15 @@ loadData();
   flex: 1;
   display: flex;
   flex-direction: column;
-  gap: 8px;
+  gap: 18px;
   margin-bottom: 16px;
+}
+
+/* 信息分组（设备信息 / 运行状态），组内行距紧凑、组间靠大间距区分，无需小标题 */
+.robot-info-group {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
 }
 
 .robot-info-item {
@@ -468,13 +478,6 @@ loadData();
   align-items: center;
   gap: 8px;
   flex-shrink: 0;
-}
-
-/* 信息区与状态区之间的分隔线（代替分区小标题） */
-.robot-info-divider {
-  height: 1px;
-  margin: 4px 0;
-  background-color: var(--n-divider-color);
 }
 
 .robot-card-footer {
