@@ -39,9 +39,12 @@ from modules.robot.schemas.robot import (
     RobotMapBindingUpdate,
     SlotStatusData,
     MicBluetoothStatusData,
+    MeetingModeUpdate,
+    MeetingModeStatusData,
 )
 from modules.robot.services.robot_slot_service import RobotSlotService
 from modules.robot.services.robot_mic_bluetooth_service import RobotMicBluetoothService
+from modules.robot.services.robot_meeting_mode_service import RobotMeetingModeService
 
 logger = logging.getLogger(__name__)
 
@@ -498,4 +501,50 @@ async def reconnect_robot_mic_bluetooth(
 
     except Exception as e:
         logger.error("重连机器人麦克风蓝牙接口失败: %s", str(e), exc_info=True)
+        raise
+
+
+@robot_router.post(
+    "/{robot_id}/meeting-mode",
+    response_model=ResponseModel[MeetingModeStatusData],
+    dependencies=[Depends(require_permission("robot:manage:restart"))],
+)
+@log_operation(module="robot", action="meeting_mode", description="切换机器人会议模式")
+async def set_robot_meeting_mode(
+    request: Request,
+    payload: MeetingModeUpdate,
+    robot_id: int = Path(..., description="机器人ID"),
+    db: AsyncSession = Depends(get_session),
+    user: SysUser = Depends(current_user),
+):
+    """
+    手动切换机器人会议模式（进入/退出）
+
+    经 gRPC（agent 端）直连机器人执行，成功后把最新状态落库（robot.meeting_mode），
+    返回切换后的 meeting_mode（true-监听中 / false-未开启）。
+    机器人不可达或切换动作失败时返回业务错误提示。
+    """
+    try:
+        logger.info(
+            "切换机器人会议模式接口被调用，机器人ID: %d，目标状态: %s",
+            robot_id,
+            payload.enabled,
+        )
+
+        robot_obj = await RobotService.get(db, robot_id)
+        meeting_mode = await RobotMeetingModeService.set_meeting_mode(
+            db, robot_obj, payload.enabled
+        )
+
+        logger.info(
+            "切换机器人会议模式接口成功，机器人ID: %d，状态: %s",
+            robot_id,
+            meeting_mode,
+        )
+        return response_base.success(
+            data=MeetingModeStatusData(meeting_mode=meeting_mode), msg="切换成功"
+        )
+
+    except Exception as e:
+        logger.error("切换机器人会议模式接口失败: %s", str(e), exc_info=True)
         raise

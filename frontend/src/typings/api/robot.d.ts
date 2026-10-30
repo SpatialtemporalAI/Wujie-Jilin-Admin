@@ -153,6 +153,17 @@ declare namespace Api {
       status: MicBluetoothStatus | string;
     };
 
+    /** 会议模式切换请求 */
+    type MeetingModeUpdate = {
+      /** true-进入会议模式 / false-退出会议模式 */
+      enabled: boolean;
+    };
+
+    /** 会议模式状态响应（切换后的最新状态） */
+    type MeetingModeStatusData = {
+      meeting_mode: boolean;
+    };
+
     /** robot create */
     type RobotCreate = {
       name: string;

@@ -145,6 +145,15 @@ export function fetchReconnectRobotMicBluetooth(id: number) {
   });
 }
 
+/** 手动切换机器人会议模式（gRPC 直连机器人 agent，返回切换后的状态） */
+export function fetchSetRobotMeetingMode(id: number, data: Api.Robot.MeetingModeUpdate) {
+  return request<Api.Robot.MeetingModeStatusData>({
+    url: `/admin/robot/manage/${id}/meeting-mode`,
+    method: 'post',
+    data
+  });
+}
+
 /** update robot grpc config (agent + middleware + ros) */
 export function fetchUpdateRobotGrpcConfig(id: number, data: Api.Robot.RobotGrpcConfig) {
   return request<Api.Robot.Robot>({

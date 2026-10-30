@@ -169,6 +169,20 @@ class MicBluetoothStatusData(BaseModel):
     status: str = Field(..., description="麦克风蓝牙状态：已连接/未连接/未知")
 
 
+class MeetingModeUpdate(BaseModel):
+    """会议模式切换请求"""
+
+    enabled: bool = Field(..., description="true-进入会议模式 / false-退出会议模式")
+
+
+class MeetingModeStatusData(BaseModel):
+    """会议模式状态响应"""
+
+    meeting_mode: bool = Field(
+        ..., description="切换后的会议模式状态：true-监听中 / false-未开启"
+    )
+
+
 class RobotSimpleResponse(BaseRespEntity):
     """
     机器人简化响应模型

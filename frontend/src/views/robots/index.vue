@@ -7,6 +7,7 @@ import {
   fetchGetRobotSlotStatus,
   fetchGetRobotMicBluetoothStatus,
   fetchReconnectRobotMicBluetooth,
+  fetchSetRobotMeetingMode,
   fetchRestartRobotSlot
 } from '@/service/api';
 import { useAuth } from '@/hooks/business/auth';
@@ -116,7 +117,23 @@ function getSlotStatusType(status: string): import('naive-ui').TagProps['type'] 
   return typeMap[status] || 'default';
 }
 
-/** 会议模式状态直接读 robot.meeting_mode（机器人侧上报，随列表接口返回），无需逐台拉取 */
+/** 会议模式状态直接读 robot.meeting_mode（机器人侧上报/切换成功后落库，随列表接口返回），无需逐台拉取 */
+const meetingTogglingMap = ref<Record<number, boolean>>({});
+
+async function handleToggleMeetingMode(robot: Api.Robot.Robot) {
+  meetingTogglingMap.value[robot.id] = true;
+  try {
+    const { data, error } = await fetchSetRobotMeetingMode(robot.id, { enabled: !robot.meeting_mode });
+    if (!error && data) {
+      robot.meeting_mode = data.meeting_mode;
+      message.success(data.meeting_mode ? '已进入会议模式' : '已退出会议模式');
+    }
+  } catch (err) {
+    console.error('切换会议模式失败:', err);
+  } finally {
+    meetingTogglingMap.value[robot.id] = false;
+  }
+}
 
 async function handleRestartSlot(robot: Api.Robot.Robot) {
   slotRestartingMap.value[robot.id] = true;
@@ -273,6 +290,7 @@ loadData();
             </div>
 
             <div class="robot-card-body">
+              <div class="robot-info-divider robot-info-divider--top"></div>
               <div class="robot-info-group">
                 <div class="robot-info-item">
                   <span class="robot-info-label">型号</span>
@@ -282,45 +300,60 @@ loadData();
                   <span class="robot-info-label">地图</span>
                   <span class="robot-info-value">{{ robot.map_name || '-' }}</span>
                 </div>
-                <div class="robot-info-item">
+              </div>
+              <div class="robot-info-divider"></div>
+              <div class="robot-info-group">
+                <div class="robot-info-item robot-info-item--between">
                   <span class="robot-info-label">会议模式</span>
-                  <NTag :type="robot.meeting_mode ? 'success' : 'default'" size="small" round>
-                    {{ robot.meeting_mode ? '监听中' : '未开启' }}
-                  </NTag>
-                </div>
-              </div>
-              <div class="robot-info-group" v-if="hasAuth('robot:manage:restart')">
-                <div class="robot-info-item">
-                  <span class="robot-info-label">服务器自启状态</span>
                   <div class="robot-info-extra">
-                    <NTag :type="getSlotStatusType(slotStatusMap[robot.id] || '未知')" size="small" round>
-                      {{ slotStatusMap[robot.id] || '未知' }}
+                    <NTag :type="robot.meeting_mode ? 'success' : 'default'" size="small" round>
+                      {{ robot.meeting_mode ? '监听中' : '未开启' }}
                     </NTag>
-                    <NButton size="tiny" secondary :loading="slotRestartingMap[robot.id]"
-                      :disabled="slotStatusMap[robot.id] === '启动中'" @click="handleRestartSlot(robot)">
+                    <NButton v-if="hasAuth('robot:manage:restart')" size="tiny" secondary
+                      :loading="meetingTogglingMap[robot.id]" @click="handleToggleMeetingMode(robot)">
                       <template #icon>
-                        <icon-mdi-restart class="text-icon" />
+                        <icon-mdi-video-outline class="text-icon" />
                       </template>
-                      重启
-                    </NButton>
-                  </div>
-                </div>
-                <div class="robot-info-item">
-                  <span class="robot-info-label">麦克风蓝牙状态</span>
-                  <div class="robot-info-extra">
-                    <NTag :type="getMicBtStatusType(micBtStatusMap[robot.id] || '未知')" size="small" round>
-                      {{ micBtStatusMap[robot.id] || '未知' }}
-                    </NTag>
-                    <NButton size="tiny" secondary :loading="micBtReconnectingMap[robot.id]"
-                      @click="handleReconnectMicBt(robot)">
-                      <template #icon>
-                        <icon-mdi-bluetooth-connect class="text-icon" />
-                      </template>
-                      重连
+                      {{ robot.meeting_mode ? '关闭' : '开启' }}
                     </NButton>
                   </div>
                 </div>
               </div>
+              <template v-if="hasAuth('robot:manage:restart')">
+                <div class="robot-info-divider"></div>
+                <div class="robot-info-group">
+                  <div class="robot-info-item robot-info-item--between">
+                    <span class="robot-info-label">服务器自启状态</span>
+                    <div class="robot-info-extra">
+                      <NTag :type="getSlotStatusType(slotStatusMap[robot.id] || '未知')" size="small" round>
+                        {{ slotStatusMap[robot.id] || '未知' }}
+                      </NTag>
+                      <NButton size="tiny" secondary :loading="slotRestartingMap[robot.id]"
+                        :disabled="slotStatusMap[robot.id] === '启动中'" @click="handleRestartSlot(robot)">
+                        <template #icon>
+                          <icon-mdi-restart class="text-icon" />
+                        </template>
+                        重启
+                      </NButton>
+                    </div>
+                  </div>
+                  <div class="robot-info-item robot-info-item--between">
+                    <span class="robot-info-label">麦克风蓝牙状态</span>
+                    <div class="robot-info-extra">
+                      <NTag :type="getMicBtStatusType(micBtStatusMap[robot.id] || '未知')" size="small" round>
+                        {{ micBtStatusMap[robot.id] || '未知' }}
+                      </NTag>
+                      <NButton size="tiny" secondary :loading="micBtReconnectingMap[robot.id]"
+                        @click="handleReconnectMicBt(robot)">
+                        <template #icon>
+                          <icon-mdi-bluetooth-connect class="text-icon" />
+                        </template>
+                        重连
+                      </NButton>
+                    </div>
+                  </div>
+                </div>
+              </template>
             </div>
 
             <div class="robot-card-footer">
@@ -421,7 +454,7 @@ loadData();
 .robot-name {
   font-size: 16px;
   font-weight: 500;
-  color: var(--n-text-color);
+  color: var(--n-primary-color);
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
@@ -437,11 +470,11 @@ loadData();
   flex: 1;
   display: flex;
   flex-direction: column;
-  gap: 18px;
+  gap: 14px;
   margin-bottom: 16px;
 }
 
-/* 信息分组（设备信息 / 运行状态），组内行距紧凑、组间靠大间距区分，无需小标题 */
+/* 信息分组：组内行距紧凑，组间用分隔线隔开（参考卡片优化稿） */
 .robot-info-group {
   display: flex;
   flex-direction: column;
@@ -451,16 +484,25 @@ loadData();
 .robot-info-item {
   display: flex;
   align-items: center;
-  justify-content: space-between;
   gap: 12px;
   font-size: 13px;
   min-height: 28px;
 }
 
-/* 所有 label 统一灰色 */
+/* 可操作状态行：label 居左、tag+按钮整体居右 */
+.robot-info-item--between {
+  justify-content: space-between;
+}
+
+/* 所有 label 统一灰色；静态信息行 label 固定宽度，值列从同一竖线开始 */
 .robot-info-label {
   flex-shrink: 0;
+  width: 4em;
   color: var(--n-text-color-disabled);
+}
+
+.robot-info-item--between .robot-info-label {
+  width: auto;
 }
 
 .robot-info-value {
@@ -478,6 +520,17 @@ loadData();
   align-items: center;
   gap: 8px;
   flex-shrink: 0;
+}
+
+/* 分组之间的分隔线 */
+.robot-info-divider {
+  height: 1px;
+  background-color: var(--n-divider-color);
+}
+
+/* header 下方的分隔线：header 自带 margin-bottom，这里抵消避免间距过大 */
+.robot-info-divider--top {
+  margin-top: -8px;
 }
 
 .robot-card-footer {

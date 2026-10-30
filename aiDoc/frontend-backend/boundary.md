@@ -245,8 +245,16 @@
 |------|------|------|
 | `robot.meeting_mode` | `bool` | 会议模式状态（机器人表字段，随机器人列表接口返回）：`true`-已进入会议模式 |
 
-- 状态由机器人侧上报写入（上报通道另行对接），系统侧不控制该字段；机器人侧仍可能以预设指令进入会议模式
+- 状态由机器人侧上报写入（上报通道另行对接）；机器人侧仍可能以预设指令进入会议模式
 - 前端：机器人列表卡片直接读 `robot.meeting_mode` 展示「监听中/未开启」tag（`robots/index.vue`）
+
+### 会议模式手动切换（2026-10-30）
+
+- 链路：与麦克风蓝牙同一模式 —— 后端 gRPC 直连机器人 **agent 端**，proto 在子模块 `backend/grpc`：`protos/config/meeting_mode.proto`（`MeetingModeService.SetMeetingMode(robot_id, enabled) → { success, meeting_mode, message }`）
+- 端点：`POST /robot/manage/{id}/meeting-mode`（权限 `robot:manage:restart`，复用重启权限点），请求体 `{ enabled: bool }` → `{ meeting_mode }`；切换成功后后端把最新状态落库 `robot.meeting_mode`；机器人不可达/切换失败返回业务错误
+- `MeetingModeUpdate` / `MeetingModeStatusData` 为纯 BaseModel
+- 前端：机器人卡片「会议模式」行与自启/蓝牙行同款交互（状态 tag + 开启/关闭按钮，按钮带 loading，成功后就地更新 `robot.meeting_mode`）；按钮需 `robot:manage:restart` 权限
+- agent 端需实现 `SetMeetingMode` RPC，未实现时切换提示「机器人当前不可达」（状态展示不受影响）
 
 ## 机器人与场景绑定契约
 
