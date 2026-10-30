@@ -287,13 +287,14 @@ loadData();
                   {{ robot.meeting_mode ? '监听中' : '未开启' }}
                 </NTag>
               </div>
+              <div class="robot-info-divider" v-if="hasAuth('robot:manage:restart')"></div>
               <div class="robot-info-item" v-if="hasAuth('robot:manage:restart')">
                 <span class="robot-info-label">服务器自启状态</span>
                 <div class="robot-info-extra">
                   <NTag :type="getSlotStatusType(slotStatusMap[robot.id] || '未知')" size="small" round>
                     {{ slotStatusMap[robot.id] || '未知' }}
                   </NTag>
-                  <NButton size="tiny" type="primary" ghost :loading="slotRestartingMap[robot.id]"
+                  <NButton size="tiny" secondary :loading="slotRestartingMap[robot.id]"
                     :disabled="slotStatusMap[robot.id] === '启动中'" @click="handleRestartSlot(robot)">
                     <template #icon>
                       <icon-mdi-restart class="text-icon" />
@@ -308,7 +309,7 @@ loadData();
                   <NTag :type="getMicBtStatusType(micBtStatusMap[robot.id] || '未知')" size="small" round>
                     {{ micBtStatusMap[robot.id] || '未知' }}
                   </NTag>
-                  <NButton size="tiny" type="primary" ghost :loading="micBtReconnectingMap[robot.id]"
+                  <NButton size="tiny" secondary :loading="micBtReconnectingMap[robot.id]"
                     @click="handleReconnectMicBt(robot)">
                     <template #icon>
                       <icon-mdi-bluetooth-connect class="text-icon" />
@@ -440,33 +441,40 @@ loadData();
 .robot-info-item {
   display: flex;
   align-items: center;
+  justify-content: space-between;
+  gap: 12px;
   font-size: 13px;
-  min-height: 24px;
+  min-height: 28px;
 }
 
-/* 固定宽度标签列：所有内容从同一竖线开始，视觉整齐 */
+/* 所有 label 统一灰色 */
 .robot-info-label {
-  width: 7em;
   flex-shrink: 0;
   color: var(--n-text-color-disabled);
 }
 
 .robot-info-value {
-  flex: 1;
   min-width: 0;
-  color: var(--n-text-color);
+  color: var(--n-primary-color);
+  font-weight: 500;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
 }
 
-/* 状态行内容组（tag + 操作按钮），按钮紧跟 tag，与 tag 保持主次层次 */
+/* 状态行内容组（tag + 操作按钮），整体靠右 */
 .robot-info-extra {
   display: flex;
   align-items: center;
   gap: 8px;
-  flex: 1;
-  min-width: 0;
+  flex-shrink: 0;
+}
+
+/* 信息区与状态区之间的分隔线（代替分区小标题） */
+.robot-info-divider {
+  height: 1px;
+  margin: 4px 0;
+  background-color: var(--n-divider-color);
 }
 
 .robot-card-footer {
