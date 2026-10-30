@@ -256,7 +256,7 @@ function createDefaultPerformanceStep(): PerformanceStepItem {
     action: null,
     music: null,
     play_count: 1,
-    interval: 0
+    interval: 5
   };
 }
 
@@ -622,8 +622,8 @@ async function handleSubmit() {
         window.$message?.warning(`第 ${i + 1} 套的播放次数需在 1-99999 之间`);
         return;
       }
-      if (i < model.value.performance_steps.length - 1 && (step.interval === null || step.interval < 0)) {
-        window.$message?.warning(`请填写第 ${i + 1} 套与下一套之间的间隔（秒）`);
+      if (i < model.value.performance_steps.length - 1 && (step.interval === null || step.interval < 5)) {
+        window.$message?.warning(`第 ${i + 1} 套与下一套之间的间隔不能小于 5 秒`);
         return;
       }
     }
@@ -922,7 +922,7 @@ onMounted(() => {
           <!-- 套间间隔单独一行：仅作用于两套动作之间，同一套内连续播放多次不受此间隔影响 -->
           <NFormItem v-if="index < model.performance_steps.length - 1" label="与下一套的间隔" class="mb-0 mt-12px">
             <div class="flex-col gap-4px">
-              <NInputNumber v-model:value="step.interval" :min="0" :max="300" :precision="0" :show-button="false"
+              <NInputNumber v-model:value="step.interval" :min="5" :max="300" :precision="0" :show-button="false"
                 style="width: 100px">
                 <template #suffix>秒</template>
               </NInputNumber>

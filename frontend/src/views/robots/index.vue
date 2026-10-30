@@ -312,7 +312,8 @@ loadData();
                     <NButton v-if="hasAuth('robot:manage:restart')" size="tiny" secondary
                       :loading="meetingTogglingMap[robot.id]" @click="handleToggleMeetingMode(robot)">
                       <template #icon>
-                        <icon-mdi-video-outline class="text-icon" />
+                        <icon-mdi-stop v-if="robot.meeting_mode" class="text-icon" />
+                        <icon-mdi-play v-else class="text-icon" />
                       </template>
                       {{ robot.meeting_mode ? '关闭' : '开启' }}
                     </NButton>
