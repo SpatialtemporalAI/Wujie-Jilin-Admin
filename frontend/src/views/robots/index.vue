@@ -318,10 +318,7 @@ loadData();
                     </NButton>
                   </div>
                 </div>
-              </div>
-              <template v-if="hasAuth('robot:manage:restart')">
-                <div class="robot-info-divider"></div>
-                <div class="robot-info-group">
+                <template v-if="hasAuth('robot:manage:restart')">
                   <div class="robot-info-item robot-info-item--between">
                     <span class="robot-info-label">服务器自启状态</span>
                     <div class="robot-info-extra">
@@ -352,8 +349,8 @@ loadData();
                       </NButton>
                     </div>
                   </div>
-                </div>
-              </template>
+                </template>
+              </div>
             </div>
 
             <div class="robot-card-footer">
