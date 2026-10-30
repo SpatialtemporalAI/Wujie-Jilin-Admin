@@ -400,6 +400,27 @@ loadData();
   padding: 8px 16px;
 }
 
+/* 页面级卡片限高（flex-1-hidden）时，内容超出改为内部纵向滚动，表头固定 */
+:deep(.n-card__content) {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+:deep(.n-spin-container) {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+:deep(.n-spin-content) {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+}
+
 .robot-card {
   display: flex;
   flex-direction: column;
@@ -470,7 +491,7 @@ loadData();
   flex: 1;
   display: flex;
   flex-direction: column;
-  gap: 14px;
+  gap: 16px;
   margin-bottom: 16px;
 }
 
@@ -524,7 +545,7 @@ loadData();
 /* 分组之间的分隔线 */
 .robot-info-divider {
   height: 1px;
-  background-color: #e2e5ea;
+  background-color: #e5e7eb;
 }
 
 /* header 下方的分隔线：header 自带 margin-bottom，这里抵消避免间距过大 */
