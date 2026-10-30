@@ -274,21 +274,21 @@ loadData();
 
             <div class="robot-card-body">
               <div class="robot-info-item">
-                <span class="robot-info-label">型号：</span>
+                <span class="robot-info-label">型号</span>
                 <span class="robot-info-value">{{ robot.model_name || '-' }}</span>
               </div>
               <div class="robot-info-item">
-                <span class="robot-info-label">地图：</span>
+                <span class="robot-info-label">地图</span>
                 <span class="robot-info-value">{{ robot.map_name || '-' }}</span>
               </div>
               <div class="robot-info-item">
-                <span class="robot-info-label">会议模式：</span>
+                <span class="robot-info-label">会议模式</span>
                 <NTag :type="robot.meeting_mode ? 'success' : 'default'" size="small" round>
                   {{ robot.meeting_mode ? '监听中' : '未开启' }}
                 </NTag>
               </div>
               <div class="robot-info-item" v-if="hasAuth('robot:manage:restart')">
-                <span class="robot-info-label">服务器自启状态：</span>
+                <span class="robot-info-label">服务器自启状态</span>
                 <div class="robot-info-extra">
                   <NTag :type="getSlotStatusType(slotStatusMap[robot.id] || '未知')" size="small" round>
                     {{ slotStatusMap[robot.id] || '未知' }}
@@ -303,7 +303,7 @@ loadData();
                 </div>
               </div>
               <div class="robot-info-item" v-if="hasAuth('robot:manage:restart')">
-                <span class="robot-info-label">麦克风蓝牙状态：</span>
+                <span class="robot-info-label">麦克风蓝牙状态</span>
                 <div class="robot-info-extra">
                   <NTag :type="getMicBtStatusType(micBtStatusMap[robot.id] || '未知')" size="small" round>
                     {{ micBtStatusMap[robot.id] || '未知' }}
@@ -440,31 +440,33 @@ loadData();
 .robot-info-item {
   display: flex;
   align-items: center;
-  justify-content: space-between;
-  gap: 6px;
   font-size: 13px;
+  min-height: 24px;
 }
 
-/* 状态行右侧内容组（tag + 操作按钮），与 label 形成左右布局 */
-.robot-info-extra {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  flex-shrink: 0;
-}
-
+/* 固定宽度标签列：所有内容从同一竖线开始，视觉整齐 */
 .robot-info-label {
-  color: var(--n-text-color-disabled);
+  width: 7em;
   flex-shrink: 0;
+  color: var(--n-text-color-disabled);
 }
 
 .robot-info-value {
-  color: var(--n-text-color);
+  flex: 1;
   min-width: 0;
-  text-align: right;
+  color: var(--n-text-color);
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
+}
+
+/* 状态行内容组（tag + 操作按钮），按钮紧跟 tag，与 tag 保持主次层次 */
+.robot-info-extra {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex: 1;
+  min-width: 0;
 }
 
 .robot-card-footer {
