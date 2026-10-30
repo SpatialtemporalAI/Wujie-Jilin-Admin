@@ -287,38 +287,32 @@ loadData();
                   {{ robot.meeting_mode ? '监听中' : '未开启' }}
                 </NTag>
               </div>
-            </div>
-
-            <div class="robot-card-slot" v-if="hasAuth('robot:manage:restart')">
-              <span class="robot-info-label">服务器自启状态</span>
-              <NSpace align="center">
+              <div class="robot-info-item" v-if="hasAuth('robot:manage:restart')">
+                <span class="robot-info-label">服务器自启状态：</span>
                 <NTag :type="getSlotStatusType(slotStatusMap[robot.id] || '未知')" size="small" round>
                   {{ slotStatusMap[robot.id] || '未知' }}
                 </NTag>
-                <NButton size="small" secondary :loading="slotRestartingMap[robot.id]"
+                <NButton size="tiny" type="primary" ghost :loading="slotRestartingMap[robot.id]"
                   :disabled="slotStatusMap[robot.id] === '启动中'" @click="handleRestartSlot(robot)">
                   <template #icon>
                     <icon-mdi-restart class="text-icon" />
                   </template>
                   重启
                 </NButton>
-              </NSpace>
-            </div>
-
-            <div class="robot-card-slot" v-if="hasAuth('robot:manage:restart')">
-              <span class="robot-info-label">麦克风蓝牙状态</span>
-              <NSpace align="center">
+              </div>
+              <div class="robot-info-item" v-if="hasAuth('robot:manage:restart')">
+                <span class="robot-info-label">麦克风蓝牙状态：</span>
                 <NTag :type="getMicBtStatusType(micBtStatusMap[robot.id] || '未知')" size="small" round>
                   {{ micBtStatusMap[robot.id] || '未知' }}
                 </NTag>
-                <NButton size="small" secondary :loading="micBtReconnectingMap[robot.id]"
+                <NButton size="tiny" type="primary" ghost :loading="micBtReconnectingMap[robot.id]"
                   @click="handleReconnectMicBt(robot)">
                   <template #icon>
                     <icon-mdi-bluetooth-connect class="text-icon" />
                   </template>
                   重连
                 </NButton>
-              </NSpace>
+              </div>
             </div>
 
             <div class="robot-card-footer">
@@ -442,6 +436,7 @@ loadData();
 .robot-info-item {
   display: flex;
   align-items: center;
+  gap: 6px;
   font-size: 13px;
 }
 
@@ -455,21 +450,6 @@ loadData();
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
-}
-
-.robot-card-slot {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: 10px 0;
-  border-top: 1px dashed var(--n-divider-color);
-  font-size: 13px;
-}
-
-/* 相邻状态行（自启/蓝牙）收紧间距，去掉重复分隔线 */
-.robot-card-slot + .robot-card-slot {
-  border-top: none;
-  padding-top: 2px;
 }
 
 .robot-card-footer {
