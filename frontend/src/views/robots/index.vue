@@ -318,7 +318,10 @@ loadData();
                     </NButton>
                   </div>
                 </div>
-                <template v-if="hasAuth('robot:manage:restart')">
+              </div>
+              <template v-if="hasAuth('robot:manage:restart')">
+                <div class="robot-info-divider"></div>
+                <div class="robot-info-group">
                   <div class="robot-info-item robot-info-item--between">
                     <span class="robot-info-label">服务器自启状态</span>
                     <div class="robot-info-extra">
@@ -349,8 +352,8 @@ loadData();
                       </NButton>
                     </div>
                   </div>
-                </template>
-              </div>
+                </div>
+              </template>
             </div>
 
             <div class="robot-card-footer">
@@ -504,8 +507,7 @@ loadData();
 
 .robot-info-value {
   min-width: 0;
-  color: var(--n-primary-color);
-  font-weight: 500;
+  color: var(--n-text-color);
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
@@ -522,12 +524,12 @@ loadData();
 /* 分组之间的分隔线 */
 .robot-info-divider {
   height: 1px;
-  background-color: var(--n-divider-color);
+  background-color: #e2e5ea;
 }
 
 /* header 下方的分隔线：header 自带 margin-bottom，这里抵消避免间距过大 */
 .robot-info-divider--top {
-  margin-top: -8px;
+  margin-top: 8px;
 }
 
 .robot-card-footer {
