@@ -212,6 +212,7 @@ function showStepInterval(step: { interval: number | null | undefined }, index: 
             <NTimelineItem
               v-for="(step, index) in detail.task_definition.performance_steps"
               :key="index"
+              :type="pointStatusType(index)"
               :title="`第 ${index + 1} 套`"
             >
               <NText depth="3">表演动作: {{ performanceActionLabels[step.action] || step.action }}</NText>

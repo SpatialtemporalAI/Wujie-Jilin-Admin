@@ -34,6 +34,11 @@ def _check_reserved_performance_name(task_type: str | None, name: str) -> None:
         raise ValidationError(msg=f"任务名称不能使用「{name}」，请更换其他名称")
 
 
+def ensure_task_mutable(task_obj: Task) -> None:
+    if task_obj.is_builtin:
+        raise ConflictError(msg="内置任务仅支持查看")
+
+
 class TaskService:
     """任务管理服务类"""
 
@@ -75,7 +80,7 @@ class TaskService:
         if conditions:
             base_query = base_query.where(and_(*conditions))
 
-        base_query = base_query.order_by(Task.id.desc())
+        base_query = base_query.order_by(Task.is_builtin.desc(), Task.id.desc())
         return base_query
 
     @staticmethod
@@ -215,6 +220,7 @@ class TaskService:
         """更新任务"""
         try:
             task_obj = await TaskService.get(db, task_id)
+            ensure_task_mutable(task_obj)
 
             # 更新基础字段
             update_data = task_in.model_dump(exclude_unset=True, exclude={"points", "robot_ids"})
@@ -403,6 +409,7 @@ class TaskService:
         """删除任务（软删除）"""
         try:
             task_obj = await TaskService.get(db, task_id)
+            ensure_task_mutable(task_obj)
 
             # 软删除前先取出当前关联 robot_ids，删除后用于 gRPC 通知
             assoc_result = await db.execute(
@@ -459,6 +466,7 @@ class TaskService:
         """切换启用/禁用"""
         try:
             task_obj = await TaskService.get(db, task_id)
+            ensure_task_mutable(task_obj)
             task_obj.enabled = enabled
             await db.commit()
             await db.refresh(task_obj)

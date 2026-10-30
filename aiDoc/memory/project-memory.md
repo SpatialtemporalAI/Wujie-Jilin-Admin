@@ -8,7 +8,8 @@
 
 ## 业务需求记忆
 
-- [2026-10-29 表演任务执行详情展示任务内容和步骤](./business/2026-10-29_performance-task-detail-steps.md) — 详情抽屉直接渲染 performance_steps，时间线展示动作/音乐/播放次数/套间间隔；动作和音乐映射中文名称，选项失败回退原始标识；仅前端详情组件改动
+- [2026-10-30 固定 ID 的内置八段锦只读任务](./business/2026-10-30_builtin-baduanjin-task.md) — 0020 将八段锦1111迁移为 id=1/八段锦/is_builtin=true 并种子化，复制主记录后转移机器人/点位/执行记录；只允许查询，服务层拒绝全部写入和执行控制，列表后端内置优先排序，前端名称旁显示内置并隐藏操作
+- [2026-10-29 表演任务执行详情展示任务内容和步骤](./business/2026-10-29_performance-task-detail-steps.md) — 详情抽屉时间线展示动作/音乐/播放次数/套间间隔并复用巡逻 points_status 显示步骤执行状态；后端将历史快照 sets 规范化为 performance_steps，保留新格式且不覆盖历史；选项失败回退原始标识
 - [2026-10-13 巡逻任务运控动作加回 5 项](./business/2026-10-13_task-action-options-add-back-5.md) — operate-drawer actionOptions 加回 击掌/拥抱/右手飞吻/双手飞吻/动感光波（07-02 精简项的子集，不含 left_kiss）；类型/详情标签/后端 schema 本就保留这些值，仅改下拉一处
 - [2026-10-13 NotifyTaskChanged 增加 execution_id](./business/2026-10-13_task-notify-execution-id.md) — TaskChangedRequest 新增字段 3（值=task_execution_record.id，0=未指定走兜底），解决同名任务多行恢复错位；pause/resume/stop 逐记录带 id，批量暂停改逐条推送；proto 在子模块 backend/grpc 改并重新生成；机器人 not found 仅记日志不阻塞
 - [2026-08-27 限流 429 跨域 Network Error 修复](./business/2026-08-27_rate-limit-429-cors-network-error.md) — CORS 注册得早执行靠内，RateLimit/RequestSizeLimit 短路的 429/413 无 CORS 头，跨域（内网直连 :8000）被浏览器拦成 Network Error；CORSMiddleware 移到最后注册（最外层），铁律：短路中间件必须注册在 CORS 之前

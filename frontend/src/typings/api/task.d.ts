@@ -97,6 +97,7 @@ declare namespace Api {
       map_id: number | null;
       map_name: string | null;
       task_type: TaskType;
+      is_builtin: boolean;
       enabled: boolean;
       status: TaskStatus;
       broadcast_text: string | null;

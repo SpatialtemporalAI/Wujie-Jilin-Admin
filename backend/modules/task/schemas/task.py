@@ -279,6 +279,7 @@ class TaskResponseData(BaseEntity):
     map_id: Optional[int] = Field(None, description="关联场景地图ID")
     map_name: Optional[str] = Field(None, description="关联场景地图名称")
     task_type: str = Field(..., description="任务类型")
+    is_builtin: bool = Field(False, description="是否内置任务（内置任务仅支持查看）")
     enabled: EnableStatusField = Field(..., description="启用状态: 1-启用, 2-禁用")
     status: str = Field(..., description="执行状态")
     broadcast_text: Optional[str] = Field(None, description="播报文本（兼容旧数据）")

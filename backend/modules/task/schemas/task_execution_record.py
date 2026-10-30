@@ -10,7 +10,7 @@
 JS 大整数 ID 检查的序列化器在这里手动复制一份。
 """
 from typing import Optional, List, Dict, Any, ClassVar, Literal
-from pydantic import Field, ConfigDict, field_serializer
+from pydantic import Field, ConfigDict, field_serializer, model_validator
 from datetime import datetime
 
 from app.models.common.base import (
@@ -56,6 +56,33 @@ class TaskDefinitionSnapshot(BaseReqEntity):
     performance_steps: Optional[List[Dict[str, Any]]] = Field(
         None, description="表演步骤列表"
     )
+
+    @model_validator(mode="before")
+    @classmethod
+    def normalize_performance_steps(cls, values):
+        """将机器人端历史快照 sets 转换为前端统一的 performance_steps。"""
+        if not isinstance(values, dict) or values.get("performance_steps"):
+            return values
+        sets = values.get("sets")
+        if values.get("task_type") != "performance" or not isinstance(sets, list):
+            return values
+
+        steps = []
+        for item in sets:
+            if not isinstance(item, dict):
+                continue
+            music = item.get("music")
+            if isinstance(music, dict):
+                music = music.get("path") or music.get("music_key") or music.get("name")
+            steps.append(
+                {
+                    "action": item.get("action_id") or item.get("action") or "",
+                    "music": music if isinstance(music, str) and music else None,
+                    "play_count": item.get("play_count", 1),
+                    "interval": item.get("interval_seconds", item.get("interval")),
+                }
+            )
+        return {**values, "performance_steps": steps} if steps else values
 
 
 # ==================== 进度 Schema ====================

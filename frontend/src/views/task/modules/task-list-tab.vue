@@ -122,7 +122,13 @@ const { columns, columnChecks, data, getData, getDataByPage, loading, mobilePagi
       title: '任务名称',
       align: 'center',
       minWidth: 140,
-      ellipsis: { tooltip: true }
+      ellipsis: { tooltip: true },
+      render: row => (
+        <div class="flex-center gap-4px">
+          <span>{row.name}</span>
+          {row.is_builtin && <NTag size="small">内置</NTag>}
+        </div>
+      )
     },
     {
       key: 'task_type',
@@ -184,6 +190,7 @@ const { columns, columnChecks, data, getData, getDataByPage, loading, mobilePagi
       width: 380,
       fixed: 'right',
       render: row => {
+        if (row.is_builtin) return <span>-</span>;
         const pausableCount = row.active_execution_count || 0;
         const canPause = pausableCount > 0 && hasAuth('task:execution:control');
         const canStart = row.enabled && hasAuth('task:execution:start') && !canPause;
