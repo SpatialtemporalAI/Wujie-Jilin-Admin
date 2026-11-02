@@ -126,7 +126,7 @@ const { columns, columnChecks, data, getData, getDataByPage, loading, mobilePagi
       render: row => (
         <div class="flex-center gap-4px">
           <span>{row.name}</span>
-          {row.is_builtin && <NTag size="small">内置</NTag>}
+          {row.is_builtin && <NTag size="small" type="info">内置</NTag>}
         </div>
       )
     },

@@ -925,7 +925,8 @@ onMounted(() => {
                 @focus="() => loadPerformanceOptions()" />
             </NFormItemGi>
             <NFormItemGi label="背景音乐" :span="9">
-              <PerformanceMusicSelect v-model:value="step.music" />
+              <!-- 内置任务为只读数据，背景音乐不允许修改 -->
+              <PerformanceMusicSelect v-model:value="step.music" :disabled="isBuiltin" />
             </NFormItemGi>
             <NFormItemGi label="播放次数" :span="5">
               <NInputNumber v-model:value="step.play_count" :min="1" :max="99999" :precision="0" :show-button="false"

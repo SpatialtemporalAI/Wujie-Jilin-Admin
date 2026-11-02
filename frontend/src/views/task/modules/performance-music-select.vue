@@ -8,9 +8,13 @@ defineOptions({ name: 'PerformanceMusicSelect' });
 
 interface Props {
   value: string | null;
+  /** 是否禁用：内置任务只读时禁止选择、试听弹窗及清空操作 */
+  disabled?: boolean;
 }
 
-const props = defineProps<Props>();
+const props = withDefaults(defineProps<Props>(), {
+  disabled: false
+});
 
 const emit = defineEmits<{
   (e: 'update:value', value: string | null): void;
@@ -97,6 +101,18 @@ function togglePlay(item: Api.Task.PerformanceMusicOption) {
 
 // ---------- 选择 / 上传 / 删除 ----------
 
+/** 打开选曲弹窗：禁用态直接忽略，避免绕过只读约束 */
+function openModal() {
+  if (props.disabled) return;
+  showModal.value = true;
+}
+
+/** 清空已选音乐（禁用态忽略） */
+function handleClear() {
+  if (props.disabled) return;
+  emit('update:value', null);
+}
+
 function handleSelect(item: Api.Task.PerformanceMusicOption) {
   stopPlay();
   emit('update:value', item.value);
@@ -165,7 +181,8 @@ onBeforeUnmount(stopPlay);
   <div class="w-full">
     <!-- 清除/删除图标放在按钮内部右侧（类似 NSelect 的 clearable），字段宽度保持恒定；
          图标点击需 stop 阻止冒泡，避免触发打开弹窗 -->
-    <NButton class="w-full music-trigger" style="justify-content: flex-start" @click="showModal = true">
+    <NButton class="w-full music-trigger" style="justify-content: flex-start" :disabled="disabled"
+      @click="openModal">
       <template #icon>
         <icon-ic-round-music-note class="text-icon" />
       </template>
@@ -175,9 +192,9 @@ onBeforeUnmount(stopPlay);
       </span>
       <!-- 清除已选（背景音乐为非必填项），固定在最右侧；删除入口在弹窗的上传列表里 -->
       <icon-ic-round-close
-        v-if="value"
+        v-if="value && !disabled"
         class="text-icon shrink-0 text-#999 hover:text-#666"
-        @click.stop="emit('update:value', null)"
+        @click.stop="handleClear"
       />
     </NButton>
 

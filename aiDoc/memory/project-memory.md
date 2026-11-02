@@ -8,7 +8,7 @@
 
 ## 业务需求记忆
 
-- [2026-10-30 固定 ID 的内置八段锦任务](./business/2026-10-30_builtin-baduanjin-task.md) — 0020 将八段锦1111迁移为 id=1/八段锦/is_builtin=true 并种子化，保留关联；允许查询、立即启动和仅 robot_ids 更新，其他写入和执行控制禁止；列表后端内置优先，编辑抽屉保留编排展示但仅机器人可改
+- [2026-10-30 固定 ID 的内置八段锦任务](./business/2026-10-30_builtin-baduanjin-task.md) — 0020 将八段锦1111迁移为 id=1/八段锦/is_builtin=true 并种子化，保留关联；允许查询、立即启动和仅 robot_ids 更新，其他写入和执行控制禁止；列表后端内置优先，编辑抽屉保留编排展示但仅机器人可改；2026-11-02 内置标签改蓝、背景音乐选择器禁用
 - [2026-10-29 表演任务执行详情展示任务内容和步骤](./business/2026-10-29_performance-task-detail-steps.md) — 详情抽屉时间线展示动作/音乐/播放次数/套间间隔并复用巡逻 points_status 显示步骤执行状态；后端将历史快照 sets 规范化为 performance_steps，保留新格式且不覆盖历史；选项失败回退原始标识
 - [2026-10-13 巡逻任务运控动作加回 5 项](./business/2026-10-13_task-action-options-add-back-5.md) — operate-drawer actionOptions 加回 击掌/拥抱/右手飞吻/双手飞吻/动感光波（07-02 精简项的子集，不含 left_kiss）；类型/详情标签/后端 schema 本就保留这些值，仅改下拉一处
 - [2026-10-13 NotifyTaskChanged 增加 execution_id](./business/2026-10-13_task-notify-execution-id.md) — TaskChangedRequest 新增字段 3（值=task_execution_record.id，0=未指定走兜底），解决同名任务多行恢复错位；pause/resume/stop 逐记录带 id，批量暂停改逐条推送；proto 在子模块 backend/grpc 改并重新生成；机器人 not found 仅记日志不阻塞
