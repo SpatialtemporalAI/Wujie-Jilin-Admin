@@ -78,7 +78,6 @@ class TaskExecutionRecordService:
         task = task_result.scalar_one_or_none()
         if task is None:
             raise NotFoundError(msg=f"任务 {task_id} 不存在")
-        ensure_task_mutable(task)
 
         # 巡逻任务校验：执行机器人必须与任务在同一场景地图
         if task.task_type == "patrol":

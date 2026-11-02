@@ -223,7 +223,7 @@
   - 预设清单（标识/名称/时长）来源是后端模块级常量（`_PERFORMANCE_ACTIONS`/`_PERFORMANCE_MUSIC`），不建表；预设音频文件种入 `sys_file`（固定 ID，`created_by=0` 系统内置，实体文件由迁移从 `database/seed_assets/performance_music/` 复制到存储）；上传音频复用 `sys_file` + `core.storage`，按 `created_by` + 扩展名（mp3/wav）识别
 - 前端：`task-operate-drawer.vue` 表演类型渲染「表演动作编排」卡片（动作/音乐 NSelect + 播放次数/套间间隔 NInputNumber + 上移/下移/删除，最多 3 套）；类型文案/颜色映射在各 tab 同步（`performance` → 表演 / 自定义紫色）
 - `TaskDefinitionSnapshot` 同步含 `performance_steps`（宽松 dict，容纳历史脏数据）；`TaskResponseData.performance_steps` 同样为宽松 dict（2026-10-22：防止单行脏数据导致整个任务列表 422，写入侧仍由 `TaskCreate`/`TaskUpdate` 严格校验）。执行详情表演时间线复用 `progress.points_status` 展示每套执行状态
-- 内置任务：`TaskResponseData.is_builtin: boolean`（默认 `false`）。固定种子任务 `id=1`、名称“八段锦”、`is_builtin=true`，仅允许列表/详情查询；编辑、复制、删除、启禁用及启动/暂停/恢复/停止均由后端拒绝，前端任务列表仅在名称旁显示“内置”标签并隐藏操作按钮。任务列表后端按 `is_builtin DESC, id DESC` 排序。历史快照中的 `sets` 由执行详情响应模型规范化为 `performance_steps`
+- 内置任务：`TaskResponseData.is_builtin: boolean`（默认 `false`）。固定种子任务 `id=1`、名称“八段锦”、`is_builtin=true`，允许列表/详情查询和立即启动；更新请求仅在字段严格等于 `{robot_ids}` 时允许，其他字段更新及复制、删除、启禁用、暂停/恢复/停止均由后端拒绝。前端名称旁显示“内置”，操作列只显示立即启动和编辑；编辑抽屉保留表演动作编排但禁用除机器人外的全部控件，提交仅携带 `robot_ids`。任务列表后端按 `is_builtin DESC, id DESC` 排序。历史快照中的 `sets` 由执行详情响应模型规范化为 `performance_steps`
 
 ## 参数配置 · 会议模式状态契约
 

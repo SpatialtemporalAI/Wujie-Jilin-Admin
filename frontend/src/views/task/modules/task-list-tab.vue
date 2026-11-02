@@ -190,9 +190,8 @@ const { columns, columnChecks, data, getData, getDataByPage, loading, mobilePagi
       width: 380,
       fixed: 'right',
       render: row => {
-        if (row.is_builtin) return <span>-</span>;
         const pausableCount = row.active_execution_count || 0;
-        const canPause = pausableCount > 0 && hasAuth('task:execution:control');
+        const canPause = !row.is_builtin && pausableCount > 0 && hasAuth('task:execution:control');
         const canStart = row.enabled && hasAuth('task:execution:start') && !canPause;
         return (
           <div class="flex-center gap-8px">
@@ -225,17 +224,17 @@ const { columns, columnChecks, data, getData, getDataByPage, loading, mobilePagi
                 {$t('common.edit')}
               </NButton>
             )}
-            {hasAuth('task:add') && (
+            {!row.is_builtin && hasAuth('task:add') && (
               <NButton size="small" ghost onClick={() => handleCopy(row.id)}>
                 复制
               </NButton>
             )}
-            {hasAuth('task:edit') && (
+            {!row.is_builtin && hasAuth('task:edit') && (
               <NButton size="small" ghost onClick={() => handleToggleEnabled(row)}>
                 {row.enabled ? '禁用' : '启用'}
               </NButton>
             )}
-            {hasAuth('task:delete') && (
+            {!row.is_builtin && hasAuth('task:delete') && (
               <NPopconfirm onPositiveClick={() => handleDelete(row.id)}>
                 {{
                   default: () => $t('common.confirmDelete'),

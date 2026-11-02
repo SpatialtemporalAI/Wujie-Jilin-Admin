@@ -418,6 +418,7 @@ const rules = computed(() => ({
 
 const taskId = computed(() => props.rowData?.id || -1);
 const isEdit = computed(() => props.operateType === 'edit');
+const isBuiltin = computed(() => isEdit.value && props.rowData?.is_builtin === true);
 const submitting = ref(false);
 
 async function handleInitModel() {
@@ -562,6 +563,21 @@ function closeDrawer() {
 
 async function handleSubmit() {
   await validate();
+
+  if (isBuiltin.value) {
+    submitting.value = true;
+    try {
+      const { error } = await fetchUpdateTask(taskId.value, { robot_ids: model.value.robot_ids });
+      if (!error) {
+        window.$message?.success($t('common.updateSuccess'));
+        closeDrawer();
+        emit('submitted');
+      }
+    } finally {
+      submitting.value = false;
+    }
+    return;
+  }
 
   // Custom validations
   if (model.value.task_type === 'performance' && model.value.name.trim() === '八段锦') {
@@ -725,7 +741,7 @@ onMounted(() => {
 <template>
   <NModal v-model:show="visible" display-directive="show" preset="card" :mask-closable="false" :title="title"
     style="width: 880px; max-width: 90vw">
-    <NForm ref="formRef" :model="model" :rules="rules" label-placement="top">
+    <NForm ref="formRef" :model="model" :rules="rules" label-placement="top" :disabled="isBuiltin">
       <!-- 基础信息 -->
       <NGrid :cols="2" :x-gap="16">
         <NFormItemGi :span="2" label="任务名称" path="name">
@@ -757,7 +773,7 @@ onMounted(() => {
           :placeholder="model.map_id === null ? '请先选择场景地图' : '请选择一台机器人'" filterable clearable
           :disabled="model.map_id === null" :render-label="renderRobotLabel" />
         <NSelect v-else v-model:value="model.robot_ids" multiple :options="robotOptions" placeholder="请选择机器人（可多选）"
-          filterable clearable max-tag-count="responsive" />
+          filterable clearable max-tag-count="responsive" :disabled="false" />
       </NFormItem>
 
       <!-- 巡逻点位配置 -->
@@ -886,15 +902,15 @@ onMounted(() => {
           <div class="broadcast-step-header">
             <span class="broadcast-step-title">第 {{ index + 1 }} 套</span>
             <NSpace :size="8">
-              <NButton quaternary size="small" :disabled="index === 0" @click="movePerformanceStep(index, -1)">
+              <NButton quaternary size="small" :disabled="isBuiltin || index === 0" @click="movePerformanceStep(index, -1)">
                 ↑
               </NButton>
-              <NButton quaternary size="small" :disabled="index === model.performance_steps.length - 1"
+              <NButton quaternary size="small" :disabled="isBuiltin || index === model.performance_steps.length - 1"
                 @click="movePerformanceStep(index, 1)">
                 ↓
               </NButton>
               <NButton v-if="model.performance_steps.length > 1" type="error" quaternary size="small"
-                @click="removePerformanceStep(index)">
+                :disabled="isBuiltin" @click="removePerformanceStep(index)">
                 <template #icon>
                   <icon-ic-round-delete-outline class="text-icon" />
                 </template>
@@ -934,7 +950,7 @@ onMounted(() => {
         </div>
 
         <NButton type="primary" dashed block class="mt-12px"
-          :disabled="model.performance_steps.length >= PERFORMANCE_MAX_STEPS" @click="addPerformanceStep">
+          :disabled="isBuiltin || model.performance_steps.length >= PERFORMANCE_MAX_STEPS" @click="addPerformanceStep">
           <template #icon>
             <icon-ic-round-plus class="text-icon" />
           </template>

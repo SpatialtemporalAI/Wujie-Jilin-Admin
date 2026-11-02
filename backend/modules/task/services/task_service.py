@@ -36,7 +36,7 @@ def _check_reserved_performance_name(task_type: str | None, name: str) -> None:
 
 def ensure_task_mutable(task_obj: Task) -> None:
     if task_obj.is_builtin:
-        raise ConflictError(msg="内置任务仅支持查看")
+        raise ConflictError(msg="内置任务仅支持启动和修改绑定机器人")
 
 
 class TaskService:
@@ -220,7 +220,8 @@ class TaskService:
         """更新任务"""
         try:
             task_obj = await TaskService.get(db, task_id)
-            ensure_task_mutable(task_obj)
+            if task_obj.is_builtin and set(task_in.model_fields_set) != {"robot_ids"}:
+                ensure_task_mutable(task_obj)
 
             # 更新基础字段
             update_data = task_in.model_dump(exclude_unset=True, exclude={"points", "robot_ids"})
