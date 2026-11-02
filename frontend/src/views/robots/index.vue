@@ -342,7 +342,7 @@ loadData();
                     <span class="robot-info-label">麦克风蓝牙状态</span>
                     <div class="robot-info-extra">
                       <NTag :type="getMicBtStatusType(micBtStatusMap[robot.id] || '未知')" size="small" round>
-                        {{ micBtStatusMap[robot.id] || '未知' }}
+                        {{ micBtStatusMap[robot.id] || '未连接' }}
                       </NTag>
                       <NButton size="tiny" secondary :loading="micBtReconnectingMap[robot.id]"
                         @click="handleReconnectMicBt(robot)">
