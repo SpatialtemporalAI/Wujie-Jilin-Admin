@@ -33,6 +33,10 @@ from app.grpc.generated.config import (
     battery_pb2_grpc,
     face_recognition_pb2,
     face_recognition_pb2_grpc,
+    meeting_mode_pb2,
+    meeting_mode_pb2_grpc,
+    mic_bluetooth_pb2,
+    mic_bluetooth_pb2_grpc,
     speed_pb2,
     speed_pb2_grpc,
     video_pb2,
@@ -48,6 +52,18 @@ from modules.grpc.channel import get_config_channel_by_addr
 logger = logging.getLogger(__name__)
 
 T = TypeVar("T")
+
+
+class GrpcMethodUnsupported(Exception):
+    """机器人端未实现该 RPC（UNIMPLEMENTED）
+
+    与「机器人不可达」严格区分：能够拿到 UNIMPLEMENTED 说明 TCP/gRPC 链路是通的，
+    只是对端 agent 程序版本里没有这个方法，需要升级机器人端程序。
+    """
+
+    def __init__(self, method_name: str):
+        super().__init__(f"agent 未实现 RPC: {method_name}")
+        self.method_name = method_name
 
 
 async def _dispatch_with_target(
@@ -573,3 +589,161 @@ class FaceRecognitionClient:
         return await cls.notify_changed(
             face_recognition_pb2.FACE_OPERATION_DELETE, face_id=face_id
         )
+
+
+# ==================== MicBluetoothClient ====================
+
+
+class MicBluetoothClient:
+    """麦克风蓝牙 gRPC 客户端（走 agent）
+
+    与推送类 RPC 不同：这里是查询/动作类调用，业务层需要区分
+    「机器人应答了但蓝牙未连接」与「机器人不可达」，
+    因此失败时返回 None 而不是哨兵响应，状态文案由业务层决定。
+    """
+
+    _stubs_by_addr: Dict[str, mic_bluetooth_pb2_grpc.MicBluetoothServiceStub] = {}
+
+    @classmethod
+    async def _get_stub_for_addr(
+        cls, addr: str
+    ) -> mic_bluetooth_pb2_grpc.MicBluetoothServiceStub:
+        if addr not in cls._stubs_by_addr:
+            channel = await get_config_channel_by_addr(addr)
+            cls._stubs_by_addr[addr] = mic_bluetooth_pb2_grpc.MicBluetoothServiceStub(
+                channel
+            )
+        return cls._stubs_by_addr[addr]
+
+    @classmethod
+    async def _call(
+        cls, robot_id: int, method_name: str, request: Any
+    ) -> Optional[Any]:
+        """单端调用（agent）；未启用/未配置/调用失败返回 None"""
+        if not settings.GRPC.ENABLED:
+            logger.info("mic bluetooth rpc skipped: gRPC 未启用, robot_id=%s", robot_id)
+            return None
+
+        addr = await get_config_addr_provider().get_addr(robot_id, "agent")
+        if not addr:
+            logger.info(
+                "mic bluetooth rpc skipped: agent 地址未配置, robot_id=%s", robot_id
+            )
+            return None
+
+        try:
+            stub = await cls._get_stub_for_addr(addr)
+            rpc: Callable[..., Awaitable[Any]] = getattr(stub, method_name)
+            return await rpc(request, timeout=settings.GRPC.TIMEOUT_SECONDS)
+        except grpc.aio.AioRpcError as e:
+            logger.warning(
+                "mic bluetooth rpc failed method=%s robot_id=%s code=%s details=%s",
+                method_name,
+                robot_id,
+                e.code(),
+                e.details(),
+            )
+            return None
+        except Exception:  # noqa: BLE001 - 查询/动作者失败不阻塞业务
+            logger.exception(
+                "mic bluetooth rpc unexpected error method=%s robot_id=%s",
+                method_name,
+                robot_id,
+            )
+            return None
+
+    @classmethod
+    async def get_status(
+        cls, robot_id: int
+    ) -> Optional[mic_bluetooth_pb2.GetMicBluetoothStatusResponse]:
+        """查询麦克风蓝牙连接状态；机器人不可达返回 None"""
+        request = mic_bluetooth_pb2.GetMicBluetoothStatusRequest(robot_id=robot_id)
+        return await cls._call(robot_id, "GetMicBluetoothStatus", request)
+
+    @classmethod
+    async def reconnect(
+        cls, robot_id: int
+    ) -> Optional[mic_bluetooth_pb2.ReconnectMicBluetoothResponse]:
+        """触发蓝牙麦克风重连；机器人不可达返回 None"""
+        request = mic_bluetooth_pb2.ReconnectMicBluetoothRequest(robot_id=robot_id)
+        return await cls._call(robot_id, "ReconnectMicBluetooth", request)
+
+
+# ==================== MeetingModeClient ====================
+
+
+class MeetingModeClient:
+    """会议模式 gRPC 客户端（走 agent）
+
+    动作类调用：与 MicBluetoothClient 同样约定，
+    失败返回 None（机器人不可达），由业务层决定提示文案。
+    """
+
+    _stubs_by_addr: Dict[str, meeting_mode_pb2_grpc.MeetingModeServiceStub] = {}
+
+    @classmethod
+    async def _get_stub_for_addr(
+        cls, addr: str
+    ) -> meeting_mode_pb2_grpc.MeetingModeServiceStub:
+        if addr not in cls._stubs_by_addr:
+            channel = await get_config_channel_by_addr(addr)
+            cls._stubs_by_addr[addr] = meeting_mode_pb2_grpc.MeetingModeServiceStub(
+                channel
+            )
+        return cls._stubs_by_addr[addr]
+
+    @classmethod
+    async def _call(
+        cls, robot_id: int, method_name: str, request: Any
+    ) -> Optional[Any]:
+        """单端调用（agent）；未启用/未配置/调用失败返回 None"""
+        if not settings.GRPC.ENABLED:
+            logger.info("meeting mode rpc skipped: gRPC 未启用, robot_id=%s", robot_id)
+            return None
+
+        addr = await get_config_addr_provider().get_addr(robot_id, "agent")
+        if not addr:
+            logger.info(
+                "meeting mode rpc skipped: agent 地址未配置, robot_id=%s", robot_id
+            )
+            return None
+
+        try:
+            stub = await cls._get_stub_for_addr(addr)
+            rpc: Callable[..., Awaitable[Any]] = getattr(stub, method_name)
+            return await rpc(request, timeout=settings.GRPC.TIMEOUT_SECONDS)
+        except grpc.aio.AioRpcError as e:
+            if e.code() == grpc.StatusCode.UNIMPLEMENTED:
+                logger.warning(
+                    "meeting mode rpc unimplemented method=%s robot_id=%s addr=%s details=%s",
+                    method_name,
+                    robot_id,
+                    addr,
+                    e.details(),
+                )
+                raise GrpcMethodUnsupported(method_name) from e
+            logger.warning(
+                "meeting mode rpc failed method=%s robot_id=%s code=%s details=%s",
+                method_name,
+                robot_id,
+                e.code(),
+                e.details(),
+            )
+            return None
+        except Exception:  # noqa: BLE001 - 动作失败不阻塞业务
+            logger.exception(
+                "meeting mode rpc unexpected error method=%s robot_id=%s",
+                method_name,
+                robot_id,
+            )
+            return None
+
+    @classmethod
+    async def set_meeting_mode(
+        cls, robot_id: int, enabled: bool
+    ) -> Optional[meeting_mode_pb2.SetMeetingModeResponse]:
+        """切换会议模式；机器人不可达返回 None"""
+        request = meeting_mode_pb2.SetMeetingModeRequest(
+            robot_id=robot_id, enabled=enabled
+        )
+        return await cls._call(robot_id, "SetMeetingMode", request)

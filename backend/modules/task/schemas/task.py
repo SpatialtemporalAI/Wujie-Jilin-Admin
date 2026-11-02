@@ -24,6 +24,7 @@ VALID_PERFORMANCE_ACTIONS = {'baduanjin_1', 'baduanjin_2', 'baduanjin_3'}
 VALID_PERFORMANCE_MUSIC = {'bdj_1', 'bdj_2', 'bdj_3', 'bdj_full_12min'}
 UPLOAD_MUSIC_PATTERN = re.compile(r'^upload:\d+$')
 PERFORMANCE_MAX_STEPS = 3
+PERFORMANCE_MIN_INTERVAL = 5
 PERFORMANCE_MAX_INTERVAL = 300
 
 
@@ -61,12 +62,12 @@ class BroadcastStepSchema(BaseReqEntity):
 
 class PerformanceStepSchema(BaseReqEntity):
     """表演任务单套动作（八段锦）：动作为后端预置标识；背景音乐可选（预设标识或用户上传）；
-    play_count 播放次数 1-99999，interval 套间间隔 0-300 秒（最后一套可为空）"""
+    play_count 播放次数 1-99999，interval 套间间隔 5-300 秒（最后一套可为空）"""
 
     action: str = Field(..., description="表演动作: baduanjin_1/baduanjin_2/baduanjin_3", max_length=30)
     music: Optional[str] = Field(None, description="背景音乐（可选）: 预设标识 bdj_1/bdj_2/bdj_3（bdj_full_12min 为历史兼容值），或用户上传 upload:<file_id>", max_length=30)
     play_count: int = Field(1, description="播放次数（循环动作+音乐）", ge=1, le=99999)
-    interval: Optional[int] = Field(None, description="套间间隔（秒），最后一套可为空", ge=0, le=PERFORMANCE_MAX_INTERVAL)
+    interval: Optional[int] = Field(None, description="套间间隔（秒），最后一套可为空，最小 5 秒", ge=PERFORMANCE_MIN_INTERVAL, le=PERFORMANCE_MAX_INTERVAL)
 
     @field_validator('action')
     @classmethod

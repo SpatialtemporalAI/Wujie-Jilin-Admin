@@ -1,10 +1,13 @@
 <script setup lang="ts">
-import { ref } from 'vue';
+import { onBeforeUnmount, onMounted, ref } from 'vue';
 import { NButton, NCard, NEmpty, NPopconfirm, NSpace, NSpin, NTag, useMessage } from 'naive-ui';
 import {
   fetchDeleteRobot,
   fetchGetRobotList,
   fetchGetRobotSlotStatus,
+  fetchGetRobotMicBluetoothStatus,
+  fetchReconnectRobotMicBluetooth,
+  fetchSetRobotMeetingMode,
   fetchRestartRobotSlot
 } from '@/service/api';
 import { useAuth } from '@/hooks/business/auth';
@@ -36,13 +39,21 @@ const robotDrawerVisible = ref(false);
 const robotOperateType = ref<NaiveUI.TableOperateType>('add');
 const editingRobotData = ref<Api.Robot.Robot | null>(null);
 
+/** 列表数据落本地：list 接口已聚合逐台状态（自启/蓝牙），无需逐台再调状态接口 */
+function applyRecords(records: Api.Robot.Robot[]) {
+  robotList.value = records;
+  records.forEach(robot => {
+    slotStatusMap.value[robot.id] = robot.slot_status || '未知';
+    micBtStatusMap.value[robot.id] = robot.mic_bluetooth_status || '未知';
+  });
+}
+
 async function loadData() {
   loading.value = true;
   try {
     const { data, error } = await fetchGetRobotList({ page: 1, page_size: 200 });
     if (!error && data) {
-      robotList.value = data.records || [];
-      loadSlotStatuses(data.records || []);
+      applyRecords(data.records || []);
     }
   } catch (err) {
     console.error('加载机器人列表失败:', err);
@@ -51,17 +62,43 @@ async function loadData() {
   }
 }
 
+/** 10 秒静默轮询：不转全屏 loading，只调 list 一个接口（在线/会议模式/自启/蓝牙状态全部由 list 聚合返回） */
+const POLL_INTERVAL_MS = 10_000;
+let pollTimer: ReturnType<typeof setInterval> | null = null;
+/** 轮询请求在途标记：上一次未返回则跳过本次，避免机器人不可达时请求堆积 */
+let polling = false;
+
+async function pollSilently() {
+  if (polling || loading.value) return;
+  polling = true;
+  try {
+    const { data, error } = await fetchGetRobotList({ page: 1, page_size: 200 });
+    if (!error && data) {
+      applyRecords(data.records || []);
+    }
+  } catch {
+    // 静默轮询失败不打断页面，下个周期再试
+  } finally {
+    polling = false;
+  }
+}
+
+onMounted(() => {
+  pollTimer = setInterval(pollSilently, POLL_INTERVAL_MS);
+});
+
+onBeforeUnmount(() => {
+  if (pollTimer) {
+    clearInterval(pollTimer);
+    pollTimer = null;
+  }
+});
+
 /** 服务器自启状态（面板返回：已启动/启动中/启动失败/未配置/未知） */
 const slotStatusMap = ref<Record<number, string>>({});
 const slotRestartingMap = ref<Record<number, boolean>>({});
 
-/** 并行拉取每台机器人的自启状态，单台失败置「未知」不影响其它卡片 */
-function loadSlotStatuses(records: Api.Robot.Robot[]) {
-  records.forEach(robot => {
-    loadSlotStatus(robot.id);
-  });
-}
-
+/** 重启/重连动作完成后单独刷新该台状态（初始与轮询由 list 聚合返回） */
 async function loadSlotStatus(robotId: number) {
   try {
     const { data, error } = await fetchGetRobotSlotStatus(robotId);
@@ -80,7 +117,23 @@ function getSlotStatusType(status: string): import('naive-ui').TagProps['type'] 
   return typeMap[status] || 'default';
 }
 
-/** 会议模式状态直接读 robot.meeting_mode（机器人侧上报，随列表接口返回），无需逐台拉取 */
+/** 会议模式状态直接读 robot.meeting_mode（机器人侧上报/切换成功后落库，随列表接口返回），无需逐台拉取 */
+const meetingTogglingMap = ref<Record<number, boolean>>({});
+
+async function handleToggleMeetingMode(robot: Api.Robot.Robot) {
+  meetingTogglingMap.value[robot.id] = true;
+  try {
+    const { data, error } = await fetchSetRobotMeetingMode(robot.id, { enabled: !robot.meeting_mode });
+    if (!error && data) {
+      robot.meeting_mode = data.meeting_mode;
+      message.success(data.meeting_mode ? '已进入会议模式' : '已退出会议模式');
+    }
+  } catch (err) {
+    console.error('切换会议模式失败:', err);
+  } finally {
+    meetingTogglingMap.value[robot.id] = false;
+  }
+}
 
 async function handleRestartSlot(robot: Api.Robot.Robot) {
   slotRestartingMap.value[robot.id] = true;
@@ -95,6 +148,43 @@ async function handleRestartSlot(robot: Api.Robot.Robot) {
   } finally {
     slotRestartingMap.value[robot.id] = false;
     loadSlotStatus(robot.id);
+  }
+}
+
+/** 麦克风蓝牙状态（list 接口聚合返回：已连接/未连接/未知） */
+const micBtStatusMap = ref<Record<number, string>>({});
+const micBtReconnectingMap = ref<Record<number, boolean>>({});
+
+async function loadMicBtStatus(robotId: number) {
+  try {
+    const { data, error } = await fetchGetRobotMicBluetoothStatus(robotId);
+    micBtStatusMap.value[robotId] = !error && data ? data.status : '未知';
+  } catch {
+    micBtStatusMap.value[robotId] = '未知';
+  }
+}
+
+function getMicBtStatusType(status: string): import('naive-ui').TagProps['type'] {
+  const typeMap: Record<string, import('naive-ui').TagProps['type']> = {
+    已连接: 'success',
+    未连接: 'error'
+  };
+  return typeMap[status] || 'default';
+}
+
+async function handleReconnectMicBt(robot: Api.Robot.Robot) {
+  micBtReconnectingMap.value[robot.id] = true;
+  try {
+    const { data, error } = await fetchReconnectRobotMicBluetooth(robot.id);
+    if (!error && data) {
+      micBtStatusMap.value[robot.id] = data.status;
+      message.success(`重连指令已执行，当前状态：${data.status}`);
+    }
+  } catch (err) {
+    console.error('重连麦克风蓝牙失败:', err);
+  } finally {
+    micBtReconnectingMap.value[robot.id] = false;
+    loadMicBtStatus(robot.id);
   }
 }
 
@@ -200,36 +290,71 @@ loadData();
             </div>
 
             <div class="robot-card-body">
-              <div class="robot-info-item">
-                <span class="robot-info-label">型号：</span>
-                <span class="robot-info-value">{{ robot.model_name || '-' }}</span>
+              <div class="robot-info-divider robot-info-divider--top"></div>
+              <div class="robot-info-group">
+                <div class="robot-info-item">
+                  <span class="robot-info-label">型号</span>
+                  <span class="robot-info-value">{{ robot.model_name || '-' }}</span>
+                </div>
+                <div class="robot-info-item">
+                  <span class="robot-info-label">地图</span>
+                  <span class="robot-info-value">{{ robot.map_name || '-' }}</span>
+                </div>
               </div>
-              <div class="robot-info-item">
-                <span class="robot-info-label">地图：</span>
-                <span class="robot-info-value">{{ robot.map_name || '-' }}</span>
+              <div class="robot-info-divider"></div>
+              <div class="robot-info-group">
+                <div class="robot-info-item robot-info-item--between">
+                  <span class="robot-info-label">会议模式</span>
+                  <div class="robot-info-extra">
+                    <NTag :type="robot.meeting_mode ? 'success' : 'default'" size="small" round>
+                      {{ robot.meeting_mode ? '监听中' : '未开启' }}
+                    </NTag>
+                    <NButton v-if="hasAuth('robot:manage:restart')" size="tiny" secondary
+                      :loading="meetingTogglingMap[robot.id]" @click="handleToggleMeetingMode(robot)">
+                      <template #icon>
+                        <icon-mdi-stop v-if="robot.meeting_mode" class="text-icon" />
+                        <icon-mdi-play v-else class="text-icon" />
+                      </template>
+                      {{ robot.meeting_mode ? '关闭' : '开启' }}
+                    </NButton>
+                  </div>
+                </div>
               </div>
-              <div class="robot-info-item">
-                <span class="robot-info-label">会议模式：</span>
-                <NTag :type="robot.meeting_mode ? 'success' : 'default'" size="small" round>
-                  {{ robot.meeting_mode ? '监听中' : '未开启' }}
-                </NTag>
-              </div>
-            </div>
-
-            <div class="robot-card-slot" v-if="hasAuth('robot:manage:restart')">
-              <span class="robot-info-label">服务器自启状态</span>
-              <NSpace align="center">
-                <NTag :type="getSlotStatusType(slotStatusMap[robot.id] || '未知')" size="small" round>
-                  {{ slotStatusMap[robot.id] || '未知' }}
-                </NTag>
-                <NButton size="small" secondary :loading="slotRestartingMap[robot.id]"
-                  :disabled="slotStatusMap[robot.id] === '启动中'" @click="handleRestartSlot(robot)">
-                  <template #icon>
-                    <icon-mdi-restart class="text-icon" />
-                  </template>
-                  重启
-                </NButton>
-              </NSpace>
+              <template v-if="hasAuth('robot:manage:restart')">
+                <div class="robot-info-divider"></div>
+                <div class="robot-info-group">
+                  <div class="robot-info-item robot-info-item--between">
+                    <span class="robot-info-label">服务器自启状态</span>
+                    <div class="robot-info-extra">
+                      <NTag :type="getSlotStatusType(slotStatusMap[robot.id] || '未知')" size="small" round>
+                        {{ slotStatusMap[robot.id] || '未知' }}
+                      </NTag>
+                      <NButton size="tiny" secondary :loading="slotRestartingMap[robot.id]"
+                        :disabled="slotStatusMap[robot.id] === '启动中'" @click="handleRestartSlot(robot)">
+                        <template #icon>
+                          <icon-mdi-restart class="text-icon" />
+                        </template>
+                        重启
+                      </NButton>
+                    </div>
+                  </div>
+                  <div class="robot-info-item robot-info-item--between">
+                    <span class="robot-info-label">麦克风蓝牙状态</span>
+                    <div class="robot-info-extra">
+                      <NTag :type="getMicBtStatusType(micBtStatusMap[robot.id] || '未知')" size="small" round>
+                        {{ micBtStatusMap[robot.id] || '未知' }}
+                      </NTag>
+                      <NButton size="tiny" secondary :loading="micBtReconnectingMap[robot.id]"
+                        @click="handleReconnectMicBt(robot)">
+                        <template #icon>
+                          <icon-mdi-bluetooth-connect class="text-icon" />
+                        </template>
+                        重连
+                      </NButton>
+                    </div>
+                  </div>
+                </div>
+              </template>
             </div>
 
             <div class="robot-card-footer">
@@ -274,6 +399,27 @@ loadData();
   grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
   gap: 20px;
   padding: 8px 16px;
+}
+
+/* 页面级卡片限高（flex-1-hidden）时，内容超出改为内部纵向滚动，表头固定 */
+:deep(.n-card__content) {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+:deep(.n-spin-container) {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+:deep(.n-spin-content) {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
 }
 
 .robot-card {
@@ -330,7 +476,7 @@ loadData();
 .robot-name {
   font-size: 16px;
   font-weight: 500;
-  color: var(--n-text-color);
+  color: var(--n-primary-color);
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
@@ -346,36 +492,66 @@ loadData();
   flex: 1;
   display: flex;
   flex-direction: column;
-  gap: 8px;
+  gap: 16px;
   margin-bottom: 16px;
+}
+
+/* 信息分组：组内行距紧凑，组间用分隔线隔开（参考卡片优化稿） */
+.robot-info-group {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
 }
 
 .robot-info-item {
   display: flex;
   align-items: center;
+  gap: 12px;
   font-size: 13px;
+  min-height: 28px;
 }
 
+/* 可操作状态行：label 居左、tag+按钮整体居右 */
+.robot-info-item--between {
+  justify-content: space-between;
+}
+
+/* 所有 label 统一灰色；静态信息行 label 固定宽度，值列从同一竖线开始 */
 .robot-info-label {
-  color: var(--n-text-color-disabled);
   flex-shrink: 0;
+  width: 4em;
+  color: var(--n-text-color-disabled);
+}
+
+.robot-info-item--between .robot-info-label {
+  width: auto;
 }
 
 .robot-info-value {
+  min-width: 0;
   color: var(--n-text-color);
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
 }
 
-.robot-card-slot {
+/* 状态行内容组（tag + 操作按钮），整体靠右 */
+.robot-info-extra {
   display: flex;
   align-items: center;
-  justify-content: space-between;
-  padding: 12px 0;
-  margin-bottom: 4px;
-  border-top: 1px dashed var(--n-divider-color);
-  font-size: 13px;
+  gap: 8px;
+  flex-shrink: 0;
+}
+
+/* 分组之间的分隔线 */
+.robot-info-divider {
+  height: 1px;
+  background-color: #e5e7eb;
+}
+
+/* header 下方的分隔线：header 自带 margin-bottom，这里抵消避免间距过大 */
+.robot-info-divider--top {
+  margin-top: 8px;
 }
 
 .robot-card-footer {

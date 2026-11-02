@@ -116,6 +116,12 @@ class RobotResponseData(BaseRespEntity):
         None, description="gRPC 配置: { agent, middleware, ros }"
     )
     model_name: Optional[str] = Field(None, description="型号名称（关联查询）")
+    slot_status: Optional[str] = Field(
+        None, description="服务器自启状态（list 接口实时聚合）：已启动/启动中/启动失败/未配置/未知"
+    )
+    mic_bluetooth_status: Optional[str] = Field(
+        None, description="麦克风蓝牙状态（list 接口实时聚合）：已连接/未连接/未知"
+    )
     created_at: datetime = Field(..., description="创建时间")
     updated_at: Optional[datetime] = Field(None, description="更新时间")
 
@@ -151,6 +157,29 @@ class SlotStatusData(BaseModel):
 
     status: str = Field(
         ..., description="服务器自启动状态：已启动/启动中/启动失败/未配置/未知"
+    )
+
+
+class MicBluetoothStatusData(BaseModel):
+    """
+    麦克风蓝牙状态响应
+    同 SlotStatusData：不能用 BaseRespEntity，status 中文字符串需保持原值。
+    """
+
+    status: str = Field(..., description="麦克风蓝牙状态：已连接/未连接/未知")
+
+
+class MeetingModeUpdate(BaseModel):
+    """会议模式切换请求"""
+
+    enabled: bool = Field(..., description="true-进入会议模式 / false-退出会议模式")
+
+
+class MeetingModeStatusData(BaseModel):
+    """会议模式状态响应"""
+
+    meeting_mode: bool = Field(
+        ..., description="切换后的会议模式状态：true-监听中 / false-未开启"
     )
 
 

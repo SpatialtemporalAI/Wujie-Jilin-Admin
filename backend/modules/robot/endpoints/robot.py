@@ -4,6 +4,7 @@
 """
 机器人管理相关接口
 """
+import asyncio
 import logging
 from fastapi import APIRouter, Depends, Path, Request
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -37,8 +38,13 @@ from modules.robot.schemas.robot import (
     RobotGrpcConfigUpdate,
     RobotMapBindingUpdate,
     SlotStatusData,
+    MicBluetoothStatusData,
+    MeetingModeUpdate,
+    MeetingModeStatusData,
 )
 from modules.robot.services.robot_slot_service import RobotSlotService
+from modules.robot.services.robot_mic_bluetooth_service import RobotMicBluetoothService
+from modules.robot.services.robot_meeting_mode_service import RobotMeetingModeService
 
 logger = logging.getLogger(__name__)
 
@@ -67,6 +73,35 @@ async def _fill_robot_names(db: AsyncSession, records: list[RobotResponseData]) 
             record.map_name = map_map.get(record.map_id)
 
 
+async def _fill_runtime_statuses(
+    db: AsyncSession, records: list[RobotResponseData]
+) -> None:
+    """list 接口聚合每台机器人的自启状态与麦克风蓝牙状态
+
+    逐台并发查询（面板 HTTP + gRPC agent），两个 service 内部已做失败兜底
+    （未知/未配置），单机失败不拖垮整页；前端因此只需轮询 list 一个接口。
+    """
+    if not records:
+        return
+
+    ids = [record.id for record in records]
+    result = await db.execute(select(Robot).where(Robot.id.in_(ids)))
+    robots = {robot.id: robot for robot in result.scalars().all()}
+
+    async def fill_one(record: RobotResponseData) -> None:
+        robot = robots.get(record.id)
+        if robot is None:
+            return
+        slot_status, mic_bt_status = await asyncio.gather(
+            RobotSlotService.get_slot_status(robot),
+            RobotMicBluetoothService.get_status(robot),
+        )
+        record.slot_status = slot_status
+        record.mic_bluetooth_status = mic_bt_status
+
+    await asyncio.gather(*(fill_one(record) for record in records))
+
+
 @robot_router.get(
     "/list",
     response_model=ResponsePageModel[RobotResponseData],
@@ -79,6 +114,10 @@ async def get_robot_list(
 ):
     """
     获取机器人列表（分页）
+
+    每台机器人附带实时聚合的运行状态：slot_status（服务器自启）与
+    mic_bluetooth_status（麦克风蓝牙），供列表页一次渲染/轮询，
+    无需逐台再调状态接口。
     """
     try:
         logger.info("获取机器人列表接口被调用")
@@ -94,6 +133,7 @@ async def get_robot_list(
         )
 
         await _fill_robot_names(db, page_data.records)
+        await _fill_runtime_statuses(db, page_data.records)
 
         logger.info("获取机器人列表接口成功，共 %d 条记录", page_data.total)
         return response_base.page(data=page_data)
@@ -390,4 +430,121 @@ async def restart_robot_slot(
 
     except Exception as e:
         logger.error("重启机器人服务器自启动接口失败: %s", str(e), exc_info=True)
+        raise
+
+
+@robot_router.get(
+    "/{robot_id}/mic-bluetooth/status",
+    response_model=ResponseModel[MicBluetoothStatusData],
+    dependencies=[Depends(require_permission("robot:manage:list"))],
+)
+async def get_robot_mic_bluetooth_status(
+    robot_id: int = Path(..., description="机器人ID"),
+    db: AsyncSession = Depends(get_session),
+):
+    """
+    查询机器人麦克风蓝牙连接状态
+
+    经 gRPC（agent 端）直连机器人查询，status 取值：已连接/未连接；
+    机器人不可达（离线/未配置 gRPC/未启用）返回「未知」。
+    """
+    try:
+        logger.info("查询机器人麦克风蓝牙状态接口被调用，机器人ID: %d", robot_id)
+
+        robot_obj = await RobotService.get(db, robot_id)
+        status = await RobotMicBluetoothService.get_status(robot_obj)
+
+        logger.info(
+            "查询机器人麦克风蓝牙状态接口成功，机器人ID: %d，状态: %s",
+            robot_id,
+            status,
+        )
+        return response_base.success(data=MicBluetoothStatusData(status=status))
+
+    except Exception as e:
+        logger.error("查询机器人麦克风蓝牙状态接口失败: %s", str(e), exc_info=True)
+        raise
+
+
+@robot_router.post(
+    "/{robot_id}/mic-bluetooth/reconnect",
+    response_model=ResponseModel[MicBluetoothStatusData],
+    dependencies=[Depends(require_permission("robot:manage:restart"))],
+)
+@log_operation(module="robot", action="reconnect", description="重连机器人麦克风蓝牙")
+async def reconnect_robot_mic_bluetooth(
+    request: Request,
+    robot_id: int = Path(..., description="机器人ID"),
+    db: AsyncSession = Depends(get_session),
+    user: SysUser = Depends(current_user),
+):
+    """
+    重连机器人麦克风蓝牙（断开当前连接后重新搜索/连接）
+
+    经 gRPC（agent 端）直连机器人执行，返回重连后的 status（已连接/未连接）。
+    机器人不可达或重连动作失败时返回业务错误提示。
+    """
+    try:
+        logger.info("重连机器人麦克风蓝牙接口被调用，机器人ID: %d", robot_id)
+
+        robot_obj = await RobotService.get(db, robot_id)
+        status = await RobotMicBluetoothService.reconnect(robot_obj)
+
+        logger.info(
+            "重连机器人麦克风蓝牙接口成功，机器人ID: %d，状态: %s",
+            robot_id,
+            status,
+        )
+        return response_base.success(
+            data=MicBluetoothStatusData(status=status), msg="重连指令已执行"
+        )
+
+    except Exception as e:
+        logger.error("重连机器人麦克风蓝牙接口失败: %s", str(e), exc_info=True)
+        raise
+
+
+@robot_router.post(
+    "/{robot_id}/meeting-mode",
+    response_model=ResponseModel[MeetingModeStatusData],
+    dependencies=[Depends(require_permission("robot:manage:restart"))],
+)
+@log_operation(module="robot", action="meeting_mode", description="切换机器人会议模式")
+async def set_robot_meeting_mode(
+    request: Request,
+    payload: MeetingModeUpdate,
+    robot_id: int = Path(..., description="机器人ID"),
+    db: AsyncSession = Depends(get_session),
+    user: SysUser = Depends(current_user),
+):
+    """
+    手动切换机器人会议模式（进入/退出）
+
+    经 gRPC（agent 端）直连机器人执行，成功后把最新状态落库（robot.meeting_mode），
+    返回切换后的 meeting_mode（true-监听中 / false-未开启）。
+    机器人不可达或切换动作失败时返回业务错误提示。
+    """
+    try:
+        logger.info(
+            "切换机器人会议模式接口被调用，机器人ID: %d，目标状态: %s",
+            robot_id,
+            payload.enabled,
+        )
+
+        robot_obj = await RobotService.get(db, robot_id)
+        meeting_mode = await RobotMeetingModeService.set_meeting_mode(
+            db, robot_obj, payload.enabled
+        )
+
+        logger.info(
+            "切换机器人会议模式接口成功，机器人ID: %d，状态: %s",
+            robot_id,
+            meeting_mode,
+        )
+        return response_base.success(
+            data=MeetingModeStatusData(meeting_mode=meeting_mode), msg="切换成功"
+        )
+
+    except Exception as e:
+        logger.error("切换机器人会议模式接口失败: %s", str(e), exc_info=True)
         raise

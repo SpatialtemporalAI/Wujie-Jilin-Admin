@@ -225,6 +225,17 @@
 - `TaskDefinitionSnapshot` 同步含 `performance_steps`（宽松 dict，容纳历史脏数据）；`TaskResponseData.performance_steps` 同样为宽松 dict（2026-10-22：防止单行脏数据导致整个任务列表 422，写入侧仍由 `TaskCreate`/`TaskUpdate` 严格校验）。执行详情表演时间线复用 `progress.points_status` 展示每套执行状态
 - 内置任务：`TaskResponseData.is_builtin: boolean`（默认 `false`）。固定种子任务 `id=1`、名称“八段锦”、`is_builtin=true`，允许列表/详情查询和立即启动；更新请求仅在字段严格等于 `{robot_ids}` 时允许，其他字段更新及复制、删除、启禁用、暂停/恢复/停止均由后端拒绝。前端名称旁显示“内置”，操作列只显示立即启动和编辑；编辑抽屉保留表演动作编排但禁用除机器人外的全部控件，提交仅携带 `robot_ids`。任务列表后端按 `is_builtin DESC, id DESC` 排序。历史快照中的 `sets` 由执行详情响应模型规范化为 `performance_steps`
 
+## 机器人管理 · 麦克风蓝牙状态契约（2026-10-29）
+
+- 链路：后端 gRPC 直连机器人 **agent 端**（`robot.grpc_config.agent`），不走控制面板 HTTP；proto 在子模块 `backend/grpc`：`protos/config/mic_bluetooth.proto`（`MicBluetoothService.GetMicBluetoothStatus` / `ReconnectMicBluetooth`）
+- 端点（挂 `/robot/manage`）：
+  - `GET /robot/manage/{id}/mic-bluetooth/status`（权限 `robot:manage:list`）→ `{ status }`，status ∈ `已连接 / 未连接 / 未知`（机器人不可达、gRPC 未启用/未配置时为「未知」）
+  - `POST /robot/manage/{id}/mic-bluetooth/reconnect`（权限 `robot:manage:restart`，复用重启权限点）→ 同上，返回重连后状态；机器人不可达/重连失败返回业务错误
+- `MicBluetoothStatusData` 为纯 BaseModel（不能用 `BaseRespEntity`，status 序列化器会把中文字符串转成 "1"）
+- 前端：机器人卡片「服务器自启状态」行下方新增「麦克风蓝牙状态」行（权限 `robot:manage:restart` 控制整行）；已连接 success / 未连接 error / 未知 default；重连按钮带 loading，完成后单独刷新该台状态
+- 状态为实时查询不落库；agent 端需实现对应两个 RPC，未实现时前端显示「未知」
+- **列表聚合（2026-10-29）**：`GET /robot/manage/list` 每条记录附带 `slot_status` / `mic_bluetooth_status`（后端逐台并发查询，单机失败兜底「未知」不拖垮整页）；前端列表页 10s 静默轮询只调 list 一个接口，初始加载与轮询不再逐台调状态接口（单独状态接口保留，供重启/重连动作后单台刷新）
+
 ## 参数配置 · 会议模式状态契约
 
 会议指令配置已下线（2026-10-16）：参数配置页不再提供进入/退出指令输入，`robot_voice_config` 的两个指令列与 `NotifyMeetingModeChanged` gRPC 推送链路已移除。
@@ -235,8 +246,16 @@
 |------|------|------|
 | `robot.meeting_mode` | `bool` | 会议模式状态（机器人表字段，随机器人列表接口返回）：`true`-已进入会议模式 |
 
-- 状态由机器人侧上报写入（上报通道另行对接），系统侧不控制该字段；机器人侧仍可能以预设指令进入会议模式
+- 状态由机器人侧上报写入（上报通道另行对接）；机器人侧仍可能以预设指令进入会议模式
 - 前端：机器人列表卡片直接读 `robot.meeting_mode` 展示「监听中/未开启」tag（`robots/index.vue`）
+
+### 会议模式手动切换（2026-10-30）
+
+- 链路：与麦克风蓝牙同一模式 —— 后端 gRPC 直连机器人 **agent 端**，proto 在子模块 `backend/grpc`：`protos/config/meeting_mode.proto`（`MeetingModeService.SetMeetingMode(robot_id, enabled) → { success, meeting_mode, message }`）
+- 端点：`POST /robot/manage/{id}/meeting-mode`（权限 `robot:manage:restart`，复用重启权限点），请求体 `{ enabled: bool }` → `{ meeting_mode }`；切换成功后后端把最新状态落库 `robot.meeting_mode`；机器人不可达/切换失败返回业务错误
+- `MeetingModeUpdate` / `MeetingModeStatusData` 为纯 BaseModel
+- 前端：机器人卡片「会议模式」行与自启/蓝牙行同款交互（状态 tag + 开启/关闭按钮，按钮带 loading，成功后就地更新 `robot.meeting_mode`）；按钮需 `robot:manage:restart` 权限
+- agent 端需实现 `SetMeetingMode` RPC，未实现时切换提示「机器人当前不可达」（状态展示不受影响）
 
 ## 机器人与场景绑定契约
 

@@ -109,6 +109,10 @@ declare namespace Api {
       grpc_config?: RobotGrpcConfig | null;
       /** meeting mode state: true = in meeting mode (reported by robot side) */
       meeting_mode?: boolean;
+      /** 服务器自启状态（list 接口实时聚合）：已启动/启动中/启动失败/未配置/未知 */
+      slot_status?: string | null;
+      /** 麦克风蓝牙状态（list 接口实时聚合）：已连接/未连接/未知 */
+      mic_bluetooth_status?: string | null;
       /** robot logo url */
       logo?: string | null;
     };
@@ -139,6 +143,25 @@ declare namespace Api {
     /** 服务器自启动状态响应 */
     type SlotStatusData = {
       status: SlotStatus | string;
+    };
+
+    /** 麦克风蓝牙状态（后端 gRPC 直连机器人 agent 查询；机器人不可达为「未知」） */
+    type MicBluetoothStatus = '已连接' | '未连接' | '未知';
+
+    /** 麦克风蓝牙状态响应 */
+    type MicBluetoothStatusData = {
+      status: MicBluetoothStatus | string;
+    };
+
+    /** 会议模式切换请求 */
+    type MeetingModeUpdate = {
+      /** true-进入会议模式 / false-退出会议模式 */
+      enabled: boolean;
+    };
+
+    /** 会议模式状态响应（切换后的最新状态） */
+    type MeetingModeStatusData = {
+      meeting_mode: boolean;
     };
 
     /** robot create */
