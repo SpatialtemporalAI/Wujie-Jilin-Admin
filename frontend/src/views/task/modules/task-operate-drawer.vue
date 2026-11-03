@@ -953,7 +953,11 @@ onMounted(() => {
           <template #icon>
             <icon-ic-round-plus class="text-icon" />
           </template>
-          添加表演动作（最多 {{ PERFORMANCE_MAX_STEPS }} 套）
+          {{
+            model.performance_steps.length >= PERFORMANCE_MAX_STEPS
+              ? `已达上限（最多 ${PERFORMANCE_MAX_STEPS} 套）`
+              : '添加表演动作'
+          }}
         </NButton>
         <div class="mt-8px text-12px" style="color: var(--n-text-color-3)">
           多套动作按顺序串行执行，可重复选择同一套动作；背景音乐可选（不选则无配乐），可选系统预设曲目，也可上传本地音频（mp3/wav，单个不超过
