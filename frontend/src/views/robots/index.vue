@@ -44,7 +44,7 @@ function applyRecords(records: Api.Robot.Robot[]) {
   robotList.value = records;
   records.forEach(robot => {
     slotStatusMap.value[robot.id] = robot.slot_status || '未知';
-    micBtStatusMap.value[robot.id] = robot.mic_bluetooth_status || '未知';
+    micBtStatusMap.value[robot.id] = normalizeMicBtStatus(robot.mic_bluetooth_status);
   });
 }
 
@@ -151,16 +151,21 @@ async function handleRestartSlot(robot: Api.Robot.Robot) {
   }
 }
 
-/** 麦克风蓝牙状态（list 接口聚合返回：已连接/未连接/未知） */
+/** 麦克风蓝牙状态（list 接口聚合返回：已连接/未连接；求值失败或未知一律按未连接展示） */
 const micBtStatusMap = ref<Record<number, string>>({});
 const micBtReconnectingMap = ref<Record<number, boolean>>({});
+
+/** 蓝牙状态只区分已连接/未连接，后端返回的「未知」也按未连接展示 */
+function normalizeMicBtStatus(status?: string) {
+  return status === '已连接' ? '已连接' : '未连接';
+}
 
 async function loadMicBtStatus(robotId: number) {
   try {
     const { data, error } = await fetchGetRobotMicBluetoothStatus(robotId);
-    micBtStatusMap.value[robotId] = !error && data ? data.status : '未知';
+    micBtStatusMap.value[robotId] = !error && data ? normalizeMicBtStatus(data.status) : '未连接';
   } catch {
-    micBtStatusMap.value[robotId] = '未知';
+    micBtStatusMap.value[robotId] = '未连接';
   }
 }
 
@@ -177,7 +182,7 @@ async function handleReconnectMicBt(robot: Api.Robot.Robot) {
   try {
     const { data, error } = await fetchReconnectRobotMicBluetooth(robot.id);
     if (!error && data) {
-      micBtStatusMap.value[robot.id] = data.status;
+      micBtStatusMap.value[robot.id] = normalizeMicBtStatus(data.status);
       message.success(`重连指令已执行，当前状态：${data.status}`);
     }
   } catch (err) {
@@ -341,16 +346,16 @@ loadData();
                   <div class="robot-info-item robot-info-item--between">
                     <span class="robot-info-label">麦克风蓝牙状态</span>
                     <div class="robot-info-extra">
-                      <NTag :type="getMicBtStatusType(micBtStatusMap[robot.id] || '未知')" size="small" round>
+                      <NTag :type="getMicBtStatusType(micBtStatusMap[robot.id] || '未连接')" size="small" round>
                         {{ micBtStatusMap[robot.id] || '未连接' }}
                       </NTag>
-                      <NButton size="tiny" secondary :loading="micBtReconnectingMap[robot.id]"
+                      <!-- <NButton size="tiny" secondary :loading="micBtReconnectingMap[robot.id]"
                         @click="handleReconnectMicBt(robot)">
                         <template #icon>
                           <icon-mdi-bluetooth-connect class="text-icon" />
                         </template>
                         重连
-                      </NButton>
+                      </NButton> -->
                     </div>
                   </div>
                 </div>
