@@ -23,7 +23,7 @@ VALID_REPEAT_CYCLES = {'none', 'mon', 'tue', 'wed', 'thu', 'fri', 'sat', 'sun'}
 VALID_PERFORMANCE_ACTIONS = {'baduanjin_1', 'baduanjin_2', 'baduanjin_3'}
 VALID_PERFORMANCE_MUSIC = {'bdj_1', 'bdj_2', 'bdj_3', 'bdj_full_12min'}
 UPLOAD_MUSIC_PATTERN = re.compile(r'^upload:\d+$')
-PERFORMANCE_MAX_STEPS = 3
+PERFORMANCE_MAX_STEPS = 30
 PERFORMANCE_MIN_INTERVAL = 5
 PERFORMANCE_MAX_INTERVAL = 300
 
@@ -151,7 +151,7 @@ class TaskCreate(BaseReqEntity):
     broadcast_text: Optional[str] = Field(None, description="播报文本（兼容旧数据）")
     broadcast_count: Optional[str] = Field(None, description="播报次数: 1/2/3/5/loop")
     broadcast_steps: Optional[List[BroadcastStepSchema]] = Field(None, description="播报步骤列表")
-    performance_steps: Optional[List[PerformanceStepSchema]] = Field(None, description="表演步骤列表（最多3套）")
+    performance_steps: Optional[List[PerformanceStepSchema]] = Field(None, description="表演步骤列表（最多30套）")
     robot_ids: List[int] = Field(..., description="绑定的机器人ID列表（巡逻任务仅支持单选，播报/表演任务支持多选）", min_length=1)
     schedule_enabled: bool = Field(False, description="是否启用定时调度")
     schedule_date: Optional[date] = Field(None, description="调度日期")
@@ -188,7 +188,7 @@ class TaskCreate(BaseReqEntity):
 
     @model_validator(mode='after')
     def validate_performance_steps(self):
-        """表演任务必须包含 1-3 套动作（每个步骤的动作/音乐校验由 PerformanceStepSchema 负责）；
+        """表演任务必须包含 1-30 套动作（每个步骤的动作/音乐校验由 PerformanceStepSchema 负责）；
         除最后一套外，其余套必须填写套间间隔"""
         if self.task_type != 'performance':
             return self
@@ -212,7 +212,7 @@ class TaskUpdate(BaseReqEntity):
     broadcast_text: Optional[str] = Field(None, description="播报文本（兼容旧数据）")
     broadcast_count: Optional[str] = Field(None, description="播报次数")
     broadcast_steps: Optional[List[BroadcastStepSchema]] = Field(None, description="播报步骤列表")
-    performance_steps: Optional[List[PerformanceStepSchema]] = Field(None, description="表演步骤列表（最多3套）")
+    performance_steps: Optional[List[PerformanceStepSchema]] = Field(None, description="表演步骤列表（最多30套）")
     robot_ids: Optional[List[int]] = Field(None, description="绑定的机器人ID列表（巡逻任务仅支持单选，播报/表演任务支持多选）")
     schedule_enabled: Optional[bool] = Field(None, description="是否启用定时调度")
     schedule_date: Optional[date] = Field(None, description="调度日期")
@@ -253,7 +253,7 @@ class TaskUpdate(BaseReqEntity):
 
     @model_validator(mode='after')
     def validate_performance_steps(self):
-        """表演任务必须包含 1-3 套动作；task_type 缺省或 performance_steps 为 None 时跳过"""
+        """表演任务必须包含 1-30 套动作；task_type 缺省或 performance_steps 为 None 时跳过"""
         if self.task_type != 'performance':
             return self
         steps = self.performance_steps

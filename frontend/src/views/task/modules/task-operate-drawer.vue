@@ -208,7 +208,7 @@ interface PerformanceStepItem {
 }
 
 /** 表演步骤上限（与后端 PERFORMANCE_MAX_STEPS 一致） */
-const PERFORMANCE_MAX_STEPS = 3;
+const PERFORMANCE_MAX_STEPS = 30;
 
 /** 预设表演动作选项（背景音乐的选择/上传/试听/删除在 PerformanceMusicSelect 组件内闭环） */
 const performanceActionOptions = ref<{ label: string; value: string }[]>([]);
@@ -639,7 +639,7 @@ async function handleSubmit() {
         return;
       }
       if (i < model.value.performance_steps.length - 1 && (step.interval === null || step.interval < 5)) {
-        window.$message?.warning(`第 ${i + 1} 套与下一套之间的间隔不能小于 5 秒`);
+        window.$message?.warning(`时间间隔不能小于 5 秒`);
         return;
       }
     }
@@ -902,7 +902,8 @@ onMounted(() => {
           <div class="broadcast-step-header">
             <span class="broadcast-step-title">第 {{ index + 1 }} 套</span>
             <NSpace :size="8">
-              <NButton quaternary size="small" :disabled="isBuiltin || index === 0" @click="movePerformanceStep(index, -1)">
+              <NButton quaternary size="small" :disabled="isBuiltin || index === 0"
+                @click="movePerformanceStep(index, -1)">
                 ↑
               </NButton>
               <NButton quaternary size="small" :disabled="isBuiltin || index === model.performance_steps.length - 1"
@@ -937,15 +938,12 @@ onMounted(() => {
           </NGrid>
 
           <!-- 套间间隔单独一行：仅作用于两套动作之间，同一套内连续播放多次不受此间隔影响 -->
-          <NFormItem v-if="index < model.performance_steps.length - 1" label="与下一套的间隔" class="mb-0 mt-12px">
+          <NFormItem v-if="index < model.performance_steps.length - 1" label="时间间隔" class="mb-0 mt-12px">
             <div class="flex-col gap-4px">
               <NInputNumber v-model:value="step.interval" :min="5" :max="300" :precision="0" :show-button="false"
                 style="width: 100px">
                 <template #suffix>秒</template>
               </NInputNumber>
-              <span class="text-12px text-#777 mt-4px pl-4px">
-                第 {{ index + 1 }} 套全部播完后，等待该间隔再开始第 {{ index + 2 }} 套；同一套内连续播放多次不间隔。
-              </span>
             </div>
           </NFormItem>
         </div>

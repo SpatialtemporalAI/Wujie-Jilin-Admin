@@ -62,8 +62,8 @@ async function loadData() {
   }
 }
 
-/** 10 秒静默轮询：不转全屏 loading，只调 list 一个接口（在线/会议模式/自启/蓝牙状态全部由 list 聚合返回） */
-const POLL_INTERVAL_MS = 10_000;
+/** 6 秒静默轮询：不转全屏 loading，只调 list 一个接口（在线/会议模式/自启/蓝牙状态全部由 list 聚合返回） */
+const POLL_INTERVAL_MS = 6_000;
 let pollTimer: ReturnType<typeof setInterval> | null = null;
 /** 轮询请求在途标记：上一次未返回则跳过本次，避免机器人不可达时请求堆积 */
 let polling = false;

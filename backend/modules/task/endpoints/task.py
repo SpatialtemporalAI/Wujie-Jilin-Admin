@@ -349,7 +349,7 @@ async def toggle_task_enabled(
     response_model=ResponseModel[list[PerformanceActionOption]],
 )
 async def list_performance_actions():
-    """获取表演动作预设列表（八段锦，最多 3 套，可重复）"""
+    """获取表演动作预设列表（八段锦，最多 30 套，可重复）"""
     return response_base.success(data=_PERFORMANCE_ACTIONS)
 
 

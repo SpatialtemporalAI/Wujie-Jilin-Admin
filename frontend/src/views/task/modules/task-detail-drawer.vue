@@ -131,10 +131,8 @@ function showStepInterval(step: { interval: number | null | undefined }, index: 
             {{ taskTypeLabel[detail.task_definition?.task_type || ''] || detail.task_definition?.task_type || '-' }}
           </NDescriptionsItem>
           <NDescriptionsItem label="执行状态">
-            <NTag
-              size="small"
-              :type="detail.status === 'completed' ? 'success' : detail.status === 'failed' ? 'error' : 'default'"
-            >
+            <NTag size="small"
+              :type="detail.status === 'completed' ? 'success' : detail.status === 'failed' ? 'error' : 'default'">
               {{ statusLabelMap[detail.status] || detail.status }}
             </NTag>
           </NDescriptionsItem>
@@ -158,12 +156,8 @@ function showStepInterval(step: { interval: number | null | undefined }, index: 
         <template v-if="detail.task_definition?.task_type === 'patrol' && detail.task_definition?.points?.length">
           <NDivider title-placement="left">巡逻点位</NDivider>
           <NTimeline>
-            <NTimelineItem
-              v-for="(point, index) in detail.task_definition.points"
-              :key="index"
-              :type="pointStatusType(index)"
-              :title="`点位 ${index + 1}: ${point.point_name || '-'}`"
-            >
+            <NTimelineItem v-for="(point, index) in detail.task_definition.points" :key="index"
+              :type="pointStatusType(index)" :title="`点位 ${index + 1}: ${point.point_name || '-'}`">
               <template v-if="point.actions && point.actions.length > 0">
                 <div v-for="(actionItem, actionIdx) in point.actions" :key="actionIdx" class="mb-4px">
                   <NText depth="3">
@@ -182,15 +176,12 @@ function showStepInterval(step: { interval: number | null | undefined }, index: 
         <template v-if="detail.task_definition?.broadcast_steps?.length || detail.task_definition?.broadcast_text">
           <NDivider title-placement="left">播报内容</NDivider>
           <NTimeline v-if="detail.task_definition?.broadcast_steps?.length">
-            <NTimelineItem
-              v-for="(step, index) in detail.task_definition.broadcast_steps"
-              :key="index"
-              :title="`步骤 ${index + 1}`"
-            >
+            <NTimelineItem v-for="(step, index) in detail.task_definition.broadcast_steps" :key="index"
+              :title="`步骤 ${index + 1}`">
               <NText v-if="step.content" depth="3">内容: {{ step.content }}</NText>
               <template v-if="step.actions && step.actions.length > 0">
                 <br v-if="step.content" />
-                <NText depth="3">动作: {{ step.actions.map(a => actionLabel[a] || a).join('、') }}</NText>
+                <NText depth="3">动作: {{step.actions.map(a => actionLabel[a] || a).join('、')}}</NText>
               </template>
               <template v-if="showStepInterval(step, index, detail.task_definition?.broadcast_steps?.length ?? 0)">
                 <br v-if="step.content || (step.actions && step.actions.length > 0)" />
@@ -202,19 +193,13 @@ function showStepInterval(step: { interval: number | null | undefined }, index: 
         </template>
 
         <!-- 表演步骤 -->
-        <template
-          v-if="
-            detail.task_definition?.task_type === 'performance' && detail.task_definition?.performance_steps?.length
-          "
-        >
+        <template v-if="
+          detail.task_definition?.task_type === 'performance' && detail.task_definition?.performance_steps?.length
+        ">
           <NDivider title-placement="left">表演内容</NDivider>
           <NTimeline>
-            <NTimelineItem
-              v-for="(step, index) in detail.task_definition.performance_steps"
-              :key="index"
-              :type="pointStatusType(index)"
-              :title="`第 ${index + 1} 套`"
-            >
+            <NTimelineItem v-for="(step, index) in detail.task_definition.performance_steps" :key="index"
+              :type="pointStatusType(index)" :title="`第 ${index + 1} 套`">
               <NText depth="3">表演动作: {{ performanceActionLabels[step.action] || step.action }}</NText>
               <br />
               <NText depth="3">
@@ -224,7 +209,7 @@ function showStepInterval(step: { interval: number | null | undefined }, index: 
               <NText depth="3">播放次数: {{ step.play_count }} 次</NText>
               <template v-if="showStepInterval(step, index, detail.task_definition?.performance_steps?.length ?? 0)">
                 <br />
-                <NText depth="3">与下一套间隔: {{ step.interval }} 秒</NText>
+                <NText depth="3">时间间隔: {{ step.interval }} 秒</NText>
               </template>
             </NTimelineItem>
           </NTimeline>
