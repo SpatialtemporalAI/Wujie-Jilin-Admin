@@ -18,7 +18,6 @@ from modules.robot.services.robot_service import RobotService
 from modules.task.schemas.task_execution_record import (
     TaskExecutionRecordQueryParams,
 )
-from modules.task.services.task_service import ensure_task_mutable
 
 logger = logging.getLogger(__name__)
 
@@ -34,17 +33,6 @@ def _parse_optional_int(value: Optional[str]) -> Optional[int]:
         return int(stripped)
     except (ValueError, TypeError):
         return None
-
-
-async def _ensure_task_id_mutable(db: AsyncSession, task_id: Optional[int]) -> None:
-    if task_id is None:
-        return
-    result = await db.execute(
-        select(Task).where(Task.id == task_id, Task.deleted_at.is_(None))
-    )
-    task_obj = result.scalar_one_or_none()
-    if task_obj is not None:
-        ensure_task_mutable(task_obj)
 
 
 class TaskExecutionRecordService:
@@ -134,7 +122,6 @@ class TaskExecutionRecordService:
     async def pause_execution(db: AsyncSession, record_id: int) -> TaskExecutionRecord:
         try:
             record = await TaskExecutionRecordService._get_record(db, record_id)
-            await _ensure_task_id_mutable(db, record.task_id)
             if record.status not in ("running", "pending"):
                 raise ConflictError(msg="只有运行中或等待中的任务才能暂停")
             record.status = "paused"
@@ -171,7 +158,6 @@ class TaskExecutionRecordService:
     async def resume_execution(db: AsyncSession, record_id: int) -> TaskExecutionRecord:
         try:
             record = await TaskExecutionRecordService._get_record(db, record_id)
-            await _ensure_task_id_mutable(db, record.task_id)
             if record.status != "paused":
                 raise ConflictError(msg="只有已暂停的任务才能恢复")
             record.status = "pending"
@@ -208,7 +194,6 @@ class TaskExecutionRecordService:
     async def stop_execution(db: AsyncSession, record_id: int) -> TaskExecutionRecord:
         try:
             record = await TaskExecutionRecordService._get_record(db, record_id)
-            await _ensure_task_id_mutable(db, record.task_id)
             if record.status not in ("running", "paused", "pending"):
                 raise ConflictError(msg="只有运行中、已暂停或等待中的任务才能停止")
             record.status = "cancelled"
@@ -246,7 +231,6 @@ class TaskExecutionRecordService:
     async def pause_executions_by_task(db: AsyncSession, task_id: int) -> int:
         """按任务 ID 批量暂停该任务下所有 running/pending 的执行记录，返回暂停条数"""
         try:
-            await _ensure_task_id_mutable(db, task_id)
             result = await db.execute(
                 select(TaskExecutionRecord).where(
                     TaskExecutionRecord.task_id == task_id,
