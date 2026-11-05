@@ -121,6 +121,12 @@ function getSlotStatusType(status: string): import('naive-ui').TagProps['type'] 
 const meetingTogglingMap = ref<Record<number, boolean>>({});
 
 async function handleToggleMeetingMode(robot: Api.Robot.Robot) {
+  // 离线机器人无法建立 gRPC 连接，开启会议模式前直接拦截
+  if (!robot.meeting_mode && robot.status === 'offline') {
+    message.warning('机器人离线,未成功开启会议模式');
+    return;
+  }
+
   meetingTogglingMap.value[robot.id] = true;
   try {
     const { data, error } = await fetchSetRobotMeetingMode(robot.id, { enabled: !robot.meeting_mode });
