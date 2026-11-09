@@ -378,7 +378,7 @@ loadData();
                     <NTag :type="getMicBtStatusType(micBtStatusMap[robot.id] || '未连接')" size="small" round>
                       {{ micBtStatusMap[robot.id] || '未连接' }}
                     </NTag>
-                    <NPopconfirm v-if="(micBtStatusMap[robot.id] || '未连接') === '已连接'"
+                    <!-- <NPopconfirm v-if="(micBtStatusMap[robot.id] || '未连接') === '已连接'"
                       @positive-click="handleDisconnectMicBt(robot)">
                       <template #trigger>
                         <NButton size="tiny" secondary type="error" :loading="micBtActionMap[robot.id]">
@@ -396,7 +396,7 @@ loadData();
                         <icon-mdi-bluetooth-connect class="text-icon" />
                       </template>
                       连接
-                    </NButton>
+                    </NButton> -->
                   </div>
                 </div>
               </div>
@@ -424,7 +424,7 @@ loadData();
             </div>
 
             <div class="robot-card-footer">
-              <NSpace>
+              <div class="flex flex-wrap gap-2">
                 <NButton v-if="hasAuth('robot:manage:edit')" type="primary" ghost size="small"
                   @click="handleEditRobot(robot)">
                   {{ $t('common.edit') }}
@@ -445,7 +445,7 @@ loadData();
                   </template>
                   {{ $t('common.confirmDelete') }}
                 </NPopconfirm>
-              </NSpace>
+              </div>
             </div>
           </div>
         </div>
