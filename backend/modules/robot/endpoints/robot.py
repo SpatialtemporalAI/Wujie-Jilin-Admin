@@ -505,6 +505,44 @@ async def reconnect_robot_mic_bluetooth(
 
 
 @robot_router.post(
+    "/{robot_id}/mic-bluetooth/disconnect",
+    response_model=ResponseModel[MicBluetoothStatusData],
+    dependencies=[Depends(require_permission("robot:manage:restart"))],
+)
+@log_operation(module="robot", action="disconnect", description="断开机器人麦克风蓝牙")
+async def disconnect_robot_mic_bluetooth(
+    request: Request,
+    robot_id: int = Path(..., description="机器人ID"),
+    db: AsyncSession = Depends(get_session),
+    user: SysUser = Depends(current_user),
+):
+    """
+    断开机器人麦克风蓝牙连接
+
+    经 gRPC（agent 端）直连机器人执行，返回断开后的 status（已连接/未连接）。
+    机器人不可达或断开动作失败时返回业务错误提示。
+    """
+    try:
+        logger.info("断开机器人麦克风蓝牙接口被调用，机器人ID: %d", robot_id)
+
+        robot_obj = await RobotService.get(db, robot_id)
+        status = await RobotMicBluetoothService.disconnect(robot_obj)
+
+        logger.info(
+            "断开机器人麦克风蓝牙接口成功，机器人ID: %d，状态: %s",
+            robot_id,
+            status,
+        )
+        return response_base.success(
+            data=MicBluetoothStatusData(status=status), msg="断开指令已执行"
+        )
+
+    except Exception as e:
+        logger.error("断开机器人麦克风蓝牙接口失败: %s", str(e), exc_info=True)
+        raise
+
+
+@robot_router.post(
     "/{robot_id}/meeting-mode",
     response_model=ResponseModel[MeetingModeStatusData],
     dependencies=[Depends(require_permission("robot:manage:restart"))],

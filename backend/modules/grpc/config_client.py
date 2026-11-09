@@ -668,6 +668,14 @@ class MicBluetoothClient:
         request = mic_bluetooth_pb2.ReconnectMicBluetoothRequest(robot_id=robot_id)
         return await cls._call(robot_id, "ReconnectMicBluetooth", request)
 
+    @classmethod
+    async def disconnect(
+        cls, robot_id: int
+    ) -> Optional[mic_bluetooth_pb2.DisconnectMicBluetoothResponse]:
+        """主动断开蓝牙麦克风连接；机器人不可达返回 None"""
+        request = mic_bluetooth_pb2.DisconnectMicBluetoothRequest(robot_id=robot_id)
+        return await cls._call(robot_id, "DisconnectMicBluetooth", request)
+
 
 # ==================== MeetingModeClient ====================
 

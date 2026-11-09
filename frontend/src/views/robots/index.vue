@@ -1,14 +1,15 @@
 <script setup lang="ts">
 import { onBeforeUnmount, onMounted, ref } from 'vue';
-import { NButton, NCard, NEmpty, NPopconfirm, NSpace, NSpin, NTag, useMessage } from 'naive-ui';
+import { NButton, NCard, NEmpty, NPopconfirm, NSpace, NSpin, NTag, useDialog, useMessage } from 'naive-ui';
 import {
   fetchDeleteRobot,
+  fetchDisconnectRobotMicBluetooth,
   fetchGetRobotList,
-  fetchGetRobotSlotStatus,
   fetchGetRobotMicBluetoothStatus,
+  fetchGetRobotSlotStatus,
   fetchReconnectRobotMicBluetooth,
-  fetchSetRobotMeetingMode,
-  fetchRestartRobotSlot
+  fetchRestartRobotSlot,
+  fetchSetRobotMeetingMode
 } from '@/service/api';
 import { useAuth } from '@/hooks/business/auth';
 import { $t } from '@/locales';
@@ -21,6 +22,7 @@ defineOptions({ name: 'RobotManagePage' });
 
 const { hasAuth } = useAuth();
 const message = useMessage();
+const dialog = useDialog();
 
 /** 机器人列表 */
 const robotList = ref<Api.Robot.Robot[]>([]);
@@ -159,10 +161,10 @@ async function handleRestartSlot(robot: Api.Robot.Robot) {
 
 /** 麦克风蓝牙状态（list 接口聚合返回：已连接/未连接；求值失败或未知一律按未连接展示） */
 const micBtStatusMap = ref<Record<number, string>>({});
-const micBtReconnectingMap = ref<Record<number, boolean>>({});
+const micBtActionMap = ref<Record<number, boolean>>({});
 
 /** 蓝牙状态只区分已连接/未连接，后端返回的「未知」也按未连接展示 */
-function normalizeMicBtStatus(status?: string) {
+function normalizeMicBtStatus(status?: string | null) {
   return status === '已连接' ? '已连接' : '未连接';
 }
 
@@ -183,20 +185,60 @@ function getMicBtStatusType(status: string): import('naive-ui').TagProps['type']
   return typeMap[status] || 'default';
 }
 
-async function handleReconnectMicBt(robot: Api.Robot.Robot) {
-  micBtReconnectingMap.value[robot.id] = true;
+/**
+ * 执行麦克风蓝牙操作
+ * @param useCardLoading 是否让卡片上的按钮进入 loading；从弹窗确认触发时由弹窗按钮自己 loading
+ * @returns 是否成功（供弹窗 onPositiveClick 判断，失败时保持弹窗打开）
+ */
+async function executeMicBtAction(
+  robot: Api.Robot.Robot,
+  action: 'connect' | 'disconnect',
+  useCardLoading = true
+): Promise<boolean> {
+  const actionText = action === 'connect' ? '连接' : '断开';
+  if (useCardLoading) micBtActionMap.value[robot.id] = true;
   try {
-    const { data, error } = await fetchReconnectRobotMicBluetooth(robot.id);
-    if (!error && data) {
-      micBtStatusMap.value[robot.id] = normalizeMicBtStatus(data.status);
-      message.success(`重连指令已执行，当前状态：${data.status}`);
-    }
+    const { data, error } =
+      action === 'connect'
+        ? await fetchReconnectRobotMicBluetooth(robot.id)
+        : await fetchDisconnectRobotMicBluetooth(robot.id);
+    if (error || !data) return false;
+
+    micBtStatusMap.value[robot.id] = normalizeMicBtStatus(data.status);
+    message.success(`${actionText}指令已执行，当前状态：${data.status}`);
+    return true;
   } catch (err) {
-    console.error('重连麦克风蓝牙失败:', err);
+    console.error(`${actionText}麦克风蓝牙失败:`, err);
+    return false;
   } finally {
-    micBtReconnectingMap.value[robot.id] = false;
+    if (useCardLoading) micBtActionMap.value[robot.id] = false;
     loadMicBtStatus(robot.id);
   }
+}
+
+/** 麦克风同一时间只允许连接一台机器人：连接其他机器人前二次确认（会先断开当前已连接的机器人） */
+function handleConnectMicBt(robot: Api.Robot.Robot) {
+  const connectedRobot = robotList.value.find(
+    item => item.id !== robot.id && micBtStatusMap.value[item.id] === '已连接'
+  );
+
+  if (!connectedRobot) {
+    executeMicBtAction(robot, 'connect');
+    return;
+  }
+
+  dialog.warning({
+    title: '提示',
+    content: `「${connectedRobot.name}」当前已连接麦克风蓝牙，连接「${robot.name}」会先断开已连接的机器人，确认继续？`,
+    positiveText: '继续连接',
+    negativeText: '取消',
+    // 返回 Promise 时确认按钮自动 loading，失败返回 false 保持弹窗打开
+    onPositiveClick: () => executeMicBtAction(robot, 'connect', false)
+  });
+}
+
+function handleDisconnectMicBt(robot: Api.Robot.Robot) {
+  executeMicBtAction(robot, 'disconnect');
 }
 
 function handleAddRobot() {
@@ -330,6 +372,33 @@ loadData();
                     </NButton>
                   </div>
                 </div>
+                <div class="robot-info-item robot-info-item--between">
+                  <span class="robot-info-label">麦克风蓝牙状态</span>
+                  <div class="robot-info-extra">
+                    <NTag :type="getMicBtStatusType(micBtStatusMap[robot.id] || '未连接')" size="small" round>
+                      {{ micBtStatusMap[robot.id] || '未连接' }}
+                    </NTag>
+                    <NPopconfirm v-if="(micBtStatusMap[robot.id] || '未连接') === '已连接'"
+                      @positive-click="handleDisconnectMicBt(robot)">
+                      <template #trigger>
+                        <NButton size="tiny" secondary type="error" :loading="micBtActionMap[robot.id]">
+                          <template #icon>
+                            <icon-mdi-bluetooth-off class="text-icon" />
+                          </template>
+                          断开
+                        </NButton>
+                      </template>
+                      确定断开该机器人的麦克风蓝牙连接？
+                    </NPopconfirm>
+                    <NButton v-else size="tiny" secondary type="primary" :loading="micBtActionMap[robot.id]"
+                      @click="handleConnectMicBt(robot)">
+                      <template #icon>
+                        <icon-mdi-bluetooth-connect class="text-icon" />
+                      </template>
+                      连接
+                    </NButton>
+                  </div>
+                </div>
               </div>
               <template v-if="hasAuth('robot:manage:restart')">
                 <div class="robot-info-divider"></div>
@@ -349,21 +418,7 @@ loadData();
                       </NButton>
                     </div>
                   </div>
-                  <div class="robot-info-item robot-info-item--between">
-                    <span class="robot-info-label">麦克风蓝牙状态</span>
-                    <div class="robot-info-extra">
-                      <NTag :type="getMicBtStatusType(micBtStatusMap[robot.id] || '未连接')" size="small" round>
-                        {{ micBtStatusMap[robot.id] || '未连接' }}
-                      </NTag>
-                      <!-- <NButton size="tiny" secondary :loading="micBtReconnectingMap[robot.id]"
-                        @click="handleReconnectMicBt(robot)">
-                        <template #icon>
-                          <icon-mdi-bluetooth-connect class="text-icon" />
-                        </template>
-                        重连
-                      </NButton> -->
-                    </div>
-                  </div>
+
                 </div>
               </template>
             </div>

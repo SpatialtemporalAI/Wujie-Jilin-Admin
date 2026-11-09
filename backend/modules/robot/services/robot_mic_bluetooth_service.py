@@ -3,9 +3,9 @@
 
 """
 机器人麦克风蓝牙状态服务层
-经 gRPC（agent 端）直连机器人查询/重连蓝牙麦克风：
+经 gRPC（agent 端）直连机器人查询/连接/断开蓝牙麦克风：
 - 状态文案：已连接 / 未连接 / 未知（机器人不可达、未配置 gRPC、未启用时不拖垮列表展示）
-- 重连：机器人不可达或重连失败时抛 ServerError 提示前端
+- 重连/断开：机器人不可达或动作失败时抛 ServerError 提示前端
 """
 import logging
 
@@ -43,4 +43,19 @@ class RobotMicBluetoothService:
             raise ServerError(msg="机器人当前不可达，请确认机器人在线后重试")
         if not resp.success:
             raise ServerError(msg=resp.message or "麦克风蓝牙重连失败，请稍后重试")
+        return "已连接" if resp.connected else "未连接"
+
+    @staticmethod
+    async def disconnect(robot: Robot) -> str:
+        """
+        主动断开蓝牙麦克风连接，返回断开后的状态文案
+
+        Raises:
+            ServerError: 机器人不可达（gRPC 未启用/未配置/调用失败）或断开动作失败
+        """
+        resp = await MicBluetoothClient.disconnect(robot.id)
+        if resp is None:
+            raise ServerError(msg="机器人当前不可达，请确认机器人在线后重试")
+        if not resp.success:
+            raise ServerError(msg=resp.message or "麦克风蓝牙断开失败，请稍后重试")
         return "已连接" if resp.connected else "未连接"

@@ -137,10 +137,18 @@ export function fetchGetRobotMicBluetoothStatus(id: number) {
   });
 }
 
-/** 重连机器人麦克风蓝牙（gRPC 直连机器人 agent，返回重连后的状态） */
+/** 连接机器人麦克风蓝牙（gRPC 直连机器人 agent，返回连接后的状态） */
 export function fetchReconnectRobotMicBluetooth(id: number) {
   return request<Api.Robot.MicBluetoothStatusData>({
     url: `/admin/robot/manage/${id}/mic-bluetooth/reconnect`,
+    method: 'post'
+  });
+}
+
+/** 断开机器人麦克风蓝牙（gRPC 直连机器人 agent，返回断开后的状态） */
+export function fetchDisconnectRobotMicBluetooth(id: number) {
+  return request<Api.Robot.MicBluetoothStatusData>({
+    url: `/admin/robot/manage/${id}/mic-bluetooth/disconnect`,
     method: 'post'
   });
 }
