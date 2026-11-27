@@ -176,7 +176,7 @@ class VoiceprintService:
             created_by=user_id,
         )
         db.add(record)
-        await db.flush()
+        await db.commit()
 
         try:
             resp = await VoiceprintClient.register_voiceprint(
@@ -191,19 +191,19 @@ class VoiceprintService:
         except GrpcMethodUnsupported:
             record.status = "failed"
             record.error_msg = "机器人端暂不支持声纹注册，请升级机器人程序后重试"
-            await db.flush()
+            await db.commit()
             return record
         except Exception as exc:  # noqa: BLE001 - 失败也要落库，便于前端提示
             logger.exception("声纹注册下发失败 robot_id=%s", robot_id)
             record.status = "failed"
             record.error_msg = f"声纹注册下发失败: {exc}"[:500]
-            await db.flush()
+            await db.commit()
             return record
 
         if resp is None:
             record.status = "failed"
             record.error_msg = "机器人当前不可达或 agent 未启用，请确认机器人在线后重试"
-            await db.flush()
+            await db.commit()
             return record
 
         record.voiceprint_id = resp.voiceprint_id or None
@@ -215,7 +215,7 @@ class VoiceprintService:
         record.status = "success" if resp.success else "failed"
         if not resp.success:
             record.error_msg = (resp.message or "声纹注册失败")[:500]
-        await db.flush()
+        await db.commit()
         return record
 
     @staticmethod
@@ -230,7 +230,7 @@ class VoiceprintService:
             except Exception:  # noqa: BLE001 - 远端失败不阻塞本地删除
                 logger.exception("删除 agent 声纹失败 id=%s", record_id)
         record.soft_delete()
-        await db.flush()
+        await db.commit()
 
     @staticmethod
     def to_response(record: MeetingVoiceprint) -> VoiceprintResponse:

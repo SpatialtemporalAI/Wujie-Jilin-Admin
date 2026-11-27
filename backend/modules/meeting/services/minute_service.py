@@ -189,21 +189,21 @@ class MinuteService:
         segment.speaker_id = speaker.id
         segment.speaker_key = speaker.speaker_key
         segment.need_confirm = False
-        await db.flush()
+        await db.commit()
 
     @staticmethod
     async def soft_delete(db: AsyncSession, minute_id: int) -> None:
         """软删除（移入回收站）"""
         minute = await MinuteService.get_minute(db, minute_id, include_deleted=False)
         minute.soft_delete()
-        await db.flush()
+        await db.commit()
 
     @staticmethod
     async def restore(db: AsyncSession, minute_id: int) -> None:
         """从回收站恢复"""
         minute = await MinuteService.get_minute(db, minute_id, include_deleted=True)
         minute.deleted_at = None
-        await db.flush()
+        await db.commit()
 
     @staticmethod
     async def purge(db: AsyncSession, minute_id: int) -> None:
@@ -211,7 +211,7 @@ class MinuteService:
         minute = await MinuteService.get_minute(db, minute_id, include_deleted=True)
         await MinuteService._purge_children(db, [minute.id])
         await db.delete(minute)
-        await db.flush()
+        await db.commit()
 
     @staticmethod
     async def clear_trash(db: AsyncSession) -> int:
@@ -224,7 +224,7 @@ class MinuteService:
             return 0
         await MinuteService._purge_children(db, minute_ids)
         await db.execute(delete(MeetingMinute).where(MeetingMinute.id.in_(minute_ids)))
-        await db.flush()
+        await db.commit()
         return len(minute_ids)
 
     @staticmethod
@@ -350,7 +350,7 @@ class MinuteService:
                 audio_url=audio_url,
             )
             db.add(minute)
-            await db.flush()
+            await db.commit()
         else:
             minute.deleted_at = None
             minute.title = payload.title
@@ -367,7 +367,7 @@ class MinuteService:
             minute.audio_url = audio_url
             # 覆盖上报：先清空旧的发言人/逐字稿，避免残留
             await MinuteService._purge_children(db, [minute.id])
-            await db.flush()
+            await db.commit()
 
         speaker_id_map: dict[str, int] = {}
         for index, item in enumerate(
@@ -402,7 +402,15 @@ class MinuteService:
             )
             db.add(segment)
 
-        await db.flush()
+        await db.commit()
+        logger.info(
+            "agent 上报会议纪要 meeting_no=%s robot_id=%s created=%s speakers=%s segments=%s",
+            meeting_no,
+            payload.robot_id,
+            created,
+            len(payload.speakers),
+            len(payload.segments),
+        )
         return minute, created
 
     @staticmethod

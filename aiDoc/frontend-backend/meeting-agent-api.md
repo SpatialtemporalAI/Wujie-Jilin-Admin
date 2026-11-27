@@ -170,6 +170,8 @@ curl -X POST "http://{platform}/openapi/v1/meeting/files" \
 | `speakers` | array | 否 | 发言人列表，见下表 |
 | `segments` | array | 否 | 逐字稿片段列表，见下表 |
 
+> 业务不需要整场录音时，`audio_file_id` 与 `audio_url` 均可不传：平台侧 `audio_url` 保持为空，前端详情页自动隐藏录音播放条，纪要、发言人、逐字稿的展示与导出不受影响。
+
 `speakers[]`：
 
 | 字段 | 类型 | 必填 | 说明 |
@@ -234,6 +236,7 @@ curl -X POST "http://{platform}/openapi/v1/meeting/files" \
 - 同 `meeting_no` 重复上报：覆盖主表字段，并**先清空**旧的发言人 / 逐字稿再按本次 payload 重建。请务必每次上报完整的 `speakers` 与 `segments`，不要只传增量。
 - 若该会议此前被平台软删除，同 `meeting_no` 再次上报会自动恢复该会议。
 - 未传 `meeting_no` 时，平台每次都会生成新编号，即每次上报都会新建一条会议（不适合重试场景）。
+- 数据库对 `meeting_no` 建有唯一索引；若重复上报仍出现新建记录，请先比对**响应体里的 `meeting_no`** 与请求是否一致（不一致说明请求未带上该字段，或每次传了不同值）。
 - 时间字段兼容 ISO8601（如 `2026-11-25T09:30:00+08:00`、`...Z`）与 `YYYY-MM-DD HH:MM:SS`；无时区信息时按 `Asia/Shanghai` 解析。
 
 ### 2.5 常见错误

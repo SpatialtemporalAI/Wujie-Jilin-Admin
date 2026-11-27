@@ -66,6 +66,7 @@ async def upload_meeting_file(
         created_by=0,
     )
     url = await FileService.get_file_url(db, sys_file.id)
+    await db.commit()
     data = AgentFileUploadResponse(
         file_id=sys_file.id,
         url=url,
