@@ -288,6 +288,44 @@ export const generatedRoutes: GeneratedRoute[] = [
     }
   },
   {
+    name: 'meeting',
+    path: '/meeting',
+    component: 'layout.base',
+    meta: {
+      title: 'meeting',
+      i18nKey: 'route.meeting'
+    },
+    children: [
+      {
+        name: 'meeting_bluetooth',
+        path: '/meeting/bluetooth',
+        component: 'view.meeting_bluetooth',
+        meta: {
+          title: 'meeting_bluetooth',
+          i18nKey: 'route.meeting_bluetooth'
+        }
+      },
+      {
+        name: 'meeting_minutes',
+        path: '/meeting/minutes',
+        component: 'view.meeting_minutes',
+        meta: {
+          title: 'meeting_minutes',
+          i18nKey: 'route.meeting_minutes'
+        }
+      },
+      {
+        name: 'meeting_voiceprint',
+        path: '/meeting/voiceprint',
+        component: 'view.meeting_voiceprint',
+        meta: {
+          title: 'meeting_voiceprint',
+          i18nKey: 'route.meeting_voiceprint'
+        }
+      }
+    ]
+  },
+  {
     name: 'monitor',
     path: '/monitor',
     component: 'layout.base$view.monitor',

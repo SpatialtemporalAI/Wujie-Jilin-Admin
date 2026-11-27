@@ -275,3 +275,13 @@ class RobotPanelModel(BaseModel):
         "", description="控制面板地址，如 http://192.168.112.198:5678，为空则功能不可用"
     )
     TIMEOUT_SECONDS: float = Field(5.0, description="面板接口超时时间(秒)")
+
+
+class MeetingModel(BaseModel):
+    """会议管理（agent 上报）配置"""
+
+    AGENT_TOKEN: str = Field(
+        "",
+        description="agent 上报接口鉴权 Token，请求头 X-Agent-Token；为空则不校验（仅建议开发环境）",
+    )
+

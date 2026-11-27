@@ -28,6 +28,7 @@ from .settings_model import (
     FaceRecognitionModel,
     LiveKitModel,
     RobotPanelModel,
+    MeetingModel,
 )
 
 
@@ -79,3 +80,5 @@ class GlobalSetting(BaseSettings):
     LIVEKIT: LiveKitModel = LiveKitModel()
     # 机器人控制面板（服务器自启动状态）配置
     ROBOT_PANEL: RobotPanelModel = RobotPanelModel()
+    # 会议管理（agent 上报）配置
+    MEETING: MeetingModel = MeetingModel()

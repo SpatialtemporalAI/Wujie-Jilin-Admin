@@ -14,6 +14,7 @@ from modules.task.router import router as task_router
 from modules.merchant.router import router as merchant_router
 from modules.face.router import router as face_router
 from modules.voice_consultation.router import router as voice_consultation_router
+from modules.meeting.router import router as meeting_router
 
 # 创建管理路由器
 router = APIRouter(
@@ -28,3 +29,4 @@ router.include_router(task_router)
 router.include_router(merchant_router)
 router.include_router(face_router)
 router.include_router(voice_consultation_router)
+router.include_router(meeting_router)

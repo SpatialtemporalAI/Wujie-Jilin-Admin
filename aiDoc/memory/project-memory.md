@@ -8,6 +8,7 @@
 
 ## 业务需求记忆
 
+- [2026-11-25 会议管理（声纹注册 / 会议纪要 / 蓝牙设备连接）](./business/2026-11-25_meeting-management.md) — 新增 meeting 模块与 4 张表（迁移 0021/0022）；浏览器录音→下发 agent 建模；agent 经 `/openapi/v1/meeting/*`（X-Agent-Token）上报音频与纪要（meeting_no 幂等全量覆盖）；三个前端页面 + 权限码与 i18n；蓝牙仅占位
 - [2026-10-30 固定 ID 的内置八段锦任务](./business/2026-10-30_builtin-baduanjin-task.md) — 0020 将八段锦1111迁移为 id=1/八段锦/is_builtin=true 并种子化；任务管理仅允许启动和 robot_ids 更新，执行列表暂停/恢复/停止同普通任务；列表内置优先，编辑抽屉仅机器人可改；2026-11-02 内置标签改蓝、背景音乐选择器禁用
 - [2026-10-29 表演任务执行详情展示任务内容和步骤](./business/2026-10-29_performance-task-detail-steps.md) — 详情抽屉时间线展示动作/音乐/播放次数/套间间隔并复用巡逻 points_status 显示步骤执行状态；后端将历史快照 sets 规范化为 performance_steps，保留新格式且不覆盖历史；选项失败回退原始标识
 - [2026-10-13 巡逻任务运控动作加回 5 项](./business/2026-10-13_task-action-options-add-back-5.md) — operate-drawer actionOptions 加回 击掌/拥抱/右手飞吻/双手飞吻/动感光波（07-02 精简项的子集，不含 left_kiss）；类型/详情标签/后端 schema 本就保留这些值，仅改下拉一处

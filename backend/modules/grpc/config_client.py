@@ -43,6 +43,8 @@ from app.grpc.generated.config import (
     video_pb2_grpc,
     voice_pb2,
     voice_pb2_grpc,
+    voiceprint_pb2,
+    voiceprint_pb2_grpc,
 )
 
 from core.config import settings
@@ -755,3 +757,106 @@ class MeetingModeClient:
             robot_id=robot_id, enabled=enabled
         )
         return await cls._call(robot_id, "SetMeetingMode", request)
+
+
+# ==================== VoiceprintClient ====================
+
+
+class VoiceprintClient:
+    """声纹注册 gRPC 客户端（走 agent）
+
+    平台侧在浏览器完成录音后，把音频下发给 agent 做 ASR + 声纹建模。
+    与 Bluetooth/MeetingMode 一致：机器人不可达返回 None。
+    """
+
+    _stubs_by_addr: Dict[str, voiceprint_pb2_grpc.VoiceprintServiceStub] = {}
+
+    @classmethod
+    async def _get_stub_for_addr(
+        cls, addr: str
+    ) -> voiceprint_pb2_grpc.VoiceprintServiceStub:
+        if addr not in cls._stubs_by_addr:
+            channel = await get_config_channel_by_addr(addr)
+            cls._stubs_by_addr[addr] = voiceprint_pb2_grpc.VoiceprintServiceStub(
+                channel
+            )
+        return cls._stubs_by_addr[addr]
+
+    @classmethod
+    async def _call(
+        cls, robot_id: int, method_name: str, request: Any
+    ) -> Optional[Any]:
+        """单端调用（agent）；未启用/未配置/调用失败返回 None"""
+        if not settings.GRPC.ENABLED:
+            logger.info("voiceprint rpc skipped: gRPC 未启用, robot_id=%s", robot_id)
+            return None
+
+        addr = await get_config_addr_provider().get_addr(robot_id, "agent")
+        if not addr:
+            logger.info(
+                "voiceprint rpc skipped: agent 地址未配置, robot_id=%s", robot_id
+            )
+            return None
+
+        try:
+            stub = await cls._get_stub_for_addr(addr)
+            rpc: Callable[..., Awaitable[Any]] = getattr(stub, method_name)
+            return await rpc(request, timeout=settings.GRPC.TIMEOUT_SECONDS)
+        except grpc.aio.AioRpcError as e:
+            if e.code() == grpc.StatusCode.UNIMPLEMENTED:
+                logger.warning(
+                    "voiceprint rpc unimplemented method=%s robot_id=%s addr=%s details=%s",
+                    method_name,
+                    robot_id,
+                    addr,
+                    e.details(),
+                )
+                raise GrpcMethodUnsupported(method_name) from e
+            logger.warning(
+                "voiceprint rpc failed method=%s robot_id=%s code=%s details=%s",
+                method_name,
+                robot_id,
+                e.code(),
+                e.details(),
+            )
+            return None
+        except Exception:  # noqa: BLE001 - 动作失败不阻塞业务
+            logger.exception(
+                "voiceprint rpc unexpected error method=%s robot_id=%s",
+                method_name,
+                robot_id,
+            )
+            return None
+
+    @classmethod
+    async def register_voiceprint(
+        cls,
+        robot_id: int,
+        role_name: str,
+        role_type: str,
+        method: str,
+        audio: bytes,
+        audio_format: str,
+        transcript_hint: str = "",
+    ) -> Optional[voiceprint_pb2.RegisterVoiceprintResponse]:
+        """下发声纹注册；机器人不可达返回 None"""
+        request = voiceprint_pb2.RegisterVoiceprintRequest(
+            robot_id=robot_id,
+            role_name=role_name,
+            role_type=role_type,
+            method=method,
+            audio=audio,
+            audio_format=audio_format,
+            transcript_hint=transcript_hint,
+        )
+        return await cls._call(robot_id, "RegisterVoiceprint", request)
+
+    @classmethod
+    async def delete_voiceprint(
+        cls, robot_id: int, voiceprint_id: str
+    ) -> Optional[voiceprint_pb2.DeleteVoiceprintResponse]:
+        """删除 agent 侧声纹；机器人不可达返回 None"""
+        request = voiceprint_pb2.DeleteVoiceprintRequest(
+            robot_id=robot_id, voiceprint_id=voiceprint_id
+        )
+        return await cls._call(robot_id, "DeleteVoiceprint", request)

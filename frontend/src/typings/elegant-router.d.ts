@@ -45,6 +45,10 @@ declare module "@elegant-router/types" {
     "manage_scheduler-log": "/manage/scheduler-log";
     "manage_user": "/manage/user";
     "map-editor": "/map-editor";
+    "meeting": "/meeting";
+    "meeting_bluetooth": "/meeting/bluetooth";
+    "meeting_minutes": "/meeting/minutes";
+    "meeting_voiceprint": "/meeting/voiceprint";
     "monitor": "/monitor";
     "open-merchant": "/open-merchant";
     "open-merchant_call-log": "/open-merchant/call-log";
@@ -102,6 +106,7 @@ declare module "@elegant-router/types" {
     | "login"
     | "manage"
     | "map-editor"
+    | "meeting"
     | "monitor"
     | "open-merchant"
     | "operation-monitor"
@@ -152,6 +157,9 @@ declare module "@elegant-router/types" {
     | "manage_scheduler"
     | "manage_user"
     | "map-editor"
+    | "meeting_bluetooth"
+    | "meeting_minutes"
+    | "meeting_voiceprint"
     | "monitor"
     | "open-merchant_call-log"
     | "open-merchant_merchant"

@@ -29,6 +29,7 @@
 - `frontend-backend/boundary.md`: 前后端契约与字段类型约束
 - `frontend-backend/frontend-rules.md`: 前端代码、状态、路由、样式规范
 - `frontend-backend/frontend-utils.md`: 工具函数的强制复用规则
+- `frontend-backend/meeting-agent-api.md`: 会议管理 gRPC / agent 上报 HTTP 对接说明
 - `examples/README.md`: 示例层总入口
 - `memory/project-memory.md`: 记忆层总入口
 - `memory/long-term/`: 长期记忆

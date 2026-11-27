@@ -379,7 +379,21 @@ const local: App.I18n.Schema = {
     face_image_add: 'Upload',
     face_image_delete: 'Delete',
     face_search: 'Search',
-    face_detect: 'Detect'
+    face_detect: 'Detect',
+    meeting: 'Meeting',
+    meeting_voiceprint: 'Voiceprint',
+    meeting_minutes: 'Minutes',
+    meeting_bluetooth: 'Bluetooth',
+    meeting_voiceprint_list: 'List',
+    meeting_voiceprint_add: 'Register',
+    meeting_voiceprint_delete: 'Delete',
+    meeting_voiceprint_meeting_mode: 'Meeting Mode',
+    meeting_minutes_list: 'List',
+    meeting_minutes_detail: 'Detail',
+    meeting_minutes_edit: 'Edit',
+    meeting_minutes_delete: 'Delete',
+    meeting_minutes_export: 'Export',
+    meeting_bluetooth_list: 'List'
   },
   page: {
     login: {

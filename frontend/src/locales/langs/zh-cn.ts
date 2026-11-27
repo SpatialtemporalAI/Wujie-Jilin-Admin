@@ -375,7 +375,21 @@ const local: App.I18n.Schema = {
     face_image_add: '上传',
     face_image_delete: '删除',
     face_search: '搜索',
-    face_detect: '检测'
+    face_detect: '检测',
+    meeting: '会议管理',
+    meeting_voiceprint: '声纹注册',
+    meeting_minutes: '会议纪要',
+    meeting_bluetooth: '蓝牙设备连接',
+    meeting_voiceprint_list: '查询',
+    meeting_voiceprint_add: '注册',
+    meeting_voiceprint_delete: '删除',
+    meeting_voiceprint_meeting_mode: '会议模式',
+    meeting_minutes_list: '查询',
+    meeting_minutes_detail: '详情',
+    meeting_minutes_edit: '编辑',
+    meeting_minutes_delete: '删除',
+    meeting_minutes_export: '导出',
+    meeting_bluetooth_list: '查询'
   },
   page: {
     login: {
